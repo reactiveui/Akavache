@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="BlobCacheExtensionsFixture.cs" />
     <Compile Include="BlobCacheFixture.cs" />
+    <Compile Include="EncryptedBlobCacheFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
