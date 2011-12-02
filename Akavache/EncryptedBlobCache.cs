@@ -11,16 +11,20 @@ namespace Akavache
     {
     }
 
-    public class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
+    public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
-        static Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => new EncryptedBlobCache());
+        static Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => new CEncryptedBlobCache(GetDefaultCacheDirectory()));
         public static ISecureBlobCache Current
         {
             get { return _Current.Value; }
         }
 
-        protected EncryptedBlobCache(IScheduler scheduler = null) : base(GetDefaultCacheDirectory(), scheduler)
+        protected EncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, scheduler)
         {
+        }
+
+        class CEncryptedBlobCache : EncryptedBlobCache {
+            public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, RxApp.TaskpoolScheduler) { }
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data)
@@ -63,7 +67,7 @@ namespace Akavache
             }
         }
 
-        static string GetDefaultCacheDirectory()
+        protected static string GetDefaultCacheDirectory()
         {
             return RxApp.InUnitTestRunner() ?
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SecretCache") :
