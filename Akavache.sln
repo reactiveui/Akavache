@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache", "Akavache\Akavache.csproj", "{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
