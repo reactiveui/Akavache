@@ -29,7 +29,7 @@ namespace Akavache
 
         protected PersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null)
         {
-            this.CacheDirectory = cacheDirectory ?? GetDefaultCacheDirectory();
+            this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
 
             // Here, we're not actually caching the requests directly (i.e. as
@@ -59,13 +59,13 @@ namespace Akavache
             this.Log().InfoFormat("{0} entries in blob cache index", CacheIndex.Count);
         }
 
-        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetLocalMachineCacheDirectory()));
+        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultLocalMachineCacheDirectory()));
         public static IBlobCache LocalMachine 
         {
             get { return _LocalMachine.Value;  }
         }
 
-        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultCacheDirectory()));
+        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultRoamingCacheDirectory()));
         public static IBlobCache UserAccount 
         {
             get { return _UserAccount.Value;  }
@@ -264,18 +264,18 @@ namespace Akavache
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
 
-        static string GetDefaultCacheDirectory()
+        protected static string GetDefaultRoamingCacheDirectory()
         {
             return RxApp.InUnitTestRunner() ?
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GitHub", "BlobCache");
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
 
-        static string GetLocalMachineCacheDirectory()
+        protected static string GetDefaultLocalMachineCacheDirectory()
         {
             return RxApp.InUnitTestRunner() ?
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "LocalBlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GitHub", "BlobCache");
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
     }
 }
