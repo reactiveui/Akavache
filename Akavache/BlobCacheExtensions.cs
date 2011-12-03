@@ -13,10 +13,11 @@ namespace Akavache
 {
     public static class JsonSerializationMixin
     {
-        public static void InsertObject<T>(this IBlobCache This, string key, T value)
+        public static void InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             This.Insert(GetTypePrefixedKey(key, typeof(T)), 
-                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value)));
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value)),
+                absoluteExpiration);
         }
 
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
@@ -159,6 +160,19 @@ namespace Akavache
         public static IObservable<Tuple<string, string>> GetLoginAsync(this ISecureBlobCache This)
         {
             return This.GetObjectAsync<Tuple<string, string>>("login");
+        }
+    }
+
+    public static class RelativeTimeMixin
+    {
+        public static void Insert(this IBlobCache This, string key, byte[] data, TimeSpan expiration)
+        {
+            This.Insert(key, data, This.Scheduler.Now + expiration);
+        }
+
+        public static void InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
+        {
+            This.InsertObject(key, value, This.Scheduler.Now + expiration);
         }
     }
 }
