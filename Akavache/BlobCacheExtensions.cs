@@ -48,18 +48,18 @@ namespace Akavache
 
     public static class HttpMixin
     {
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, DateTimeOffset? absoluteExpiration = null)
         {
             var fail = Observable.Defer(() =>
             {
                 return MakeWebRequest(new Uri(url))
-                    .SelectMany(x => ProcessAndCacheWebResponse(x, url, This));
+                    .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
             });
 
             return This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail);
         }
 
-        static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache)
+        static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
         {
             var hwr = (HttpWebResponse) wr;
             if ((int)hwr.StatusCode >= 400)
@@ -71,7 +71,7 @@ namespace Akavache
             hwr.GetResponseStream().CopyTo(ms);
 
             var ret = ms.ToArray();
-            cache.Insert(url, ret);
+            cache.Insert(url, ret, absoluteExpiration);
             return Observable.Return(ret);
         }
 
@@ -152,9 +152,9 @@ namespace Akavache
 
     public static class LoginMixin
     {
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password)
+        public static void SaveLogin(this ISecureBlobCache This, string user, string password, DateTimeOffset? absoluteExpiration = null)
         {
-            This.InsertObject("login", new Tuple<string, string>(user, password));
+            This.InsertObject("login", new Tuple<string, string>(user, password), absoluteExpiration);
         }
 
         public static IObservable<Tuple<string, string>> GetLoginAsync(this ISecureBlobCache This)
@@ -173,6 +173,16 @@ namespace Akavache
         public static void InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
         {
             This.InsertObject(key, value, This.Scheduler.Now + expiration);
+        }
+
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, TimeSpan expiration)
+        {
+            return This.DownloadUrl(url, This.Scheduler.Now + expiration);
+        }
+
+        public static void SaveLogin(this ISecureBlobCache This, string user, string password, TimeSpan expiration)
+        {
+            This.SaveLogin(user, password, This.Scheduler.Now + expiration);
         }
     }
 }
