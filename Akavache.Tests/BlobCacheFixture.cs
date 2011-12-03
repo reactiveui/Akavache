@@ -22,7 +22,7 @@ namespace Akavache.Tests
         [Test]
         public void CacheShouldBeAbleToGetAndInsertBlobs()
         {
-            (Scheduler.CurrentThread).With(sched =>
+            (Scheduler.Immediate).With(sched =>
             {
                 var fixture = new TPersistentBlobCache();
 
@@ -75,11 +75,11 @@ namespace Akavache.Tests
         {
             string path;
 
-            (new TestScheduler()).With(sched =>
+            using(Utility.WithEmptyDirectory(out path))
             {
-                using(Utility.WithEmptyDirectory(out path))
+                (new TestScheduler()).With(sched =>
                 {
-                    using(var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = new TPersistentBlobCache(path))
                     {
                         fixture.Insert("foo", new byte[] {1, 2, 3}, TimeSpan.FromTicks(100));
                         fixture.Insert("bar", new byte[] {4, 5, 6}, TimeSpan.FromTicks(500));
@@ -99,13 +99,13 @@ namespace Akavache.Tests
                             ex => shouldFail = false);
                         fixture.GetAsync("bar").Subscribe(x => result = x);
 
-                        sched.AdvanceTo(130);
+                        sched.AdvanceTo(300);
                         Assert.False(shouldFail);
                         Assert.AreEqual(4, result[0]);
                     }
 
                     // Serialize out the cache and reify it again
-                    using(var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = new TPersistentBlobCache(path))
                     {
                         byte[] result = null;
                         fixture.GetAsync("bar").Subscribe(x => result = x);
@@ -125,8 +125,8 @@ namespace Akavache.Tests
                     }
 
                     sched.Start();
-                }
-            });
+                });
+            }
         }
     }
 }

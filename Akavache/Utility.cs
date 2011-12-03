@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
@@ -109,7 +110,7 @@ namespace Akavache
             });
         }
 
-        public static IObservable<Unit> CopyToAsync(this Stream This, Stream destination)
+        public static IObservable<Unit> CopyToAsync(this Stream This, Stream destination, IScheduler scheduler = null)
         {
             return Observable.Start(() =>
             {
@@ -123,7 +124,7 @@ namespace Akavache
                 {
                     Log.Warn("CopyToAsync failed", ex);
                 }
-            }, RxApp.TaskpoolScheduler);
+            }, scheduler ?? RxApp.TaskpoolScheduler);
 
 #if FALSE
             var reader = Observable.FromAsyncPattern<byte[], int, int, int>(This.BeginRead, This.EndRead);

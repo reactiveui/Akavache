@@ -27,7 +27,7 @@ namespace Akavache
             public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, RxApp.TaskpoolScheduler) { }
         }
 
-        protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data)
+        protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace Akavache
             
         }
 
-        protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data)
+        protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
             try
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -9,6 +10,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using ReactiveUI;
 
 namespace Akavache
@@ -21,7 +23,7 @@ namespace Akavache
     {
         protected MemoizingMRUCache<string, AsyncSubject<byte[]>> MemoizedRequests;
         protected readonly string CacheDirectory;
-        protected readonly ConcurrentDictionary<string, bool> CacheIndex = new ConcurrentDictionary<string, bool>();
+        protected ConcurrentDictionary<string, DateTimeOffset> CacheIndex = new ConcurrentDictionary<string, DateTimeOffset>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
 
         public IScheduler Scheduler { get; protected set; }
@@ -39,7 +41,7 @@ namespace Akavache
             // we don't have to keep a separate list of "in-flight reads" vs
             // "already completed and cached reads"
             MemoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
-                FetchOrWriteBlobFromDisk, 20);
+                (x,c) => FetchOrWriteBlobFromDisk(x,c,false), 20);
 
             if (!Directory.Exists(CacheDirectory))
             {
@@ -47,18 +49,21 @@ namespace Akavache
                 (new DirectoryInfo(CacheDirectory)).CreateRecursive();
             }
 
-            CacheIndex = GetAsync(BlobCacheIndexKey)
+            FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
-                .Select(x => Encoding.UTF8.GetString(x).Split('\n').ToDictionary(y => y, _ => true))
-                .Select(x => new ConcurrentDictionary<string, bool>(x))
-                .First();
+                .Select(x => Encoding.UTF8.GetString(x).Split('\n')
+                    .SelectMany(ParseCacheIndexEntry)
+                    .ToDictionary(y => y.Key, y => y.Value))
+                .Select(x => new ConcurrentDictionary<string, DateTimeOffset>(x))
+                .Subscribe(x => CacheIndex = x);
 
             actionTaken
                 .Throttle(TimeSpan.FromSeconds(2), RxApp.TaskpoolScheduler)
-                .Subscribe(_ => FlushCacheIndex());
+                .Subscribe(_ => FlushCacheIndex(false));
 
             this.Log().InfoFormat("{0} entries in blob cache index", CacheIndex.Count);
         }
+
 
         static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultLocalMachineCacheDirectory()));
         public static IBlobCache LocalMachine 
@@ -92,7 +97,7 @@ namespace Akavache
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
                 err.LogErrors("Insert").Subscribe(
-                    x => CacheIndex[key] = true, 
+                    x => CacheIndex[key] = absoluteExpiration ?? DateTimeOffset.MaxValue, 
                     ex => Invalidate(key));
                 
                 actionTaken.OnNext(Unit.Default);
@@ -103,6 +108,14 @@ namespace Akavache
         {
             lock(MemoizedRequests)
             {
+                IObservable<byte[]> ret;
+                if (IsKeyStale(key))
+                {
+                    Invalidate(key);
+                    ret = Observable.Throw<byte[]>(new KeyNotFoundException());
+                    goto leave;
+                }
+
                 // There are three scenarios here, and we handle all of them 
                 // with aplomb and elegance:
                 //
@@ -118,17 +131,23 @@ namespace Akavache
                 //    this case, FetchOrWriteBlobFromDisk will be called which
                 //    will immediately return an AsyncSubject representing the
                 //    queued disk read.
-                var ret = MemoizedRequests.Get(key);
+                ret = MemoizedRequests.Get(key);
 
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
-                ret.LogErrors("GetAsync").Subscribe(
-                    x => CacheIndex[key] = true,
-                    ex => Invalidate(key));
+                ret.LogErrors("GetAsync")
+                    .Subscribe(x => {}, ex => Invalidate(key)); 
 
+            leave:
                 actionTaken.OnNext(Unit.Default);
                 return ret;
             }
+        }
+
+        bool IsKeyStale(string key)
+        {
+            DateTimeOffset value;
+            return (CacheIndex.TryGetValue(key, out value) && value < Scheduler.Now);
         }
 
         public IEnumerable<string> GetAllKeys()
@@ -147,7 +166,7 @@ namespace Akavache
                 this.Log().DebugFormat("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
 
-                bool dontcare;
+                DateTimeOffset dontcare;
                 CacheIndex.TryRemove(key, out dontcare);
 
                 var deleteMe = new Action(() =>
@@ -196,55 +215,49 @@ namespace Akavache
                     .Wait();
             }
 
-            // XXX: This is the hackiest of ugly hacks and I hate it
-            if (!(Scheduler.GetType().Name.Contains("TestScheduler")))
-                FlushCacheIndex().First();
+            FlushCacheIndex(true).Subscribe(_ => {});
         }
 
-        IObservable<Unit> FlushCacheIndex()
-        {
-            var index = CacheIndex.Keys.ToArray();
-            return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)))
-                .Select(_ => Unit.Default);
-        }
-
-        protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data)
+        protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
             return Observable.Return(data);
         }
 
-        protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data)
+        protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
             return Observable.Return(data);
         }
 
-        AsyncSubject<byte[]> FetchOrWriteBlobFromDisk(string key, object byteData)
+        AsyncSubject<byte[]> FetchOrWriteBlobFromDisk(string key, object byteData, bool synchronous)
         {
             // If this is secretly a write, dispatch to WriteBlobToDisk (we're 
             // kind of abusing the 'context' variable from MemoizingMRUCache 
             // here a bit)
             if (byteData != null)
             {
-                return WriteBlobToDisk(key, (byte[]) byteData);
+                return WriteBlobToDisk(key, (byte[]) byteData, synchronous);
             }
 
-            var ms = new MemoryStream();
             var ret = new AsyncSubject<byte[]>();
+            var ms = new MemoryStream();
 
+            var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
             Utility.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read)
-                .SelectMany(x => x.CopyToAsync(ms))
-                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray()))
+                .SelectMany(x => x.CopyToAsync(ms, scheduler))
+                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .Multicast(ret).Connect();
 
             return ret;
         }
 
-        AsyncSubject<byte[]> WriteBlobToDisk(string key, byte[] byteData)
+        AsyncSubject<byte[]> WriteBlobToDisk(string key, byte[] byteData, bool synchronous)
         {
             var ret = new AsyncSubject<byte[]>();
+            var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
+
             var files = Observable.Zip(
-                BeforeWriteToDiskFilter(byteData).Select(x => new MemoryStream(x)),
+                BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
                 Utility.SafeOpenFileAsync(GetPathForKey(key), FileMode.Create, FileAccess.Write, FileShare.None),
                 (from, to) => new { from, to }
             );
@@ -255,11 +268,43 @@ namespace Akavache
             // this also means that failed writes will disappear from the
             // cache, which is A Good Thing.
             files
-                .SelectMany(x => x.from.CopyToAsync(x.to))
+                .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
                 .Multicast(ret).Connect();
     
             return ret;
+        }
+
+        IObservable<Unit> FlushCacheIndex(bool synchronous)
+        {
+            var index = CacheIndex.Select(x => 
+                String.Format(CultureInfo.InvariantCulture, "{0},{1},{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks));
+
+            return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
+                .Select(_ => Unit.Default);
+        }
+
+        IEnumerable<KeyValuePair<string, DateTimeOffset>> ParseCacheIndexEntry(string s)
+        {
+            if (String.IsNullOrWhiteSpace(s))
+            {
+                return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
+            }
+
+            try
+            {
+                var parts = s.Split(',');
+                var time = new DateTimeOffset(
+                    Int64.Parse(parts[1], CultureInfo.InvariantCulture),
+                    new TimeSpan(Int64.Parse(parts[2], CultureInfo.InvariantCulture)));
+
+                return new[] {new KeyValuePair<string, DateTimeOffset>(parts[0], time)};
+            } 
+            catch(Exception ex)
+            {
+                this.Log().Warn("Invalid cache index entry", ex);
+                return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
+            }
         }
 
         string GetPathForKey(string key)
