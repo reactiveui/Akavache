@@ -29,6 +29,7 @@ namespace Akavache
         public IScheduler Scheduler { get; protected set; }
 
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
+        const char UnicodeSeparator = '\u2029'; // PARAGRAPH SEPARATOR PSEP
 
         protected PersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null)
         {
@@ -278,7 +279,7 @@ namespace Akavache
         IObservable<Unit> FlushCacheIndex(bool synchronous)
         {
             var index = CacheIndex.Select(x => 
-                String.Format(CultureInfo.InvariantCulture, "{0},{1},{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks));
+                String.Format(CultureInfo.InvariantCulture, "{0}{3}{1}{3}{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks, UnicodeSeparator));
 
             return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
                 .Select(_ => Unit.Default);
@@ -293,7 +294,7 @@ namespace Akavache
 
             try
             {
-                var parts = s.Split(',');
+                var parts = s.Split(UnicodeSeparator);
                 var time = new DateTimeOffset(
                     Int64.Parse(parts[1], CultureInfo.InvariantCulture),
                     new TimeSpan(Int64.Parse(parts[2], CultureInfo.InvariantCulture)));
