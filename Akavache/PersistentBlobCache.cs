@@ -93,6 +93,7 @@ namespace Akavache
             // we never sit on this lock for any real length of time
             lock(MemoizedRequests)
             {
+                MemoizedRequests.Invalidate(key);
                 var err = MemoizedRequests.Get(key, data);
 
                 // If we fail trying to fetch/write the key on disk, we want to 

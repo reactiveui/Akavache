@@ -71,6 +71,28 @@ namespace Akavache.Tests
         }
 
         [Test]
+        public void InsertingAnItemTwiceShouldAlwaysGetTheNewOne()
+        {
+            string path;
+
+            using(Utility.WithEmptyDirectory(out path))
+            using (var fixture = new TPersistentBlobCache(path))
+            {
+                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+
+                var output = fixture.GetAsync("Foo").First();
+                Assert.AreEqual(3, output.Length);
+                Assert.AreEqual(1, output[0]);
+
+                fixture.Insert("Foo", new byte[] { 4, 5 });
+
+                output = fixture.GetAsync("Foo").First();
+                Assert.AreEqual(2, output.Length);
+                Assert.AreEqual(4, output[0]);
+            }   
+        }
+
+        [Test]
         public void CacheShouldRespectExpiration()
         {
             string path;
