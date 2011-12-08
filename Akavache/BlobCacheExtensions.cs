@@ -48,7 +48,7 @@ namespace Akavache
 
     public static class HttpMixin
     {
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var fail = Observable.Defer(() =>
             {
@@ -56,7 +56,7 @@ namespace Akavache
                     .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
             });
 
-            return This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail);
+            return (fetchAlways ? fail : This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail));
         }
 
         static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
@@ -175,9 +175,9 @@ namespace Akavache
             This.InsertObject(key, value, This.Scheduler.Now + expiration);
         }
 
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, TimeSpan expiration, Dictionary<string, string> headers = null)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
         {
-            return This.DownloadUrl(url, headers, This.Scheduler.Now + expiration);
+            return This.DownloadUrl(url, headers, fetchAlways, This.Scheduler.Now + expiration);
         }
 
         public static void SaveLogin(this ISecureBlobCache This, string user, string password, TimeSpan expiration)
