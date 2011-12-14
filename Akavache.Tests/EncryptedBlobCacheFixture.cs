@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ReactiveUI;
 
 namespace Akavache.Tests
@@ -17,7 +17,7 @@ namespace Akavache.Tests
 
     public class EncryptedBlobCacheFixture : IEnableLogger
     {
-        [Test]
+        [Fact]
         public void NoPlaintextShouldShowUpInCache()
         {
             const string secretUser = "OmgSekritUser";
@@ -47,7 +47,7 @@ namespace Akavache.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptedDataShouldBeRoundtripped()
         {
             const string secretUser = "OmgSekritUser";
@@ -64,8 +64,8 @@ namespace Akavache.Tests
                 using (var fixture = new TEncryptedBlobCache(path))
                 {
                     var loginInfo = fixture.GetLoginAsync().First();
-                    Assert.AreEqual(secretUser, loginInfo.Item1);
-                    Assert.AreEqual(secretPass, loginInfo.Item2);
+                    Assert.Equal(secretUser, loginInfo.Item1);
+                    Assert.Equal(secretPass, loginInfo.Item2);
                 }
             }
         }

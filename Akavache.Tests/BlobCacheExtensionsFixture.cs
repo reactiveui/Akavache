@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 
 namespace Akavache.Tests
 {
@@ -17,8 +17,8 @@ namespace Akavache.Tests
 
     public class BlobCacheExtensionsFixture
     {
-        [Test]
-        public void DownloadUrlTest()
+        [Fact]
+        public void DownloadUrlFact()
         {
             string path;
 
@@ -26,11 +26,11 @@ namespace Akavache.Tests
             using(var fixture = new TPersistentBlobCache(path))
             {
                 var bytes = fixture.DownloadUrl(@"https://www.google.com/intl/en_com/images/srpr/logo3w.png").First();
-                Assert.IsTrue(bytes.Length > 0);
+                Assert.True(bytes.Length > 0);
             }
         }
 
-        [Test]
+        [Fact]
         public void ObjectsShouldBeRoundtrippable()
         {
             string path;
@@ -49,9 +49,9 @@ namespace Akavache.Tests
                 }
             }
 
-            Assert.AreEqual(input.Blog, result.Blog);
-            Assert.AreEqual(input.Bio, result.Bio);
-            Assert.AreEqual(input.Name, result.Name);
+            Assert.Equal(input.Blog, result.Blog);
+            Assert.Equal(input.Bio, result.Bio);
+            Assert.Equal(input.Name, result.Name);
         }
     }
 }
