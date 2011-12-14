@@ -71,7 +71,7 @@ namespace Akavache
         {
             return RxApp.InUnitTestRunner() ?
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SecretCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GitHub", "SecretCache");
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
         }
     }
 }
