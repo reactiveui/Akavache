@@ -15,7 +15,7 @@ namespace Akavache.Tests
         public TEncryptedBlobCache (string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, scheduler) { }
     }
 
-    public class EncryptedBlobCacheFixture : IEnableLogger
+    public class EncryptedBlobCacheFixture
     {
         [Fact]
         public void NoPlaintextShouldShowUpInCache()
@@ -38,7 +38,6 @@ namespace Akavache.Tests
                 foreach(var file in fileList)
                 {
                     var text = File.ReadAllText(file.FullName, Encoding.UTF8);
-                    this.Log().InfoFormat("File '{0}': {1}", file.Name, text);
 
                     Assert.False(text.Contains(secretUser));
                     Assert.False(text.Contains(secretPass));

@@ -11,6 +11,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using NLog;
 using ReactiveUI;
 
 namespace Akavache
@@ -19,8 +20,10 @@ namespace Akavache
     /// This class represents an asynchronous key-value store backed by a 
     /// directory. It stores the last 'n' key requests in memory.
     /// </summary>
-    public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
+    public abstract class PersistentBlobCache : IBlobCache
     {
+        static readonly Logger log = LogManager.GetCurrentClassLogger();
+
         protected MemoizingMRUCache<string, AsyncSubject<byte[]>> MemoizedRequests;
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, DateTimeOffset> CacheIndex = new ConcurrentDictionary<string, DateTimeOffset>();
@@ -46,7 +49,7 @@ namespace Akavache
 
             if (!Directory.Exists(CacheDirectory))
             {
-                this.Log().WarnFormat("Creating cache directory '{0}'", CacheDirectory);
+                log.Warn("Creating cache directory '{0}'", CacheDirectory);
                 (new DirectoryInfo(CacheDirectory)).CreateRecursive();
             }
 
@@ -62,7 +65,7 @@ namespace Akavache
                 .Throttle(TimeSpan.FromSeconds(2), RxApp.TaskpoolScheduler)
                 .Subscribe(_ => FlushCacheIndex(false));
 
-            this.Log().InfoFormat("{0} entries in blob cache index", CacheIndex.Count);
+            log.Info("{0} entries in blob cache index", CacheIndex.Count);
         }
 
 
@@ -165,7 +168,7 @@ namespace Akavache
         {
             lock(MemoizedRequests)
             {
-                this.Log().DebugFormat("Invalidating {0}", key);
+                log.Debug("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
 
                 DateTimeOffset dontcare;
@@ -177,7 +180,7 @@ namespace Akavache
                     {
                         File.Delete(GetPathForKey(key));
                     }
-                    catch (FileNotFoundException ex) { this.Log().Warn(ex); }
+                    catch (FileNotFoundException ex) { log.Warn(ex); }
                 });
 
                 actionTaken.OnNext(Unit.Default);
@@ -304,7 +307,7 @@ namespace Akavache
             } 
             catch(Exception ex)
             {
-                this.Log().Warn("Invalid cache index entry", ex);
+                log.Warn("Invalid cache index entry", ex);
                 return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
             }
         }
