@@ -25,16 +25,18 @@ namespace Akavache
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, DateTimeOffset> CacheIndex = new ConcurrentDictionary<string, DateTimeOffset>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
+        protected IFilesystemProvider filesystem;
 
         public IScheduler Scheduler { get; protected set; }
 
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
         const char UnicodeSeparator = '\u2029'; // PARAGRAPH SEPARATOR PSEP
 
-        protected PersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null)
+        protected PersistentBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null)
         {
             this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -43,12 +45,8 @@ namespace Akavache
             // "already completed and cached reads"
             MemoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
                 (x,c) => FetchOrWriteBlobFromDisk(x,c,false), 20);
-
-            if (!Directory.Exists(CacheDirectory))
-            {
-                this.Log().WarnFormat("Creating cache directory '{0}'", CacheDirectory);
-                (new DirectoryInfo(CacheDirectory)).CreateRecursive();
-            }
+                
+            filesystem.CreateRecursive(CacheDirectory);
 
             FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
@@ -79,7 +77,7 @@ namespace Akavache
         }
 
         class CPersistentBlobCache : PersistentBlobCache {
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, RxApp.TaskpoolScheduler) { }
+            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
         }
 
         public void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
@@ -175,7 +173,7 @@ namespace Akavache
                 {
                     try
                     {
-                        File.Delete(GetPathForKey(key));
+                        filesystem.Delete(GetPathForKey(key));
                     }
                     catch (FileNotFoundException ex) { this.Log().Warn(ex); }
                 });
@@ -244,7 +242,7 @@ namespace Akavache
             var ms = new MemoryStream();
 
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
-            Utility.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read)
+            filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
@@ -260,7 +258,7 @@ namespace Akavache
 
             var files = Observable.Zip(
                 BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
-                Utility.SafeOpenFileAsync(GetPathForKey(key), FileMode.Create, FileAccess.Write, FileShare.None),
+                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Create, FileAccess.Write, FileShare.None),
                 (from, to) => new { from, to }
             );
 

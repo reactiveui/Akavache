@@ -12,7 +12,7 @@ namespace Akavache.Tests
 {
     class TEncryptedBlobCache : EncryptedBlobCache
     {
-        public TEncryptedBlobCache (string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, scheduler) { }
+        public TEncryptedBlobCache (string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
     }
 
     public class EncryptedBlobCacheFixture : IEnableLogger
