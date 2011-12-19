@@ -14,4 +14,8 @@ namespace Akavache
 
         IScheduler Scheduler { get; }
     }
+
+    public interface ISecureBlobCache : IBlobCache
+    {
+    }
 }

@@ -52,7 +52,7 @@ namespace Akavache
 
             FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
-                .Select(x => Encoding.UTF8.GetString(x).Split('\n')
+                .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
                     .SelectMany(ParseCacheIndexEntry)
                     .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, DateTimeOffset>(x))

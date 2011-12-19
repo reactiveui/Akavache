@@ -7,10 +7,6 @@ using ReactiveUI;
 
 namespace Akavache
 {
-    public interface ISecureBlobCache : IBlobCache
-    {
-    }
-
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
         static Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => new CEncryptedBlobCache(GetDefaultCacheDirectory()));

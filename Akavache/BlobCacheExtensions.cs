@@ -23,7 +23,7 @@ namespace Akavache
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .Select(x => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x)));
+                .Select(x => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x, 0, x.Length)));
         }
 
         public static IObservable<IEnumerable<T>> GetAllObjects<T>(this IBlobCache This)
@@ -138,9 +138,13 @@ namespace Akavache
             try
             {
                 var ret = new BitmapImage();
+#if SILVERLIGHT
+                ret.SetSource(new MemoryStream(compressedImage));
+#else
                 ret.BeginInit();
                 ret.StreamSource = new MemoryStream(compressedImage);
                 ret.EndInit();
+#endif
                 return Observable.Return(ret);
             }
             catch (Exception ex)
