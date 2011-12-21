@@ -40,6 +40,15 @@ namespace Akavache
                 .ToList();
         }
 
+        public static IObservable<T> GetOrFetchObject<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        {
+            return This.GetObjectAsync<T>(key).Catch<T, KeyNotFoundException>(_ =>
+            {
+                return fetchFunc()
+                    .Do(x => This.InsertObject(key, x, absoluteExpiration));
+            });
+        }
+
         static string GetTypePrefixedKey(string key, Type type)
         {
             return type.FullName + "___" + key;
