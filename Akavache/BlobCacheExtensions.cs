@@ -49,6 +49,22 @@ namespace Akavache
             });
         }
 
+        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        {
+            var fail = Observable.Defer(() => fetchFunc())
+                .Finally(() => This.Invalidate(key));
+
+            var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
+                .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
+
+            return result.SelectMany(x =>
+            {
+                return x.Item2 ?
+                    Observable.Return(x.Item1) :
+                    Observable.Empty<T>();
+            }).Concat(fail);
+        }
+
         static string GetTypePrefixedKey(string key, Type type)
         {
             return type.FullName + "___" + key;

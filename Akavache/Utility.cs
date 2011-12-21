@@ -63,7 +63,7 @@ namespace Akavache
                         subj.OnCompleted();
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     subj.OnError(new FileNotFoundException());
                 }
