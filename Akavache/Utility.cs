@@ -20,10 +20,14 @@ namespace Akavache
 
         public static string GetMd5Hash(string input)
         {
+#if SILVERLIGHT
+            using (var md5Hasher = new MD5Managed())
+#else
             using (var md5Hasher = MD5.Create())
+#endif
             {
                 // Convert the input string to a byte array and compute the hash.
-                var data = md5Hasher.ComputeHash(Encoding.Default.GetBytes(input));
+                var data = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(input));
                 var sBuilder = new StringBuilder();
                 foreach (var item in data)
                 {
@@ -51,11 +55,15 @@ namespace Akavache
                         subj.OnError(new FileNotFoundException());
                     } else
                     {
+#if SILVERLIGHT
+                        subj.OnNext(new FileStream(path, mode, access, share, 4096));
+#else
                         subj.OnNext(new FileStream(path, mode, access, share, 4096, true));
+#endif
                         subj.OnCompleted();
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     subj.OnError(new FileNotFoundException());
                 }

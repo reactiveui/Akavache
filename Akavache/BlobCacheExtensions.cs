@@ -23,7 +23,7 @@ namespace Akavache
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .Select(x => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x)));
+                .Select(x => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x, 0, x.Length)));
         }
 
         public static IObservable<IEnumerable<T>> GetAllObjects<T>(this IBlobCache This)
@@ -47,6 +47,22 @@ namespace Akavache
                 return fetchFunc()
                     .Do(x => This.InsertObject(key, x, absoluteExpiration));
             });
+        }
+
+        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        {
+            var fail = Observable.Defer(() => fetchFunc())
+                .Finally(() => This.Invalidate(key));
+
+            var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
+                .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
+
+            return result.SelectMany(x =>
+            {
+                return x.Item2 ?
+                    Observable.Return(x.Item1) :
+                    Observable.Empty<T>();
+            }).Concat(fail);
         }
 
         static string GetTypePrefixedKey(string key, Type type)
@@ -147,9 +163,13 @@ namespace Akavache
             try
             {
                 var ret = new BitmapImage();
+#if SILVERLIGHT
+                ret.SetSource(new MemoryStream(compressedImage));
+#else
                 ret.BeginInit();
                 ret.StreamSource = new MemoryStream(compressedImage);
                 ret.EndInit();
+#endif
                 return Observable.Return(ret);
             }
             catch (Exception ex)

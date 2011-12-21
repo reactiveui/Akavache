@@ -7,10 +7,6 @@ using ReactiveUI;
 
 namespace Akavache
 {
-    public interface ISecureBlobCache : IBlobCache
-    {
-    }
-
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
         static Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => new CEncryptedBlobCache(GetDefaultCacheDirectory()));
@@ -19,12 +15,12 @@ namespace Akavache
             get { return _Current.Value; }
         }
 
-        protected EncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, scheduler)
+        protected EncryptedBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null) : base(cacheDirectory, filesystemProvider, scheduler)
         {
         }
 
         class CEncryptedBlobCache : EncryptedBlobCache {
-            public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, RxApp.TaskpoolScheduler) { }
+            public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)

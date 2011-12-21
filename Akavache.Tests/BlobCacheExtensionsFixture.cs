@@ -18,7 +18,7 @@ namespace Akavache.Tests
     public class BlobCacheExtensionsFixture
     {
         [Fact]
-        public void DownloadUrlFact()
+        public void DownloadUrlTest()
         {
             string path;
 
@@ -52,6 +52,43 @@ namespace Akavache.Tests
             Assert.Equal(input.Blog, result.Blog);
             Assert.Equal(input.Bio, result.Bio);
             Assert.Equal(input.Name, result.Name);
+        }
+
+        [Fact]
+        public void FetchFunctionShouldBeCalledOnceForGetOrFetchObject()
+        {
+            int fetchCount = 0;
+            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
+            {
+                fetchCount++;
+                return Observable.Return(new Tuple<string, string>("Foo", "Bar"));
+            });
+
+            string path;
+            using(Utility.WithEmptyDirectory(out path))
+            {
+                using(var fixture = new TPersistentBlobCache(path))
+                {
+                    var result = fixture.GetOrFetchObject("Test", fetcher).First();
+                    Assert.Equal("Foo", result.Item1);
+                    Assert.Equal("Bar", result.Item2);
+                    Assert.Equal(1, fetchCount);
+
+                    // 2nd time around, we should be grabbing from cache
+                    result = fixture.GetOrFetchObject("Test", fetcher).First();
+                    Assert.Equal("Foo", result.Item1);
+                    Assert.Equal("Bar", result.Item2);
+                    Assert.Equal(1, fetchCount);
+                }
+
+                using(var fixture = new TPersistentBlobCache(path))
+                {
+                    var result = fixture.GetOrFetchObject("Test", fetcher).First();
+                    Assert.Equal("Foo", result.Item1);
+                    Assert.Equal("Bar", result.Item2);
+                    Assert.Equal(1, fetchCount);
+                }
+            }
         }
     }
 }

@@ -20,7 +20,6 @@ namespace Akavache
 
         static IBlobCache localMachine;
         static IBlobCache userAccount;
-        static ISecureBlobCache secure;
 
         public static IBlobCache LocalMachine
         {
@@ -34,10 +33,14 @@ namespace Akavache
             set { userAccount = value; }
         }
 
+#if !SILVERLIGHT
+        static ISecureBlobCache secure;
+
         public static ISecureBlobCache Secure
         {
             get { return secure ?? EncryptedBlobCache.Current; }
             set { secure = value; }
         }
+#endif
     }
 }

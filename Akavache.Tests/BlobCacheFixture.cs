@@ -14,7 +14,7 @@ namespace Akavache.Tests
 {
     class TPersistentBlobCache : PersistentBlobCache
     {
-        public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, scheduler) { }
+        public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
     }
 
     public class BlobCacheFixture

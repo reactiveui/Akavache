@@ -59,6 +59,7 @@
     <Compile Include="IBlobCache.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
