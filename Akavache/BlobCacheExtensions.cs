@@ -9,6 +9,10 @@ using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
 using ReactiveUI;
 
+#if SILVERLIGHT
+using System.Net.Browser;
+#endif
+
 namespace Akavache
 {
     public static class JsonSerializationMixin
@@ -73,6 +77,14 @@ namespace Akavache
 
     public static class HttpMixin
     {
+#if SILVERLIGHT
+        static HttpMixin()
+        {
+            WebRequest.RegisterPrefix("http://", WebRequestCreator.ClientHttp);
+            WebRequest.RegisterPrefix("https://", WebRequestCreator.ClientHttp);
+        }
+#endif
+
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var fail = Observable.Defer(() =>
