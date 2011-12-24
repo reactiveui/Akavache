@@ -176,8 +176,8 @@ namespace Akavache
                     {
                         filesystem.Delete(GetPathForKey(key));
                     }
-                    catch (FileNotFoundException ex) { This.Log().Warn(ex); }
-                    catch (IsolatedStorageException ex) { This.Log().Warn(ex); }
+                    catch (FileNotFoundException ex) { this.Log().Warn(ex); }
+                    catch (IsolatedStorageException ex) { this.Log().Warn(ex); }
                 });
 
                 actionTaken.OnNext(Unit.Default);
