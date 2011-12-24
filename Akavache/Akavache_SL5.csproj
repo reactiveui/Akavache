@@ -68,6 +68,7 @@
     <Compile Include="BlobCacheExtensions.cs" />
     <Compile Include="ConcurrentDictionary.cs" />
     <Compile Include="IBlobCache.cs" />
+    <Compile Include="IsolatedStorageProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="PersistentBlobCache.cs" />

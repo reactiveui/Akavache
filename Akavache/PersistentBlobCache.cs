@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -175,7 +176,8 @@ namespace Akavache
                     {
                         filesystem.Delete(GetPathForKey(key));
                     }
-                    catch (FileNotFoundException ex) { this.Log().Warn(ex); }
+                    catch (FileNotFoundException ex) { This.Log().Warn(ex); }
+                    catch (IsolatedStorageException ex) { This.Log().Warn(ex); }
                 });
 
                 actionTaken.OnNext(Unit.Default);
@@ -246,6 +248,7 @@ namespace Akavache
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .Multicast(ret).Connect();
 
             return ret;
