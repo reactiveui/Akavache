@@ -56,11 +56,12 @@ namespace Akavache
                     } else
                     {
 #if SILVERLIGHT
-                        subj.OnNext(new FileStream(path, mode, access, share, 4096));
+                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096), RxApp.TaskpoolScheduler)
+                            .Subscribe(subj);
 #else
-                        subj.OnNext(new FileStream(path, mode, access, share, 4096, true));
+                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), RxApp.TaskpoolScheduler)
+                            .Subscribe(subj);
 #endif
-                        subj.OnCompleted();
                     }
                 }
                 catch (Exception)
