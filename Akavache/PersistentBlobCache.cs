@@ -65,12 +65,14 @@ namespace Akavache
                 .Select(x => new ConcurrentDictionary<string, DateTimeOffset>(x))
                 .Subscribe(x => CacheIndex = x);
 
+            //flushThreadSubscription = Disposable.Empty;
+
             flushThreadSubscription = actionTaken
                 .Where(_ => Scheduler.Now - lastFlushTime > TimeSpan.FromSeconds(5))
                 .SelectMany(_ => FlushCacheIndex(true))
                 .Subscribe(_ =>
                 {
-                    this.Log().Debug("Flushing cache");
+                    log.Debug("Flushing cache");
                     lastFlushTime = Scheduler.Now;
                 });
 
@@ -194,7 +196,14 @@ namespace Akavache
 
             }
                 
-	        deleteMe.Retry();
+            try
+            {
+                deleteMe.Retry(1);
+            } 
+            catch(Exception ex)
+            {
+                log.Warn("Really can't delete key: " + key, ex);
+            }
         }
 
         public void InvalidateAll()
