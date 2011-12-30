@@ -7,6 +7,7 @@ using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
@@ -26,7 +27,11 @@ namespace Akavache
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, DateTimeOffset> CacheIndex = new ConcurrentDictionary<string, DateTimeOffset>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
+
         protected IFilesystemProvider filesystem;
+
+        readonly IDisposable flushThreadSubscription;
+        DateTimeOffset lastFlushTime = DateTimeOffset.MinValue;
 
         public IScheduler Scheduler { get; protected set; }
 
@@ -57,9 +62,14 @@ namespace Akavache
                 .Select(x => new ConcurrentDictionary<string, DateTimeOffset>(x))
                 .Subscribe(x => CacheIndex = x);
 
-            actionTaken
-                .Throttle(TimeSpan.FromSeconds(2), RxApp.TaskpoolScheduler)
-                .Subscribe(_ => FlushCacheIndex(false));
+            flushThreadSubscription = actionTaken
+                .Where(_ => Scheduler.Now - lastFlushTime > TimeSpan.FromSeconds(5))
+                .SelectMany(_ => FlushCacheIndex(true))
+                .Subscribe(_ =>
+                {
+                    this.Log().Debug("Flushing cache");
+                    lastFlushTime = Scheduler.Now;
+                });
 
             this.Log().InfoFormat("{0} entries in blob cache index", CacheIndex.Count);
         }
@@ -100,8 +110,6 @@ namespace Akavache
                 err.LogErrors("Insert").Subscribe(
                     x => CacheIndex[key] = absoluteExpiration ?? DateTimeOffset.MaxValue, 
                     ex => Invalidate(key));
-                
-                actionTaken.OnNext(Unit.Default);
             }
         }
 
@@ -114,7 +122,7 @@ namespace Akavache
                 {
                     Invalidate(key);
                     ret = Observable.Throw<byte[]>(new KeyNotFoundException());
-                    goto leave;
+                    return ret;
                 }
 
                 // There are three scenarios here, and we handle all of them 
@@ -139,8 +147,6 @@ namespace Akavache
                 ret.LogErrors("GetAsync")
                     .Subscribe(x => {}, ex => Invalidate(key)); 
 
-            leave:
-                actionTaken.OnNext(Unit.Default);
                 return ret;
             }
         }
@@ -155,7 +161,6 @@ namespace Akavache
         {
             lock (MemoizedRequests)
             {
-                actionTaken.OnNext(Unit.Default);
                 return CacheIndex.Keys.ToArray();
             }
         }
@@ -180,12 +185,13 @@ namespace Akavache
                     }
                     catch (FileNotFoundException ex) { this.Log().Warn(ex); }
                     catch (IsolatedStorageException ex) { this.Log().Warn(ex); }
+            
+                    actionTaken.OnNext(Unit.Default);
                 };
 
-                actionTaken.OnNext(Unit.Default);
             }
                 
-	    deleteMe.Retry();
+	        deleteMe.Retry();
         }
 
         public void InvalidateAll()
@@ -208,19 +214,26 @@ namespace Akavache
             {
                 requests = MemoizedRequests.CachedValues().ToArray();
                 MemoizedRequests = null;
+
+                actionTaken.OnCompleted();
+                flushThreadSubscription.Dispose();
             }
+
+            IObservable<byte[]> requestChain = null;
 
             if (requests.Length > 0)
             {
                 // Since these are all AsyncSubjects, most of them will replay
                 // immediately, except for the ones still outstanding; we'll 
                 // Merge them all then wait for them all to complete.
-                requests.Merge()
+                requestChain = requests.Merge(System.Reactive.Concurrency.Scheduler.Immediate)
                     .Timeout(TimeSpan.FromSeconds(30), Scheduler)
-                    .Wait();
+                    .Aggregate((acc, x) => x);
             }
 
-            FlushCacheIndex(true).Subscribe(_ => {});
+            requestChain = requestChain ?? Observable.Return(new byte[0]);
+
+            requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => {});
         }
 
         /// <summary>
@@ -268,11 +281,13 @@ namespace Akavache
             var ms = new MemoryStream();
 
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
+
             filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Do(_ => { if (!synchronous) { actionTaken.OnNext(Unit.Default); }})
                 .Multicast(ret).Connect();
 
             return ret;
@@ -297,6 +312,7 @@ namespace Akavache
             files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
+                .Do(_ => { if (!synchronous) { actionTaken.OnNext(Unit.Default); }})
                 .Multicast(ret).Connect();
     
             return ret;

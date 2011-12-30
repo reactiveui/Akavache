@@ -43,6 +43,7 @@ namespace Akavache.Tests
                 {
                     fixture.InsertObject("key", input);
                 }
+
                 using(var fixture = new TPersistentBlobCache(path))
                 {
                     result = fixture.GetObjectAsync<UserObject>("key").First();
