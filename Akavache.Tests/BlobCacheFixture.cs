@@ -12,41 +12,42 @@ using Xunit;
 
 namespace Akavache.Tests
 {
-    class TPersistentBlobCache : PersistentBlobCache
+    public abstract class BlobCacheInterfaceFixture
     {
-        public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
-    }
+        protected abstract IBlobCache CreateBlobCache(string path);
 
-    public class BlobCacheFixture
-    {
         [Fact]
         public void CacheShouldBeAbleToGetAndInsertBlobs()
         {
-            (Scheduler.Immediate).With(sched =>
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
             {
-                var fixture = new TPersistentBlobCache();
+                (Scheduler.Immediate).With(sched =>
+                {
+                    var fixture = CreateBlobCache(path);
 
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-                fixture.Insert("Bar", new byte[] { 4, 5, 6 });
+                    fixture.Insert("Foo", new byte[] {1, 2, 3});
+                    fixture.Insert("Bar", new byte[] {4, 5, 6});
 
-                Assert.Throws<ArgumentNullException>(() =>
-                    fixture.Insert(null, new byte[] { 7, 8, 9 }));
+                    Assert.Throws<ArgumentNullException>(() =>
+                        fixture.Insert(null, new byte[] {7, 8, 9}));
 
-                byte[] output1 = fixture.GetAsync("Foo").First();
-                byte[] output2 = fixture.GetAsync("Bar").First();
+                    byte[] output1 = fixture.GetAsync("Foo").First();
+                    byte[] output2 = fixture.GetAsync("Bar").First();
 
-                Assert.Throws<ArgumentNullException>(() =>
-                    fixture.GetAsync(null).First());
+                    Assert.Throws<ArgumentNullException>(() =>
+                        fixture.GetAsync(null).First());
 
-                Assert.Throws<KeyNotFoundException>(() =>
-                    fixture.GetAsync("Baz").First());
+                    Assert.Throws<KeyNotFoundException>(() =>
+                        fixture.GetAsync("Baz").First());
 
-                Assert.Equal(3, output1.Length);
-                Assert.Equal(3, output2.Length);
+                    Assert.Equal(3, output1.Length);
+                    Assert.Equal(3, output2.Length);
 
-                Assert.Equal(1, output1[0]);
-                Assert.Equal(4, output2[0]);
-            });
+                    Assert.Equal(1, output1[0]);
+                    Assert.Equal(4, output2[0]);
+                });
+            }
         }
 
         [Fact]
@@ -56,12 +57,12 @@ namespace Akavache.Tests
 
             using(Utility.WithEmptyDirectory(out path))
             {
-                using (var fixture = new TPersistentBlobCache(path))
+                using (var fixture = CreateBlobCache(path))
                 {
                     fixture.Insert("Foo", new byte[] { 1, 2, 3 });
                 }   
 
-                using(var fixture = new TPersistentBlobCache(path))
+                using(var fixture = CreateBlobCache(path))
                 {
                     var output = fixture.GetAsync("Foo").First();
                     Assert.Equal(3, output.Length);
@@ -76,7 +77,7 @@ namespace Akavache.Tests
             string path;
 
             using(Utility.WithEmptyDirectory(out path))
-            using (var fixture = new TPersistentBlobCache(path))
+            using (var fixture = CreateBlobCache(path))
             {
                 fixture.Insert("Foo", new byte[] { 1, 2, 3 });
 
@@ -101,7 +102,7 @@ namespace Akavache.Tests
             {
                 (new TestScheduler()).With(sched =>
                 {
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         fixture.Insert("foo", new byte[] {1, 2, 3}, TimeSpan.FromTicks(100));
                         fixture.Insert("bar", new byte[] {4, 5, 6}, TimeSpan.FromTicks(500));
@@ -127,7 +128,7 @@ namespace Akavache.Tests
                     }
 
                     // Serialize out the cache and reify it again
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         byte[] result = null;
                         fixture.GetAsync("bar").Subscribe(x => result = x);
@@ -149,6 +150,32 @@ namespace Akavache.Tests
                     sched.Start();
                 });
             }
+        }
+    }
+
+    public class TPersistentBlobCache : PersistentBlobCache
+    {
+        public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
+    }
+
+    public class PersistentBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new TPersistentBlobCache(path);
+        }
+    }
+
+    public class EncryptedBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new TEncryptedBlobCache(path);
+        }
+
+        public class TEncryptedBlobCache : EncryptedBlobCache
+        {
+            public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
         }
     }
 }
