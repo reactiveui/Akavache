@@ -37,8 +37,9 @@ namespace Akavache
             }
         }
 
-        public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share)
+        public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
+            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             return Observable.Create<FileStream>(subj =>
             {
                 try
@@ -56,10 +57,10 @@ namespace Akavache
                     } else
                     {
 #if SILVERLIGHT
-                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096), RxApp.TaskpoolScheduler)
+                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler)
                             .Subscribe(subj);
 #else
-                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), RxApp.TaskpoolScheduler)
+                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler)
                             .Subscribe(subj);
 #endif
                     }
