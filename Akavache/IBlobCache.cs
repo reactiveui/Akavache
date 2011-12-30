@@ -21,8 +21,9 @@ namespace Akavache
         /// <param name="mode">The file mode</param>
         /// <param name="access">The required access privileges</param>
         /// <param name="share">The allowed file sharing modes.</param>
+        /// <param name="scheduler">The scheduler to schedule the open under.</param>
         /// <returns>A Future result representing the Open file.</returns>
-        IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share);
+        IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler);
 
         /// <summary>
         /// Create a directory and its parents. If the directory already
@@ -82,7 +83,7 @@ namespace Akavache
         /// <summary>
         /// Invalidate all entries in the cache (i.e. clear it). Note that
         /// this method is blocking and incurs a significant performance
-        /// penalty if used while the cache is being used on other threads.
+        /// penalty if used while the cache is being used on other threads. 
         /// </summary>
         void InvalidateAll();
 
