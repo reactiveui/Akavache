@@ -87,6 +87,7 @@ namespace Akavache
             return This.GetObjectAsync<T>(key).Catch<T, KeyNotFoundException>(_ =>
             {
                 return fetchFunc()
+                    .Multicast(new AsyncSubject<T>()).RefCount()
                     .Do(x => This.InsertObject(key, x, absoluteExpiration));
             });
         }
