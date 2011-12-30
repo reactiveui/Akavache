@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading;
 using Akavache;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;
@@ -55,14 +58,14 @@ namespace Akavache.Tests
         {
             string path;
 
-            using(Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-                }   
+                    fixture.Insert("Foo", new byte[] {1, 2, 3});
+                }
 
-                using(var fixture = CreateBlobCache(path))
+                using (var fixture = CreateBlobCache(path))
                 {
                     var output = fixture.GetAsync("Foo").First();
                     Assert.Equal(3, output.Length);
@@ -76,21 +79,21 @@ namespace Akavache.Tests
         {
             string path;
 
-            using(Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
             using (var fixture = CreateBlobCache(path))
             {
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                fixture.Insert("Foo", new byte[] {1, 2, 3});
 
                 var output = fixture.GetAsync("Foo").First();
                 Assert.Equal(3, output.Length);
                 Assert.Equal(1, output[0]);
 
-                fixture.Insert("Foo", new byte[] { 4, 5 });
+                fixture.Insert("Foo", new byte[] {4, 5});
 
                 output = fixture.GetAsync("Foo").First();
                 Assert.Equal(2, output.Length);
                 Assert.Equal(4, output[0]);
-            }   
+            }
         }
 
         [Fact]
@@ -98,7 +101,7 @@ namespace Akavache.Tests
         {
             string path;
 
-            using(Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
             {
                 (new TestScheduler()).With(sched =>
                 {
@@ -151,6 +154,62 @@ namespace Akavache.Tests
                     sched.Start();
                 });
             }
+        }
+
+        [Fact]
+        public void AbuseTheCacheOnATonOfThreads()
+        {
+            var rng = new Random();
+            var keys = Enumerable.Range(0, 10).Select(_ => Guid.NewGuid().ToString()).ToArray();
+
+            var actions = Enumerable.Range(0, 1000)
+                .Select(_ => new {AddOrDelete = rng.Next()%2 == 0, Key = keys[rng.Next(0, keys.Length - 1)], Val = Guid.NewGuid().ToByteArray()})
+                .ToArray();
+
+            var exList = new List<Exception>();
+
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var threads = Enumerable.Range(0, 10).Select(__ => new Thread(() =>
+                {
+                    var prng = new Random();
+                    int start = prng.Next(0, actions.Length);
+
+                    try
+                    {
+                        for(int i = start; i < start + actions.Length; i++)
+                        {
+                            var item = actions[i%actions.Length];
+                            if (prng.Next() % 2 == 0)
+                            {
+                                fixture.GetAsync(item.Key)
+                                    .Catch<byte[], KeyNotFoundException>(_ => Observable.Return(new byte[0]))
+                                    .Subscribe(_ => {}, ex => { lock(exList) { exList.Add(ex);}});
+                                continue;
+                            }
+
+                            if (item.AddOrDelete)
+                            {
+                                fixture.Insert(item.Key, item.Val);
+                            }
+                            else
+                            {
+                                fixture.Invalidate(item.Key);
+                            }
+                        }
+                    } catch (Exception ex)
+                    {
+                        lock(exList) { exList.Add(ex); }
+                    }
+                })).ToArray();
+
+                foreach (var t in threads) { t.Start();}
+                foreach (var t in threads) { t.Join(); }
+            }
+
+            Assert.Equal(0, exList.Count);
         }
     }
 
