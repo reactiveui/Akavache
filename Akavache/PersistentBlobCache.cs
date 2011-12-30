@@ -223,11 +223,32 @@ namespace Akavache
             FlushCacheIndex(true).Subscribe(_ => {});
         }
 
+        /// <summary>
+        /// This method is called immediately before writing any data to disk.
+        /// Override this in encrypting data stores in order to encrypt the
+        /// data.
+        /// </summary>
+        /// <param name="data">The byte data about to be written to disk.</param>
+        /// <param name="scheduler">The scheduler to use if an operation has
+        /// to be deferred. If the operation can be done immediately, use
+        /// Observable.Return and ignore this parameter.</param>
+        /// <returns>A Future result representing the encrypted data</returns>
         protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
             return Observable.Return(data);
         }
 
+        /// <summary>
+        /// This method is called immediately after reading any data to disk.
+        /// Override this in encrypting data stores in order to decrypt the
+        /// data.
+        /// </summary>
+        /// <param name="data">The byte data that has just been read from
+        /// disk.</param>
+        /// <param name="scheduler">The scheduler to use if an operation has
+        /// to be deferred. If the operation can be done immediately, use
+        /// Observable.Return and ignore this parameter.</param>
+        /// <returns>A Future result representing the decrypted data</returns>
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
             return Observable.Return(data);
