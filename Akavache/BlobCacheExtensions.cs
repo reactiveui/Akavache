@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Windows.Media.Imaging;
 using Newtonsoft.Json;

@@ -165,6 +165,7 @@ namespace Akavache
 
         public void Invalidate(string key)
         {
+            Action deleteMe;
             lock(MemoizedRequests)
             {
                 log.Debug("Invalidating {0}", key);
@@ -173,19 +174,21 @@ namespace Akavache
                 DateTimeOffset dontcare;
                 CacheIndex.TryRemove(key, out dontcare);
 
-                var deleteMe = new Action(() =>
+                var path = GetPathForKey(key);
+                deleteMe = () =>
                 {
                     try
                     {
-                        filesystem.Delete(GetPathForKey(key));
+                        filesystem.Delete(path);
                     }
                     catch (FileNotFoundException ex) { log.Warn(ex); }
                     catch (IsolatedStorageException ex) { log.Warn(ex); }
-                });
+                };
 
                 actionTaken.OnNext(Unit.Default);
-                deleteMe.Retry();
             }
+                
+	    deleteMe.Retry();
         }
 
         public void InvalidateAll()
