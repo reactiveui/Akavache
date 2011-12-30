@@ -108,6 +108,7 @@ namespace Akavache.Tests
                         fixture.Insert("bar", new byte[] {4, 5, 6}, TimeSpan.FromTicks(500));
 
                         byte[] result = null;
+                        sched.AdvanceTo(20);
                         fixture.GetAsync("foo").Subscribe(x => result = x);
 
                         // Foo should still be active
