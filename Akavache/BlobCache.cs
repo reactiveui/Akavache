@@ -5,6 +5,10 @@ namespace Akavache
     public static class BlobCache
     {
         static string applicationName;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public static string ApplicationName
         {
             get
@@ -21,12 +25,18 @@ namespace Akavache
         static IBlobCache localMachine;
         static IBlobCache userAccount;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static IBlobCache LocalMachine
         {
             get { return localMachine ?? PersistentBlobCache.LocalMachine; }
             set { localMachine = value; }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static IBlobCache UserAccount
         {
             get { return userAccount ?? PersistentBlobCache.UserAccount; }
@@ -36,6 +46,9 @@ namespace Akavache
 #if !SILVERLIGHT
         static ISecureBlobCache secure;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static ISecureBlobCache Secure
         {
             get { return secure ?? EncryptedBlobCache.Current; }
