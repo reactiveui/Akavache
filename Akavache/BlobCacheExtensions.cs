@@ -114,7 +114,8 @@ namespace Akavache
         public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
             var fail = Observable.Defer(() => fetchFunc())
-                .Finally(() => This.Invalidate(key));
+                .Finally(() => This.Invalidate(key))
+                .Do(x => This.InsertObject(key, x, absoluteExpiration));
 
             var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
                 .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
@@ -124,7 +125,7 @@ namespace Akavache
                 return x.Item2 ?
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
-            }).Concat(fail);
+            }).Concat(fail).Multicast(new AsyncSubject<T>()).RefCount();
         }
 
         static string GetTypePrefixedKey(string key, Type type)
