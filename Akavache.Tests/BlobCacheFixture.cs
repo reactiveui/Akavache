@@ -207,6 +207,8 @@ namespace Akavache.Tests
 
                 foreach (var t in threads) { t.Start();}
                 foreach (var t in threads) { t.Join(); }
+
+                Thread.Sleep(10 * 1000);
             }
 
             Assert.Equal(0, exList.Count);
