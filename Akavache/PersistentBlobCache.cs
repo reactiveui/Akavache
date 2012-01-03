@@ -65,8 +65,9 @@ namespace Akavache
                 .Select(x => new ConcurrentDictionary<string, DateTimeOffset>(x))
                 .Subscribe(x => CacheIndex = x);
 
-            //flushThreadSubscription = Disposable.Empty;
+            flushThreadSubscription = Disposable.Empty;
 
+            /* XXX: Figure out how to do this correctly
             flushThreadSubscription = actionTaken
                 .Where(_ => Scheduler.Now - lastFlushTime > TimeSpan.FromSeconds(5))
                 .SelectMany(_ => FlushCacheIndex(true))
@@ -75,6 +76,7 @@ namespace Akavache
                     log.Debug("Flushing cache");
                     lastFlushTime = Scheduler.Now;
                 });
+            */
 
             log.Info("{0} entries in blob cache index", CacheIndex.Count);
         }
