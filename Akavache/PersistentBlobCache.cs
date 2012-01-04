@@ -296,7 +296,7 @@ namespace Akavache
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Do(_ => { if (!synchronous) { actionTaken.OnNext(Unit.Default); }})
+                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }})
                 .Multicast(ret).Connect();
 
             return ret;
@@ -321,7 +321,7 @@ namespace Akavache
             files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
-                .Do(_ => { if (!synchronous) { actionTaken.OnNext(Unit.Default); }})
+                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }})
                 .Multicast(ret).Connect();
     
             return ret;
