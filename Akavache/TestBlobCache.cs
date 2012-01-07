@@ -109,7 +109,7 @@ namespace Akavache
             });
 
             var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
-            BlobCache.LocalMachine = testCache; BlobCache.Secure = testCache; BlobCache.Secure = testCache;
+            BlobCache.LocalMachine = testCache; BlobCache.Secure = testCache; BlobCache.UserAccount = testCache;
 
             return testCache;
         }
