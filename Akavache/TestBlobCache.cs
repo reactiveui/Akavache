@@ -22,8 +22,14 @@ namespace Akavache
             }
         }
 
+        internal TestBlobCache(Action disposer, IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null) : this(scheduler, initialContents)
+        {
+            inner = Disposable.Create(disposer);
+        }
+
         public IScheduler Scheduler { get; protected set; }
 
+        IDisposable inner = null;
         Dictionary<string, Tuple<DateTimeOffset?, byte[]>> cache = new Dictionary<string, Tuple<DateTimeOffset?, byte[]>>();
 
         public void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
@@ -85,21 +91,27 @@ namespace Akavache
         {
             Scheduler = null;
             cache = null;
+            if (inner != null)
+            {
+                inner.Dispose();
+            }
         }
 
-        public static IDisposable OverrideGlobals(out TestBlobCache testCache, IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
+        public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
             var sec = BlobCache.Secure;
 
-            testCache = new TestBlobCache(scheduler, initialContents);
-            BlobCache.LocalMachine = testCache; BlobCache.Secure = testCache; BlobCache.Secure = testCache;
-
-            return Disposable.Create(() =>
+            var resetBlobCache = new Action(() =>
             {
                 BlobCache.LocalMachine = local; BlobCache.Secure = sec; BlobCache.UserAccount = user;
             });
+
+            var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
+            BlobCache.LocalMachine = testCache; BlobCache.Secure = testCache; BlobCache.Secure = testCache;
+
+            return testCache;
         }
     }
 }
