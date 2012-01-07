@@ -15,7 +15,7 @@ namespace Akavache
 
         public TestBlobCache(IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
         {
-            Scheduler = scheduler ?? Scheduler;
+            Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
             {
                 cache[item.Key] = new Tuple<DateTimeOffset?, byte[]>(null, item.Value);
