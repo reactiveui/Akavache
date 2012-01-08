@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Reflection;
 using System.Threading;
-using Akavache;
 using Microsoft.Reactive.Testing;
-using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
 
@@ -29,11 +24,11 @@ namespace Akavache.Tests
                 {
                     var fixture = CreateBlobCache(path);
 
-                    fixture.Insert("Foo", new byte[] {1, 2, 3});
-                    fixture.Insert("Bar", new byte[] {4, 5, 6});
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                    fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
                     Assert.Throws<ArgumentNullException>(() =>
-                        fixture.Insert(null, new byte[] {7, 8, 9}));
+                        fixture.Insert(null, new byte[] { 7, 8, 9 }));
 
                     byte[] output1 = fixture.GetAsync("Foo").First();
                     byte[] output2 = fixture.GetAsync("Bar").First();
@@ -62,7 +57,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    fixture.Insert("Foo", new byte[] {1, 2, 3});
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 });
                 }
 
                 using (var fixture = CreateBlobCache(path))
@@ -82,13 +77,13 @@ namespace Akavache.Tests
             using (Utility.WithEmptyDirectory(out path))
             using (var fixture = CreateBlobCache(path))
             {
-                fixture.Insert("Foo", new byte[] {1, 2, 3});
+                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
 
                 var output = fixture.GetAsync("Foo").First();
                 Assert.Equal(3, output.Length);
                 Assert.Equal(1, output[0]);
 
-                fixture.Insert("Foo", new byte[] {4, 5});
+                fixture.Insert("Foo", new byte[] { 4, 5 });
 
                 output = fixture.GetAsync("Foo").First();
                 Assert.Equal(2, output.Length);
@@ -107,8 +102,8 @@ namespace Akavache.Tests
                 {
                     using (var fixture = CreateBlobCache(path))
                     {
-                        fixture.Insert("foo", new byte[] {1, 2, 3}, TimeSpan.FromTicks(100));
-                        fixture.Insert("bar", new byte[] {4, 5, 6}, TimeSpan.FromTicks(500));
+                        fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromTicks(100));
+                        fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromTicks(500));
 
                         byte[] result = null;
                         sched.AdvanceTo(20);
@@ -163,7 +158,7 @@ namespace Akavache.Tests
             var keys = Enumerable.Range(0, 10).Select(_ => Guid.NewGuid().ToString()).ToArray();
 
             var actions = Enumerable.Range(0, 1000)
-                .Select(_ => new {AddOrDelete = rng.Next()%2 == 0, Key = keys[rng.Next(0, keys.Length - 1)], Val = Guid.NewGuid().ToByteArray()})
+                .Select(_ => new { AddOrDelete = rng.Next() % 2 == 0, Key = keys[rng.Next(0, keys.Length - 1)], Val = Guid.NewGuid().ToByteArray() })
                 .ToArray();
 
             var exList = new List<Exception>();
@@ -179,14 +174,14 @@ namespace Akavache.Tests
 
                     try
                     {
-                        for(int i = start; i < start + actions.Length; i++)
+                        for (int i = start; i < start + actions.Length; i++)
                         {
-                            var item = actions[i%actions.Length];
+                            var item = actions[i % actions.Length];
                             if (prng.Next() % 2 == 0)
                             {
                                 fixture.GetAsync(item.Key)
                                     .Catch<byte[], KeyNotFoundException>(_ => Observable.Return(new byte[0]))
-                                    .Subscribe(_ => {}, ex => { lock(exList) { exList.Add(ex);}});
+                                    .Subscribe(_ => { }, ex => { lock (exList) { exList.Add(ex); } });
                                 continue;
                             }
 
@@ -199,19 +194,29 @@ namespace Akavache.Tests
                                 fixture.Invalidate(item.Key);
                             }
                         }
-                    } catch (Exception ex)
+                    }
+                    catch (Exception ex)
                     {
-                        lock(exList) { exList.Add(ex); }
+                        lock (exList) { exList.Add(ex); }
                     }
                 })).ToArray();
 
-                foreach (var t in threads) { t.Start();}
+                foreach (var t in threads) { t.Start(); }
                 foreach (var t in threads) { t.Join(); }
 
                 Thread.Sleep(10 * 1000);
             }
 
             Assert.Equal(0, exList.Count);
+        }
+
+        [Fact]
+        public void DisposedCacheThrowsObjectDisposedException()
+        {
+            var cache = CreateBlobCache("somepath");
+            cache.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }));
         }
     }
 
