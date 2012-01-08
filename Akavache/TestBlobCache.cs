@@ -4,13 +4,12 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text;
 
 namespace Akavache
 {
     public class TestBlobCache : ISecureBlobCache
     {
-        public TestBlobCache(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) : 
+        public TestBlobCache(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) :
             this(scheduler, (IEnumerable<KeyValuePair<string, byte[]>>)initialContents) { }
 
         public TestBlobCache(IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
@@ -22,19 +21,22 @@ namespace Akavache
             }
         }
 
-        internal TestBlobCache(Action disposer, IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null) : this(scheduler, initialContents)
+        internal TestBlobCache(Action disposer, IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
+            : this(scheduler, initialContents)
         {
             inner = Disposable.Create(disposer);
         }
 
         public IScheduler Scheduler { get; protected set; }
 
-        IDisposable inner = null;
+        readonly IDisposable inner = null;
+        bool disposed;
         Dictionary<string, Tuple<DateTimeOffset?, byte[]>> cache = new Dictionary<string, Tuple<DateTimeOffset?, byte[]>>();
 
         public void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
         {
-            lock(cache)
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            lock (cache)
             {
                 cache[key] = new Tuple<DateTimeOffset?, byte[]>(absoluteExpiration, data);
             }
@@ -42,7 +44,8 @@ namespace Akavache
 
         public IObservable<byte[]> GetAsync(string key)
         {
-            lock(cache)
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            lock (cache)
             {
                 if (!cache.ContainsKey(key))
                 {
@@ -62,7 +65,8 @@ namespace Akavache
 
         public IEnumerable<string> GetAllKeys()
         {
-            lock(cache)
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            lock (cache)
             {
                 return cache.Keys.ToArray();
             }
@@ -70,7 +74,8 @@ namespace Akavache
 
         public void Invalidate(string key)
         {
-            lock(cache)
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            lock (cache)
             {
                 if (cache.ContainsKey(key))
                 {
@@ -81,6 +86,7 @@ namespace Akavache
 
         public void InvalidateAll()
         {
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
                 cache.Clear();
@@ -95,6 +101,7 @@ namespace Akavache
             {
                 inner.Dispose();
             }
+            disposed = true;
         }
 
         public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
