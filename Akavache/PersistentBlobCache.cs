@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.IsolatedStorage;
@@ -27,7 +27,7 @@ namespace Akavache
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, DateTimeOffset> CacheIndex = new ConcurrentDictionary<string, DateTimeOffset>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
-
+        bool disposed;
         protected IFilesystemProvider filesystem;
 
         readonly IDisposable flushThreadSubscription;
@@ -50,8 +50,8 @@ namespace Akavache
             // we don't have to keep a separate list of "in-flight reads" vs
             // "already completed and cached reads"
             MemoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
-                (x,c) => FetchOrWriteBlobFromDisk(x,c,false), 20);
-                
+                (x, c) => FetchOrWriteBlobFromDisk(x, c, false), 20);
+
             filesystem.CreateRecursive(CacheDirectory);
 
             FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
@@ -78,23 +78,25 @@ namespace Akavache
 
 
         static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultLocalMachineCacheDirectory()));
-        public static IBlobCache LocalMachine 
+        public static IBlobCache LocalMachine
         {
-            get { return _LocalMachine.Value;  }
+            get { return _LocalMachine.Value; }
         }
 
         static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultRoamingCacheDirectory()));
-        public static IBlobCache UserAccount 
+        public static IBlobCache UserAccount
         {
-            get { return _UserAccount.Value;  }
+            get { return _UserAccount.Value; }
         }
 
-        class CPersistentBlobCache : PersistentBlobCache {
+        class CPersistentBlobCache : PersistentBlobCache
+        {
             public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
         }
 
         public void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
             if (key == null || data == null)
             {
                 throw new ArgumentNullException();
@@ -102,7 +104,7 @@ namespace Akavache
 
             // NB: Since FetchOrWriteBlobFromDisk is guaranteed to not block,
             // we never sit on this lock for any real length of time
-            lock(MemoizedRequests)
+            lock (MemoizedRequests)
             {
                 MemoizedRequests.Invalidate(key);
                 var err = MemoizedRequests.Get(key, data);
@@ -110,14 +112,16 @@ namespace Akavache
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
                 err.LogErrors("Insert").Subscribe(
-                    x => CacheIndex[key] = absoluteExpiration ?? DateTimeOffset.MaxValue, 
+                    x => CacheIndex[key] = absoluteExpiration ?? DateTimeOffset.MaxValue,
                     ex => Invalidate(key));
             }
         }
 
         public IObservable<byte[]> GetAsync(string key)
         {
-            lock(MemoizedRequests)
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
+            lock (MemoizedRequests)
             {
                 IObservable<byte[]> ret;
                 if (IsKeyStale(key))
@@ -147,7 +151,7 @@ namespace Akavache
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
                 ret.LogErrors("GetAsync")
-                    .Subscribe(x => {}, ex => Invalidate(key)); 
+                    .Subscribe(x => { }, ex => Invalidate(key));
 
                 return ret;
             }
@@ -155,12 +159,16 @@ namespace Akavache
 
         bool IsKeyStale(string key)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             DateTimeOffset value;
             return (CacheIndex.TryGetValue(key, out value) && value < Scheduler.Now);
         }
 
         public IEnumerable<string> GetAllKeys()
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             lock (MemoizedRequests)
             {
                 return CacheIndex.Keys.ToArray();
@@ -169,8 +177,10 @@ namespace Akavache
 
         public void Invalidate(string key)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             Action deleteMe;
-            lock(MemoizedRequests)
+            lock (MemoizedRequests)
             {
                 this.Log().DebugFormat("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
@@ -192,12 +202,12 @@ namespace Akavache
                 };
 
             }
-                
+
             try
             {
                 deleteMe.Retry(1);
-            } 
-            catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 this.Log().Warn("Really can't delete key: " + key, ex);
             }
@@ -205,9 +215,11 @@ namespace Akavache
 
         public void InvalidateAll()
         {
-            lock(MemoizedRequests)
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
+            lock (MemoizedRequests)
             {
-                foreach(var key in CacheIndex.Keys.ToArray())
+                foreach (var key in CacheIndex.Keys.ToArray())
                 {
                     Invalidate(key);
                 }
@@ -219,7 +231,7 @@ namespace Akavache
             // We need to make sure that all outstanding writes are flushed
             // before we bail
             AsyncSubject<byte[]>[] requests;
-            lock(MemoizedRequests)
+            lock (MemoizedRequests)
             {
                 requests = MemoizedRequests.CachedValues().ToArray();
                 MemoizedRequests = null;
@@ -242,7 +254,8 @@ namespace Akavache
 
             requestChain = requestChain ?? Observable.Return(new byte[0]);
 
-            requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => {});
+            requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => { });
+            disposed = true;
         }
 
         /// <summary>
@@ -257,6 +270,8 @@ namespace Akavache
         /// <returns>A Future result representing the encrypted data</returns>
         protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             return Observable.Return(data);
         }
 
@@ -273,17 +288,21 @@ namespace Akavache
         /// <returns>A Future result representing the decrypted data</returns>
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             return Observable.Return(data);
         }
 
         AsyncSubject<byte[]> FetchOrWriteBlobFromDisk(string key, object byteData, bool synchronous)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             // If this is secretly a write, dispatch to WriteBlobToDisk (we're 
             // kind of abusing the 'context' variable from MemoizingMRUCache 
             // here a bit)
             if (byteData != null)
             {
-                return WriteBlobToDisk(key, (byte[]) byteData, synchronous);
+                return WriteBlobToDisk(key, (byte[])byteData, synchronous);
             }
 
             var ret = new AsyncSubject<byte[]>();
@@ -296,7 +315,7 @@ namespace Akavache
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }})
+                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
                 .Multicast(ret).Connect();
 
             return ret;
@@ -304,6 +323,8 @@ namespace Akavache
 
         AsyncSubject<byte[]> WriteBlobToDisk(string key, byte[] byteData, bool synchronous)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             var ret = new AsyncSubject<byte[]>();
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
 
@@ -321,15 +342,17 @@ namespace Akavache
             files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
-                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }})
+                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
                 .Multicast(ret).Connect();
-    
+
             return ret;
         }
 
         IObservable<Unit> FlushCacheIndex(bool synchronous)
         {
-            var index = CacheIndex.Select(x => 
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
+            var index = CacheIndex.Select(x =>
                 String.Format(CultureInfo.InvariantCulture, "{0}{3}{1}{3}{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks, UnicodeSeparator));
 
             return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
@@ -338,6 +361,8 @@ namespace Akavache
 
         IEnumerable<KeyValuePair<string, DateTimeOffset>> ParseCacheIndexEntry(string s)
         {
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+
             if (String.IsNullOrWhiteSpace(s))
             {
                 return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
@@ -350,9 +375,9 @@ namespace Akavache
                     Int64.Parse(parts[1], CultureInfo.InvariantCulture),
                     new TimeSpan(Int64.Parse(parts[2], CultureInfo.InvariantCulture)));
 
-                return new[] {new KeyValuePair<string, DateTimeOffset>(parts[0], time)};
-            } 
-            catch(Exception ex)
+                return new[] { new KeyValuePair<string, DateTimeOffset>(parts[0], time) };
+            }
+            catch (Exception ex)
             {
                 this.Log().Warn("Invalid cache index entry", ex);
                 return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
