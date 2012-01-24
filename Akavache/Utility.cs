@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -40,7 +41,9 @@ namespace Akavache
         public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
-            return Observable.Create<FileStream>(subj =>
+            var ret = new AsyncSubject<FileStream>();
+
+            Observable.Start(() =>
             {
                 try
                 {
@@ -50,28 +53,32 @@ namespace Akavache
                         FileMode.CreateNew,
                         FileMode.OpenOrCreate,
                     };
-    
+
+                    // NB: We do this (even though it's incorrect!) because
+                    // throwing lots of 1st chance exceptions makes debugging
+                    // obnoxious, as well as a bug in VS where it detects
+                    // exceptions caught by Observable.Start as Unhandled.
                     if (!createModes.Contains(mode) && !File.Exists(path))
                     {
-                        subj.OnError(new FileNotFoundException());
-                    } else
-                    {
-#if SILVERLIGHT
-                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler)
-                            .Subscribe(subj);
-#else
-                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler)
-                            .Subscribe(subj);
-#endif
+                        ret.OnError(new FileNotFoundException());
+                        return;
                     }
+
+#if SILVERLIGHT
+                    ret.OnNext(new FileStream(path, mode, access, share, 4096));
+                    ret.OnCompleted();
+#else
+                    ret.OnNext(new FileStream(path, mode, access, share, 4096, true));
+                    ret.OnCompleted();
+#endif
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    subj.OnError(new FileNotFoundException());
+                    ret.OnError(ex);
                 }
-                        
-                return Disposable.Empty;
-            });
+            }, scheduler);
+
+            return ret;
         }
 
         public static void CreateRecursive(this DirectoryInfo This)
