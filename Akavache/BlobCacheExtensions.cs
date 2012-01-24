@@ -113,7 +113,7 @@ namespace Akavache
         /// results (possibly a cached version, then the latest version)</returns>
         public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
-            var fail = Observable.Defer(() => fetchFunc())
+            var fail = Observable.Defer(fetchFunc)
                 .Finally(() => This.Invalidate(key))
                 .Do(x => This.InsertObject(key, x, absoluteExpiration));
 
