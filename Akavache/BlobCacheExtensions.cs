@@ -227,8 +227,8 @@ namespace Akavache
         {
             return This.GetAsync(key)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .ObserveOn(RxApp.DeferredScheduler)
-                .SelectMany(BytesToImage);
+                .SelectMany(BytesToImage)
+                .ObserveOn(RxApp.DeferredScheduler);
         }
 
         /// <summary>
@@ -265,6 +265,7 @@ namespace Akavache
                 ret.BeginInit();
                 ret.StreamSource = new MemoryStream(compressedImage);
                 ret.EndInit();
+                ret.Freeze();
 #endif
                 return Observable.Return(ret);
             }
