@@ -12,6 +12,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using NLog;
 using ReactiveUI;
 
@@ -66,16 +67,14 @@ namespace Akavache
 
             flushThreadSubscription = Disposable.Empty;
 
-            /* XXX: Figure out how to do this correctly
             flushThreadSubscription = actionTaken
-                .Where(_ => Scheduler.Now - lastFlushTime > TimeSpan.FromSeconds(5))
+                .Throttle(TimeSpan.FromSeconds(30), Scheduler)
                 .SelectMany(_ => FlushCacheIndex(true))
                 .Subscribe(_ =>
                 {
                     log.Debug("Flushing cache");
                     lastFlushTime = Scheduler.Now;
                 });
-            */
 
             log.Info("{0} entries in blob cache index", CacheIndex.Count);
         }
@@ -235,9 +234,21 @@ namespace Akavache
             // We need to make sure that all outstanding writes are flushed
             // before we bail
             AsyncSubject<byte[]>[] requests;
+            if (MemoizedRequests == null)
+            {
+                return;
+            }
+
             lock (MemoizedRequests)
             {
-                requests = MemoizedRequests.CachedValues().ToArray();
+                var mq = Interlocked.Exchange(ref MemoizedRequests, null);
+                if (mq == null)
+                {
+                    return;
+                }
+
+                requests = mq.CachedValues().ToArray();
+
                 MemoizedRequests = null;
 
                 actionTaken.OnCompleted();
@@ -354,7 +365,7 @@ namespace Akavache
 
         IObservable<Unit> FlushCacheIndex(bool synchronous)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposed) return Observable.Return(Unit.Default);
 
             var index = CacheIndex.Select(x =>
                 String.Format(CultureInfo.InvariantCulture, "{0}{3}{1}{3}{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks, UnicodeSeparator));
