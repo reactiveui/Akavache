@@ -286,9 +286,9 @@ namespace Akavache
         /// <param name="user">The user name to save.</param>
         /// <param name="password">The associated password</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, DateTimeOffset? absoluteExpiration = null)
+        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host = "github.com", DateTimeOffset? absoluteExpiration = null)
         {
-            This.InsertObject("login", new Tuple<string, string>(user, password), absoluteExpiration);
+            This.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
         }
 
         /// <summary>
@@ -297,9 +297,9 @@ namespace Akavache
         /// OnError's with KeyNotFoundException.
         /// </summary>
         /// <returns>A Future result representing the user/password Tuple.</returns>
-        public static IObservable<Tuple<string, string>> GetLoginAsync(this ISecureBlobCache This)
+        public static IObservable<Tuple<string, string>> GetLoginAsync(this ISecureBlobCache This, string host = "github.com")
         {
-            return This.GetObjectAsync<Tuple<string, string>>("login");
+            return This.GetObjectAsync<Tuple<string, string>>("login:" + host);
         }
     }
 
@@ -320,9 +320,9 @@ namespace Akavache
             return This.DownloadUrl(url, headers, fetchAlways, This.Scheduler.Now + expiration);
         }
 
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, TimeSpan expiration)
+        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
         {
-            This.SaveLogin(user, password, This.Scheduler.Now + expiration);
+            This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
         }
     }
 }
