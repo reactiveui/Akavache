@@ -132,6 +132,9 @@ namespace Akavache
             () => JsonSerializer.Create(new JsonSerializerSettings()));
         static byte[] SerializeObject<T>(T value)
         {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
+
+#if FALSE
             // NB: The BSON spec doesn't allow you to serialize just a string,
             // so wrap it in an array
             if (typeof(T) == typeof(string))
@@ -139,22 +142,32 @@ namespace Akavache
                 return SerializeObject(new T[] {value});
             }
 
+            var type = typeof(T).FullName;
+            Console.WriteLine(type);
+
             using (var ms = new MemoryStream())
             using (var writer = new BsonWriter(ms))
             {
                 serializer.Value.Serialize(writer, value);
                 return ms.ToArray();
             }
+#endif
         }
 
         static IObservable<T> DeserializeObject<T>(byte[] x)
         {
+            return Observable.Return(JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x)));
+
+#if FALSE
             // NB: The BSON spec doesn't allow you to serialize just a string,
             // so wrap it in an array
             if (typeof(T) == typeof(string))
             {
                 return DeserializeObject<T[]>(x).Select(y => y.First());
             }
+
+            var type = typeof(T).FullName;
+            Console.WriteLine(type);
 
             using (var ms = new MemoryStream(x))
             using (var reader = new BsonReader(ms))
@@ -168,6 +181,7 @@ namespace Akavache
                     return Observable.Throw<T>(ex);
                 }
             }
+#endif
         }
 
         static string GetTypePrefixedKey(string key, Type type)
