@@ -8,6 +8,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using ReactiveUI;
 
 #if SILVERLIGHT
@@ -26,9 +27,8 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         public static void InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            This.Insert(GetTypePrefixedKey(key, typeof(T)), 
-                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value)),
-                absoluteExpiration);
+            var bytes = SerializeObject(value);
+            This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Akavache
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .Select(x => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x, 0, x.Length)));
+                .SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>
@@ -126,6 +126,48 @@ namespace Akavache
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
             }).Concat(fail).Multicast(new AsyncSubject<T>()).RefCount();
+        }
+
+        static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
+            () => JsonSerializer.Create(new JsonSerializerSettings()));
+        static byte[] SerializeObject<T>(T value)
+        {
+            // NB: The BSON spec doesn't allow you to serialize just a string,
+            // so wrap it in an array
+            if (typeof(T) == typeof(string))
+            {
+                return SerializeObject(new T[] {value});
+            }
+
+            using (var ms = new MemoryStream())
+            using (var writer = new BsonWriter(ms))
+            {
+                serializer.Value.Serialize(writer, value);
+                return ms.ToArray();
+            }
+        }
+
+        static IObservable<T> DeserializeObject<T>(byte[] x)
+        {
+            // NB: The BSON spec doesn't allow you to serialize just a string,
+            // so wrap it in an array
+            if (typeof(T) == typeof(string))
+            {
+                return DeserializeObject<T[]>(x).Select(y => y.First());
+            }
+
+            using (var ms = new MemoryStream(x))
+            using (var reader = new BsonReader(ms))
+            {
+                try
+                {
+                    return Observable.Return(serializer.Value.Deserialize<T>(reader));
+                }
+                catch (Exception ex)
+                {
+                    return Observable.Throw<T>(ex);
+                }
+            }
         }
 
         static string GetTypePrefixedKey(string key, Type type)
