@@ -343,6 +343,14 @@ namespace Akavache
         {
             return This.GetObjectAsync<Tuple<string, string>>("login:" + host);
         }
+
+        /// <summary>
+        /// Erases the login associated with the specified host
+        /// </summary>
+        public static void EraseLogin(this ISecureBlobCache This, string host = "default")
+        {
+            This.Invalidate("login:" + host);
+        }
     }
 
     public static class RelativeTimeMixin
