@@ -67,14 +67,17 @@ namespace Akavache
 
             flushThreadSubscription = Disposable.Empty;
 
-            flushThreadSubscription = actionTaken
-                .Throttle(TimeSpan.FromSeconds(30), Scheduler)
-                .SelectMany(_ => FlushCacheIndex(true))
-                .Subscribe(_ =>
-                {
-                    log.Debug("Flushing cache");
-                    lastFlushTime = Scheduler.Now;
-                });
+            if (!RxApp.InUnitTestRunner())
+            {
+                flushThreadSubscription = actionTaken
+                    .Throttle(TimeSpan.FromSeconds(30), Scheduler)
+                    .SelectMany(_ => FlushCacheIndex(true))
+                    .Subscribe(_ =>
+                    {
+                        log.Debug("Flushing cache");
+                        lastFlushTime = Scheduler.Now;
+                    });
+            }
 
             log.Info("{0} entries in blob cache index", CacheIndex.Count);
         }
