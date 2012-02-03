@@ -84,7 +84,7 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrFetchObject<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
-            return This.GetObjectAsync<T>(key).Catch<T, KeyNotFoundException>(_ =>
+            return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
             {
                 return fetchFunc()
                     .Multicast(new AsyncSubject<T>()).RefCount()
