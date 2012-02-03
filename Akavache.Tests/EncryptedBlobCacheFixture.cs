@@ -28,7 +28,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = new TEncryptedBlobCache(path))
                 {
-                    fixture.SaveLogin(secretUser, secretPass);
+                    fixture.SaveLogin(secretUser, secretPass, "github.com");
                 }
 
                 var di = new DirectoryInfo(path);
@@ -57,7 +57,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = new TEncryptedBlobCache(path))
                 {
-                    fixture.SaveLogin(secretUser, secretPass);
+                    fixture.SaveLogin(secretUser, secretPass, "github.com");
                 }
 
                 using (var fixture = new TEncryptedBlobCache(path))
