@@ -156,7 +156,15 @@ namespace Akavache
 
         static IObservable<T> DeserializeObject<T>(byte[] x)
         {
-            return Observable.Return(JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x)));
+            try
+            {
+                var ret = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x));
+                return Observable.Return(ret);
+            } 
+            catch (Exception ex)
+            {
+                return Observable.Throw<T>(ex);
+            }
 
 #if FALSE
             // NB: The BSON spec doesn't allow you to serialize just a string,
