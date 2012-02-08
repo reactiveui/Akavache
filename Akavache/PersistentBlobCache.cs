@@ -125,7 +125,7 @@ namespace Akavache
 
         public IObservable<byte[]> GetAsync(string key)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
             lock (MemoizedRequests)
             {
@@ -288,7 +288,7 @@ namespace Akavache
         /// <returns>A Future result representing the encrypted data</returns>
         protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
             return Observable.Return(data);
         }
@@ -306,6 +306,7 @@ namespace Akavache
         /// <returns>A Future result representing the decrypted data</returns>
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
 
             return Observable.Return(data);
@@ -313,8 +314,6 @@ namespace Akavache
 
         AsyncSubject<byte[]> FetchOrWriteBlobFromDisk(string key, object byteData, bool synchronous)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
-
             // If this is secretly a write, dispatch to WriteBlobToDisk (we're 
             // kind of abusing the 'context' variable from MemoizingMRUCache 
             // here a bit)
@@ -327,6 +326,11 @@ namespace Akavache
             var ms = new MemoryStream();
 
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
+            if (disposed)
+            {
+                Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache")).Multicast(ret).Connect();
+                goto leave;
+            }
 
             filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
@@ -336,15 +340,20 @@ namespace Akavache
                 .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
                 .Multicast(ret).Connect();
 
+        leave:
             return ret;
         }
 
         AsyncSubject<byte[]> WriteBlobToDisk(string key, byte[] byteData, bool synchronous)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
-
             var ret = new AsyncSubject<byte[]>();
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
+
+            if (disposed)
+            {
+                Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache")).Multicast(ret).Connect();
+                goto leave;
+            }
 
             var files = Observable.Zip(
                 BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
@@ -363,6 +372,7 @@ namespace Akavache
                 .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
                 .Multicast(ret).Connect();
 
+        leave:
             return ret;
         }
 
