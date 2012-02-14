@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using ReactiveUI;
 
 #if SILVERLIGHT
@@ -130,7 +130,13 @@ namespace Akavache
 
         static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
             () => JsonSerializer.Create(new JsonSerializerSettings()));
-        static byte[] SerializeObject<T>(T value)
+        
+        internal static byte[] SerializeObject(object value)
+        {
+            return SerializeObject<object>(value);
+        }
+
+        internal static byte[] SerializeObject<T>(T value)
         {
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
 
