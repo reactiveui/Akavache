@@ -10,7 +10,9 @@ namespace Akavache
     public class TestBlobCache : ISecureBlobCache
     {
         public TestBlobCache(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) :
-            this(scheduler, (IEnumerable<KeyValuePair<string, byte[]>>)initialContents) { }
+            this(scheduler, (IEnumerable<KeyValuePair<string, byte[]>>)initialContents)
+        {
+        }
 
         public TestBlobCache(IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
         {
@@ -29,7 +31,7 @@ namespace Akavache
 
         public IScheduler Scheduler { get; protected set; }
 
-        readonly IDisposable inner = null;
+        readonly IDisposable inner;
         bool disposed;
         Dictionary<string, Tuple<DateTimeOffset?, byte[]>> cache = new Dictionary<string, Tuple<DateTimeOffset?, byte[]>>();
 
@@ -112,13 +114,28 @@ namespace Akavache
 
             var resetBlobCache = new Action(() =>
             {
-                BlobCache.LocalMachine = local; BlobCache.Secure = sec; BlobCache.UserAccount = user;
+                BlobCache.LocalMachine = local;
+                BlobCache.Secure = sec;
+                BlobCache.UserAccount = user;
             });
 
             var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
-            BlobCache.LocalMachine = testCache; BlobCache.Secure = testCache; BlobCache.UserAccount = testCache;
+            BlobCache.LocalMachine = testCache;
+            BlobCache.Secure = testCache;
+            BlobCache.UserAccount = testCache;
 
             return testCache;
+        }
+
+        public static TestBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler scheduler = null)
+        {
+            return OverrideGlobals(scheduler, initialContents.ToArray());
+        }
+
+        public static TestBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler scheduler = null)
+        {
+            var initialSerializedContents = initialContents.Select(item => new KeyValuePair<string, byte[]>(item.Key, JsonSerializationMixin.SerializeObject(item.Value))).ToArray();
+            return OverrideGlobals(scheduler, initialSerializedContents);
         }
     }
 }
