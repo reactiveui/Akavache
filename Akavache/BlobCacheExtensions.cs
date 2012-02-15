@@ -125,7 +125,7 @@ namespace Akavache
                 return x.Item2 ?
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
-            }).Concat(fail).Multicast(new AsyncSubject<T>()).RefCount();
+            }).Concat(fail).Multicast(new ReplaySubject<T>()).RefCount();
         }
 
         static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
