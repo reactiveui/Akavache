@@ -87,8 +87,8 @@ namespace Akavache
             return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
             {
                 return fetchFunc()
-                    .Multicast(new AsyncSubject<T>()).RefCount()
-                    .Do(x => This.InsertObject(key, x, absoluteExpiration));
+                    .Do(x => This.InsertObject(key, x, absoluteExpiration))
+                    .Multicast(new AsyncSubject<T>()).RefCount();
             });
         }
 
