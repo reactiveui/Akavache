@@ -1,10 +1,21 @@
 using System;
+using ReactiveUI;
 
 namespace Akavache
 {
     public static class BlobCache
     {
         static string applicationName;
+
+        static BlobCache()
+        {
+            if (RxApp.InUnitTestRunner())
+            {
+                localMachine = new TestBlobCache(RxApp.TaskpoolScheduler);
+                userAccount = new TestBlobCache(RxApp.TaskpoolScheduler);
+                secure = new TestBlobCache(RxApp.TaskpoolScheduler);
+            }
+        }
 
         /// <summary>
         /// 
