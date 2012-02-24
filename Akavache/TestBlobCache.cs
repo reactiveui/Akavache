@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace Akavache
 {
@@ -106,6 +107,7 @@ namespace Akavache
             disposed = true;
         }
 
+        static readonly object gate = 42;
         public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
             var local = BlobCache.LocalMachine;
@@ -117,6 +119,7 @@ namespace Akavache
                 BlobCache.LocalMachine = local;
                 BlobCache.Secure = sec;
                 BlobCache.UserAccount = user;
+                Monitor.Exit(gate);
             });
 
             var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
@@ -124,6 +127,7 @@ namespace Akavache
             BlobCache.Secure = testCache;
             BlobCache.UserAccount = testCache;
 
+            Monitor.Enter(gate);
             return testCache;
         }
 
