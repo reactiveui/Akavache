@@ -309,9 +309,9 @@ namespace Akavache
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. This
         /// Observable is guaranteed to be returned on the UI thread.</returns>
-        public static IObservable<BitmapImage> LoadImageFromUrl(this IBlobCache This, string url)
+        public static IObservable<BitmapImage> LoadImageFromUrl(this IBlobCache This, string url, bool fetchAlways = false)
         {
-            return This.DownloadUrl(url)
+            return This.DownloadUrl(url, null, fetchAlways)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(BytesToImage)
                 .ObserveOn(RxApp.DeferredScheduler);
