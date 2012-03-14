@@ -1,4 +1,5 @@
 using System;
+using System.Reactive.Concurrency;
 using ReactiveUI;
 
 namespace Akavache
@@ -6,6 +7,7 @@ namespace Akavache
     public static class BlobCache
     {
         static string applicationName;
+        static ISecureBlobCache perSession = new TestBlobCache(Scheduler.Immediate);
 
         static BlobCache()
         {
@@ -66,5 +68,14 @@ namespace Akavache
             set { secure = value; }
         }
 #endif
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static ISecureBlobCache InMemory
+        {
+            get { return perSession; }
+            set { perSession = value; }
+        }
     }
 }
