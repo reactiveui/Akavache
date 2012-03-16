@@ -48,7 +48,7 @@ namespace Akavache.Tests
             return Disposable.Create(() => DeleteDirectory(di.FullName));
         }
 
-        public static void Retry(this Action block, int retries = 3)
+        public static void Retry(this Action block, int retries = 2)
         {
             while (true)
             {
@@ -59,12 +59,12 @@ namespace Akavache.Tests
                 }
                 catch (Exception)
                 {
-                    retries--;
                     if (retries == 0)
                     {
-                        Thread.Sleep(10);
                         throw;
                     }
+                    retries--;
+                    Thread.Sleep(10);
                 }
             }
         }
