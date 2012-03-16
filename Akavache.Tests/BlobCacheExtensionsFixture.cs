@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
+using Microsoft.Reactive.Testing;
+using ReactiveUI.Testing;
 using Xunit;
 
 namespace Akavache.Tests
@@ -33,26 +35,31 @@ namespace Akavache.Tests
         [Fact]
         public void ObjectsShouldBeRoundtrippable()
         {
-            string path;
-            var input = new UserObject() {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"};
-            UserObject result;
-
-            using(Utility.WithEmptyDirectory(out path))
+            new TestScheduler().With(sched =>
             {
-                using(var fixture = new TPersistentBlobCache(path))
+                string path;
+                var input = new UserObject() {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"};
+                UserObject result;
+
+                using (Utility.WithEmptyDirectory(out path))
                 {
-                    fixture.InsertObject("key", input);
+                    using (var fixture = new TPersistentBlobCache(path))
+                    {
+                        fixture.InsertObject("key", input);
+                    }
+                    sched.Start();
+                    using (var fixture = new TPersistentBlobCache(path))
+                    {
+                        var action = fixture.GetObjectAsync<UserObject>("key");
+                        sched.Start();
+                        result = action.First();
+                    }
                 }
 
-                using(var fixture = new TPersistentBlobCache(path))
-                {
-                    result = fixture.GetObjectAsync<UserObject>("key").First();
-                }
-            }
-
-            Assert.Equal(input.Blog, result.Blog);
-            Assert.Equal(input.Bio, result.Bio);
-            Assert.Equal(input.Name, result.Name);
+                Assert.Equal(input.Blog, result.Blog);
+                Assert.Equal(input.Bio, result.Bio);
+                Assert.Equal(input.Name, result.Name);
+            });
         }
 
         [Fact]

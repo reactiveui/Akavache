@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
+using Microsoft.Reactive.Testing;
+using ReactiveUI.Testing;
 using Xunit;
 using ReactiveUI;
 
@@ -20,30 +22,34 @@ namespace Akavache.Tests
         [Fact]
         public void NoPlaintextShouldShowUpInCache()
         {
-            const string secretUser = "OmgSekritUser";
-            const string secretPass = "OmgSekritPassword";
-            string path;
-
-            using (Utility.WithEmptyDirectory(out path))
+            new TestScheduler().With(sched =>
             {
-                using (var fixture = new TEncryptedBlobCache(path))
+                const string secretUser = "OmgSekritUser";
+                const string secretPass = "OmgSekritPassword";
+                string path;
+
+                using (Utility.WithEmptyDirectory(out path))
                 {
-                    fixture.SaveLogin(secretUser, secretPass, "github.com");
+                    using (var fixture = new TEncryptedBlobCache(path))
+                    {
+                        fixture.SaveLogin(secretUser, secretPass, "github.com");
+                    }
+                    sched.Start();
+
+                    var di = new DirectoryInfo(path);
+                    var fileList = di.GetFiles().ToArray();
+                    Assert.True(fileList.Length > 1);
+
+                    foreach (var file in fileList)
+                    {
+                        var text = File.ReadAllText(file.FullName, Encoding.UTF8);
+
+                        Assert.False(text.Contains(secretUser));
+                        Assert.False(text.Contains(secretPass));
+                        Assert.False(text.Contains("login"));
+                    }
                 }
-
-                var di = new DirectoryInfo(path);
-                var fileList = di.GetFiles().ToArray();
-                Assert.True(fileList.Length > 1);
-
-                foreach(var file in fileList)
-                {
-                    var text = File.ReadAllText(file.FullName, Encoding.UTF8);
-
-                    Assert.False(text.Contains(secretUser));
-                    Assert.False(text.Contains(secretPass));
-                    Assert.False(text.Contains("login"));
-                }
-            }
+            });
         }
 
         [Fact]
