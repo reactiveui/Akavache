@@ -9,6 +9,7 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ReactiveUI;
 
 #if SILVERLIGHT
@@ -39,9 +40,16 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
+        public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false, Type prefixedType = null)
         {
-            return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
+            if (typeof(T) == typeof(object))
+            {
+                return (IObservable<T>)This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
+                    .SelectMany(DeserializeDynamic);
+            }
+
+            var type = prefixedType ?? typeof(T);
+            return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, type))
                 .SelectMany(DeserializeObject<T>);
         }
 
@@ -151,6 +159,19 @@ namespace Akavache
             catch (Exception ex)
             {
                 return Observable.Throw<T>(ex);
+            }
+        }
+
+        static IObservable<dynamic> DeserializeDynamic(byte[] x)
+        {
+            try
+            {
+                var ret = JObject.Parse(Encoding.UTF8.GetString(x));
+                return Observable.Return(ret);
+            }
+            catch (Exception ex)
+            {
+                return Observable.Throw<dynamic>(ex);
             }
         }
 
