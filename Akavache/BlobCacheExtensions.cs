@@ -253,9 +253,19 @@ namespace Akavache
                 }
         
                 var buf = Encoding.UTF8.GetBytes(content);
-                return Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
-                    .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
-                    .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)());
+                
+                // NB: You'd think that BeginGetResponse would never block, 
+                // seeing as how it's asynchronous. You'd be wrong :-/
+                var ret = new AsyncSubject<WebResponse>();
+                Observable.Start(() =>
+                {
+                    Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
+                        .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
+                        .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
+                        .Multicast(ret).Connect();
+                }, RxApp.TaskpoolScheduler);
+
+                return ret;
             });
         
             return request.Timeout(timeout ?? TimeSpan.FromSeconds(15)).Retry(retries);
