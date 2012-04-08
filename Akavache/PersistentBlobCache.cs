@@ -70,6 +70,7 @@ namespace Akavache
             if (!RxApp.InUnitTestRunner())
             {
                 flushThreadSubscription = actionTaken
+                    .Where(_ => CacheIndex != null)
                     .Throttle(TimeSpan.FromSeconds(30), Scheduler)
                     .SelectMany(_ => FlushCacheIndex(true))
                     .Subscribe(_ =>
