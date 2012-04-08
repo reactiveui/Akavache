@@ -384,7 +384,12 @@ namespace Akavache
                 String.Format(CultureInfo.InvariantCulture, "{0}{3}{1}{3}{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks, UnicodeSeparator));
 
             return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
-                .Select(_ => Unit.Default);
+                .Select(_ => Unit.Default)
+                .Catch<Unit, Exception>(ex =>
+                {
+                    log.WarnException("Couldn't flush cache index", ex);
+                    return Observable.Return(Unit.Default);
+                });
         }
 
         IEnumerable<KeyValuePair<string, DateTimeOffset>> ParseCacheIndexEntry(string s)
