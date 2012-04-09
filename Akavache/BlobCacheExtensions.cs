@@ -42,15 +42,11 @@ namespace Akavache
         /// <returns>A Future result representing the object in the cache.</returns>
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false, Type prefixedType = null)
         {
-            if (typeof(T) == typeof(object))
-            {
-                return (IObservable<T>)This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                    .SelectMany(DeserializeDynamic);
-            }
-
             var type = prefixedType ?? typeof(T);
-            return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, type))
-                .SelectMany(DeserializeObject<T>);
+            var prefixedKey = noTypePrefix ? key : GetTypePrefixedKey(key, type);
+
+            return This.GetAsync(prefixedKey)
+                .SelectMany(bytes => typeof(T) == typeof(object) ? (IObservable<T>)DeserializeDynamic(bytes) : DeserializeObject<T>(bytes));
         }
 
         /// <summary>
