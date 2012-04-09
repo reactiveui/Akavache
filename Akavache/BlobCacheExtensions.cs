@@ -296,9 +296,9 @@ namespace Akavache
         /// OnError's with KeyNotFoundException.
         /// </summary>
         /// <returns>A Future result representing the user/password Tuple.</returns>
-        public static IObservable<Tuple<string, string>> GetLoginAsync(this ISecureBlobCache This)
+        public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache This)
         {
-            return This.GetObjectAsync<Tuple<string, string>>("login");
+            return This.GetObjectAsync<Tuple<string, string>>("login").Select(info => new LoginInfo(info));
         }
     }
 
