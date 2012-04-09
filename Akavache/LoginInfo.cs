@@ -10,7 +10,7 @@ namespace Akavache
             Password = password;
         }
 
-        internal LoginInfo(Tuple<string, string> usernameAndLogin) : this(usernameAndLogin.Item2, usernameAndLogin.Item2)
+        internal LoginInfo(Tuple<string, string> usernameAndLogin) : this(usernameAndLogin.Item1, usernameAndLogin.Item2)
         {
         }
 
