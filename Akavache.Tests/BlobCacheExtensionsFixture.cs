@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
-using System.Threading;
 using Microsoft.Reactive.Testing;
 using ReactiveUI.Testing;
 using Xunit;
@@ -61,24 +60,6 @@ namespace Akavache.Tests
                 Assert.Equal(input.Bio, result.Bio);
                 Assert.Equal(input.Name, result.Name);
             });
-        }
-
-        [Fact]
-        public void DynamicObjectsShouldBeDeserializable()
-        {
-            string path;
-
-            using(Utility.WithEmptyDirectory(out path))
-            using(var fixture = new TPersistentBlobCache(path))
-            {
-                fixture.InsertObject("foo", new Tuple<string, string>("bar", "baz"));
-
-                Thread.Sleep(500);
-
-                dynamic result = fixture.GetObjectAsync<dynamic>("foo", true, typeof(Tuple<string, string>));
-                Assert.Equal("bar", result.Item1);
-                Assert.Equal("baz", result.Item2);
-            }
         }
 
         [Fact]
