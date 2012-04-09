@@ -75,9 +75,9 @@ namespace Akavache.Tests
 
                 Thread.Sleep(500);
 
-                dynamic result = fixture.GetObjectAsync<dynamic>("foo", true, typeof(Tuple<string, string>));
-                Assert.Equal("bar", result.Item1);
-                Assert.Equal("baz", result.Item2);
+                dynamic result = fixture.GetObjectAsync<dynamic>("foo", false, typeof(Tuple<string, string>)).First();
+                Assert.Equal("bar", (string)result.Item1);
+                Assert.Equal("baz", (string)result.Item2);
             }
         }
 
