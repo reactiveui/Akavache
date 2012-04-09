@@ -64,8 +64,8 @@ namespace Akavache.Tests
                 using (var fixture = new TEncryptedBlobCache(path))
                 {
                     var loginInfo = fixture.GetLoginAsync().First();
-                    Assert.Equal(secretUser, loginInfo.Item1);
-                    Assert.Equal(secretPass, loginInfo.Item2);
+                    Assert.Equal(secretUser, loginInfo.UserName);
+                    Assert.Equal(secretPass, loginInfo.Password);
                 }
             }
         }
