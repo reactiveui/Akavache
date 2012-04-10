@@ -215,37 +215,59 @@ namespace Akavache
             int retries = 3,
             TimeSpan? timeout = null)
         {
-            var request = Observable.Defer(() =>
-            {
-                var hwr = WebRequest.Create(uri);
-                if (headers != null)
-                {
-                    foreach(var x in headers)
-                    {
-                        hwr.Headers[x.Key] = x.Value;
-                    }
-                }
-        
-                if (content == null)
-                {
-                    return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
-                }
-        
-                var buf = Encoding.UTF8.GetBytes(content);
-                
-                // NB: You'd think that BeginGetResponse would never block, 
-                // seeing as how it's asynchronous. You'd be wrong :-/
-                var ret = new AsyncSubject<WebResponse>();
-                Observable.Start(() =>
-                {
-                    Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
-                        .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
-                        .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
-                        .Multicast(ret).Connect();
-                }, RxApp.TaskpoolScheduler);
+            IObservable<WebResponse> request;
 
-                return ret;
-            });
+            var hwr = WebRequest.Create(uri);
+            if (headers != null)
+            {
+                foreach(var x in headers)
+                {
+                    hwr.Headers[x.Key] = x.Value;
+                }
+            }
+
+            if (RxApp.InUnitTestRunner()) 
+            {
+                request = Observable.Defer(() => 
+                {
+                    if (content == null) 
+                    {
+                        return Observable.Start(() => hwr.GetResponse(), RxApp.TaskpoolScheduler);
+                    }
+
+                    var buf = Encoding.UTF8.GetBytes(content);
+                    return Observable.Start(() => 
+                    {
+                        hwr.GetRequestStream().Write(buf, 0, buf.Length);
+                        return hwr.GetResponse();
+                    }, RxApp.TaskpoolScheduler);
+                });
+            }
+            else 
+            {
+                request = Observable.Defer(() =>
+                {
+                    if (content == null)
+                    {
+                        return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
+                    }
+            
+                    var buf = Encoding.UTF8.GetBytes(content);
+                    
+                    // NB: You'd think that BeginGetResponse would never block, 
+                    // seeing as how it's asynchronous. You'd be wrong :-/
+                    var ret = new AsyncSubject<WebResponse>();
+                    Observable.Start(() =>
+                    {
+                        Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
+                            .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
+                            .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
+                            .Multicast(ret).Connect();
+                    }, RxApp.TaskpoolScheduler);
+
+                    return ret;
+                });
+            }
         
             return request.Timeout(timeout ?? TimeSpan.FromSeconds(15)).Retry(retries);
         }
