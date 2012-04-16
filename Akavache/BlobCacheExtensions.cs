@@ -128,6 +128,19 @@ namespace Akavache
             }).Concat(fail).Multicast(new ReplaySubject<T>()).RefCount();
         }
 
+        public static void InvalidateObject<T>(this IBlobCache This, string key)
+        {
+            This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
+        }
+
+        public static void InvalidateAllObjects<T>(this IBlobCache This)
+        {
+             foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
+             {
+                 This.Invalidate(key);
+             }
+        }
+
         static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
             () => JsonSerializer.Create(new JsonSerializerSettings()));
         
@@ -154,7 +167,7 @@ namespace Akavache
             }
         }
 
-        static string GetTypePrefixedKey(string key, Type type)
+        internal static string GetTypePrefixedKey(string key, Type type)
         {
             return type.FullName + "___" + key;
         }
@@ -365,7 +378,7 @@ namespace Akavache
         /// </summary>
         public static void EraseLogin(this ISecureBlobCache This, string host = "default")
         {
-            This.Invalidate("login:" + host);
+            This.InvalidateObject<Tuple<string, string>>("login:" + host);
         }
     }
 
