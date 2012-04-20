@@ -335,8 +335,7 @@ namespace Akavache
         {
             return This.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .SelectMany(BytesToImage)
-                .ObserveOn(RxApp.DeferredScheduler);
+                .SelectMany(BytesToImage);
         }
 
         public static IObservable<byte[]> ThrowOnBadImageBuffer(byte[] compressedImage)
