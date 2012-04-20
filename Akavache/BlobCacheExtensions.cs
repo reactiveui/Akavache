@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -183,6 +184,8 @@ namespace Akavache
         }
 #endif
 
+        static readonly ConcurrentDictionary<string, IObservable<byte[]>> inflightWebRequests = new ConcurrentDictionary<string, IObservable<byte[]>>();
+
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
         /// cache. If the data is already in the cache, this returns
@@ -196,13 +199,14 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var fail = Observable.Defer(() =>
+            var fail = inflightWebRequests.GetOrAdd(url, _ => Observable.Defer(() =>
             {
                 return MakeWebRequest(new Uri(url), headers)
                     .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
-            });
+            }).Multicast(new AsyncSubject<byte[]>()).RefCount());
 
-            return (fetchAlways ? fail : This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail));
+            IObservable<byte[]> dontcare;
+            return (fetchAlways ? fail : This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail)).Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
         }
 
         static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
