@@ -20,6 +20,8 @@ namespace Akavache
 {
     public static class JsonSerializationMixin
     {
+        static readonly ConcurrentDictionary<string, object> inflightFetchRequests = new ConcurrentDictionary<string, object>(); 
+
         /// <summary>
         /// Insert an object into the cache, via the JSON serializer.
         /// </summary>
@@ -87,8 +89,10 @@ namespace Akavache
         {
             return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
             {
-                return fetchFunc()
+                object dontcare;
+                return ((IObservable<T>)inflightFetchRequests.GetOrAdd(key, __ => (object)fetchFunc()))
                     .Do(x => This.InsertObject(key, x, absoluteExpiration))
+                    .Finally(() => inflightFetchRequests.TryRemove(key, out dontcare))
                     .Multicast(new AsyncSubject<T>()).RefCount();
             });
         }
