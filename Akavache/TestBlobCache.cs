@@ -20,7 +20,7 @@ namespace Akavache
             Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
             {
-                cache[item.Key] = new Tuple<DateTimeOffset?, byte[]>(null, item.Value);
+                cache[item.Key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, null), item.Value);
             }
         }
 
@@ -34,14 +34,14 @@ namespace Akavache
 
         readonly IDisposable inner;
         bool disposed;
-        Dictionary<string, Tuple<DateTimeOffset?, byte[]>> cache = new Dictionary<string, Tuple<DateTimeOffset?, byte[]>>();
+        Dictionary<string, Tuple<CacheIndexEntry, byte[]>> cache = new Dictionary<string, Tuple<CacheIndexEntry, byte[]>>();
 
         public void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
-                cache[key] = new Tuple<DateTimeOffset?, byte[]>(absoluteExpiration, data);
+                cache[key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, absoluteExpiration), data);
             }
         }
 
@@ -56,13 +56,26 @@ namespace Akavache
                 }
 
                 var item = cache[key];
-                if (item.Item1 != null && Scheduler.Now > item.Item1.Value)
+                if (item.Item1.ExpiresAt != null && Scheduler.Now > item.Item1.ExpiresAt.Value)
                 {
                     cache.Remove(key);
                     return Observable.Throw<byte[]>(new KeyNotFoundException());
                 }
 
                 return Observable.Return(item.Item2, Scheduler);
+            }
+        }
+
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key)
+        {
+            lock (cache)
+            {
+                if (!cache.ContainsKey(key))
+                {
+                    return Observable.Return<DateTimeOffset?>(null);
+                }
+
+                return Observable.Return<DateTimeOffset?>(cache[key].Item1.CreatedAt);
             }
         }
 

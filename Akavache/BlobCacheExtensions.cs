@@ -116,7 +116,10 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version)</returns>
-        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, 
+            string key, 
+            Func<IObservable<T>> fetchFunc, 
+            DateTimeOffset? absoluteExpiration = null)
         {
             var fail = Observable.Defer(fetchFunc)
                 .Finally(() => This.Invalidate(key))
