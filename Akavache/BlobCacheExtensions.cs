@@ -199,14 +199,15 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var fail = inflightWebRequests.GetOrAdd(url, _ => Observable.Defer(() =>
+            var doFetch = new Func<KeyNotFoundException, IObservable<byte[]>>(_ => inflightWebRequests.GetOrAdd(url, __ => Observable.Defer(() =>
             {
                 return MakeWebRequest(new Uri(url), headers)
                     .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
-            }).Multicast(new AsyncSubject<byte[]>()).RefCount());
+            }).Multicast(new AsyncSubject<byte[]>()).RefCount()));
 
             IObservable<byte[]> dontcare;
-            return (fetchAlways ? fail : This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail)).Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
+            var ret = fetchAlways ? doFetch(null) : This.GetAsync(url).Catch(doFetch);
+            return ret.Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
         }
 
         static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
