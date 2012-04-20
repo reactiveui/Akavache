@@ -113,15 +113,23 @@ namespace Akavache
         /// </summary>
         /// <param name="key">The key to store the returned result under.</param>
         /// <param name="fetchFunc"></param>
+        /// <param name="fetchPredicate">An optional Func to determine whether
+        /// the updated item should be fetched. If the cached version isn't found,
+        /// this parameter is ignored and the item is always fetched.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version)</returns>
         public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, 
             string key, 
             Func<IObservable<T>> fetchFunc, 
+            Func<DateTimeOffset, bool> fetchPredicate = null,
             DateTimeOffset? absoluteExpiration = null)
         {
-            var fail = Observable.Defer(fetchFunc)
+            bool foundItemInCache;
+            var fail = Observable.Defer(() => This.GetCreatedAt(key))
+                .Select(x => fetchPredicate != null && x != null ? fetchPredicate(x.Value) : true)
+                .Where(x => x != false)
+                .SelectMany(_ => fetchFunc())
                 .Finally(() => This.Invalidate(key))
                 .Do(x => This.InsertObject(key, x, absoluteExpiration));
 
@@ -130,6 +138,7 @@ namespace Akavache
 
             return result.SelectMany(x =>
             {
+                foundItemInCache = x.Item2;
                 return x.Item2 ?
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
