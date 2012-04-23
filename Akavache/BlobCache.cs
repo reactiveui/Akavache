@@ -1,10 +1,23 @@
 using System;
+using System.Reactive.Concurrency;
+using ReactiveUI;
 
 namespace Akavache
 {
     public static class BlobCache
     {
         static string applicationName;
+        static ISecureBlobCache perSession = new TestBlobCache(Scheduler.Immediate);
+
+        static BlobCache()
+        {
+            if (RxApp.InUnitTestRunner())
+            {
+                localMachine = new TestBlobCache(RxApp.TaskpoolScheduler);
+                userAccount = new TestBlobCache(RxApp.TaskpoolScheduler);
+                secure = new TestBlobCache(RxApp.TaskpoolScheduler);
+            }
+        }
 
         /// <summary>
         /// 
@@ -55,5 +68,14 @@ namespace Akavache
             set { secure = value; }
         }
 #endif
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static ISecureBlobCache InMemory
+        {
+            get { return perSession; }
+            set { perSession = value; }
+        }
     }
 }

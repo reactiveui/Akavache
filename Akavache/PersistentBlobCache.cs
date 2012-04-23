@@ -13,6 +13,8 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using NLog;
+using Newtonsoft.Json;
 using ReactiveUI;
 
 namespace Akavache
@@ -21,11 +23,13 @@ namespace Akavache
     /// This class represents an asynchronous key-value store backed by a 
     /// directory. It stores the last 'n' key requests in memory.
     /// </summary>
-    public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
+    public abstract class PersistentBlobCache : IBlobCache
     {
+        static readonly Logger log = LogManager.GetCurrentClassLogger();
+
         protected MemoizingMRUCache<string, AsyncSubject<byte[]>> MemoizedRequests;
         protected readonly string CacheDirectory;
-        protected ConcurrentDictionary<string, DateTimeOffset> CacheIndex = new ConcurrentDictionary<string, DateTimeOffset>();
+        protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
         bool disposed;
         protected IFilesystemProvider filesystem;
@@ -36,7 +40,6 @@ namespace Akavache
         public IScheduler Scheduler { get; protected set; }
 
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
-        const char UnicodeSeparator = '\u2029'; // PARAGRAPH SEPARATOR PSEP
 
         protected PersistentBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null)
         {
@@ -59,21 +62,25 @@ namespace Akavache
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
                     .SelectMany(ParseCacheIndexEntry)
                     .ToDictionary(y => y.Key, y => y.Value))
-                .Select(x => new ConcurrentDictionary<string, DateTimeOffset>(x))
+                .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x))
                 .Subscribe(x => CacheIndex = x);
 
-            //flushThreadSubscription = Disposable.Empty;
+            flushThreadSubscription = Disposable.Empty;
 
-            flushThreadSubscription = actionTaken
-                .Where(_ => Scheduler.Now - lastFlushTime > TimeSpan.FromSeconds(5))
-                .SelectMany(_ => FlushCacheIndex(true))
-                .Subscribe(_ =>
-                {
-                    this.Log().Debug("Flushing cache");
-                    lastFlushTime = Scheduler.Now;
-                });
+            if (!RxApp.InUnitTestRunner())
+            {
+                flushThreadSubscription = actionTaken
+                    .Where(_ => CacheIndex != null)
+                    .Throttle(TimeSpan.FromSeconds(30), Scheduler)
+                    .SelectMany(_ => FlushCacheIndex(true))
+                    .Subscribe(_ =>
+                    {
+                        log.Debug("Flushing cache");
+                        lastFlushTime = Scheduler.Now;
+                    });
+            }
 
-            this.Log().InfoFormat("{0} entries in blob cache index", CacheIndex.Count);
+            log.Info("{0} entries in blob cache index", CacheIndex.Count);
         }
 
 
@@ -112,7 +119,7 @@ namespace Akavache
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
                 err.LogErrors("Insert").Subscribe(
-                    x => CacheIndex[key] = absoluteExpiration ?? DateTimeOffset.MaxValue,
+                    x => CacheIndex[key] = new CacheIndexEntry(Scheduler.Now, absoluteExpiration),
                     ex => Invalidate(key));
             }
         }
@@ -161,8 +168,19 @@ namespace Akavache
         {
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
 
-            DateTimeOffset value;
-            return (CacheIndex.TryGetValue(key, out value) && value < Scheduler.Now);
+            CacheIndexEntry value;
+            return (CacheIndex.TryGetValue(key, out value) && value.ExpiresAt != null && value.ExpiresAt < Scheduler.Now);
+        }
+
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key)
+        {
+            CacheIndexEntry value;
+            if (!CacheIndex.TryGetValue(key, out value))
+            {
+                return Observable.Return<DateTimeOffset?>(null);
+            }
+
+            return Observable.Return<DateTimeOffset?>(value.CreatedAt);
         }
 
         public IEnumerable<string> GetAllKeys()
@@ -182,10 +200,10 @@ namespace Akavache
             Action deleteMe;
             lock (MemoizedRequests)
             {
-                this.Log().DebugFormat("Invalidating {0}", key);
+                log.Debug("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
 
-                DateTimeOffset dontcare;
+                CacheIndexEntry dontcare;
                 CacheIndex.TryRemove(key, out dontcare);
 
                 var path = GetPathForKey(key);
@@ -195,9 +213,10 @@ namespace Akavache
                     {
                         filesystem.Delete(path);
                     }
-                    catch (FileNotFoundException ex) { this.Log().Warn(ex); }
-                    catch (IsolatedStorageException ex) { this.Log().Warn(ex); }
-            
+
+                    catch (FileNotFoundException ex) { log.Warn(ex); }
+                    catch (IsolatedStorageException ex) { log.Warn(ex); }
+
                     actionTaken.OnNext(Unit.Default);
                 };
 
@@ -209,7 +228,7 @@ namespace Akavache
             }
             catch (Exception ex)
             {
-                this.Log().Warn("Really can't delete key: " + key, ex);
+                log.Warn("Really can't delete key: " + key, ex);
             }
         }
 
@@ -231,9 +250,22 @@ namespace Akavache
             // We need to make sure that all outstanding writes are flushed
             // before we bail
             AsyncSubject<byte[]>[] requests;
+
+            if (MemoizedRequests == null)
+            {
+                return;
+            }
+
             lock (MemoizedRequests)
             {
-                requests = MemoizedRequests.CachedValues().ToArray();
+                var mq = Interlocked.Exchange(ref MemoizedRequests, null);
+                if (mq == null)
+                {
+                    return;
+                }
+
+                requests = mq.CachedValues().ToArray();
+
                 MemoizedRequests = null;
 
                 actionTaken.OnCompleted();
@@ -360,37 +392,35 @@ namespace Akavache
 
         IObservable<Unit> FlushCacheIndex(bool synchronous)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposed) return Observable.Return(Unit.Default);
 
-            var index = CacheIndex.Select(x =>
-                String.Format(CultureInfo.InvariantCulture, "{0}{3}{1}{3}{2}", x.Key, x.Value.Ticks, x.Value.Offset.Ticks, UnicodeSeparator));
-
+            var index = CacheIndex.Select(x => JsonConvert.SerializeObject(x));
             return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
-                .Select(_ => Unit.Default);
+                .Select(_ => Unit.Default)
+                .Catch<Unit, Exception>(ex =>
+                {
+                    log.WarnException("Couldn't flush cache index", ex);
+                    return Observable.Return(Unit.Default);
+                });
         }
 
-        IEnumerable<KeyValuePair<string, DateTimeOffset>> ParseCacheIndexEntry(string s)
+        IEnumerable<KeyValuePair<string, CacheIndexEntry>> ParseCacheIndexEntry(string s)
         {
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
 
             if (String.IsNullOrWhiteSpace(s))
             {
-                return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
+                return Enumerable.Empty<KeyValuePair<string, CacheIndexEntry>>();
             }
 
             try
             {
-                var parts = s.Split(UnicodeSeparator);
-                var time = new DateTimeOffset(
-                    Int64.Parse(parts[1], CultureInfo.InvariantCulture),
-                    new TimeSpan(Int64.Parse(parts[2], CultureInfo.InvariantCulture)));
-
-                return new[] { new KeyValuePair<string, DateTimeOffset>(parts[0], time) };
+                return new[] { JsonConvert.DeserializeObject<KeyValuePair<string, CacheIndexEntry>>(s) };
             }
             catch (Exception ex)
             {
-                this.Log().Warn("Invalid cache index entry", ex);
-                return Enumerable.Empty<KeyValuePair<string, DateTimeOffset>>();
+                log.Warn("Invalid cache index entry", ex);
+                return Enumerable.Empty<KeyValuePair<string, CacheIndexEntry>>();
             }
         }
 
@@ -411,6 +441,18 @@ namespace Akavache
             return RxApp.InUnitTestRunner() ?
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "LocalBlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
+        }
+    }
+
+    public class CacheIndexEntry
+    {
+        public DateTimeOffset CreatedAt { get; protected set; }
+        public DateTimeOffset? ExpiresAt { get; protected set; }
+
+        public CacheIndexEntry(DateTimeOffset createdAt, DateTimeOffset? expiresAt)
+        {
+            CreatedAt = createdAt;
+            ExpiresAt = expiresAt;
         }
     }
 }

@@ -74,8 +74,16 @@ namespace Akavache
         IEnumerable<string> GetAllKeys();
 
         /// <summary>
+        /// Returns the time that the key was added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The key to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        IObservable<DateTimeOffset?> GetCreatedAt(string key);
+
+        /// <summary>
         /// Remove a key from the cache. If the key doesn't exist, this method
-	    /// should do nothing and return (*not* throw KeyNotFoundException).
+        /// should do nothing and return (*not* throw KeyNotFoundException).
         /// </summary>
         /// <param name="key">The key to remove from the cache.</param>
         void Invalidate(string key);
@@ -89,7 +97,7 @@ namespace Akavache
 
         /// <summary>
         /// The IScheduler used to defer operations. By default, this is
-	    /// RxApp.TaskPoolScheduler.
+        /// RxApp.TaskPoolScheduler.
         /// </summary>
         IScheduler Scheduler { get; }
     }

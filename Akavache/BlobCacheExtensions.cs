@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -18,6 +20,8 @@ namespace Akavache
 {
     public static class JsonSerializationMixin
     {
+        static readonly ConcurrentDictionary<string, object> inflightFetchRequests = new ConcurrentDictionary<string, object>(); 
+
         /// <summary>
         /// Insert an object into the cache, via the JSON serializer.
         /// </summary>
@@ -26,9 +30,8 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         public static void InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            This.Insert(GetTypePrefixedKey(key, typeof(T)), 
-                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value)),
-                absoluteExpiration);
+            var bytes = SerializeObject(value);
+            This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
         }
 
         /// <summary>
@@ -42,7 +45,7 @@ namespace Akavache
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .Select(x => JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x, 0, x.Length)));
+                .SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>
@@ -84,11 +87,13 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrFetchObject<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
-            return This.GetObjectAsync<T>(key).Catch<T, KeyNotFoundException>(_ =>
+            return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
             {
-                return fetchFunc()
-                    .Multicast(new AsyncSubject<T>()).RefCount()
-                    .Do(x => This.InsertObject(key, x, absoluteExpiration));
+                object dontcare;
+                return ((IObservable<T>)inflightFetchRequests.GetOrAdd(key, __ => (object)fetchFunc()))
+                    .Do(x => This.InsertObject(key, x, absoluteExpiration))
+                    .Finally(() => inflightFetchRequests.TryRemove(key, out dontcare))
+                    .Multicast(new AsyncSubject<T>()).RefCount();
             });
         }
 
@@ -108,12 +113,23 @@ namespace Akavache
         /// </summary>
         /// <param name="key">The key to store the returned result under.</param>
         /// <param name="fetchFunc"></param>
+        /// <param name="fetchPredicate">An optional Func to determine whether
+        /// the updated item should be fetched. If the cached version isn't found,
+        /// this parameter is ignored and the item is always fetched.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version)</returns>
-        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, 
+            string key, 
+            Func<IObservable<T>> fetchFunc, 
+            Func<DateTimeOffset, bool> fetchPredicate = null,
+            DateTimeOffset? absoluteExpiration = null)
         {
-            var fail = Observable.Defer(() => fetchFunc())
+            bool foundItemInCache;
+            var fail = Observable.Defer(() => This.GetCreatedAt(key))
+                .Select(x => fetchPredicate != null && x != null ? fetchPredicate(x.Value) : true)
+                .Where(x => x != false)
+                .SelectMany(_ => fetchFunc())
                 .Finally(() => This.Invalidate(key))
                 .Do(x => This.InsertObject(key, x, absoluteExpiration));
 
@@ -122,13 +138,53 @@ namespace Akavache
 
             return result.SelectMany(x =>
             {
+                foundItemInCache = x.Item2;
                 return x.Item2 ?
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
-            }).Concat(fail).Multicast(new AsyncSubject<T>()).RefCount();
+            }).Concat(fail).Multicast(new ReplaySubject<T>()).RefCount();
         }
 
-        static string GetTypePrefixedKey(string key, Type type)
+        public static void InvalidateObject<T>(this IBlobCache This, string key)
+        {
+            This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
+        }
+
+        public static void InvalidateAllObjects<T>(this IBlobCache This)
+        {
+             foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
+             {
+                 This.Invalidate(key);
+             }
+        }
+
+        static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
+            () => JsonSerializer.Create(new JsonSerializerSettings()));
+        
+        internal static byte[] SerializeObject(object value)
+        {
+            return SerializeObject<object>(value);
+        }
+
+        internal static byte[] SerializeObject<T>(T value)
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
+        }
+
+        static IObservable<T> DeserializeObject<T>(byte[] x)
+        {
+            try
+            {
+                var ret = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x));
+                return Observable.Return(ret);
+            } 
+            catch (Exception ex)
+            {
+                return Observable.Throw<T>(ex);
+            }
+        }
+
+        internal static string GetTypePrefixedKey(string key, Type type)
         {
             return type.FullName + "___" + key;
         }
@@ -144,6 +200,8 @@ namespace Akavache
         }
 #endif
 
+        static readonly ConcurrentDictionary<string, IObservable<byte[]>> inflightWebRequests = new ConcurrentDictionary<string, IObservable<byte[]>>();
+
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
         /// cache. If the data is already in the cache, this returns
@@ -157,13 +215,15 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var fail = Observable.Defer(() =>
+            var doFetch = new Func<KeyNotFoundException, IObservable<byte[]>>(_ => inflightWebRequests.GetOrAdd(url, __ => Observable.Defer(() =>
             {
                 return MakeWebRequest(new Uri(url), headers)
                     .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
-            });
+            }).Multicast(new AsyncSubject<byte[]>()).RefCount()));
 
-            return (fetchAlways ? fail : This.GetAsync(url).Catch<byte[], KeyNotFoundException>(_ => fail));
+            IObservable<byte[]> dontcare;
+            var ret = fetchAlways ? doFetch(null) : This.GetAsync(url).Catch(doFetch);
+            return ret.Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
         }
 
         static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
@@ -189,27 +249,59 @@ namespace Akavache
             int retries = 3,
             TimeSpan? timeout = null)
         {
-            var request = Observable.Defer(() =>
+            IObservable<WebResponse> request;
+
+            var hwr = WebRequest.Create(uri);
+            if (headers != null)
             {
-                var hwr = WebRequest.Create(uri);
-                if (headers != null)
+                foreach(var x in headers)
                 {
-                    foreach(var x in headers)
+                    hwr.Headers[x.Key] = x.Value;
+                }
+            }
+
+            if (RxApp.InUnitTestRunner()) 
+            {
+                request = Observable.Defer(() => 
+                {
+                    if (content == null) 
                     {
-                        hwr.Headers[x.Key] = x.Value;
+                        return Observable.Start(() => hwr.GetResponse(), RxApp.TaskpoolScheduler);
                     }
-                }
-        
-                if (content == null)
+
+                    var buf = Encoding.UTF8.GetBytes(content);
+                    return Observable.Start(() => 
+                    {
+                        hwr.GetRequestStream().Write(buf, 0, buf.Length);
+                        return hwr.GetResponse();
+                    }, RxApp.TaskpoolScheduler);
+                });
+            }
+            else 
+            {
+                request = Observable.Defer(() =>
                 {
-                    return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
-                }
-        
-                var buf = Encoding.UTF8.GetBytes(content);
-                return Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
-                    .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
-                    .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)());
-            });
+                    if (content == null)
+                    {
+                        return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
+                    }
+            
+                    var buf = Encoding.UTF8.GetBytes(content);
+                    
+                    // NB: You'd think that BeginGetResponse would never block, 
+                    // seeing as how it's asynchronous. You'd be wrong :-/
+                    var ret = new AsyncSubject<WebResponse>();
+                    Observable.Start(() =>
+                    {
+                        Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
+                            .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
+                            .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
+                            .Multicast(ret).Connect();
+                    }, RxApp.TaskpoolScheduler);
+
+                    return ret;
+                });
+            }
         
             return request.Timeout(timeout ?? TimeSpan.FromSeconds(15)).Retry(retries);
         }
@@ -227,8 +319,8 @@ namespace Akavache
         {
             return This.GetAsync(key)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .ObserveOn(RxApp.DeferredScheduler)
-                .SelectMany(BytesToImage);
+                .SelectMany(BytesToImage)
+                .ObserveOn(RxApp.DeferredScheduler);
         }
 
         /// <summary>
@@ -239,11 +331,10 @@ namespace Akavache
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. This
         /// Observable is guaranteed to be returned on the UI thread.</returns>
-        public static IObservable<BitmapImage> LoadImageFromUrl(this IBlobCache This, string url)
+        public static IObservable<BitmapImage> LoadImageFromUrl(this IBlobCache This, string url, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            return This.DownloadUrl(url)
+            return This.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .ObserveOn(RxApp.DeferredScheduler)
                 .SelectMany(BytesToImage);
         }
 
@@ -265,6 +356,7 @@ namespace Akavache
                 ret.BeginInit();
                 ret.StreamSource = new MemoryStream(compressedImage);
                 ret.EndInit();
+                ret.Freeze();
 #endif
                 return Observable.Return(ret);
             }
@@ -285,9 +377,9 @@ namespace Akavache
         /// <param name="user">The user name to save.</param>
         /// <param name="password">The associated password</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, DateTimeOffset? absoluteExpiration = null)
+        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null)
         {
-            This.InsertObject("login", new Tuple<string, string>(user, password), absoluteExpiration);
+            This.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
         }
 
         /// <summary>
@@ -296,9 +388,18 @@ namespace Akavache
         /// OnError's with KeyNotFoundException.
         /// </summary>
         /// <returns>A Future result representing the user/password Tuple.</returns>
-        public static IObservable<Tuple<string, string>> GetLoginAsync(this ISecureBlobCache This)
+        public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache This, string host = "default")
         {
-            return This.GetObjectAsync<Tuple<string, string>>("login");
+            return This.GetObjectAsync<Tuple<string, string>>("login:" + host).Select(x => new LoginInfo(x));
+        }
+
+                
+        /// <summary>
+        /// Erases the login associated with the specified host
+        /// </summary>
+        public static void EraseLogin(this ISecureBlobCache This, string host = "default")
+        {
+            This.InvalidateObject<Tuple<string, string>>("login:" + host);
         }
     }
 
@@ -319,9 +420,9 @@ namespace Akavache
             return This.DownloadUrl(url, headers, fetchAlways, This.Scheduler.Now + expiration);
         }
 
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, TimeSpan expiration)
+        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
         {
-            This.SaveLogin(user, password, This.Scheduler.Now + expiration);
+            This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
         }
     }
 }

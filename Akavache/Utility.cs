@@ -6,17 +6,18 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using NLog;
 using ReactiveUI;
 
 namespace Akavache
 {
     static class Utility
     {
-        static ILog Log;
-        static Utility() { Log = RxApp.LoggerFactory("Utility"); }
+        static readonly Logger log = LogManager.GetCurrentClassLogger();
 
         public static string GetMd5Hash(string input)
         {
@@ -40,7 +41,9 @@ namespace Akavache
         public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
-            return Observable.Create<FileStream>(subj =>
+            var ret = new AsyncSubject<FileStream>();
+
+            Observable.Start(() =>
             {
                 try
                 {
@@ -50,12 +53,17 @@ namespace Akavache
                         FileMode.CreateNew,
                         FileMode.OpenOrCreate,
                     };
-    
+
+                    // NB: We do this (even though it's incorrect!) because
+                    // throwing lots of 1st chance exceptions makes debugging
+                    // obnoxious, as well as a bug in VS where it detects
+                    // exceptions caught by Observable.Start as Unhandled.
                     if (!createModes.Contains(mode) && !File.Exists(path))
                     {
-                        subj.OnError(new FileNotFoundException());
-                    } else
-                    {
+                        ret.OnError(new FileNotFoundException());
+                        return;
+                    }
+
 #if SILVERLIGHT
                         return Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler)
                             .Subscribe(subj);
@@ -65,13 +73,13 @@ namespace Akavache
 #endif
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    subj.OnError(new FileNotFoundException());
+                    ret.OnError(ex);
                 }
-                        
-                return Disposable.Empty;
-            });
+            }, scheduler);
+
+            return ret;
         }
 
         public static void CreateRecursive(this DirectoryInfo This)
@@ -114,7 +122,7 @@ namespace Akavache
                     ex =>
                     {
                         var msg = message ?? "0x" + This.GetHashCode().ToString("x");
-                        Log.InfoFormat("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
+                        log.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
                         subj.OnError(ex);
                     }, subj.OnCompleted);
             });
@@ -132,7 +140,7 @@ namespace Akavache
                 }
                 catch(Exception ex)
                 {
-                    Log.Warn("CopyToAsync failed", ex);
+                    log.Warn("CopyToAsync failed", ex);
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 
