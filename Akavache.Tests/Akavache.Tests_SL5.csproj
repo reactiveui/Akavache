@@ -83,10 +83,10 @@
       <HintPath>$(MSBuildExtensionsPath)\..\Microsoft SDKs\Silverlight\v4.0\Toolkit\Apr10\Testing\Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Testing_SL5">
-      <HintPath>..\ext\SL5\ReactiveUI.Testing_SL5.dll</HintPath>
+      <HintPath>..\packages\reactiveui-testing.3.1.0\lib\SL5\ReactiveUI.Testing_SL5.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI_SL5">
-      <HintPath>..\ext\SL5\ReactiveUI_SL5.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.3.1.0\lib\SL5\ReactiveUI_SL5.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations, Version=5.0.5.0, Culture=neutral, PublicKeyToken=ddd0da4d3e678217, processorArchitecture=MSIL" />
     <Reference Include="System.Reactive, Version=1.1.11111.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />

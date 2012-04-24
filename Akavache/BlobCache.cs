@@ -15,7 +15,9 @@ namespace Akavache
             {
                 localMachine = new TestBlobCache(RxApp.TaskpoolScheduler);
                 userAccount = new TestBlobCache(RxApp.TaskpoolScheduler);
+#if !SILVERLIGHT
                 secure = new TestBlobCache(RxApp.TaskpoolScheduler);
+#endif
             }
         }
 

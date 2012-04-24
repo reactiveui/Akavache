@@ -37,9 +37,17 @@
       <HintPath>..\..\packages\Rx_Experimental-Testing.1.1.11111\lib\Net4-Full\Microsoft.Reactive.Testing.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json, Version=4.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Newtonsoft.Json.4.0.7\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.3\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.3.1.0\lib\Net4\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI.Testing">
+      <HintPath>..\packages\reactiveui-testing.3.1.0\lib\Net4\ReactiveUI.Testing.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -74,14 +82,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ReactiveUI\ReactiveUI.Testing\ReactiveUI.Testing.csproj">
-      <Project>{E1F2AD19-276E-4D05-A41A-89AA133CECFC}</Project>
-      <Name>ReactiveUI.Testing</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\ReactiveUI\ReactiveUI\ReactiveUI.csproj">
-      <Project>{292A477B-BB94-43C1-984E-E177EF9FEDB7}</Project>
-      <Name>ReactiveUI</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache.csproj">
       <Project>{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}</Project>
       <Name>Akavache</Name>

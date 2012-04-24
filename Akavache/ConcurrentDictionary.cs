@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -180,6 +181,18 @@ namespace Akavache
             value = this[key];
             Remove(key);
             return true;
+        }
+
+        public TVal GetOrAdd(TKey key, Func<TKey, TVal> factory)
+        {
+            if (ContainsKey(key))
+            {
+                return this[key];
+            }
+
+            var ret = factory(key);
+            this[key] = ret;
+            return ret;
         }
     }
 }

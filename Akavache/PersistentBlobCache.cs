@@ -443,16 +443,4 @@ namespace Akavache
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
     }
-
-    public class CacheIndexEntry
-    {
-        public DateTimeOffset CreatedAt { get; protected set; }
-        public DateTimeOffset? ExpiresAt { get; protected set; }
-
-        public CacheIndexEntry(DateTimeOffset createdAt, DateTimeOffset? expiresAt)
-        {
-            CreatedAt = createdAt;
-            ExpiresAt = expiresAt;
-        }
-    }
 }

@@ -124,19 +124,25 @@ namespace Akavache
         {
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
+#if !SILVERLIGHT
             var sec = BlobCache.Secure;
+#endif
 
             var resetBlobCache = new Action(() =>
             {
                 BlobCache.LocalMachine = local;
+#if !SILVERLIGHT
                 BlobCache.Secure = sec;
+#endif
                 BlobCache.UserAccount = user;
                 Monitor.Exit(gate);
             });
 
             var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
             BlobCache.LocalMachine = testCache;
+#if !SILVERLIGHT
             BlobCache.Secure = testCache;
+#endif
             BlobCache.UserAccount = testCache;
 
             Monitor.Enter(gate);

@@ -65,13 +65,10 @@ namespace Akavache
                     }
 
 #if SILVERLIGHT
-                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler)
-                            .Subscribe(subj);
+                    Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Subscribe(ret);
 #else
-                        return Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler)
-                            .Subscribe(subj);
+                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler).Subscribe(ret);
 #endif
-                    }
                 }
                 catch (Exception ex)
                 {

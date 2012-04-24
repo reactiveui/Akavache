@@ -175,7 +175,7 @@ namespace Akavache
         {
             try
             {
-                var ret = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x));
+                var ret = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x, 0, x.Length));
                 return Observable.Return(ret);
             } 
             catch (Exception ex)
@@ -260,6 +260,7 @@ namespace Akavache
                 }
             }
 
+#if !SILVERLIGHT
             if (RxApp.InUnitTestRunner()) 
             {
                 request = Observable.Defer(() => 
@@ -278,6 +279,7 @@ namespace Akavache
                 });
             }
             else 
+#endif
             {
                 request = Observable.Defer(() =>
                 {
@@ -303,7 +305,7 @@ namespace Akavache
                 });
             }
         
-            return request.Timeout(timeout ?? TimeSpan.FromSeconds(15)).Retry(retries);
+            return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), RxApp.TaskpoolScheduler).Retry(retries);
         }
     }
 

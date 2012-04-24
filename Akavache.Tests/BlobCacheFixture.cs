@@ -238,6 +238,7 @@ namespace Akavache.Tests
         }
     }
 
+#if !SILVERLIGHT
     public class EncryptedBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
@@ -250,4 +251,5 @@ namespace Akavache.Tests
             public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
         }
     }
+#endif
 }
