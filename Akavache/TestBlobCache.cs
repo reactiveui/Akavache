@@ -10,9 +10,6 @@ namespace Akavache
 {
     public class TestBlobCache : ISecureBlobCache
     {
-        public TestBlobCache(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) :
-            this(scheduler, (IEnumerable<KeyValuePair<string, byte[]>>)initialContents) { }
-
         public TestBlobCache(IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
         {
             Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
