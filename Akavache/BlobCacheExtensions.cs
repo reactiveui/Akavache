@@ -64,7 +64,8 @@ namespace Akavache
 
             return matchingKeys.ToObservable()
                 .SelectMany(x => This.GetObjectAsync<T>(x, true).Catch(Observable.Empty<T>()))
-                .ToList();
+                .ToList()
+                .Select(x => (IEnumerable<T>) x);
         }
 
         /// <summary>
@@ -296,7 +297,7 @@ namespace Akavache
                     Observable.Start(() =>
                     {
                         Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
-                            .SelectMany(x => Observable.FromAsyncPattern<byte[], int, int>(x.BeginWrite, x.EndWrite)(buf, 0, buf.Length))
+                            .SelectMany(x => x.WriteAsync(buf, 0, buf.Length))
                             .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
                             .Multicast(ret).Connect();
                     }, RxApp.TaskpoolScheduler);

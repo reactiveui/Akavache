@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 
 namespace Akavache
 {
@@ -8,7 +9,7 @@ namespace Akavache
     {
         public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
         {
-            return Utility.SafeOpenFileAsync(path, mode, access, share, scheduler);
+            return Utility.SafeOpenFileAsync(path, mode, access, share, scheduler).Select(x => (Stream) x);
         }
 
         public void CreateRecursive(string path)

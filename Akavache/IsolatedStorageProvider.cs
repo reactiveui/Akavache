@@ -23,7 +23,7 @@ namespace Akavache
                 {
                     fs = IsolatedStorageFile.GetUserStoreForApplication();
                     disp.Add(fs);
-                    disp.Add(Observable.Start(() => fs.OpenFile(path, mode, access, share), RxApp.TaskpoolScheduler).Subscribe(subj));
+                    disp.Add(Observable.Start(() => fs.OpenFile(path, mode, access, share), RxApp.TaskpoolScheduler).Select(x => (Stream)x).Subscribe(subj));
                 }
                 catch(Exception ex)
                 {

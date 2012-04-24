@@ -429,6 +429,17 @@ namespace Akavache
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
 
+#if SILVERLIGHT
+        protected static string GetDefaultRoamingCacheDirectory()
+        {
+            return "BlobCache";
+        }
+
+        protected static string GetDefaultLocalMachineCacheDirectory()
+        {
+            return "LocalBlobCache";
+        }
+#else
         protected static string GetDefaultRoamingCacheDirectory()
         {
             return RxApp.InUnitTestRunner() ?
@@ -442,5 +453,6 @@ namespace Akavache
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "LocalBlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
+#endif
     }
 }
