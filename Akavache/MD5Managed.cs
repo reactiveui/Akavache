@@ -1,3 +1,4 @@
+// Fetched from http://archive.msdn.microsoft.com/SilverlightMD5
 //Copyright (c) Microsoft Corporation.  All rights reserved.
 using System;
 using System.Security.Cryptography;
