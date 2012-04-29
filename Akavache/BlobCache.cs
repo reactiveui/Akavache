@@ -15,9 +15,7 @@ namespace Akavache
             {
                 localMachine = new TestBlobCache(RxApp.TaskpoolScheduler);
                 userAccount = new TestBlobCache(RxApp.TaskpoolScheduler);
-#if !SILVERLIGHT
                 secure = new TestBlobCache(RxApp.TaskpoolScheduler);
-#endif
             }
         }
 
@@ -63,7 +61,6 @@ namespace Akavache
             set { userAccount = value; }
         }
 
-#if !SILVERLIGHT
         static ISecureBlobCache secure;
 
         /// <summary>
@@ -75,7 +72,6 @@ namespace Akavache
             get { return secure ?? EncryptedBlobCache.Current; }
             set { secure = value; }
         }
-#endif
 
         /// <summary>
         /// An IBlobCache that simply stores data in memory. Data stored in
