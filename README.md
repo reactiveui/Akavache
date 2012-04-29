@@ -25,44 +25,88 @@ added to support:
 - Fetching and loading Images
 - Securely storing User Credentials
 
+## Getting Started
 
-## An example - consider Twitter for Mac
+Interacting with Akavache is primarily done through an object called
+`BlobCache`. At App startup, you must first set your app's name via
+`BlobCache.ApplicationName` - on the desktop, your application's data will be
+stored in `%AppData%\[ApplicationName]` and
+`%LocalAppData%\[ApplicationName]`. Store data that should be shared between
+different machines in `BlobCache.UserAccount` and store data that is
+throwaway or per-machine (such as images) in `BlobCache.LocalMachine`.
 
-![](http://f.cl.ly/items/2N2F2n3X2y3n1g3o3e1e/Image%202012.04.27%204:37:37%20PM.png)
-
-When you open Twitter for Mac, you immediately see content, even before the
-application finishes talking to Twitter. This content is cached, but the
-pattern of when to refresh the data might be different. For the tweets
-themselves, the logic might be something like, *"Load the cached data, but
-**always** fetch the latest data"*. 
-
-However, for the avatar images, you might have logic like, *"Always load the
-cached image, but if the avatar is older than six hours, refresh the image."*
-
-In Akavache, the former might be:
+The most straightforward way to use Akavache is via the object extensions:
 
 ```cs
-var tweets = await BlobCache.UserAccount.GetAndFetchLatest("tweets", DownloadSomeTweets());
+var myToaster = new Toaster();
+BlobCache.UserAccount.InsertObject("toaster", myToaster);
+
+//
+// ...later, in another part of town...
+//
+
+// Using async/await
+var toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+
+// or without async/await
+Toaster toaster;
+
+BlobCache.UserAccount.GetObjectAsync("toaster")
+    .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"))
 ```
 
-And the latter might be something like:
+## Handling Errors
+
+When a key is not present in the cache, GetObject throws a
+KeyNotFoundException (or more correctly, OnError's the IObservable). Often,
+you would want to return a default value instead of failing:
 
 ```cs
-var image = await BlobCache.LocalMachine.GetAndFetchLatest(tweet.AvatarUrl, 
-    DownloadUrl(tweet.AvatarUrl), 
-    createdAt => DateTimeOffset.Now - createdAt > TimeSpan.FromHours(6));
+var toaster = await BlobCache.UserAccount.GetObjectAsync("toaster")
+    .Catch(Observable.Return(new Toaster()));
 ```
 
-## No (Thread.)Sleep 'till Brooklyn
+## Unit Testing with Akavache
 
-Akavache is non-blocking, via a library called the [Reactive
-Extensions](http://msdn.microsoft.com/en-us/data/gg577609) - any operation
-that could delay the UI returns an *Observable*, which represents a future
-result. 
+By default, if Akavache detects that it is being run in a unit test runner, it
+will use the `TestBlobCache` implementation instead of the default
+implementation. `TestBlobCache` implements `IBlobCache` in memory
+synchronously using a Dictionary instead of persisting to disk.
 
-Akavache also solves several difficult concurrency problems that simplify UI
-programming. For example, in the image above, a naive cache implementation
-could end up loading the GitHub avatar icon multiple times if the requests
-were issued at the same time (which is easy to do if you try to load the
-avatar for each tweet). Akavache ensures that exactly *one* network request is
-issued. 
+This class can be explicitly created as well, and initialized to have specific
+contents to test cache hit / cache miss scenarios. Use the
+`TestBlobCache.OverrideGlobals` method to temporarily replace the
+`BlobCache.UserAccount` variables with a specific TestBlobCache.
+
+Testing expiration can also be done, using Rx's `TestScheduler`:
+
+```cs
+[Fact]
+public void TestSomeExpirationStuff()
+{
+    (new TestScheduler()).With(sched => {
+        using (cache = TestBlobCache.OverrideGlobals(null, sched)) {
+            cache.Insert("foo", new byte[] { 1,2,3 }, TimeSpan.FromMilliseconds(100));
+
+            sched.AdvanceByMs(50);
+
+            var result = cache.GetAsync("foo").First();
+            Assert.Equal(1, result[0]);
+
+            // Fast forward to t=200ms, after the cache entry is expired
+            sched.AdvanceByMs(150);
+
+            bool didThrow;
+            try {
+                // This should now throw KeyNotFoundException
+                result = cache.GetAsync("foo").First();
+                didThrow = false;
+            } catch (Exception ex) {
+                didThrow = true;
+            }
+
+            Assert.True(didThrow);
+        }
+    });
+}
+```
