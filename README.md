@@ -12,7 +12,7 @@ do. However, many applications that don't take the consideration of caching
 into the design from the start often end up with inconsistent, duplicated code
 for caching different types of objects. 
 
-[Akavache](github.com/github/akavache) is a library that makes common app
+[Akavache](https://github.com/github/akavache) is a library that makes common app
 patterns easy, and unifies caching of different object types (i.e. HTTP
 responses vs. JSON objects vs. images). 
 
