@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -28,10 +29,10 @@ namespace Akavache
         /// <param name="key">The key to associate with the object.</param>
         /// <param name="value">The object to serialize.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
-        public static void InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             var bytes = SerializeObject(value);
-            This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
+            return This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
         }
 
         /// <summary>
@@ -380,9 +381,9 @@ namespace Akavache
         /// <param name="user">The user name to save.</param>
         /// <param name="password">The associated password</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<Unit> SaveLogin(this ISecureBlobCache This, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null)
         {
-            This.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
+            return This.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
         }
 
         /// <summary>
