@@ -44,6 +44,11 @@ namespace Akavache
             return Observable.Return(Unit.Default);
         }
 
+        public IObservable<Unit> Flush()
+        {
+            return Observable.Return(Unit.Default);
+        }
+
         public IObservable<byte[]> GetAsync(string key)
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
