@@ -55,6 +55,7 @@ namespace Akavache
         /// <param name="data">The data to save in the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.
         /// After the specified date, the key-value pair should be removed.</param>
+        /// <returns>A signal to indicate when the key has been inserted.</returns>
         IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
@@ -81,6 +82,13 @@ namespace Akavache
         /// <param name="key">The key to return the date for.</param>
         /// <returns>The date the key was created on.</returns>
         IObservable<DateTimeOffset?> GetCreatedAt(string key);
+
+        /// <summary>
+        /// This method guarantees that all in-flight inserts have completed
+        /// and any indexes have been written to disk.
+        /// </summary>
+        /// <returns>A signal indicating when the flush is complete.</returns>
+        IObservable<Unit> Flush();
 
         /// <summary>
         /// Remove a key from the cache. If the key doesn't exist, this method

@@ -390,6 +390,11 @@ namespace Akavache
             return ret;
         }
 
+        public IObservable<Unit> Flush()
+        {
+            return FlushCacheIndex(false);
+        }
+
         IObservable<Unit> FlushCacheIndex(bool synchronous)
         {
             if (disposed) return Observable.Return(Unit.Default);
