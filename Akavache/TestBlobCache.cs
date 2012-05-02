@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -36,13 +37,15 @@ namespace Akavache
         bool disposed;
         Dictionary<string, Tuple<CacheIndexEntry, byte[]>> cache = new Dictionary<string, Tuple<CacheIndexEntry, byte[]>>();
 
-        public void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
                 cache[key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, absoluteExpiration), data);
             }
+
+            return Observable.Return(Unit.Default);
         }
 
         public IObservable<byte[]> GetAsync(string key)

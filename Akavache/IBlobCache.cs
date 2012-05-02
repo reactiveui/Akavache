@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reactive;
 using System.Reactive.Concurrency;
 
 namespace Akavache
@@ -54,7 +55,7 @@ namespace Akavache
         /// <param name="data">The data to save in the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.
         /// After the specified date, the key-value pair should be removed.</param>
-        void Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null);
+        IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
         /// Retrieve a value from the key-value cache. If the key is not in
