@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="BlobCache.cs" />
     <Compile Include="BlobCacheExtensions.cs" />
+    <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="ConcurrentDictionary.cs" />
     <Compile Include="EncryptedBlobCache.cs" />

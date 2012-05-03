@@ -10,7 +10,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache</RootNamespace>
     <AssemblyName>Akavache</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\Akavache\</SolutionDir>
     <RestorePackages>true</RestorePackages>
@@ -19,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Net40\</OutputPath>
+    <OutputPath>bin\Debug\Mono\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -27,7 +26,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\Net40\</OutputPath>
+    <OutputPath>bin\Release\Mono\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -39,7 +38,6 @@
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="PresentationCore" />
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.3.1.0\lib\Net4\ReactiveUI.dll</HintPath>
     </Reference>
@@ -60,7 +58,6 @@
   <ItemGroup>
     <Compile Include="BlobCache.cs" />
     <Compile Include="BlobCacheExtensions.cs" />
-    <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="IBlobCache.cs" />
