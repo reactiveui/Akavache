@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -139,7 +138,7 @@ namespace Akavache
                 }
                 catch(Exception ex)
                 {
-                    log.Warn("CopyToAsync failed", ex);
+                    log.WarnException("CopyToAsync failed", ex);
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 

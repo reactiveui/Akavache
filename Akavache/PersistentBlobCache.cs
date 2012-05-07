@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
@@ -13,8 +12,8 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using NLog;
 using Newtonsoft.Json;
+using NLog;
 using ReactiveUI;
 
 namespace Akavache
@@ -215,8 +214,8 @@ namespace Akavache
                     {
                         filesystem.Delete(path);
                     }
-                    catch (FileNotFoundException ex) { log.Warn(ex); }
-                    catch (IsolatedStorageException ex) { log.Warn(ex); }
+                    catch (FileNotFoundException ex) { log.WarnException("File not found.", ex); }
+                    catch (IsolatedStorageException ex) { log.WarnException("Isolated storage exception occurred.", ex); }
 
                     actionTaken.OnNext(Unit.Default);
                 };
@@ -229,7 +228,7 @@ namespace Akavache
             }
             catch (Exception ex)
             {
-                log.Warn("Really can't delete key: " + key, ex);
+                log.WarnException("Really can't delete key: " + key, ex);
             }
         }
 
@@ -424,7 +423,7 @@ namespace Akavache
             }
             catch (Exception ex)
             {
-                log.Warn("Invalid cache index entry", ex);
+                log.WarnException("Invalid cache index entry", ex);
                 return Enumerable.Empty<KeyValuePair<string, CacheIndexEntry>>();
             }
         }
