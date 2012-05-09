@@ -66,6 +66,13 @@ var toaster = await BlobCache.UserAccount.GetObjectAsync("toaster")
     .Catch(Observable.Return(new Toaster()));
 ```
 
+## Examining Akavache caches
+
+Using [Akavache Explorer](https://github.com/xpaulbettsx/AkavacheExplorer), you
+can dig into Akavache repos for debugging purposes to see what has been stored.
+
+![](http://f.cl.ly/items/2D3Y0L0k262X0U0y3B0e/Image%202012.05.07%206:57:48%20PM.png)
+
 ## Unit Testing with Akavache
 
 By default, if Akavache detects that it is being run in a unit test runner, it
