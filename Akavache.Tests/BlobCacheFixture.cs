@@ -28,7 +28,7 @@ namespace Akavache.Tests
                     fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
                     Assert.Throws<ArgumentNullException>(() =>
-                        fixture.Insert(null, new byte[] { 7, 8, 9 }));
+                        fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
                     byte[] output1 = fixture.GetAsync("Foo").First();
                     byte[] output2 = fixture.GetAsync("Bar").First();
@@ -221,7 +221,7 @@ namespace Akavache.Tests
             var cache = CreateBlobCache("somepath");
             cache.Dispose();
 
-            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }));
+            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }).First());
         }
     }
 
