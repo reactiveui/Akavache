@@ -63,7 +63,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = new TEncryptedBlobCache(path))
                 {
-                    fixture.SaveLogin(secretUser, secretPass, "github.com");
+                    fixture.SaveLogin(secretUser, secretPass, "github.com").First();
                 }
 
                 using (var fixture = new TEncryptedBlobCache(path))
