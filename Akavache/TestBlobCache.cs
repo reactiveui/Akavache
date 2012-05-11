@@ -131,6 +131,8 @@ namespace Akavache
         static readonly object gate = 42;
         public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
+            Monitor.Enter(gate);
+
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
             var sec = BlobCache.Secure;
@@ -148,7 +150,6 @@ namespace Akavache
             BlobCache.Secure = testCache;
             BlobCache.UserAccount = testCache;
 
-            Monitor.Enter(gate);
             return testCache;
         }
 
