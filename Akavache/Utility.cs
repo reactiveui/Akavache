@@ -82,14 +82,9 @@ namespace Akavache
 
         public static void CreateRecursive(this DirectoryInfo This)
         {
-            This.FullName.Split(Path.DirectorySeparatorChar).Aggregate("", (acc, x) =>
+            This.SplitFullPath().Aggregate((parent, dir) =>
             {
-                var path = Path.Combine(acc, x);
-
-                if (path[path.Length - 1] == Path.VolumeSeparatorChar)
-                {
-                    path += Path.DirectorySeparatorChar;
-                }
+                var path = Path.Combine(parent, dir);
 
                 if (!Directory.Exists(path))
                 {

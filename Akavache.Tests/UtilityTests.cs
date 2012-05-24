@@ -19,6 +19,13 @@ namespace Akavache.Tests
                     Assert.True(dir.Exists);
                 }
             }
+
+            [Fact]
+            public void ThrowsIOExceptionForNonexistentNetworkPaths()
+            {
+                var exception = Assert.Throws<IOException>(() => new DirectoryInfo(@"\\does\not\exist").CreateRecursive());
+                Assert.Equal("The network path was not found.\r\n", exception.Message);
+            }
         }
 
         public class TheSplitFullPathMethod
