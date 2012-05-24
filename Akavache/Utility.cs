@@ -96,7 +96,7 @@ namespace Akavache
                     Directory.CreateDirectory(path);
                 }
 
-                return (new DirectoryInfo(path)).FullName;
+                return path;
             });
         }
 
