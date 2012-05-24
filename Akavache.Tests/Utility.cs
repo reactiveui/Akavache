@@ -27,7 +27,7 @@ namespace Akavache.Tests
 
             foreach (var dir in dirs)
             {
-                DeleteDirectory(di.FullName);
+                DeleteDirectory(dir.FullName);
             }
 
             File.SetAttributes(directoryPath, FileAttributes.Normal);

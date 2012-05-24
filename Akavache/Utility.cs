@@ -82,34 +82,33 @@ namespace Akavache
 
         public static void CreateRecursive(this DirectoryInfo This)
         {
-            This.FullName.Split(Path.DirectorySeparatorChar).Scan("", (acc, x) =>
+            This.SplitFullPath().Aggregate((parent, dir) =>
             {
-                var path = Path.Combine(acc, x);
-
-                if (path[path.Length - 1] == Path.VolumeSeparatorChar)
-                {
-                    path += Path.DirectorySeparatorChar;
-                }
+                var path = Path.Combine(parent, dir);
 
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
                 }
 
-                return (new DirectoryInfo(path)).FullName;
+                return path;
             });
         }
 
-        public static TAcc Scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)
+        public static IEnumerable<string> SplitFullPath(this DirectoryInfo This)
         {
-            TAcc acc = initialValue;
-
-            foreach (var x in This)
+            var root = Path.GetPathRoot(This.FullName);
+            var components = new List<string>();
+            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
             {
-                acc = accFunc(acc, x);
+                var filename = Path.GetFileName(path);
+                if (String.IsNullOrEmpty(filename))
+                    continue;
+                components.Add(filename);
             }
-
-            return acc;
+            components.Add(root);
+            components.Reverse();
+            return components;
         }
 
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
