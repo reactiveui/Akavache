@@ -100,6 +100,22 @@ namespace Akavache
             });
         }
 
+        public static IEnumerable<string> SplitFullPath(this DirectoryInfo This)
+        {
+            var root = Path.GetPathRoot(This.FullName);
+            var components = new List<string>();
+            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
+            {
+                var filename = Path.GetFileName(path);
+                if (String.IsNullOrEmpty(filename))
+                    continue;
+                components.Add(filename);
+            }
+            components.Add(root);
+            components.Reverse();
+            return components;
+        }
+
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
         {
             return Observable.Create<T>(subj =>

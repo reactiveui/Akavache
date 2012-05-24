@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace Akavache.Tests
@@ -17,6 +18,29 @@ namespace Akavache.Tests
                     dir.CreateRecursive();
                     Assert.True(dir.Exists);
                 }
+            }
+        }
+
+        public class TheSplitFullPathMethod
+        {
+            [Fact]
+            public void SplitsAbsolutePaths()
+            {
+                Assert.Equal(new[] {@"c:\", "foo", "bar"}, new DirectoryInfo(@"c:\foo\bar").SplitFullPath());
+            }
+
+            [Fact]
+            public void ResolvesAndSplitsRelativePaths()
+            {
+                var components = new DirectoryInfo(@"foo\bar").SplitFullPath().ToList();
+                Assert.True(components.Count > 2);
+                Assert.Equal(new[] {"foo", "bar"}, components.Skip(components.Count - 2));
+            }
+
+            [Fact]
+            public void SplitsUncPaths()
+            {
+                Assert.Equal(new[] {@"\\foo\bar", "baz"}, new DirectoryInfo(@"\\foo\bar\baz").SplitFullPath());
             }
         }
     }
