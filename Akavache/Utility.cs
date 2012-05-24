@@ -82,7 +82,7 @@ namespace Akavache
 
         public static void CreateRecursive(this DirectoryInfo This)
         {
-            This.FullName.Split(Path.DirectorySeparatorChar).Scan("", (acc, x) =>
+            This.FullName.Split(Path.DirectorySeparatorChar).Aggregate("", (acc, x) =>
             {
                 var path = Path.Combine(acc, x);
 
@@ -98,18 +98,6 @@ namespace Akavache
 
                 return (new DirectoryInfo(path)).FullName;
             });
-        }
-
-        public static TAcc Scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)
-        {
-            TAcc acc = initialValue;
-
-            foreach (var x in This)
-            {
-                acc = accFunc(acc, x);
-            }
-
-            return acc;
         }
 
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
