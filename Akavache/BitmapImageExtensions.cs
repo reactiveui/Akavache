@@ -9,12 +9,12 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
 using ReactiveUI;
 
 namespace Akavache
 {
-
     public static class BitmapImageMixin
     {
         /// <summary>
