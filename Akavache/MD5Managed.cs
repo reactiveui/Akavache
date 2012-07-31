@@ -15,9 +15,9 @@ namespace Akavache
 {
 
 #if SILVERLIGHT
-public class MD5Managed : HashAlgorithm
+internal class MD5Managed : HashAlgorithm
 #else
-public class MD5Managed : MD5
+internal class MD5Managed : MD5
 #endif
 {
     private byte[] _data;

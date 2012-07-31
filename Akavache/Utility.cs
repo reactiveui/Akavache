@@ -4,10 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using NLog;
@@ -21,11 +19,7 @@ namespace Akavache
 
         public static string GetMd5Hash(string input)
         {
-#if SILVERLIGHT
             using (var md5Hasher = new MD5Managed())
-#else
-            using (var md5Hasher = MD5.Create())
-#endif
             {
                 // Convert the input string to a byte array and compute the hash.
                 var data = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(input));
@@ -38,10 +32,10 @@ namespace Akavache
             }
         }
 
-        public static IObservable<Stream> SafeOpenFileAsync (string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
+        public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
-            var ret = new AsyncSubject<Stream> ();
+            var ret = new AsyncSubject<FileStream>();
 
             Observable.Start(() =>
             {
@@ -87,34 +81,33 @@ namespace Akavache
 
         public static void CreateRecursive(this DirectoryInfo This)
         {
-            This.FullName.Split(Path.DirectorySeparatorChar).Scan("", (acc, x) =>
+            This.SplitFullPath().Aggregate((parent, dir) =>
             {
-                var path = Path.Combine(acc, x);
-
-                if (path[path.Length - 1] == Path.VolumeSeparatorChar)
-                {
-                    path += Path.DirectorySeparatorChar;
-                }
+                var path = Path.Combine(parent, dir);
 
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
                 }
 
-                return (new DirectoryInfo(path)).FullName;
+                return path;
             });
         }
 
-        public static TAcc Scan<T, TAcc>(this IEnumerable<T> This, TAcc initialValue, Func<TAcc, T, TAcc> accFunc)
+        public static IEnumerable<string> SplitFullPath(this DirectoryInfo This)
         {
-            TAcc acc = initialValue;
-
-            foreach (var x in This)
+            var root = Path.GetPathRoot(This.FullName);
+            var components = new List<string>();
+            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
             {
-                acc = accFunc(acc, x);
+                var filename = Path.GetFileName(path);
+                if (String.IsNullOrEmpty(filename))
+                    continue;
+                components.Add(filename);
             }
-
-            return acc;
+            components.Add(root);
+            components.Reverse();
+            return components;
         }
 
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
@@ -143,7 +136,7 @@ namespace Akavache
                 }
                 catch(Exception ex)
                 {
-                    log.Warn("CopyToAsync failed", ex);
+                    log.WarnException("CopyToAsync failed", ex);
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 

@@ -11,6 +11,11 @@ namespace Akavache
 {
     public class TestBlobCache : ISecureBlobCache
     {
+        public TestBlobCache(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) :
+            this(scheduler, (IEnumerable<KeyValuePair<string, byte[]>>)initialContents)
+        {
+        }
+
         public TestBlobCache(IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
         {
             Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
@@ -35,7 +40,6 @@ namespace Akavache
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
-
             lock (cache)
             {
                 cache[key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, absoluteExpiration), data);
@@ -127,6 +131,8 @@ namespace Akavache
         static readonly object gate = 42;
         public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
+            Monitor.Enter(gate);
+
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
             var sec = BlobCache.Secure;
@@ -144,7 +150,6 @@ namespace Akavache
             BlobCache.Secure = testCache;
             BlobCache.UserAccount = testCache;
 
-            Monitor.Enter(gate);
             return testCache;
         }
 

@@ -28,7 +28,7 @@ namespace Akavache.Tests
                     fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
                     Assert.Throws<ArgumentNullException>(() =>
-                        fixture.Insert(null, new byte[] { 7, 8, 9 }));
+                        fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
                     byte[] output1 = fixture.GetAsync("Foo").First();
                     byte[] output2 = fixture.GetAsync("Bar").First();
@@ -107,26 +107,26 @@ namespace Akavache.Tests
                 {
                     using (var fixture = CreateBlobCache(path))
                     {
-                        fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromTicks(100));
-                        fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromTicks(500));
+                        fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
+                        fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
 
                         byte[] result = null;
-                        sched.AdvanceTo(20);
+                        sched.AdvanceToMs(20);
                         fixture.GetAsync("foo").Subscribe(x => result = x);
 
                         // Foo should still be active
-                        sched.AdvanceTo(50);
+                        sched.AdvanceToMs(50);
                         Assert.Equal(1, result[0]);
 
                         // From 100 < t < 500, foo should be inactive but bar should still work
                         bool shouldFail = true;
-                        sched.AdvanceTo(120);
+                        sched.AdvanceToMs(120);
                         fixture.GetAsync("foo").Subscribe(
                             x => result = x,
                             ex => shouldFail = false);
                         fixture.GetAsync("bar").Subscribe(x => result = x);
 
-                        sched.AdvanceTo(300);
+                        sched.AdvanceToMs(300);
                         Assert.False(shouldFail);
                         Assert.Equal(4, result[0]);
                     }
@@ -136,18 +136,18 @@ namespace Akavache.Tests
                     {
                         byte[] result = null;
                         fixture.GetAsync("bar").Subscribe(x => result = x);
-                        sched.AdvanceTo(400);
+                        sched.AdvanceToMs(400);
 
                         Assert.Equal(4, result[0]);
 
                         // At t=1000, everything is invalidated
                         bool shouldFail = true;
-                        sched.AdvanceTo(1000);
+                        sched.AdvanceToMs(1000);
                         fixture.GetAsync("bar").Subscribe(
                             x => result = x,
                             ex => shouldFail = false);
 
-                        sched.AdvanceTo(1010);
+                        sched.AdvanceToMs(1010);
                         Assert.False(shouldFail);
                     }
 
@@ -221,7 +221,7 @@ namespace Akavache.Tests
             var cache = CreateBlobCache("somepath");
             cache.Dispose();
 
-            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }));
+            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }).First());
         }
     }
 
@@ -238,7 +238,6 @@ namespace Akavache.Tests
         }
     }
 
-#if !SILVERLIGHT
     public class EncryptedBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
@@ -251,5 +250,4 @@ namespace Akavache.Tests
             public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
         }
     }
-#endif
 }
