@@ -71,7 +71,9 @@
     <Compile Include="ConcurrentDictionary.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="IBlobCache.cs" />
+    <Compile Include="IObjectFactory.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />
+    <Compile Include="JsonObjectConverter.cs" />
     <Compile Include="LoginInfo.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />

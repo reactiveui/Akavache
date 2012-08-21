@@ -6,6 +6,7 @@ namespace Akavache
 {
     public static class BlobCache
     {
+        static IObjectFactory objectFactory;
         static string applicationName;
         static ISecureBlobCache perSession = new TestBlobCache(Scheduler.Immediate);
 
@@ -19,9 +20,27 @@ namespace Akavache
             }
         }
 
+        public static IObjectFactory ObjectFactory
+        {
+            get { return objectFactory; }
+            set
+            {
+                if (value != null)
+                {
+                    JsonObjectConverter = new JsonObjectConverter(value);
+                }
+                else
+                {
+                    JsonObjectConverter = null;
+                }
+            }
+        }
+
+        internal static JsonObjectConverter JsonObjectConverter { get; private set; }
+
         /// <summary>
         /// Your application's name. Set this at startup, this defines where
-	/// your data will be stored (usually at %AppData%\[ApplicationName])
+        /// your data will be stored (usually at %AppData%\[ApplicationName])
         /// </summary>
         public static string ApplicationName
         {
@@ -41,8 +60,8 @@ namespace Akavache
 
         /// <summary>
         /// The local machine cache. Store data here that is unrelated to the
-	/// user account or shouldn't be uploaded to other machines (i.e.
-	/// image cache data)
+        /// user account or shouldn't be uploaded to other machines (i.e.
+        /// image cache data)
         /// </summary>
         public static IBlobCache LocalMachine
         {
@@ -52,8 +71,8 @@ namespace Akavache
 
         /// <summary>
         /// The user account cache. Store data here that is associated with
-	/// the user; in large organizations, this data will be synced to all
-	/// machines via NT Roaming Profiles.
+        /// the user; in large organizations, this data will be synced to all
+        /// machines via NT Roaming Profiles.
         /// </summary>
         public static IBlobCache UserAccount
         {
@@ -65,7 +84,7 @@ namespace Akavache
 
         /// <summary>
         /// An IBlobCache that is encrypted - store sensitive data in this
-	/// cache such as login information.
+        /// cache such as login information.
         /// </summary>
         public static ISecureBlobCache Secure
         {
@@ -75,7 +94,7 @@ namespace Akavache
 
         /// <summary>
         /// An IBlobCache that simply stores data in memory. Data stored in
-	/// this cache will be lost when the application restarts.
+        /// this cache will be lost when the application restarts.
         /// </summary>
         public static ISecureBlobCache InMemory
         {

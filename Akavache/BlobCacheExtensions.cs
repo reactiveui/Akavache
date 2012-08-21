@@ -176,7 +176,8 @@ namespace Akavache
         {
             try
             {
-                var ret = JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(x, 0, x.Length));
+                var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
+                var ret = BlobCache.ObjectFactory == null ? JsonConvert.DeserializeObject<T>(bytes) : JsonConvert.DeserializeObject<T>(bytes, BlobCache.JsonObjectConverter);
                 return Observable.Return(ret);
             } 
             catch (Exception ex)
