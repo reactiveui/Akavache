@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
 using Microsoft.Reactive.Testing;
 using ReactiveUI.Testing;
 using Xunit;
@@ -27,9 +24,9 @@ namespace Akavache.Tests
         public int Age { get; set; }
     }
 
-    public class ObjectFactory : IObjectFactory
+    public class ServiceProvider : IServiceProvider
     {
-        public object Create(Type t)
+        public object GetService(Type t)
         {
             if (t == typeof(UserModel))
             {

@@ -6,7 +6,7 @@ namespace Akavache
 {
     public static class BlobCache
     {
-        static IObjectFactory objectFactory;
+        static IServiceProvider serviceProvider;
         static string applicationName;
         static ISecureBlobCache perSession = new TestBlobCache(Scheduler.Immediate);
 
@@ -20,20 +20,12 @@ namespace Akavache
             }
         }
 
-        public static IObjectFactory ObjectFactory
+        public static IServiceProvider ServiceProvider
         {
-            get { return objectFactory; }
-            set
-            {
-                objectFactory = value;
-                if (value != null)
-                {
-                    JsonObjectConverter = new JsonObjectConverter(value);
-                }
-                else
-                {
-                    JsonObjectConverter = null;
-                }
+            get { return serviceProvider; }
+            set {
+                serviceProvider = value;
+                JsonObjectConverter = value != null ? new JsonObjectConverter(value) : null;
             }
         }
 

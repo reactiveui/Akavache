@@ -34,6 +34,11 @@ namespace Akavache
 
         public IScheduler Scheduler { get; protected set; }
 
+        public IServiceProvider ServiceProvider
+        {
+            get { return BlobCache.ServiceProvider; }
+        }
+
         readonly IDisposable inner;
         bool disposed;
         Dictionary<string, Tuple<CacheIndexEntry, byte[]>> cache = new Dictionary<string, Tuple<CacheIndexEntry, byte[]>>();
@@ -130,6 +135,7 @@ namespace Akavache
         }
 
         static readonly object gate = 42;
+
         public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
             Monitor.Enter(gate);
@@ -162,8 +168,8 @@ namespace Akavache
         public static TestBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler scheduler = null)
         {
             var initialSerializedContents = initialContents
-		    .Select(item => new KeyValuePair<string, byte[]>(item.Key, JsonSerializationMixin.SerializeObject(item.Value)))
-		    .ToArray();
+                .Select(item => new KeyValuePair<string, byte[]>(item.Key, JsonSerializationMixin.SerializeObject(item.Value)))
+                .ToArray();
 
             return OverrideGlobals(scheduler, initialSerializedContents);
         }

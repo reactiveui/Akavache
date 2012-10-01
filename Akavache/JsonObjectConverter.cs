@@ -5,12 +5,12 @@ namespace Akavache
 {
     public class JsonObjectConverter : CustomCreationConverter<object>
     {
-        readonly IObjectFactory objectFactory;
+        readonly IServiceProvider serviceProvider;
 
-        public JsonObjectConverter(IObjectFactory objectFactory)
+        public JsonObjectConverter(IServiceProvider serviceProvider)
         {
-            if (objectFactory == null) throw new ArgumentNullException("objectFactory");
-            this.objectFactory = objectFactory;
+            if (serviceProvider == null) throw new ArgumentNullException("serviceProvider");
+            this.serviceProvider = serviceProvider;
         }
 
         public override bool CanConvert(Type objectType)
@@ -20,7 +20,7 @@ namespace Akavache
 
         public override object Create(Type objectType)
         {
-            return objectFactory.Create(objectType);
+            return serviceProvider.GetService(objectType);
         }
     }
 }

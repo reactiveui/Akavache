@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -20,7 +19,7 @@ namespace Akavache
 {
     public static class JsonSerializationMixin
     {
-        static readonly ConcurrentDictionary<string, object> inflightFetchRequests = new ConcurrentDictionary<string, object>(); 
+        static readonly ConcurrentDictionary<string, object> inflightFetchRequests = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Insert an object into the cache, via the JSON serializer.
@@ -45,7 +44,7 @@ namespace Akavache
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .SelectMany(DeserializeObject<T>);
+                .SelectMany(bytes => DeserializeObject<T>(bytes, This.ServiceProvider));
         }
 
         /// <summary>
@@ -120,16 +119,16 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version)</returns>
-        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This, 
-            string key, 
-            Func<IObservable<T>> fetchFunc, 
+        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This,
+            string key,
+            Func<IObservable<T>> fetchFunc,
             Func<DateTimeOffset, bool> fetchPredicate = null,
             DateTimeOffset? absoluteExpiration = null)
         {
             bool foundItemInCache;
             var fail = Observable.Defer(() => This.GetCreatedAt(key))
                 .Select(x => fetchPredicate != null && x != null ? fetchPredicate(x.Value) : true)
-                .Where(x => x != false)
+                .Where(x => x)
                 .SelectMany(_ => fetchFunc())
                 .Finally(() => This.Invalidate(key))
                 .Do(x => This.InsertObject(key, x, absoluteExpiration));
@@ -153,15 +152,15 @@ namespace Akavache
 
         public static void InvalidateAllObjects<T>(this IBlobCache This)
         {
-             foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
-             {
-                 This.Invalidate(key);
-             }
+            foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
+            {
+                This.Invalidate(key);
+            }
         }
 
         static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
             () => JsonSerializer.Create(new JsonSerializerSettings()));
-        
+
         internal static byte[] SerializeObject(object value)
         {
             return SerializeObject<object>(value);
@@ -172,14 +171,14 @@ namespace Akavache
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
         }
 
-        static IObservable<T> DeserializeObject<T>(byte[] x)
+        static IObservable<T> DeserializeObject<T>(byte[] x, IServiceProvider serviceProvider)
         {
             try
             {
                 var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
-                var ret = BlobCache.ObjectFactory == null ? JsonConvert.DeserializeObject<T>(bytes) : JsonConvert.DeserializeObject<T>(bytes, BlobCache.JsonObjectConverter);
+                var ret = serviceProvider == null ? JsonConvert.DeserializeObject<T>(bytes) : JsonConvert.DeserializeObject<T>(bytes, new JsonObjectConverter(serviceProvider));
                 return Observable.Return(ret);
-            } 
+            }
             catch (Exception ex)
             {
                 return Observable.Throw<T>(ex);
@@ -245,8 +244,8 @@ namespace Akavache
         }
 
         static IObservable<WebResponse> MakeWebRequest(
-            Uri uri, 
-            Dictionary<string, string> headers = null, 
+            Uri uri,
+            Dictionary<string, string> headers = null,
             string content = null,
             int retries = 3,
             TimeSpan? timeout = null)
@@ -263,17 +262,17 @@ namespace Akavache
             }
 
 #if !SILVERLIGHT
-            if (RxApp.InUnitTestRunner()) 
+            if (RxApp.InUnitTestRunner())
             {
-                request = Observable.Defer(() => 
+                request = Observable.Defer(() =>
                 {
-                    if (content == null) 
+                    if (content == null)
                     {
                         return Observable.Start(() => hwr.GetResponse(), RxApp.TaskpoolScheduler);
                     }
 
                     var buf = Encoding.UTF8.GetBytes(content);
-                    return Observable.Start(() => 
+                    return Observable.Start(() =>
                     {
                         hwr.GetRequestStream().Write(buf, 0, buf.Length);
                         return hwr.GetResponse();
@@ -289,9 +288,9 @@ namespace Akavache
                     {
                         return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
                     }
-            
+
                     var buf = Encoding.UTF8.GetBytes(content);
-                    
+
                     // NB: You'd think that BeginGetResponse would never block, 
                     // seeing as how it's asynchronous. You'd be wrong :-/
                     var ret = new AsyncSubject<WebResponse>();
@@ -306,7 +305,7 @@ namespace Akavache
                     return ret;
                 });
             }
-        
+
             return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), RxApp.TaskpoolScheduler).Retry(retries);
         }
     }
@@ -337,7 +336,6 @@ namespace Akavache
             return This.GetObjectAsync<Tuple<string, string>>("login:" + host).Select(x => new LoginInfo(x));
         }
 
-                
         /// <summary>
         /// Erases the login associated with the specified host
         /// </summary>

@@ -109,6 +109,13 @@ namespace Akavache
         /// RxApp.TaskPoolScheduler.
         /// </summary>
         IScheduler Scheduler { get; }
+
+        /// <summary>
+        /// Service provider used to create instances of objects retrieved 
+        /// from the cache. This uses the value set in BlobCache.ServiceProvider.
+        /// If none is set, it just uses the old behavior.
+        /// </summary>
+        IServiceProvider ServiceProvider { get; }
     }
 
     /// <summary>
