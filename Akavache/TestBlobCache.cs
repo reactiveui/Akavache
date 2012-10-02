@@ -34,9 +34,12 @@ namespace Akavache
 
         public IScheduler Scheduler { get; protected set; }
 
+        IServiceProvider serviceProvider;
+
         public IServiceProvider ServiceProvider
         {
-            get { return BlobCache.ServiceProvider; }
+            get { return serviceProvider ?? BlobCache.ServiceProvider; }
+            set { serviceProvider = value; }
         }
 
         readonly IDisposable inner;
