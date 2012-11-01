@@ -8,15 +8,12 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
-using NLog;
 using ReactiveUI;
 
 namespace Akavache
 {
     static class Utility
     {
-        static readonly Logger log = LogManager.GetCurrentClassLogger();
-
         public static string GetMd5Hash(string input)
         {
             using (var md5Hasher = new MD5Managed())
@@ -118,7 +115,7 @@ namespace Akavache
                     ex =>
                     {
                         var msg = message ?? "0x" + This.GetHashCode().ToString("x");
-                        log.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
+                        LogHost.Default.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
                         subj.OnError(ex);
                     }, subj.OnCompleted);
             });
@@ -136,7 +133,7 @@ namespace Akavache
                 }
                 catch(Exception ex)
                 {
-                    log.WarnException("CopyToAsync failed", ex);
+                    LogHost.Default.WarnException("CopyToAsync failed", ex);
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 

@@ -46,16 +46,14 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.4.5.3\lib\sl4-windowsphone71\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4-windowsphone71\NLog.dll</HintPath>
-    </Reference>
     <Reference Include="ReactiveUI_WP7">
-      <HintPath>..\packages\reactiveui-core.3.1.0\lib\SL4-WindowsPhone71\ReactiveUI_WP7.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.4.0.1\lib\SL4-WindowsPhone71\ReactiveUI_WP7.dll</HintPath>
     </Reference>
     <Reference Include="System.Observable" />
-    <Reference Include="System.Reactive, Version=1.1.11111.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rx_Experimental-Main.1.1.11111\lib\SL3-WP\System.Reactive.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Reactive.Core, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Reactive.Interfaces, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Reactive.Linq, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Reactive.PlatformServices, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />

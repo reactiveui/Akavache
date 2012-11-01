@@ -13,7 +13,6 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using NLog;
 using Newtonsoft.Json;
 using ReactiveUI;
 
@@ -23,10 +22,8 @@ namespace Akavache
     /// This class represents an asynchronous key-value store backed by a 
     /// directory. It stores the last 'n' key requests in memory.
     /// </summary>
-    public abstract class PersistentBlobCache : IBlobCache
+    public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
     {
-        static readonly Logger log = LogManager.GetCurrentClassLogger();
-
         protected MemoizingMRUCache<string, AsyncSubject<byte[]>> MemoizedRequests;
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
@@ -75,12 +72,12 @@ namespace Akavache
                     .SelectMany(_ => FlushCacheIndex(true))
                     .Subscribe(_ =>
                     {
-                        log.Debug("Flushing cache");
+                        this.Log().Debug("Flushing cache");
                         lastFlushTime = Scheduler.Now;
                     });
             }
 
-            log.Info("{0} entries in blob cache index", CacheIndex.Count);
+            this.Log().Info("{0} entries in blob cache index", CacheIndex.Count);
         }
 
 
@@ -202,7 +199,7 @@ namespace Akavache
             Action deleteMe;
             lock (MemoizedRequests)
             {
-                log.Debug("Invalidating {0}", key);
+                this.Log().Debug("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
 
                 CacheIndexEntry dontcare;
@@ -216,8 +213,8 @@ namespace Akavache
                         filesystem.Delete(path);
                     }
 
-                    catch (FileNotFoundException ex) { log.Warn(ex); }
-                    catch (IsolatedStorageException ex) { log.Warn(ex); }
+                    catch (FileNotFoundException ex) { this.Log().Warn(ex); }
+                    catch (IsolatedStorageException ex) { this.Log().Warn(ex); }
 
                     actionTaken.OnNext(Unit.Default);
                 };
@@ -230,7 +227,7 @@ namespace Akavache
             }
             catch (Exception ex)
             {
-                log.Warn("Really can't delete key: " + key, ex);
+                this.Log().Warn("Really can't delete key: " + key, ex);
             }
         }
 
@@ -406,7 +403,7 @@ namespace Akavache
                 .Select(_ => Unit.Default)
                 .Catch<Unit, Exception>(ex =>
                 {
-                    log.WarnException("Couldn't flush cache index", ex);
+                    this.Log().WarnException("Couldn't flush cache index", ex);
                     return Observable.Return(Unit.Default);
                 });
         }
@@ -426,7 +423,7 @@ namespace Akavache
             }
             catch (Exception ex)
             {
-                log.Warn("Invalid cache index entry", ex);
+                this.Log().Warn("Invalid cache index entry", ex);
                 return Enumerable.Empty<KeyValuePair<string, CacheIndexEntry>>();
             }
         }

@@ -52,17 +52,24 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.4.5.3\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4\NLog.dll</HintPath>
+    <Reference Include="ReactiveUI_SL5">
+      <HintPath>..\packages\reactiveui-core.4.0.1\lib\SL5\ReactiveUI_SL5.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_SL5, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="System.Reactive.Core, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-core.3.1.0\lib\SL5\ReactiveUI_SL5.dll</HintPath>
+      <HintPath>..\packages\Rx-Core.2.0.21030\lib\SL5\System.Reactive.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive, Version=1.1.11111.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Reactive.Interfaces, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Rx_Experimental-Main.1.1.11111\lib\SL5\System.Reactive.dll</HintPath>
+      <HintPath>..\packages\Rx-Interfaces.2.0.21030\lib\SL5\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Linq.2.0.21030\lib\SL5\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.0.20823.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-PlatformServices.2.0.21030\lib\SL5\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />
