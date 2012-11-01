@@ -298,7 +298,7 @@ namespace Akavache
                     Observable.Start(() =>
                     {
                         Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
-                            .SelectMany(x => x.WriteAsync(buf, 0, buf.Length))
+                            .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
                             .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
                             .Multicast(ret).Connect();
                     }, RxApp.TaskpoolScheduler);

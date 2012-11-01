@@ -6,7 +6,7 @@ namespace System
 {
     public static class StreamMixins
     {
-        public static IObservable<Unit> WriteAsync(this Stream This, byte[] data, int start, int length)
+        public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
         {
             var ret = new AsyncSubject<Unit>();
 
