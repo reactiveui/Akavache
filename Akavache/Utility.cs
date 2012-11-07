@@ -10,6 +10,10 @@ using System.Text;
 using System.Threading;
 using ReactiveUI;
 
+#if NETFX_CORE
+using Windows.Storage;
+#endif
+
 namespace Akavache
 {
     static class Utility
@@ -29,6 +33,18 @@ namespace Akavache
             }
         }
 
+#if NETFX_CORE
+        public static IObservable<Stream> SafeOpenFileAsync(string path, FileAccessMode access, IScheduler scheduler = null)
+        {
+          throw new Exception("yeah yeah i'll get to this");   
+        }
+
+        public static void CreateRecursive(this string This)
+        {
+            throw new Exception("yeah yeah i'll get to this");   
+        }
+
+#else
         public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
@@ -76,6 +92,7 @@ namespace Akavache
             return ret;
         }
 
+
         public static void CreateRecursive(this DirectoryInfo This)
         {
             This.SplitFullPath().Aggregate((parent, dir) =>
@@ -106,6 +123,7 @@ namespace Akavache
             components.Reverse();
             return components;
         }
+#endif
 
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
         {
@@ -137,7 +155,7 @@ namespace Akavache
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 
-#if FALSE
+#if FALSE // i love this
             var reader = Observable.FromAsyncPattern<byte[], int, int, int>(This.BeginRead, This.EndRead);
             var writer = Observable.FromAsyncPattern<byte[], int, int>(destination.BeginWrite, destination.EndWrite);
 
@@ -174,7 +192,9 @@ namespace Akavache
                     retries--;
                     if (retries == 0)
                     {
+#if !NETFX_CORE
                         Thread.Sleep(10);
+#endif
                         throw;
                     }
                 }
@@ -195,7 +215,9 @@ namespace Akavache
                     retries--;
                     if (retries == 0)
                     {
+#if !NETFX_CORE
                         Thread.Sleep(10);
+#endif
                         throw;
                     }
                 }

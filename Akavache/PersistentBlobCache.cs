@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -15,6 +14,11 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using ReactiveUI;
+#if NETFX_CORE
+using Windows.Storage;
+#else
+using System.IO.IsolatedStorage;
+#endif
 
 namespace Akavache
 {
@@ -214,7 +218,9 @@ namespace Akavache
                     }
 
                     catch (FileNotFoundException ex) { this.Log().Warn(ex); }
+#if !NETFX_CORE
                     catch (IsolatedStorageException ex) { this.Log().Warn(ex); }
+#endif
 
                     actionTaken.OnNext(Unit.Default);
                 };
@@ -345,6 +351,8 @@ namespace Akavache
                 goto leave;
             }
 
+#if NETFX_CORE
+#else
             filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
@@ -352,6 +360,8 @@ namespace Akavache
                 .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
                 .Multicast(ret).Connect();
+#endif
+
 
         leave:
             return ret;
@@ -370,7 +380,12 @@ namespace Akavache
 
             var files = Observable.Zip(
                 BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
+#if NETFX_CORE
+                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileAccessMode.ReadWrite, scheduler),
+#else
                 filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Create, FileAccess.Write, FileShare.None, scheduler),
+#endif
+
                 (from, to) => new { from, to }
             );
 
@@ -433,7 +448,7 @@ namespace Akavache
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
 
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
         protected static string GetDefaultRoamingCacheDirectory()
         {
             return "BlobCache";

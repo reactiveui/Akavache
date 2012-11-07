@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
+#if NETFX_CORE
+using Windows.Storage;
+#else
+
+#endif
 
 namespace Akavache
 {
@@ -24,7 +29,12 @@ namespace Akavache
         /// <param name="share">The allowed file sharing modes.</param>
         /// <param name="scheduler">The scheduler to schedule the open under.</param>
         /// <returns>A Future result representing the Open file.</returns>
+#if NETFX_CORE
+        IObservable<Stream> SafeOpenFileAsync(string path, FileAccessMode access,  IScheduler scheduler);
+#else
         IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler);
+#endif
+        
 
         /// <summary>
         /// Create a directory and its parents. If the directory already

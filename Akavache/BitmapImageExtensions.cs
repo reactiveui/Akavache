@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Windows.Media.Imaging;
-using Newtonsoft.Json;
 using ReactiveUI;
+using System;
+using System.IO;
+using System.Reactive.Linq;
+
+#if !NETFX_CORE
+using System.Windows.Media.Imaging;
+#else
+using Windows.Storage.Streams;
+using Windows.UI.Xaml.Media.Imaging;
+#endif
 
 namespace Akavache
 {
@@ -60,6 +57,8 @@ namespace Akavache
                 var ret = new BitmapImage();
 #if SILVERLIGHT
                 ret.SetSource(new MemoryStream(compressedImage));
+#elif NETFX_CORE
+                ret.SetSourceAsync(new MemoryRandomAccessStream(compressedImage));
 #else
                 ret.BeginInit();
                 ret.StreamSource = new MemoryStream(compressedImage);

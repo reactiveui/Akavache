@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+#if NETFX_CORE
+using Windows.Storage;
+#else
 using System.IO.IsolatedStorage;
+#endif
 using System.Linq;
 using System.Net;
 using System.Reactive.Concurrency;
@@ -9,10 +13,27 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReactiveUI;
 
+
 namespace Akavache
 {
     public class IsolatedStorageProvider : IFilesystemProvider
     {
+#if NETFX_CORE
+        public IObservable<Stream> SafeOpenFileAsync(string path, FileAccessMode mode, IScheduler scheduler)
+        {
+            throw new Exception("yeah yeah its coming");
+        }
+
+        public void CreateRecursive(string dirPath)
+        {
+            throw new Exception("yeah yeah its coming");
+        }
+
+        public void Delete(string path)
+        {
+            throw new Exception("yeah yeah its coming");
+        }
+#else
         public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
         {
             return Observable.Create<Stream>(subj =>
@@ -74,5 +95,6 @@ namespace Akavache
                 } catch (FileNotFoundException) { }
             }
         }
+#endif
     }
 }
