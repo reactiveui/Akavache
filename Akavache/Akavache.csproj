@@ -67,14 +67,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlobCache.cs" />
-    <Compile Include="BlobCacheExtensions.cs" />
+    <Compile Include="RelativeTimeMixin.cs" />
     <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
+    <Compile Include="HttpMixin.cs" />
     <Compile Include="IBlobCache.cs" />
     <Compile Include="IObjectFactory.cs" />
     <Compile Include="JsonObjectConverter.cs" />
+    <Compile Include="JsonSerializationMixin.cs" />
     <Compile Include="LoginInfo.cs" />
+    <Compile Include="LoginMixin.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="PersistentBlobCache.cs" />
