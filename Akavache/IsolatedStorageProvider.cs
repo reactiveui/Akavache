@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+#if !NETFX_CORE
 using System.IO.IsolatedStorage;
+#else
+
+#endif
 using System.Linq;
 using System.Net;
 using System.Reactive.Concurrency;

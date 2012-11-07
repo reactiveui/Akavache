@@ -3,7 +3,11 @@ using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
+#if !NETFX_CORE
 using System.Security.Cryptography;
+#else
+
+#endif
 using ReactiveUI;
 
 namespace Akavache

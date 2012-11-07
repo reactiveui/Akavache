@@ -1,7 +1,12 @@
 // Fetched from http://archive.msdn.microsoft.com/SilverlightMD5
 //Copyright (c) Microsoft Corporation.  All rights reserved.
 using System;
+#if !NETFX_CORE
 using System.Security.Cryptography;
+#else
+
+#endif
+
 
 // **************************************************************
 // * Raw implementation of the MD5 hash algorithm
@@ -16,6 +21,8 @@ namespace Akavache
 
 #if SILVERLIGHT
 internal class MD5Managed : HashAlgorithm
+#elif NETFXCORE
+internal class MD5Managed : MD5 // TODO: fix this shit
 #else
 internal class MD5Managed : MD5
 #endif

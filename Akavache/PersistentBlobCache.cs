@@ -3,7 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+#if !NETFX_CORE
 using System.IO.IsolatedStorage;
+#else
+
+#endif
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
