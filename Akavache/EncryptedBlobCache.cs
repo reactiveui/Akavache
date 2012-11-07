@@ -32,7 +32,7 @@ namespace Akavache
         {
             try
             {
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
                 var ret = Observable.Return(ProtectedData.Protect(data, null));
 #else
                 var ret = Observable.Return(ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser));
@@ -59,7 +59,7 @@ namespace Akavache
             try
             {
                 string dontcare;
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
                 var ret = Observable.Return(ProtectedData.Unprotect(data, null));
 #else
                 var ret = Observable.Return(ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser));
@@ -80,7 +80,7 @@ namespace Akavache
 
         protected static string GetDefaultCacheDirectory()
         {
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
             return "SecretCache";
 #else
             return RxApp.InUnitTestRunner() ?

@@ -34,11 +34,16 @@ namespace Akavache
         }
 
 #if NETFX_CORE
-
         public static IObservable<Stream> SafeOpenFileAsync(string path, FileAccessMode access, IScheduler scheduler = null)
         {
           throw new Exception("yeah yeah i'll get to this");   
         }
+
+        public static void CreateRecursive(this string This)
+        {
+            throw new Exception("yeah yeah i'll get to this");   
+        }
+
 #else
         public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
@@ -150,7 +155,7 @@ namespace Akavache
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 
-#if FALSE
+#if FALSE // i love this
             var reader = Observable.FromAsyncPattern<byte[], int, int, int>(This.BeginRead, This.EndRead);
             var writer = Observable.FromAsyncPattern<byte[], int, int>(destination.BeginWrite, destination.EndWrite);
 
@@ -187,7 +192,9 @@ namespace Akavache
                     retries--;
                     if (retries == 0)
                     {
+#if !NETFX_CORE
                         Thread.Sleep(10);
+#endif
                         throw;
                     }
                 }
@@ -208,7 +215,9 @@ namespace Akavache
                     retries--;
                     if (retries == 0)
                     {
+#if !NETFX_CORE
                         Thread.Sleep(10);
+#endif
                         throw;
                     }
                 }

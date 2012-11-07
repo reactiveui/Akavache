@@ -6,6 +6,12 @@ namespace System
 {
     public static class StreamMixins
     {
+#if NETFX_CORE
+        public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
+        {
+            throw new Exception("yeah yeah its coming");
+        }
+#else
         public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
         {
             var ret = new AsyncSubject<Unit>();
@@ -33,5 +39,6 @@ namespace System
 
             return ret;
         }
+#endif
     }
 }

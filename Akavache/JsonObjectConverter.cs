@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using Newtonsoft.Json.Converters;
 
 namespace Akavache
@@ -15,7 +16,11 @@ namespace Akavache
 
         public override bool CanConvert(Type objectType)
         {
+#if NETFX_CORE
+            return objectType.GetTypeInfo().IsInterface;
+#else
             return objectType.IsInterface;
+#endif
         }
 
         public override object Create(Type objectType)

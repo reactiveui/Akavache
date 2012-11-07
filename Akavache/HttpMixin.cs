@@ -84,7 +84,7 @@ namespace Akavache
                 }
             }
 
-#if !SILVERLIGHT
+#if !(SILVERLIGHT || NETFX_CORE)
             if (RxApp.InUnitTestRunner()) 
             {
                 request = Observable.Defer(() => 
@@ -120,7 +120,11 @@ namespace Akavache
                     Observable.Start(() =>
                     {
                         Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
+#if NETFX_CORE
                             .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
+#else
+                            .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
+#endif
                             .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
                             .Multicast(ret).Connect();
                     }, RxApp.TaskpoolScheduler);
