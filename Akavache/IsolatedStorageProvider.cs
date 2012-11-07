@@ -17,6 +17,9 @@ namespace Akavache
 {
     public class IsolatedStorageProvider : IFilesystemProvider
     {
+#if NETFX_CORE
+
+#else
         public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
         {
             return Observable.Create<Stream>(subj =>
@@ -37,6 +40,7 @@ namespace Akavache
                 return disp;
             });
         }
+#endif
 
         public void CreateRecursive(string dirPath)
         {

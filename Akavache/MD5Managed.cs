@@ -21,7 +21,7 @@ namespace Akavache
 
 #if SILVERLIGHT
 internal class MD5Managed : HashAlgorithm
-#elif NETFXCORE
+#elif NETFX_CORE
 internal class MD5Managed : MD5 // TODO: fix this shit
 #else
 internal class MD5Managed : MD5
