@@ -1,19 +1,27 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>1.0.1</version>
+    <version>2.0.0</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
     <dependencies>
       <dependency id="Newtonsoft.Json" version="4.5.3" />
-      <dependency id="reactiveui-core" version="3.1.0" />
+      <dependency id="reactiveui-core" version="4.0.2" />
     </dependencies>
+
     <id>akavache</id>
     <title>Akavache</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</description>
     <summary>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</summary>
-    <copyright>Copyright GitHub Â© 2012</copyright>
+    <copyright>Copyright GitHub© 2012</copyright>
   </metadata>
+
+  <files>
+    <file src="bin\Release\Net40\Akavache.*" target="lib\net40" />
+    <file src="bin\Release\SL5\Akavache_SL5.*" target="lib\sl5" />
+    <file src="bin\Release\WP7\Akavache_WP7.*" target="lib\wp7" />
+    <file src="bin\Release\WP8\Akavache_WP8.*" target="lib\wp8" />
+  </files>
 </package>
