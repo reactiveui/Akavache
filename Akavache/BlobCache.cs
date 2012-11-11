@@ -25,6 +25,7 @@ namespace Akavache
             get { return objectFactory; }
             set
             {
+                objectFactory = value;
                 if (value != null)
                 {
                     JsonObjectConverter = new JsonObjectConverter(value);
