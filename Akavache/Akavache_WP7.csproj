@@ -90,7 +90,6 @@
     <Compile Include="StreamMixins.cs" />
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="WP7Shims.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.$(TargetFrameworkProfile).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.CSharp.targets" />
