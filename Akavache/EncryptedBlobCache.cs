@@ -21,7 +21,11 @@ namespace Akavache
         }
 
         class CEncryptedBlobCache : EncryptedBlobCache {
+#if SILVERLIGHT
+            public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
+#else
             public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
+#endif
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
