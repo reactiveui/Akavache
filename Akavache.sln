@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_WP7", "Akavache\Ak
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_WP8", "Akavache\Akavache_WP8.csproj", "{A54279A3-3457-41DB-9166-67E05FD0E0B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheWP8", "AkavacheWP8\AkavacheWP8.csproj", "{554953A1-C466-4641-820F-59036152B5FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Net45", "Akavache\Akavache_Net45.csproj", "{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +91,14 @@ Global
 		{554953A1-C466-4641-820F-59036152B5FA}.Release|x86.ActiveCfg = Release|x86
 		{554953A1-C466-4641-820F-59036152B5FA}.Release|x86.Build.0 = Release|x86
 		{554953A1-C466-4641-820F-59036152B5FA}.Release|x86.Deploy.0 = Release|x86
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

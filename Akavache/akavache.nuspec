@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.2.1</version>
+    <version>2.2.2</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
@@ -21,6 +21,7 @@
 
   <files>
     <file src="bin\Release\Net40\Akavache.*" target="lib\net40" />
+    <file src="bin\Release\Net45\Akavache.*" target="lib\net45" />
     <file src="bin\Release\SL5\Akavache_SL5.*" target="lib\sl5" />
     <file src="bin\Release\WP7\Akavache_WP7.*" target="lib\wp7" />
     <file src="bin\Release\WP8\Akavache_WP8.*" target="lib\wp8" />
