@@ -95,7 +95,11 @@ namespace Akavache
 
         class CPersistentBlobCache : PersistentBlobCache
         {
+#if SILVERLIGHT
+            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
+#else
             public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
+#endif
         }
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
