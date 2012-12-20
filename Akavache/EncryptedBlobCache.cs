@@ -54,7 +54,6 @@ namespace Akavache
         {
             try
             {
-                string dontcare;
 #if SILVERLIGHT
                 var ret = Observable.Return(ProtectedData.Unprotect(data, null));
 #else
