@@ -5,6 +5,7 @@
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="Newtonsoft.Json" version="4.5.11" />
       <dependency id="reactiveui-core" version="4.2.2" />
