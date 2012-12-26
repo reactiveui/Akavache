@@ -51,15 +51,22 @@ namespace Akavache
             MemoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
                 (x, c) => FetchOrWriteBlobFromDisk(x, c, false), 20);
 
-            filesystem.CreateRecursive(CacheDirectory);
+            try 
+            {
+                filesystem.CreateRecursive(CacheDirectory).Wait();
+            }
+            catch (Exception ex) 
+            {
+                this.Log().FatalException("Couldn't create cache directory", ex);
+            }
 
-            FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
+            CacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
                     .SelectMany(ParseCacheIndexEntry)
                     .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x))
-                .Subscribe(x => CacheIndex = x);
+                .First();
 
             flushThreadSubscription = Disposable.Empty;
 
