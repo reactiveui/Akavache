@@ -451,6 +451,16 @@ namespace Akavache
         {
             return "LocalBlobCache";
         }
+#elif WINRT
+        protected static string GetDefaultRoamingCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "BlobCache");
+        }
+
+        protected static string GetDefaultLocalMachineCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
+        }
 #else
         protected static string GetDefaultRoamingCacheDirectory()
         {

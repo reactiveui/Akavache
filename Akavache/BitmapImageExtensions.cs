@@ -9,9 +9,14 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
-using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
 using ReactiveUI;
+
+#if WINRT
+using Windows.UI.Xaml.Media.Imaging;
+#else
+using System.Windows.Media.Imaging;
+#endif
 
 namespace Akavache
 {
@@ -60,6 +65,8 @@ namespace Akavache
                 var ret = new BitmapImage();
 #if SILVERLIGHT
                 ret.SetSource(new MemoryStream(compressedImage));
+#elif WINRT
+                ret.SetSourceAsync(compressedImage.AsRandomAccessStream());
 #else
                 ret.BeginInit();
                 ret.StreamSource = new MemoryStream(compressedImage);

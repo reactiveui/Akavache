@@ -32,13 +32,13 @@ namespace Akavache
         /// directory exists)
         /// </summary>
         /// <param name="path">The path to create.</param>
-        void CreateRecursive(string path);
+        IObservable<Unit> CreateRecursive(string path);
 
         /// <summary>
         /// Deletes a file.
         /// </summary>
         /// <param name="path">The path to the file</param>
-        void Delete(string path);
+        IObservable<Unit> Delete(string path);
     }
 
     /// <summary>

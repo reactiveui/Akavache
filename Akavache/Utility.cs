@@ -10,12 +10,23 @@ using System.Text;
 using System.Threading;
 using ReactiveUI;
 
+#if WINRT
+using System.Reactive.Windows.Foundation;
+using Windows.Storage;
+#endif
+
 namespace Akavache
 {
     static class Utility
     {
         public static string GetMd5Hash(string input)
         {
+#if WINRT
+            // NB: Technically, we could do this everywhere, but if we did this
+            // upgrade, we may return different strings than we used to (i.e. 
+            // formatting-wise), which would break old caches.
+            return MD5Core.GetHashString(input, Encoding.UTF8);
+#else
             using (var md5Hasher = new MD5Managed())
             {
                 // Convert the input string to a byte array and compute the hash.
@@ -27,12 +38,13 @@ namespace Akavache
                 }
                 return sBuilder.ToString();
             }
+#endif
         }
 
-        public static IObservable<FileStream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
+        public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
-            var ret = new AsyncSubject<FileStream>();
+            var ret = new AsyncSubject<Stream>();
 
             Observable.Start(() =>
             {
@@ -45,6 +57,7 @@ namespace Akavache
                         FileMode.OpenOrCreate,
                     };
 
+#if !WINRT
                     // NB: We do this (even though it's incorrect!) because
                     // throwing lots of 1st chance exceptions makes debugging
                     // obnoxious, as well as a bug in VS where it detects
@@ -54,17 +67,23 @@ namespace Akavache
                         ret.OnError(new FileNotFoundException());
                         return;
                     }
+#endif
 
 #if SILVERLIGHT
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Subscribe(ret);
+                    Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Select(x => (Stream)x).Subscribe(ret);
 #elif MONO
                     Observable.Start (() => 
                     {
                         var ufi = new Mono.Unix.UnixFileInfo (path);
                         return ufi.Open (mode, access);
                     }, scheduler).Cast<Stream>().Subscribe(ret);
+#elif WINRT
+                    StorageFile.GetFileFromPathAsync(path).ToObservable()
+                        .SelectMany(x => x.OpenAsync(access == FileAccess.Read ? FileAccessMode.Read : FileAccessMode.ReadWrite).ToObservable())
+                        .Select(x => x.AsStream())
+                        .Subscribe(ret);
 #else
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler).Subscribe(ret);
+                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler).Cast<Stream>().Subscribe(ret);
 #endif
                 }
                 catch (Exception ex)
@@ -76,6 +95,7 @@ namespace Akavache
             return ret;
         }
 
+#if !WINRT
         public static void CreateRecursive(this DirectoryInfo This)
         {
             This.SplitFullPath().Aggregate((parent, dir) =>
@@ -106,6 +126,7 @@ namespace Akavache
             components.Reverse();
             return components;
         }
+#endif
 
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
         {
@@ -174,7 +195,6 @@ namespace Akavache
                     retries--;
                     if (retries == 0)
                     {
-                        Thread.Sleep(10);
                         throw;
                     }
                 }
@@ -195,7 +215,6 @@ namespace Akavache
                     retries--;
                     if (retries == 0)
                     {
-                        Thread.Sleep(10);
                         throw;
                     }
                 }
