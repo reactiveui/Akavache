@@ -19,7 +19,6 @@ namespace Akavache
             get { return _Current.Value; }
         }
 
-        readonly DataProtectionProvider dpapi = new DataProtectionProvider();
         protected EncryptedBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null)
             : base(cacheDirectory, filesystemProvider, scheduler)
         {
@@ -32,12 +31,24 @@ namespace Akavache
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (data.Length == 0) 
+            {
+                return Observable.Return(data);
+            }
+
+            var dpapi = new DataProtectionProvider("LOCAL=user");
             return dpapi.ProtectAsync(data.AsBuffer()).ToObservable()
                 .Select(x => x.ToArray());
         }
 
         protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (data.Length == 0) 
+            {
+                return Observable.Return(data);
+            }
+
+            var dpapi = new DataProtectionProvider();
             return dpapi.UnprotectAsync(data.AsBuffer()).ToObservable()
                 .Select(x => x.ToArray());
         }
