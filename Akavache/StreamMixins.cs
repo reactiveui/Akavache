@@ -2,12 +2,19 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
 
+#if WINRT
+using System.Reactive.Threading.Tasks;
+#endif
+
 namespace System
 {
     public static class StreamMixins
     {
         public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
         {
+#if WINRT
+            return This.WriteAsync(data, start, length).ToObservable();
+#else
             var ret = new AsyncSubject<Unit>();
 
             try
@@ -32,6 +39,7 @@ namespace System
             }
 
             return ret;
+#endif
         }
     }
 }

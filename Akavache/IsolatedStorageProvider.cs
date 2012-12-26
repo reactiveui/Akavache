@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Net;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -34,45 +35,52 @@ namespace Akavache
             });
         }
 
-        public void CreateRecursive(string dirPath)
+        public IObservable<Unit> CreateRecursive(string dirPath)
         {
-            using(var fs = IsolatedStorageFile.GetUserStoreForApplication())
+            return Observable.Start(() => 
             {
-                string acc = "";
-                foreach(var x in dirPath.Split(Path.DirectorySeparatorChar))
+                using(var fs = IsolatedStorageFile.GetUserStoreForApplication())
                 {
-                    var path = Path.Combine(acc, x);
-
-                    if (path[path.Length - 1] == Path.VolumeSeparatorChar)
+                    string acc = "";
+                    foreach(var x in dirPath.Split(Path.DirectorySeparatorChar))
                     {
-                        path += Path.DirectorySeparatorChar;
+                        var path = Path.Combine(acc, x);
+
+                        if (path[path.Length - 1] == Path.VolumeSeparatorChar)
+                        {
+                            path += Path.DirectorySeparatorChar;
+                        }
+
+
+                        if (!fs.DirectoryExists(path))
+                        {
+                            fs.CreateDirectory(path);
+                        }
+
+                        acc = path;
                     }
-
-
-                    if (!fs.DirectoryExists(path))
-                    {
-                        fs.CreateDirectory(path);
-                    }
-
-                    acc = path;
                 }
-            }
+            }, RxApp.TaskpoolScheduler) ;
         }
 
-        public void Delete(string path)
+        public IObservable<Unit> Delete(string path)
         {
-            using(var fs = IsolatedStorageFile.GetUserStoreForApplication())
+            return Observable.Start(() =>
             {
-                if (!fs.FileExists(path))
+                using (var fs = IsolatedStorageFile.GetUserStoreForApplication())
                 {
-                    return;
-                }
+                    if (!fs.FileExists(path))
+                    {
+                        return;
+                    }
 
-                try
-                {
-                    fs.DeleteFile(path);
-                } catch (FileNotFoundException) { }
-            }
+                    try
+                    {
+                        fs.DeleteFile(path);
+                    }
+                    catch (FileNotFoundException) { }
+                }
+            }, RxApp.TaskpoolScheduler);
         }
     }
 }

@@ -51,15 +51,22 @@ namespace Akavache
             MemoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
                 (x, c) => FetchOrWriteBlobFromDisk(x, c, false), 20);
 
-            filesystem.CreateRecursive(CacheDirectory);
+            try 
+            {
+                filesystem.CreateRecursive(CacheDirectory).Wait();
+            }
+            catch (Exception ex) 
+            {
+                this.Log().FatalException("Couldn't create cache directory", ex);
+            }
 
-            FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
+            CacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
                     .SelectMany(ParseCacheIndexEntry)
                     .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x))
-                .Subscribe(x => CacheIndex = x);
+                .First();
 
             flushThreadSubscription = Disposable.Empty;
 
@@ -376,9 +383,10 @@ namespace Akavache
                 goto leave;
             }
 
+            var path = GetPathForKey(key);
             var files = Observable.Zip(
                 BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
-                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Create, FileAccess.Write, FileShare.None, scheduler),
+                filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler),
                 (from, to) => new { from, to }
             );
 
@@ -390,7 +398,10 @@ namespace Akavache
             files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
-                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
+                .Do(_ =>
+                {
+                    if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }
+                }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex))
                 .Multicast(ret).Connect();
 
         leave:
@@ -450,6 +461,16 @@ namespace Akavache
         protected static string GetDefaultLocalMachineCacheDirectory()
         {
             return "LocalBlobCache";
+        }
+#elif WINRT
+        protected static string GetDefaultRoamingCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "BlobCache");
+        }
+
+        protected static string GetDefaultLocalMachineCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
         }
 #else
         protected static string GetDefaultRoamingCacheDirectory()
