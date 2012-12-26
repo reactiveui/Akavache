@@ -376,9 +376,10 @@ namespace Akavache
                 goto leave;
             }
 
+            var path = GetPathForKey(key);
             var files = Observable.Zip(
                 BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
-                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Create, FileAccess.Write, FileShare.None, scheduler),
+                filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler),
                 (from, to) => new { from, to }
             );
 
@@ -390,7 +391,10 @@ namespace Akavache
             files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
-                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
+                .Do(_ =>
+                {
+                    if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }
+                }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex))
                 .Multicast(ret).Connect();
 
         leave:

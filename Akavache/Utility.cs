@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading;
 using ReactiveUI;
@@ -144,6 +145,22 @@ namespace Akavache
 
         public static IObservable<Unit> CopyToAsync(this Stream This, Stream destination, IScheduler scheduler = null)
         {
+#if WINRT
+            return This.CopyToAsync(destination).ToObservable()
+                .Do(x =>
+                {
+                    try
+                    {
+                        This.Dispose();
+                        destination.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogHost.Default.WarnException("CopyToAsync failed", ex);
+                    }
+                });
+#endif
+
             return Observable.Start(() =>
             {
                 try

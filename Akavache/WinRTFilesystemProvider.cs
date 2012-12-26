@@ -18,7 +18,11 @@ namespace Akavache
     {
         public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
         {
-            return StorageFile.GetFileFromPathAsync(path).ToObservable()
+            var folder = Path.GetDirectoryName(path);
+            var name = Path.GetFileName(path);
+
+            return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
+                .SelectMany(x => x.CreateFileAsync(name, CreationCollisionOption.OpenIfExists).ToObservable())
                 .SelectMany(x => access == FileAccess.Read ?
                     x.OpenStreamForReadAsync().ToObservable() :
                     x.OpenStreamForWriteAsync().ToObservable());
@@ -26,7 +30,8 @@ namespace Akavache
 
         public IObservable<Unit> CreateRecursive(string path)
         {
-            return createRecursiveHelper(path).ToObservable();
+            var ret = createRecursiveHelper(path).ToObservable();
+            return ret;
         }
 
         async Task createRecursiveHelper(string path)
@@ -43,11 +48,17 @@ namespace Akavache
                 {
                     var sf = await StorageFolder.GetFolderFromPathAsync(dir);
                     root = sf.Path;
+                    break;
                 }
                 catch (FileNotFoundException ex)
                 {
                     continue;
                 }
+            }
+
+            if (root == path) 
+            {
+                return;
             }
 
             if (root == null)
