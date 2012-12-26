@@ -261,7 +261,7 @@ namespace Akavache
                 }
             }
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINRT
             if (RxApp.InUnitTestRunner())
             {
                 request = Observable.Defer(() =>
