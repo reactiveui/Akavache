@@ -53,20 +53,29 @@ namespace Akavache
 
             try 
             {
-                filesystem.CreateRecursive(CacheDirectory).Wait();
+                var dir = filesystem.CreateRecursive(CacheDirectory);
+#if WINRT
+                // NB: I don't want to talk about it.
+                dir.Wait();
+#endif
             }
             catch (Exception ex) 
             {
                 this.Log().FatalException("Couldn't create cache directory", ex);
             }
 
-            CacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
+            var cacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
                     .SelectMany(ParseCacheIndexEntry)
                     .ToDictionary(y => y.Key, y => y.Value))
-                .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x))
-                .First();
+                .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x));
+
+#if WINRT
+            CacheIndex = cacheIndex.First();
+#else
+            cacheIndex.Subscribe(x => CacheIndex = x);
+#endif
 
             flushThreadSubscription = Disposable.Empty;
 

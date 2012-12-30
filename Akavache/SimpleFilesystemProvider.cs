@@ -16,7 +16,8 @@ namespace Akavache
 
         public IObservable<Unit> CreateRecursive(string path)
         {
-            return Observable.Start(() => Utility.CreateRecursive(new DirectoryInfo(path)), RxApp.TaskpoolScheduler);
+            Utility.CreateRecursive(new DirectoryInfo(path));
+            return Observable.Return(Unit.Default);
         }
 
         public IObservable<Unit> Delete(string path)
