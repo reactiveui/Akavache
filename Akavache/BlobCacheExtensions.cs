@@ -168,7 +168,7 @@ namespace Akavache
 
         internal static byte[] SerializeObject<T>(T value)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, BlobCache.SerializerSettings));
         }
 
         static IObservable<T> DeserializeObject<T>(byte[] x, IServiceProvider serviceProvider)
@@ -176,7 +176,9 @@ namespace Akavache
             try
             {
                 var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
-                var ret = serviceProvider == null ? JsonConvert.DeserializeObject<T>(bytes) : JsonConvert.DeserializeObject<T>(bytes, new JsonObjectConverter(serviceProvider));
+                var ret = serviceProvider == null ? 
+                    JsonConvert.DeserializeObject<T>(bytes, BlobCache.SerializerSettings) : 
+                    JsonConvert.DeserializeObject<T>(bytes, new JsonObjectConverter(serviceProvider));
                 return Observable.Return(ret);
             }
             catch (Exception ex)

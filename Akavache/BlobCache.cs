@@ -1,5 +1,6 @@
 using System;
 using System.Reactive.Concurrency;
+using Newtonsoft.Json;
 using ReactiveUI;
 
 namespace Akavache
@@ -94,5 +95,7 @@ namespace Akavache
             get { return perSession; }
             set { perSession = value; }
         }
+
+        public static JsonSerializerSettings SerializerSettings { get; set; }
     }
 }
