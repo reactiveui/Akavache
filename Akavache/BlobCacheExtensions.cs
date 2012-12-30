@@ -29,6 +29,9 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return objCache.InsertObject(key, value, absoluteExpiration);
+
             var bytes = SerializeObject(value);
             return This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
         }
@@ -43,6 +46,9 @@ namespace Akavache
         /// <returns>A Future result representing the object in the cache.</returns>
         public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return objCache.GetObjectAsync<T>(key, noTypePrefix);
+
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
                 .SelectMany(bytes => DeserializeObject<T>(bytes, This.ServiceProvider));
         }
@@ -54,6 +60,9 @@ namespace Akavache
         /// with the specified Type.</returns>
         public static IObservable<IEnumerable<T>> GetAllObjects<T>(this IBlobCache This)
         {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return objCache.GetAllObjects<T>();
+
             // NB: This isn't exactly thread-safe, but it's Close Enough(tm)
             // We make up for the fact that the keys could get kicked out
             // from under us via the Catch below
@@ -145,13 +154,29 @@ namespace Akavache
             }).Concat(fail).Multicast(new ReplaySubject<T>()).RefCount();
         }
 
+        /// <summary>
+        /// Invalidates a single object from the cache. It is important that the Type
+        /// Parameter for this method be correct, and you cannot use 
+        /// IBlobCache.Invalidate to perform the same task.
+        /// </summary>
+        /// <param name="key">The key to invalidate.</param>
         public static void InvalidateObject<T>(this IBlobCache This, string key)
         {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) objCache.InvalidateObject<T>(key);
+
             This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
         }
 
+        /// <summary>
+        /// Invalidates all objects of the specified type. To invalidate all
+        /// objects regardless of type, use InvalidateAll.
+        /// </summary>
         public static void InvalidateAllObjects<T>(this IBlobCache This)
         {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) objCache.InvalidateAllObjects<T>();
+
             foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
             {
                 This.Invalidate(key);
