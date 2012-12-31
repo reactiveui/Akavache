@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI.Testing;
 using Xunit;
@@ -36,15 +38,17 @@ namespace Akavache.Tests
         }
     }
 
-    public class BlobCacheExtensionsFixture
+    public abstract class BlobCacheExtensionsFixture
     {
+        protected abstract IBlobCache CreateBlobCache(string path);
+
         [Fact]
         public void DownloadUrlTest()
         {
             string path;
 
             using(Utility.WithEmptyDirectory(out path))
-            using(var fixture = new TPersistentBlobCache(path))
+            using(var fixture = CreateBlobCache(path))
             {
                 var bytes = fixture.DownloadUrl(@"https://www.google.com/intl/en_com/images/srpr/logo3w.png").First();
                 Assert.True(bytes.Length > 0);
@@ -62,12 +66,12 @@ namespace Akavache.Tests
 
                 using (Utility.WithEmptyDirectory(out path))
                 {
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         fixture.InsertObject("key", input);
                     }
                     sched.Start();
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         var action = fixture.GetObjectAsync<UserObject>("key");
                         sched.Start();
@@ -92,12 +96,12 @@ namespace Akavache.Tests
 
                 using (Utility.WithEmptyDirectory(out path))
                 {
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         fixture.InsertObject("key", input);
                     }
                     sched.Start();
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         var action = fixture.GetObjectAsync<UserObject[]>("key");
                         sched.Start();
@@ -125,12 +129,12 @@ namespace Akavache.Tests
 
                 using (Utility.WithEmptyDirectory(out path))
                 {
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         fixture.InsertObject("key", input);
                     }
                     sched.Start();
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         var action = fixture.GetObjectAsync<UserModel>("key");
                         sched.Start();
@@ -154,12 +158,12 @@ namespace Akavache.Tests
 
                 using (Utility.WithEmptyDirectory(out path))
                 {
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         fixture.InsertObject("key", input);
                     }
                     sched.Start();
-                    using (var fixture = new TPersistentBlobCache(path))
+                    using (var fixture = CreateBlobCache(path))
                     {
                         var action = fixture.GetObjectAsync<UserModel[]>("key");
                         sched.Start();
@@ -187,7 +191,7 @@ namespace Akavache.Tests
             string path;
             using(Utility.WithEmptyDirectory(out path))
             {
-                using(var fixture = new TPersistentBlobCache(path))
+                using(var fixture = CreateBlobCache(path))
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher).First();
                     Assert.Equal("Foo", result.Item1);
@@ -201,7 +205,7 @@ namespace Akavache.Tests
                     Assert.Equal(1, fetchCount);
                 }
 
-                using(var fixture = new TPersistentBlobCache(path))
+                using(var fixture = CreateBlobCache(path))
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher).First();
                     Assert.Equal("Foo", result.Item1);
@@ -209,6 +213,22 @@ namespace Akavache.Tests
                     Assert.Equal(1, fetchCount);
                 }
             }
+        }
+    }
+
+    public class PersistentBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new TEncryptedBlobCache(path);
+        }
+    }
+
+    public class SqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
         }
     }
 }

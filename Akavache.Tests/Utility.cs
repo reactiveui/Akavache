@@ -45,7 +45,10 @@ namespace Akavache.Tests
             di.Create();
 
             directoryPath = di.FullName;
-            return Disposable.Create(() => DeleteDirectory(di.FullName));
+            return Disposable.Create(() =>
+            {
+                DeleteDirectory(di.FullName);
+            });
         }
 
         public static void Retry(this Action block, int retries = 2)
