@@ -25,6 +25,7 @@ namespace Akavache.Sqlite3
         readonly SQLiteAsyncConnection _connection;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> _inflightCache;
         readonly DateTimeOffset _maxDateTime;
+        bool disposed = false;
 
         public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
@@ -60,6 +61,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) _inflightCache.Invalidate(key);
 
             var element = new CacheElement()
@@ -74,6 +76,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<byte[]> GetAsync(string key)
         {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) {
                 return _inflightCache.Get(key)
                     .Select(x => x.Value)
@@ -83,6 +86,8 @@ namespace Akavache.Sqlite3
 
         public IEnumerable<string> GetAllKeys()
         {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
             return _connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement;")
                 .First()
                 .Select(x => x.Key)
@@ -91,6 +96,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
+            if (disposed) return Observable.Throw<DateTimeOffset?>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) 
             {
                 return _inflightCache.Get(key)
@@ -108,12 +114,14 @@ namespace Akavache.Sqlite3
 
         public void Invalidate(string key)
         {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             lock(_inflightCache) _inflightCache.Invalidate(key);
             _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Key=?;", key);
         }
 
         public void InvalidateAll()
         {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             lock(_inflightCache) _inflightCache.InvalidateAll();
             _connection.ExecuteAsync("DELETE FROM CacheElement;");
         }
@@ -124,6 +132,7 @@ namespace Akavache.Sqlite3
             var serializer = new JsonSerializer();
             var writer = new BsonWriter(ms);
 
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             serializer.Serialize(writer, value);
 
             lock (_inflightCache) _inflightCache.Invalidate(key);
@@ -141,6 +150,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
         {
+            if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) 
             {
                 var ret = _inflightCache.Get(key);
@@ -150,6 +160,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
+            if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => DeserializeObject<T>(x.Value))
@@ -158,18 +169,57 @@ namespace Akavache.Sqlite3
 
         public void InvalidateObject<T>(string key)
         {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             Invalidate(key);
         }
 
         public void InvalidateAllObjects<T>()
         {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             _connection.ExecuteAsync("DELETE * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName);
         }
 
         public void Dispose()
         {
             SQLiteConnectionPool.Shared.Reset();
+            disposed = true;
         }
+
+        /// <summary>
+        /// This method is called immediately before writing any data to disk.
+        /// Override this in encrypting data stores in order to encrypt the
+        /// data.
+        /// </summary>
+        /// <param name="data">The byte data about to be written to disk.</param>
+        /// <param name="scheduler">The scheduler to use if an operation has
+        /// to be deferred. If the operation can be done immediately, use
+        /// Observable.Return and ignore this parameter.</param>
+        /// <returns>A Future result representing the encrypted data</returns>
+        protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
+        {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return Observable.Return(data);
+        }
+
+        /// <summary>
+        /// This method is called immediately after reading any data to disk.
+        /// Override this in encrypting data stores in order to decrypt the
+        /// data.
+        /// </summary>
+        /// <param name="data">The byte data that has just been read from
+        /// disk.</param>
+        /// <param name="scheduler">The scheduler to use if an operation has
+        /// to be deferred. If the operation can be done immediately, use
+        /// Observable.Return and ignore this parameter.</param>
+        /// <returns>A Future result representing the decrypted data</returns>
+        protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
+        {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return Observable.Return(data);
+        }
+
 
         IObservable<T> DeserializeObject<T>(byte[] data)
         {
