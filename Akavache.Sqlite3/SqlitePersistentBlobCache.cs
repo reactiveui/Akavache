@@ -68,10 +68,15 @@ namespace Akavache.Sqlite3
             {
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
-                Value = data,
             };
 
-            return _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default);
+            var ret = BeforeWriteToDiskFilter(data, Scheduler)
+                .Do(x => element.Value = x)
+                .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
         public IObservable<byte[]> GetAsync(string key)
@@ -80,6 +85,7 @@ namespace Akavache.Sqlite3
             lock (_inflightCache) {
                 return _inflightCache.Get(key)
                     .Select(x => x.Value)
+                    .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
                     .Finally(() => _inflightCache.Invalidate(key));
             }
         }
@@ -141,11 +147,16 @@ namespace Akavache.Sqlite3
             {
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
-                Value = ms.ToArray(),
                 TypeName = typeof(T).FullName
             };
 
-            return _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default);
+            var ret = BeforeWriteToDiskFilter(ms.ToArray(), Scheduler)
+                .Do(x => element.Value = x)
+                .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
         public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
@@ -154,16 +165,20 @@ namespace Akavache.Sqlite3
             lock (_inflightCache) 
             {
                 var ret = _inflightCache.Get(key);
-                return ret.SelectMany(x => DeserializeObject<T>(x.Value));
+                return ret
+                    .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
+                    .SelectMany(DeserializeObject<T>);
             }
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
             if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
             return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
-                .SelectMany(x => DeserializeObject<T>(x.Value))
+                .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
+                .SelectMany(DeserializeObject<T>)
                 .ToList();
         }
 
