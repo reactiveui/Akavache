@@ -231,4 +231,12 @@ namespace Akavache.Tests
             return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
         }
     }
+
+    public class EncryptedSqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db"));
+        }
+    }
 }
