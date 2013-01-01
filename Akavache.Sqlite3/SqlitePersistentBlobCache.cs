@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Text;
 using Akavache;
 using Newtonsoft.Json;
@@ -240,10 +240,18 @@ namespace Akavache.Sqlite3
         {
             var serializer = new JsonSerializer();
             var reader = new BsonReader(new MemoryStream(data));
+
+#if WINRT
+            if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
+            {
+                reader.ReadRootValueAsArray = true;
+            }
+#else
             if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
             {
                 reader.ReadRootValueAsArray = true;
             }
+#endif
 
             try 
             {

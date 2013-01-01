@@ -19,9 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-#if WINDOWS_PHONE
-#define USE_CSHARP_SQLITE
-#endif
 
 using System;
 using System.Diagnostics;
