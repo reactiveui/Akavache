@@ -251,10 +251,14 @@ namespace Akavache
                 keys = CacheIndex.Keys.ToArray();
             }
 
-            return keys.ToObservable()
+            var ret = keys.ToObservable()
                 .Select(x => Observable.Defer(() => Invalidate(x)))
                 .Merge(8)
-                .Aggregate(Unit.Default, (acc, x) => acc);
+                .Aggregate(Unit.Default, (acc, x) => acc)
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
         public void Dispose()
