@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <version>2.3.0</version>
+    <authors>GitHub</authors>
+    <owners>Paul Betts</owners>
+    <projectUrl>https://github.com/github/Akavache</projectUrl>
+    <dependencies>
+      <dependency id="akavache" version="2.3.0" />
+    </dependencies>
+
+    <!-- NB: We use this to warn people about sqlite3.dll, lmao if your lawyer
+	 makes you make people accept license agreements -->
+    <licenseUrl>https://raw.github.com/github/Akavache/sqlite3-driver/Akavache.Sqlite3/sqlite3-hint.txt</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+
+    <id>akavache.sqlite3</id>
+    <title>Akavache.SQLite3</title>
+    <description>A backend for Akavache based on SQLite3, particularly recommended on mobile platforms.</description>
+    <summary>A backend for Akavache based on SQLite3, particularly recommended on mobile platforms.</summary>
+    <copyright>Copyright GitHub© 2012</copyright>
+  </metadata>
+
+  <files>
+    <file src="bin\Release\Net40\Akavache.*" target="lib\net40" />
+    <file src="bin\Release\Net45\Akavache.*" target="lib\net45" />
+    <file src="bin\Release\WP8\Akavache_WP8.*" target="lib\wp8" />
+    <file src="bin\Release\WinRT45\Akavache_WinRT45.*" target="lib\WinRT45" />
+  </files>
+</package>
