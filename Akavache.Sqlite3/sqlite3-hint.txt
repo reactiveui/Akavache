@@ -9,3 +9,6 @@ WPF / Desktop:
 WP8 / WinRT:
 1. Download the Extension VSIX from http://www.sqlite.org/download.html
 2. Follow http://is.gd/LFKkEb to set it up (works on both WP8 and WinRT)
+
+If you really were looking for a license, it's at:
+https://raw.github.com/github/Akavache/master/LICENSE
