@@ -95,14 +95,14 @@ namespace Akavache
         /// should do nothing and return (*not* throw KeyNotFoundException).
         /// </summary>
         /// <param name="key">The key to remove from the cache.</param>
-        void Invalidate(string key);
+        IObservable<Unit> Invalidate(string key);
 
         /// <summary>
         /// Invalidate all entries in the cache (i.e. clear it). Note that
         /// this method is blocking and incurs a significant performance
         /// penalty if used while the cache is being used on other threads. 
         /// </summary>
-        void InvalidateAll();
+        IObservable<Unit> InvalidateAll();
 
         /// <summary>
         /// The IScheduler used to defer operations. By default, this is
