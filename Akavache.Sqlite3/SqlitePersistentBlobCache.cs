@@ -24,7 +24,6 @@ namespace Akavache.Sqlite3
 
         readonly SQLiteAsyncConnection _connection;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> _inflightCache;
-        readonly DateTimeOffset _maxDateTime;
         bool disposed = false;
 
         public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
@@ -33,8 +32,6 @@ namespace Akavache.Sqlite3
 
             _connection = new SQLiteAsyncConnection(databaseFile, true);
             _connection.CreateTableAsync<CacheElement>();
-
-            _maxDateTime = new DateTimeOffset(DateTime.MaxValue, TimeSpan.Zero);
 
             _inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, _) =>
             {
