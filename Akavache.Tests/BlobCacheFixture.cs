@@ -223,6 +223,35 @@ namespace Akavache.Tests
 
             Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }).First());
         }
+
+        [Fact]
+        public void InvalidateAllReallyDoesInvalidateEverything()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path)) 
+            {
+                (Scheduler.TaskPool).With(sched =>
+                {
+                    using (var fixture = CreateBlobCache(path)) 
+                    {
+                        fixture.Insert("Foo", new byte[] { 1, 2, 3 }).First();
+                        fixture.Insert("Bar", new byte[] { 4, 5, 6 }).First();
+                        fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
+
+                        Assert.NotEqual(0, fixture.GetAllKeys().Count());
+
+                        fixture.InvalidateAll().First();
+
+                        Assert.Equal(0, fixture.GetAllKeys().Count());
+                    }
+
+                    using (var fixture = CreateBlobCache(path)) 
+                    {
+                        Assert.Equal(0, fixture.GetAllKeys().Count());
+                    }
+                });
+            }
+        }
     }
 
     public class TPersistentBlobCache : PersistentBlobCache
