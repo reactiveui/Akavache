@@ -20,6 +20,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Net45", "Akavache\Akavache_Net45.csproj", "{B4E665E5-6CAF-4414-A6E2-8DE1C3BCF203}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_WinRT", "Akavache\Akavache_WinRT.csproj", "{57655198-7A38-48A6-BF95-BE57B2C3D32D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3EF05CA8-ED19-489C-AF42-71C4B6507AE7} = {3EF05CA8-ED19-489C-AF42-71C4B6507AE7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
