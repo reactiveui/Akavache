@@ -7,9 +7,11 @@ using System.Net;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using Newtonsoft.Json;
 using ReactiveUI;
+using System.Threading.Tasks;
 
 #if SILVERLIGHT
 using System.Net.Browser;
@@ -107,6 +109,45 @@ namespace Akavache
         }
 
         /// <summary>
+        /// Attempt to return an object from the cache. If the item doesn't
+        /// exist or returns an error, call a Func to return the latest
+        /// version of an object and insert the result in the cache.
+        ///
+        /// For most Internet applications, this method is the best method to
+        /// call to fetch static data (i.e. images) from the network.
+        /// </summary>
+        /// <param name="key">The key to associate with the object.</param>
+        /// <param name="fetchFunc">A Func which will asynchronously return
+        /// the latest value for the object should the cache not contain the
+        /// key. </param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the deserialized object from
+        /// the cache.</returns>
+        public static IObservable<T> GetOrFetchObject<T>(this IBlobCache This, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        {
+            return This.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
+        }
+
+        /// <summary>
+        /// Attempt to return an object from the cache. If the item doesn't
+        /// exist or returns an error, call a Func to create a new one.
+        ///
+        /// For most Internet applications, this method is the best method to
+        /// call to fetch static data (i.e. images) from the network.
+        /// </summary>
+        /// <param name="key">The key to associate with the object.</param>
+        /// <param name="fetchFunc">A Func which will return
+        /// the latest value for the object should the cache not contain the
+        /// key. </param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the deserialized object from
+        /// the cache.</returns>
+        public static IObservable<T> GetOrCreateObject<T>(this IBlobCache This, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        {
+            return This.GetOrFetchObject(key, () => Observable.Return(fetchFunc()), absoluteExpiration);
+        }
+
+        /// <summary>
         /// This method attempts to returned a cached value, while
         /// simultaneously calling a Func to return the latest value. When the
         /// latest data comes back, it replaces what was previously in the
@@ -119,6 +160,9 @@ namespace Akavache
         /// (first the cached data, then the latest data). Therefore, it's
         /// important for UI applications that in your Subscribe method, you
         /// write the code to merge the second result when it comes in.
+        ///
+        /// This also means that await'ing this method is a Bad Idea(tm), always
+        /// use Subscribe.
         /// </summary>
         /// <param name="key">The key to store the returned result under.</param>
         /// <param name="fetchFunc"></param>
@@ -137,7 +181,7 @@ namespace Akavache
             bool foundItemInCache;
             var fail = Observable.Defer(() => This.GetCreatedAt(key))
                 .Select(x => fetchPredicate != null && x != null ? fetchPredicate(x.Value) : true)
-                .Where(x => x)
+                .Where(x => x != false)
                 .SelectMany(_ => fetchFunc())
                 .Finally(() => This.Invalidate(key))
                 .Do(x => This.InsertObject(key, x, absoluteExpiration));
@@ -152,6 +196,40 @@ namespace Akavache
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
             }).Concat(fail).Multicast(new ReplaySubject<T>()).RefCount();
+        }
+
+        /// <summary>
+        /// This method attempts to returned a cached value, while
+        /// simultaneously calling a Func to return the latest value. When the
+        /// latest data comes back, it replaces what was previously in the
+        /// cache.
+        ///
+        /// This method is best suited for loading dynamic data from the
+        /// Internet, while still showing the user earlier data.
+        ///
+        /// This method returns an IObservable that may return *two* results
+        /// (first the cached data, then the latest data). Therefore, it's
+        /// important for UI applications that in your Subscribe method, you
+        /// write the code to merge the second result when it comes in.
+        /// 
+        /// This also means that await'ing this method is a Bad Idea(tm), always
+        /// use Subscribe.
+        /// </summary>
+        /// <param name="key">The key to store the returned result under.</param>
+        /// <param name="fetchFunc"></param>
+        /// <param name="fetchPredicate">An optional Func to determine whether
+        /// the updated item should be fetched. If the cached version isn't found,
+        /// this parameter is ignored and the item is always fetched.</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>An Observable stream containing either one or two
+        /// results (possibly a cached version, then the latest version)</returns>
+        public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This,
+            string key,
+            Func<Task<T>> fetchFunc,
+            Func<DateTimeOffset, bool> fetchPredicate = null,
+            DateTimeOffset? absoluteExpiration = null)
+        {
+            return This.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration);
         }
 
         /// <summary>
