@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using Microsoft.Reactive.Testing;
+using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
 
@@ -59,9 +60,14 @@ namespace Akavache.Tests
                 {
                     using (var fixture = CreateBlobCache(path))
                     {
+                        // TestBlobCache isn't round-trippable by design
+                        if (fixture is TestBlobCache) return;
+
                         fixture.Insert("Foo", new byte[] {1, 2, 3});
                     }
+
                     sched.Start();
+
                     using (var fixture = CreateBlobCache(path))
                     {
                         var action = fixture.GetAsync("Foo");
@@ -105,8 +111,11 @@ namespace Akavache.Tests
             {
                 (new TestScheduler()).With(sched =>
                 {
+                    bool wasTestCache;
+
                     using (var fixture = CreateBlobCache(path))
                     {
+                        wasTestCache = fixture is TestBlobCache;
                         fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
                         fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
 
@@ -130,6 +139,9 @@ namespace Akavache.Tests
                         Assert.False(shouldFail);
                         Assert.Equal(4, result[0]);
                     }
+
+                    // NB: TestBlobCache is not serializable by design
+                    if (wasTestCache) return;
 
                     // Serialize out the cache and reify it again
                     using (var fixture = CreateBlobCache(path))
@@ -223,6 +235,35 @@ namespace Akavache.Tests
 
             Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }).First());
         }
+
+        [Fact]
+        public void InvalidateAllReallyDoesInvalidateEverything()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path)) 
+            {
+                (Scheduler.TaskPool).With(sched =>
+                {
+                    using (var fixture = CreateBlobCache(path)) 
+                    {
+                        fixture.Insert("Foo", new byte[] { 1, 2, 3 }).First();
+                        fixture.Insert("Bar", new byte[] { 4, 5, 6 }).First();
+                        fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
+
+                        Assert.NotEqual(0, fixture.GetAllKeys().Count());
+
+                        fixture.InvalidateAll().First();
+
+                        Assert.Equal(0, fixture.GetAllKeys().Count());
+                    }
+
+                    using (var fixture = CreateBlobCache(path)) 
+                    {
+                        Assert.Equal(0, fixture.GetAllKeys().Count());
+                    }
+                });
+            }
+        }
     }
 
     public class TPersistentBlobCache : PersistentBlobCache
@@ -235,6 +276,14 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             return new TPersistentBlobCache(path);
+        }
+    }
+
+    public class TestBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new TestBlobCache(RxApp.TaskpoolScheduler);
         }
     }
 

@@ -105,7 +105,7 @@ namespace Akavache
             }
         }
 
-        public void Invalidate(string key)
+        public IObservable<Unit> Invalidate(string key)
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
@@ -115,15 +115,19 @@ namespace Akavache
                     cache.Remove(key);
                 }
             }
+
+            return Observable.Return(Unit.Default);
         }
 
-        public void InvalidateAll()
+        public IObservable<Unit> InvalidateAll()
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
                 cache.Clear();
             }
+
+            return Observable.Return(Unit.Default);
         }
 
         public void Dispose()

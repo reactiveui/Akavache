@@ -217,55 +217,48 @@ namespace Akavache
             }
         }
 
-        public void Invalidate(string key)
+        public IObservable<Unit> Invalidate(string key)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
-            Action deleteMe;
-            lock (MemoizedRequests)
+            lock (MemoizedRequests) 
             {
                 this.Log().Debug("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
 
                 CacheIndexEntry dontcare;
                 CacheIndex.TryRemove(key, out dontcare);
-
-                var path = GetPathForKey(key);
-                deleteMe = () =>
-                {
-                    try
-                    {
-                        filesystem.Delete(path);
-                    }
-
-                    catch (FileNotFoundException ex) { this.Log().Warn(ex); }
-                    catch (IsolatedStorageException ex) { this.Log().Warn(ex); }
-
-                    actionTaken.OnNext(Unit.Default);
-                };
             }
 
-            try
-            {
-                deleteMe.Retry(1);
-            }
-            catch (Exception ex)
-            {
-                this.Log().Warn("Really can't delete key: " + key, ex);
-            }
+            var path = GetPathForKey(key);
+            var ret = Observable.Defer(() => filesystem.Delete(path))
+                .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
+                .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
+                .Retry(2)
+                .Do(_ => actionTaken.OnNext(Unit.Default))
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
-        public void InvalidateAll()
+        public IObservable<Unit> InvalidateAll()
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
-            lock (MemoizedRequests)
-            {
-                foreach (var key in CacheIndex.Keys.ToArray())
-                {
-                    Invalidate(key);
-                }
+            string[] keys;
+            lock (MemoizedRequests) {
+                keys = CacheIndex.Keys.ToArray();
             }
+
+            var ret = keys.ToObservable()
+                .Select(x => Observable.Defer(() => Invalidate(x)))
+                .Merge(8)
+                .Aggregate(Unit.Default, (acc, x) => acc)
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
         public void Dispose()
