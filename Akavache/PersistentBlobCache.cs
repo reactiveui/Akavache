@@ -344,7 +344,6 @@ namespace Akavache
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
 
             return Observable.Return(data);
         }

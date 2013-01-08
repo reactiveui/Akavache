@@ -1,0 +1,14 @@
+READ ME, THIS ISN'T A LICENCE, IMMA HELP YOU OUT
+
+Akavache.SQLite3 depends on a native sqlite3.dll being present. How you do that depends on what platform you're on:
+
+WPF / Desktop:
+1. Copy sqlite3.dll from http://www.sqlite.org/download.html into bin/Debug
+2. Make sure your project is set to x86, not AnyCPU
+
+WP8 / WinRT:
+1. Download the Extension VSIX from http://www.sqlite.org/download.html
+2. Follow http://is.gd/LFKkEb to set it up (works on both WP8 and WinRT)
+
+If you really were looking for a license, it's at:
+https://raw.github.com/github/Akavache/master/LICENSE
