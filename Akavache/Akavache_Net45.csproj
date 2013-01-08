@@ -42,7 +42,7 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="ReactiveUI_Net45">
-      <HintPath>..\packages\reactiveui-core.4.2.2\lib\net45\ReactiveUI_Net45.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.4.3.0\lib\net45\ReactiveUI_Net45.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

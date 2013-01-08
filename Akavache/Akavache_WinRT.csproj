@@ -126,7 +126,7 @@
       <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\winrt45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI_WinRT">
-      <HintPath>..\packages\reactiveui-core.4.2.2\lib\WinRT45\ReactiveUI_WinRT.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.4.3.0\lib\WinRT45\ReactiveUI_WinRT.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.0.21114\lib\WinRT45\System.Reactive.Core.dll</HintPath>
