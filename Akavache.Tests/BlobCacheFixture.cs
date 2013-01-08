@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
+using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;
 using ReactiveUI.Testing;
@@ -20,32 +22,29 @@ namespace Akavache.Tests
         {
             string path;
             using (Utility.WithEmptyDirectory(out path))
+            using (TestUtils.WithScheduler(Scheduler.CurrentThread))
+            using (var fixture = CreateBlobCache(path)) 
             {
-                (Scheduler.Immediate).With(sched =>
-                {
-                    var fixture = CreateBlobCache(path);
+                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
-                    fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-                    fixture.Insert("Bar", new byte[] { 4, 5, 6 });
+                Assert.Throws<ArgumentNullException>(() =>
+                    fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
-                    Assert.Throws<ArgumentNullException>(() =>
-                        fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
+                byte[] output1 = fixture.GetAsync("Foo").First();
+                byte[] output2 = fixture.GetAsync("Bar").First();
 
-                    byte[] output1 = fixture.GetAsync("Foo").First();
-                    byte[] output2 = fixture.GetAsync("Bar").First();
+                Assert.Throws<ArgumentNullException>(() =>
+                    fixture.GetAsync(null).First());
 
-                    Assert.Throws<ArgumentNullException>(() =>
-                        fixture.GetAsync(null).First());
+                Assert.Throws<KeyNotFoundException>(() =>
+                    fixture.GetAsync("Baz").First());
 
-                    Assert.Throws<KeyNotFoundException>(() =>
-                        fixture.GetAsync("Baz").First());
+                Assert.Equal(3, output1.Length);
+                Assert.Equal(3, output2.Length);
 
-                    Assert.Equal(3, output1.Length);
-                    Assert.Equal(3, output2.Length);
-
-                    Assert.Equal(1, output1[0]);
-                    Assert.Equal(4, output2[0]);
-                });
+                Assert.Equal(1, output1[0]);
+                Assert.Equal(4, output2[0]);
             }
         }
 
@@ -88,13 +87,13 @@ namespace Akavache.Tests
             using (Utility.WithEmptyDirectory(out path))
             using (var fixture = CreateBlobCache(path))
             {
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
 
                 var output = fixture.GetAsync("Foo").First();
                 Assert.Equal(3, output.Length);
                 Assert.Equal(1, output[0]);
 
-                fixture.Insert("Foo", new byte[] { 4, 5 });
+                fixture.Insert("Foo", new byte[] { 4, 5 }).Wait();
 
                 output = fixture.GetAsync("Foo").First();
                 Assert.Equal(2, output.Length);
@@ -297,6 +296,14 @@ namespace Akavache.Tests
         public class TEncryptedBlobCache : EncryptedBlobCache
         {
             public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
+        }
+    }
+
+    public class SqliteBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
         }
     }
 }
