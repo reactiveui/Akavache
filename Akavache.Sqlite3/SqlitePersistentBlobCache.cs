@@ -164,7 +164,7 @@ namespace Akavache.Sqlite3
                 var ret = _inflightCache.Get(key);
                 return ret
                     .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                    .SelectMany(DeserializeObject<T>);
+                    .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider));
             }
         }
 
@@ -175,7 +175,7 @@ namespace Akavache.Sqlite3
             return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                .SelectMany(DeserializeObject<T>)
+                .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider))
                 .ToList();
         }
 
@@ -233,10 +233,21 @@ namespace Akavache.Sqlite3
         }
 
 
-        IObservable<T> DeserializeObject<T>(byte[] data)
+        IObservable<T> DeserializeObject<T>(byte[] data, IServiceProvider serviceProvider)
         {
-            var serializer = new JsonSerializer();
+            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
             var reader = new BsonReader(new MemoryStream(data));
+
+            if (serviceProvider != null) 
+            {
+                serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
+            }
+
+            if (BlobCache.SerializerSettings != null) 
+            {
+                serializer.Binder = BlobCache.SerializerSettings.Binder;
+                serializer.ConstructorHandling = BlobCache.SerializerSettings.ConstructorHandling;
+            }
 
 #if WINRT
             if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))

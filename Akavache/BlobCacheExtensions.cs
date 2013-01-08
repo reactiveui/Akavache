@@ -204,6 +204,7 @@ namespace Akavache
                 var ret = serviceProvider == null ? 
                     JsonConvert.DeserializeObject<T>(bytes, BlobCache.SerializerSettings) : 
                     JsonConvert.DeserializeObject<T>(bytes, new JsonObjectConverter(serviceProvider));
+
                 return Observable.Return(ret);
             }
             catch (Exception ex)
