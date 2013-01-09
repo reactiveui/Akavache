@@ -21,9 +21,10 @@ namespace Akavache
         {
             var folder = Path.GetDirectoryName(path);
             var name = Path.GetFileName(path);
+            bool shouldCreate = (access != FileAccess.Read);
 
             return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
-                .SelectMany(x => x.CreateFileAsync(name, CreationCollisionOption.OpenIfExists).ToObservable())
+                .SelectMany(x => (shouldCreate ? x.CreateFileAsync(path, CreationCollisionOption.OpenIfExists) : x.GetFileAsync(path)).ToObservable())
                 .SelectMany(x => access == FileAccess.Read ?
                     x.OpenStreamForReadAsync().ToObservable() :
                     x.OpenStreamForWriteAsync().ToObservable());
