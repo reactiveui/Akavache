@@ -62,7 +62,17 @@ KeyNotFoundException (or more correctly, OnError's the IObservable). Often,
 you would want to return a default value instead of failing:
 
 ```cs
-var toaster = await BlobCache.UserAccount.GetObjectAsync("toaster")
+
+Toaster toaster;
+
+try {
+    toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+} catch (KeyNotFoundException ex) {
+    toaster = new Toaster();
+}
+
+// Or without async/await:
+toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
     .Catch(Observable.Return(new Toaster()));
 ```
 
