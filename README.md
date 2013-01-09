@@ -55,9 +55,6 @@ BlobCache.UserAccount.GetObjectAsync("toaster")
     .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"))
 ```
 
-## Common scenarios
-
-
 ## Handling Errors
 
 When a key is not present in the cache, GetObject throws a
