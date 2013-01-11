@@ -11,20 +11,31 @@ using System.Text;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using ReactiveUI;
+using Windows.Foundation;
 using Windows.Storage;
 
 namespace Akavache
 {
     public class SimpleFilesystemProvider : IFilesystemProvider, IEnableLogger
     {
+        readonly IDictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>> openFileStrategies
+            = new Dictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>>
+        {
+            { FileMode.Create, (f,name) => f.CreateFileAsync(name) },
+            { FileMode.CreateNew, (f,name) => f.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting) },
+            { FileMode.Open, (f,name) => f.GetFileAsync(name) },
+            { FileMode.OpenOrCreate, (f,name) => f.CreateFileAsync(name, CreationCollisionOption.OpenIfExists) },
+            { FileMode.Truncate, (f,name) => null }, // ???
+            { FileMode.Append, (f,name) => null } // ???
+        };
+
         public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
         {
             var folder = Path.GetDirectoryName(path);
             var name = Path.GetFileName(path);
-            bool shouldCreate = (access != FileAccess.Read);
 
             return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
-                .SelectMany(x => (shouldCreate ? x.CreateFileAsync(path, CreationCollisionOption.OpenIfExists) : x.GetFileAsync(path)).ToObservable())
+                .SelectMany(x => openFileStrategies[mode](x, name).ToObservable())
                 .SelectMany(x => access == FileAccess.Read ?
                     x.OpenStreamForReadAsync().ToObservable() :
                     x.OpenStreamForWriteAsync().ToObservable());
