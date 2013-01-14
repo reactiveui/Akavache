@@ -243,12 +243,6 @@ namespace Akavache.Sqlite3
                 serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
             }
 
-            if (BlobCache.SerializerSettings != null) 
-            {
-                serializer.Binder = BlobCache.SerializerSettings.Binder;
-                serializer.ConstructorHandling = BlobCache.SerializerSettings.ConstructorHandling;
-            }
-
 #if WINRT
             if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
             {
