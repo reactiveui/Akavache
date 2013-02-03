@@ -133,7 +133,7 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             var ms = new MemoryStream();
-            var serializer = new JsonSerializer();
+            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
             var writer = new BsonWriter(ms);
 
             if (BlobCache.ServiceProvider != null) 
