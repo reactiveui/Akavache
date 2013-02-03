@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -134,6 +135,11 @@ namespace Akavache.Sqlite3
             var ms = new MemoryStream();
             var serializer = new JsonSerializer();
             var writer = new BsonWriter(ms);
+
+            if (BlobCache.ServiceProvider != null) 
+            {
+                serializer.Converters.Add(new JsonObjectConverter(BlobCache.ServiceProvider));
+            }
 
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             serializer.Serialize(writer, value);

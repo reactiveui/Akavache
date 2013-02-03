@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Runtime.Serialization;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
+using Newtonsoft.Json;
+using ReactiveUI;
+using ReactiveUI.Routing;
 using ReactiveUI.Testing;
 using Xunit;
 
@@ -35,6 +40,38 @@ namespace Akavache.Tests
                 return new UserModel(new UserObject());
             }
             return null;
+        }
+    }
+
+    [DataContract]
+    public class DummyRoutedViewModel : ReactiveObject, IRoutableViewModel
+    {
+        public string UrlPathSegment { get { return "foo"; } }
+        [DataMember] public IScreen HostScreen { get; private set; }
+
+        Guid _ARandomGuid;
+        [DataMember] public Guid ARandomGuid 
+        {
+            get { return _ARandomGuid; }
+            set { this.RaiseAndSetIfChanged(ref _ARandomGuid, value); }
+        }
+
+        public DummyRoutedViewModel(IScreen screen)
+        {
+            HostScreen = screen;
+        }
+    }
+
+    [DataContract]
+    public class DummyAppBootstrapper : IScreen
+    {
+        [DataMember]
+        public IRoutingState Router { get; protected set; }
+
+        public DummyAppBootstrapper()
+        {
+            Router = new RoutingState();
+            Router.NavigateAndReset.Execute(new DummyRoutedViewModel(this) { ARandomGuid =  Guid.NewGuid() });
         }
     }
 
@@ -212,6 +249,34 @@ namespace Akavache.Tests
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
                 }
+            }
+        }
+
+        [Fact]
+        public void ApplicationStateShouldBeRoundtrippable()
+        {
+            string path;
+            var input = new DummyAppBootstrapper();
+            var expected = ((DummyRoutedViewModel) input.Router.NavigationStack[0]).ARandomGuid;
+            input.Router.Navigate.Execute(new DummyRoutedViewModel(input) {ARandomGuid = Guid.NewGuid()});
+
+            Console.WriteLine("After Nav Count: {0}", input.Router.NavigationStack.Count);
+
+            BlobCache.SerializerSettings = new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore, 
+                TypeNameHandling = TypeNameHandling.All, 
+                ObjectCreationHandling = ObjectCreationHandling.Replace,
+            };
+
+            using(Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path)) 
+            {
+                fixture.InsertObject("state", input).First();
+
+                var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
+                var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
+                Assert.Equal(expected, output.ARandomGuid);
             }
         }
     }
