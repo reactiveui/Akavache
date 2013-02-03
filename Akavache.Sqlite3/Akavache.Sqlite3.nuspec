@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.4.1</version>
+    <version>2.4.3</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="2.4.1" />
+      <dependency id="akavache" version="2.4.3" />
     </dependencies>
 
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
@@ -24,6 +24,6 @@
     <file src="bin\Release\Net45\Akavache.Sqlite3.*" target="lib\net45" />
     <file src="bin\Release\WP8\Akavache.Sqlite3_WP8.*" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.Sqlite3_WinRT.*" target="lib\WinRT45" />
-    <file src="sqlite3-hint.txt" target="content\readme.txt" />
+    <file src="sqlite3-hint.txt" target="readme.txt" />
   </files>
 </package>
