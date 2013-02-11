@@ -8,7 +8,7 @@
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="Newtonsoft.Json" version="4.5.11" />
-      <dependency id="reactiveui-core" version="4.3.2" />
+      <dependency id="reactiveui-core" version="4.4.0" />
     </dependencies>
 
     <id>akavache</id>
