@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <version>2.5.0</version>
+    <authors>GitHub</authors>
+    <owners>Paul Betts</owners>
+    <projectUrl>https://github.com/github/Akavache</projectUrl>
+    <dependencies>
+      <dependency id="akavache" version="2.5.0" />
+    </dependencies>
+
+    <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+
+    <id>akavache.mobile</id>
+    <title>Akavache.Mobile</title>
+    <description>An implementation of ISuspensionDriver that uses Akavache to save app state on tombstoning.</description>
+    <summary>An implementation of ISuspensionDriver that uses Akavache to save app state on tombstoning.</summary>
+    <copyright>Copyright GitHub© 2012</copyright>
+  </metadata>
+
+  <files>
+    <file src="bin\Release\WP8\Akavache.Mobile_WP8.*" target="lib\wp8" />
+    <file src="bin\Release\WinRT45\Akavache.Mobile_WinRT.*" target="lib\WinRT45" />
+  </files>
+</package>
