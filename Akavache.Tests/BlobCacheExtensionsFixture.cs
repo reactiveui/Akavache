@@ -253,6 +253,47 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void FetchFunctionShouldPropagateThrownExceptionAsObservableException()
+        {
+            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
+            {
+                throw new InvalidOperationException();
+            });
+
+            string path;
+            using(Utility.WithEmptyDirectory(out path))
+            {
+                using(var fixture = new TPersistentBlobCache(path))
+                {
+                    var result = fixture.GetOrFetchObject("Test", fetcher)
+                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
+                    Assert.Equal("one", result.Item1);
+                    Assert.Equal("two", result.Item2);
+                }
+            }
+        }
+
+        [Fact]
+        public void FetchFunctionShouldPropagateObservedExceptionAsObservableException()
+        {
+            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
+                Observable.Throw<Tuple<string, string>>(new InvalidOperationException()));
+
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                using (var fixture = new TPersistentBlobCache(path))
+                {
+                    var result = fixture.GetOrFetchObject("Test", fetcher)
+                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
+                    Assert.Equal("one", result.Item1);
+                    Assert.Equal("two", result.Item2);
+                }
+            }
+        }
+
+
+        [Fact]
         public void ApplicationStateShouldBeRoundtrippable()
         {
             string path;
