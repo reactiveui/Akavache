@@ -51,15 +51,15 @@ namespace Akavache
             MemoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
                 (x, c) => FetchOrWriteBlobFromDisk(x, c, false), 20);
 
-            try 
+            try
             {
                 var dir = filesystem.CreateRecursive(CacheDirectory);
 #if WINRT
-                // NB: I don't want to talk about it.
+    // NB: I don't want to talk about it.
                 dir.Wait();
 #endif
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 this.Log().FatalException("Couldn't create cache directory", ex);
             }
@@ -67,8 +67,8 @@ namespace Akavache
             var cacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
-                    .SelectMany(ParseCacheIndexEntry)
-                    .ToDictionary(y => y.Key, y => y.Value))
+                                     .SelectMany(ParseCacheIndexEntry)
+                                     .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x));
 
 #if WINRT
@@ -115,7 +115,9 @@ namespace Akavache
 #if SILVERLIGHT
             public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
 #else
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
+            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler)
+            {
+            }
 #endif
         }
 
@@ -178,7 +180,7 @@ namespace Akavache
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
                 ret.LogErrors("GetAsync")
-                    .Subscribe(x => { }, ex => Invalidate(key));
+                   .Subscribe(x => {}, ex => Invalidate(key));
 
                 return ret;
             }
@@ -217,7 +219,7 @@ namespace Akavache
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
-            lock (MemoizedRequests) 
+            lock (MemoizedRequests)
             {
                 this.Log().Debug("Invalidating {0}", key);
                 MemoizedRequests.Invalidate(key);
@@ -228,11 +230,11 @@ namespace Akavache
 
             var path = GetPathForKey(key);
             var ret = Observable.Defer(() => filesystem.Delete(path))
-                .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
-                .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
-                .Retry(2)
-                .Do(_ => actionTaken.OnNext(Unit.Default))
-                .Multicast(new AsyncSubject<Unit>());
+                                .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
+                                .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
+                                .Retry(2)
+                                .Do(_ => actionTaken.OnNext(Unit.Default))
+                                .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
             return ret;
@@ -243,15 +245,16 @@ namespace Akavache
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
             string[] keys;
-            lock (MemoizedRequests) {
+            lock (MemoizedRequests)
+            {
                 keys = CacheIndex.Keys.ToArray();
             }
 
             var ret = keys.ToObservable()
-                .Select(x => Observable.Defer(() => Invalidate(x)))
-                .Merge(8)
-                .Aggregate(Unit.Default, (acc, x) => acc)
-                .Multicast(new AsyncSubject<Unit>());
+                          .Select(x => Observable.Defer(() => Invalidate(x)))
+                          .Merge(8)
+                          .Aggregate(Unit.Default, (acc, x) => acc)
+                          .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
             return ret;
@@ -292,13 +295,13 @@ namespace Akavache
                 // immediately, except for the ones still outstanding; we'll 
                 // Merge them all then wait for them all to complete.
                 requestChain = requests.Merge(System.Reactive.Concurrency.Scheduler.Immediate)
-                    .Timeout(TimeSpan.FromSeconds(30), Scheduler)
-                    .Aggregate((acc, x) => x);
+                                       .Timeout(TimeSpan.FromSeconds(30), Scheduler)
+                                       .Aggregate((acc, x) => x);
             }
 
             requestChain = requestChain ?? Observable.Return(new byte[0]);
 
-            requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => { });
+            requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => {});
             disposed = true;
         }
 
@@ -344,7 +347,7 @@ namespace Akavache
             // here a bit)
             if (byteData != null)
             {
-                return WriteBlobToDisk(key, (byte[])byteData, synchronous);
+                return WriteBlobToDisk(key, (byte[]) byteData, synchronous);
             }
 
             var ret = new AsyncSubject<byte[]>();
@@ -358,14 +361,20 @@ namespace Akavache
             }
 
             filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
-                .SelectMany(x => x.CopyToAsync(ms, scheduler))
-                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Do(_ => { if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); } })
-                .Multicast(ret).Connect();
+                      .SelectMany(x => x.CopyToAsync(ms, scheduler))
+                      .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
+                      .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                      .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                      .Do(_ =>
+                      {
+                          if (!synchronous && key != BlobCacheIndexKey)
+                          {
+                              actionTaken.OnNext(Unit.Default);
+                          }
+                      })
+                      .Multicast(ret).Connect();
 
-        leave:
+            leave:
             return ret;
         }
 
@@ -381,11 +390,7 @@ namespace Akavache
             }
 
             var path = GetPathForKey(key);
-            var files = Observable.Zip(
-                BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)),
-                filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler),
-                (from, to) => new { from, to }
-            );
+            var files = BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)).Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), (from, to) => new {@from, to});
 
             // NB: The fact that our writing AsyncSubject waits until the 
             // write actually completes means that an Insert immediately 
@@ -397,11 +402,14 @@ namespace Akavache
                 .Select(_ => byteData)
                 .Do(_ =>
                 {
-                    if (!synchronous && key != BlobCacheIndexKey) { actionTaken.OnNext(Unit.Default); }
+                    if (!synchronous && key != BlobCacheIndexKey)
+                    {
+                        actionTaken.OnNext(Unit.Default);
+                    }
                 }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex))
                 .Multicast(ret).Connect();
 
-        leave:
+            leave:
             return ret;
         }
 
@@ -435,7 +443,7 @@ namespace Akavache
 
             try
             {
-                return new[] { JsonConvert.DeserializeObject<KeyValuePair<string, CacheIndexEntry>>(s) };
+                return new[] {JsonConvert.DeserializeObject<KeyValuePair<string, CacheIndexEntry>>(s)};
             }
             catch (Exception ex)
             {
@@ -472,21 +480,23 @@ namespace Akavache
 #else
         protected static string GetDefaultRoamingCacheDirectory()
         {
-            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
             return RxApp.InUnitTestRunner() ?
-                Path.Combine(assemblyDirectoryName, "BlobCache") :
+                Path.Combine(GetAssemblyDirectoryName(), "BlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
 
         protected static string GetDefaultLocalMachineCacheDirectory()
         {
+            return RxApp.InUnitTestRunner() ?
+                Path.Combine(GetAssemblyDirectoryName(), "LocalBlobCache") :
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
+        }
+
+        protected static string GetAssemblyDirectoryName()
+        {
             var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
-            
-            return RxApp.InUnitTestRunner() ? 
-                Path.Combine(assemblyDirectoryName, "LocalBlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
+            return assemblyDirectoryName;
         }
 #endif
     }

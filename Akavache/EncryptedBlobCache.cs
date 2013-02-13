@@ -83,12 +83,12 @@ namespace Akavache
 #if SILVERLIGHT
             return "SecretCache";
 #else
-            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
             return RxApp.InUnitTestRunner() ?
-                Path.Combine(assemblyDirectoryName, "SecretCache") :
+                Path.Combine(GetAssemblyDirectoryName(), "SecretCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
 #endif
         }
+
+        
     }
 }
