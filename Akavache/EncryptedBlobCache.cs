@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -10,7 +11,7 @@ namespace Akavache
 {
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
-        static Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => new CEncryptedBlobCache(GetDefaultCacheDirectory()));
+        static readonly Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => new CEncryptedBlobCache(GetDefaultCacheDirectory()));
         public static ISecureBlobCache Current
         {
             get { return _Current.Value; }
@@ -82,8 +83,10 @@ namespace Akavache
 #if SILVERLIGHT
             return "SecretCache";
 #else
+            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
             return RxApp.InUnitTestRunner() ?
-                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SecretCache") :
+                Path.Combine(assemblyDirectoryName, "SecretCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
 #endif
         }

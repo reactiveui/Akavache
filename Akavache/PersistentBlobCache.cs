@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace Akavache
         protected IFilesystemProvider filesystem;
 
         readonly IDisposable flushThreadSubscription;
-        DateTimeOffset lastFlushTime = DateTimeOffset.MinValue;
+        
 
         public IScheduler Scheduler { get; protected set; }
 
@@ -476,15 +477,20 @@ namespace Akavache
 #else
         protected static string GetDefaultRoamingCacheDirectory()
         {
+            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
             return RxApp.InUnitTestRunner() ?
-                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BlobCache") :
+                Path.Combine(assemblyDirectoryName, "BlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
 
         protected static string GetDefaultLocalMachineCacheDirectory()
         {
+            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
+            
             return RxApp.InUnitTestRunner() ? 
-                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "LocalBlobCache") :
+                Path.Combine(assemblyDirectoryName, "LocalBlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
 #endif
