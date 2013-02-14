@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -336,13 +337,18 @@ namespace Akavache
         static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
         {
             var hwr = (HttpWebResponse) wr;
+            Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be.");
             if ((int)hwr.StatusCode >= 400)
             {
                 return Observable.Throw<byte[]>(new WebException(hwr.StatusDescription));
             }
 
             var ms = new MemoryStream();
-            hwr.GetResponseStream().CopyTo(ms);
+            using (var responseStream = hwr.GetResponseStream())
+            {
+                Debug.Assert(responseStream != null, "The response stream is somehow null");
+                responseStream.CopyTo(ms);
+            }
 
             var ret = ms.ToArray();
             cache.Insert(url, ret, absoluteExpiration);
