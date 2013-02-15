@@ -12,12 +12,19 @@ namespace Akavache
 {
     public class TestBlobCache : ISecureBlobCache
     {
-        public TestBlobCache(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) :
-            this(scheduler, (IEnumerable<KeyValuePair<string, byte[]>>)initialContents)
+        public TestBlobCache() : this(null, null)
         {
         }
 
-        public TestBlobCache(IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
+        public TestBlobCache(IScheduler scheduler) : this(scheduler, null)
+        {
+        }
+
+        public TestBlobCache(IEnumerable<KeyValuePair<string, byte[]>> initialContents) : this(null, initialContents)
+        {
+        }
+
+        public TestBlobCache(IScheduler scheduler, IEnumerable<KeyValuePair<string, byte[]>> initialContents)
         {
             Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
@@ -26,7 +33,9 @@ namespace Akavache
             }
         }
 
-        internal TestBlobCache(Action disposer, IScheduler scheduler = null, IEnumerable<KeyValuePair<string, byte[]>> initialContents = null)
+        internal TestBlobCache(Action disposer, 
+            IScheduler scheduler, 
+            IEnumerable<KeyValuePair<string, byte[]>> initialContents)
             : this(scheduler, initialContents)
         {
             inner = Disposable.Create(disposer);
