@@ -36,16 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Reactive.Testing">
-      <HintPath>..\packages\Rx-Testing.2.1.30204.0\lib\Net40-Full\Microsoft.Reactive.Testing.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.14-rc\lib\net40\Microsoft.Threading.Tasks.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks.Extensions">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.14-rc\lib\net40\Microsoft.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Threading.Tasks.Extensions.Desktop">
-      <HintPath>..\packages\Microsoft.Bcl.Async.1.0.14-rc\lib\net40\Microsoft.Threading.Tasks.Extensions.Desktop.dll</HintPath>
+      <HintPath>..\packages\Rx-Testing.2.1.30214.0\lib\Net40-Full\Microsoft.Reactive.Testing.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json">
@@ -53,36 +44,39 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.4.4.0\lib\Net40\ReactiveUI.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.4.4.1\lib\Net40\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Blend">
-      <HintPath>..\packages\reactiveui-xaml.4.4.0\lib\Net40\ReactiveUI.Blend.dll</HintPath>
+      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\Net40\ReactiveUI.Blend.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Routing">
-      <HintPath>..\packages\reactiveui-xaml.4.4.0\lib\Net40\ReactiveUI.Routing.dll</HintPath>
+      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\Net40\ReactiveUI.Routing.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Testing">
-      <HintPath>..\packages\reactiveui-testing.4.4.0\lib\Net40\ReactiveUI.Testing.dll</HintPath>
+      <HintPath>..\packages\reactiveui-testing.4.4.1\lib\Net40\ReactiveUI.Testing.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Xaml">
-      <HintPath>..\packages\reactiveui-xaml.4.4.0\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
+      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\Net40\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reactive.Core">
-      <HintPath>..\packages\Rx-Core.2.1.30204.0\lib\Net40\System.Reactive.Core.dll</HintPath>
+    <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net40\System.Reactive.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\packages\Rx-Interfaces.2.1.30204.0\lib\Net40\System.Reactive.Interfaces.dll</HintPath>
+    <Reference Include="System.Reactive.Interfaces, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Interfaces.2.1.30214.0\lib\Net40\System.Reactive.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Linq">
-      <HintPath>..\packages\Rx-Linq.2.1.30204.0\lib\Net40\System.Reactive.Linq.dll</HintPath>
+      <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net40\System.Reactive.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\packages\Rx-PlatformServices.2.1.30204.0\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-PlatformServices.2.1.30214.0\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Windows.Threading">
-      <HintPath>..\packages\Rx-XAML.2.1.30204.0\lib\Net40\System.Reactive.Windows.Threading.dll</HintPath>
+      <HintPath>..\packages\Rx-XAML.2.1.30214.0\lib\Net40\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime">
       <HintPath>..\packages\Microsoft.Bcl.1.0.16-rc\lib\net40\System.Runtime.dll</HintPath>
@@ -97,13 +91,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
-    <Reference Include="xunit, Version=1.9.0.1566, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+    <Reference Include="xunit, Version=1.9.1.1600, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\xunit.1.9.0.1566\lib\xunit.dll</HintPath>
-    </Reference>
-    <Reference Include="xunit.extensions, Version=1.9.0.1566, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\xunit.extensions.1.9.0.1566\lib\xunit.extensions.dll</HintPath>
+      <HintPath>..\packages\xunit.1.9.1\lib\net20\xunit.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +131,7 @@
   <PropertyGroup>
     <PreBuildEvent>copy $(SolutionDir)ext\Net40\sqlite3.* $(TargetDir)</PreBuildEvent>
   </PropertyGroup>
+  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.0-rc\tools\Microsoft.Bcl.Build.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
