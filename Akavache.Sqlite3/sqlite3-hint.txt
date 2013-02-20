@@ -8,7 +8,7 @@ WPF / Desktop:
 Pro-Tip: To do this, make folders called ".\ext\x86", then in the post-build 
 event command line, put: 
 
-copy "$(SolutionDir)\ext\x86\sqlite.dll" "$(TargetPath)"
+copy "$(SolutionDir)ext\x86\sqlite3.dll" "$(ProjectDir)$(OutDir)sqlite3.dll"
 
 WP8 / WinRT:
 1. Download the Extension VSIX from http://www.sqlite.org/download.html
