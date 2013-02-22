@@ -262,32 +262,19 @@ namespace Akavache
 
         public void Dispose()
         {
+            var mq = Interlocked.Exchange(ref MemoizedRequests, null);
+            disposed = true;
+
+            if (mq == null) return;
+
             // We need to make sure that all outstanding writes are flushed
             // before we bail
-            AsyncSubject<byte[]>[] requests;
+            var requests = mq.CachedValues().ToArray();
 
-            if (MemoizedRequests == null)
-            {
-                return;
-            }
+            actionTaken.OnCompleted();
+            flushThreadSubscription.Dispose();
 
-            lock (MemoizedRequests)
-            {
-                var mq = Interlocked.Exchange(ref MemoizedRequests, null);
-                if (mq == null)
-                {
-                    return;
-                }
-
-                requests = mq.CachedValues().ToArray();
-
-                MemoizedRequests = null;
-
-                actionTaken.OnCompleted();
-                flushThreadSubscription.Dispose();
-            }
-
-            IObservable<byte[]> requestChain = null;
+            var requestChain = Observable.Return(new byte[0]);
 
             if (requests.Length > 0)
             {
@@ -295,14 +282,12 @@ namespace Akavache
                 // immediately, except for the ones still outstanding; we'll 
                 // Merge them all then wait for them all to complete.
                 requestChain = requests.Merge(System.Reactive.Concurrency.Scheduler.Immediate)
-                                       .Timeout(TimeSpan.FromSeconds(30), Scheduler)
-                                       .Aggregate((acc, x) => x);
+                   .Timeout(TimeSpan.FromSeconds(30), Scheduler)
+                   .Aggregate((acc, x) => x);
             }
 
-            requestChain = requestChain ?? Observable.Return(new byte[0]);
-
+            // NB: FlushCacheIndex is guaranteed not to throw
             requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => {});
-            disposed = true;
         }
 
         /// <summary>
