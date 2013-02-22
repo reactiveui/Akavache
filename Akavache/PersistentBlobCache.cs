@@ -262,8 +262,8 @@ namespace Akavache
 
         public void Dispose()
         {
-            var mq = Interlocked.Exchange(ref MemoizedRequests, null);
             disposed = true;
+            var mq = Interlocked.Exchange(ref MemoizedRequests, null);
 
             if (mq == null) return;
 
