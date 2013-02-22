@@ -28,7 +28,7 @@ namespace Akavache
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
-        bool disposed;
+        readonly SingleEntryGate disposeGate = new SingleEntryGate();
         protected IFilesystemProvider filesystem;
 
         readonly IDisposable flushThreadSubscription;
@@ -123,7 +123,7 @@ namespace Akavache
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
+            if (disposeGate.IsClosed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
             if (key == null || data == null)
             {
                 return Observable.Throw<Unit>(new ArgumentNullException());
@@ -148,7 +148,7 @@ namespace Akavache
 
         public IObservable<byte[]> GetAsync(string key)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
+            if (disposeGate.IsClosed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
             lock (MemoizedRequests)
             {
@@ -188,7 +188,7 @@ namespace Akavache
 
         bool IsKeyStale(string key)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposeGate.IsClosed) throw new ObjectDisposedException("PersistentBlobCache");
 
             CacheIndexEntry value;
             return (CacheIndex.TryGetValue(key, out value) && value.ExpiresAt != null && value.ExpiresAt < Scheduler.Now);
@@ -207,7 +207,7 @@ namespace Akavache
 
         public IEnumerable<string> GetAllKeys()
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposeGate.IsClosed) throw new ObjectDisposedException("PersistentBlobCache");
 
             lock (MemoizedRequests)
             {
@@ -217,7 +217,7 @@ namespace Akavache
 
         public IObservable<Unit> Invalidate(string key)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
+            if (disposeGate.IsClosed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
             lock (MemoizedRequests)
             {
@@ -242,7 +242,7 @@ namespace Akavache
 
         public IObservable<Unit> InvalidateAll()
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
+            if (disposeGate.IsClosed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
             string[] keys;
             lock (MemoizedRequests)
@@ -262,6 +262,11 @@ namespace Akavache
 
         public void Dispose()
         {
+            if (!disposeGate.Enter())
+            {
+                return;
+            }
+
             // We need to make sure that all outstanding writes are flushed
             // before we bail
             AsyncSubject<byte[]>[] requests;
@@ -301,8 +306,7 @@ namespace Akavache
 
             requestChain = requestChain ?? Observable.Return(new byte[0]);
 
-            requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => {});
-            disposed = true;
+            requestChain.SelectMany(FlushCacheIndex(synchronous: true, disposing: true)).Subscribe(_ => {});
         }
 
         /// <summary>
@@ -314,10 +318,11 @@ namespace Akavache
         /// <param name="scheduler">The scheduler to use if an operation has
         /// to be deferred. If the operation can be done immediately, use
         /// Observable.Return and ignore this parameter.</param>
+        /// <param name="disposing">Whether or not we're in the middle of disposing this cache.</param>
         /// <returns>A Future result representing the encrypted data</returns>
-        protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
+        protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler, bool disposing = false)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
+            if (disposeGate.IsClosed && !disposing) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
             return Observable.Return(data);
         }
@@ -335,7 +340,7 @@ namespace Akavache
         /// <returns>A Future result representing the decrypted data</returns>
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
+            if (disposeGate.IsClosed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
             return Observable.Return(data);
         }
@@ -354,7 +359,7 @@ namespace Akavache
             var ms = new MemoryStream();
 
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
-            if (disposed)
+            if (disposeGate.IsClosed)
             {
                 Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache")).Multicast(ret).Connect();
                 goto leave;
@@ -378,12 +383,12 @@ namespace Akavache
             return ret;
         }
 
-        AsyncSubject<byte[]> WriteBlobToDisk(string key, byte[] byteData, bool synchronous)
+        AsyncSubject<byte[]> WriteBlobToDisk(string key, byte[] byteData, bool synchronous, bool disposing = false)
         {
             var ret = new AsyncSubject<byte[]>();
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
 
-            if (disposed)
+            if (disposeGate.IsClosed && !disposing)
             {
                 Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache")).Multicast(ret).Connect();
                 goto leave;
@@ -418,9 +423,9 @@ namespace Akavache
             return FlushCacheIndex(false);
         }
 
-        IObservable<Unit> FlushCacheIndex(bool synchronous)
+        IObservable<Unit> FlushCacheIndex(bool synchronous, bool disposing = false)
         {
-            if (disposed) return Observable.Return(Unit.Default);
+            if (disposeGate.IsClosed && !disposing) return Observable.Return(Unit.Default);
 
             var index = CacheIndex.Select(x => JsonConvert.SerializeObject(x));
             return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
@@ -434,7 +439,7 @@ namespace Akavache
 
         IEnumerable<KeyValuePair<string, CacheIndexEntry>> ParseCacheIndexEntry(string s)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            if (disposeGate.IsClosed) throw new ObjectDisposedException("PersistentBlobCache");
 
             if (String.IsNullOrWhiteSpace(s))
             {

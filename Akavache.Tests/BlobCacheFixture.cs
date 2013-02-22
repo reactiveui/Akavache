@@ -236,6 +236,14 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void ExtraCallsToDisposeDoNothing()
+        {
+            var cache = CreateBlobCache("somepath");
+            cache.Dispose();
+            cache.Dispose();
+        }
+
+        [Fact]
         public void InvalidateAllReallyDoesInvalidateEverything()
         {
             string path;
