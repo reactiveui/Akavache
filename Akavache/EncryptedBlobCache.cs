@@ -29,7 +29,7 @@ namespace Akavache
 #endif
         }
 
-        protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
+        protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler, bool disposing = false)
         {
             try
             {
