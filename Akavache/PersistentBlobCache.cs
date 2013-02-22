@@ -302,8 +302,6 @@ namespace Akavache
         /// <returns>A Future result representing the encrypted data</returns>
         protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
-
             return Observable.Return(data);
         }
 
@@ -368,12 +366,6 @@ namespace Akavache
             var ret = new AsyncSubject<byte[]>();
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
 
-            if (disposed)
-            {
-                Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache")).Multicast(ret).Connect();
-                goto leave;
-            }
-
             var path = GetPathForKey(key);
             var files = BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)).Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), (from, to) => new {@from, to});
 
@@ -394,7 +386,6 @@ namespace Akavache
                 }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex))
                 .Multicast(ret).Connect();
 
-            leave:
             return ret;
         }
 
@@ -405,9 +396,8 @@ namespace Akavache
 
         IObservable<Unit> FlushCacheIndex(bool synchronous)
         {
-            if (disposed) return Observable.Return(Unit.Default);
-
             var index = CacheIndex.Select(x => JsonConvert.SerializeObject(x));
+
             return WriteBlobToDisk(BlobCacheIndexKey, Encoding.UTF8.GetBytes(String.Join("\n", index)), synchronous)
                 .Select(_ => Unit.Default)
                 .Catch<Unit, Exception>(ex =>
@@ -419,8 +409,6 @@ namespace Akavache
 
         IEnumerable<KeyValuePair<string, CacheIndexEntry>> ParseCacheIndexEntry(string s)
         {
-            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
-
             if (String.IsNullOrWhiteSpace(s))
             {
                 return Enumerable.Empty<KeyValuePair<string, CacheIndexEntry>>();
