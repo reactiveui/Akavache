@@ -48,6 +48,7 @@
     </Reference>
     <Reference Include="ReactiveUI.Blend">
       <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\Net40\ReactiveUI.Blend.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="ReactiveUI.Routing">
       <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\Net40\ReactiveUI.Routing.dll</HintPath>
