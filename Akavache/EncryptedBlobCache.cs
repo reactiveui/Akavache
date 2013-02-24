@@ -41,10 +41,7 @@ namespace Akavache
 
 
                 // NB: MemoizedRequests will be null as we're disposing
-                if (MemoizedRequests != null)
-                {
-                    lock(MemoizedRequests) MemoizedRequests.InvalidateAll();
-                }
+                InvalidateAllRequests();
 
                 return ret;
             } 
@@ -66,10 +63,7 @@ namespace Akavache
 #endif
 
                 // NB: MemoizedRequests will be null as we're disposing
-                if (MemoizedRequests != null)
-                {
-                    lock(MemoizedRequests) MemoizedRequests.InvalidateAll();
-                }
+                InvalidateAllRequests();
                 return ret;
             } 
             catch(Exception ex)
