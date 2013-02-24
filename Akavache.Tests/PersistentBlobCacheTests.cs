@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Threading;
 using Xunit;
+using Xunit.Extensions;
 
 namespace Akavache.Tests
 {
@@ -17,8 +19,10 @@ namespace Akavache.Tests
             /// Sorry, this is a fucking complicated test. But rooting out race conditions is hard like that.
             /// This ensures that Dispose doesn't cause existing operations to error out.
             /// </summary>
-            [Fact]
-            public void DisposeDoesNotCauseNullReferenceException()
+            [Theory]
+            [PropertyData("CacheFuncs")]
+            public void DisposeDoesNotCauseNullReferenceException(
+                Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache> factory)
             {
                 Exception exception = null;
                 var invalidateStarted = new ManualResetEvent(false);
@@ -32,7 +36,7 @@ namespace Akavache.Tests
                     // with completing the insert.
                     disposeComplete.WaitOne(100);
                 });
-                var cache = new PersistentBlobCacheTester("somepath", invalidateAction);
+                var cache = factory("somepath", invalidateAction);
                 cache.Insert("key", new byte[] {13}, DateTimeOffset.Now);
 
                 // This thread will hold a looong lock on MemoizedRequests
@@ -76,11 +80,38 @@ namespace Akavache.Tests
 
                 Assert.Null(exception);
             }
+
+            public static IEnumerable<Object[]> CacheFuncs
+            {
+                get
+                {
+                    yield return new object[]{ 
+                        new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
+                            (cacheDir, invalidateCallback) => 
+                                new PersistentBlobCacheTester(cacheDir, invalidateCallback))
+                    };
+                    yield return new object[]{ 
+                        new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
+                            (cacheDir, invalidateCallback) => 
+                                new EncryptedBlobCacheTester(cacheDir, invalidateCallback))
+                    };
+                }
+            }
         }
 
         public class PersistentBlobCacheTester : PersistentBlobCache
         {
             public PersistentBlobCacheTester(
+                string cacheDirectory = null, 
+                Action<AsyncSubject<byte[]>> invalidatedCallback = null)
+                    : base(cacheDirectory, null, null, invalidatedCallback)
+            {
+            }
+        }
+
+        public class EncryptedBlobCacheTester : EncryptedBlobCache
+        {
+            public EncryptedBlobCacheTester(
                 string cacheDirectory = null, 
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
                     : base(cacheDirectory, null, null, invalidatedCallback)

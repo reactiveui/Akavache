@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Security.Cryptography;
 using ReactiveUI;
@@ -17,7 +18,12 @@ namespace Akavache
             get { return _Current.Value; }
         }
 
-        protected EncryptedBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null) : base(cacheDirectory, filesystemProvider, scheduler)
+        protected EncryptedBlobCache(
+            string cacheDirectory = null, 
+            IFilesystemProvider filesystemProvider = null, 
+            IScheduler scheduler = null,
+            Action<AsyncSubject<byte[]>> invalidatedCallback = null) 
+            : base(cacheDirectory, filesystemProvider, scheduler, invalidatedCallback)
         {
         }
 
