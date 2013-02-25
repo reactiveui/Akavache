@@ -96,11 +96,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\xunit.1.9.1\lib\net20\xunit.dll</HintPath>
     </Reference>
+    <Reference Include="xunit.extensions">
+      <HintPath>..\packages\xunit.extensions.1.9.1\lib\net20\xunit.extensions.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlobCacheExtensionsFixture.cs" />
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="EncryptedBlobCacheFixture.cs" />
+    <Compile Include="PersistentBlobCacheTests.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="UtilityTests.cs" />
   </ItemGroup>
