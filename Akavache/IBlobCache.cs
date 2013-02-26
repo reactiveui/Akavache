@@ -105,6 +105,12 @@ namespace Akavache
         IObservable<Unit> InvalidateAll();
 
         /// <summary>
+        /// This Observable fires after the Dispose completes successfully, 
+        /// since there is no such thing as an AsyncDispose().
+        /// </summary>
+        IObservable<Unit> Shutdown { get; }
+
+        /// <summary>
         /// The IScheduler used to defer operations. By default, this is
         /// RxApp.TaskPoolScheduler.
         /// </summary>

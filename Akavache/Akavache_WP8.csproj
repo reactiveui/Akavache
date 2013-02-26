@@ -130,6 +130,7 @@
     <Compile Include="IObjectCreator.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />
     <Compile Include="JsonObjectConverter.cs" />
+    <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="LoginInfo.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />

@@ -84,11 +84,16 @@ namespace Akavache.Tests
         {
             string path;
 
-            using(Utility.WithEmptyDirectory(out path))
-            using(var fixture = CreateBlobCache(path))
+            using (Utility.WithEmptyDirectory(out path))
             {
-                var bytes = fixture.DownloadUrl(@"https://www.google.com/intl/en_com/images/srpr/logo3w.png").First();
-                Assert.True(bytes.Length > 0);
+                var fixture = CreateBlobCache(path);
+                using(fixture)
+                {
+                    var bytes = fixture.DownloadUrl(@"https://www.google.com/intl/en_com/images/srpr/logo3w.png").First();
+                    Assert.True(bytes.Length > 0);
+                }
+
+                fixture.Shutdown.Wait();
             }
         }
 

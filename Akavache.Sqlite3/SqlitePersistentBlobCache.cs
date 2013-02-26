@@ -57,6 +57,9 @@ namespace Akavache.Sqlite3
             }, 10);
         }
 
+        readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
+        public IObservable<Unit> Shutdown { get { return shutdown; } }
+
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
@@ -199,7 +202,11 @@ namespace Akavache.Sqlite3
 
         public void Dispose()
         {
-            SQLiteConnectionPool.Shared.Reset();
+            _connection.Shutdown()
+                .Finally(() => SQLiteConnectionPool.Shared.Reset())
+                .Multicast(shutdown)
+                .PermaRef();
+
             disposed = true;
         }
 

@@ -7,20 +7,16 @@ using System.Reactive.Subjects;
 using System.Threading;
 using ReactiveUI;
 
-namespace Akavache.Sqlite3
+namespace Akavache
 {
-    abstract class KeyedOperation
+    internal abstract class KeyedOperation
     {
         public string Key { get; set; }
-
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         public int Id { get; set; }
-
         public abstract IObservable<Unit> EvaluateFunc();
     }
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Observables are automatically disposed OnComplete")]
-    class KeyedOperation<T> : KeyedOperation
+    internal class KeyedOperation<T> : KeyedOperation
     {
         public Func<IObservable<T>> Func { get; set; }
         public readonly ReplaySubject<T> Result = new ReplaySubject<T>();
@@ -34,20 +30,17 @@ namespace Akavache.Sqlite3
         }
     }
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Observables are automatically disposed OnComplete")]
-    class KeyedOperationQueue
+    public class KeyedOperationQueue : IEnableLogger
     {
         readonly IScheduler scheduler;
         static int sequenceNumber = 1;
         readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
         readonly IConnectableObservable<KeyedOperation> resultObs;
 
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Automatically disposed when the observable completes.")]
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
             scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             this.scheduler = scheduler;
-
             resultObs = queuedOps
                 .GroupBy(x => x.Key)
                 .Select(x => x.Select(ProcessOperation).Concat())
@@ -98,15 +91,35 @@ namespace Akavache.Sqlite3
             int id = Interlocked.Increment(ref sequenceNumber);
             key = key ?? "__NONE__";
 
+            this.Log().Debug("Queuing operation {0} with key {1}", id, key);
             var item = new KeyedOperation<T>
             {
                 Key = key, Id = id,
                 Func = asyncCalculationFunc,
             };
 
-            queuedOps.OnNext(item);
+            lock (queuedOps)
+            {
+                queuedOps.OnNext(item);
+            }
 
             return item.Result;
+        }
+
+        public IObservable<Unit> ShutdownQueue()
+        {
+            lock (queuedOps)
+            {
+                queuedOps.OnCompleted();
+            }
+
+            return Observable.Create<Unit>(subj => 
+            {
+                return resultObs.Subscribe(
+                    _ => { }, 
+                    subj.OnError, 
+                    () => { subj.OnNext(Unit.Default); subj.OnCompleted(); });
+            }).Multicast(new AsyncSubject<Unit>()).PermaRef();
         }
 
         IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
@@ -129,6 +142,7 @@ namespace Akavache.Sqlite3
                 }
                 catch (Exception ex)
                 {
+                    this.Log().WarnException("Failure running queued op", ex);
                     ret.OnError(ex);
                 }
             }, scheduler);

@@ -32,6 +32,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
 using ReactiveUI;
+using Akavache;
 
 namespace SQLite
 {
@@ -257,6 +258,11 @@ namespace SQLite
                 var conn = GetConnection ();
                 return conn.Query<T> (sql, args);
             });
+        }
+
+        public IObservable<Unit> Shutdown()
+        {
+            return _opQueue.ShutdownQueue();
         }
 
         //
