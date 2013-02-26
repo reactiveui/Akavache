@@ -347,22 +347,21 @@ namespace Akavache
                 return ret;
             }
 
-            var opKey = (synchronous ? Guid.NewGuid().ToString() : key);
-            var readResult = opQueue.EnqueueObservableOperation(opKey, () => 
-                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
-                    .SelectMany(x => x.CopyToAsync(ms, scheduler))
-                    .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                    .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                    .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                    .Do(_ =>
+            var readResult = filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
+                .SelectMany(x => x.CopyToAsync(ms, scheduler))
+                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
+                .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Do(_ =>
+                {
+                    if (!synchronous && key != BlobCacheIndexKey)
                     {
-                        if (!synchronous && key != BlobCacheIndexKey)
-                        {
-                            actionTaken.OnNext(Unit.Default);
-                        }
-                    }));
+                        actionTaken.OnNext(Unit.Default);
+                    }
+                });
 
-            readResult.Multicast(ret).PermaRef();
+            (synchronous ? readResult : opQueue.EnqueueObservableOperation(key, () => readResult))
+                .Multicast(ret).PermaRef();
             return ret;
         }
 
@@ -381,16 +380,16 @@ namespace Akavache
             // followed by a Get will take longer to process - however,
             // this also means that failed writes will disappear from the
             // cache, which is A Good Thing.
-            var opKey = (synchronous ? Guid.NewGuid().ToString() : key);
-            var writeResult = opQueue.EnqueueObservableOperation(opKey, () => files
+            var writeResult = files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
                 .Do(_ =>
                 {
                     if (!synchronous && key != BlobCacheIndexKey) actionTaken.OnNext(Unit.Default);
-                }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex)));
+                }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex));
 
-            writeResult.Multicast(ret).Connect();
+            (synchronous ? writeResult : opQueue.EnqueueObservableOperation(key, () => writeResult))
+                .Multicast(ret).Connect();
             return ret;
         }
 
