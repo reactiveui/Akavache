@@ -7,7 +7,7 @@ using System.Reactive.Subjects;
 using System.Threading;
 using ReactiveUI;
 
-namespace GitHub.Helpers
+namespace Akavache
 {
     internal abstract class KeyedOperation
     {

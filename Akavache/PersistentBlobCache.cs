@@ -25,6 +25,8 @@ namespace Akavache
     public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
     {
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
+        readonly KeyedOperationQueue opQueue;
+
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
@@ -34,6 +36,9 @@ namespace Akavache
         readonly IDisposable flushThreadSubscription;
 
         public IScheduler Scheduler { get; protected set; }
+
+        readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
+        public IObservable<Unit> Shutdown { get { return shutdown; } }
 
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
 
@@ -46,6 +51,7 @@ namespace Akavache
             this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
+            this.opQueue = new KeyedOperationQueue(scheduler);
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -230,15 +236,14 @@ namespace Akavache
             }
 
             var path = GetPathForKey(key);
-            var ret = Observable.Defer(() => filesystem.Delete(path))
-                .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
-                .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
-                .Retry(2)
-                .Do(_ => actionTaken.OnNext(Unit.Default))
-                .Multicast(new AsyncSubject<Unit>());
+            var ret = opQueue.EnqueueObservableOperation(key, () => 
+                Observable.Defer(() => filesystem.Delete(path))
+                    .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
+                    .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
+                    .Retry(2)
+                    .Do(_ => actionTaken.OnNext(Unit.Default)));
 
-            ret.Connect();
-            return ret;
+            return ret.Multicast(new AsyncSubject<Unit>()).PermaRef();
         }
 
         public IObservable<Unit> InvalidateAll()
@@ -268,27 +273,14 @@ namespace Akavache
                 if (disposed) return;
                 disposed = true;
 
-                // We need to make sure that all outstanding writes are flushed
-                // before we bail
-                var requests = memoizedRequests.CachedValues().ToArray();
-
                 actionTaken.OnCompleted();
                 flushThreadSubscription.Dispose();
 
-                var requestChain = Observable.Return(new byte[0]);
-
-                if (requests.Length > 0)
-                {
-                    // Since these are all AsyncSubjects, most of them will replay
-                    // immediately, except for the ones still outstanding; we'll 
-                    // Merge them all then wait for them all to complete.
-                    requestChain = requests.Merge(System.Reactive.Concurrency.Scheduler.Immediate)
-                        .Timeout(TimeSpan.FromSeconds(30), Scheduler)
-                        .Aggregate((acc, x) => x);
-                }
-
-                // NB: FlushCacheIndex is guaranteed not to throw
-                requestChain.SelectMany(FlushCacheIndex(true)).Subscribe(_ => {});
+                opQueue.ShutdownQueue()
+                    .LoggedCatch(this, Observable.Return(Unit.Default))
+                    .SelectMany(FlushCacheIndex(true))
+                    .Multicast(shutdown)
+                    .PermaRef();
             }
         }
 
@@ -349,25 +341,28 @@ namespace Akavache
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
             if (disposed)
             {
-                Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache")).Multicast(ret).Connect();
-                goto leave;
+                Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"))
+                    .Multicast(ret)
+                    .PermaRef();
+                return ret;
             }
 
-            filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
-                .SelectMany(x => x.CopyToAsync(ms, scheduler))
-                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Do(_ =>
-                {
-                  if (!synchronous && key != BlobCacheIndexKey)
-                  {
-                      actionTaken.OnNext(Unit.Default);
-                  }
-                })
-                .Multicast(ret).Connect();
+            var opKey = (synchronous ? Guid.NewGuid().ToString() : key);
+            var readResult = opQueue.EnqueueObservableOperation(opKey, () => 
+                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
+                    .SelectMany(x => x.CopyToAsync(ms, scheduler))
+                    .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
+                    .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                    .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                    .Do(_ =>
+                    {
+                        if (!synchronous && key != BlobCacheIndexKey)
+                        {
+                            actionTaken.OnNext(Unit.Default);
+                        }
+                    }));
 
-            leave:
+            readResult.Multicast(ret).PermaRef();
             return ret;
         }
 
@@ -377,25 +372,25 @@ namespace Akavache
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
 
             var path = GetPathForKey(key);
-            var files = BeforeWriteToDiskFilter(byteData, scheduler).Select(x => new MemoryStream(x)).Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), (from, to) => new {@from, to});
+            var files = BeforeWriteToDiskFilter(byteData, scheduler)
+                .Select(x => new MemoryStream(x))
+                .Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), (from, to) => new {from, to});
 
             // NB: The fact that our writing AsyncSubject waits until the 
             // write actually completes means that an Insert immediately 
             // followed by a Get will take longer to process - however,
             // this also means that failed writes will disappear from the
             // cache, which is A Good Thing.
-            files
+            var opKey = (synchronous ? Guid.NewGuid().ToString() : key);
+            var writeResult = opQueue.EnqueueObservableOperation(opKey, () => files
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
                 .Do(_ =>
                 {
-                    if (!synchronous && key != BlobCacheIndexKey)
-                    {
-                        actionTaken.OnNext(Unit.Default);
-                    }
-                }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex))
-                .Multicast(ret).Connect();
+                    if (!synchronous && key != BlobCacheIndexKey) actionTaken.OnNext(Unit.Default);
+                }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex)));
 
+            writeResult.Multicast(ret).Connect();
             return ret;
         }
 

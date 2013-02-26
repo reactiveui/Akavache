@@ -7,6 +7,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using ReactiveUI;
+using System.Reactive.Subjects;
 
 namespace Akavache
 {
@@ -50,6 +51,9 @@ namespace Akavache
             get { return serviceProvider ?? BlobCache.ServiceProvider; }
             set { serviceProvider = value; }
         }
+
+        readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
+        public IObservable<Unit> Shutdown { get { return shutdown; } }
 
         readonly IDisposable inner;
         bool disposed;
@@ -147,6 +151,8 @@ namespace Akavache
             {
                 inner.Dispose();
             }
+
+            shutdown.OnNext(Unit.Default); shutdown.OnCompleted();
             disposed = true;
         }
 

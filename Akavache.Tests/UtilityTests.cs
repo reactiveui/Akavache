@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using Akavache;
-using GitHub.Helpers;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
