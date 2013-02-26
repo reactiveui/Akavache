@@ -71,8 +71,8 @@ namespace Akavache
             var cacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
-                                     .SelectMany(ParseCacheIndexEntry)
-                                     .ToDictionary(y => y.Key, y => y.Value))
+                     .SelectMany(ParseCacheIndexEntry)
+                     .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x));
 
 #if WINRT
@@ -231,11 +231,11 @@ namespace Akavache
 
             var path = GetPathForKey(key);
             var ret = Observable.Defer(() => filesystem.Delete(path))
-                                .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
-                                .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
-                                .Retry(2)
-                                .Do(_ => actionTaken.OnNext(Unit.Default))
-                                .Multicast(new AsyncSubject<Unit>());
+                .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
+                .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
+                .Retry(2)
+                .Do(_ => actionTaken.OnNext(Unit.Default))
+                .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
             return ret;
@@ -251,10 +251,10 @@ namespace Akavache
             }
 
             var ret = keys.ToObservable()
-                          .Select(x => Observable.Defer(() => Invalidate(x)))
-                          .Merge(8)
-                          .Aggregate(Unit.Default, (acc, x) => acc)
-                          .Multicast(new AsyncSubject<Unit>());
+                .Select(x => Observable.Defer(() => Invalidate(x)))
+                .Merge(8)
+                .Aggregate(Unit.Default, (acc, x) => acc)
+                .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
             return ret;
@@ -283,8 +283,8 @@ namespace Akavache
                     // immediately, except for the ones still outstanding; we'll 
                     // Merge them all then wait for them all to complete.
                     requestChain = requests.Merge(System.Reactive.Concurrency.Scheduler.Immediate)
-                                           .Timeout(TimeSpan.FromSeconds(30), Scheduler)
-                                           .Aggregate((acc, x) => x);
+                        .Timeout(TimeSpan.FromSeconds(30), Scheduler)
+                        .Aggregate((acc, x) => x);
                 }
 
                 // NB: FlushCacheIndex is guaranteed not to throw
@@ -354,18 +354,18 @@ namespace Akavache
             }
 
             filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
-                      .SelectMany(x => x.CopyToAsync(ms, scheduler))
-                      .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                      .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                      .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                      .Do(_ =>
-                      {
-                          if (!synchronous && key != BlobCacheIndexKey)
-                          {
-                              actionTaken.OnNext(Unit.Default);
-                          }
-                      })
-                      .Multicast(ret).Connect();
+                .SelectMany(x => x.CopyToAsync(ms, scheduler))
+                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
+                .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Do(_ =>
+                {
+                  if (!synchronous && key != BlobCacheIndexKey)
+                  {
+                      actionTaken.OnNext(Unit.Default);
+                  }
+                })
+                .Multicast(ret).Connect();
 
             leave:
             return ret;
