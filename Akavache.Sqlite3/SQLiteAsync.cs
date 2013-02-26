@@ -32,6 +32,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
 using ReactiveUI;
+using GitHub.Helpers;
 
 namespace SQLite
 {
