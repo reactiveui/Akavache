@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
-using System.Text;
-using Akavache;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveUI;
@@ -40,14 +37,14 @@ namespace Akavache.Sqlite3
                     .SelectMany(x =>
                     {
                         return (x.Count == 1) ?
-                            Observable.Return(x[0]) : Observable.Throw<CacheElement>(new KeyNotFoundException());
+                            Observable.Return(x[0]) : ObservableThrowKeyNotFoundException(key);
                     })
                     .SelectMany(x =>
                     {
                         if (x.Expiration < Scheduler.Now.UtcDateTime) 
                         {
                             Invalidate(key);
-                            return Observable.Throw<CacheElement>(new KeyNotFoundException());
+                            return ObservableThrowKeyNotFoundException(key);
                         }
                         else 
                         {
@@ -278,7 +275,6 @@ namespace Akavache.Sqlite3
                 return Observable.Throw<T>(ex);
             }           
         }
-
     }
 
     class CacheElement
