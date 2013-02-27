@@ -71,20 +71,17 @@ namespace Akavache
 #endif
 
 #if SILVERLIGHT
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Select(x => (Stream)x).Subscribe(ret);
+                    ret.OnNext((Stream)new FileStream(path, mode, access, share, 4096));
 #elif MONO
-                    Observable.Start (() => 
-                    {
-                        var ufi = new Mono.Unix.UnixFileInfo (path);
-                        return ufi.Open (mode, access);
-                    }, scheduler).Cast<Stream>().Subscribe(ret);
+                    var ufi = new Mono.Unix.UnixFileInfo (path);
+                    ret.OnNext((Stream)ufi.Open(mode, access));
 #elif WINRT
                     StorageFile.GetFileFromPathAsync(path).ToObservable()
                         .SelectMany(x => x.OpenAsync(access == FileAccess.Read ? FileAccessMode.Read : FileAccessMode.ReadWrite).ToObservable())
                         .Select(x => x.AsStream())
                         .Subscribe(ret);
 #else
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler).Cast<Stream>().Subscribe(ret);
+                    ret.OnNext((Stream)new FileStream(path, mode, access, share, 4096, true));
 #endif
                 }
                 catch (Exception ex)
