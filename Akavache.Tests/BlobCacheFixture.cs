@@ -51,32 +51,28 @@ namespace Akavache.Tests
         [Fact]
         public void CacheShouldBeRoundtrippable()
         {
-            new TestScheduler().With(sched =>
+            string path;
+
+            using (Utility.WithEmptyDirectory(out path))
             {
-                string path;
-
-                using (Utility.WithEmptyDirectory(out path))
+                var fixture = CreateBlobCache(path);
+                using (fixture)
                 {
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        // TestBlobCache isn't round-trippable by design
-                        if (fixture is TestBlobCache) return;
+                    // TestBlobCache isn't round-trippable by design
+                    if (fixture is TestBlobCache) return;
 
-                        fixture.Insert("Foo", new byte[] {1, 2, 3});
-                    }
-
-                    sched.Start();
-
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        var action = fixture.GetAsync("Foo");
-                        sched.Start();
-                        var output = action.First();
-                        Assert.Equal(3, output.Length);
-                        Assert.Equal(1, output[0]);
-                    }
+                    fixture.Insert("Foo", new byte[] {1, 2, 3});
                 }
-            });
+
+                fixture.Shutdown.Wait();
+
+                using (var fixture2 = CreateBlobCache(path))
+                {
+                    var output = fixture2.GetAsync("Foo").First();
+                    Assert.Equal(3, output.Length);
+                    Assert.Equal(1, output[0]);
+                }
+            }
         }
 
         [Fact]
@@ -141,6 +137,10 @@ namespace Akavache.Tests
 
                     // NB: TestBlobCache is not serializable by design
                     if (wasTestCache) return;
+
+                    sched.AdvanceToMs(350);
+                    sched.AdvanceToMs(351);
+                    sched.AdvanceToMs(352);
 
                     // Serialize out the cache and reify it again
                     using (var fixture = CreateBlobCache(path))

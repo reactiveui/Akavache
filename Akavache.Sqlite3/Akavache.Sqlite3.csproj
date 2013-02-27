@@ -82,7 +82,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EncryptedBlobCache.cs" />
-    <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SqlitePersistentBlobCache.cs" />
