@@ -163,12 +163,15 @@ namespace Akavache
                 try
                 {
                     This.CopyTo(destination);
-                    This.Dispose();
-                    destination.Dispose();
                 }
                 catch(Exception ex)
                 {
                     LogHost.Default.WarnException("CopyToAsync failed", ex);
+                }
+                finally
+                {
+                    This.Dispose();
+                    destination.Dispose();
                 }
             }, scheduler ?? RxApp.TaskpoolScheduler);
 
