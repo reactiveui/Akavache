@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Linq;
@@ -162,13 +163,11 @@ namespace Akavache
             lock (memoizedRequests)
             {
                 if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
-
-                IObservable<byte[]> ret;
+                
                 if (IsKeyStale(key))
                 {
                     Invalidate(key);
-                    ret = Observable.Throw<byte[]>(new KeyNotFoundException());
-                    return ret;
+                    return ObservableThrowKeyNotFoundException(key);
                 }
 
                 // There are three scenarios here, and we handle all of them 
@@ -186,7 +185,7 @@ namespace Akavache
                 //    this case, FetchOrWriteBlobFromDisk will be called which
                 //    will immediately return an AsyncSubject representing the
                 //    queued disk read.
-                ret = memoizedRequests.Get(key);
+                var ret = memoizedRequests.Get(key);
 
                 // If we fail trying to fetch/write the key on disk, we want to 
                 // try again instead of replaying the same failure
@@ -350,8 +349,8 @@ namespace Akavache
             var readResult = filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                .Catch<byte[], FileNotFoundException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
-                .Catch<byte[], IsolatedStorageException>(ex => Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .Catch<byte[], FileNotFoundException>(ex => ObservableThrowKeyNotFoundException(key, ex))
+                .Catch<byte[], IsolatedStorageException>(ex => ObservableThrowKeyNotFoundException(key, ex))
                 .Do(_ =>
                 {
                     if (!synchronous && key != BlobCacheIndexKey)
@@ -476,5 +475,12 @@ namespace Akavache
             return assemblyDirectoryName;
         }
 #endif
+
+        static IObservable<byte[]> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
+        {
+            return Observable.Throw<byte[]>(
+                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
+                "The given key '{0}' was not present in the cache.", key), innerException));
+        }
     }
 }
