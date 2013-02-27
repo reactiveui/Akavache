@@ -36,6 +36,7 @@ namespace Akavache
         static int sequenceNumber = 1;
         readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
         readonly IConnectableObservable<KeyedOperation> resultObs;
+        AsyncSubject<Unit> shutdownObs = null;
 
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
@@ -110,16 +111,21 @@ namespace Akavache
         {
             lock (queuedOps)
             {
-                queuedOps.OnCompleted();
-            }
+                if (shutdownObs != null) return shutdownObs;
 
-            return Observable.Create<Unit>(subj => 
-            {
-                return resultObs.Subscribe(
-                    _ => { }, 
-                    subj.OnError, 
-                    () => { subj.OnNext(Unit.Default); subj.OnCompleted(); });
-            }).Multicast(new AsyncSubject<Unit>()).PermaRef();
+                queuedOps.OnCompleted();
+
+                resultObs.Materialize()
+                    .Where(x => x.Kind != NotificationKind.OnNext)
+                    .SelectMany(x =>
+                        (x.Kind == NotificationKind.OnError) ?
+                            Observable.Throw<Unit>(x.Exception) :
+                            Observable.Return(Unit.Default))
+                    .Multicast(shutdownObs)
+                    .PermaRef();
+
+                return shutdownObs;
+            }
         }
 
         IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
