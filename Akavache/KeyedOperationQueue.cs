@@ -115,6 +115,7 @@ namespace Akavache
 
                 queuedOps.OnCompleted();
 
+                shutdownObs = new AsyncSubject<Unit>();
                 resultObs.Materialize()
                     .Where(x => x.Kind != NotificationKind.OnNext)
                     .SelectMany(x =>
