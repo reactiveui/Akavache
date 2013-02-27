@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveUI;
@@ -274,6 +275,13 @@ namespace Akavache.Sqlite3
             {
                 return Observable.Throw<T>(ex);
             }           
+        }
+
+        static IObservable<CacheElement> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
+        {
+            return Observable.Throw<CacheElement>(
+                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
+                "The given key '{0}' was not present in the cache.", key), innerException));
         }
     }
 
