@@ -141,35 +141,37 @@ namespace Akavache
 
             // NB: Since FetchOrWriteBlobFromDisk is guaranteed to not block,
             // we never sit on this lock for any real length of time
+            var err = default(AsyncSubject<byte[]>);
             lock (memoizedRequests)
             {
                 if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
 
                 memoizedRequests.Invalidate(key);
-                var err = memoizedRequests.Get(key, data);
-
-                // If we fail trying to fetch/write the key on disk, we want to 
-                // try again instead of replaying the same failure
-                err.LogErrors("Insert").Subscribe(
-                    x => CacheIndex[key] = new CacheIndexEntry(Scheduler.Now, absoluteExpiration),
-                    ex => Invalidate(key));
-
-                return err.Select(_ => Unit.Default);
+                err = memoizedRequests.Get(key, data);
             }
+
+            // If we fail trying to fetch/write the key on disk, we want to
+            // try again instead of replaying the same failure
+            err.LogErrors("Insert").Subscribe(
+                x => CacheIndex[key] = new CacheIndexEntry(Scheduler.Now, absoluteExpiration),
+                ex => Invalidate(key));
+
+            return err.Select(_ => Unit.Default);
         }
 
         public IObservable<byte[]> GetAsync(string key)
         {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
+
+            if (IsKeyStale(key))
+            {
+                Invalidate(key);
+                return ObservableThrowKeyNotFoundException(key);
+            }
+
+            var ret = default(AsyncSubject<byte[]>);
             lock (memoizedRequests)
             {
-                if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
-                
-                if (IsKeyStale(key))
-                {
-                    Invalidate(key);
-                    return ObservableThrowKeyNotFoundException(key);
-                }
-
                 // There are three scenarios here, and we handle all of them 
                 // with aplomb and elegance:
                 //
@@ -185,15 +187,15 @@ namespace Akavache
                 //    this case, FetchOrWriteBlobFromDisk will be called which
                 //    will immediately return an AsyncSubject representing the
                 //    queued disk read.
-                var ret = memoizedRequests.Get(key);
-
-                // If we fail trying to fetch/write the key on disk, we want to 
-                // try again instead of replaying the same failure
-                ret.LogErrors("GetAsync")
-                   .Subscribe(x => {}, ex => Invalidate(key));
-
-                return ret;
+                ret = memoizedRequests.Get(key);
             }
+
+            // If we fail trying to fetch/write the key on disk, we want to
+            // try again instead of replaying the same failure
+            ret.LogErrors("GetAsync")
+               .Subscribe(x => {}, ex => Invalidate(key));
+
+            return ret;
         }
 
         bool IsKeyStale(string key)
@@ -215,11 +217,8 @@ namespace Akavache
 
         public IEnumerable<string> GetAllKeys()
         {
-            lock (memoizedRequests)
-            {
-                if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
-                return CacheIndex.Keys.ToArray();
-            }
+            if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
+            return CacheIndex.Keys.ToArray();
         }
 
         public IObservable<Unit> Invalidate(string key)
@@ -229,10 +228,10 @@ namespace Akavache
                 if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
                 this.Log().Debug("Invalidating {0}", key);
                 memoizedRequests.Invalidate(key);
-
-                CacheIndexEntry dontcare;
-                CacheIndex.TryRemove(key, out dontcare);
             }
+
+            CacheIndexEntry dontcare;
+            CacheIndex.TryRemove(key, out dontcare);
 
             var path = GetPathForKey(key);
             var ret = opQueue.EnqueueObservableOperation(key, () => 
