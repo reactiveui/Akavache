@@ -287,13 +287,16 @@ namespace Akavache.Tests
             string path;
             using (Utility.WithEmptyDirectory(out path))
             {
-                using (var fixture = new TPersistentBlobCache(path))
+                var fixture = new TPersistentBlobCache(path);
+                using (fixture)
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
                         .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
                     Assert.Equal("one", result.Item1);
                     Assert.Equal("two", result.Item2);
                 }
+
+                fixture.Shutdown.Wait();
             }
         }
 
