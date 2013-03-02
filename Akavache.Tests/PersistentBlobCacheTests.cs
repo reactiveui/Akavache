@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using Xunit;
@@ -13,6 +16,107 @@ namespace Akavache.Tests
     /// </summary>
     public class PersistentBlobCacheTests
     {
+        public class CrazyStressTests
+        {
+            [Theory]
+            [PropertyData("CacheFuncs")]
+            public void JustStartHammeringThis(Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache> factory)
+            {
+                // Just a crazy test that hammers the cache.
+                const int timeout = 5; // seconds
+                var exceptions = new ConcurrentBag<Exception>();
+                long counter = long.MinValue;
+                var cache = factory("somepath", _ => {});
+                var allThreads = new List<Thread>();
+                bool running = true;
+                var cacheKeys = new[]
+                {
+                    Guid.NewGuid().ToString(),
+                    Guid.NewGuid().ToString(),
+                    Guid.NewGuid().ToString(),
+                    Guid.NewGuid().ToString(),
+                    Guid.NewGuid().ToString(),
+                    Guid.NewGuid().ToString()
+                };
+                Func<string, Action<string>, Thread> createThread =
+                    (key, action) => new Thread(() =>
+                    {
+                        try
+                        {
+                            while (running || exceptions.Count == 0)
+                            {
+                                action(key);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            exceptions.Add(e);
+                        }
+                    });
+
+                // Just insert crap.
+                allThreads.AddRange(cacheKeys.Select(
+                    key => createThread(key, k => cache.Insert(k, BitConverter.GetBytes(counter++)))));
+                // Just invalidate crap
+                allThreads.AddRange(cacheKeys.Select(
+                    key => createThread(key, k => cache.Invalidate(k))));
+                // Just insert then crap
+                allThreads.AddRange(cacheKeys.Select(
+                    key => createThread(key, k =>
+                    {
+                        cache.Insert(key, BitConverter.GetBytes(counter++));
+                        cache.Invalidate(key);
+                    })));
+                // Just read crap
+                allThreads.AddRange(cacheKeys.Select(
+                    key => createThread(key, k => cache.GetAsync(key).First())));
+
+                // Just insert and read crap
+                allThreads.AddRange(cacheKeys.Select(
+                    key => createThread(key, k =>
+                    {
+                        cache.Insert(key, BitConverter.GetBytes(counter++));
+                        cache.GetAsync(key).First();
+                    })));
+
+                allThreads.ForEach(t => t.Start());
+
+                var endTime = DateTime.UtcNow.AddSeconds(timeout);
+                while (exceptions.Count == 0 && DateTime.UtcNow < endTime)
+                {
+                    Thread.Sleep(1);
+                }
+                running = false;
+                allThreads.ForEach(t => t.Join(100));
+
+                Console.WriteLine(exceptions.Count);
+                foreach (var exception in exceptions)
+                {
+                    Console.WriteLine(exception.Message);
+                }
+                Assert.Empty(exceptions);
+            }
+
+            public static IEnumerable<Object[]> CacheFuncs
+            {
+                get
+                {
+                    yield return new object[]
+                    {
+                        new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
+                            (cacheDir, invalidateCallback) =>
+                                new PersistentBlobCacheTester(cacheDir, invalidateCallback))
+                    };
+                    yield return new object[]
+                    {
+                        new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
+                            (cacheDir, invalidateCallback) =>
+                                new EncryptedBlobCacheTester(cacheDir, invalidateCallback))
+                    };
+                }
+            }
+        }
+
         public class TheDisposeMethod
         {
             /// <summary>
@@ -85,14 +189,16 @@ namespace Akavache.Tests
             {
                 get
                 {
-                    yield return new object[]{ 
+                    yield return new object[]
+                    {
                         new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
-                            (cacheDir, invalidateCallback) => 
+                            (cacheDir, invalidateCallback) =>
                                 new PersistentBlobCacheTester(cacheDir, invalidateCallback))
                     };
-                    yield return new object[]{ 
+                    yield return new object[]
+                    {
                         new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
-                            (cacheDir, invalidateCallback) => 
+                            (cacheDir, invalidateCallback) =>
                                 new EncryptedBlobCacheTester(cacheDir, invalidateCallback))
                     };
                 }
@@ -102,9 +208,9 @@ namespace Akavache.Tests
         public class PersistentBlobCacheTester : PersistentBlobCache
         {
             public PersistentBlobCacheTester(
-                string cacheDirectory = null, 
+                string cacheDirectory = null,
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
-                    : base(cacheDirectory, null, null, invalidatedCallback)
+                : base(cacheDirectory, null, null, invalidatedCallback)
             {
             }
         }
@@ -112,9 +218,9 @@ namespace Akavache.Tests
         public class EncryptedBlobCacheTester : EncryptedBlobCache
         {
             public EncryptedBlobCacheTester(
-                string cacheDirectory = null, 
+                string cacheDirectory = null,
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
-                    : base(cacheDirectory, null, null, invalidatedCallback)
+                : base(cacheDirectory, null, null, invalidatedCallback)
             {
             }
         }
