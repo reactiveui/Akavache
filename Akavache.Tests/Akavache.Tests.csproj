@@ -105,6 +105,7 @@
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="EncryptedBlobCacheFixture.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
+    <Compile Include="Stresser.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="UtilityTests.cs" />
   </ItemGroup>

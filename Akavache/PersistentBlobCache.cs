@@ -141,7 +141,7 @@ namespace Akavache
 
             // NB: Since FetchOrWriteBlobFromDisk is guaranteed to not block,
             // we never sit on this lock for any real length of time
-            var err = default(AsyncSubject<byte[]>);
+            AsyncSubject<byte[]> err;
             lock (memoizedRequests)
             {
                 if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("PersistentBlobCache"));
@@ -169,7 +169,7 @@ namespace Akavache
                 return ObservableThrowKeyNotFoundException(key);
             }
 
-            var ret = default(AsyncSubject<byte[]>);
+            AsyncSubject<byte[]> ret;
             lock (memoizedRequests)
             {
                 // There are three scenarios here, and we handle all of them 
@@ -345,7 +345,8 @@ namespace Akavache
                 return ret;
             }
 
-            var readResult = filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
+            Func<IObservable<byte[]>> readResult = () => 
+                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => ObservableThrowKeyNotFoundException(key, ex))
@@ -358,7 +359,7 @@ namespace Akavache
                     }
                 });
 
-            (synchronous ? readResult : opQueue.EnqueueObservableOperation(key, () => readResult))
+            (synchronous ? readResult() : opQueue.EnqueueObservableOperation(key, readResult))
                 .Multicast(ret).PermaRef();
             return ret;
         }
@@ -369,16 +370,17 @@ namespace Akavache
             var scheduler = synchronous ? System.Reactive.Concurrency.Scheduler.Immediate : Scheduler;
 
             var path = GetPathForKey(key);
-            var files = BeforeWriteToDiskFilter(byteData, scheduler)
-                .Select(x => new MemoryStream(x))
-                .Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), (from, to) => new {from, to});
 
             // NB: The fact that our writing AsyncSubject waits until the 
             // write actually completes means that an Insert immediately 
             // followed by a Get will take longer to process - however,
             // this also means that failed writes will disappear from the
             // cache, which is A Good Thing.
-            var writeResult = files
+
+            Func<IObservable<byte[]>> writeResult = () => BeforeWriteToDiskFilter(byteData, scheduler)
+                .Select(x => new MemoryStream(x))
+                .Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), 
+                    (from, to) => new {from, to})
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
                 .Do(_ =>
@@ -386,7 +388,7 @@ namespace Akavache
                     if (!synchronous && key != BlobCacheIndexKey) actionTaken.OnNext(Unit.Default);
                 }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex));
 
-            (synchronous ? writeResult : opQueue.EnqueueObservableOperation(key, () => writeResult))
+            (synchronous ? writeResult() : opQueue.EnqueueObservableOperation(key, writeResult))
                 .Multicast(ret).Connect();
             return ret;
         }
