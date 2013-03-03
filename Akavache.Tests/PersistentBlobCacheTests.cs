@@ -32,6 +32,9 @@ namespace Akavache.Tests
 
                 var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
 
+                
+                cache.Dispose();
+                cache.Shutdown.Wait();
                 Assert.Equal("", String.Join(",", exceptions));
             }
 
@@ -58,6 +61,8 @@ namespace Akavache.Tests
 
                 var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
 
+                cache.Dispose();
+                cache.Shutdown.Wait();
                 Assert.Equal("", String.Join(",", exceptions));
             }
 
@@ -147,7 +152,7 @@ namespace Akavache.Tests
                 invalidateThread.Join();
                 insertThread.Join();
                 disposeThread.Join();
-
+                cache.Shutdown.Wait();
                 Assert.Null(exception);
             }
 
