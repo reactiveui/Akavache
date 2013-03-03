@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using Xunit;
@@ -13,6 +14,49 @@ namespace Akavache.Tests
     /// </summary>
     public class PersistentBlobCacheTests
     {
+        public class CrazyStressTests
+        {
+            [Theory]
+            [PropertyData("CacheFuncs")]
+            public void CreateAndReadAtSameTimeTest(
+                string cacheType,
+                Func<string, Action<AsyncSubject<byte[]>>, 
+                PersistentBlobCache> factory)
+            {
+                var cache = factory("somepath", _ => {});
+                var stresser = new Stresser(new Action<string>[]
+                {
+                    key => cache.Insert(key, Stresser.RandomData()),
+                    key => cache.GetAsync(key).First()
+                });
+
+                var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
+
+                Assert.Equal("", String.Join(",", exceptions));
+            }
+
+            public static IEnumerable<Object[]> CacheFuncs
+            {
+                get
+                {
+                    yield return new object[]
+                    {
+                        "PersistentCache",
+                        new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
+                            (cacheDir, invalidateCallback) =>
+                                new PersistentBlobCacheTester("pers-" + cacheDir, invalidateCallback))
+                    };
+                    yield return new object[]
+                    {
+                        "EncryptedCache",
+                        new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
+                            (cacheDir, invalidateCallback) =>
+                                new EncryptedBlobCacheTester("encr-" + cacheDir, invalidateCallback))
+                    };
+                }
+            }
+        }
+
         public class TheDisposeMethod
         {
             /// <summary>
@@ -85,14 +129,16 @@ namespace Akavache.Tests
             {
                 get
                 {
-                    yield return new object[]{ 
+                    yield return new object[]
+                    {
                         new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
-                            (cacheDir, invalidateCallback) => 
+                            (cacheDir, invalidateCallback) =>
                                 new PersistentBlobCacheTester(cacheDir, invalidateCallback))
                     };
-                    yield return new object[]{ 
+                    yield return new object[]
+                    {
                         new Func<string, Action<AsyncSubject<byte[]>>, PersistentBlobCache>(
-                            (cacheDir, invalidateCallback) => 
+                            (cacheDir, invalidateCallback) =>
                                 new EncryptedBlobCacheTester(cacheDir, invalidateCallback))
                     };
                 }
@@ -102,9 +148,9 @@ namespace Akavache.Tests
         public class PersistentBlobCacheTester : PersistentBlobCache
         {
             public PersistentBlobCacheTester(
-                string cacheDirectory = null, 
+                string cacheDirectory = null,
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
-                    : base(cacheDirectory, null, null, invalidatedCallback)
+                : base(cacheDirectory, null, null, invalidatedCallback)
             {
             }
         }
@@ -112,9 +158,9 @@ namespace Akavache.Tests
         public class EncryptedBlobCacheTester : EncryptedBlobCache
         {
             public EncryptedBlobCacheTester(
-                string cacheDirectory = null, 
+                string cacheDirectory = null,
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
-                    : base(cacheDirectory, null, null, invalidatedCallback)
+                : base(cacheDirectory, null, null, invalidatedCallback)
             {
             }
         }
