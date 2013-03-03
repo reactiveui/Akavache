@@ -44,11 +44,6 @@ namespace Akavache
 #else
                 var ret = Observable.Return(ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser));
 #endif
-
-
-                // NB: MemoizedRequests will be null as we're disposing
-                InvalidateAllRequests();
-
                 return ret;
             } 
             catch(Exception ex)
@@ -67,9 +62,6 @@ namespace Akavache
 #else
                 var ret = Observable.Return(ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser));
 #endif
-
-                // NB: MemoizedRequests will be null as we're disposing
-                InvalidateAllRequests();
                 return ret;
             } 
             catch(Exception ex)
