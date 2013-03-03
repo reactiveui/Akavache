@@ -35,6 +35,32 @@ namespace Akavache.Tests
                 Assert.Equal("", String.Join(",", exceptions));
             }
 
+            // This test is cuuurraazzy!
+            [Theory]
+            [PropertyData("CacheFuncs")]
+            public void CreateReadAndInvalidateAtSameTimeTest(
+                string cacheType,
+                Func<string, Action<AsyncSubject<byte[]>>, 
+                PersistentBlobCache> factory)
+            {
+                var cache = factory("somepath", _ => {});
+                var stresser = new Stresser(new Action<string>[]
+                {
+                    key => cache.Insert(key, Stresser.RandomData()),
+                    key =>
+                    {
+                        cache.Insert(key, Stresser.RandomData());
+                        cache.GetAsync(key).First();
+                    },
+                    key => cache.GetAsync(key).First(),
+                    key => cache.Invalidate(key).First()
+                }, uniqueKeyCount: 2);
+
+                var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
+
+                Assert.Equal("", String.Join(",", exceptions));
+            }
+
             public static IEnumerable<Object[]> CacheFuncs
             {
                 get
