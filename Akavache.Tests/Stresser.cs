@@ -17,10 +17,16 @@ namespace Akavache.Tests
         readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception>();
         bool isRunning;
 
-        public Stresser(IEnumerable<Action<string>> actions)
+        public Stresser(IEnumerable<Action<string>> actions) : this(actions, 1)
         {
-            var key = Guid.NewGuid().ToString();
-            tasks = (from action in actions
+        }
+
+        public Stresser(IEnumerable<Action<string>> actions, int uniqueKeyCount)
+        {
+            tasks = (
+                from action in actions
+                from counter in Enumerable.Range(0, uniqueKeyCount)
+                let key = Guid.NewGuid().ToString()
                 select new Task(() => RunAction(key, action)))
                 .ToList();
         }

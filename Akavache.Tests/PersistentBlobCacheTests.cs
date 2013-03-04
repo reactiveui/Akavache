@@ -32,6 +32,37 @@ namespace Akavache.Tests
 
                 var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
 
+                
+                cache.Dispose();
+                cache.Shutdown.Wait();
+                Assert.Equal("", String.Join(",", exceptions));
+            }
+
+            // This test is cuuurraazzy!
+            [Theory]
+            [PropertyData("CacheFuncs")]
+            public void CreateReadAndInvalidateAtSameTimeTest(
+                string cacheType,
+                Func<string, Action<AsyncSubject<byte[]>>, 
+                PersistentBlobCache> factory)
+            {
+                var cache = factory("somepath", _ => {});
+                var stresser = new Stresser(new Action<string>[]
+                {
+                    key => cache.Insert(key, Stresser.RandomData()),
+                    key =>
+                    {
+                        cache.Insert(key, Stresser.RandomData());
+                        cache.GetAsync(key).First();
+                    },
+                    key => cache.GetAsync(key).First(),
+                    key => cache.Invalidate(key).First()
+                }, uniqueKeyCount: 2);
+
+                var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
+
+                cache.Dispose();
+                cache.Shutdown.Wait();
                 Assert.Equal("", String.Join(",", exceptions));
             }
 
@@ -121,7 +152,7 @@ namespace Akavache.Tests
                 invalidateThread.Join();
                 insertThread.Join();
                 disposeThread.Join();
-
+                cache.Shutdown.Wait();
                 Assert.Null(exception);
             }
 
