@@ -13,7 +13,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using Newtonsoft.Json;
 using ReactiveUI;
 
@@ -32,7 +31,7 @@ namespace Akavache
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
         bool disposed;
-        protected IFilesystemProvider filesystem;
+        readonly IFilesystemProvider filesystem;
 
         readonly IDisposable flushThreadSubscription;
 
@@ -313,14 +312,6 @@ namespace Akavache
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
             return Observable.Return(data);
-        }
-
-        protected void InvalidateAllRequests()
-        {
-            lock (memoizedRequests)
-            {
-                memoizedRequests.InvalidateAll();
-            }
         }
 
         AsyncSubject<byte[]> FetchOrWriteBlobFromDisk(string key, object byteData, bool synchronous)
