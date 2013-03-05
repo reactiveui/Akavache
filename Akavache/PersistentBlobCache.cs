@@ -337,7 +337,9 @@ namespace Akavache
             }
 
             Func<IObservable<byte[]>> readResult = () => 
-                filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler)
+                Observable.Defer(() => 
+                    filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler))
+                .Retry(1)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => ObservableThrowKeyNotFoundException(key, ex))
@@ -370,7 +372,9 @@ namespace Akavache
 
             Func<IObservable<byte[]>> writeResult = () => BeforeWriteToDiskFilter(byteData, scheduler)
                 .Select(x => new MemoryStream(x))
-                .Zip(filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler), 
+                .Zip(Observable.Defer(() => 
+                        filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler))
+                        .Retry(1),
                     (from, to) => new {from, to})
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
                 .Select(_ => byteData)
