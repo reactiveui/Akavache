@@ -1,6 +1,6 @@
 ## How to ship an Akavache release
 
-1. Bump the version in all the `nuspec` file
+1. Bump the version in all the `nuspec` files
 1. Bump the required ReactiveUI version in the `nuspec` file if necessary
 1. Bump the version in all the `AssemblyInfo.cs` files
 1. `msbuild Akavache.sln /p:Configuration=Release`
