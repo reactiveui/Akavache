@@ -1,7 +1,12 @@
 using System;
+using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Threading.Tasks;
 using Newtonsoft.Json;
 using ReactiveUI;
+using System.Reactive;
+using System.Threading.Tasks;
 
 namespace Akavache
 {
@@ -94,6 +99,33 @@ namespace Akavache
         {
             get { return perSession; }
             set { perSession = value; }
+        }
+
+        /// <summary>
+        /// This method shuts down all of the blob caches. Make sure call it
+        /// on app exit and await / Wait() on it!
+        /// </summary>
+        /// <returns>A Task representing when all caches have finished shutting
+        /// down.</returns>
+#if WP7
+        public static IObservable<Unit> Shutdown()
+#else
+        public static Task Shutdown()
+#endif
+        {
+            var toDispose = new[] { LocalMachine, UserAccount, Secure, InMemory, };
+
+            var ret = toDispose.Select(x =>
+            {
+                x.Dispose();
+                return x.Shutdown;
+            }).Merge().ToList().Select(_ => Unit.Default);
+
+#if WP7
+            return ret;
+#else
+            return ret.ToTask();
+#endif
         }
 
         public static JsonSerializerSettings SerializerSettings { get; set; }
