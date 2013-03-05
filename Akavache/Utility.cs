@@ -84,7 +84,7 @@ namespace Akavache
                         .Select(x => x.AsStream())
                         .Subscribe(ret);
 #else
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, true), scheduler).Cast<Stream>().Subscribe(ret);
+                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
 #endif
                 }
                 catch (Exception ex)
