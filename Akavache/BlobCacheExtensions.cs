@@ -181,7 +181,7 @@ namespace Akavache
         {
             bool foundItemInCache;
             var fail = Observable.Defer(() => This.GetCreatedAt(key))
-                .Select(x => fetchPredicate != null && x != null ? fetchPredicate(x.Value) : true)
+                .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
                 .SelectMany(_ => fetchFunc())
                 .Finally(() => This.Invalidate(key))
