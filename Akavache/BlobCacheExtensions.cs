@@ -179,7 +179,6 @@ namespace Akavache
             Func<DateTimeOffset, bool> fetchPredicate = null,
             DateTimeOffset? absoluteExpiration = null)
         {
-            bool foundItemInCache;
             var fail = Observable.Defer(() => This.GetCreatedAt(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
@@ -192,7 +191,6 @@ namespace Akavache
 
             return result.SelectMany(x =>
             {
-                foundItemInCache = x.Item2;
                 return x.Item2 ?
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
@@ -261,9 +259,6 @@ namespace Akavache
                 This.Invalidate(key);
             }
         }
-
-        static Lazy<JsonSerializer> serializer = new Lazy<JsonSerializer>(
-            () => JsonSerializer.Create(new JsonSerializerSettings()));
 
         internal static byte[] SerializeObject(object value)
         {
