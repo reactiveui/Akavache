@@ -128,7 +128,7 @@ namespace Akavache
             }
         }
 
-        IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
+        static IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
         {
             return Observable.Defer(operation.EvaluateFunc)
                 .Select(_ => operation)
