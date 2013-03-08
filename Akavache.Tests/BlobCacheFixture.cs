@@ -167,65 +167,6 @@ namespace Akavache.Tests
             }
         }
 
-        [Fact(Skip = "Put off this test until later, it's fairly evil")]
-        public void AbuseTheCacheOnATonOfThreads()
-        {
-            var rng = new Random();
-            var keys = Enumerable.Range(0, 10).Select(_ => Guid.NewGuid().ToString()).ToArray();
-
-            var actions = Enumerable.Range(0, 1000)
-                .Select(_ => new { AddOrDelete = rng.Next() % 2 == 0, Key = keys[rng.Next(0, keys.Length - 1)], Val = Guid.NewGuid().ToByteArray() })
-                .ToArray();
-
-            var exList = new List<Exception>();
-
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
-                var threads = Enumerable.Range(0, 10).Select(__ => new Thread(() =>
-                {
-                    var prng = new Random();
-                    int start = prng.Next(0, actions.Length);
-
-                    try
-                    {
-                        for (int i = start; i < start + actions.Length; i++)
-                        {
-                            var item = actions[i % actions.Length];
-                            if (prng.Next() % 2 == 0)
-                            {
-                                fixture.GetAsync(item.Key)
-                                    .Catch<byte[], KeyNotFoundException>(_ => Observable.Return(new byte[0]))
-                                    .Subscribe(_ => { }, ex => { lock (exList) { exList.Add(ex); } });
-                                continue;
-                            }
-
-                            if (item.AddOrDelete)
-                            {
-                                fixture.Insert(item.Key, item.Val);
-                            }
-                            else
-                            {
-                                fixture.Invalidate(item.Key);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        lock (exList) { exList.Add(ex); }
-                    }
-                })).ToArray();
-
-                foreach (var t in threads) { t.Start(); }
-                foreach (var t in threads) { t.Join(); }
-
-                Thread.Sleep(10 * 1000);
-            }
-
-            Assert.Equal(0, exList.Count);
-        }
-
         [Fact]
         public void DisposedCacheThrowsObjectDisposedException()
         {

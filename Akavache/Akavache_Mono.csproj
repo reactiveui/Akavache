@@ -62,6 +62,7 @@
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="IBlobCache.cs" />
+    <Compile Include="IKeyedOperationQueue.cs" />
     <Compile Include="LoginInfo.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -30,13 +29,13 @@ namespace Akavache
         }
     }
 
-    public class KeyedOperationQueue : IEnableLogger
+    public class KeyedOperationQueue : IKeyedOperationQueue, IEnableLogger
     {
         readonly IScheduler scheduler;
         static int sequenceNumber = 1;
         readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
         readonly IConnectableObservable<KeyedOperation> resultObs;
-        AsyncSubject<Unit> shutdownObs = null;
+        AsyncSubject<Unit> shutdownObs;
 
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
@@ -129,7 +128,7 @@ namespace Akavache
             }
         }
 
-        IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
+        static IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
         {
             return Observable.Defer(operation.EvaluateFunc)
                 .Select(_ => operation)
