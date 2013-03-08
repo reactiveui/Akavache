@@ -32,5 +32,11 @@ namespace Akavache
         /// <param name="action">A method to run in the background</param>
         /// <returns>A future representing when the operation completes</returns>
         IObservable<Unit> EnqueueOperation(string key, Action action);
+
+        /// <summary>
+        ///   Flushes the remaining operations and returns a signal when they are all complete.
+        /// </summary>
+        /// <returns></returns>
+        IObservable<Unit> ShutdownQueue();
     }
 }
