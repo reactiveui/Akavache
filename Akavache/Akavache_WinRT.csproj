@@ -109,6 +109,7 @@
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="IBlobCache.cs" />
     <Compile Include="IObjectCreator.cs" />
+    <Compile Include="IKeyedOperationQueue.cs" />
     <Compile Include="JsonObjectConverter.cs" />
     <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="LoginInfo.cs" />
