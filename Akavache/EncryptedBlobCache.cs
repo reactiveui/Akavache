@@ -80,7 +80,5 @@ namespace Akavache
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
 #endif
         }
-
-        
     }
 }
