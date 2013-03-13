@@ -249,15 +249,16 @@ namespace Akavache
         /// Invalidates all objects of the specified type. To invalidate all
         /// objects regardless of type, use InvalidateAll.
         /// </summary>
-        public static void InvalidateAllObjects<T>(this IBlobCache This)
+        /// <remarks>Returns a Unit for each invalidation completion. Use Wait instead of First to wait for 
+        /// this.</remarks>
+        public static IObservable<Unit> InvalidateAllObjects<T>(this IBlobCache This)
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) objCache.InvalidateAllObjects<T>();
 
-            foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
-            {
-                This.Invalidate(key);
-            }
+            return This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
+                .ToObservable()
+                .SelectMany(This.Invalidate);
         }
 
         internal static byte[] SerializeObject(object value)
