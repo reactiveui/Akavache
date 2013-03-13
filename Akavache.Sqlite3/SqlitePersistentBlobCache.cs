@@ -186,16 +186,17 @@ namespace Akavache.Sqlite3
                 .ToList();
         }
 
-        public void InvalidateObject<T>(string key)
+        public IObservable<Unit> InvalidateObject<T>(string key)
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
-            Invalidate(key);
+            return Invalidate(key);
         }
 
-        public void InvalidateAllObjects<T>()
+        public IObservable<Unit> InvalidateAllObjects<T>()
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
-            _connection.ExecuteAsync("DELETE * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName);
+            return _connection.ExecuteAsync("DELETE * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
+                .Select(_ => Unit.Default);
         }
 
         public void Dispose()

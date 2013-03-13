@@ -237,27 +237,28 @@ namespace Akavache
         /// IBlobCache.Invalidate to perform the same task.
         /// </summary>
         /// <param name="key">The key to invalidate.</param>
-        public static void InvalidateObject<T>(this IBlobCache This, string key)
+        public static IObservable<Unit> InvalidateObject<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) objCache.InvalidateObject<T>(key);
 
-            This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
+            return This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
         }
 
         /// <summary>
         /// Invalidates all objects of the specified type. To invalidate all
         /// objects regardless of type, use InvalidateAll.
         /// </summary>
-        public static void InvalidateAllObjects<T>(this IBlobCache This)
+        /// <remarks>Returns a Unit for each invalidation completion. Use Wait instead of First to wait for 
+        /// this.</remarks>
+        public static IObservable<Unit> InvalidateAllObjects<T>(this IBlobCache This)
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) objCache.InvalidateAllObjects<T>();
 
-            foreach(var key in This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T)))))
-            {
-                This.Invalidate(key);
-            }
+            return This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
+                .ToObservable()
+                .SelectMany(This.Invalidate);
         }
 
         internal static byte[] SerializeObject(object value)
@@ -446,22 +447,22 @@ namespace Akavache
         /// <summary>
         /// Erases the login associated with the specified host
         /// </summary>
-        public static void EraseLogin(this ISecureBlobCache This, string host = "default")
+        public static IObservable<Unit> EraseLogin(this ISecureBlobCache This, string host = "default")
         {
-            This.InvalidateObject<Tuple<string, string>>("login:" + host);
+            return This.InvalidateObject<Tuple<string, string>>("login:" + host);
         }
     }
 
     public static class RelativeTimeMixin
     {
-        public static void Insert(this IBlobCache This, string key, byte[] data, TimeSpan expiration)
+        public static IObservable<Unit> Insert(this IBlobCache This, string key, byte[] data, TimeSpan expiration)
         {
-            This.Insert(key, data, This.Scheduler.Now + expiration);
+            return This.Insert(key, data, This.Scheduler.Now + expiration);
         }
 
-        public static void InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
+        public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
         {
-            This.InsertObject(key, value, This.Scheduler.Now + expiration);
+            return This.InsertObject(key, value, This.Scheduler.Now + expiration);
         }
 
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
@@ -469,9 +470,9 @@ namespace Akavache
             return This.DownloadUrl(url, headers, fetchAlways, This.Scheduler.Now + expiration);
         }
 
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
+        public static IObservable<Unit> SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
         {
-            This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
+            return This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
         }
     }
 }
