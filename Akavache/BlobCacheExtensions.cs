@@ -237,12 +237,12 @@ namespace Akavache
         /// IBlobCache.Invalidate to perform the same task.
         /// </summary>
         /// <param name="key">The key to invalidate.</param>
-        public static void InvalidateObject<T>(this IBlobCache This, string key)
+        public static IObservable<Unit> InvalidateObject<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) objCache.InvalidateObject<T>(key);
 
-            This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
+            return This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
         }
 
         /// <summary>
@@ -446,9 +446,9 @@ namespace Akavache
         /// <summary>
         /// Erases the login associated with the specified host
         /// </summary>
-        public static void EraseLogin(this ISecureBlobCache This, string host = "default")
+        public static IObservable<Unit> EraseLogin(this ISecureBlobCache This, string host = "default")
         {
-            This.InvalidateObject<Tuple<string, string>>("login:" + host);
+            return This.InvalidateObject<Tuple<string, string>>("login:" + host);
         }
     }
 
