@@ -141,6 +141,7 @@ namespace Akavache
         /// <param name="key">The key to associate with the object.</param>
         /// <param name="value">The object to serialize.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the completion of the insert.</returns>
         IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
@@ -166,12 +167,15 @@ namespace Akavache
         /// IBlobCache.Invalidate to perform the same task.
         /// </summary>
         /// <param name="key">The key to invalidate.</param>
-        void InvalidateObject<T>(string key);
+        /// <returns>A Future result representing the completion of the invalidation.</returns>
+        IObservable<Unit> InvalidateObject<T>(string key);
 
         /// <summary>
         /// Invalidates all objects of the specified type. To invalidate all
         /// objects regardless of type, use InvalidateAll.
         /// </summary>
-        void InvalidateAllObjects<T>();
+        /// <returns>
+        /// A Future result representing the completion of the invalidation.</returns>
+        IObservable<Unit> InvalidateAllObjects<T>();
     }
 }
