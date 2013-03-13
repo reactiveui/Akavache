@@ -455,14 +455,14 @@ namespace Akavache
 
     public static class RelativeTimeMixin
     {
-        public static void Insert(this IBlobCache This, string key, byte[] data, TimeSpan expiration)
+        public static IObservable<Unit> Insert(this IBlobCache This, string key, byte[] data, TimeSpan expiration)
         {
-            This.Insert(key, data, This.Scheduler.Now + expiration);
+            return This.Insert(key, data, This.Scheduler.Now + expiration);
         }
 
-        public static void InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
+        public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
         {
-            This.InsertObject(key, value, This.Scheduler.Now + expiration);
+            return This.InsertObject(key, value, This.Scheduler.Now + expiration);
         }
 
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
@@ -470,9 +470,9 @@ namespace Akavache
             return This.DownloadUrl(url, headers, fetchAlways, This.Scheduler.Now + expiration);
         }
 
-        public static void SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
+        public static IObservable<Unit> SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
         {
-            This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
+            return This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
         }
     }
 }
