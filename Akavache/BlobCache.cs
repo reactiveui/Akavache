@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 
 namespace Akavache
 {
+    // Ignore this man behind the curtain
+    internal interface IWantsToRegisterStuff
+    {
+        void Register();
+    }
+
     public static class BlobCache
     {
         static IServiceProvider serviceProvider;

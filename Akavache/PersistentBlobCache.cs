@@ -47,9 +47,9 @@ namespace Akavache
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidateCallback = null)
         {
-            this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
-            this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
+            this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
+            this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -63,7 +63,7 @@ namespace Akavache
             {
                 var dir = filesystem.CreateRecursive(CacheDirectory);
 #if WINRT
-    // NB: I don't want to talk about it.
+                // NB: I don't want to talk about it.
                 dir.Wait();
 #endif
             }
@@ -104,14 +104,41 @@ namespace Akavache
             get { return BlobCache.ServiceProvider; }
         }
 
-        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultLocalMachineCacheDirectory()));
+        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => {
+            var fs = default(IFilesystemProvider);
+            try {
+                fs = RxApp.GetService<IFilesystemProvider>();
+            } catch (Exception ex) {
+                LogHost.Default.DebugException("Couldn't find custom fs provider for local machine", ex);
+            }
+#if SILVERLIGHT
+            fs = fs ?? new IsolatedStorageProvider();
+#else
+            fs = fs ?? new SimpleFilesystemProvider();
+#endif
+            return new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs);
+        });
 
         public static IBlobCache LocalMachine
         {
             get { return _LocalMachine.Value; }
         }
 
-        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultRoamingCacheDirectory()));
+
+        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => {
+            var fs = default(IFilesystemProvider);
+            try {
+                fs = RxApp.GetService<IFilesystemProvider>();
+            } catch (Exception ex) {
+                LogHost.Default.DebugException("Couldn't find custom fs provider for user acct", ex);
+            }
+#if SILVERLIGHT
+            fs = fs ?? new IsolatedStorageProvider();
+#else
+            fs = fs ?? new SimpleFilesystemProvider();
+#endif
+            return new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs);
+        });
 
         public static IBlobCache UserAccount
         {
@@ -120,13 +147,7 @@ namespace Akavache
 
         class CPersistentBlobCache : PersistentBlobCache
         {
-#if SILVERLIGHT
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
-#else
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler)
-            {
-            }
-#endif
+            public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, RxApp.TaskpoolScheduler) { }
         }
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
@@ -426,49 +447,6 @@ namespace Akavache
         {
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
-
-#if SILVERLIGHT
-        protected static string GetDefaultRoamingCacheDirectory()
-        {
-            return "BlobCache";
-        }
-
-        protected static string GetDefaultLocalMachineCacheDirectory()
-        {
-            return "LocalBlobCache";
-        }
-#elif WINRT
-        protected static string GetDefaultRoamingCacheDirectory()
-        {
-            return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "BlobCache");
-        }
-
-        protected static string GetDefaultLocalMachineCacheDirectory()
-        {
-            return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
-        }
-#else
-        protected static string GetDefaultRoamingCacheDirectory()
-        {
-            return RxApp.InUnitTestRunner() ?
-                Path.Combine(GetAssemblyDirectoryName(), "BlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
-        }
-
-        protected static string GetDefaultLocalMachineCacheDirectory()
-        {
-            return RxApp.InUnitTestRunner() ?
-                Path.Combine(GetAssemblyDirectoryName(), "LocalBlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
-        }
-
-        protected static string GetAssemblyDirectoryName()
-        {
-            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
-            return assemblyDirectoryName;
-        }
-#endif
 
         static IObservable<byte[]> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
         {
