@@ -18,8 +18,51 @@ using Windows.Storage;
 
 namespace Akavache
 {
-    static class Utility
+    internal static class Utility
     {
+        public static IObservable<T> TrySerialized<T>(Func<T> func, object gate)
+        {
+            return Try(() =>
+            {
+                lock (gate)
+                {
+                    return func();
+                }
+            });
+        }
+
+        public static IObservable<Unit> TrySerialized(Action action, object gate)
+        {
+            return Try(() =>
+            {
+                lock (gate)
+                {
+                    action();
+                }
+            });
+        }
+
+        public static IObservable<T> Try<T>(Func<T> func)
+        {
+            try
+            {
+                return Observable.Return(func());
+            }
+            catch (Exception e)
+            {
+                return Observable.Throw<T>(e);
+            }
+        }
+
+        public static IObservable<Unit> Try(Action action)
+        {
+            return Try(() =>
+            {
+                action();
+                return Unit.Default;
+            });
+        }
+
         public static string GetMd5Hash(string input)
         {
 #if WINRT
@@ -103,10 +146,7 @@ namespace Akavache
             {
                 var path = Path.Combine(parent, dir);
 
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
+                Directory.CreateDirectory(path);
 
                 return path;
             });
