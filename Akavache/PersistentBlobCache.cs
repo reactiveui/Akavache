@@ -25,7 +25,6 @@ namespace Akavache
     public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
     {
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
-        readonly KeyedOperationQueue opQueue;
 
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
@@ -51,7 +50,6 @@ namespace Akavache
             this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
-            this.opQueue = new KeyedOperationQueue(scheduler);
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -233,12 +231,11 @@ namespace Akavache
             CacheIndex.TryRemove(key, out dontcare);
 
             var path = GetPathForKey(key);
-            var ret = opQueue.EnqueueObservableOperation(key, () => 
-                Observable.Defer(() => filesystem.Delete(path))
+            var ret = Observable.Defer(() => filesystem.Delete(path))
                     .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
                     .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
                     .Retry(2)
-                    .Do(_ => actionTaken.OnNext(Unit.Default)));
+                    .Do(_ => actionTaken.OnNext(Unit.Default));
 
             return ret.Multicast(new AsyncSubject<Unit>()).PermaRef();
         }
@@ -273,8 +270,9 @@ namespace Akavache
                 actionTaken.OnCompleted();
                 flushThreadSubscription.Dispose();
 
-                opQueue.ShutdownQueue()
-                    .LoggedCatch(this, Observable.Return(Unit.Default))
+                memoizedRequests.CachedValues()
+                    .Select(x => x.LoggedCatch(this, Observable.Return(new byte[0])))
+                    .Merge(8)
                     .SelectMany(FlushCacheIndex(true))
                     .Multicast(shutdown)
                     .PermaRef();
@@ -350,8 +348,7 @@ namespace Akavache
                     }
                 });
 
-            (synchronous ? readResult() : opQueue.EnqueueObservableOperation(key, readResult))
-                .Multicast(ret).PermaRef();
+            readResult().Multicast(ret).PermaRef();
             return ret;
         }
 
@@ -381,8 +378,7 @@ namespace Akavache
                     if (!synchronous && key != BlobCacheIndexKey) actionTaken.OnNext(Unit.Default);
                 }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex));
 
-            (synchronous ? writeResult() : opQueue.EnqueueObservableOperation(key, writeResult))
-                .Multicast(ret).Connect();
+            writeResult().Multicast(ret).Connect();
             return ret;
         }
 
