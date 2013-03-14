@@ -20,7 +20,7 @@ namespace Akavache
 
         protected EncryptedBlobCache(
             string cacheDirectory = null, 
-            IFilesystemProvider filesystemProvider = null, 
+            IFileSystemProvider filesystemProvider = null, 
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidatedCallback = null) 
             : base(cacheDirectory, filesystemProvider, scheduler, invalidatedCallback)
@@ -31,7 +31,7 @@ namespace Akavache
 #if SILVERLIGHT
             public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
 #else
-            public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler) { }
+            public CEncryptedBlobCache(string cacheDirectory) : base(cacheDirectory, new SimpleFileSystemProvider(), RxApp.TaskpoolScheduler) { }
 #endif
         }
 

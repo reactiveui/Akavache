@@ -7,16 +7,13 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Reactive.Windows.Foundation;
-using System.Text;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using ReactiveUI;
 using Windows.Foundation;
 using Windows.Storage;
 
 namespace Akavache
 {
-    public class SimpleFilesystemProvider : IFilesystemProvider, IEnableLogger
+    public class WinRTFileSystemProvider : IFileSystemProvider, IEnableLogger
     {
         readonly IDictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>> openFileStrategies
             = new Dictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>>
@@ -29,19 +26,27 @@ namespace Akavache
             { FileMode.Append, (f,name) => null } // ???
         };
 
-        public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
+        public IObservable<byte[]> ReadFileToBytesAsync(string path, IScheduler scheduler)
         {
-            var folder = Path.GetDirectoryName(path);
-            var name = Path.GetFileName(path);
-
-            return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
-                .SelectMany(x => openFileStrategies[mode](x, name).ToObservable())
-                .SelectMany(x => access == FileAccess.Read ?
-                    x.OpenStreamForReadAsync().ToObservable() :
-                    x.OpenStreamForWriteAsync().ToObservable());
+            return Observable.Zip(
+                SafeOpenFileAsync(path, FileMode.Open, FileAccess.Read, FileShare.Read),
+                Observable.Return(new MemoryStream()),
+                (file, memoryStream) => new {file, memoryStream})
+            .SelectMany(x => x.file.CopyToAsync(x.memoryStream, scheduler)
+            .Select(_ => x.memoryStream.ToArray()));
         }
 
-        public IObservable<Unit> CreateRecursive(string path)
+        public IObservable<byte[]> WriteBytesToFileAsync(string path, byte[] data, IScheduler scheduler)
+        {
+            return Observable.Zip(
+                Observable.Return(new MemoryStream(data)),
+                SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.Read),
+                (bytes, file) => new { bytes, file })
+            .SelectMany(x => x.bytes.CopyToAsync(x.file, scheduler)
+            .Select(_ => data));
+        }
+
+        public IObservable<Unit> CreateRecursiveAsync(string path)
         {
             var paths = path.Split('\\');
 
@@ -67,10 +72,23 @@ namespace Akavache
                 .Select(_ => Unit.Default);
         }
 
-        public IObservable<Unit> Delete(string path)
+        public IObservable<Unit> DeleteFileAsync(string path)
         {
             return StorageFile.GetFileFromPathAsync(path).ToObservable()
                 .SelectMany(x => x.DeleteAsync().ToObservable());
         }
+
+        IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share)
+        {
+            var folder = Path.GetDirectoryName(path);
+            var name = Path.GetFileName(path);
+
+            return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
+                .SelectMany(x => openFileStrategies[mode](x, name).ToObservable())
+                .SelectMany(x => access == FileAccess.Read ?
+                    x.OpenStreamForReadAsync().ToObservable() :
+                    x.OpenStreamForWriteAsync().ToObservable());
+        }
+
     }
 }

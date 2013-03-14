@@ -19,7 +19,7 @@ namespace Akavache
             get { return _Current.Value; }
         }
 
-        protected EncryptedBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null)
+        protected EncryptedBlobCache(string cacheDirectory = null, IFileSystemProvider filesystemProvider = null, IScheduler scheduler = null)
             : base(cacheDirectory, filesystemProvider, scheduler)
         {
         }
