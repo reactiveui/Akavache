@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -8,32 +7,27 @@ namespace Akavache
 {
     public class SimpleFileSystemProvider : IFileSystemProvider
     {
-        ConcurrentDictionary<string, object> gates = new ConcurrentDictionary<string, object>();
+        readonly KeyedMonitor monitor = new KeyedMonitor();
         readonly object gate = new object();
 
         public IObservable<byte[]> ReadFileToBytesAsync(string path, IScheduler scheduler)
         {
-            return Utility.TrySerialized(() => ReadFileToBytes(path), GetGateForKey(path));
+            return monitor.Try(path, () => ReadFileToBytes(path));
         }
 
         public IObservable<byte[]> WriteBytesToFileAsync(string path, byte[] data, IScheduler scheduler)
         {
-            return Utility.TrySerialized(() => WriteBytesToFile(path, data), gate);
+            return monitor.Try(path, (() => WriteBytesToFile(path, data)));
         }
 
         public IObservable<Unit> DeleteFileAsync(string path)
         {
-            return Utility.TrySerialized(() => DeleteFile(path), gate);
+            return monitor.Try(path, (() => DeleteFile(path)));
         }
 
         public IObservable<Unit> CreateRecursiveAsync(string path)
         {
-            return Utility.TrySerialized(() => CreateRecursive(path), gate);
-        }
-
-        object GetGateForKey(string key)
-        {
-            return gates.GetOrAdd(key, _ => new object());
+            return monitor.Try(path, (() => CreateRecursive(path)));
         }
 
         byte[] ReadFileToBytes(string path)

@@ -20,28 +20,6 @@ namespace Akavache
 {
     internal static class Utility
     {
-        public static IObservable<T> TrySerialized<T>(Func<T> func, object gate)
-        {
-            return Try(() =>
-            {
-                lock (gate)
-                {
-                    return func();
-                }
-            });
-        }
-
-        public static IObservable<Unit> TrySerialized(Action action, object gate)
-        {
-            return Try(() =>
-            {
-                lock (gate)
-                {
-                    action();
-                }
-            });
-        }
-
         public static IObservable<T> Try<T>(Func<T> func)
         {
             try
