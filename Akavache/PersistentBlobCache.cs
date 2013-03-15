@@ -25,13 +25,12 @@ namespace Akavache
     public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
     {
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
-        readonly KeyedOperationQueue opQueue;
 
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
         bool disposed;
-        readonly IFilesystemProvider filesystem;
+        readonly IFileSystemProvider filesystem;
 
         readonly IDisposable flushThreadSubscription;
 
@@ -43,15 +42,19 @@ namespace Akavache
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
 
         protected PersistentBlobCache(
-            string cacheDirectory = null, 
-            IFilesystemProvider filesystemProvider = null, 
+            string cacheDirectory = null,
+            IFileSystemProvider filesystemProvider = null, 
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidateCallback = null)
         {
             this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
-            this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
-            this.opQueue = new KeyedOperationQueue(scheduler);
+            this.filesystem = filesystemProvider 
+#if !WINRT && !SILVERLIGHT && !WINDOWS_PHONE && !WP7
+ ?? new SimpleFileSystemProvider()
+#endif
+                
+                ;
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -63,7 +66,7 @@ namespace Akavache
 
             try
             {
-                var dir = filesystem.CreateRecursive(CacheDirectory);
+                var dir = filesystem.CreateRecursiveAsync(CacheDirectory);
 #if WINRT
     // NB: I don't want to talk about it.
                 dir.Wait();
@@ -124,8 +127,12 @@ namespace Akavache
         {
 #if SILVERLIGHT
             public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
+#elif WINRT
+            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new WinRTFileSystemProvider(), RxApp.TaskpoolScheduler)
+            {
+            }
 #else
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler)
+            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new SimpleFileSystemProvider(), RxApp.TaskpoolScheduler)
             {
             }
 #endif
@@ -233,12 +240,10 @@ namespace Akavache
             CacheIndex.TryRemove(key, out dontcare);
 
             var path = GetPathForKey(key);
-            var ret = opQueue.EnqueueObservableOperation(key, () => 
-                Observable.Defer(() => filesystem.Delete(path))
-                    .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
-                    .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
+            var ret = Observable.Defer(() => filesystem.DeleteFileAsync(path))
+                        .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
                     .Retry(2)
-                    .Do(_ => actionTaken.OnNext(Unit.Default)));
+                    .Do(_ => actionTaken.OnNext(Unit.Default));
 
             return ret.Multicast(new AsyncSubject<Unit>()).PermaRef();
         }
@@ -273,8 +278,13 @@ namespace Akavache
                 actionTaken.OnCompleted();
                 flushThreadSubscription.Dispose();
 
-                opQueue.ShutdownQueue()
-                    .LoggedCatch(this, Observable.Return(Unit.Default))
+                var waitOnAllInflight = memoizedRequests.CachedValues()
+                    .Select(x => x.LoggedCatch(this, Observable.Return(new byte[0])))
+                    .Merge(8)
+                    .Concat(Observable.Return(new byte[0]))
+                    .Aggregate(Unit.Default, (acc, x) => acc);
+
+                waitOnAllInflight
                     .SelectMany(FlushCacheIndex(true))
                     .Multicast(shutdown)
                     .PermaRef();
@@ -335,11 +345,8 @@ namespace Akavache
             }
 
             Func<IObservable<byte[]>> readResult = () => 
-                Observable.Defer(() => 
-                    filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler))
-                .Retry(1)
-                .SelectMany(x => x.CopyToAsync(ms, scheduler))
-                .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
+                filesystem.ReadFileToBytesAsync(GetPathForKey(key), scheduler)
+                .SelectMany(bytes => AfterReadFromDiskFilter(bytes, scheduler))
                 .Catch<byte[], FileNotFoundException>(ex => ObservableThrowKeyNotFoundException(key, ex))
                 .Catch<byte[], IsolatedStorageException>(ex => ObservableThrowKeyNotFoundException(key, ex))
                 .Do(_ =>
@@ -350,8 +357,7 @@ namespace Akavache
                     }
                 });
 
-            (synchronous ? readResult() : opQueue.EnqueueObservableOperation(key, readResult))
-                .Multicast(ret).PermaRef();
+            readResult().Multicast(ret).PermaRef();
             return ret;
         }
 
@@ -369,20 +375,14 @@ namespace Akavache
             // cache, which is A Good Thing.
 
             Func<IObservable<byte[]>> writeResult = () => BeforeWriteToDiskFilter(byteData, scheduler)
-                .Select(x => new MemoryStream(x))
-                .Zip(Observable.Defer(() => 
-                        filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler))
-                        .Retry(1),
-                    (from, to) => new {from, to})
-                .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
+                .SelectMany(data => filesystem.WriteBytesToFileAsync(path, data, scheduler))
                 .Select(_ => byteData)
                 .Do(_ =>
                 {
                     if (!synchronous && key != BlobCacheIndexKey) actionTaken.OnNext(Unit.Default);
                 }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex));
 
-            (synchronous ? writeResult() : opQueue.EnqueueObservableOperation(key, writeResult))
-                .Multicast(ret).Connect();
+            writeResult().Multicast(ret).Connect();
             return ret;
         }
 

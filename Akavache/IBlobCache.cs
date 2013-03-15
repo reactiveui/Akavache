@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
 
@@ -11,34 +10,37 @@ namespace Akavache
     /// perform. Create a new instance of this when adapting IBlobCache to
     /// different platforms or backing stores, or for testing purposes.
     /// </summary>
-    public interface IFilesystemProvider
+    /// <remarks>
+    /// In many cases, you can simply inherit from the StreamFileSystemProvider.
+    /// </remarks>
+    public interface IFileSystemProvider
     {
         /// <summary>
-        /// Open a file on a background thread, with the File object in 'async
-        /// mode'. It is critical that this operation is deferred and returns
-        /// immediately (i.e. wrapped in an Observable.Start).
+        /// Reads the file at the specified path and copies the contents to a byte array.
         /// </summary>
-        /// <param name="path">The path to the file</param>
-        /// <param name="mode">The file mode</param>
-        /// <param name="access">The required access privileges</param>
-        /// <param name="share">The allowed file sharing modes.</param>
-        /// <param name="scheduler">The scheduler to schedule the open under.</param>
-        /// <returns>A Future result representing the Open file.</returns>
-        IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler);
+        /// <param name="path">Path to the file to read.</param>
+        /// <returns>Byte array consisting of the contents of the file at the path.</returns>
+        IObservable<byte[]> ReadFileToBytesAsync(string path, IScheduler scheduler);
 
         /// <summary>
-        /// Create a directory and its parents. If the directory already
-        /// exists, this method does nothing (i.e. it does not throw if a
-        /// directory exists)
+        /// Writes the bytes to the file at the given path.
         /// </summary>
-        /// <param name="path">The path to create.</param>
-        IObservable<Unit> CreateRecursive(string path);
+        /// <param name="path">Path to the file to write to.</param>
+        /// <param name="data">The data to write.</param>
+        /// <returns>The original data</returns>
+        IObservable<byte[]> WriteBytesToFileAsync(string path, byte[] data, IScheduler scheduler);
 
         /// <summary>
-        /// Deletes a file.
+        /// Deletes the file at the specified path. If it does not exist, then this is a noop.
         /// </summary>
-        /// <param name="path">The path to the file</param>
-        IObservable<Unit> Delete(string path);
+        /// <param name="path">Path to the file to delete.</param>
+        IObservable<Unit> DeleteFileAsync(string path);
+
+        /// <summary>
+        /// Creates the directory (and necessary parent directories) at the specified path.
+        /// </summary>
+        /// <param name="path"></param>
+        IObservable<Unit> CreateRecursiveAsync(string path);
     }
 
     /// <summary>

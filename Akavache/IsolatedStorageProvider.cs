@@ -1,86 +1,97 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.IO.IsolatedStorage;
-using System.Linq;
-using System.Net;
 using System.Reactive;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using ReactiveUI;
 
 namespace Akavache
 {
-    public class IsolatedStorageProvider : IFilesystemProvider
+    public class IsolatedStorageProvider : IFileSystemProvider
     {
-        public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
+        public IObservable<byte[]> ReadFileToBytesAsync(string path, IScheduler scheduler)
         {
-            return Observable.Create<Stream>(subj =>
-            {
-                var disp = new CompositeDisposable();
-                IsolatedStorageFile fs = null;
-                try
-                {
-                    fs = IsolatedStorageFile.GetUserStoreForApplication();
-                    disp.Add(fs);
-                    disp.Add(Observable.Start(() => fs.OpenFile(path, mode, access, share), RxApp.TaskpoolScheduler).Select(x => (Stream)x).Subscribe(subj));
-                }
-                catch(Exception ex)
-                {
-                    subj.OnError(ex);
-                }
-
-                return disp;
-            });
+            return Utility.Try(() => ReadFileToBytes(path));
         }
 
-        public IObservable<Unit> CreateRecursive(string dirPath)
+        public IObservable<byte[]> WriteBytesToFileAsync(string path, byte[] data, IScheduler scheduler)
         {
-            return Observable.Start(() => 
-            {
-                using(var fs = IsolatedStorageFile.GetUserStoreForApplication())
-                {
-                    string acc = "";
-                    foreach(var x in dirPath.Split(Path.DirectorySeparatorChar))
-                    {
-                        var path = Path.Combine(acc, x);
-
-                        if (path[path.Length - 1] == Path.VolumeSeparatorChar)
-                        {
-                            path += Path.DirectorySeparatorChar;
-                        }
-
-
-                        if (!fs.DirectoryExists(path))
-                        {
-                            fs.CreateDirectory(path);
-                        }
-
-                        acc = path;
-                    }
-                }
-            }, RxApp.TaskpoolScheduler) ;
+            return Utility.Try(() => WriteBytesToFile(path, data));
         }
 
-        public IObservable<Unit> Delete(string path)
+        public IObservable<Unit> DeleteFileAsync(string path)
         {
-            return Observable.Start(() =>
+            return Utility.Try(() => DeleteFile(path));
+        }
+
+        public IObservable<Unit> CreateRecursiveAsync(string path)
+        {
+            return Utility.Try(() => CreateRecursive(path));
+        }
+
+        byte[] ReadFileToBytes(string path)
+        {
+            using (var memoryStream = new MemoryStream())
             {
                 using (var fs = IsolatedStorageFile.GetUserStoreForApplication())
+                using (var stream = fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    if (!fs.FileExists(path))
+                    stream.CopyTo(memoryStream);
+                }
+                return memoryStream.ToArray();
+            }
+        }
+
+        byte[] WriteBytesToFile(string path, byte[] data)
+        {
+            using (var memoryStream = new MemoryStream(data))
+            using (var fs = IsolatedStorageFile.GetUserStoreForApplication())
+            using (var stream = fs.OpenFile(path, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                memoryStream.CopyTo(stream);
+            }
+            return data;
+        }
+
+        void DeleteFile(string path)
+        {
+            using (var fs = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                if (!fs.FileExists(path))
+                {
+                    return;
+                }
+
+                try
+                {
+                    fs.DeleteFile(path);
+                }
+                catch (FileNotFoundException) { }
+            }
+        }
+
+        void CreateRecursive(string path)
+        {
+            using (var fs = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                string acc = "";
+                foreach (var x in path.Split(Path.DirectorySeparatorChar))
+                {
+                    var directory = Path.Combine(acc, x);
+
+                    if (directory[directory.Length - 1] == Path.VolumeSeparatorChar)
                     {
-                        return;
+                        directory += Path.DirectorySeparatorChar;
                     }
 
-                    try
+                    if (!fs.DirectoryExists(directory))
                     {
-                        fs.DeleteFile(path);
+                        fs.CreateDirectory(directory);
                     }
-                    catch (FileNotFoundException) { }
+
+                    acc = directory;
                 }
-            }, RxApp.TaskpoolScheduler);
+            }
+
         }
     }
 }

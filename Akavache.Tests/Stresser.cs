@@ -24,9 +24,9 @@ namespace Akavache.Tests
         public Stresser(IEnumerable<Action<string>> actions, int uniqueKeyCount)
         {
             tasks = (
-                from action in actions
                 from counter in Enumerable.Range(0, uniqueKeyCount)
-                let key = Guid.NewGuid().ToString()
+                let key = counter + ":" + Guid.NewGuid().ToString()
+                from action in actions
                 select new Task(() => RunAction(key, action)))
                 .ToList();
         }

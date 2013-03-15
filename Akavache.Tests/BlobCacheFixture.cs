@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Threading;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;

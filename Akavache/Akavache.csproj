@@ -95,13 +95,14 @@
     <Compile Include="IKeyedOperationQueue.cs" />
     <Compile Include="IObjectCreator.cs" />
     <Compile Include="JsonObjectConverter.cs" />
+    <Compile Include="KeyedMonitor.cs" />
     <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="LoginInfo.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimpleFilesystemProvider.cs" />
+    <Compile Include="SimpleFileSystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="Utility.cs" />
