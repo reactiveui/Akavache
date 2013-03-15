@@ -95,6 +95,7 @@
     <Compile Include="IKeyedOperationQueue.cs" />
     <Compile Include="IObjectCreator.cs" />
     <Compile Include="JsonObjectConverter.cs" />
+    <Compile Include="KeyedMonitor.cs" />
     <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="LoginInfo.cs" />
     <Compile Include="MD5.cs" />

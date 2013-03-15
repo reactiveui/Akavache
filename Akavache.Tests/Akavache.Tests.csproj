@@ -104,6 +104,7 @@
     <Compile Include="BlobCacheExtensionsFixture.cs" />
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="EncryptedBlobCacheFixture.cs" />
+    <Compile Include="KeyedMonitorTests.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
     <Compile Include="Stresser.cs" />
     <Compile Include="Utility.cs" />
