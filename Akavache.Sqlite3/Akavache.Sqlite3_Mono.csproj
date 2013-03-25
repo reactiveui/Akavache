@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <AssemblyName>Akavache.Sqlite3</AssemblyName>
+    <AssemblyName>Akavache.Sqlite3_Mono</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\Akavache\</SolutionDir>
     <RestorePackages>true</RestorePackages>
@@ -72,6 +72,7 @@
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SqlitePersistentBlobCache.cs" />
+    <Compile Include="ServiceLocationRegistration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

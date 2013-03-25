@@ -9,7 +9,9 @@ namespace Akavache.Mobile
 {
     public class AkavacheDriver : ISuspensionDriver, IEnableLogger
     {
-        public AkavacheDriver(string applicationName = null)
+        public AkavacheDriver() : this(null) {}
+
+        public AkavacheDriver(string applicationName)
         {
             if (applicationName != null) BlobCache.ApplicationName = applicationName;
 
