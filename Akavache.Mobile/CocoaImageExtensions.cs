@@ -11,8 +11,16 @@ using System.Reactive.Subjects;
 using System.Text;
 using Newtonsoft.Json;
 using ReactiveUI;
+
+#if IOS
+using MonoTouch.UIKit;
+using MonoTouch.Foundation;
+using NSImage = MonoTouch.UIKit.UIImage;
+#else
 using MonoMac.AppKit;
 using MonoMac.Foundation;
+#endif
+
 
 namespace Akavache
 {

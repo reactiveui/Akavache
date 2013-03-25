@@ -9,9 +9,10 @@ namespace Akavache.Mobile
 {
     public class AkavacheDriver : ISuspensionDriver, IEnableLogger
     {
-        public AkavacheDriver(string applicationName)
+        public AkavacheDriver(string applicationName = null)
         {
-            BlobCache.ApplicationName = applicationName;
+            if (applicationName != null) BlobCache.ApplicationName = applicationName;
+
             BlobCache.SerializerSettings = new JsonSerializerSettings() {
                 ObjectCreationHandling = ObjectCreationHandling.Replace,
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,

@@ -1,12 +1,18 @@
 using System;
-using MonoMac.Foundation;
 using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive;
 using System.Reactive.Linq;
 using ReactiveUI;
 
+#if IOS
+using MonoTouch.Foundation;
+using ReactiveUI.Mobile;
+namespace Akavache.Mobile
+#else
+using MonoMac.Foundation;
 namespace Akavache.Mac
+#endif
 {
     public class ServiceLocationRegistration : IWantsToRegisterStuff
     {
@@ -14,6 +20,9 @@ namespace Akavache.Mac
         {
             RxApp.Register(typeof(MacFilesystemProvider), typeof(IFilesystemProvider));
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
+#if IOS
+            RxApp.Register(typeof(AkavacheDriver), typeof(ISuspensionDriver));
+#endif
         }
     }
 
