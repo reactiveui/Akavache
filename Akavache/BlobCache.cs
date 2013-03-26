@@ -7,9 +7,19 @@ using Newtonsoft.Json;
 using ReactiveUI;
 using System.Reactive;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.IO;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Akavache
 {
+    // Ignore this man behind the curtain
+    internal interface IWantsToRegisterStuff
+    {
+        void Register();
+    }
+
     public static class BlobCache
     {
         static IServiceProvider serviceProvider;
@@ -23,6 +33,27 @@ namespace Akavache
                 localMachine = new TestBlobCache(RxApp.TaskpoolScheduler);
                 userAccount = new TestBlobCache(RxApp.TaskpoolScheduler);
                 secure = new TestBlobCache(RxApp.TaskpoolScheduler);
+                return;
+            }
+            
+            var namespaces = AttemptToEarlyLoadAkavacheDLLs();
+
+            foreach(var ns in namespaces) {
+                #if WINRT
+                var assm = typeof (BlobCache).GetTypeInfo().Assembly;
+                #else
+                var assm = Assembly.GetExecutingAssembly();
+                #endif
+                var fullName = typeof(BlobCache).AssemblyQualifiedName;
+                var targetType = ns + ".ServiceLocationRegistration";
+                fullName = fullName.Replace("Akavache.BlobCache", targetType);
+                fullName = fullName.Replace(assm.FullName, assm.FullName.Replace("Akavache", ns));
+                
+                var registerTypeClass = Reflection.ReallyFindType(fullName, false);
+                if (registerTypeClass != null) {
+                    var registerer = (IWantsToRegisterStuff) Activator.CreateInstance(registerTypeClass);
+                    registerer.Register();
+                }
             }
         }
 
@@ -54,7 +85,10 @@ namespace Akavache
             set { applicationName = value; }
         }
 
+        internal static Lazy<IBlobCache> defaultLocalMachineOverride;
         static IBlobCache localMachine;
+
+        internal static Lazy<IBlobCache> defaultUserAccountOverride;
         static IBlobCache userAccount;
 
         /// <summary>
@@ -64,7 +98,9 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get { return localMachine ?? PersistentBlobCache.LocalMachine; }
+            get { return localMachine ?? 
+                (defaultLocalMachineOverride != null ? defaultLocalMachineOverride.Value : null) ??
+                PersistentBlobCache.LocalMachine; }
             set { localMachine = value; }
         }
 
@@ -75,10 +111,13 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return userAccount ?? PersistentBlobCache.UserAccount; }
+            get { return userAccount ?? 
+                (defaultUserAccountOverride != null ? defaultUserAccountOverride.Value : null) ??
+                PersistentBlobCache.UserAccount; }
             set { userAccount = value; }
         }
 
+        internal static Lazy<ISecureBlobCache> defaultSecureOverride;
         static ISecureBlobCache secure;
 
         /// <summary>
@@ -87,7 +126,9 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get { return secure ?? EncryptedBlobCache.Current; }
+            get { return secure ?? 
+                (defaultSecureOverride != null ? defaultSecureOverride.Value : null) ??
+                EncryptedBlobCache.Current; }
             set { secure = value; }
         }
 
@@ -129,5 +170,51 @@ namespace Akavache
         }
 
         public static JsonSerializerSettings SerializerSettings { get; set; }
+
+        static IEnumerable<string> AttemptToEarlyLoadAkavacheDLLs()
+        {
+            var guiLibs = new[] {
+                "Akavache.Mac",
+                "Akavache.Mobile",
+                "Akavache.Sqlite3",
+            };
+            
+            #if WINRT || WP8 || SILVERLIGHT
+            // NB: WinRT hates your Freedom
+            return new[] {"Akavache.Mobile", "Akavache.Sqlite3", };
+            #else
+            var name = Assembly.GetExecutingAssembly().GetName();
+            var suffix = GetArchSuffixForPath(Assembly.GetExecutingAssembly().Location);
+            
+            return guiLibs.SelectMany(x => {
+                var fullName = String.Format("{0}{1}, Version={2}, Culture=neutral, PublicKeyToken=null", x, suffix, name.Version.ToString());
+                
+                var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                if (String.IsNullOrEmpty(assemblyLocation))
+                    return Enumerable.Empty<string>();
+                
+                var path = Path.Combine(Path.GetDirectoryName(assemblyLocation), x + suffix + ".dll");
+                if (!File.Exists(path) && !RxApp.InUnitTestRunner()) {
+                    LogHost.Default.Debug("Couldn't find {0}", path);
+                    return Enumerable.Empty<string>();
+                }
+                
+                try {
+                    Assembly.Load(fullName);
+                    return new[] {x};
+                } catch (Exception ex) {
+                    LogHost.Default.DebugException("Couldn't load " + x, ex);
+                    return Enumerable.Empty<string>();
+                }
+            });
+            #endif
+        }
+        
+        static string GetArchSuffixForPath(string path)
+        {
+            var re = new Regex(@"(_[A-Za-z0-9]+)\.");
+            var m = re.Match(Path.GetFileName(path));
+            return m.Success ? m.Groups[1].Value : "";
+        }
     }
 }

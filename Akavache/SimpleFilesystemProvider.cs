@@ -4,6 +4,8 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using ReactiveUI;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace Akavache
 {
@@ -23,6 +25,34 @@ namespace Akavache
         public IObservable<Unit> Delete(string path)
         {
             return Observable.Start(() => File.Delete(path), RxApp.TaskpoolScheduler);
+        }
+                
+        public string GetDefaultRoamingCacheDirectory()
+        {
+            return RxApp.InUnitTestRunner() ?
+                Path.Combine(GetAssemblyDirectoryName(), "BlobCache") :
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
+        }
+
+        public string GetDefaultSecretCacheDirectory()
+        {
+            return RxApp.InUnitTestRunner() ?
+                Path.Combine(GetAssemblyDirectoryName(), "SecretCache") :
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
+        }
+
+        public string GetDefaultLocalMachineCacheDirectory()
+        {
+            return RxApp.InUnitTestRunner() ?
+                Path.Combine(GetAssemblyDirectoryName(), "LocalBlobCache") :
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
+        }
+
+        protected static string GetAssemblyDirectoryName()
+        {
+            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
+            return assemblyDirectoryName;
         }
     }
 }
