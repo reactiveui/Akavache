@@ -25,7 +25,6 @@ namespace Akavache
     public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
     {
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
-        readonly KeyedOperationQueue opQueue;
 
         protected readonly string CacheDirectory;
         protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
@@ -48,10 +47,9 @@ namespace Akavache
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidateCallback = null)
         {
-            this.CacheDirectory = cacheDirectory ?? GetDefaultRoamingCacheDirectory();
-            this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
-            this.opQueue = new KeyedOperationQueue(scheduler);
+            this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
+            this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -65,7 +63,7 @@ namespace Akavache
             {
                 var dir = filesystem.CreateRecursive(CacheDirectory);
 #if WINRT
-    // NB: I don't want to talk about it.
+                // NB: I don't want to talk about it.
                 dir.Wait();
 #endif
             }
@@ -106,14 +104,41 @@ namespace Akavache
             get { return BlobCache.ServiceProvider; }
         }
 
-        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultLocalMachineCacheDirectory()));
+        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => {
+            var fs = default(IFilesystemProvider);
+            try {
+                fs = RxApp.GetService<IFilesystemProvider>();
+            } catch (Exception ex) {
+                LogHost.Default.DebugException("Couldn't find custom fs provider for local machine", ex);
+            }
+#if SILVERLIGHT
+            fs = fs ?? new IsolatedStorageProvider();
+#else
+            fs = fs ?? new SimpleFilesystemProvider();
+#endif
+            return new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs);
+        });
 
         public static IBlobCache LocalMachine
         {
             get { return _LocalMachine.Value; }
         }
 
-        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => new CPersistentBlobCache(GetDefaultRoamingCacheDirectory()));
+
+        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => {
+            var fs = default(IFilesystemProvider);
+            try {
+                fs = RxApp.GetService<IFilesystemProvider>();
+            } catch (Exception ex) {
+                LogHost.Default.DebugException("Couldn't find custom fs provider for user acct", ex);
+            }
+#if SILVERLIGHT
+            fs = fs ?? new IsolatedStorageProvider();
+#else
+            fs = fs ?? new SimpleFilesystemProvider();
+#endif
+            return new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs);
+        });
 
         public static IBlobCache UserAccount
         {
@@ -122,13 +147,7 @@ namespace Akavache
 
         class CPersistentBlobCache : PersistentBlobCache
         {
-#if SILVERLIGHT
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, new IsolatedStorageProvider(), RxApp.TaskpoolScheduler) { }
-#else
-            public CPersistentBlobCache(string cacheDirectory) : base(cacheDirectory, null, RxApp.TaskpoolScheduler)
-            {
-            }
-#endif
+            public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, RxApp.TaskpoolScheduler) { }
         }
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
@@ -233,12 +252,11 @@ namespace Akavache
             CacheIndex.TryRemove(key, out dontcare);
 
             var path = GetPathForKey(key);
-            var ret = opQueue.EnqueueObservableOperation(key, () => 
-                Observable.Defer(() => filesystem.Delete(path))
+            var ret = Observable.Defer(() => filesystem.Delete(path))
                     .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
                     .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
                     .Retry(2)
-                    .Do(_ => actionTaken.OnNext(Unit.Default)));
+                    .Do(_ => actionTaken.OnNext(Unit.Default));
 
             return ret.Multicast(new AsyncSubject<Unit>()).PermaRef();
         }
@@ -273,8 +291,13 @@ namespace Akavache
                 actionTaken.OnCompleted();
                 flushThreadSubscription.Dispose();
 
-                opQueue.ShutdownQueue()
-                    .LoggedCatch(this, Observable.Return(Unit.Default))
+                var waitOnAllInflight = memoizedRequests.CachedValues()
+                    .Select(x => x.LoggedCatch(this, Observable.Return(new byte[0])))
+                    .Merge(8)
+                    .Concat(Observable.Return(new byte[0]))
+                    .Aggregate(Unit.Default, (acc, x) => acc);
+
+                waitOnAllInflight
                     .SelectMany(FlushCacheIndex(true))
                     .Multicast(shutdown)
                     .PermaRef();
@@ -350,8 +373,7 @@ namespace Akavache
                     }
                 });
 
-            (synchronous ? readResult() : opQueue.EnqueueObservableOperation(key, readResult))
-                .Multicast(ret).PermaRef();
+            readResult().Multicast(ret).PermaRef();
             return ret;
         }
 
@@ -381,8 +403,7 @@ namespace Akavache
                     if (!synchronous && key != BlobCacheIndexKey) actionTaken.OnNext(Unit.Default);
                 }, ex => LogHost.Default.WarnException("Failed to write out file: " + path, ex));
 
-            (synchronous ? writeResult() : opQueue.EnqueueObservableOperation(key, writeResult))
-                .Multicast(ret).Connect();
+            writeResult().Multicast(ret).Connect();
             return ret;
         }
 
@@ -426,49 +447,6 @@ namespace Akavache
         {
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
-
-#if SILVERLIGHT
-        protected static string GetDefaultRoamingCacheDirectory()
-        {
-            return "BlobCache";
-        }
-
-        protected static string GetDefaultLocalMachineCacheDirectory()
-        {
-            return "LocalBlobCache";
-        }
-#elif WINRT
-        protected static string GetDefaultRoamingCacheDirectory()
-        {
-            return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "BlobCache");
-        }
-
-        protected static string GetDefaultLocalMachineCacheDirectory()
-        {
-            return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
-        }
-#else
-        protected static string GetDefaultRoamingCacheDirectory()
-        {
-            return RxApp.InUnitTestRunner() ?
-                Path.Combine(GetAssemblyDirectoryName(), "BlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
-        }
-
-        protected static string GetDefaultLocalMachineCacheDirectory()
-        {
-            return RxApp.InUnitTestRunner() ?
-                Path.Combine(GetAssemblyDirectoryName(), "LocalBlobCache") :
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
-        }
-
-        protected static string GetAssemblyDirectoryName()
-        {
-            var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
-            return assemblyDirectoryName;
-        }
-#endif
 
         static IObservable<byte[]> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
         {

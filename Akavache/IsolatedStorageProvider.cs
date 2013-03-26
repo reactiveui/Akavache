@@ -82,5 +82,20 @@ namespace Akavache
                 }
             }, RxApp.TaskpoolScheduler);
         }
+
+        public string GetDefaultRoamingCacheDirectory()
+        {
+            return "BlobCache";
+        }
+
+        public string GetDefaultSecretCacheDirectory()
+        {
+            return "SecretCache";
+        }
+
+        public string GetDefaultLocalMachineCacheDirectory()
+        {
+            return "LocalBlobCache";
+        }
     }
 }

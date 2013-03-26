@@ -72,5 +72,20 @@ namespace Akavache
             return StorageFile.GetFileFromPathAsync(path).ToObservable()
                 .SelectMany(x => x.DeleteAsync().ToObservable());
         }
+
+        public string GetDefaultRoamingCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "BlobCache");
+        }
+
+        public string GetDefaultLocalMachineCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
+        }
+
+	public string GetDefaultSecretCacheDirectory()
+        {
+            return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "SecretCache");
+        }
     }
 }
