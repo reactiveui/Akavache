@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_Monotouch",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3_Monotouch", "Akavache.Sqlite3\Akavache.Sqlite3_Monotouch.csproj", "{9091337C-9E90-4DBD-801E-05E1FDA78FFC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Monodroid", "Akavache\Akavache_Monodroid.csproj", "{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3_Monodroid", "Akavache.Sqlite3\Akavache.Sqlite3_Monodroid.csproj", "{F92A477B-BB94-A3C1-084E-917AEF9FEDB7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{9091337C-9E90-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9091337C-9E90-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9091337C-9E90-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F92A477B-BB94-A3C1-084E-917AEF9FEDB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F92A477B-BB94-A3C1-084E-917AEF9FEDB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F92A477B-BB94-A3C1-084E-917AEF9FEDB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F92A477B-BB94-A3C1-084E-917AEF9FEDB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FA91337A-9E94-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FA91337A-9E94-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA91337A-9E94-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU

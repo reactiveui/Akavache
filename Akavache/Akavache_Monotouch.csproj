@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monotouch</OutputPath>
-    <DefineConstants>DEBUG; MONO; IOS</DefineConstants>
+    <DefineConstants>DEBUG; MONO; IOS; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -29,7 +29,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
-    <DefineConstants>MONO; IOS</DefineConstants>
+    <DefineConstants>MONO; IOS; XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
