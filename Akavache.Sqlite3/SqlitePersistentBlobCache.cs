@@ -107,6 +107,7 @@ namespace Akavache.Sqlite3
                 return _inflightCache.Get(key)
                     .Select(x => x.Expiration == DateTime.MaxValue ?
                         default(DateTimeOffset?) : new DateTimeOffset(x.Expiration, TimeSpan.Zero))
+                    .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
                     .Finally(() => _inflightCache.Invalidate(key));
             }           
         }
