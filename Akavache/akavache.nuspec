@@ -21,7 +21,7 @@
 
   <files>
     <file src="bin\Release\Net40\Akavache.*" target="lib\net40" />
-    <file src="bin\Release\Net45\Akavache.*" target="lib\net45" />
+    <file src="bin\Release\Net45\Akavache_Net45.*" target="lib\net45" />
     <file src="bin\Release\SL5\Akavache_SL5.*" target="lib\sl5" />
     <file src="bin\Release\WP7\Akavache_WP7.*" target="lib\wp7" />
     <file src="bin\Release\WP8\Akavache_WP8.*" target="lib\wp8" />
