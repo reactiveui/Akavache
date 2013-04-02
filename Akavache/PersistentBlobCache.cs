@@ -47,7 +47,11 @@ namespace Akavache
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidateCallback = null)
         {
+#if SILVERLIGHT
+            this.filesystem = filesystemProvider ?? new IsolatedStorageProvider();
+#else
             this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
+#endif
             this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
 
