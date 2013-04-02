@@ -1,4 +1,4 @@
-﻿$Archs = {"Net40", "Net45", "SL5", "WP7", "WP8", "WinRT45", "Mono"}
+﻿$Archs = {"Net40", "Net45", "SL5", "WP7", "WP8", "WinRT45", "Mono", "Monodroid", "Monotouch"}
 $Projects = {"Akavache", "Akavache.Sqlite3", "Akavache.Mobile"}
 
 $SlnFileExists = Test-Path ".\Akavache.sln"
