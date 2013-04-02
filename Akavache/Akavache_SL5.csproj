@@ -100,11 +100,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProtectDataShim.cs" />
-    <Compile Include="SimpleFilesystemProvider.cs" />
+    <Compile Include="ProtectDataShim.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="StreamMixins.cs" />
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="Utility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>
