@@ -19,6 +19,12 @@ namespace Akavache
             } catch (Exception ex) {
                 LogHost.Default.DebugException("Couldn't find custom fs provider for secret cache", ex);
             }
+            
+#if SILVERLIGHT
+            fs = fs ?? new IsolatedStorageProvider();
+#else
+            fs = fs ?? new SimpleFilesystemProvider();
+#endif
             return new CEncryptedBlobCache(fs.GetDefaultSecretCacheDirectory(), fs);
         });
 
