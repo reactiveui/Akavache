@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_WP8", "Akav
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_WinRT", "Akavache.Mobile\Akavache.Mobile_WinRT.csproj", "{47D34AB1-5188-4D8C-B24F-3151C67CC8CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Interfaces", "Akavache.Interfaces\Akavache.Interfaces.csproj", "{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -234,6 +236,16 @@ Global
 		{47D34AB1-5188-4D8C-B24F-3151C67CC8CC}.Release|x64.Build.0 = Release|x64
 		{47D34AB1-5188-4D8C-B24F-3151C67CC8CC}.Release|x86.ActiveCfg = Release|x86
 		{47D34AB1-5188-4D8C-B24F-3151C67CC8CC}.Release|x86.Build.0 = Release|x86
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Release|ARM.ActiveCfg = Release|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Release|x64.ActiveCfg = Release|Any CPU
+		{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

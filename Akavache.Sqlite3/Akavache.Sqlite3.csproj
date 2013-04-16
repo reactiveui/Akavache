@@ -88,6 +88,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
+      <Name>Akavache.Interfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache.csproj">
       <Project>{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}</Project>
       <Name>Akavache</Name>

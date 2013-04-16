@@ -116,6 +116,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
+      <Name>Akavache.Interfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj">
       <Project>{645e1374-f816-42e3-aac0-23a48277b627}</Project>
       <Name>Akavache.Sqlite3</Name>
