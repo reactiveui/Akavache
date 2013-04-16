@@ -28,3 +28,8 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+
+
+[assembly: InternalsVisibleTo("Akavache_Net45")]
+[assembly: InternalsVisibleTo("Akavache_WinRT")]
+[assembly: InternalsVisibleTo("Akavache_WP8")]
