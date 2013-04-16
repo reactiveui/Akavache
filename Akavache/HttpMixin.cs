@@ -18,7 +18,7 @@ using System.Net.Browser;
 namespace Akavache
 {
 
-    public static class HttpMixin
+    internal class HttpMixin : IHttpMixin
     {
 #if SILVERLIGHT
         static HttpMixin()
@@ -28,7 +28,7 @@ namespace Akavache
         }
 #endif
 
-        static readonly ConcurrentDictionary<string, IObservable<byte[]>> inflightWebRequests = new ConcurrentDictionary<string, IObservable<byte[]>>();
+        readonly ConcurrentDictionary<string, IObservable<byte[]>> inflightWebRequests = new ConcurrentDictionary<string, IObservable<byte[]>>();
 
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
@@ -41,7 +41,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public IObservable<byte[]> DownloadUrl(IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var doFetch = new Func<KeyNotFoundException, IObservable<byte[]>>(_ => inflightWebRequests.GetOrAdd(url, __ => Observable.Defer(() =>
             {
@@ -54,7 +54,7 @@ namespace Akavache
             return ret.Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
         }
 
-        static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
+        IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
         {
             var hwr = (HttpWebResponse)wr;
             Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be.");
@@ -77,7 +77,7 @@ namespace Akavache
 
         static IObservable<WebResponse> MakeWebRequest(
             Uri uri,
-            Dictionary<string, string> headers = null,
+            IDictionary<string, string> headers = null,
             string content = null,
             int retries = 3,
             TimeSpan? timeout = null)
