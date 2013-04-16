@@ -109,6 +109,7 @@
     <Compile Include="BlobCacheExtensions.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="IBlobCache.cs" />
+    <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="IObjectCreator.cs" />
     <Compile Include="IKeyedOperationQueue.cs" />
     <Compile Include="JsonObjectConverter.cs" />
