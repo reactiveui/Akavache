@@ -73,7 +73,6 @@
     <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
-    <Compile Include="IBlobCache.cs" />
     <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="IObjectCreator.cs" />
     <Compile Include="IKeyedOperationQueue.cs" />
