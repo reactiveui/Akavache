@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -13,6 +12,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
+using Akavache.Internal;
 using Newtonsoft.Json;
 using ReactiveUI;
 
@@ -27,7 +27,7 @@ namespace Akavache
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
 
         protected readonly string CacheDirectory;
-        protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
+        internal ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
         bool disposed;
         readonly IFilesystemProvider filesystem;

@@ -142,6 +142,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+      <Project>{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}</Project>
+      <Name>Akavache.Interfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WP8.csproj">
       <Project>{A54279A3-3457-41DB-9166-67E05FD0E0B1}</Project>
       <Name>Akavache_WP8</Name>

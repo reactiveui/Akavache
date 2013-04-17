@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace System.Collections.Concurrent
+namespace Akavache.Internal
 {
     public class LockedDictionary<TKey, TVal> : IDictionary<TKey, TVal>
     {

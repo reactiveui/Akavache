@@ -1,22 +1,15 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
+using Akavache.Internal;
 using Newtonsoft.Json;
-using ReactiveUI;
 using System.Threading.Tasks;
 
-#if SILVERLIGHT
-using System.Net.Browser;
-#endif
 
 namespace Akavache
 {
@@ -268,7 +261,7 @@ namespace Akavache
 
         internal static byte[] SerializeObject<T>(T value)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, BlobCache.SerializerSettings));
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, BlobCacheSettings.SerializerSettings));
         }
 
         static IObservable<T> DeserializeObject<T>(byte[] x, IServiceProvider serviceProvider)
@@ -276,8 +269,8 @@ namespace Akavache
             try
             {
                 var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
-                var ret = serviceProvider == null ? 
-                    JsonConvert.DeserializeObject<T>(bytes, BlobCache.SerializerSettings) : 
+                var ret = serviceProvider == null ?
+                    JsonConvert.DeserializeObject<T>(bytes, BlobCacheSettings.SerializerSettings) : 
                     JsonConvert.DeserializeObject<T>(bytes, new JsonObjectConverter(serviceProvider));
 
                 return Observable.Return(ret);
@@ -294,185 +287,4 @@ namespace Akavache
         }
     }
 
-    public static class HttpMixin
-    {
-#if SILVERLIGHT
-        static HttpMixin()
-        {
-            WebRequest.RegisterPrefix("http://", WebRequestCreator.ClientHttp);
-            WebRequest.RegisterPrefix("https://", WebRequestCreator.ClientHttp);
-        }
-#endif
-
-        static readonly ConcurrentDictionary<string, IObservable<byte[]>> inflightWebRequests = new ConcurrentDictionary<string, IObservable<byte[]>>();
-
-        /// <summary>
-        /// Download data from an HTTP URL and insert the result into the
-        /// cache. If the data is already in the cache, this returns
-        /// a cached value. The URL itself is used as the key.
-        /// </summary>
-        /// <param name="url">The URL to download.</param>
-        /// <param name="headers">An optional Dictionary containing the HTTP
-        /// request headers.</param>
-        /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
-        /// <param name="absoluteExpiration">An optional expiration date.</param>
-        /// <returns>The data downloaded from the URL.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, Dictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
-        {
-            var doFetch = new Func<KeyNotFoundException, IObservable<byte[]>>(_ => inflightWebRequests.GetOrAdd(url, __ => Observable.Defer(() =>
-            {
-                return MakeWebRequest(new Uri(url), headers)
-                    .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
-            }).Multicast(new AsyncSubject<byte[]>()).RefCount()));
-
-            IObservable<byte[]> dontcare;
-            var ret = fetchAlways ? doFetch(null) : This.GetAsync(url).Catch(doFetch);
-            return ret.Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
-        }
-
-        static IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
-        {
-            var hwr = (HttpWebResponse) wr;
-            Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be.");
-            if ((int)hwr.StatusCode >= 400)
-            {
-                return Observable.Throw<byte[]>(new WebException(hwr.StatusDescription));
-            }
-
-            var ms = new MemoryStream();
-            using (var responseStream = hwr.GetResponseStream())
-            {
-                Debug.Assert(responseStream != null, "The response stream is somehow null");
-                responseStream.CopyTo(ms);
-            }
-
-            var ret = ms.ToArray();
-            cache.Insert(url, ret, absoluteExpiration);
-            return Observable.Return(ret);
-        }
-
-        static IObservable<WebResponse> MakeWebRequest(
-            Uri uri,
-            Dictionary<string, string> headers = null,
-            string content = null,
-            int retries = 3,
-            TimeSpan? timeout = null)
-        {
-            IObservable<WebResponse> request;
-
-            var hwr = WebRequest.Create(uri);
-            if (headers != null)
-            {
-                foreach(var x in headers)
-                {
-                    hwr.Headers[x.Key] = x.Value;
-                }
-            }
-
-#if !SILVERLIGHT && !WINRT
-            if (RxApp.InUnitTestRunner())
-            {
-                request = Observable.Defer(() =>
-                {
-                    if (content == null)
-                    {
-                        return Observable.Start(() => hwr.GetResponse(), RxApp.TaskpoolScheduler);
-                    }
-
-                    var buf = Encoding.UTF8.GetBytes(content);
-                    return Observable.Start(() =>
-                    {
-                        hwr.GetRequestStream().Write(buf, 0, buf.Length);
-                        return hwr.GetResponse();
-                    }, RxApp.TaskpoolScheduler);
-                });
-            }
-            else 
-#endif
-            {
-                request = Observable.Defer(() =>
-                {
-                    if (content == null)
-                    {
-                        return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
-                    }
-
-                    var buf = Encoding.UTF8.GetBytes(content);
-
-                    // NB: You'd think that BeginGetResponse would never block, 
-                    // seeing as how it's asynchronous. You'd be wrong :-/
-                    var ret = new AsyncSubject<WebResponse>();
-                    Observable.Start(() =>
-                    {
-                        Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
-                            .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
-                            .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
-                            .Multicast(ret).Connect();
-                    }, RxApp.TaskpoolScheduler);
-
-                    return ret;
-                });
-            }
-
-            return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), RxApp.TaskpoolScheduler).Retry(retries);
-        }
-    }
-
-    public static class LoginMixin
-    {
-        /// <summary>
-        /// Save a user/password combination in a secure blob cache. Note that
-        /// this method only allows exactly *one* user/pass combo to be saved,
-        /// calling this more than once will overwrite the previous entry.
-        /// </summary>
-        /// <param name="user">The user name to save.</param>
-        /// <param name="password">The associated password</param>
-        /// <param name="absoluteExpiration">An optional expiration date.</param>
-        public static IObservable<Unit> SaveLogin(this ISecureBlobCache This, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null)
-        {
-            return This.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
-        }
-
-        /// <summary>
-        /// Returns the currently cached user/password. If the cache does not
-        /// contain a user/password, this returns an Observable which
-        /// OnError's with KeyNotFoundException.
-        /// </summary>
-        /// <returns>A Future result representing the user/password Tuple.</returns>
-        public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache This, string host = "default")
-        {
-            return This.GetObjectAsync<Tuple<string, string>>("login:" + host).Select(x => new LoginInfo(x));
-        }
-
-        /// <summary>
-        /// Erases the login associated with the specified host
-        /// </summary>
-        public static IObservable<Unit> EraseLogin(this ISecureBlobCache This, string host = "default")
-        {
-            return This.InvalidateObject<Tuple<string, string>>("login:" + host);
-        }
-    }
-
-    public static class RelativeTimeMixin
-    {
-        public static IObservable<Unit> Insert(this IBlobCache This, string key, byte[] data, TimeSpan expiration)
-        {
-            return This.Insert(key, data, This.Scheduler.Now + expiration);
-        }
-
-        public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, TimeSpan expiration)
-        {
-            return This.InsertObject(key, value, This.Scheduler.Now + expiration);
-        }
-
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
-        {
-            return This.DownloadUrl(url, headers, fetchAlways, This.Scheduler.Now + expiration);
-        }
-
-        public static IObservable<Unit> SaveLogin(this ISecureBlobCache This, string user, string password, string host, TimeSpan expiration)
-        {
-            return This.SaveLogin(user, password, host, This.Scheduler.Now + expiration);
-        }
-    }
 }

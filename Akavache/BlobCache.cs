@@ -148,11 +148,8 @@ namespace Akavache
         /// </summary>
         /// <returns>A Task representing when all caches have finished shutting
         /// down.</returns>
-#if WP7
-        public static IObservable<Unit> Shutdown()
-#else
+
         public static Task Shutdown()
-#endif
         {
             var toDispose = new[] { LocalMachine, UserAccount, Secure, InMemory, };
 
@@ -162,14 +159,15 @@ namespace Akavache
                 return x.Shutdown;
             }).Merge().ToList().Select(_ => Unit.Default);
 
-#if WP7
-            return ret;
-#else
+
             return ret.ToTask();
-#endif
         }
 
-        public static JsonSerializerSettings SerializerSettings { get; set; }
+        public static JsonSerializerSettings SerializerSettings
+        {
+            get { return BlobCacheSettings.SerializerSettings; }
+            set { BlobCacheSettings.SerializerSettings = value; }
+        }
 
         static IEnumerable<string> AttemptToEarlyLoadAkavacheDLLs()
         {

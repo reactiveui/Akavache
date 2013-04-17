@@ -138,12 +138,20 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
+      <Name>Akavache.Interfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
       <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
       <Name>Akavache_WinRT</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\winrt45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="ReactiveUI_WinRT, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-core.4.4.1\lib\WinRT45\ReactiveUI_WinRT.dll</HintPath>
