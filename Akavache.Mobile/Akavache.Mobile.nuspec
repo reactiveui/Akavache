@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.6.4</version>
+    <version>2.6.5</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="2.6.4" />
+      <dependency id="akavache" version="2.6.5" />
       <dependency id="reactiveui-mobile" version="4.4.3" />
     </dependencies>
 
@@ -17,11 +17,11 @@
     <title>Akavache.Mobile</title>
     <description>An implementation of ISuspensionDriver that uses Akavache to save app state on tombstoning.</description>
     <summary>An implementation of ISuspensionDriver that uses Akavache to save app state on tombstoning.</summary>
-    <copyright>Copyright GitHub© 2012</copyright>
+    <copyright>Copyright GitHubÂ© 2012</copyright>
   </metadata>
 
   <files>
     <file src="bin\Release\WP8\Akavache.Mobile_WP8.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Mobile_WinRT.*" target="lib\WinRT45" />
+    <file src="bin\Release\WinRT45\Akavache.Mobile_WinRT.*" target="lib\NetCore45" />
   </files>
 </package>
