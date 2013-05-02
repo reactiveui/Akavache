@@ -134,17 +134,9 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            var ms = new MemoryStream();
-            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
-            var writer = new BsonWriter(ms);
-
-            if (BlobCache.ServiceProvider != null) 
-            {
-                serializer.Converters.Add(new JsonObjectConverter(BlobCache.ServiceProvider));
-            }
-
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
-            serializer.Serialize(writer, value);
+
+            var data = SerializeObject(value);
 
             lock (_inflightCache) _inflightCache.Invalidate(key);
 
@@ -155,7 +147,7 @@ namespace Akavache.Sqlite3
                 TypeName = typeof(T).FullName
             };
 
-            var ret = BeforeWriteToDiskFilter(ms.ToArray(), Scheduler)
+            var ret = BeforeWriteToDiskFilter(data, Scheduler)
                 .Do(x => element.Value = x)
                 .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
@@ -172,7 +164,7 @@ namespace Akavache.Sqlite3
                 var ret = _inflightCache.Get(key);
                 return ret
                     .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                    .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider));
+                    .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider ?? BlobCache.ServiceProvider));
             }
         }
 
@@ -183,7 +175,7 @@ namespace Akavache.Sqlite3
             return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider))
+                .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider ?? BlobCache.ServiceProvider))
                 .ToList();
         }
 
@@ -245,6 +237,30 @@ namespace Akavache.Sqlite3
             return Observable.Return(data);
         }
 
+        byte[] SerializeObject<T>(T value)
+        {
+            var ms = new MemoryStream();
+            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
+            var writer = new BsonWriter(ms);
+
+#if WINRT
+            if (value.GetType().GetTypeInfo().IsValueType || value is String)
+#else
+            if (value.GetType().IsValueType || value is String)
+#endif
+            {
+                return SerializeObject(new ObjectWrapper<T>() { Value = value });
+            }
+
+            var serviceProvider = this.ServiceProvider ?? BlobCache.ServiceProvider;
+            if (serviceProvider != null)
+            {
+                serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
+            }
+
+            serializer.Serialize(writer, value);
+            return ms.ToArray();
+        }
 
         IObservable<T> DeserializeObject<T>(byte[] data, IServiceProvider serviceProvider)
         {
@@ -257,14 +273,23 @@ namespace Akavache.Sqlite3
             }
 
 #if WINRT
-            if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
+            if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()) &&
+                !typeof(String).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
             {
                 reader.ReadRootValueAsArray = true;
             }
+            else if (typeof(T).GetTypeInfo().IsValueType || typeof(String).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
+            {
+                return DeserializeObject<ObjectWrapper<T>>(data, serviceProvider).Select(x => x.Value);
+            }
 #else
-            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
+            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && !typeof(String).IsAssignableFrom(typeof(T)))
             {
                 reader.ReadRootValueAsArray = true;
+            }
+            else if (typeof(T).IsValueType || typeof(String).IsAssignableFrom(typeof(T)))
+            {
+                return DeserializeObject<ObjectWrapper<T>>(data, serviceProvider).Select(x => x.Value);
             }
 #endif
 
@@ -295,5 +320,11 @@ namespace Akavache.Sqlite3
         public string TypeName { get; set; }
         public byte[] Value { get; set; }
         public DateTime Expiration { get; set; }
+    }
+
+    interface IObjectWrapper {}
+    class ObjectWrapper<T> : IObjectWrapper
+    {
+        public T Value { get; set; }
     }
 }
