@@ -25,9 +25,10 @@ namespace Akavache.Sqlite3
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> _inflightCache;
         bool disposed = false;
 
-        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
+        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null, IServiceProvider serviceProvider = null)
         {
             Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            ServiceProvider = serviceProvider;
 
             _connection = new SQLiteAsyncConnection(databaseFile, true);
             _connection.CreateTableAsync<CacheElement>();
