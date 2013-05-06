@@ -200,7 +200,7 @@ namespace Akavache.Sqlite3
                 .Multicast(shutdown)
                 .PermaRef();
 
-            disposed = true;
+            //disposed = true;
         }
 
         /// <summary>
