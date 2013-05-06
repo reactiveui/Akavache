@@ -268,7 +268,7 @@ namespace Akavache.Tests
             string path;
             using(Utility.WithEmptyDirectory(out path))
             {
-                using(var fixture = new TPersistentBlobCache(path))
+                using(var fixture = CreateBlobCache(path))
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
                         .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
@@ -287,7 +287,7 @@ namespace Akavache.Tests
             string path;
             using (Utility.WithEmptyDirectory(out path))
             {
-                var fixture = new TPersistentBlobCache(path);
+                var fixture = CreateBlobCache(path);
                 using (fixture)
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
