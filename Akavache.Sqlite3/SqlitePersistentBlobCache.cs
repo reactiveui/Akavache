@@ -22,6 +22,7 @@ namespace Akavache.Sqlite3
         public IServiceProvider ServiceProvider { get; private set; }
 
         readonly SQLiteAsyncConnection _connection;
+        readonly SQLiteConnectionPool _pool;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> _inflightCache;
         bool disposed = false;
 
@@ -30,7 +31,8 @@ namespace Akavache.Sqlite3
             Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             ServiceProvider = serviceProvider;
 
-            _connection = new SQLiteAsyncConnection(databaseFile, true);
+            _pool = new SQLiteConnectionPool();
+            _connection = new SQLiteAsyncConnection(databaseFile, _pool, true);
             _connection.CreateTableAsync<CacheElement>();
 
             _inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, _) =>
@@ -196,11 +198,11 @@ namespace Akavache.Sqlite3
         public void Dispose()
         {
             _connection.Shutdown()
-                .Finally(() => SQLiteConnectionPool.Shared.Reset())
+                .Finally(() => _pool.Reset())
                 .Multicast(shutdown)
                 .PermaRef();
 
-            //disposed = true;
+            disposed = true;
         }
 
         /// <summary>

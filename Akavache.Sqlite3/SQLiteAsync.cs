@@ -54,16 +54,18 @@ namespace SQLite
     {
         SQLiteConnectionString _connectionString;
         KeyedOperationQueue _opQueue;
+        SQLiteConnectionPool _pool;
 
-        public SQLiteAsyncConnection (string databasePath, bool storeDateTimeAsTicks = false, IScheduler scheduler = null)
+        public SQLiteAsyncConnection (string databasePath, SQLiteConnectionPool pool, bool storeDateTimeAsTicks = false, IScheduler scheduler = null)
         {
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
             _opQueue = new KeyedOperationQueue(scheduler ?? RxApp.TaskpoolScheduler);
+            _pool = pool;
         }
 
         SQLiteConnectionWithoutLock GetConnection ()
         {
-            return SQLiteConnectionPool.Shared.GetConnection (_connectionString);
+            return _pool.GetConnection (_connectionString);
         }
 
         public IObservable<CreateTablesResult> CreateTableAsync<T> ()
@@ -354,7 +356,7 @@ namespace SQLite
         }
     }
 
-    class SQLiteConnectionPool
+    public class SQLiteConnectionPool
     {
         class Entry
         {
@@ -376,19 +378,6 @@ namespace SQLite
 
         readonly Dictionary<string, Entry> _entries = new Dictionary<string, Entry> ();
         readonly object _entriesLock = new object ();
-
-        static readonly SQLiteConnectionPool _shared = new SQLiteConnectionPool ();
-
-        /// <summary>
-        /// Gets the singleton instance of the connection tool.
-        /// </summary>
-        public static SQLiteConnectionPool Shared
-        {
-            get
-            {
-                return _shared;
-            }
-        }
 
         public SQLiteConnectionWithoutLock GetConnection (SQLiteConnectionString connectionString)
         {
@@ -414,6 +403,7 @@ namespace SQLite
                 foreach (var entry in _entries.Values) {
                     entry.OnApplicationSuspended ();
                 }
+
                 _entries.Clear ();
             }
         }
@@ -428,7 +418,7 @@ namespace SQLite
         }
     }
 
-    class SQLiteConnectionWithoutLock : SQLiteConnection
+    public class SQLiteConnectionWithoutLock : SQLiteConnection
     {
         public SQLiteConnectionWithoutLock (SQLiteConnectionString connectionString)
             : base (connectionString.DatabasePath, connectionString.StoreDateTimeAsTicks)
