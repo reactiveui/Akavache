@@ -246,22 +246,13 @@ namespace Akavache.Sqlite3
             var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
             var writer = new BsonWriter(ms);
 
-#if WINRT
-            if (value.GetType().GetTypeInfo().IsValueType || value is String)
-#else
-            if (value.GetType().IsValueType || value is String)
-#endif
-            {
-                return SerializeObject(new ObjectWrapper<T>() { Value = value });
-            }
-
             var serviceProvider = this.ServiceProvider ?? BlobCache.ServiceProvider;
             if (serviceProvider != null)
             {
                 serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
             }
 
-            serializer.Serialize(writer, value);
+            serializer.Serialize(writer, new ObjectWrapper<T>() { Value = value });
             return ms.ToArray();
         }
 
@@ -275,30 +266,9 @@ namespace Akavache.Sqlite3
                 serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
             }
 
-#if WINRT
-            if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()) &&
-                !typeof(String).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
-            {
-                reader.ReadRootValueAsArray = true;
-            }
-            else if (typeof(T).GetTypeInfo().IsValueType || typeof(String).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
-            {
-                return DeserializeObject<ObjectWrapper<T>>(data, serviceProvider).Select(x => x.Value);
-            }
-#else
-            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)) && !typeof(String).IsAssignableFrom(typeof(T)))
-            {
-                reader.ReadRootValueAsArray = true;
-            }
-            else if (typeof(T).IsValueType || typeof(String).IsAssignableFrom(typeof(T)))
-            {
-                return DeserializeObject<ObjectWrapper<T>>(data, serviceProvider).Select(x => x.Value);
-            }
-#endif
-
             try 
             {
-                var val = serializer.Deserialize<T>(reader);
+                var val = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
                 return Observable.Return(val);
             }
             catch (Exception ex) 
