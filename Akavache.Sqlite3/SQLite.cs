@@ -108,42 +108,11 @@ namespace SQLite
 		/// only here for backwards compatibility. There is a *significant* speed advantage, with no
 		/// down sides, when setting storeDateTimeAsTicks = true.
 		/// </param>
-		public SQLiteConnection (string databasePath, bool storeDateTimeAsTicks = false)
-		{
-			DatabasePath = databasePath;
-			Sqlite3DatabaseHandle handle;
-			var r = SQLite3.Open (DatabasePath, out handle);
-			Handle = handle;
-			if (r != SQLite3.Result.OK) {
-				throw SQLiteException.New (r, String.Format ("Could not open database file: {0} ({1})", DatabasePath, r));
-			}
-			_open = true;
-
-			StoreDateTimeAsTicks = storeDateTimeAsTicks;
-			
-			BusyTimeout = TimeSpan.FromSeconds (0.1);
-		}
-
-		/// <summary>
-		/// Constructs a new SQLiteConnection and opens a SQLite database specified by databasePath.
-		/// </summary>
-		/// <param name="databasePath">
-		/// Specifies the path to the database file.
-		/// </param>
-		/// <param name="storeDateTimeAsTicks">
-		/// Specifies whether to store DateTime properties as ticks (true) or strings (false). You
-		/// absolutely do want to store them as Ticks in all new projects. The default of false is
-		/// only here for backwards compatibility. There is a *significant* speed advantage, with no
-		/// down sides, when setting storeDateTimeAsTicks = true.
-		/// </param>
 		public SQLiteConnection (string databasePath, SQLiteOpenFlags openFlags, bool storeDateTimeAsTicks = false)
 		{
 			DatabasePath = databasePath;
 			Sqlite3DatabaseHandle handle;
 			
-#if SILVERLIGHT
-			var r = SQLite3.Open (databasePath, out handle, (int)openFlags, IntPtr.Zero);
-#else
 			// open using the byte[]
 			// in the case where the path may include Unicode
 			// force open to using UTF-8 using sqlite3_open_v2
@@ -155,7 +124,6 @@ namespace SQLite
 			databasePathLength = System.Text.Encoding.UTF8.GetBytes(DatabasePath, 0, DatabasePath.Length, databasePathAsBytes, 0);
 
 			var r = SQLite3.Open (databasePathAsBytes, out handle, (int) openFlags, IntPtr.Zero);
-#endif
 
 			Handle = handle;
 			if (r != SQLite3.Result.OK) {
@@ -2354,17 +2322,8 @@ namespace SQLite
 		}
 
 #if !USE_CSHARP_SQLITE
-		[DllImport("sqlite3", EntryPoint = "sqlite3_open", CallingConvention=CallingConvention.Cdecl)]
-		public static extern Result Open ([MarshalAs(UnmanagedType.LPStr)] string filename, out IntPtr db);
-
-		[DllImport("sqlite3", EntryPoint = "sqlite3_open_v2", CallingConvention=CallingConvention.Cdecl)]
-		public static extern Result Open ([MarshalAs(UnmanagedType.LPStr)] string filename, out IntPtr db, int flags, IntPtr zvfs);
-		
 		[DllImport("sqlite3", EntryPoint = "sqlite3_open_v2", CallingConvention = CallingConvention.Cdecl)]
 		public static extern Result Open(byte[] filename, out IntPtr db, int flags, IntPtr zvfs);
-
-		[DllImport("sqlite3", EntryPoint = "sqlite3_open16", CallingConvention = CallingConvention.Cdecl)]
-		public static extern Result Open16([MarshalAs(UnmanagedType.LPWStr)] string filename, out IntPtr db);
 
 		[DllImport("sqlite3", EntryPoint = "sqlite3_close", CallingConvention=CallingConvention.Cdecl)]
 		public static extern Result Close (IntPtr db);

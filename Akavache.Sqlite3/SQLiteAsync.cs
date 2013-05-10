@@ -55,9 +55,12 @@ namespace SQLite
         SQLiteConnectionString _connectionString;
         KeyedOperationQueue _opQueue;
         SQLiteConnectionPool _pool;
+        SQLiteOpenFlags _flags;
 
-        public SQLiteAsyncConnection (string databasePath, SQLiteConnectionPool pool, bool storeDateTimeAsTicks = false, IScheduler scheduler = null)
+        public SQLiteAsyncConnection (string databasePath, SQLiteConnectionPool pool, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false, IScheduler scheduler = null)
         {
+            _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex | SQLiteOpenFlags.SharedCache);
+
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
             _opQueue = new KeyedOperationQueue(scheduler ?? RxApp.TaskpoolScheduler);
             _pool = pool;
@@ -65,7 +68,7 @@ namespace SQLite
 
         SQLiteConnectionWithoutLock GetConnection ()
         {
-            return _pool.GetConnection (_connectionString);
+            return _pool.GetConnection (_connectionString, _flags);
         }
 
         public IObservable<CreateTablesResult> CreateTableAsync<T> ()
@@ -363,10 +366,10 @@ namespace SQLite
             public SQLiteConnectionString ConnectionString { get; private set; }
             public SQLiteConnectionWithoutLock Connection { get; private set; }
 
-            public Entry (SQLiteConnectionString connectionString)
+            public Entry (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
             {
                 ConnectionString = connectionString;
-                Connection = new SQLiteConnectionWithoutLock (connectionString);
+                Connection = new SQLiteConnectionWithoutLock (connectionString, flags);
             }
 
             public void OnApplicationSuspended ()
@@ -379,14 +382,14 @@ namespace SQLite
         readonly Dictionary<string, Entry> _entries = new Dictionary<string, Entry> ();
         readonly object _entriesLock = new object ();
 
-        public SQLiteConnectionWithoutLock GetConnection (SQLiteConnectionString connectionString)
+        public SQLiteConnectionWithoutLock GetConnection (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
         {
             lock (_entriesLock) {
                 Entry entry;
                 string key = connectionString.ConnectionString;
 
                 if (!_entries.TryGetValue (key, out entry)) {
-                    entry = new Entry (connectionString);
+                    entry = new Entry (connectionString, flags);
                     _entries[key] = entry;
                 }
 
@@ -420,8 +423,8 @@ namespace SQLite
 
     public class SQLiteConnectionWithoutLock : SQLiteConnection
     {
-        public SQLiteConnectionWithoutLock (SQLiteConnectionString connectionString)
-            : base (connectionString.DatabasePath, connectionString.StoreDateTimeAsTicks)
+        public SQLiteConnectionWithoutLock (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
+            : base (connectionString.DatabasePath, flags, connectionString.StoreDateTimeAsTicks)
         {
         }
     }

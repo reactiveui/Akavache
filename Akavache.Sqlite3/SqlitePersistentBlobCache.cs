@@ -32,7 +32,7 @@ namespace Akavache.Sqlite3
             ServiceProvider = serviceProvider;
 
             _pool = new SQLiteConnectionPool();
-            _connection = new SQLiteAsyncConnection(databaseFile, _pool, true);
+            _connection = new SQLiteAsyncConnection(databaseFile, _pool, storeDateTimeAsTicks: true);
             _connection.CreateTableAsync<CacheElement>();
 
             _inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, _) =>
