@@ -129,17 +129,15 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\ext\Net40\sqlite3.def">
+    <Content Include="..\ext\x86\sqlite3.def">
       <Link>sqlite3.def</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\ext\Net40\sqlite3.dll">
+    <Content Include="..\ext\x86\sqlite3.dll">
       <Link>sqlite3.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\ext\Net40\sqlite3.exe">
+    <Content Include="..\ext\x86\sqlite3.exe">
       <Link>sqlite3.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
