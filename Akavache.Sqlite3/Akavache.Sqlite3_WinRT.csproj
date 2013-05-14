@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <AssemblyName>Akavache.Sqlite3_WinRT</AssemblyName>
+    <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -35,7 +35,7 @@
     <DefineConstants>TRACE;NETFX_CORE; WINRT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\WinRT45\Akavache.Sqlite3_WinRT.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\WinRT45\Akavache.Sqlite3.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -153,7 +153,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
       <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
-      <Name>Akavache_WinRT</Name>
+      <Name>Akavache</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">

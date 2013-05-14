@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <AssemblyName>Akavache.Sqlite3_Mono</AssemblyName>
+    <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\Akavache\</SolutionDir>
     <RestorePackages>true</RestorePackages>
@@ -84,9 +84,9 @@
   </Target>
   -->
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_Mono.csproj">
+    <ProjectReference Include="..\Akavache\Akavache.csproj">
       <Project>{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}</Project>
-      <Name>Akavache_Mono</Name>
+      <Name>Akavache</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

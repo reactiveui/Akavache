@@ -30,6 +30,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 
-[assembly: InternalsVisibleTo("Akavache_Net45")]
-[assembly: InternalsVisibleTo("Akavache_WinRT")]
-[assembly: InternalsVisibleTo("Akavache_WP8")]
+[assembly: InternalsVisibleTo("Akavache")]

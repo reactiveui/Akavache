@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Akavache</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>Akavache.Mobile_Monotouch</AssemblyName>
+    <AssemblyName>Akavache.Mobile</AssemblyName>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -42,8 +42,8 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_Monotouch">
-      <HintPath>..\ext\monotouch\ReactiveUI_Monotouch.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
@@ -57,17 +57,17 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Mobile_Monotouch">
-      <HintPath>..\ext\monotouch\ReactiveUI.Mobile_Monotouch.dll</HintPath>
+    <Reference Include="ReactiveUI.Mobile">
+      <HintPath>..\ext\monotouch\ReactiveUI.Mobile.dll</HintPath>
     </Reference>
     <Reference Include="Xamarin.Mobile">
       <HintPath>..\ext\monotouch\Xamarin.Mobile.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing_Monotouch">
-      <HintPath>..\ext\monotouch\ReactiveUI.Routing_Monotouch.dll</HintPath>
+    <Reference Include="ReactiveUI.Routing">
+      <HintPath>..\ext\monotouch\ReactiveUI.Routing.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml_Monotouch">
-      <HintPath>..\ext\monotouch\ReactiveUI.Xaml_Monotouch.dll</HintPath>
+    <Reference Include="ReactiveUI.Xaml">
+      <HintPath>..\ext\monotouch\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
@@ -78,9 +78,9 @@
     <Compile Include="ServiceLocationRegistration.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_Monotouch.csproj">
+    <ProjectReference Include="..\Akavache\Akavache.csproj">
       <Project>{9091337A-9E94-4DBD-801E-05E1FDA78FFC}</Project>
-      <Name>Akavache_Monotouch</Name>
+      <Name>Akavache</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

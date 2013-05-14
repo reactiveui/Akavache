@@ -36,8 +36,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("2.6.6")]
 
 [assembly: InternalsVisibleTo("Akavache.Tests")]
-[assembly: InternalsVisibleTo("Akavache.Sqlite3_Mono")]
-[assembly: InternalsVisibleTo("Akavache.Sqlite3_Monotouch")]
-[assembly: InternalsVisibleTo("Akavache.Sqlite3_Monodroid")]
-[assembly: InternalsVisibleTo("Akavache.Mac_Mono")]
-[assembly: InternalsVisibleTo("Akavache.Mobile_Monotouch")]
+[assembly: InternalsVisibleTo("Akavache.Sqlite3")]
+[assembly: InternalsVisibleTo("Akavache.Mac")]
+[assembly: InternalsVisibleTo("Akavache.Mobile")]

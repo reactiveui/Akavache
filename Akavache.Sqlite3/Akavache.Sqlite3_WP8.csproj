@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <AssemblyName>Akavache.Sqlite3_WP8</AssemblyName>
+    <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <TargetFrameworkVersion>v8.0</TargetFrameworkVersion>
     <SilverlightVersion>
     </SilverlightVersion>
@@ -46,7 +46,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>Bin\Release\WP8\Akavache.Sqlite3_WP8.xml</DocumentationFile>
+    <DocumentationFile>Bin\Release\WP8\Akavache.Sqlite3.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -125,8 +125,8 @@
     <Compile Include="SqlitePersistentBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="ReactiveUI_WP8">
-      <HintPath>..\packages\reactiveui-core.4.4.1\lib\WP8\ReactiveUI_WP8.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.4.4.1\lib\WP8\ReactiveUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -142,7 +142,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WP8.csproj">
       <Project>{A54279A3-3457-41DB-9166-67E05FD0E0B1}</Project>
-      <Name>Akavache_WP8</Name>
+      <Name>Akavache</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />

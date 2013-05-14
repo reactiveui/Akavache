@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Mobile</RootNamespace>
-    <AssemblyName>Akavache.Mobile_Monodroid</AssemblyName>
+    <AssemblyName>Akavache.Mobile</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>
     </SccProjectName>
@@ -117,8 +117,8 @@
     <Reference Include="System.Reactive.Providers">
       <HintPath>..\ext\monodroid\System.Reactive.Providers.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_Monodroid">
-      <HintPath>..\ext\monodroid\ReactiveUI_Monodroid.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

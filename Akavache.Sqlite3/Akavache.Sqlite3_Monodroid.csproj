@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <AssemblyName>Akavache.Sqlite3_Monodroid</AssemblyName>
+    <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>
     </SccProjectName>
@@ -119,8 +119,8 @@
     <Reference Include="System.Reactive.Providers">
       <HintPath>..\ext\monodroid\System.Reactive.Providers.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_Monodroid">
-      <HintPath>..\ext\monodroid\ReactiveUI_Monodroid.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -145,9 +145,9 @@
     <Compile Include="SQLite.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_Monodroid.csproj">
+    <ProjectReference Include="..\Akavache\Akavache.csproj">
       <Project>{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}</Project>
-      <Name>Akavache_Monodroid</Name>
+      <Name>Akavache</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

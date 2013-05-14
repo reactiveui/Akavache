@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <AssemblyName>Akavache.Sqlite3_Net45</AssemblyName>
+    <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\Akavache\</SolutionDir>
@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <DocumentationFile>bin\Release\Net45\Akavache.Sqlite3_Net45.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Net45\Akavache.Sqlite3.xml</DocumentationFile>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
@@ -46,8 +46,8 @@
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.5.0.0.20130512-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_Net45">
-      <HintPath>..\packages\reactiveui-core.4.4.1\lib\net45\ReactiveUI_Net45.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.4.4.1\lib\net45\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -86,7 +86,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_Net45.csproj">
       <Project>{b4e665e5-6caf-4414-a6e2-8de1c3bcf203}</Project>
-      <Name>Akavache_Net45</Name>
+      <Name>Akavache</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

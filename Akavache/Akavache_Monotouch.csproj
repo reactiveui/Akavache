@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Akavache</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>Akavache_Monotouch</AssemblyName>
+    <AssemblyName>Akavache</AssemblyName>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -42,8 +42,8 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_Monotouch">
-      <HintPath>..\ext\monotouch\ReactiveUI_Monotouch.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
