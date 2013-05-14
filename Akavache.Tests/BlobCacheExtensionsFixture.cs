@@ -11,6 +11,7 @@ using ReactiveUI;
 using ReactiveUI.Xaml;
 using ReactiveUI.Testing;
 using Xunit;
+using System.Threading;
 
 namespace Akavache.Tests
 {
@@ -268,7 +269,7 @@ namespace Akavache.Tests
             string path;
             using(Utility.WithEmptyDirectory(out path))
             {
-                using(var fixture = new TPersistentBlobCache(path))
+                using(var fixture = CreateBlobCache(path))
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
                         .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
@@ -287,7 +288,7 @@ namespace Akavache.Tests
             string path;
             using (Utility.WithEmptyDirectory(out path))
             {
-                var fixture = new TPersistentBlobCache(path);
+                var fixture = CreateBlobCache(path);
                 using (fixture)
                 {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
@@ -326,6 +327,35 @@ namespace Akavache.Tests
                 var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
                 var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
                 Assert.Equal(expected, output.ARandomGuid);
+            }
+        }
+
+        [Fact]
+        public void GetAllKeysSmokeTest()
+        {
+            string path;
+
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                var fixture = default(IBlobCache);
+                using (fixture = CreateBlobCache(path))
+                {
+                    Observable.Merge(
+                        fixture.InsertObject("Foo", "bar"),
+                        fixture.InsertObject("Bar", 10),
+                        fixture.InsertObject("Baz", new UserObject() { Bio = "Bio", Blog = "Blog", Name = "Name" })
+                    ).Last();
+                }
+
+                fixture.Shutdown.Wait();
+
+                using (fixture = CreateBlobCache(path))
+                {
+                    var keys = fixture.GetAllKeys();
+                    Assert.Equal(3, keys.Count());
+                    Assert.True(keys.Any(x => x.Contains("Foo")));
+                    Assert.True(keys.Any(x => x.Contains("Bar")));
+                }
             }
         }
     }

@@ -22,14 +22,17 @@ namespace Akavache.Sqlite3
         public IServiceProvider ServiceProvider { get; private set; }
 
         readonly SQLiteAsyncConnection _connection;
+        readonly SQLiteConnectionPool _pool;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> _inflightCache;
         bool disposed = false;
 
-        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
+        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null, IServiceProvider serviceProvider = null)
         {
             Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            ServiceProvider = serviceProvider;
 
-            _connection = new SQLiteAsyncConnection(databaseFile, true);
+            _pool = new SQLiteConnectionPool();
+            _connection = new SQLiteAsyncConnection(databaseFile, _pool, storeDateTimeAsTicks: true);
             _connection.CreateTableAsync<CacheElement>();
 
             _inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, _) =>
@@ -134,17 +137,9 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            var ms = new MemoryStream();
-            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
-            var writer = new BsonWriter(ms);
-
-            if (BlobCache.ServiceProvider != null) 
-            {
-                serializer.Converters.Add(new JsonObjectConverter(BlobCache.ServiceProvider));
-            }
-
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
-            serializer.Serialize(writer, value);
+
+            var data = SerializeObject(value);
 
             lock (_inflightCache) _inflightCache.Invalidate(key);
 
@@ -155,7 +150,7 @@ namespace Akavache.Sqlite3
                 TypeName = typeof(T).FullName
             };
 
-            var ret = BeforeWriteToDiskFilter(ms.ToArray(), Scheduler)
+            var ret = BeforeWriteToDiskFilter(data, Scheduler)
                 .Do(x => element.Value = x)
                 .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
@@ -172,7 +167,7 @@ namespace Akavache.Sqlite3
                 var ret = _inflightCache.Get(key);
                 return ret
                     .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                    .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider));
+                    .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider ?? BlobCache.ServiceProvider));
             }
         }
 
@@ -183,7 +178,7 @@ namespace Akavache.Sqlite3
             return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider))
+                .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider ?? BlobCache.ServiceProvider))
                 .ToList();
         }
 
@@ -203,7 +198,7 @@ namespace Akavache.Sqlite3
         public void Dispose()
         {
             _connection.Shutdown()
-                .Finally(() => SQLiteConnectionPool.Shared.Reset())
+                .Finally(() => _pool.Reset())
                 .Multicast(shutdown)
                 .PermaRef();
 
@@ -245,6 +240,21 @@ namespace Akavache.Sqlite3
             return Observable.Return(data);
         }
 
+        byte[] SerializeObject<T>(T value)
+        {
+            var ms = new MemoryStream();
+            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
+            var writer = new BsonWriter(ms);
+
+            var serviceProvider = this.ServiceProvider ?? BlobCache.ServiceProvider;
+            if (serviceProvider != null)
+            {
+                serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
+            }
+
+            serializer.Serialize(writer, new ObjectWrapper<T>() { Value = value });
+            return ms.ToArray();
+        }
 
         IObservable<T> DeserializeObject<T>(byte[] data, IServiceProvider serviceProvider)
         {
@@ -256,21 +266,9 @@ namespace Akavache.Sqlite3
                 serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
             }
 
-#if WINRT
-            if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
-            {
-                reader.ReadRootValueAsArray = true;
-            }
-#else
-            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-            {
-                reader.ReadRootValueAsArray = true;
-            }
-#endif
-
             try 
             {
-                var val = serializer.Deserialize<T>(reader);
+                var val = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
                 return Observable.Return(val);
             }
             catch (Exception ex) 
@@ -295,5 +293,11 @@ namespace Akavache.Sqlite3
         public string TypeName { get; set; }
         public byte[] Value { get; set; }
         public DateTime Expiration { get; set; }
+    }
+
+    interface IObjectWrapper {}
+    class ObjectWrapper<T> : IObjectWrapper
+    {
+        public T Value { get; set; }
     }
 }
