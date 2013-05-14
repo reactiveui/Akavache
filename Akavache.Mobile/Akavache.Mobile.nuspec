@@ -21,7 +21,7 @@
   </metadata>
 
   <files>
-    <file src="bin\Release\WP8\Akavache.Mobile_WP8.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Mobile_WinRT.*" target="lib\NetCore45" />
+    <file src="bin\Release\WP8\Akavache.Mobile.*" target="lib\wp8" />
+    <file src="bin\Release\WinRT45\Akavache.Mobile.*" target="lib\NetCore45" />
   </files>
 </package>
