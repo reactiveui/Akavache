@@ -8,7 +8,7 @@ using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using Newtonsoft.Json;
 using ReactiveUI;
-using ReactiveUI.Routing;
+using ReactiveUI.Xaml;
 using ReactiveUI.Testing;
 using Xunit;
 

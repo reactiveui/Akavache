@@ -92,27 +92,21 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\sl4-windowsphone71\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI.Blend_WP8, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\WP8\ReactiveUI.Blend_WP8.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.5.0.5\lib\portable-net45+wp80+win8\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Mobile_WP8">
-      <HintPath>..\packages\reactiveui-mobile.4.4.1\lib\WP8\ReactiveUI.Mobile_WP8.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.5.0.0.20130512-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing_WP8, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\WP8\ReactiveUI.Routing_WP8.dll</HintPath>
+    <Reference Include="ReactiveUI.Blend">
+      <HintPath>..\packages\reactiveui-platforms.5.0.0.20130512-alpha\lib\WP8\ReactiveUI.Blend.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml_WP8, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\WP8\ReactiveUI.Xaml_WP8.dll</HintPath>
+    <Reference Include="ReactiveUI.Mobile">
+      <HintPath>..\packages\reactiveui-mobile.5.0.0.20130512-alpha\lib\WP8\ReactiveUI.Mobile.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI_WP8, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-core.4.4.1\lib\WP8\ReactiveUI_WP8.dll</HintPath>
+    <Reference Include="ReactiveUI.Xaml">
+      <HintPath>..\packages\reactiveui-platforms.5.0.0.20130512-alpha\lib\WP8\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -133,8 +127,9 @@
     <Reference Include="System.Reactive.Windows.Threading">
       <HintPath>..\packages\Rx-Xaml.2.1.30214.0\lib\WP8\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
-    <Reference Include="Xamarin.Mobile">
-      <HintPath>..\packages\reactiveui-mobile.4.4.1\lib\WP8\Xamarin.Mobile.dll</HintPath>
+    <Reference Include="Xamarin.Mobile, Version=0.6.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\reactiveui-mobile.5.0.0.20130512-alpha\lib\WP8\Xamarin.Mobile.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

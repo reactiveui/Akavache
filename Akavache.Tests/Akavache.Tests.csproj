@@ -44,23 +44,20 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.5.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="ReactiveUI.Blend_Net45">
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\net45\ReactiveUI.Blend_Net45.dll</HintPath>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.5.0.0.20130512-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing_Net45">
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\net45\ReactiveUI.Routing_Net45.dll</HintPath>
+    <Reference Include="ReactiveUI.Blend">
+      <HintPath>..\packages\reactiveui-platforms.5.0.0.20130512-alpha\lib\net45\ReactiveUI.Blend.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Testing_Net45">
-      <HintPath>..\packages\reactiveui-testing.4.4.1\lib\net45\ReactiveUI.Testing_Net45.dll</HintPath>
+    <Reference Include="ReactiveUI.Testing">
+      <HintPath>..\packages\reactiveui-testing.5.0.0.20130512-alpha\lib\net45\ReactiveUI.Testing.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml_Net45">
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\net45\ReactiveUI.Xaml_Net45.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI_Net45">
-      <HintPath>..\packages\reactiveui-core.4.4.1\lib\net45\ReactiveUI_Net45.dll</HintPath>
+    <Reference Include="ReactiveUI.Xaml">
+      <HintPath>..\packages\reactiveui-platforms.5.0.0.20130512-alpha\lib\net45\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -76,7 +73,8 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\packages\Rx-PlatformServices.2.1.30214.0\lib\Net45\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Windows.Threading">
+    <Reference Include="System.Reactive.Windows.Threading, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-XAML.2.1.30214.0\lib\Net45\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />

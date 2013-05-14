@@ -111,7 +111,7 @@ namespace Akavache
         static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => {
             var fs = default(IFilesystemProvider);
             try {
-                fs = RxApp.GetService<IFilesystemProvider>();
+                fs = RxApp.DependencyResolver.GetService<IFilesystemProvider>();
             } catch (Exception ex) {
                 LogHost.Default.DebugException("Couldn't find custom fs provider for local machine", ex);
             }
@@ -132,7 +132,7 @@ namespace Akavache
         static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => {
             var fs = default(IFilesystemProvider);
             try {
-                fs = RxApp.GetService<IFilesystemProvider>();
+                fs = RxApp.DependencyResolver.GetService<IFilesystemProvider>();
             } catch (Exception ex) {
                 LogHost.Default.DebugException("Couldn't find custom fs provider for user acct", ex);
             }

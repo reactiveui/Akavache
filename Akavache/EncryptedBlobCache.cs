@@ -15,7 +15,7 @@ namespace Akavache
         static readonly Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => {
             var fs = default(IFilesystemProvider);
             try {
-                fs = RxApp.GetService<IFilesystemProvider>();
+                fs = RxApp.DependencyResolver.GetService<IFilesystemProvider>();
             } catch (Exception ex) {
                 LogHost.Default.DebugException("Couldn't find custom fs provider for secret cache", ex);
             }

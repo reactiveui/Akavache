@@ -119,8 +119,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\portable-net40+sl4+wp7+win8\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.5.0.5\lib\netcore45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\packages\reactiveui-core.5.0.0.20130512-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI.Mobile">
+      <HintPath>..\packages\reactiveui-mobile.5.0.0.20130512-alpha\lib\WinRT45\ReactiveUI.Mobile.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Mobile_WinRT, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -129,6 +136,9 @@
     <Reference Include="ReactiveUI.Routing_WinRT, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\WinRT45\ReactiveUI.Routing_WinRT.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI.Xaml">
+      <HintPath>..\packages\reactiveui-platforms.5.0.0.20130512-alpha\lib\WinRT45\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI.Xaml_WinRT, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -162,9 +172,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-WinRT.2.1.30214.0\lib\NetCore45\System.Reactive.WindowsRuntime.dll</HintPath>
     </Reference>
-    <Reference Include="Xamarin.Mobile, Version=0.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Xamarin.Mobile, Version=0.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-mobile.4.4.1\lib\WinRT45\Xamarin.Mobile.dll</HintPath>
+      <HintPath>..\packages\reactiveui-mobile.5.0.0.20130512-alpha\lib\WinRT45\Xamarin.Mobile.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">

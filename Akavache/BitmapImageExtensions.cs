@@ -33,7 +33,7 @@ namespace Akavache
             return This.GetAsync(key)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(BytesToImage)
-                .ObserveOn(RxApp.DeferredScheduler);
+                .ObserveOn(RxApp.MainThreadScheduler);
         }
 
         /// <summary>
