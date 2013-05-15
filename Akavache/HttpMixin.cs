@@ -18,7 +18,7 @@ using System.Net.Browser;
 namespace Akavache
 {
 
-    internal class HttpMixin : IHttpMixin
+    public class AkavacheHttpMixin : IAkavacheHttpMixin
     {
 #if SILVERLIGHT
         static HttpMixin()

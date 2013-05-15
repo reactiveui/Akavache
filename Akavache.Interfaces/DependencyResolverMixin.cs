@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
@@ -28,7 +29,7 @@ namespace Akavache
             var assmName = new AssemblyName(
                 fdr.AssemblyQualifiedName.Replace(fdr.FullName + ", ", ""));
 
-            namespaces.ForEach(ns => 
+            foreach (var ns in namespaces) 
             {
                 var targetType = ns + ".Registrations";
                 string fullName = targetType + ", " + assmName.FullName.Replace(assmName.Name, ns);
@@ -37,8 +38,8 @@ namespace Akavache
                 if (registerTypeClass == null) return;
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
-                registerer.Register((f, t) => resolver.Register(f, t));
-            });
+                registerer.Register((f, t) => This.Register(f, t));
+            };
         }
     }
 }

@@ -37,6 +37,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BlobCache.cs" />
+    <Compile Include="CacheIndexEntry.cs" />
+    <Compile Include="ConcurrentDictionary.cs" />
     <Compile Include="DependencyResolverMixin.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IBlobCache.cs" />

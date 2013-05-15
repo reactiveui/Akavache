@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
-using Akavache.Internal;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json;
 
 namespace Akavache
 {
