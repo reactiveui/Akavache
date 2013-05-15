@@ -63,8 +63,10 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get { return unitTestLocalMachine ?? localMachine; }
-            set {
+            get { return unitTestLocalMachine ?? localMachine ?? 
+                RxApp.DependencyResolver.GetServices<IBlobCache>("LocalMachine").LastOrDefault(); }
+            set 
+            {
                 if (RxApp.InUnitTestRunner())
                 {
                     unitTestLocalMachine = value;
@@ -84,7 +86,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return unitTestUserAccount ?? userAccount; }
+            get { return unitTestUserAccount ?? userAccount ?? RxApp.DependencyResolver.GetServices<IBlobCache>().LastOrDefault(); }
             set {
                 if (RxApp.InUnitTestRunner())
                 {
@@ -104,8 +106,9 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get { return unitTestSecure ?? secure; }
-            set {
+            get { return unitTestSecure ?? secure ?? RxApp.DependencyResolver.GetServices<ISecureBlobCache>().LastOrDefault(); }
+            set 
+            {
                 if (RxApp.InUnitTestRunner())
                 {
                     secure = value;
