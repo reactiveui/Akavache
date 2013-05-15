@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Akavache.Sqlite3
 {
     public class Registrations : IWantsToRegisterStuff
     {
-        public void Register(Action<Func<object>, Type> registerFunction)
+        public void Register(Action<Func<object>, Type, string> registerFunction)
         {
             // NB: We want the most recently registered fs, since there really 
             // only should be one 
@@ -29,7 +30,7 @@ namespace Akavache.Sqlite3
                 
             var secure = new Lazy<ISecureBlobCache>(() => 
                 new EncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), RxApp.TaskpoolScheduler));
-            registerFunction(() => secure.Value, typeof(ISecureBlobCache));
+            registerFunction(() => secure.Value, typeof(ISecureBlobCache), null);
         }
     }
 }
