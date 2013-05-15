@@ -28,7 +28,6 @@ namespace Akavache
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>();
-
             return mixin.DownloadUrl(This, url, headers, fetchAlways, absoluteExpiration);
         }
     }

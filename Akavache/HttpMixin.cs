@@ -8,8 +8,12 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
-using Akavache.Internal;
 using ReactiveUI;
+using System.Collections.Concurrent;
+
+#if SILVERLIGHT
+using Akavache.Internal;
+#endif
 
 #if SILVERLIGHT
 using System.Net.Browser;
@@ -21,7 +25,7 @@ namespace Akavache
     public class AkavacheHttpMixin : IAkavacheHttpMixin
     {
 #if SILVERLIGHT
-        static HttpMixin()
+        static AkavacheHttpMixin()
         {
             WebRequest.RegisterPrefix("http://", WebRequestCreator.ClientHttp);
             WebRequest.RegisterPrefix("https://", WebRequestCreator.ClientHttp);

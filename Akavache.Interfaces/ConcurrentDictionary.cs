@@ -38,7 +38,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Diagnostics;
 
-namespace System.Collections.Concurrent
+namespace Akavache.Internal
 {
     [DebuggerDisplay("Count={Count}")]
     internal class ConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
@@ -524,7 +524,7 @@ namespace System.Collections.Concurrent
 //
 //
 
-namespace System.Collections.Concurrent
+namespace Akavache.Internal
 {
     internal class SplitOrderedList<TKey, T>
     {

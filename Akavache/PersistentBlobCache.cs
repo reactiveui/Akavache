@@ -12,9 +12,13 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
-using Akavache.Internal;
 using Newtonsoft.Json;
 using ReactiveUI;
+using System.Collections.Concurrent;
+
+#if SILVERLIGHT
+using Akavache.Internal;
+#endif
 
 namespace Akavache
 {
@@ -103,10 +107,7 @@ namespace Akavache
             this.Log().Info("{0} entries in blob cache index", CacheIndex.Count);
         }
 
-        public IServiceProvider ServiceProvider
-        {
-            get { return BlobCache.ServiceProvider; }
-        }
+        public IServiceProvider ServiceProvider { get; set; }
 
         static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => {
             var fs = default(IFilesystemProvider);

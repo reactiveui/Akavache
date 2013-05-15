@@ -14,7 +14,6 @@ using System.Text.RegularExpressions;
 
 namespace Akavache
 {
-
     public static class BlobCache
     {
         static string applicationName;
