@@ -49,6 +49,7 @@
     <Compile Include="LoginMixin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RelativeTimeMixin.cs" />
+    <Compile Include="TestBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">

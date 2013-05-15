@@ -156,12 +156,8 @@ namespace Akavache
             disposed = true;
         }
 
-        static readonly object gate = 42;
-
         public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
-            Monitor.Enter(gate);
-
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
             var sec = BlobCache.Secure;
@@ -171,7 +167,6 @@ namespace Akavache
                 BlobCache.LocalMachine = local;
                 BlobCache.Secure = sec;
                 BlobCache.UserAccount = user;
-                Monitor.Exit(gate);
             });
 
             var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
