@@ -17,23 +17,15 @@ namespace Akavache
 
     public static class BlobCache
     {
-        static IServiceProvider serviceProvider;
         static string applicationName;
-        static ISecureBlobCache perSession = new TestBlobCache(Scheduler.Immediate);
 
         static BlobCache()
         {
-            if (RxApp.InUnitTestRunner())
-            {
-                localMachine = new TestBlobCache(RxApp.TaskpoolScheduler);
-                userAccount = new TestBlobCache(RxApp.TaskpoolScheduler);
-                secure = new TestBlobCache(RxApp.TaskpoolScheduler);
-                return;
-            }
-
             // XXX: This is a hella hack
             var mutableRegistration = RxApp.DependencyResolver as IMutableDependencyResolver;
             mutableRegistration.RegisterAkavache();
+
+            InMemory = new TestBlobCache(RxApp.TaskpoolScheduler);
         }
 
         /// <summary>
@@ -45,20 +37,20 @@ namespace Akavache
             get
             {
                 if (applicationName == null)
-                {
                     throw new Exception("Make sure to set BlobCache.ApplicationName on startup");
-                }
 
                 return applicationName;
             }
             set { applicationName = value; }
         }
 
-        static Lazy<IBlobCache> defaultLocalMachineOverride;
         static IBlobCache localMachine;
-
-        static Lazy<IBlobCache> defaultUserAccountOverride;
         static IBlobCache userAccount;
+        static ISecureBlobCache secure;
+
+        [ThreadStatic] static IBlobCache unitTestLocalMachine;
+        [ThreadStatic] static IBlobCache unitTestUserAccount;
+        [ThreadStatic] static ISecureBlobCache unitTestSecure;
 
         /// <summary>
         /// The local machine cache. Store data here that is unrelated to the
@@ -67,10 +59,18 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get { return localMachine ?? 
-                (defaultLocalMachineOverride != null ? defaultLocalMachineOverride.Value : null) ??
-                PersistentBlobCache.LocalMachine; }
-            set { localMachine = value; }
+            get { return unitTestLocalMachine ?? localMachine; }
+            set {
+                if (RxApp.InUnitTestRunner())
+                {
+                    unitTestLocalMachine = value;
+                    localMachine = localMachine ?? value;
+                }
+                else
+                {
+                    localMachine = value;
+                }
+            }
         }
 
         /// <summary>
@@ -80,14 +80,19 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return userAccount ?? 
-                (defaultUserAccountOverride != null ? defaultUserAccountOverride.Value : null) ??
-                PersistentBlobCache.UserAccount; }
-            set { userAccount = value; }
+            get { return unitTestUserAccount ?? userAccount; }
+            set {
+                if (RxApp.InUnitTestRunner())
+                {
+                    unitTestUserAccount = value;
+                    userAccount = userAccount ?? value;
+                }
+                else
+                {
+                    userAccount = value;
+                }
+            }
         }
-
-        static Lazy<ISecureBlobCache> defaultSecureOverride;
-        static ISecureBlobCache secure;
 
         /// <summary>
         /// An IBlobCache that is encrypted - store sensitive data in this
@@ -95,21 +100,25 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get { return secure ?? 
-                (defaultSecureOverride != null ? defaultSecureOverride.Value : null) ??
-                EncryptedBlobCache.Current; }
-            set { secure = value; }
+            get { return unitTestSecure ?? secure; }
+            set {
+                if (RxApp.InUnitTestRunner())
+                {
+                    secure = value;
+                    secure = secure ?? value;
+                }
+                else
+                {
+                    secure = value;
+                }
+            }
         }
 
         /// <summary>
         /// An IBlobCache that simply stores data in memory. Data stored in
         /// this cache will be lost when the application restarts.
         /// </summary>
-        public static ISecureBlobCache InMemory
-        {
-            get { return perSession; }
-            set { perSession = value; }
-        }
+        public static ISecureBlobCache InMemory { get; set; }
 
         /// <summary>
         /// This method shuts down all of the blob caches. Make sure call it
@@ -117,7 +126,6 @@ namespace Akavache
         /// </summary>
         /// <returns>A Task representing when all caches have finished shutting
         /// down.</returns>
-
         public static Task Shutdown()
         {
             var toDispose = new[] { LocalMachine, UserAccount, Secure, InMemory, };
@@ -127,7 +135,6 @@ namespace Akavache
                 x.Dispose();
                 return x.Shutdown;
             }).Merge().ToList().Select(_ => Unit.Default);
-
 
             return ret.ToTask();
         }
