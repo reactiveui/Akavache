@@ -167,7 +167,7 @@ namespace Akavache.Sqlite3
                 var ret = _inflightCache.Get(key);
                 return ret
                     .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                    .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider ?? BlobCache.ServiceProvider));
+                    .SelectMany(DeserializeObject<T>);
             }
         }
 
@@ -178,7 +178,7 @@ namespace Akavache.Sqlite3
             return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                .SelectMany(x => DeserializeObject<T>(x, this.ServiceProvider ?? BlobCache.ServiceProvider))
+                .SelectMany(DeserializeObject<T>)
                 .ToList();
         }
 
@@ -242,29 +242,20 @@ namespace Akavache.Sqlite3
 
         byte[] SerializeObject<T>(T value)
         {
+            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
             var ms = new MemoryStream();
-            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
+            var serializer = JsonSerializer.Create(settings);
             var writer = new BsonWriter(ms);
-
-            var serviceProvider = this.ServiceProvider ?? BlobCache.ServiceProvider;
-            if (serviceProvider != null)
-            {
-                serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
-            }
 
             serializer.Serialize(writer, new ObjectWrapper<T>() { Value = value });
             return ms.ToArray();
         }
 
-        IObservable<T> DeserializeObject<T>(byte[] data, IServiceProvider serviceProvider)
+        IObservable<T> DeserializeObject<T>(byte[] data)
         {
-            var serializer = JsonSerializer.Create(BlobCache.SerializerSettings ?? new JsonSerializerSettings());
+            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var serializer = JsonSerializer.Create(settings);
             var reader = new BsonReader(new MemoryStream(data));
-
-            if (serviceProvider != null) 
-            {
-                serializer.Converters.Add(new JsonObjectConverter(serviceProvider));
-            }
 
             try 
             {
