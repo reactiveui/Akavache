@@ -120,6 +120,7 @@
   <ItemGroup>
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registrations.cs" />
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SqlitePersistentBlobCache.cs" />
