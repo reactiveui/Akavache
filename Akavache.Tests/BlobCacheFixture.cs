@@ -204,6 +204,40 @@ namespace Akavache.Tests
                 });
             }
         }
+
+        [Fact]
+        public void GetCreatedAtReturnCreatedAtWhenExpiryNotSet()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (TestUtils.WithScheduler(Scheduler.CurrentThread))
+            using (var fixture = CreateBlobCache(path))
+            {
+                fixture.Insert("Fnord", new byte[] { 1, 2, 3 });
+
+                var createdAt = fixture.GetCreatedAt("Fnord").First();
+
+                Assert.NotNull(createdAt);
+                Assert.True(createdAt <= DateTimeOffset.UtcNow);
+            }
+        }
+
+        [Fact]
+        public void GetCreatedAtReturnCreatedAtWhenExpiryIsSet()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (TestUtils.WithScheduler(Scheduler.CurrentThread))
+            using (var fixture = CreateBlobCache(path))
+            {
+                fixture.Insert("Fnord", new byte[] { 1, 2, 3 }, TimeSpan.FromSeconds(1));
+
+                var createdAt = fixture.GetCreatedAt("Fnord").First();
+
+                Assert.NotNull(createdAt);
+                Assert.True(createdAt <= DateTimeOffset.UtcNow);
+            }
+        }
     }
 
     public class TPersistentBlobCache : PersistentBlobCache
