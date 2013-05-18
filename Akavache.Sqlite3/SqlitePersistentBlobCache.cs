@@ -66,8 +66,9 @@ namespace Akavache.Sqlite3
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) _inflightCache.Invalidate(key);
 
-            var element = new CacheElement()
+            var element = new CacheElement
             {
+                CreatedAt = Scheduler.Now.UtcDateTime,
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
             };
@@ -108,8 +109,8 @@ namespace Akavache.Sqlite3
             lock (_inflightCache) 
             {
                 return _inflightCache.Get(key)
-                    .Select(x => x.Expiration == DateTime.MaxValue ?
-                        default(DateTimeOffset?) : new DateTimeOffset(x.Expiration, TimeSpan.Zero))
+                    .Select(x => x.CreatedAt.HasValue ?
+                        new DateTimeOffset?(x.CreatedAt.Value) : default(DateTimeOffset?))
                     .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
                     .Finally(() => _inflightCache.Invalidate(key));
             }           
@@ -293,6 +294,7 @@ namespace Akavache.Sqlite3
         public string TypeName { get; set; }
         public byte[] Value { get; set; }
         public DateTime Expiration { get; set; }
+        public DateTime? CreatedAt { get; set; }
     }
 
     interface IObjectWrapper {}
