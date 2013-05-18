@@ -109,7 +109,8 @@ namespace Akavache.Sqlite3
             lock (_inflightCache) 
             {
                 return _inflightCache.Get(key)
-                    .Select(x => new DateTimeOffset?(x.CreatedAt))
+                    .Select(x => x.CreatedAt.HasValue ?
+                        new DateTimeOffset?(x.CreatedAt.Value) : default(DateTimeOffset?))
                     .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
                     .Finally(() => _inflightCache.Invalidate(key));
             }           
@@ -293,7 +294,7 @@ namespace Akavache.Sqlite3
         public string TypeName { get; set; }
         public byte[] Value { get; set; }
         public DateTime Expiration { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
     }
 
     interface IObjectWrapper {}
