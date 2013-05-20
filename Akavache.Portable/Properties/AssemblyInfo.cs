@@ -31,3 +31,5 @@ using System.Runtime.InteropServices;
 
 
 [assembly: InternalsVisibleTo("Akavache")]
+[assembly: InternalsVisibleTo("Akavache.Sqlite3")]
+[assembly: InternalsVisibleTo("Akavache.Mobile")]

@@ -3,19 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Akavache.Internal;
+using ReactiveUI;
 
 namespace Akavache
 {
-
-    internal interface IHttpMixin
+    public interface IAkavacheHttpMixin
     {
         IObservable<byte[]> DownloadUrl(IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null);
     }
 
     public static class HttpMixinExtensions
     {
-        static readonly IHttpMixin _mixin = PlatformAdapter.Resolve<IHttpMixin>();
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
         /// cache. If the data is already in the cache, this returns
@@ -29,9 +27,8 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            return _mixin.DownloadUrl(This, url, headers, fetchAlways, absoluteExpiration);
+            var mixin = RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>();
+            return mixin.DownloadUrl(This, url, headers, fetchAlways, absoluteExpiration);
         }
     }
-
-
 }

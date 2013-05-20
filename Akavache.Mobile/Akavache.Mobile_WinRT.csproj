@@ -105,18 +105,19 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
       <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
-      <Name>Akavache.Interfaces</Name>
+      <Name>Akavache.Portable</Name>
     </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
       <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
-      <Name>Akavache</Name>
+      <Name>Akavache_WinRT</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AkavacheDriver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registrations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">

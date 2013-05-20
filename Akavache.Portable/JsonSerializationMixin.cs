@@ -6,10 +6,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
-using Akavache.Internal;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json;
+using ReactiveUI;
+using Akavache.Internal;
 
 namespace Akavache
 {
@@ -46,7 +46,7 @@ namespace Akavache
             if (objCache != null) return objCache.GetObjectAsync<T>(key, noTypePrefix);
 
             return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .SelectMany(bytes => DeserializeObject<T>(bytes, This.ServiceProvider));
+                .SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>
@@ -261,18 +261,19 @@ namespace Akavache
 
         internal static byte[] SerializeObject<T>(T value)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, BlobCacheSettings.SerializerSettings));
+            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
         }
 
-        static IObservable<T> DeserializeObject<T>(byte[] x, IServiceProvider serviceProvider)
+        static IObservable<T> DeserializeObject<T>(byte[] x)
         {
+            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+
             try
             {
                 var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
-                var ret = serviceProvider == null ?
-                    JsonConvert.DeserializeObject<T>(bytes, BlobCacheSettings.SerializerSettings) : 
-                    JsonConvert.DeserializeObject<T>(bytes, new JsonObjectConverter(serviceProvider));
 
+                var ret = JsonConvert.DeserializeObject<T>(bytes, settings);
                 return Observable.Return(ret);
             }
             catch (Exception ex)

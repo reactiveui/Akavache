@@ -122,22 +122,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BlobCache.cs" />
     <Compile Include="BitmapImageExtensions.cs" />
-    <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
-    <Compile Include="IKeyedOperationQueue.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />
-    <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtectDataShim.cs" />
+    <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />
-    <Compile Include="TestBlobCache.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -152,9 +148,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
       <Project>{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}</Project>
-      <Name>Akavache.Interfaces</Name>
+      <Name>Akavache.Portable</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />

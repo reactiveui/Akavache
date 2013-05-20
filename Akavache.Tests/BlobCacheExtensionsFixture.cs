@@ -305,28 +305,34 @@ namespace Akavache.Tests
         [Fact]
         public void ApplicationStateShouldBeRoundtrippable()
         {
-            string path;
-            var input = new DummyAppBootstrapper();
-            var expected = ((DummyRoutedViewModel) input.Router.NavigationStack[0]).ARandomGuid;
-            input.Router.Navigate.Execute(new DummyRoutedViewModel(input) {ARandomGuid = Guid.NewGuid()});
+            var resolver = new ModernDependencyResolver();
+            resolver.InitializeResolver();
+            resolver.InitializeAkavache();
 
-            Console.WriteLine("After Nav Count: {0}", input.Router.NavigationStack.Count);
-
-            BlobCache.SerializerSettings = new JsonSerializerSettings()
-            {
+            resolver.Register(() => new JsonSerializerSettings() {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore, 
                 TypeNameHandling = TypeNameHandling.All, 
                 ObjectCreationHandling = ObjectCreationHandling.Replace,
-            };
+            }, typeof(JsonSerializerSettings));
 
-            using(Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path)) 
+            using (resolver.WithResolver()) 
             {
-                fixture.InsertObject("state", input).First();
+                string path;
+                var input = new DummyAppBootstrapper();
+                var expected = ((DummyRoutedViewModel) input.Router.NavigationStack[0]).ARandomGuid;
+                input.Router.Navigate.Execute(new DummyRoutedViewModel(input) {ARandomGuid = Guid.NewGuid()});
 
-                var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
-                var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
-                Assert.Equal(expected, output.ARandomGuid);
+                Console.WriteLine("After Nav Count: {0}", input.Router.NavigationStack.Count);
+
+                using(Utility.WithEmptyDirectory(out path))
+                using (var fixture = CreateBlobCache(path)) 
+                {
+                    fixture.InsertObject("state", input).First();
+
+                    var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
+                    var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
+                    Assert.Equal(expected, output.ARandomGuid);
+                }
             }
         }
 

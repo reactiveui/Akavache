@@ -72,30 +72,26 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BlobCache.cs" />
     <Compile Include="BitmapImageExtensions.cs" />
-    <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
-    <Compile Include="IKeyedOperationQueue.cs" />
-    <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registrations.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
-    <Compile Include="TestBlobCache.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
       <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
-      <Name>Akavache.Interfaces</Name>
+      <Name>Akavache.Portable</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
