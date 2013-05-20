@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <version>3.0.0.20130519-alpha</version>
@@ -11,8 +11,8 @@
       <dependency id="reactiveui-core" version="[5.0.0.20130519-alpha]" />
     </dependencies>
 
-    <id>akavache.interfaces</id>
-    <title>Akavache Interface Definitions</title>
+    <id>akavache.portable</id>
+    <title>Akavache.Portable</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</description>
     <summary>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</summary>
@@ -20,9 +20,9 @@
   </metadata>
 
   <files>
-    <file src="bin\Release\Akavache.Interfaces.*" target="lib\net45" />
-    <file src="bin\Release\Akavache.Interfaces.*" target="lib\wp8" />
-    <file src="bin\Release\Akavache.Interfaces.*" target="lib\NetCore45" />
-    <file src="bin\Release\Akavache.Interfaces.*" target="lib\portable-net45+win8+wp8" />
+    <file src="bin\Release\Akavache.Portable.*" target="lib\net45" />
+    <file src="bin\Release\Akavache.Portable.*" target="lib\wp8" />
+    <file src="bin\Release\Akavache.Portable.*" target="lib\NetCore45" />
+    <file src="bin\Release\Akavache.Portable.*" target="lib\portable-net45+win8+wp8" />
   </files>
 </package>
