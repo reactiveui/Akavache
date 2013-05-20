@@ -44,10 +44,10 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.5.0.0.20130512-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.4.4.1\lib\net45\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.4.4.1\lib\net45\ReactiveUI.dll</HintPath>
+      <HintPath>..\packages\reactiveui-core.5.0.0.20130519-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -81,7 +81,7 @@
     <Compile Include="SqlitePersistentBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
       <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
       <Name>Akavache.Portable</Name>
     </ProjectReference>
