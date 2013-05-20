@@ -51,6 +51,8 @@ namespace Akavache
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidateCallback = null)
         {
+            BlobCache.EnsureInitialized();
+
             this.filesystem = filesystemProvider ?? RxApp.DependencyResolver.GetServices<IFilesystemProvider>().LastOrDefault();
 
             if (this.filesystem == null)

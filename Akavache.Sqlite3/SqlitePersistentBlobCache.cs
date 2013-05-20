@@ -31,6 +31,8 @@ namespace Akavache.Sqlite3
             Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
             ServiceProvider = serviceProvider;
 
+            BlobCache.EnsureInitialized();
+
             _pool = new SQLiteConnectionPool();
             _connection = new SQLiteAsyncConnection(databaseFile, _pool, storeDateTimeAsTicks: true);
             _connection.CreateTableAsync<CacheElement>();

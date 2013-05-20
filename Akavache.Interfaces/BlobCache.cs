@@ -86,7 +86,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return unitTestUserAccount ?? userAccount ?? RxApp.DependencyResolver.GetServices<IBlobCache>().LastOrDefault(); }
+            get { return unitTestUserAccount ?? userAccount ?? RxApp.DependencyResolver.GetServices<IBlobCache>("UserAccount").LastOrDefault(); }
             set {
                 if (RxApp.InUnitTestRunner())
                 {
@@ -126,6 +126,13 @@ namespace Akavache
         /// this cache will be lost when the application restarts.
         /// </summary>
         public static ISecureBlobCache InMemory { get; set; }
+
+        public static void EnsureInitialized()
+        {
+            // NB: This method doesn't actually do anything, it just ensures 
+            // that the static constructor runs
+            LogHost.Default.Debug("Initializing Akavache");
+        }
 
         /// <summary>
         /// This method shuts down all of the blob caches. Make sure call it
