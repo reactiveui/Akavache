@@ -105,17 +105,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BitmapImageExtensions.cs" />
-    <Compile Include="BlobCache.cs" />
-    <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
-    <Compile Include="IKeyedOperationQueue.cs" />
-    <Compile Include="KeyedOperationQueue.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />
-    <Compile Include="TestBlobCache.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="WinRTEncryptedBlobCache.cs" />
     <Compile Include="WinRTFilesystemProvider.cs" />
@@ -162,9 +158,9 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
       <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
-      <Name>Akavache.Interfaces</Name>
+      <Name>Akavache.Portable</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">

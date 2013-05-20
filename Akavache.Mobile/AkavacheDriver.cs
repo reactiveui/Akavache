@@ -9,19 +9,6 @@ namespace Akavache.Mobile
 {
     public class AkavacheDriver : ISuspensionDriver, IEnableLogger
     {
-        public AkavacheDriver() : this(null) {}
-
-        public AkavacheDriver(string applicationName)
-        {
-            if (applicationName != null) BlobCache.ApplicationName = applicationName;
-
-            BlobCache.SerializerSettings = new JsonSerializerSettings() {
-                ObjectCreationHandling = ObjectCreationHandling.Replace,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                TypeNameHandling = TypeNameHandling.All,
-            };
-        }
-
         public IObservable<T> LoadState<T>() where T : class, IApplicationRootState
         {
             return BlobCache.UserAccount.GetObjectAsync<T>("__AppState");
