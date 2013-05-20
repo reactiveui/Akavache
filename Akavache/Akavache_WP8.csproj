@@ -148,7 +148,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
       <Project>{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}</Project>
       <Name>Akavache.Portable</Name>
     </ProjectReference>

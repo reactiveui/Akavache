@@ -158,7 +158,7 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
       <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
       <Name>Akavache.Portable</Name>
     </ProjectReference>
