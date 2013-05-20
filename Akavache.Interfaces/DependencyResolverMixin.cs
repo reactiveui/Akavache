@@ -15,7 +15,7 @@ namespace Akavache
 
     public static class DependencyResolverMixin
     {
-        public static void RegisterAkavache(this IMutableDependencyResolver This)
+        public static void InitializeAkavache(this IMutableDependencyResolver This)
         {
             var namespaces = new[] { 
                 "Akavache",
