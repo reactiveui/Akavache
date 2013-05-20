@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_WP8", "Akav
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_WinRT", "Akavache.Mobile\Akavache.Mobile_WinRT.csproj", "{47D34AB1-5188-4D8C-B24F-3151C67CC8CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Interfaces", "Akavache.Interfaces\Akavache.Interfaces.csproj", "{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Portable", "Akavache.Portable\Akavache.Portable.csproj", "{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mobile", "Mobile", "{D3FCAC54-DE89-4D3D-AAFD-68A378A7A9F1}"
 EndProject

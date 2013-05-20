@@ -137,13 +137,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Interfaces.csproj">
+    <ProjectReference Include="..\Akavache.Interfaces\Akavache.Portable.csproj">
       <Project>{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}</Project>
-      <Name>Akavache.Interfaces</Name>
+      <Name>Akavache.Portable</Name>
     </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WP8.csproj">
       <Project>{A54279A3-3457-41DB-9166-67E05FD0E0B1}</Project>
-      <Name>Akavache</Name>
+      <Name>Akavache_WP8</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />
