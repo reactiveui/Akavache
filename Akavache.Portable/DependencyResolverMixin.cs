@@ -35,7 +35,7 @@ namespace Akavache
                 string fullName = targetType + ", " + assmName.FullName.Replace(assmName.Name, ns);
 
                 var registerTypeClass = Reflection.ReallyFindType(fullName, false);
-                if (registerTypeClass == null) return;
+                if (registerTypeClass == null) continue;
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
                 registerer.Register((f, t, s) => This.Register(f, t, s));
