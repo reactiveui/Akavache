@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace Akavache.Sqlite3
 {
@@ -19,6 +21,17 @@ namespace Akavache.Sqlite3
             {
                 throw new Exception("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
             }
+
+            var dirs = new[] { 
+                fs.GetDefaultLocalMachineCacheDirectory(), 
+                fs.GetDefaultRoamingCacheDirectory(), 
+                fs.GetDefaultSecretCacheDirectory(), 
+            };
+
+            dirs.ToObservable()
+                .SelectMany(x => fs.CreateRecursive(x))
+                .Aggregate(Unit.Default, (acc, x) => acc)
+                .Wait();
 
             var localCache = new Lazy<IBlobCache>(() =>
                 new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), RxApp.TaskpoolScheduler));
