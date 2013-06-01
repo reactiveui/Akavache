@@ -28,6 +28,8 @@ namespace Akavache
             var secure = new Lazy<ISecureBlobCache>(() => 
                 new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
             registerFunction(() => secure.Value, typeof(ISecureBlobCache), null);
+
+            registerFunction(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
         }
     }
 }
