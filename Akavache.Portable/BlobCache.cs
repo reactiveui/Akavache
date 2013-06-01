@@ -25,11 +25,6 @@ namespace Akavache
             mutableRegistration.InitializeAkavache();
 
             InMemory = new TestBlobCache(RxApp.TaskpoolScheduler);
-
-            if (LocalMachine == null || UserAccount == null)
-            {
-                throw new Exception("Failed to set up Akavache. You need a reference to Akavache.dll as well as Akavache.Interfaces.dll");
-            }
         }
 
         /// <summary>
