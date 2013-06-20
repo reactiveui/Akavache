@@ -91,7 +91,6 @@
     <CodeContractsCacheAnalysisResults>True</CodeContractsCacheAnalysisResults>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
-    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <GenerateDocumentation>True</GenerateDocumentation>
   </PropertyGroup>
@@ -101,27 +100,6 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Core">
-      <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\ext\monodroid\System.Reactive.Interfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Linq">
-      <HintPath>..\ext\monodroid\System.Reactive.Linq.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Providers">
-      <HintPath>..\ext\monodroid\System.Reactive.Providers.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -137,18 +115,5 @@
   </Target>
   -->
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
-  <ItemGroup>
-    <Compile Include="EncryptedBlobCache.cs" />
-    <Compile Include="ServiceLocationRegistration.cs" />
-    <Compile Include="SQLiteAsync.cs" />
-    <Compile Include="SqlitePersistentBlobCache.cs" />
-    <Compile Include="SQLite.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache.csproj">
-      <Project>{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}</Project>
-      <Name>Akavache</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>
