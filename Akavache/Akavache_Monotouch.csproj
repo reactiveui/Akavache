@@ -39,10 +39,42 @@
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\ext\monotouch\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\ext\monotouch\System.Reactive.Linq.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="EncryptedBlobCache.cs" />
+    <Compile Include="HttpMixin.cs" />
+    <Compile Include="IFilesystemProvider.cs" />
+    <Compile Include="IsolatedStorageProvider.cs" />
+    <Compile Include="MD5.cs" />
+    <Compile Include="MD5Managed.cs" />
+    <Compile Include="Registrations.cs" />
+    <Compile Include="StreamMixins.cs" />
+    <Compile Include="Utility.cs" />
+    <Compile Include="PersistentBlobCache.cs" />
+    <Compile Include="ProtectDataShim.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monotouch.csproj">
+      <Project>{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}</Project>
+      <Name>Akavache.Portable_Monotouch</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

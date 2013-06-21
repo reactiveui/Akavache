@@ -10,7 +10,7 @@ namespace Akavache
     {
         public void Register(Action<Func<object>, Type, string> registerFunction)
         {
-#if SILVERLIGHT
+#if SILVERLIGHT || XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
 #else
             var fs = new SimpleFilesystemProvider();
