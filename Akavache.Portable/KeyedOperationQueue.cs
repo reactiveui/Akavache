@@ -115,14 +115,15 @@ namespace Akavache
                 queuedOps.OnCompleted();
 
                 shutdownObs = new AsyncSubject<Unit>();
-                resultObs.Materialize()
+                var sub = resultObs.Materialize()
                     .Where(x => x.Kind != NotificationKind.OnNext)
                     .SelectMany(x =>
                         (x.Kind == NotificationKind.OnError) ?
                             Observable.Throw<Unit>(x.Exception) :
                             Observable.Return(Unit.Default))
-                    .Multicast(shutdownObs)
-                    .PermaRef();
+                    .Multicast(shutdownObs);
+
+                sub.Connect();
 
                 return shutdownObs;
             }

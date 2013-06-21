@@ -91,7 +91,6 @@
     <CodeContractsCacheAnalysisResults>True</CodeContractsCacheAnalysisResults>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
-    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <GenerateDocumentation>True</GenerateDocumentation>
   </PropertyGroup>
@@ -102,7 +101,10 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\ext\monodroid\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
@@ -115,12 +117,6 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Providers">
-      <HintPath>..\ext\monodroid\System.Reactive.Providers.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -139,25 +135,23 @@
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BlobCache.cs" />
-    <Compile Include="BlobCacheExtensions.cs" />
-    <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
-    <Compile Include="IBlobCache.cs" />
-    <Compile Include="IKeyedOperationQueue.cs" />
-    <Compile Include="IObjectCreator.cs" />
+    <Compile Include="HttpMixin.cs" />
+    <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />
-    <Compile Include="JsonObjectConverter.cs" />
-    <Compile Include="KeyedOperationQueue.cs" />
-    <Compile Include="LoginInfo.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="PersistentBlobCache.cs" />
-    <Compile Include="SimpleFilesystemProvider.cs" />
-    <Compile Include="StreamMixins.cs" />
-    <Compile Include="TestBlobCache.cs" />
-    <Compile Include="Utility.cs" />
     <Compile Include="ProtectDataShim.cs" />
+    <Compile Include="Registrations.cs" />
+    <Compile Include="StreamMixins.cs" />
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monodroid.csproj">
+      <Project>{F92A4778-B294-1AC1-084E-E177EF9FEDB7}</Project>
+      <Name>Akavache.Portable_Monodroid</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
