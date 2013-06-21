@@ -57,17 +57,14 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Mobile">
-      <HintPath>..\ext\monotouch\ReactiveUI.Mobile.dll</HintPath>
-    </Reference>
     <Reference Include="Xamarin.Mobile">
       <HintPath>..\ext\monotouch\Xamarin.Mobile.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing">
-      <HintPath>..\ext\monotouch\ReactiveUI.Routing.dll</HintPath>
+    <Reference Include="ReactiveUI.Cocoa">
+      <HintPath>..\ext\monotouch\ReactiveUI.Cocoa.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Xaml">
-      <HintPath>..\ext\monotouch\ReactiveUI.Xaml.dll</HintPath>
+    <Reference Include="ReactiveUI.Mobile">
+      <HintPath>..\ext\monotouch\ReactiveUI.Mobile.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
@@ -75,13 +72,17 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AkavacheDriver.cs" />
     <Compile Include="CocoaImageExtensions.cs" />
-    <Compile Include="ServiceLocationRegistration.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache.csproj">
-      <Project>{9091337A-9E94-4DBD-801E-05E1FDA78FFC}</Project>
-      <Name>Akavache</Name>
-    </ProjectReference>
+    <Compile Include="Registrations.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache\Akavache_Monotouch.csproj">
+      <Project>{9091337A-9E94-4DBD-801E-05E1FDA78FFC}</Project>
+      <Name>Akavache_Monotouch</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monotouch.csproj">
+      <Project>{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}</Project>
+      <Name>Akavache.Portable_Monotouch</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

@@ -91,7 +91,6 @@
     <CodeContractsCacheAnalysisResults>True</CodeContractsCacheAnalysisResults>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
-    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <GenerateDocumentation>True</GenerateDocumentation>
   </PropertyGroup>
@@ -102,7 +101,10 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\ext\monodroid\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
@@ -115,12 +117,6 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Providers">
-      <HintPath>..\ext\monodroid\System.Reactive.Providers.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -137,18 +133,23 @@
   </Target>
   -->
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>
-    <Compile Include="EncryptedBlobCache.cs" />
-    <Compile Include="ServiceLocationRegistration.cs" />
-    <Compile Include="SQLiteAsync.cs" />
-    <Compile Include="SqlitePersistentBlobCache.cs" />
-    <Compile Include="SQLite.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache.csproj">
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monodroid.csproj">
+      <Project>{F92A4778-B294-1AC1-084E-E177EF9FEDB7}</Project>
+      <Name>Akavache.Portable_Monodroid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Akavache\Akavache_Monodroid.csproj">
       <Project>{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}</Project>
-      <Name>Akavache</Name>
+      <Name>Akavache_Monodroid</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <ItemGroup>
+    <Compile Include="EncryptedBlobCache.cs" />
+    <Compile Include="Registrations.cs" />
+    <Compile Include="SQLite.cs" />
+    <Compile Include="SQLiteAsync.cs" />
+    <Compile Include="SqlitePersistentBlobCache.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
 </Project>
