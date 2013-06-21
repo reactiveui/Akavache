@@ -100,6 +100,24 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ext\monodroid\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\ext\monodroid\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\ext\monodroid\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -116,4 +134,22 @@
   -->
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monodroid.csproj">
+      <Project>{F92A4778-B294-1AC1-084E-E177EF9FEDB7}</Project>
+      <Name>Akavache.Portable_Monodroid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Akavache\Akavache_Monodroid.csproj">
+      <Project>{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}</Project>
+      <Name>Akavache_Monodroid</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EncryptedBlobCache.cs" />
+    <Compile Include="Registrations.cs" />
+    <Compile Include="SQLite.cs" />
+    <Compile Include="SQLiteAsync.cs" />
+    <Compile Include="SqlitePersistentBlobCache.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
 </Project>
