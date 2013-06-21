@@ -23,6 +23,9 @@
     <file src="bin\Release\Net45\Akavache.Sqlite3.*" target="lib\net45" />
     <file src="bin\Release\WP8\Akavache.Sqlite3.*" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.Sqlite3.*" target="lib\NetCore45" />
+    <file src="bin\Release\Mono\Akavache.Sqlite3.*" target="lib\MonoMac" />
+    <file src="bin\Release\MonoAndroid\Akavache.Sqlite3.*" target="lib\MonoAndroid" />
+    <file src="bin\Release\MonoTouch\Akavache.Sqlite3.*" target="lib\MonoTouch" />
     <file src="sqlite3-hint.txt" target="readme.txt" />
   </files>
 </package>

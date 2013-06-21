@@ -24,5 +24,8 @@
     <file src="bin\Release\Akavache.Portable.*" target="lib\wp8" />
     <file src="bin\Release\Akavache.Portable.*" target="lib\NetCore45" />
     <file src="bin\Release\Akavache.Portable.*" target="lib\portable-net45+win8+wp8" />
+    <file src="bin\Release\MonoMac\Akavache.Portable.*" target="lib\MonoMac" />
+    <file src="bin\Release\MonoAndroid\Akavache.Portable.*" target="lib\MonoAndroid" />
+    <file src="bin\Release\MonoTouch\Akavache.Portable.*" target="lib\MonoTouch" />
   </files>
 </package>
