@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Akavache</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>Akavache</AssemblyName>
+    <AssemblyName>Akavache.Portable</AssemblyName>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -39,10 +39,41 @@
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\ext\monotouch\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\ext\monotouch\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="BlobCache.cs" />
+    <Compile Include="CacheIndexEntry.cs" />
+    <Compile Include="DependencyResolverMixin.cs" />
+    <Compile Include="HttpMixin.cs" />
+    <Compile Include="IBlobCache.cs" />
+    <Compile Include="IKeyedOperationQueue.cs" />
+    <Compile Include="JsonSerializationMixin.cs" />
+    <Compile Include="KeyedOperationQueue.cs" />
+    <Compile Include="LoginInfo.cs" />
+    <Compile Include="LoginMixin.cs" />
+    <Compile Include="RelativeTimeMixin.cs" />
+    <Compile Include="TestBlobCache.cs" />
+    <Compile Include="ConcurrentDictionary.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

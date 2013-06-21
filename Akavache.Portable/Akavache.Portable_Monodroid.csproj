@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache</RootNamespace>
-    <AssemblyName>Akavache</AssemblyName>
+    <AssemblyName>Akavache.Portable</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>
     </SccProjectName>
@@ -29,7 +29,7 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
-    <OutputPath>bin\Debug\Monodroid</OutputPath>
+    <OutputPath>bin\Debug\Monoandroid</OutputPath>
     <DefineConstants>DEBUG;MONO; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -64,7 +64,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
-    <OutputPath>bin\Release\Monodroid</OutputPath>
+    <OutputPath>bin\Release\Monoandroid</OutputPath>
     <DefineConstants>MONO; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -100,6 +100,24 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ext\monodroid\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ReactiveUI">
+      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\ext\monodroid\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\ext\monodroid\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -117,6 +135,19 @@
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="BlobCache.cs" />
+    <Compile Include="CacheIndexEntry.cs" />
+    <Compile Include="ConcurrentDictionary.cs" />
+    <Compile Include="DependencyResolverMixin.cs" />
+    <Compile Include="HttpMixin.cs" />
+    <Compile Include="IBlobCache.cs" />
+    <Compile Include="IKeyedOperationQueue.cs" />
+    <Compile Include="JsonSerializationMixin.cs" />
+    <Compile Include="KeyedOperationQueue.cs" />
+    <Compile Include="LoginInfo.cs" />
+    <Compile Include="LoginMixin.cs" />
+    <Compile Include="RelativeTimeMixin.cs" />
+    <Compile Include="TestBlobCache.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>
