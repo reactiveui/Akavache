@@ -4,6 +4,18 @@
         <name>ReactiveUI</name>
     </assembly>
     <members>
+        <member name="T:ReactiveUI.EqualityTypeConverter">
+            <summary>
+            The default converter, simply converts between types that are equal or
+            can be converted (i.e. Button =&gt; UIControl)
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.StringConverter">
+            <summary>
+            Calls ToString on types. In WPF, ComponentTypeConverter should win
+            instead of this, since It's Better™.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.CommandBinder.BindCommand``3(``0,``1,System.Linq.Expressions.Expression{System.Func{``1,``2}},System.String)">
             <summary>
             Bind a command from the ViewModel to the control on the View of the
@@ -406,6 +418,11 @@
             GetService is always implemented via GetServices().LastOrDefault()
             </summary>
         </member>
+        <member name="T:ReactiveUI.INPCObservableForProperty">
+            <summary>
+            Generates Observables based on observing INotifyPropertyChanged objects
+            </summary>
+        </member>
         <member name="T:ReactiveUI.IObservedChange`2">
             <summary>
             IObservedChange is a generic interface that replaces the non-generic
@@ -736,6 +753,11 @@
         <member name="P:ReactiveUI.ViewContractAttribute.Contract">
             <summary>
             A unique string that will be used along with the type to resolve a View
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.IRNPCObservableForProperty">
+            <summary>
+            Generates Observables based on observing Reactive objects
             </summary>
         </member>
         <member name="T:ReactiveUI.Legacy.IReactiveCommand">
@@ -1540,6 +1562,13 @@
             </summary>
             <param name="selector">A function supplying the values for the comparator.</param>
         </member>
+        <member name="T:ReactiveUI.POCOObservableForProperty">
+            <summary>
+            This class is the final fallback for WhenAny, and will simply immediately
+            return the value of the type at the time it was created. It will also
+            warn the user that this is probably not what they want to do
+            </summary>
+        </member>
         <member name="T:ReactiveUI.IReactiveBinding`3">
             <summary>
             This interface represents the result of a Bind/OneWayBind and gives
@@ -1621,133 +1650,6 @@
             <summary>
             Releases unmanaged and - optionally - managed resources.
             </summary>
-        </member>
-        <member name="T:ReactiveUI.ReactiveDerivedCollection`1">
-            <summary>
-            This class represents a change-notifying Collection which is derived from
-            a source collection, via CreateDerivedCollection or via another method.
-            It is read-only, and any attempts to change items in the collection will
-            fail.
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.ReactiveDerivedCollection`2">
-            <summary>
-            This class represents a change-notifying Collection which is derived from
-            a source collection, via CreateDerivedCollection or via another method.
-            It is read-only, and any attempts to change items in the collection will
-            fail.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.canItemStayAtPosition(`1,System.Int32)">
-            <summary>
-            Gets a value indicating whether or not the item fits (sort-wise) at the provided index. The determination
-            is made by checking whether or not it's considered larger than or equal to the preceeding item and if
-            it's less than or equal to the succeeding item.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.getIndexFromSourceIndex(System.Int32)">
-            <summary>
-            Gets the index of the dervived item based on it's originating element index in the source collection.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.indexOfAll(System.Collections.Generic.IEnumerable{`0},`0,System.Collections.Generic.IEqualityComparer{`0})">
-            <summary>
-            Returns one or more positions in the source collection where the given item is found based on the
-            provided equality comparer.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.shiftIndicesAtOrOverThreshold(System.Int32,System.Int32)">
-            <summary>
-            Increases (or decreases) all source indices equal to or higher than the threshold. Represents an
-            insert or remove of one or more items in the source list thus causing all subsequent items to shift
-            up or down.
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.ReactiveDerivedCollection`2.ReferenceEqualityComparer`1">
-            <summary>
-            Internal equality comparer used for looking up the source object of a property change notification in
-            the source list.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.ReactiveCollectionMixins.CreateCollection``1(System.IObservable{``0},System.Nullable{System.TimeSpan},System.Action{System.Exception})">
-            <summary>
-            Creates a collection based on an an Observable by adding items
-            provided until the Observable completes, optionally ensuring a
-            delay. Note that if the Observable never completes and withDelay is
-            set, this method will leak a Timer. This method also guarantees that
-            items are always added via the UI thread.
-            </summary>
-            <param name="fromObservable">The Observable whose items will be put
-            into the new collection.</param>
-            <param name="onError">The handler for errors from the Observable. If
-            not specified, an error will go to DefaultExceptionHandler.</param>
-            <param name="withDelay">If set, items will be populated in the
-            collection no faster than the delay provided.</param>
-            <returns>A new collection which will be populated with the
-            Observable.</returns>
-        </member>
-        <member name="M:ReactiveUI.ReactiveCollectionMixins.CreateCollection``2(System.IObservable{``0},System.Func{``0,``1},System.Nullable{System.TimeSpan})">
-            <summary>
-            Creates a collection based on an an Observable by adding items
-            provided until the Observable completes, optionally ensuring a
-            delay. Note that if the Observable never completes and withDelay is
-            set, this method will leak a Timer. This method also guarantees that
-            items are always added via the UI thread.
-            </summary>
-            <param name="fromObservable">The Observable whose items will be put
-            into the new collection.</param>
-            <param name="selector">A Select function that will be run on each
-            item.</param>
-            <param name="withDelay">If set, items will be populated in the
-            collection no faster than the delay provided.</param>
-            <returns>A new collection which will be populated with the
-            Observable.</returns>
-        </member>
-        <member name="M:ReactiveUI.ObservableCollectionMixin.CreateDerivedCollection``3(System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Func{``0,System.Boolean},System.Func{``1,``1,System.Int32},System.IObservable{``2})">
-            <summary>
-            Creates a collection whose contents will "follow" another
-            collection; this method is useful for creating ViewModel collections
-            that are automatically updated when the respective Model collection
-            is updated.
-            Note that even though this method attaches itself to any
-            IEnumerable, it will only detect changes from objects implementing
-            INotifyCollectionChanged (like ReactiveList). If your source
-            collection doesn't implement this, signalReset is the way to signal
-            the derived collection to reorder/refilter itself.
-            </summary>
-            <param name="selector">A Select function that will be run on each
-            item.</param>
-            <param name="filter">A filter to determine whether to exclude items
-            in the derived collection.</param>
-            <param name="orderer">A comparator method to determine the ordering of
-            the resulting collection.</param>
-            <param name="signalReset">When this Observable is signalled,
-            the derived collection will be manually
-            reordered/refiltered.</param>
-            <returns>A new collection whose items are equivalent to
-            Collection.Select().Where().OrderBy() and will mirror changes
-            in the initial collection.</returns>
-        </member>
-        <member name="M:ReactiveUI.ObservableCollectionMixin.CreateDerivedCollection``2(System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Func{``0,System.Boolean},System.Func{``1,``1,System.Int32})">
-            <summary>
-            Creates a collection whose contents will "follow" another
-            collection; this method is useful for creating ViewModel collections
-            that are automatically updated when the respective Model collection
-            is updated.
-            Be aware that this overload will result in a collection that *only*
-            updates if the source implements INotifyCollectionChanged. If your
-            list changes but isn't a ReactiveList/ObservableCollection,
-            you probably want to use the other overload.
-            </summary>
-            <param name="selector">A Select function that will be run on each
-            item.</param>
-            <param name="filter">A filter to determine whether to exclude items
-            in the derived collection.</param>
-            <param name="orderer">A comparator method to determine the ordering of
-            the resulting collection.</param>
-            <returns>A new collection whose items are equivalent to
-            Collection.Select().Where().OrderBy() and will mirror changes
-            in the initial collection.</returns>
         </member>
         <member name="T:ReactiveUI.ReactiveCommand">
             <summary>
@@ -2041,107 +1943,6 @@
             Dependency Resolver.
             </summary>
         </member>
-        <member name="P:ReactiveUI.RxApp.DependencyResolver">
-            <summary>
-            Gets or sets the dependency resolver. This class is used throughout
-            ReactiveUI for many internal operations as well as for general use
-            by applications. If this isn't assigned on startup, a default, highly
-            capable implementation will be used, and it is advised for most people
-            to simply use the default implementation.
-            Note that to create your own and assign it to the global dependency
-            resolver, you must initialize it via calling InitializeResolver(), or
-            else ReactiveUI internal classes will not be registered and Bad Things™
-            will happen.
-            </summary>
-            <value>The dependency resolver.</value>
-        </member>
-        <member name="P:ReactiveUI.RxApp.MutableResolver">
-            <summary>
-            Convenience property to return the DependencyResolver cast to a
-            MutableDependencyResolver. The default resolver is also a mutable
-            resolver, so this will be non-null. Use this to register new types
-            on startup if you are using the default resolver
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.RxApp.MainThreadScheduler">
-            <summary>
-            MainThreadScheduler is the scheduler used to schedule work items that
-            should be run "on the UI thread". In normal mode, this will be
-            DispatcherScheduler, and in Unit Test mode this will be Immediate,
-            to simplify writing common unit tests.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.RxApp.TaskpoolScheduler">
-            <summary>
-            TaskpoolScheduler is the scheduler used to schedule work items to
-            run in a background thread. In both modes, this will run on the TPL
-            Task Pool (or the normal Threadpool on Silverlight).
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.RxApp.DefaultExceptionHandler">
-            <summary>
-            This Observer is signalled whenever an object that has a
-            ThrownExceptions property doesn't Subscribe to that Observable. Use
-            Observer.Create to set up what will happen - the default is to crash
-            the application with an error message.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.RxApp.InUnitTestRunnerOverride">
-            <summary>
-            This method allows you to override the return value of
-            RxApp.InUnitTestRunner - a null value means that InUnitTestRunner
-            will determine this using its normal logic.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.RxApp.InUnitTestRunner">
-            <summary>
-            InUnitTestRunner attempts to determine heuristically if the current
-            application is running in a unit test framework
-            </summary>
-            <returns>True if we have determined that a unit test framework is
-            currently running.</returns>
-        </member>
-        <member name="M:ReactiveUI.RxApp.InitializeCustomResolver(System.Action{System.Object,System.Type})">
-            <summary>
-            This method will initialize your custom service locator with the
-            built-in RxUI types. Use this to help initialize containers that
-            don't conform easily to IMutableDependencyResolver.
-            </summary>
-            <param name="registerMethod">Create a method here that will
-            register a constant. For example, the NInject version of
-            this method might look like:
-            (obj, type) =&gt; kernel.Bind(type).ToConstant(obj)
-            </param>
-        </member>
-        <member name="T:ReactiveUI.INPCObservableForProperty">
-            <summary>
-            Generates Observables based on observing INotifyPropertyChanged objects
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.IRNPCObservableForProperty">
-            <summary>
-            Generates Observables based on observing Reactive objects
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.POCOObservableForProperty">
-            <summary>
-            This class is the final fallback for WhenAny, and will simply immediately
-            return the value of the type at the time it was created. It will also
-            warn the user that this is probably not what they want to do
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.EqualityTypeConverter">
-            <summary>
-            The default converter, simply converts between types that are equal or
-            can be converted (i.e. Button =&gt; UIControl)
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.StringConverter">
-            <summary>
-            Calls ToString on types. In WPF, ComponentTypeConverter should win
-            instead of this, since It's Better™.
-            </summary>
-        </member>
         <member name="M:ReactiveUI.UnitTestDetector.#ctor">
             <summary>
             Private constructor to prevent instantiation.
@@ -2372,76 +2173,77 @@
             initial setup.
             </summary>
         </member>
-        <member name="T:ReactiveUI.AwaitableAsyncSubject`1">
+        <member name="P:ReactiveUI.RxApp.DependencyResolver">
             <summary>
-            Represents the result of an asynchronous operation.
-            The last value before the OnCompleted notification, or the error received through OnError, is sent to all subscribed observers.
+            Gets or sets the dependency resolver. This class is used throughout
+            ReactiveUI for many internal operations as well as for general use
+            by applications. If this isn't assigned on startup, a default, highly
+            capable implementation will be used, and it is advised for most people
+            to simply use the default implementation.
+            Note that to create your own and assign it to the global dependency
+            resolver, you must initialize it via calling InitializeResolver(), or
+            else ReactiveUI internal classes will not be registered and Bad Things™
+            will happen.
             </summary>
-            <typeparam name="T">The type of the elements processed by the subject.</typeparam>
+            <value>The dependency resolver.</value>
         </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.#ctor">
+        <member name="P:ReactiveUI.RxApp.MutableResolver">
             <summary>
-            Creates a subject that can only receive one value and that value is cached for all future observations.
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnCompleted">
-            <summary>
-            Notifies all subscribed observers about the end of the sequence, also causing the last received value to be sent out (if any).
-            </summary>
-        </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnError(System.Exception)">
-            <summary>
-            Notifies all subscribed observers about the exception.
-            </summary>
-            <param name="error">The exception to send to all observers.</param>
-            <exception cref="T:System.ArgumentNullException">
-                <paramref name="error" /> is null.</exception>
-        </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnNext(`0)">
-            <summary>
-            Sends a value to the subject. The last value received before successful termination will be sent to all subscribed and future observers.
-            </summary>
-            <param name="value">The value to store in the subject.</param>
-        </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.Subscribe(System.IObserver{`0})">
-            <summary>
-            Subscribes an observer to the subject.
-            </summary>
-            <param name="observer">Observer to subscribe to the subject.</param>
-            <returns>Disposable object that can be used to unsubscribe the observer from the subject.</returns>
-            <exception cref="T:System.ArgumentNullException">
-                <paramref name="observer" /> is null.</exception>
-        </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.Dispose">
-            <summary>
-            Unsubscribe all observers and release resources.
+            Convenience property to return the DependencyResolver cast to a
+            MutableDependencyResolver. The default resolver is also a mutable
+            resolver, so this will be non-null. Use this to register new types
+            on startup if you are using the default resolver
             </summary>
         </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.GetAwaiter">
+        <member name="P:ReactiveUI.RxApp.MainThreadScheduler">
             <summary>
-            Gets an awaitable object for the current AsyncSubject.
-            </summary>
-            <returns>Object that can be awaited.</returns>
-        </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnCompleted(System.Action)">
-            <summary>
-            Specifies a callback action that will be invoked when the subject completes.
-            </summary>
-            <param name="continuation">Callback action that will be invoked when the subject completes.</param>
-            <exception cref="T:System.ArgumentNullException">
-                <paramref name="continuation" /> is null.</exception>
-        </member>
-        <member name="P:ReactiveUI.AwaitableAsyncSubject`1.IsCompleted">
-            <summary>
-            Gets whether the AsyncSubject has completed.
+            MainThreadScheduler is the scheduler used to schedule work items that
+            should be run "on the UI thread". In normal mode, this will be
+            DispatcherScheduler, and in Unit Test mode this will be Immediate,
+            to simplify writing common unit tests.
             </summary>
         </member>
-        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.GetResult">
+        <member name="P:ReactiveUI.RxApp.TaskpoolScheduler">
             <summary>
-            Gets the last element of the subject, potentially blocking until the subject completes successfully or exceptionally.
+            TaskpoolScheduler is the scheduler used to schedule work items to
+            run in a background thread. In both modes, this will run on the TPL
+            Task Pool (or the normal Threadpool on Silverlight).
             </summary>
-            <returns>The last element of the subject. Throws an InvalidOperationException if no element was received.</returns>
-            <exception cref="T:System.InvalidOperationException">The source sequence is empty.</exception>
+        </member>
+        <member name="P:ReactiveUI.RxApp.DefaultExceptionHandler">
+            <summary>
+            This Observer is signalled whenever an object that has a
+            ThrownExceptions property doesn't Subscribe to that Observable. Use
+            Observer.Create to set up what will happen - the default is to crash
+            the application with an error message.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.RxApp.InUnitTestRunnerOverride">
+            <summary>
+            This method allows you to override the return value of
+            RxApp.InUnitTestRunner - a null value means that InUnitTestRunner
+            will determine this using its normal logic.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.RxApp.InUnitTestRunner">
+            <summary>
+            InUnitTestRunner attempts to determine heuristically if the current
+            application is running in a unit test framework
+            </summary>
+            <returns>True if we have determined that a unit test framework is
+            currently running.</returns>
+        </member>
+        <member name="M:ReactiveUI.RxApp.InitializeCustomResolver(System.Action{System.Object,System.Type})">
+            <summary>
+            This method will initialize your custom service locator with the
+            built-in RxUI types. Use this to help initialize containers that
+            don't conform easily to IMutableDependencyResolver.
+            </summary>
+            <param name="registerMethod">Create a method here that will
+            register a constant. For example, the NInject version of
+            this method might look like:
+            (obj, type) =&gt; kernel.Bind(type).ToConstant(obj)
+            </param>
         </member>
         <member name="T:ReactiveUI.BindingMixins">
             <summary>
@@ -3002,6 +2804,204 @@
             <typeparam name="TValue">The 1st type parameter.</typeparam>
             <typeparam name="TTarget">The 2nd type parameter.</typeparam>
             <typeparam name="TTValue">The 3rd type parameter.</typeparam>
+        </member>
+        <member name="T:ReactiveUI.AwaitableAsyncSubject`1">
+            <summary>
+            Represents the result of an asynchronous operation.
+            The last value before the OnCompleted notification, or the error received through OnError, is sent to all subscribed observers.
+            </summary>
+            <typeparam name="T">The type of the elements processed by the subject.</typeparam>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.#ctor">
+            <summary>
+            Creates a subject that can only receive one value and that value is cached for all future observations.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnCompleted">
+            <summary>
+            Notifies all subscribed observers about the end of the sequence, also causing the last received value to be sent out (if any).
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnError(System.Exception)">
+            <summary>
+            Notifies all subscribed observers about the exception.
+            </summary>
+            <param name="error">The exception to send to all observers.</param>
+            <exception cref="T:System.ArgumentNullException">
+                <paramref name="error" /> is null.</exception>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnNext(`0)">
+            <summary>
+            Sends a value to the subject. The last value received before successful termination will be sent to all subscribed and future observers.
+            </summary>
+            <param name="value">The value to store in the subject.</param>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.Subscribe(System.IObserver{`0})">
+            <summary>
+            Subscribes an observer to the subject.
+            </summary>
+            <param name="observer">Observer to subscribe to the subject.</param>
+            <returns>Disposable object that can be used to unsubscribe the observer from the subject.</returns>
+            <exception cref="T:System.ArgumentNullException">
+                <paramref name="observer" /> is null.</exception>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.Dispose">
+            <summary>
+            Unsubscribe all observers and release resources.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.GetAwaiter">
+            <summary>
+            Gets an awaitable object for the current AsyncSubject.
+            </summary>
+            <returns>Object that can be awaited.</returns>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.OnCompleted(System.Action)">
+            <summary>
+            Specifies a callback action that will be invoked when the subject completes.
+            </summary>
+            <param name="continuation">Callback action that will be invoked when the subject completes.</param>
+            <exception cref="T:System.ArgumentNullException">
+                <paramref name="continuation" /> is null.</exception>
+        </member>
+        <member name="P:ReactiveUI.AwaitableAsyncSubject`1.IsCompleted">
+            <summary>
+            Gets whether the AsyncSubject has completed.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.AwaitableAsyncSubject`1.GetResult">
+            <summary>
+            Gets the last element of the subject, potentially blocking until the subject completes successfully or exceptionally.
+            </summary>
+            <returns>The last element of the subject. Throws an InvalidOperationException if no element was received.</returns>
+            <exception cref="T:System.InvalidOperationException">The source sequence is empty.</exception>
+        </member>
+        <member name="T:ReactiveUI.ReactiveDerivedCollection`1">
+            <summary>
+            This class represents a change-notifying Collection which is derived from
+            a source collection, via CreateDerivedCollection or via another method.
+            It is read-only, and any attempts to change items in the collection will
+            fail.
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.ReactiveDerivedCollection`2">
+            <summary>
+            This class represents a change-notifying Collection which is derived from
+            a source collection, via CreateDerivedCollection or via another method.
+            It is read-only, and any attempts to change items in the collection will
+            fail.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.canItemStayAtPosition(`1,System.Int32)">
+            <summary>
+            Gets a value indicating whether or not the item fits (sort-wise) at the provided index. The determination
+            is made by checking whether or not it's considered larger than or equal to the preceeding item and if
+            it's less than or equal to the succeeding item.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.getIndexFromSourceIndex(System.Int32)">
+            <summary>
+            Gets the index of the dervived item based on it's originating element index in the source collection.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.indexOfAll(System.Collections.Generic.IEnumerable{`0},`0,System.Collections.Generic.IEqualityComparer{`0})">
+            <summary>
+            Returns one or more positions in the source collection where the given item is found based on the
+            provided equality comparer.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.shiftIndicesAtOrOverThreshold(System.Int32,System.Int32)">
+            <summary>
+            Increases (or decreases) all source indices equal to or higher than the threshold. Represents an
+            insert or remove of one or more items in the source list thus causing all subsequent items to shift
+            up or down.
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.ReactiveDerivedCollection`2.ReferenceEqualityComparer`1">
+            <summary>
+            Internal equality comparer used for looking up the source object of a property change notification in
+            the source list.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveCollectionMixins.CreateCollection``1(System.IObservable{``0},System.Nullable{System.TimeSpan},System.Action{System.Exception})">
+            <summary>
+            Creates a collection based on an an Observable by adding items
+            provided until the Observable completes, optionally ensuring a
+            delay. Note that if the Observable never completes and withDelay is
+            set, this method will leak a Timer. This method also guarantees that
+            items are always added via the UI thread.
+            </summary>
+            <param name="fromObservable">The Observable whose items will be put
+            into the new collection.</param>
+            <param name="onError">The handler for errors from the Observable. If
+            not specified, an error will go to DefaultExceptionHandler.</param>
+            <param name="withDelay">If set, items will be populated in the
+            collection no faster than the delay provided.</param>
+            <returns>A new collection which will be populated with the
+            Observable.</returns>
+        </member>
+        <member name="M:ReactiveUI.ReactiveCollectionMixins.CreateCollection``2(System.IObservable{``0},System.Func{``0,``1},System.Nullable{System.TimeSpan})">
+            <summary>
+            Creates a collection based on an an Observable by adding items
+            provided until the Observable completes, optionally ensuring a
+            delay. Note that if the Observable never completes and withDelay is
+            set, this method will leak a Timer. This method also guarantees that
+            items are always added via the UI thread.
+            </summary>
+            <param name="fromObservable">The Observable whose items will be put
+            into the new collection.</param>
+            <param name="selector">A Select function that will be run on each
+            item.</param>
+            <param name="withDelay">If set, items will be populated in the
+            collection no faster than the delay provided.</param>
+            <returns>A new collection which will be populated with the
+            Observable.</returns>
+        </member>
+        <member name="M:ReactiveUI.ObservableCollectionMixin.CreateDerivedCollection``3(System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Func{``0,System.Boolean},System.Func{``1,``1,System.Int32},System.IObservable{``2})">
+            <summary>
+            Creates a collection whose contents will "follow" another
+            collection; this method is useful for creating ViewModel collections
+            that are automatically updated when the respective Model collection
+            is updated.
+            Note that even though this method attaches itself to any
+            IEnumerable, it will only detect changes from objects implementing
+            INotifyCollectionChanged (like ReactiveList). If your source
+            collection doesn't implement this, signalReset is the way to signal
+            the derived collection to reorder/refilter itself.
+            </summary>
+            <param name="selector">A Select function that will be run on each
+            item.</param>
+            <param name="filter">A filter to determine whether to exclude items
+            in the derived collection.</param>
+            <param name="orderer">A comparator method to determine the ordering of
+            the resulting collection.</param>
+            <param name="signalReset">When this Observable is signalled,
+            the derived collection will be manually
+            reordered/refiltered.</param>
+            <returns>A new collection whose items are equivalent to
+            Collection.Select().Where().OrderBy() and will mirror changes
+            in the initial collection.</returns>
+        </member>
+        <member name="M:ReactiveUI.ObservableCollectionMixin.CreateDerivedCollection``2(System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Func{``0,System.Boolean},System.Func{``1,``1,System.Int32})">
+            <summary>
+            Creates a collection whose contents will "follow" another
+            collection; this method is useful for creating ViewModel collections
+            that are automatically updated when the respective Model collection
+            is updated.
+            Be aware that this overload will result in a collection that *only*
+            updates if the source implements INotifyCollectionChanged. If your
+            list changes but isn't a ReactiveList/ObservableCollection,
+            you probably want to use the other overload.
+            </summary>
+            <param name="selector">A Select function that will be run on each
+            item.</param>
+            <param name="filter">A filter to determine whether to exclude items
+            in the derived collection.</param>
+            <param name="orderer">A comparator method to determine the ordering of
+            the resulting collection.</param>
+            <returns>A new collection whose items are equivalent to
+            Collection.Select().Where().OrderBy() and will mirror changes
+            in the initial collection.</returns>
         </member>
         <member name="T:ReactiveUI.WaitForDispatcherScheduler">
             <summary>
