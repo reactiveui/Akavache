@@ -25,6 +25,9 @@ namespace Akavache.Mobile
 #if APPKIT || UIKIT
             registerFunction(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
+#if ANDROID
+            registerFunction(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
+#endif
         }
     }
 }
