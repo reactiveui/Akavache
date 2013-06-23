@@ -21,6 +21,9 @@ namespace Akavache.Sqlite3
             {
                 throw new Exception("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
             }
+#if ANDROID
+
+#endif
 
             var localCache = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).Wait();

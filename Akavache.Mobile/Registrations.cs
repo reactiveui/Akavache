@@ -21,6 +21,10 @@ namespace Akavache.Mobile
 
             var akavacheDriver = new AkavacheDriver();
             registerFunction(() => akavacheDriver, typeof(ISuspensionDriver), null);
+
+#if APPKIT || UIKIT
+            registerFunction(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
+#endif
         }
     }
 }
