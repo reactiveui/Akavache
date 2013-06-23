@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monotouch</OutputPath>
-    <DefineConstants>DEBUG; MONO; IOS</DefineConstants>
+    <DefineConstants>DEBUG; MONO; UIKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -31,7 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
-    <DefineConstants>MONO; IOS</DefineConstants>
+    <DefineConstants>MONO; UIKIT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -73,6 +73,7 @@
     <Compile Include="AkavacheDriver.cs" />
     <Compile Include="CocoaImageExtensions.cs" />
     <Compile Include="Registrations.cs" />
+    <Compile Include="MacFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>

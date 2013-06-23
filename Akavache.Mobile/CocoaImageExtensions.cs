@@ -12,7 +12,7 @@ using System.Text;
 using Newtonsoft.Json;
 using ReactiveUI;
 
-#if IOS
+#if UIKIT
 using MonoTouch.UIKit;
 using MonoTouch.Foundation;
 using NSImage = MonoTouch.UIKit.UIImage;

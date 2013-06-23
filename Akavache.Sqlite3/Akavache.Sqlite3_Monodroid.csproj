@@ -30,7 +30,7 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monoandroid</OutputPath>
-    <DefineConstants>DEBUG;MONO; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>DEBUG;MONO; XAMARIN_MOBILE; ANDROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
@@ -62,10 +62,9 @@
     <AndroidLinkMode>None</AndroidLinkMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>bin\Release\Monoandroid</OutputPath>
-    <DefineConstants>MONO; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>MONO; XAMARIN_MOBILE; ANDROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>

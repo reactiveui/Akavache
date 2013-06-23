@@ -69,6 +69,7 @@
     <Compile Include="Utility.cs" />
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="ProtectDataShim.cs" />
+    <Compile Include="SimpleFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>

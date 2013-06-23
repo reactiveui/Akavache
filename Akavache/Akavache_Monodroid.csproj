@@ -146,6 +146,7 @@
     <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
+    <Compile Include="SimpleFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>

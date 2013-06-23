@@ -44,9 +44,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
     <Reference Include="Mono.Posix" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\mono\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\ext\mono\ReactiveUI.dll</HintPath>
     </Reference>
@@ -61,6 +58,9 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\mono\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ext\mono\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

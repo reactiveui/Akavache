@@ -5,7 +5,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using ReactiveUI;
 
-#if IOS
+#if UIKIT
 using MonoTouch.Foundation;
 using ReactiveUI.Mobile;
 namespace Akavache.Mobile
@@ -14,18 +14,6 @@ using MonoMac.Foundation;
 namespace Akavache.Mac
 #endif
 {
-    public class ServiceLocationRegistration : IWantsToRegisterStuff
-    {
-        public void Register()
-        {
-            RxApp.Register(typeof(MacFilesystemProvider), typeof(IFilesystemProvider));
-            BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
-#if IOS
-            RxApp.Register(typeof(AkavacheDriver), typeof(ISuspensionDriver));
-#endif
-        }
-    }
-
     public class MacFilesystemProvider : IFilesystemProvider
     {
         readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
