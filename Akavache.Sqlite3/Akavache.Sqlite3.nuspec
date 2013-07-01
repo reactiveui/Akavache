@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.0.0.20130620-alpha</version>
+    <version>3.0.1</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="[3.0.0.20130620-alpha]" />
+      <dependency id="akavache" version="[3.0.1]" />
     </dependencies>
 
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
