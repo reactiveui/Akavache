@@ -15,6 +15,10 @@ namespace Akavache
 
     public static class DependencyResolverMixin
     {
+        /// <summary>
+        /// Initializes a ReactiveUI dependency resolver with classes that 
+        /// Akavache uses internally.
+        /// </summary>
         public static void InitializeAkavache(this IMutableDependencyResolver This)
         {
             var namespaces = new[] { 
