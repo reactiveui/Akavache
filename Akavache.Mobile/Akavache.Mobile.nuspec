@@ -1,13 +1,13 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.6.7</version>
+    <version>3.0.1</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="2.6.7" />
-      <dependency id="reactiveui-mobile" version="4.4.3" />
+      <dependency id="akavache" version="[3.0.1]" />
+      <dependency id="reactiveui-mobile" version="5.0.1" />
     </dependencies>
 
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
@@ -17,11 +17,14 @@
     <title>Akavache.Mobile</title>
     <description>An implementation of ISuspensionDriver that uses Akavache to save app state on tombstoning.</description>
     <summary>An implementation of ISuspensionDriver that uses Akavache to save app state on tombstoning.</summary>
-    <copyright>Copyright GitHub� 2012</copyright>
+    <copyright>Copyright GitHub© 2012</copyright>
   </metadata>
 
   <files>
-    <file src="bin\Release\WP8\Akavache.Mobile_WP8.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Mobile_WinRT.*" target="lib\WinRT45" />
+    <file src="bin\Release\WP8\Akavache.Mobile.*" target="lib\wp8" />
+    <file src="bin\Release\WinRT45\Akavache.Mobile.*" target="lib\NetCore45" />
+    <file src="bin\Release\Mono\Akavache.Mobile.*" target="lib\MonoMac" />
+    <file src="bin\Release\MonoAndroid\Akavache.Mobile.*" target="lib\MonoAndroid" />
+    <file src="bin\Release\MonoTouch\Akavache.Mobile.*" target="lib\MonoTouch" />
   </files>
 </package>
