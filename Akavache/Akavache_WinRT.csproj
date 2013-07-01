@@ -104,7 +104,6 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="MD5.cs" />

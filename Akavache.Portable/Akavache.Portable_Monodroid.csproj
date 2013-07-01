@@ -118,6 +118,9 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\ext\monodroid\Splat.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -148,6 +151,7 @@
     <Compile Include="LoginMixin.cs" />
     <Compile Include="RelativeTimeMixin.cs" />
     <Compile Include="TestBlobCache.cs" />
+    <Compile Include="BitmapImageExtensions.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

@@ -8,19 +8,11 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using Newtonsoft.Json;
 using ReactiveUI;
-
-#if UIKIT
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
-using NSImage = MonoTouch.UIKit.UIImage;
-#else
-using MonoMac.AppKit;
-using MonoMac.Foundation;
-#endif
-
+using Splat;
 
 namespace Akavache
 {
@@ -32,11 +24,11 @@ namespace Akavache
         /// <param name="key">The key to look up in the cache.</param>
         /// <returns>A Future result representing the bitmap image. This
         /// Observable is guaranteed to be returned on the UI thread.</returns>
-        public static IObservable<NSImage> LoadImage(this IBlobCache This, string key)
+        public static IObservable<IBitmap> LoadImage(this IBlobCache This, string key, float? desiredWidth = null, float? desiredHeight = null)
         {
             return This.GetAsync(key)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .SelectMany(BytesToImage)
+                .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight))
                 .ObserveOn(RxApp.MainThreadScheduler);
         }
 
@@ -48,11 +40,11 @@ namespace Akavache
         /// <param name="url">The URL to download.</param>
         /// <returns>A Future result representing the bitmap image. This
         /// Observable is guaranteed to be returned on the UI thread.</returns>
-        public static IObservable<NSImage> LoadImageFromUrl(this IBlobCache This, string url, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache This, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
             return This.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .SelectMany(BytesToImage);
+                .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
         }
 
         public static IObservable<byte[]> ThrowOnBadImageBuffer(byte[] compressedImage)
@@ -62,17 +54,9 @@ namespace Akavache
                 Observable.Return(compressedImage);
         }
 
-        public static IObservable<NSImage> BytesToImage(byte[] compressedImage)
+        public static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
         {
-            try
-            {
-                var ret = new NSImage(NSData.FromArray(compressedImage));
-                return Observable.Return(ret);
-            }
-            catch (Exception ex)
-            {
-                return Observable.Throw<NSImage>(ex);
-            }
+            return BitmapLoader.Current.Load(new MemoryStream(compressedImage), desiredWidth, desiredHeight).ToObservable();
         }
     }
 }

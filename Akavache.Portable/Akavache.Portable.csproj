@@ -36,6 +36,7 @@
     <DocumentationFile>bin\Release\Akavache.Portable.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="BlobCache.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="ConcurrentDictionary.cs" />
@@ -57,6 +58,9 @@
     </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.5.0.0.20130531-alpha\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat.Portable">
+      <HintPath>..\packages\Splat.0.1.1\lib\Portable-Net45+WinRT45+WP8\Splat.Portable.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Portable-Net45+WinRT45+WP8\System.Reactive.Core.dll</HintPath>

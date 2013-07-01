@@ -57,6 +57,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
@@ -74,6 +77,7 @@
     <Compile Include="RelativeTimeMixin.cs" />
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="ConcurrentDictionary.cs" />
+    <Compile Include="BitmapImageExtensions.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>
