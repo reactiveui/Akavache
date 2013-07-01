@@ -69,7 +69,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="EncryptedBlobCache.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
