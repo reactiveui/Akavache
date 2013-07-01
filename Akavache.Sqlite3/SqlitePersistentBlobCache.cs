@@ -16,7 +16,7 @@ using SQLite;
 
 namespace Akavache.Sqlite3
 {
-    public class SqlitePersistentBlobCache : IObjectBlobCache
+    public class SqlitePersistentBlobCache : IObjectBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
         public IServiceProvider ServiceProvider { get; private set; }
@@ -261,8 +261,18 @@ namespace Akavache.Sqlite3
 
             try 
             {
-                var val = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
-                return Observable.Return(val);
+                try
+                {
+                    var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+                    return Observable.Return(boxedVal);
+                }
+                catch (Exception ex)
+                {
+                    this.Log().WarnException("Failed to deserialize data as boxed, we may be migrating from an old Akavache", ex);
+                }
+
+                var rawVal = serializer.Deserialize<T>(reader);
+                return Observable.Return(rawVal);
             }
             catch (Exception ex) 
             {
