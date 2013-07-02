@@ -12,27 +12,6 @@ namespace Akavache
 {
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
-        static readonly Lazy<ISecureBlobCache> _Current = new Lazy<ISecureBlobCache>(() => {
-            var fs = default(IFilesystemProvider);
-            try {
-                fs = RxApp.GetService<IFilesystemProvider>();
-            } catch (Exception ex) {
-                LogHost.Default.DebugException("Couldn't find custom fs provider for secret cache", ex);
-            }
-            
-#if SILVERLIGHT
-            fs = fs ?? new IsolatedStorageProvider();
-#else
-            fs = fs ?? new SimpleFilesystemProvider();
-#endif
-            return new CEncryptedBlobCache(fs.GetDefaultSecretCacheDirectory(), fs);
-        });
-
-        public static ISecureBlobCache Current
-        {
-            get { return _Current.Value; }
-        }
-
         protected EncryptedBlobCache(
             string cacheDirectory = null, 
             IFilesystemProvider filesystemProvider = null, 
@@ -40,10 +19,6 @@ namespace Akavache
             Action<AsyncSubject<byte[]>> invalidatedCallback = null) 
             : base(cacheDirectory, filesystemProvider, scheduler, invalidatedCallback)
         {
-        }
-
-        class CEncryptedBlobCache : EncryptedBlobCache {
-            public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, RxApp.TaskpoolScheduler) { }
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
@@ -81,5 +56,9 @@ namespace Akavache
             }
         }
 
+    }
+
+    class CEncryptedBlobCache : EncryptedBlobCache {
+        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, RxApp.TaskpoolScheduler) { }
     }
 }

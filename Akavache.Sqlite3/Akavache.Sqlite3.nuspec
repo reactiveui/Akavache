@@ -1,12 +1,12 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.6.7</version>
+    <version>3.0.1</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="2.6.7" />
+      <dependency id="akavache" version="[3.0.1]" />
     </dependencies>
 
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
@@ -16,14 +16,16 @@
     <title>Akavache.SQLite3</title>
     <description>A backend for Akavache based on SQLite3, particularly recommended on mobile platforms.</description>
     <summary>A backend for Akavache based on SQLite3, particularly recommended on mobile platforms.</summary>
-    <copyright>Copyright GitHub� 2012</copyright>
+    <copyright>Copyright GitHub© 2012</copyright>
   </metadata>
 
   <files>
-    <file src="bin\Release\Net40\Akavache.Sqlite3*" target="lib\net40" />
-    <file src="bin\Release\Net45\Akavache.Sqlite3_Net45*" target="lib\net45" />
-    <file src="bin\Release\WP8\Akavache.Sqlite3_WP8.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Sqlite3_WinRT.*" target="lib\WinRT45" />
+    <file src="bin\Release\Net45\Akavache.Sqlite3.*" target="lib\net45" />
+    <file src="bin\Release\WP8\Akavache.Sqlite3.*" target="lib\wp8" />
+    <file src="bin\Release\WinRT45\Akavache.Sqlite3.*" target="lib\NetCore45" />
+    <file src="bin\Release\Mono\Akavache.Sqlite3.*" target="lib\MonoMac" />
+    <file src="bin\Release\MonoAndroid\Akavache.Sqlite3.*" target="lib\MonoAndroid" />
+    <file src="bin\Release\MonoTouch\Akavache.Sqlite3.*" target="lib\MonoTouch" />
     <file src="sqlite3-hint.txt" target="readme.txt" />
   </files>
 </package>

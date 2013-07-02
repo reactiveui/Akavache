@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -15,6 +14,11 @@ using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
 using ReactiveUI;
+using System.Collections.Concurrent;
+
+#if SILVERLIGHT
+using Akavache.Internal;
+#endif
 
 namespace Akavache
 {
@@ -27,7 +31,7 @@ namespace Akavache
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
 
         protected readonly string CacheDirectory;
-        protected ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
+        internal ConcurrentDictionary<string, CacheIndexEntry> CacheIndex = new ConcurrentDictionary<string, CacheIndexEntry>();
         readonly Subject<Unit> actionTaken = new Subject<Unit>();
         bool disposed;
         readonly IFilesystemProvider filesystem;
@@ -47,11 +51,15 @@ namespace Akavache
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidateCallback = null)
         {
-#if SILVERLIGHT
-            this.filesystem = filesystemProvider ?? new IsolatedStorageProvider();
-#else
-            this.filesystem = filesystemProvider ?? new SimpleFilesystemProvider();
-#endif
+            BlobCache.EnsureInitialized();
+
+            this.filesystem = filesystemProvider ?? RxApp.DependencyResolver.GetServices<IFilesystemProvider>().LastOrDefault();
+
+            if (this.filesystem == null)
+            {
+                throw new Exception("No IFilesystemProvider available. This should never happen, your RxUI DependencyResolver is broken");
+            }
+
             this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
             this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
 
@@ -101,57 +109,6 @@ namespace Akavache
             }
 
             this.Log().Info("{0} entries in blob cache index", CacheIndex.Count);
-        }
-
-        public IServiceProvider ServiceProvider
-        {
-            get { return BlobCache.ServiceProvider; }
-        }
-
-        static readonly Lazy<IBlobCache> _LocalMachine = new Lazy<IBlobCache>(() => {
-            var fs = default(IFilesystemProvider);
-            try {
-                fs = RxApp.GetService<IFilesystemProvider>();
-            } catch (Exception ex) {
-                LogHost.Default.DebugException("Couldn't find custom fs provider for local machine", ex);
-            }
-#if SILVERLIGHT
-            fs = fs ?? new IsolatedStorageProvider();
-#else
-            fs = fs ?? new SimpleFilesystemProvider();
-#endif
-            return new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs);
-        });
-
-        public static IBlobCache LocalMachine
-        {
-            get { return _LocalMachine.Value; }
-        }
-
-
-        static readonly Lazy<IBlobCache> _UserAccount = new Lazy<IBlobCache>(() => {
-            var fs = default(IFilesystemProvider);
-            try {
-                fs = RxApp.GetService<IFilesystemProvider>();
-            } catch (Exception ex) {
-                LogHost.Default.DebugException("Couldn't find custom fs provider for user acct", ex);
-            }
-#if SILVERLIGHT
-            fs = fs ?? new IsolatedStorageProvider();
-#else
-            fs = fs ?? new SimpleFilesystemProvider();
-#endif
-            return new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs);
-        });
-
-        public static IBlobCache UserAccount
-        {
-            get { return _UserAccount.Value; }
-        }
-
-        class CPersistentBlobCache : PersistentBlobCache
-        {
-            public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, RxApp.TaskpoolScheduler) { }
         }
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
@@ -458,5 +415,10 @@ namespace Akavache
                 new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
         }
+    }
+
+    class CPersistentBlobCache : PersistentBlobCache
+    {
+        public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, RxApp.TaskpoolScheduler) { }
     }
 }
