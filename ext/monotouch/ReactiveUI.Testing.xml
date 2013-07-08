@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>ReactiveUITesting</name>
+        <name>ReactiveUI.Testing</name>
     </assembly>
     <members>
         <member name="M:ReactiveUI.Testing.TestUtils.WithScheduler(System.Reactive.Concurrency.IScheduler)">
