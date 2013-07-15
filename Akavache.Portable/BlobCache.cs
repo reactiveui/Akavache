@@ -22,8 +22,11 @@ namespace Akavache
         {
             // XXX: This is a hella hack
             var mutableRegistration = RxApp.DependencyResolver as IMutableDependencyResolver;
-            mutableRegistration.InitializeAkavache();
-
+            if (RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>() == null && mutableRegistration != null)
+            {
+                mutableRegistration.InitializeAkavache();
+            }
+                
             InMemory = new TestBlobCache(RxApp.TaskpoolScheduler);
         }
 
