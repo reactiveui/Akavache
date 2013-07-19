@@ -6,10 +6,8 @@ like memcached for desktop apps.
 
 ## Where can I use it?
 
-Akavache is currently compatible with .NET 4.0/4.5, Mono 3.0 (including
-Xamarin.Mac), Silverlight 5, Windows Phone 7.1/8.0, and WinRT (Metro / Modern
-UI / Windows Store / Whatever Microsoft Is Calling That Tablet'y OS Thing That
-They Make).
+Akavache is currently compatible with .NET 4.5, Xamarin.iOS, Xamarin.Android,
+Xamarin.Mac, Windows Phone, and WinRT (Windows Store).
 
 ## What does that mean?
 

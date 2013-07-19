@@ -2,11 +2,12 @@
 
 Interacting with Akavache is primarily done through an object called
 `BlobCache`. At App startup, you must first set your app's name via
-`BlobCache.ApplicationName` - on the desktop, your application's data will be
-stored in `%AppData%\[ApplicationName]` and
-`%LocalAppData%\[ApplicationName]`. Store data that should be shared between
-different machines in `BlobCache.UserAccount` and store data that is
-throwaway or per-machine (such as images) in `BlobCache.LocalMachine`.
+`BlobCache.ApplicationName` (note that on iOS / OS X, this is done for you
+automatically) - on the desktop, your application's data will be stored in
+`%AppData%\[ApplicationName]` and `%LocalAppData%\[ApplicationName]`. Store
+data that should be shared between different machines in
+`BlobCache.UserAccount` and store data that is throwaway or per-machine (such
+as images) in `BlobCache.LocalMachine`.
 
 The most straightforward way to use Akavache is via the object extensions:
 
@@ -40,17 +41,7 @@ implementation has a number of speed and concurrency advantages, and is
 requires a native DLL (`sqlite3.dll`) which is a bit more work to set up. See
 [the Sqlite3 README](/Akavache.Sqlite3/sqlite3-hint.txt) for more info.
 
-To use it, configure BlobCache:
-
-```cs
-var localPath = Path.Combine(ApplicationData.LocalFolder.Path, "settings.db");
-var roamingPath = Path.Combine(ApplicationData.RoamingFolder.Path, "settings.db");
-var secretPath = Path.Combine(ApplicationData.RoamingFolder.Path, "secret.db");
-
-BlobCache.LocalMachine = new SqlitePersistentBlobCache(localPath);
-BlobCache.UserAccount = new SqlitePersistentBlobCache(roamingPath);
-BlobCache.Secure = new Akavache.Sqlite3.EncryptedBlobCache(secretPath);
-```
+To use it, simply include the Akavache.Sqlite3.dll.
 
 ## Handling Errors
 

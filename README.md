@@ -8,10 +8,13 @@ like memcached for desktop apps.
 
 ## Where can I use it?
 
-Akavache is currently compatible with .NET 4.0/4.5, Mono 3.0 (including
-Xamarin.Mac), Silverlight 5, Windows Phone 7.1/8.0, and WinRT (Metro / Modern
-UI / Windows Store / Whatever Microsoft Is Calling That Tablet'y OS Thing That
-They Make).
+Akavache is currently compatible with:
+
+* Xamarin.iOS / Xamarin.Android
+* Mono 3.x (including Xamarin.Mac)
+* .NET 4.5 Desktop (WPF)
+* Windows Phone 8
+* WinRT (Windows Store)
 
 ## What does that mean?
 
@@ -68,7 +71,7 @@ BlobCache.UserAccount.GetObjectAsync("toaster")
 
 Akavache also ships with a separate `IBlobCache` implementation in the
 `akavache.sqlite3` NuGet package which supports every platform except for
-WP7.1 and Silverlight. 
+WP8.
 
 While the default implementation is still quite usable, the SQLite3
 implementation has a number of speed and concurrency advantages, and is
@@ -76,17 +79,7 @@ implementation has a number of speed and concurrency advantages, and is
 requires a native DLL (`sqlite3.dll`) which is a bit more work to set up. See
 [the Sqlite3 README](/Akavache.Sqlite3/sqlite3-hint.txt) for more info.
 
-To use it, configure BlobCache:
-
-```cs
-var localPath = Path.Combine(ApplicationData.LocalFolder.Path, "settings.db");
-var roamingPath = Path.Combine(ApplicationData.RoamingFolder.Path, "settings.db");
-var secretPath = Path.Combine(ApplicationData.RoamingFolder.Path, "secret.db");
-
-BlobCache.LocalMachine = new SqlitePersistentBlobCache(localPath);
-BlobCache.UserAccount = new SqlitePersistentBlobCache(roamingPath);
-BlobCache.Secure = new Akavache.Sqlite3.EncryptedBlobCache(secretPath);
-```
+To use it, simply include `Akavache.Sqlite3.dll`
 
 ## Handling Errors
 
