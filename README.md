@@ -4,6 +4,8 @@ Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
 store created for writing desktop and mobile applications in C#. Think of it
 like memcached for desktop apps.
 
+![Dat Logo](http://f.cl.ly/items/2R3d1o122m090K0W081L/Akavache.png)
+
 ## Where can I use it?
 
 Akavache is currently compatible with .NET 4.0/4.5, Mono 3.0 (including
