@@ -3,6 +3,7 @@
 
 # Custom for Visual Studio
 *.cs     diff=csharp
+*.sln    text eol=crlf
 
 # Standard to msysgit
 *.doc	 diff=astextplain

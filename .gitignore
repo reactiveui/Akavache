@@ -11,6 +11,12 @@ Desktop.ini
 *.suo
 *.user
 
+# Mac crap
+.DS_Store
+
+# Xamarin Component
+*.xam
+
 # Build results
 bin/[Dd]ebug/
 bin/[Rr]elease/

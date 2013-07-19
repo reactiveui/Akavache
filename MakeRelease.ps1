@@ -24,3 +24,5 @@ foreach-object $Archs | %{
 }
 
 ls -r .\Release | ?{$_.FullName.Contains("Clousot")} | %{rm $_.FullName}
+
+ext\tools\xamarin-component.exe package component
