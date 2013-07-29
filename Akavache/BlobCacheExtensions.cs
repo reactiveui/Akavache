@@ -171,20 +171,33 @@ namespace Akavache
         /// the updated item should be fetched. If the cached version isn't found,
         /// this parameter is ignored and the item is always fetched.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <param name="shouldInvalidateOnError">If this is true, the cache will
+        /// be cleared when an exception occurs in fetchFunc</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version)</returns>
         public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This,
             string key,
             Func<IObservable<T>> fetchFunc,
             Func<DateTimeOffset, bool> fetchPredicate = null,
-            DateTimeOffset? absoluteExpiration = null)
+            DateTimeOffset? absoluteExpiration = null,
+            bool shouldInvalidateOnError = false)
         {
-            var fail = Observable.Defer(() => This.GetCreatedAt(key))
+            var fetch = Observable.Defer(() => This.GetCreatedAt(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
-                .SelectMany(_ => fetchFunc())
-                .Finally(() => This.Invalidate(key))
-                .Do(x => This.InsertObject(key, x, absoluteExpiration));
+                .SelectMany(async _ => {
+                    var ret = default(T);
+                    try {
+                        ret = await fetchFunc();
+                    } catch (Exception) {
+                        if (shouldInvalidateOnError) This.Invalidate(key);
+                        throw;
+                    }
+
+                    await This.Invalidate(key);
+                    await This.InsertObject(key, ret, absoluteExpiration);
+                    return ret;
+                });
 
             var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
                 .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
@@ -194,7 +207,7 @@ namespace Akavache
                 return x.Item2 ?
                     Observable.Return(x.Item1) :
                     Observable.Empty<T>();
-            }).Concat(fail).Multicast(new ReplaySubject<T>()).RefCount();
+            }).Concat(fetch).Multicast(new ReplaySubject<T>()).RefCount();
         }
 
         /// <summary>
