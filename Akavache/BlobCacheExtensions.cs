@@ -185,20 +185,12 @@ namespace Akavache
             var fetch = Observable.Defer(() => This.GetCreatedAt(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
-                .SelectMany(async _ => {
-                    var ret = default(T);
-                    try {
-                        ret = await fetchFunc();
-                    } catch (Exception) {
-                        if (shouldInvalidateOnError) This.Invalidate(key);
-                        throw;
-                    }
-
-                    await This.Invalidate(key);
-                    await This.InsertObject(key, ret, absoluteExpiration);
-                    return ret;
-                });
-
+                .SelectMany(_ => fetchFunc().Do(__ => {}, ex => {
+                    if (shouldInvalidateOnError) This.Invalidate(key);
+                }))
+                .SelectMany(x => This.Invalidate(key).Select(_ => x))
+                .SelectMany(x => This.InsertObject(key, x, absoluteExpiration).Select(_ => x));
+                
             var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
                 .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
 
