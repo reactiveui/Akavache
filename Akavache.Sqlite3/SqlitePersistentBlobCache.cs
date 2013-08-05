@@ -88,7 +88,7 @@ namespace Akavache.Sqlite3
                 return _inflightCache.Get(key)
                     .Select(x => x.Value)
                     .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
-                    .Finally(() => _inflightCache.Invalidate(key));
+                    .Finally(() => { lock(_inflightCache) { _inflightCache.Invalidate(key); } } );
             }
         }
 
@@ -111,7 +111,7 @@ namespace Akavache.Sqlite3
                     .Select(x => x.Expiration == DateTime.MaxValue ?
                         default(DateTimeOffset?) : new DateTimeOffset(x.Expiration, TimeSpan.Zero))
                     .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
-                    .Finally(() => _inflightCache.Invalidate(key));
+                    .Finally(() => { lock(_inflightCache) { _inflightCache.Invalidate(key); } } );
             }           
         }
 
