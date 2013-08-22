@@ -22,7 +22,6 @@
   <files>
     <file src="bin\Release\Net40\Akavache.Sqlite3*" target="lib\net40" />
     <file src="bin\Release\Net45\Akavache.Sqlite3_Net45*" target="lib\net45" />
-    <file src="bin\Release\WP8\Akavache.Sqlite3_WP8.*" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.Sqlite3_WinRT.*" target="lib\WinRT45" />
     <file src="sqlite3-hint.txt" target="readme.txt" />
   </files>
