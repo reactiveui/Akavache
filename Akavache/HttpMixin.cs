@@ -88,20 +88,13 @@ namespace Akavache
         {
             IObservable<WebResponse> request;
 
-            var hwr = WebRequest.Create(uri);
-            if (headers != null)
-            {
-                foreach (var x in headers)
-                {
-                    hwr.Headers[x.Key] = x.Value;
-                }
-            }
-
 #if !SILVERLIGHT && !WINRT
             if (RxApp.InUnitTestRunner())
             {
                 request = Observable.Defer(() =>
                 {
+                    var hwr = CreateWebRequest(uri, headers);
+
                     if (content == null)
                     {
                         return Observable.Start(() => hwr.GetResponse(), RxApp.TaskpoolScheduler);
@@ -120,6 +113,8 @@ namespace Akavache
             {
                 request = Observable.Defer(() =>
                 {
+                    var hwr = CreateWebRequest(uri, headers);
+
                     if (content == null)
                     {
                         return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
@@ -143,6 +138,19 @@ namespace Akavache
             }
 
             return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), RxApp.TaskpoolScheduler).Retry(retries);
+        }
+
+        static WebRequest CreateWebRequest(Uri uri, IDictionary<string, string> headers)
+        {
+            var hwr = WebRequest.Create(uri);
+            if (headers != null)
+            {
+                foreach (var x in headers)
+                {
+                    hwr.Headers[x.Key] = x.Value;
+                }
+            }
+            return hwr;
         }
     }
 }
