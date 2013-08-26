@@ -53,15 +53,22 @@ namespace SQLite
     public class SQLiteAsyncConnection
     {
         SQLiteConnectionString _connectionString;
+        KeyedOperationQueue _opQueue;
         SQLiteConnectionPool _pool;
         SQLiteOpenFlags _flags;
 
-        public SQLiteAsyncConnection (string databasePath, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false)
+        public SQLiteAsyncConnection (string databasePath, SQLiteConnectionPool pool, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false, IScheduler scheduler = null)
         {
             _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex | SQLiteOpenFlags.SharedCache);
 
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
-            _pool = new SQLiteConnectionPool(_connectionString, _flags);
+            _opQueue = new KeyedOperationQueue(scheduler ?? RxApp.TaskpoolScheduler);
+            _pool = pool;
+        }
+
+        SQLiteConnectionWithoutLock GetConnection ()
+        {
+            return _pool.GetConnection (_connectionString, _flags);
         }
 
         public IObservable<CreateTablesResult> CreateTableAsync<T> ()
@@ -106,8 +113,9 @@ namespace SQLite
 
         public IObservable<CreateTablesResult> CreateTablesAsync (params Type[] types)
         {
-            return _pool.EnqueueConnectionOp(conn => {
-                var result = new CreateTablesResult ();
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                CreateTablesResult result = new CreateTablesResult ();
+                var conn = GetConnection ();
 
                 foreach (Type type in types) {
                     int aResult = conn.CreateTable (type);
@@ -120,21 +128,24 @@ namespace SQLite
         public IObservable<int> DropTableAsync<T> ()
             where T : new ()
         {
-            return _pool.EnqueueConnectionOp(conn => {
-                return conn.DropTable<T>();
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
+                return conn.DropTable<T> ();
             });
         }
 
         public IObservable<int> InsertAsync (object item)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Insert (item);
             });
         }
 
         public IObservable<int> InsertAsync (object item, string extra, Type type)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Insert (item, extra, type);
             });
         }
@@ -142,14 +153,16 @@ namespace SQLite
 
         public IObservable<int> UpdateAsync (object item)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Update (item);
             });
         }
 
         public IObservable<int> DeleteAsync (object item)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Delete (item);
             });
         }
@@ -157,7 +170,8 @@ namespace SQLite
         public IObservable<T> GetAsync<T>(object pk)
             where T : new()
         {
-            return _pool.EnqueueConnectionOp<T>(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection();
                 return conn.Get<T>(pk);
             });
         }
@@ -165,7 +179,8 @@ namespace SQLite
         public IObservable<T> FindAsync<T> (object pk)
             where T : new ()
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Find<T> (pk);
             });
         }
@@ -173,7 +188,9 @@ namespace SQLite
         public IObservable<T> GetAsync<T> (Expression<Func<T, bool>> predicate)
             where T : new()
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () =>
+            {
+                var conn = GetConnection();
                 return conn.Get<T> (predicate);
             });
         }
@@ -181,33 +198,37 @@ namespace SQLite
         public IObservable<T> FindAsync<T> (Expression<Func<T, bool>> predicate)
             where T : new ()
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Find<T> (predicate);
             });
         }
 
         public IObservable<int> ExecuteAsync (string query, params object[] args)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Execute (query, args);
             });
         }
 
         public IObservable<int> InsertAllAsync (IEnumerable items)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.InsertAll (items);
             });
         }
 
-        public IObservable<Unit> RunInTransactionAsync(Action<SQLiteConnection> action)
+        public IObservable<Unit>RunInTransactionAsync(Action<SQLiteConnection> action)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = this.GetConnection();
+
                 conn.BeginTransaction();
                 try {
                     action(conn);
                     conn.Commit();
-                    return Unit.Default;
                 } catch (Exception) {
                     conn.Rollback();
                     throw;
@@ -215,9 +236,21 @@ namespace SQLite
             });
         }
 
+        public IAsyncTableQuery<T> Table<T> ()
+            where T : new ()
+        {
+            //
+            // This isn't async as the underlying connection doesn't go out to the database
+            // until the query is performed. The Async methods are on the query iteself.
+            //
+            var conn = GetConnection ();
+            return new AsyncTableQuery<T> (conn.Table<T> (), _opQueue, _connectionString);
+        }
+
         public IObservable<T> ExecuteScalarAsync<T> (string sql, params object[] args)
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 var command = conn.CreateCommand (sql, args);
                 return command.ExecuteScalar<T> ();
             });
@@ -226,14 +259,93 @@ namespace SQLite
         public IObservable<List<T>> QueryAsync<T> (string sql, params object[] args)
             where T : new ()
         {
-            return _pool.EnqueueConnectionOp(conn => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
+                var conn = GetConnection ();
                 return conn.Query<T> (sql, args);
             });
         }
 
         public IObservable<Unit> Shutdown()
         {
-            return _pool.Reset();
+            return _opQueue.ShutdownQueue();
+        }
+
+        //
+        // TODO: Bind to AsyncConnection.GetConnection instead so that delayed
+        // execution can still work after a Pool.Reset.
+        //
+        class AsyncTableQuery<T> : IAsyncTableQuery<T> where T : new ()
+        {
+            TableQuery<T> _innerQuery;
+            KeyedOperationQueue _opQueue;
+            SQLiteConnectionString _connString;
+
+            public AsyncTableQuery (TableQuery<T> innerQuery, KeyedOperationQueue opQueue, SQLiteConnectionString connString)
+            {
+                _innerQuery = innerQuery;
+                _opQueue = opQueue;
+                _connString = connString;
+            }
+
+            public IAsyncTableQuery<T> Where (Expression<Func<T, bool>> predExpr)
+            {
+                return new AsyncTableQuery<T> (_innerQuery.Where (predExpr), _opQueue, _connString);
+            }
+
+            public IAsyncTableQuery<T> Skip (int n)
+            {
+                return new AsyncTableQuery<T> (_innerQuery.Skip (n), _opQueue, _connString);
+            }
+
+            public IAsyncTableQuery<T> Take (int n)
+            {
+                return new AsyncTableQuery<T> (_innerQuery.Take (n), _opQueue, _connString);
+            }
+
+            public IAsyncTableQuery<T> OrderBy<U> (Expression<Func<T, U>> orderExpr)
+            {
+                return new AsyncTableQuery<T> (_innerQuery.OrderBy<U> (orderExpr), _opQueue, _connString);
+            }
+
+            public IAsyncTableQuery<T> OrderByDescending<U> (Expression<Func<T, U>> orderExpr)
+            {
+                return new AsyncTableQuery<T> (_innerQuery.OrderByDescending<U> (orderExpr), _opQueue, _connString);
+            }
+
+            public IObservable<List<T>> ToListAsync ()
+            {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
+                    return _innerQuery.ToList ();
+                });
+            }
+
+            public IObservable<int> CountAsync ()
+            {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
+                    return _innerQuery.Count ();
+                });
+            }
+
+            public IObservable<T> ElementAtAsync (int index)
+            {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
+                    return _innerQuery.ElementAt (index);
+                });
+            }
+
+            public IObservable<T> FirstAsync ()
+            {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
+                    return _innerQuery.First ();
+                });
+            }
+
+            public IObservable<T> FirstOrDefaultAsync ()
+            {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
+                    return _innerQuery.FirstOrDefault ();
+                });
+            }
         }
     }
 
@@ -249,18 +361,18 @@ namespace SQLite
 
     public class SQLiteConnectionPool
     {
+        readonly List<Entry> connections;
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
 
-        List<Entry> connections;
         KeyedOperationQueue opQueue;
         int nextConnectionToUseAtomic = 0;
 
-        public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount = null)
+        public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount)
         {
             this.connectionCount = connectionCount ?? 6;
             connInfo = Tuple.Create(connectionString, flags);
-            Reset().Wait();
+            Reset();
         }
 
         public IObservable<T> EnqueueConnectionOp<T>(Func<SQLiteConnection, T> operation)
@@ -268,8 +380,7 @@ namespace SQLite
             var idx = Interlocked.Increment(ref nextConnectionToUseAtomic) % connectionCount;
             var conn = connections[idx];
 
-            return opQueue.EnqueueOperation(idx.ToString(), () => 
-            {
+            opQueue.EnqueueOperation(idx.ToString(), () => {
                 return operation(conn.Connection);
             });
         }
@@ -277,29 +388,23 @@ namespace SQLite
         /// <summary>
         /// Closes all connections managed by this pool.
         /// </summary>
-        public IObservable<Unit> Reset ()
+        public void Reset ()
         {
-            var shutdownQueue = Observable.Return(Unit.Default);
-
             if (opQueue != null)
             {
-                shutdownQueue = opQueue.ShutdownQueue().Finally(() => 
+                opQueue.ShutdownQueue();
+
+                foreach (var entry in connections) 
                 {
-                    foreach (var entry in connections) 
-                    {
-                        entry.OnApplicationSuspended ();
-                    }
-                });
+                    entry.OnApplicationSuspended ();
+                }
             }
 
-            return shutdownQueue.Finally(() => 
-            {
-                connections = Enumerable.Range(0, connectionCount)
-                    .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
-                    .ToList();
+            connections = Enumerable.Range(0, connectionCount.Value)
+                .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
+                .ToList();
 
-                opQueue = new KeyedOperationQueue();
-            });
+            opQueue = new KeyedOperationQueue();
         }
 
         /// <summary>
@@ -308,7 +413,7 @@ namespace SQLite
         /// <remarks>Behaviour here is to close any open connections.</remarks>
         public void ApplicationSuspended ()
         {
-            Reset().Wait();
+            Reset ();
         }
 
         class Entry
