@@ -361,6 +361,61 @@ namespace SQLite
 
     public class SQLiteConnectionPool
     {
+        readonly List<Entry> connections;
+        readonly int connectionCount;
+        readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
+
+        KeyedOperationQueue opQueue;
+        int nextConnectionToUseAtomic = 0;
+
+        public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount)
+        {
+            this.connectionCount = connectionCount ?? 6;
+            connInfo = Tuple.Create(connectionString, flags);
+            Reset();
+        }
+
+        public IObservable<T> EnqueueConnectionOp<T>(Func<SQLiteConnection, T> operation)
+        {
+            var idx = Interlocked.Increment(ref nextConnectionToUseAtomic) % connectionCount;
+            var conn = connections[idx];
+
+            opQueue.EnqueueOperation(idx.ToString(), () => {
+                return operation(conn.Connection);
+            });
+        }
+
+        /// <summary>
+        /// Closes all connections managed by this pool.
+        /// </summary>
+        public void Reset ()
+        {
+            if (opQueue != null)
+            {
+                opQueue.ShutdownQueue();
+
+                foreach (var entry in connections) 
+                {
+                    entry.OnApplicationSuspended ();
+                }
+            }
+
+            connections = Enumerable.Range(0, connectionCount.Value)
+                .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
+                .ToList();
+
+            opQueue = new KeyedOperationQueue();
+        }
+
+        /// <summary>
+        /// Call this method when the application is suspended.
+        /// </summary>
+        /// <remarks>Behaviour here is to close any open connections.</remarks>
+        public void ApplicationSuspended ()
+        {
+            Reset ();
+        }
+
         class Entry
         {
             public SQLiteConnectionString ConnectionString { get; private set; }
@@ -377,47 +432,6 @@ namespace SQLite
                 Connection.Dispose ();
                 Connection = null;
             }
-        }
-
-        readonly Dictionary<string, Entry> _entries = new Dictionary<string, Entry> ();
-        readonly object _entriesLock = new object ();
-
-        public SQLiteConnectionWithoutLock GetConnection (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
-        {
-            lock (_entriesLock) {
-                Entry entry;
-                string key = connectionString.ConnectionString;
-
-                if (!_entries.TryGetValue (key, out entry)) {
-                    entry = new Entry (connectionString, flags);
-                    _entries[key] = entry;
-                }
-
-                return entry.Connection;
-            }
-        }
-
-        /// <summary>
-        /// Closes all connections managed by this pool.
-        /// </summary>
-        public void Reset ()
-        {
-            lock (_entriesLock) {
-                foreach (var entry in _entries.Values) {
-                    entry.OnApplicationSuspended ();
-                }
-
-                _entries.Clear ();
-            }
-        }
-
-        /// <summary>
-        /// Call this method when the application is suspended.
-        /// </summary>
-        /// <remarks>Behaviour here is to close any open connections.</remarks>
-        public void ApplicationSuspended ()
-        {
-            Reset ();
         }
     }
 
