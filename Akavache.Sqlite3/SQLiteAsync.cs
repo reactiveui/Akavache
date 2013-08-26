@@ -113,7 +113,7 @@ namespace SQLite
 
         public IObservable<CreateTablesResult> CreateTablesAsync (params Type[] types)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 CreateTablesResult result = new CreateTablesResult ();
                 var conn = GetConnection ();
 
@@ -128,7 +128,7 @@ namespace SQLite
         public IObservable<int> DropTableAsync<T> ()
             where T : new ()
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.DropTable<T> ();
             });
@@ -136,7 +136,7 @@ namespace SQLite
 
         public IObservable<int> InsertAsync (object item)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Insert (item);
             });
@@ -144,7 +144,7 @@ namespace SQLite
 
         public IObservable<int> InsertAsync (object item, string extra, Type type)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Insert (item, extra, type);
             });
@@ -153,7 +153,7 @@ namespace SQLite
 
         public IObservable<int> UpdateAsync (object item)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Update (item);
             });
@@ -161,7 +161,7 @@ namespace SQLite
 
         public IObservable<int> DeleteAsync (object item)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Delete (item);
             });
@@ -170,7 +170,7 @@ namespace SQLite
         public IObservable<T> GetAsync<T>(object pk)
             where T : new()
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection();
                 return conn.Get<T>(pk);
             });
@@ -179,7 +179,7 @@ namespace SQLite
         public IObservable<T> FindAsync<T> (object pk)
             where T : new ()
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Find<T> (pk);
             });
@@ -188,7 +188,7 @@ namespace SQLite
         public IObservable<T> GetAsync<T> (Expression<Func<T, bool>> predicate)
             where T : new()
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () =>
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () =>
             {
                 var conn = GetConnection();
                 return conn.Get<T> (predicate);
@@ -198,7 +198,7 @@ namespace SQLite
         public IObservable<T> FindAsync<T> (Expression<Func<T, bool>> predicate)
             where T : new ()
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Find<T> (predicate);
             });
@@ -206,7 +206,7 @@ namespace SQLite
 
         public IObservable<int> ExecuteAsync (string query, params object[] args)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Execute (query, args);
             });
@@ -214,7 +214,7 @@ namespace SQLite
 
         public IObservable<int> InsertAllAsync (IEnumerable items)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.InsertAll (items);
             });
@@ -222,7 +222,7 @@ namespace SQLite
 
         public IObservable<Unit>RunInTransactionAsync(Action<SQLiteConnection> action)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = this.GetConnection();
 
                 conn.BeginTransaction();
@@ -249,7 +249,7 @@ namespace SQLite
 
         public IObservable<T> ExecuteScalarAsync<T> (string sql, params object[] args)
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 var command = conn.CreateCommand (sql, args);
                 return command.ExecuteScalar<T> ();
@@ -259,7 +259,7 @@ namespace SQLite
         public IObservable<List<T>> QueryAsync<T> (string sql, params object[] args)
             where T : new ()
         {
-            return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+            return _opQueue.EnqueueOperation(_connectionString.DatabasePath, () => {
                 var conn = GetConnection ();
                 return conn.Query<T> (sql, args);
             });
@@ -314,35 +314,35 @@ namespace SQLite
 
             public IObservable<List<T>> ToListAsync ()
             {
-                return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
                     return _innerQuery.ToList ();
                 });
             }
 
             public IObservable<int> CountAsync ()
             {
-                return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
                     return _innerQuery.Count ();
                 });
             }
 
             public IObservable<T> ElementAtAsync (int index)
             {
-                return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
                     return _innerQuery.ElementAt (index);
                 });
             }
 
             public IObservable<T> FirstAsync ()
             {
-                return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
                     return _innerQuery.First ();
                 });
             }
 
             public IObservable<T> FirstOrDefaultAsync ()
             {
-                return _opQueue.EnqueueOperation(Guid.NewGuid().ToString(), () => {
+                return _opQueue.EnqueueOperation(_connString.DatabasePath, () => {
                     return _innerQuery.FirstOrDefault ();
                 });
             }
