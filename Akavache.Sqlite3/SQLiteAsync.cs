@@ -56,12 +56,12 @@ namespace SQLite
         SQLiteConnectionPool _pool;
         SQLiteOpenFlags _flags;
 
-        public SQLiteAsyncConnection (string databasePath, SQLiteConnectionPool pool, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false)
+        public SQLiteAsyncConnection (string databasePath, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false)
         {
             _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex | SQLiteOpenFlags.SharedCache);
 
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
-            _pool = pool;
+            _pool = new SQLiteConnectionPool(_connectionString, _flags);
         }
 
         public IObservable<CreateTablesResult> CreateTableAsync<T> ()
@@ -249,14 +249,14 @@ namespace SQLite
 
     public class SQLiteConnectionPool
     {
-        readonly List<Entry> connections;
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
 
+        List<Entry> connections;
         KeyedOperationQueue opQueue;
         int nextConnectionToUseAtomic = 0;
 
-        public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount)
+        public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount = null)
         {
             this.connectionCount = connectionCount ?? 6;
             connInfo = Tuple.Create(connectionString, flags);
@@ -294,7 +294,7 @@ namespace SQLite
 
             return shutdownQueue.Finally(() => 
             {
-                connections = Enumerable.Range(0, connectionCount.Value)
+                connections = Enumerable.Range(0, connectionCount)
                     .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
                     .ToList();
 
