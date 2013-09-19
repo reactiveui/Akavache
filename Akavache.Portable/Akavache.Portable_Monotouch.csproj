@@ -40,6 +40,12 @@
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
+    </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
     </Reference>
@@ -54,12 +60,6 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
