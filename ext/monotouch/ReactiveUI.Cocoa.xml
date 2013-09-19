@@ -77,6 +77,62 @@
             Returns the current orientation of the device on iOS.
             </summary>
         </member>
+        <member name="F:ReactiveUI.Cocoa.UIKitObservableForPropertyBase.config">
+            <summary>
+            Configuration map
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.UIKitObservableForPropertyBase.Register(System.Type,System.String,System.Int32,System.Func{MonoTouch.Foundation.NSObject,System.String,System.IObservable{ReactiveUI.IObservedChange{System.Object,System.Object}}})">
+            <summary>
+            Registers an observable factory for the specified type and property.
+            </summary>
+            <param name="type">Type.</param>
+            <param name="property">Property.</param>
+            <param name="createObservable">Create observable.</param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.UIKitObservableForPropertyBase.ObservableFromUIControlEvent(MonoTouch.Foundation.NSObject,System.String,MonoTouch.UIKit.UIControlEvent)">
+            <summary>
+            Creates an Observable for a UIControl Event
+            </summary>
+            <returns>An observable</returns>
+            <param name="sender">The sender</param>
+            <param name="propertyName">The property name </param>
+            <param name="evt">The control event to listen for</param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.UIKitObservableForPropertyBase.ObservableFromNotification(MonoTouch.Foundation.NSObject,System.String,MonoTouch.Foundation.NSString)">
+            <summary>
+            Creates an Observable for a NSNotificationCenter notification
+            </summary>
+            <returns>The from notification.</returns>
+            <param name="sender">Sender.</param>
+            <param name="propertyName">Property name.</param>
+            <param name="notification">Notification.</param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.UIKitObservableForPropertyBase.ObservableFromEvent(MonoTouch.Foundation.NSObject,System.String,System.String)">
+            <summary>
+            Creates an Observable for a NSNotificationCenter notification
+            </summary>
+            <returns>The from notification.</returns>
+            <param name="sender">Sender.</param>
+            <param name="propertyName">Property name.</param>
+            <param name="notification">Notification.</param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.FlexibleCommandBinder.Register(System.Type,System.Int32,System.Func{System.Windows.Input.ICommand,System.Object,System.IObservable{System.Object},System.IDisposable})">
+            <summary>
+            Registers an observable factory for the specified type and property.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.FlexibleCommandBinder.ForEvent(System.Windows.Input.ICommand,System.Object,System.IObservable{System.Object},System.String,System.String)">
+            <summary>
+            Creates a commands binding from event and a property
+            </summary>
+            <returns>The binding from event.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.FlexibleCommandBinder.ForTargetAction(System.Windows.Input.ICommand,System.Object,System.IObservable{System.Object},System.String)">
+            <summary>
+            Creates a commands binding from event and a property
+            </summary>
+        </member>
         <member name="T:ReactiveUI.Cocoa.ReactiveView">
             <summary>
             This is an View that is both an NSView and has ReactiveObject powers
@@ -195,6 +251,122 @@
             </param>
         </member>
         <member name="M:ReactiveUI.Cocoa.ReactiveViewController.RaisePropertyChanging(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewCell.Changing">
+            <summary>
+            Represents an Observable that fires *before* a property is about to
+            be changed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewCell.Changed">
+            <summary>
+            Represents an Observable that fires *after* a property has changed.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewCell.SuppressChangeNotifications">
+            <summary>
+            When this method is called, an object will not fire change
+            notifications (neither traditional nor Observable notifications)
+            until the return value is disposed.
+            </summary>
+            <returns>An object that, when disposed, reenables change
+            notifications.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewCell.RaiseAndSetIfChanged``1(``0@,``0,System.String)">
+            <summary>
+            RaiseAndSetIfChanged fully implements a Setter for a read-write
+            property on a ReactiveObject, using CallerMemberName to raise the notification
+            and the ref to the backing field to set the property.
+            </summary>
+            <typeparam name="TObj">The type of the This.</typeparam>
+            <typeparam name="TRet">The type of the return value.</typeparam>
+            <param name="This">The <see cref="T:ReactiveUI.ReactiveObject" /> raising the notification.</param>
+            <param name="backingField">A Reference to the backing field for this
+            property.</param>
+            <param name="newValue">The new value.</param>
+            <param name="propertyName">The name of the property, usually
+            automatically provided through the CallerMemberName attribute.</param>
+            <returns>The newly set value, normally discarded.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewCell.RaisePropertyChanged(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewCell.RaisePropertyChanging(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewController.Changing">
+            <summary>
+            Represents an Observable that fires *before* a property is about to
+            be changed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewController.Changed">
+            <summary>
+            Represents an Observable that fires *after* a property has changed.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewController.SuppressChangeNotifications">
+            <summary>
+            When this method is called, an object will not fire change
+            notifications (neither traditional nor Observable notifications)
+            until the return value is disposed.
+            </summary>
+            <returns>An object that, when disposed, reenables change
+            notifications.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewController.RaiseAndSetIfChanged``1(``0@,``0,System.String)">
+            <summary>
+            RaiseAndSetIfChanged fully implements a Setter for a read-write
+            property on a ReactiveObject, using CallerMemberName to raise the notification
+            and the ref to the backing field to set the property.
+            </summary>
+            <typeparam name="TObj">The type of the This.</typeparam>
+            <typeparam name="TRet">The type of the return value.</typeparam>
+            <param name="This">The <see cref="T:ReactiveUI.ReactiveObject" /> raising the notification.</param>
+            <param name="backingField">A Reference to the backing field for this
+            property.</param>
+            <param name="newValue">The new value.</param>
+            <param name="propertyName">The name of the property, usually
+            automatically provided through the CallerMemberName attribute.</param>
+            <returns>The newly set value, normally discarded.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewController.RaisePropertyChanged(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewController.RaisePropertyChanging(System.String)">
             <summary>
             Use this method in your ReactiveObject classes when creating custom
             properties where raiseAndSetIfChanged doesn't suffice.
