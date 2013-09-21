@@ -283,17 +283,19 @@ namespace SQLite
 
             if (opQueue != null)
             {
-                shutdownQueue = opQueue.ShutdownQueue().Finally(() => 
-                {
-                    foreach (var entry in connections) 
-                    {
-                        entry.OnApplicationSuspended ();
-                    }
-                });
+                shutdownQueue = opQueue.ShutdownQueue();
             }
 
             return shutdownQueue.Finally(() => 
             {
+                if (connections != null)
+                {
+                    foreach(var v in connections.Where(x => x != null && x.Connection != null))
+                    {
+                        v.Connection.Dispose();
+                    }
+                }
+
                 connections = Enumerable.Range(0, connectionCount)
                     .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
                     .ToList();
