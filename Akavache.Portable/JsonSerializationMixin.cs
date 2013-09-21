@@ -44,9 +44,9 @@ namespace Akavache
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) return objCache.GetObjectAsync<T>(key, noTypePrefix);
+            var theKey = noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T));
 
-            return This.GetAsync(noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T)))
-                .SelectMany(DeserializeObject<T>);
+            return This.GetAsync(theKey).SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>

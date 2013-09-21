@@ -337,6 +337,52 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void KeysByTypeTest()
+        {
+            string path;
+            var input = new[] 
+            { 
+                "Foo",
+                "Bar",
+                "Baz"
+            };
+
+            var inputItems = input.Select(x => new UserObject() { Name = x, Bio = "A thing", }).ToArray();
+            var fixture = default(IBlobCache);
+
+            using (Utility.WithEmptyDirectory(out path))
+            using (fixture = CreateBlobCache(path))
+            {
+                foreach(var item in input.Zip(inputItems, (Key, Value) => new { Key, Value }))
+                {
+                    fixture.InsertObject(item.Key, item.Value).Wait();
+                }
+
+                var allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(input.Length, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length, allObjectsCount);
+
+                fixture.InsertObject("Quux", new UserModel(null));
+
+                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(input.Length + 1, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length, allObjectsCount);
+
+                fixture.InvalidateObject<UserObject>("Foo").Wait();
+
+                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(input.Length + 1 - 1, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length - 1, allObjectsCount);
+
+                fixture.InvalidateAllObjects<UserObject>().Wait();
+
+                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(1, fixture.GetAllKeys().Count());
+                Assert.Equal(0, allObjectsCount);
+            }
+        }
+
+        [Fact]
         public void GetAllKeysSmokeTest()
         {
             string path;
@@ -370,6 +416,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
+            BlobCache.ApplicationName = "TestRunner";
             return new TEncryptedBlobCache(path);
         }
     }
@@ -378,6 +425,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
+            BlobCache.ApplicationName = "TestRunner";
             return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
         }
     }
@@ -386,7 +434,17 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
+            BlobCache.ApplicationName = "TestRunner";
             return new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db"));
+        }
+    }
+
+    public class TestBlobCacheFixture : BlobCacheExtensionsFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            BlobCache.ApplicationName = "TestRunner";
+            return new TestBlobCache();
         }
     }
 }
