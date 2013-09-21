@@ -58,7 +58,7 @@ namespace SQLite
 
         public SQLiteAsyncConnection (string databasePath, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false)
         {
-            _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex | SQLiteOpenFlags.SharedCache);
+            _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex | SQLiteOpenFlags.SharedCache);
 
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
             _pool = new SQLiteConnectionPool(_connectionString, _flags);
