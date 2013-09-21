@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Akavache.Sqlite3;
@@ -12,6 +13,7 @@ using ReactiveUI.Xaml;
 using ReactiveUI.Testing;
 using Xunit;
 using System.Threading;
+using System.Reactive.Concurrency;
 
 namespace Akavache.Tests
 {
@@ -379,6 +381,8 @@ namespace Akavache.Tests
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
                 Assert.Equal(1, fixture.GetAllKeys().Count());
                 Assert.Equal(0, allObjectsCount);
+
+                fixture.Shutdown.Wait();
             }
         }
 
@@ -417,7 +421,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new TEncryptedBlobCache(path);
+            return new BlockingDisposeCache(new TEncryptedBlobCache(path));
         }
     }
 
@@ -426,7 +430,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
+            return new BlockingDisposeObjectCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -435,7 +439,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db"));
+            return new BlockingDisposeObjectCache(new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -445,6 +449,96 @@ namespace Akavache.Tests
         {
             BlobCache.ApplicationName = "TestRunner";
             return new TestBlobCache();
+        }
+    }
+
+    class BlockingDisposeCache : IBlobCache
+    {
+        protected readonly IBlobCache _inner;
+        public BlockingDisposeCache(IBlobCache cache)
+        {
+            _inner = cache;
+        }
+
+        public virtual void Dispose()
+        {
+            _inner.Dispose();
+            _inner.Shutdown.Wait();
+        }
+
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
+        {
+            return _inner.Insert(key, data, absoluteExpiration);
+        }
+
+        public IObservable<byte[]> GetAsync(string key)
+        {
+            return _inner.GetAsync(key);
+        }
+
+        public IEnumerable<string> GetAllKeys()
+        {
+            return _inner.GetAllKeys();
+        }
+
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key)
+        {
+            return _inner.GetCreatedAt(key);
+        }
+
+        public IObservable<Unit> Flush()
+        {
+            return _inner.Flush();
+        }
+
+        public IObservable<Unit> Invalidate(string key)
+        {
+            return _inner.Invalidate(key);
+        }
+
+        public IObservable<Unit> InvalidateAll()
+        {
+            return _inner.InvalidateAll();
+        }
+
+        public IObservable<Unit> Shutdown
+        {
+            get { return _inner.Shutdown; }
+        }
+
+        public IScheduler Scheduler
+        {
+            get { return _inner.Scheduler; }
+        }
+    }
+
+    class BlockingDisposeObjectCache : BlockingDisposeCache, IObjectBlobCache
+    {
+        public BlockingDisposeObjectCache(IObjectBlobCache cache) : base(cache) { }
+
+        public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
+        {
+            return ((IObjectBlobCache)_inner).InsertObject(key, value, absoluteExpiration);
+        }
+
+        public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
+        {
+            return ((IObjectBlobCache)_inner).GetObjectAsync<T>(key, noTypePrefix);
+        }
+
+        public IObservable<IEnumerable<T>> GetAllObjects<T>()
+        {
+            return ((IObjectBlobCache)_inner).GetAllObjects<T>();
+        }
+
+        public IObservable<Unit> InvalidateObject<T>(string key)
+        {
+            return ((IObjectBlobCache)_inner).InvalidateObject<T>(key);
+        }
+
+        public IObservable<Unit> InvalidateAllObjects<T>()
+        {
+            return ((IObjectBlobCache)_inner).InvalidateAllObjects<T>();
         }
     }
 }
