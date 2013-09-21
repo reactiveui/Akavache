@@ -37,7 +37,7 @@ namespace Akavache.Sqlite3
 
             _inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, _) =>
             {
-                return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE Key = ? LIMIT 1;", key)
+                return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE Key=? LIMIT 1;", key)
                     .SelectMany(x =>
                     {
                         return (x.Count == 1) ?
@@ -175,7 +175,7 @@ namespace Akavache.Sqlite3
         {
             if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
 
-            return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
+            return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName=?;", typeof(T).FullName)
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
                 .SelectMany(DeserializeObject<T>)
@@ -191,7 +191,7 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
-            return _connection.ExecuteAsync("DELETE * FROM CacheElement WHERE TypeName = ?;", typeof(T).FullName)
+            return _connection.ExecuteAsync("DELETE FROM CacheElement WHERE TypeName=?;", typeof(T).FullName)
                 .Select(_ => Unit.Default);
         }
 
