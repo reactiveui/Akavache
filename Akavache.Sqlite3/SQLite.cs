@@ -44,14 +44,9 @@ namespace SQLite
 	{
 		public SQLite3.Result Result { get; private set; }
 
-		protected SQLiteException (SQLite3.Result r,string message) : base(message)
+		public SQLiteException (SQLite3.Result r, string message) : base(message)
 		{
 			Result = r;
-		}
-
-		public static SQLiteException New (SQLite3.Result r, string message)
-		{
-			return new SQLiteException (r, message);
 		}
 	}
 
@@ -127,7 +122,7 @@ namespace SQLite
 
 			Handle = handle;
 			if (r != SQLite3.Result.OK) {
-				throw SQLiteException.New (r, String.Format ("Could not open database file: {0} ({1})", DatabasePath, r));
+				throw new SQLiteException (r, String.Format ("Could not open database file: {0} ({1})", DatabasePath, r));
 			}
 			_open = true;
 
@@ -389,7 +384,7 @@ namespace SQLite
 		public SQLiteCommand CreateCommand (string cmdText, params object[] ps)
 		{
 			if (!_open) {
-				throw SQLiteException.New (SQLite3.Result.Error, "Cannot create commands from unopened database");
+				throw new SQLiteException (SQLite3.Result.Error, "Cannot create commands from unopened database");
 			} else {
 				var cmd = NewCommand ();
 				cmd.CommandText = cmdText;
@@ -1084,7 +1079,7 @@ namespace SQLite
 					var r = SQLite3.Close(Handle);
 					if (r != SQLite3.Result.OK) {
 						string msg = SQLite3.GetErrmsg(Handle);
-						throw SQLiteException.New(r, msg);
+						throw new SQLiteException(r, msg);
 					}
 				}
 				finally {
@@ -1543,9 +1538,9 @@ namespace SQLite
 				return rowsAffected;
 			} else if (r == SQLite3.Result.Error) {
 				string msg = SQLite3.GetErrmsg (_conn.Handle);
-				throw SQLiteException.New (r, msg);
+				throw new SQLiteException (r, msg);
 			} else {
-				throw SQLiteException.New (r, r.ToString ());
+				throw new SQLiteException (r, r.ToString ());
 			}
 		}
 
@@ -1846,10 +1841,10 @@ namespace SQLite
 			} else if (r == SQLite3.Result.Error) {
 				string msg = SQLite3.GetErrmsg (Connection.Handle);
 				SQLite3.Reset (Statement);
-				throw SQLiteException.New (r, msg);
+				throw new SQLiteException (r, msg);
 			} else {
 				SQLite3.Reset (Statement);
-				throw SQLiteException.New (r, r.ToString ());
+				throw new SQLiteException (r, r.ToString ());
 			}
 		}
 
@@ -2321,6 +2316,12 @@ namespace SQLite
 			Serialized = 3
 		}
 
+        public static void Throw(IntPtr db, Result r)
+        {
+            if (r == Result.OK) return;
+            throw new SQLiteException(r, GetErrmsg(db));
+        }
+
 #if !USE_CSHARP_SQLITE
 		[DllImport("sqlite3", EntryPoint = "sqlite3_open_v2", CallingConvention = CallingConvention.Cdecl)]
 		public static extern Result Open(byte[] filename, out IntPtr db, int flags, IntPtr zvfs);
@@ -2345,7 +2346,7 @@ namespace SQLite
 			IntPtr stmt;
 			var r = Prepare2 (db, query, query.Length, out stmt, IntPtr.Zero);
 			if (r != Result.OK) {
-				throw SQLiteException.New (r, GetErrmsg (db));
+				throw new SQLiteException (r, GetErrmsg (db));
 			}
 			return stmt;
 		}
@@ -2474,7 +2475,7 @@ namespace SQLite
 			var r = Sqlite3.sqlite3_prepare_v2(db, query, query.Length, ref stmt, 0);
 			if (r != 0)
 			{
-				throw SQLiteException.New((Result)r, GetErrmsg(db));
+				throw new SQLiteException((Result)r, GetErrmsg(db));
 			}
 			return stmt;
 		}
