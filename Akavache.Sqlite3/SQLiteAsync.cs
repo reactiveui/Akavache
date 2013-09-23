@@ -233,7 +233,7 @@ namespace SQLite
 
         public IObservable<Unit> Shutdown()
         {
-            return _pool.Reset();
+            return _pool.Reset(false);
         }
     }
 
@@ -247,7 +247,7 @@ namespace SQLite
         }
     }
 
-    internal class SQLiteConnectionPool
+    internal class SQLiteConnectionPool : IDisposable
     {
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
@@ -268,6 +268,11 @@ namespace SQLite
             var idx = Interlocked.Increment(ref nextConnectionToUseAtomic) % connectionCount;
             var conn = connections[idx];
 
+            if (connections == null)
+            {
+                Reset(true).Wait();
+            }
+
             return opQueue.EnqueueOperation(idx.ToString(), () => 
             {
                 return operation(conn.Connection);
@@ -277,7 +282,7 @@ namespace SQLite
         /// <summary>
         /// Closes all connections managed by this pool.
         /// </summary>
-        public IObservable<Unit> Reset ()
+        public IObservable<Unit> Reset (bool shouldReopen = true)
         {
             var shutdownQueue = Observable.Return(Unit.Default);
 
@@ -292,25 +297,26 @@ namespace SQLite
                 {
                     foreach(var v in connections.Where(x => x != null && x.Connection != null))
                     {
-                        v.Connection.Dispose();
+                        v.OnApplicationSuspended();
                     }
+
+                    connections = null;
                 }
 
-                connections = Enumerable.Range(0, connectionCount)
-                    .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
-                    .ToList();
+                if (shouldReopen)
+                {
+                    connections = Enumerable.Range(0, connectionCount)
+                        .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
+                        .ToList();
 
-                opQueue = new KeyedOperationQueue();
+                    opQueue = new KeyedOperationQueue();
+                }
             });
         }
 
-        /// <summary>
-        /// Call this method when the application is suspended.
-        /// </summary>
-        /// <remarks>Behaviour here is to close any open connections.</remarks>
-        public void ApplicationSuspended ()
+        public void Dispose()
         {
-            Reset().Wait();
+            Reset(false).Wait();
         }
 
         class Entry

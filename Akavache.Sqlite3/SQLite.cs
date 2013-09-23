@@ -2316,10 +2316,12 @@ namespace SQLite
 			Serialized = 3
 		}
 
-        public static void Throw(IntPtr db, Result r)
+        public static void Throw(IntPtr db, Result? r = null)
         {
+            r = r ?? LastErrorIfThereWasOne(db);
+
             if (r == Result.OK) return;
-            throw new SQLiteException(r, GetErrmsg(db));
+            throw new SQLiteException(r.Value, GetErrmsg(db));
         }
 
 #if !USE_CSHARP_SQLITE
@@ -2365,6 +2367,9 @@ namespace SQLite
 
 		[DllImport("sqlite3", EntryPoint = "sqlite3_errmsg16", CallingConvention=CallingConvention.Cdecl)]
 		public static extern IntPtr Errmsg (IntPtr db);
+
+		[DllImport("sqlite3", EntryPoint = "sqlite3_errcode", CallingConvention=CallingConvention.Cdecl)]
+		public static extern Result LastErrorIfThereWasOne (IntPtr db);
 
 		public static string GetErrmsg (IntPtr db)
 		{
