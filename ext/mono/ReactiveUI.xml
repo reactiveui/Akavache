@@ -575,62 +575,33 @@
             the collection or any of its items have changed, in any way".
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.ItemsAdded">
+        <member name="T:ReactiveUI.IReactiveCollection`1">
             <summary>
-            Fires when items are added to the collection, once per item added.
-            Functions that add multiple items such AddRange should fire this
-            multiple times. The object provided is the item that was added.
+            IReactiveCollection of T is the typed version of IReactiveCollection and
+            adds type-specified versions of Observables
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.BeforeItemsAdded">
+        <member name="T:ReactiveUI.IReactiveNotifyCollectionItemChanged">
             <summary>
-            Fires before an item is going to be added to the collection.
+            IReactiveNotifyCollectionItemChanged provides notifications for collection item updates, ie when an object in
+            a collection changes.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.ItemsRemoved">
-            <summary>
-            Fires once an item has been removed from a collection, providing the
-            item that was removed.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.IReactiveCollection.BeforeItemsRemoved">
-            <summary>
-            Fires before an item will be removed from a collection, providing
-            the item that will be removed.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.IReactiveCollection.CountChanged">
-            <summary>
-            Fires whenever the number of items in a collection has changed,
-            providing the new Count.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.IReactiveCollection.CountChanging">
-            <summary>
-            Fires before a collection is about to change, providing the previous
-            Count.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.IReactiveCollection.IsEmptyChanged">
-            <summary>
-            Fires when a collection becomes or stops being empty.
-            </summary>
-        </member>
-        <member name="P:ReactiveUI.IReactiveCollection.ItemChanging">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionItemChanged.ItemChanging">
             <summary>
             Provides Item Changing notifications for any item in collection that
             implements IReactiveNotifyPropertyChanged. This is only enabled when
             ChangeTrackingEnabled is set to True.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.ItemChanged">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionItemChanged.ItemChanged">
             <summary>
             Provides Item Changed notifications for any item in collection that
             implements IReactiveNotifyPropertyChanged. This is only enabled when
             ChangeTrackingEnabled is set to True.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.ChangeTrackingEnabled">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionItemChanged.ChangeTrackingEnabled">
             <summary>
             Enables the ItemChanging and ItemChanged properties; when this is
             enabled, whenever a property on any object implementing
@@ -638,19 +609,83 @@
             rebroadcast through ItemChanging/ItemChanged.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.Changing">
+        <member name="T:ReactiveUI.IReactiveNotifyCollectionItemChanged`1">
+            <summary>
+            IReactiveNotifyCollectionItemChanged of T is the typed version of IReactiveNotifyCollectionItemChanged and
+            adds type-specified versions of Observables
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionItemChanged`1.ItemChanging">
+            <summary>
+            Provides Item Changing notifications for any item in collection that
+            implements IReactiveNotifyPropertyChanged. This is only enabled when
+            ChangeTrackingEnabled is set to True.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionItemChanged`1.ItemChanged">
+            <summary>
+            Provides Item Changed notifications for any item in collection that
+            implements IReactiveNotifyPropertyChanged. This is only enabled when
+            ChangeTrackingEnabled is set to True.
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.IReactiveNotifyCollectionChanged">
+            <summary>
+            IReactiveCollection provides notifications when the contents
+            of collection are changed (items are added/removed/moved).
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.ItemsAdded">
+            <summary>
+            Fires when items are added to the collection, once per item added.
+            Functions that add multiple items such AddRange should fire this
+            multiple times. The object provided is the item that was added.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.BeforeItemsAdded">
+            <summary>
+            Fires before an item is going to be added to the collection.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.ItemsRemoved">
+            <summary>
+            Fires once an item has been removed from a collection, providing the
+            item that was removed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.BeforeItemsRemoved">
+            <summary>
+            Fires before an item will be removed from a collection, providing
+            the item that will be removed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.BeforeItemsMoved">
+            <summary>
+            Fires before an items moves from one position in the collection to
+            another, providing the item(s) to be moved as well as source and destination
+            indices.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.ItemsMoved">
+            <summary>
+            Fires once one or more items moves from one position in the collection to
+            another, providing the item(s) that was moved as well as source and destination
+            indices.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.Changing">
             <summary>
             This Observable is equivalent to the NotifyCollectionChanged event,
             but fires before the collection is changed
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.Changed">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.Changed">
             <summary>
             This Observable is equivalent to the NotifyCollectionChanged event,
             and fires after the collection is changed
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection.ShouldReset">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged.ShouldReset">
             <summary>
             This Observable is fired when a ShouldReset fires on the collection. This
             means that you should forget your previous knowledge of the state
@@ -659,53 +694,85 @@
             Doing It Wrong.
             </summary>
         </member>
-        <member name="T:ReactiveUI.IReactiveCollection`1">
+        <member name="T:ReactiveUI.IReactiveNotifyCollectionChanged`1">
             <summary>
-            IReactiveCollection of T is the typed version of IReactiveCollection and
+            IReactiveNotifyCollectionChanged of T is the typed version of IReactiveNotifyCollectionChanged and
             adds type-specified versions of Observables
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection`1.ItemsAdded">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged`1.ItemsAdded">
             <summary>
             Fires when items are added to the collection, once per item added.
             Functions that add multiple items such AddRange should fire this
             multiple times. The object provided is the item that was added.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection`1.BeforeItemsAdded">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged`1.BeforeItemsAdded">
             <summary>
             Fires before an item is going to be added to the collection.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection`1.ItemsRemoved">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged`1.ItemsRemoved">
             <summary>
             Fires once an item has been removed from a collection, providing the
             item that was removed.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection`1.BeforeItemsRemoved">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged`1.BeforeItemsRemoved">
             <summary>
             Fires before an item will be removed from a collection, providing
             the item that will be removed.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection`1.ItemChanging">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged`1.BeforeItemsMoved">
             <summary>
-            Provides Item Changing notifications for any item in collection that
-            implements IReactiveNotifyPropertyChanged. This is only enabled when
-            ChangeTrackingEnabled is set to True.
+            Fires before an items moves from one position in the collection to
+            another, providing the item(s) to be moved as well as source and destination
+            indices.
             </summary>
         </member>
-        <member name="P:ReactiveUI.IReactiveCollection`1.ItemChanged">
+        <member name="P:ReactiveUI.IReactiveNotifyCollectionChanged`1.ItemsMoved">
             <summary>
-            Provides Item Changed notifications for any item in collection that
-            implements IReactiveNotifyPropertyChanged. This is only enabled when
-            ChangeTrackingEnabled is set to True.
+            Fires once one or more items moves from one position in the collection to
+            another, providing the item(s) that was moved as well as source and destination
+            indices.
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.IReadOnlyReactiveCollection`1">
+            <summary>
+            IReadOnlyReactiveCollection represents a read-only collection that can notify when its
+            contents are changed (either items are added/removed, or the object
+            itself changes).
+            It is important to implement the Changing/Changed from
+            IReactiveNotifyPropertyChanged semantically as "Fire when *anything* in
+            the collection or any of its items have changed, in any way".
             </summary>
         </member>
         <member name="T:ReactiveUI.IReactiveList`1">
             <summary>
-            An IList that reports change notifications
+            IReactiveList represents a list that can notify when its
+            contents are changed (either items are added/removed, or the object
+            itself changes).
+            It is important to implement the Changing/Changed from
+            IReactiveNotifyPropertyChanged semantically as "Fire when *anything* in
+            the collection or any of its items have changed, in any way".
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.IReadOnlyReactiveList`1">
+            <summary>
+            IReactiveList represents a read-only list that can notify when its
+            contents are changed (either items are added/removed, or the object
+            itself changes).
+            It is important to implement the Changing/Changed from
+            IReactiveNotifyPropertyChanged semantically as "Fire when *anything* in
+            the collection or any of its items have changed, in any way".
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.IReactiveDerivedList`1">
+            <summary>
+            IReactiveDerivedList repreents a collection whose contents will "follow" another
+            collection; this method is useful for creating ViewModel collections
+            that are automatically updated when the respective Model collection is updated.
             </summary>
         </member>
         <member name="P:ReactiveUI.IRoutingState.NavigationStack">
@@ -1904,6 +1971,12 @@
             provided equality comparer.
             </summary>
         </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.moveSourceIndexInMap(System.Int32,System.Int32)">
+            <summary>
+            Increases (or decreases depending on move direction) all source indices between the source and destination
+            move indices.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.ReactiveDerivedCollection`2.shiftIndicesAtOrOverThreshold(System.Int32,System.Int32)">
             <summary>
             Increases (or decreases) all source indices equal to or higher than the threshold. Represents an
@@ -1911,10 +1984,25 @@
             up or down.
             </summary>
         </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.shiftSourceIndicesInRange(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Increases (or decreases) all source indices within the range (lower inclusive, upper exclusive).
+            </summary>
+        </member>
         <member name="T:ReactiveUI.ReactiveDerivedCollection`2.ReferenceEqualityComparer`1">
             <summary>
             Internal equality comparer used for looking up the source object of a property change notification in
             the source list.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.newPositionForExistingItem(System.Int32,System.Int32,`1)">
+            <summary>
+            Calculates a new destination for an updated item that's already in the list.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.ReactiveDerivedCollection`2.newPositionForExistingItem``1(System.Collections.Generic.IList{``0},``0,System.Int32,System.Func{``0,``0,System.Int32})">
+            <summary>
+            Calculates a new destination for an updated item that's already in the list.
             </summary>
         </member>
         <member name="M:ReactiveUI.ReactiveCollectionMixins.CreateCollection``1(System.IObservable{``0},System.Nullable{System.TimeSpan},System.Action{System.Exception})">
@@ -2375,6 +2463,24 @@
             <returns>
             </returns>
         </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``2(``0,System.Linq.Expressions.Expression{System.Func{``0,``1}})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of a
+            property on an object has changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``3(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Func{``2,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``3(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Func{ReactiveUI.IObservedChange{``0,``2},``1})">
             <summary>
             WhenAny allows you to observe whenever one or more properties on an
@@ -2391,6 +2497,15 @@
             is set up, unlike ObservableForProperty(). Use this method in
             constructors to set up bindings between properties that also need an
             initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``4(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Func{``2,``3,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
             </summary>
         </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``4(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},``1})">
@@ -2411,6 +2526,15 @@
             initial setup.
             </summary>
         </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``5(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Func{``2,``3,``4,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``5(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},``1})">
             <summary>
             WhenAny allows you to observe whenever one or more properties on an
@@ -2427,6 +2551,15 @@
             is set up, unlike ObservableForProperty(). Use this method in
             constructors to set up bindings between properties that also need an
             initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``6(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Func{``2,``3,``4,``5,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
             </summary>
         </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``6(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},``1})">
@@ -2447,6 +2580,15 @@
             initial setup.
             </summary>
         </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``7(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Func{``2,``3,``4,``5,``6,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``7(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},``1})">
             <summary>
             WhenAny allows you to observe whenever one or more properties on an
@@ -2463,6 +2605,15 @@
             is set up, unlike ObservableForProperty(). Use this method in
             constructors to set up bindings between properties that also need an
             initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``8(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Func{``2,``3,``4,``5,``6,``7,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
             </summary>
         </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``8(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},``1})">
@@ -2483,6 +2634,15 @@
             initial setup.
             </summary>
         </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``9(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Func{``2,``3,``4,``5,``6,``7,``8,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``9(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},ReactiveUI.IObservedChange{``0,``8},``1})">
             <summary>
             WhenAny allows you to observe whenever one or more properties on an
@@ -2499,6 +2659,15 @@
             is set up, unlike ObservableForProperty(). Use this method in
             constructors to set up bindings between properties that also need an
             initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``10(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Func{``2,``3,``4,``5,``6,``7,``8,``9,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
             </summary>
         </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``10(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},ReactiveUI.IObservedChange{``0,``8},ReactiveUI.IObservedChange{``0,``9},``1})">
@@ -2519,6 +2688,15 @@
             initial setup.
             </summary>
         </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``11(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Func{``2,``3,``4,``5,``6,``7,``8,``9,``10,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``11(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},ReactiveUI.IObservedChange{``0,``8},ReactiveUI.IObservedChange{``0,``9},ReactiveUI.IObservedChange{``0,``10},``1})">
             <summary>
             WhenAny allows you to observe whenever one or more properties on an
@@ -2535,6 +2713,15 @@
             is set up, unlike ObservableForProperty(). Use this method in
             constructors to set up bindings between properties that also need an
             initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``12(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Linq.Expressions.Expression{System.Func{``0,``11}},System.Func{``2,``3,``4,``5,``6,``7,``8,``9,``10,``11,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
             </summary>
         </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``12(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Linq.Expressions.Expression{System.Func{``0,``11}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},ReactiveUI.IObservedChange{``0,``8},ReactiveUI.IObservedChange{``0,``9},ReactiveUI.IObservedChange{``0,``10},ReactiveUI.IObservedChange{``0,``11},``1})">
@@ -2555,6 +2742,15 @@
             initial setup.
             </summary>
         </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``13(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Linq.Expressions.Expression{System.Func{``0,``11}},System.Linq.Expressions.Expression{System.Func{``0,``12}},System.Func{``2,``3,``4,``5,``6,``7,``8,``9,``10,``11,``12,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
+            </summary>
+        </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``13(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Linq.Expressions.Expression{System.Func{``0,``11}},System.Linq.Expressions.Expression{System.Func{``0,``12}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},ReactiveUI.IObservedChange{``0,``8},ReactiveUI.IObservedChange{``0,``9},ReactiveUI.IObservedChange{``0,``10},ReactiveUI.IObservedChange{``0,``11},ReactiveUI.IObservedChange{``0,``12},``1})">
             <summary>
             WhenAny allows you to observe whenever one or more properties on an
@@ -2571,6 +2767,15 @@
             is set up, unlike ObservableForProperty(). Use this method in
             constructors to set up bindings between properties that also need an
             initial setup.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.WhenAnyMixin.WhenAnyValue``14(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Linq.Expressions.Expression{System.Func{``0,``11}},System.Linq.Expressions.Expression{System.Func{``0,``12}},System.Linq.Expressions.Expression{System.Func{``0,``13}},System.Func{``2,``3,``4,``5,``6,``7,``8,``9,``10,``11,``12,``13,``1})">
+            <summary>
+            WhenAnyValue allows you to observe whenever the value of one or more
+            properties on an object have changed, providing an initial value when
+            the Observable is set up, unlike ObservableForProperty(). Use this
+            method in constructors to set up bindings between properties that also
+            need an initial setup.
             </summary>
         </member>
         <member name="M:ReactiveUI.WhenAnyMixin.WhenAny``14(``0,System.Linq.Expressions.Expression{System.Func{``0,``2}},System.Linq.Expressions.Expression{System.Func{``0,``3}},System.Linq.Expressions.Expression{System.Func{``0,``4}},System.Linq.Expressions.Expression{System.Func{``0,``5}},System.Linq.Expressions.Expression{System.Func{``0,``6}},System.Linq.Expressions.Expression{System.Func{``0,``7}},System.Linq.Expressions.Expression{System.Func{``0,``8}},System.Linq.Expressions.Expression{System.Func{``0,``9}},System.Linq.Expressions.Expression{System.Func{``0,``10}},System.Linq.Expressions.Expression{System.Func{``0,``11}},System.Linq.Expressions.Expression{System.Func{``0,``12}},System.Linq.Expressions.Expression{System.Func{``0,``13}},System.Func{ReactiveUI.IObservedChange{``0,``2},ReactiveUI.IObservedChange{``0,``3},ReactiveUI.IObservedChange{``0,``4},ReactiveUI.IObservedChange{``0,``5},ReactiveUI.IObservedChange{``0,``6},ReactiveUI.IObservedChange{``0,``7},ReactiveUI.IObservedChange{``0,``8},ReactiveUI.IObservedChange{``0,``9},ReactiveUI.IObservedChange{``0,``10},ReactiveUI.IObservedChange{``0,``11},ReactiveUI.IObservedChange{``0,``12},ReactiveUI.IObservedChange{``0,``13},``1})">
@@ -3132,6 +3337,75 @@
             viewModel.</returns>
             <param name="viewModel">View model.</param>
             <param name="contract">Contract.</param>
+        </member>
+        <member name="T:ReactiveUI.Mobile.ISuspensionHost">
+            <summary>
+            ISuspensionHost represents a standardized version of the events that the
+            host operating system publishes. Subscribe to these events in order to
+            handle app suspend / resume.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Mobile.ISuspensionHost.IsLaunchingNew">
+            <summary>
+            Signals when the application is launching new. This can happen when
+            an app has recently crashed, as well as the firs time the app has
+            been launched. Apps should create their state from scratch.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Mobile.ISuspensionHost.IsResuming">
+            <summary>
+            Signals when the application is resuming from suspended state (i.e.
+            it was previously running but its process was destroyed).
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Mobile.ISuspensionHost.IsUnpausing">
+            <summary>
+            Signals when the application is activated. Note that this may mean
+            that your process was not actively running before this signal.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Mobile.ISuspensionHost.ShouldPersistState">
+            <summary>
+            Signals when the application should persist its state to disk.
+            </summary>
+            <value>Returns an IDisposable that should be disposed once the
+            application finishes persisting its state</value>
+        </member>
+        <member name="P:ReactiveUI.Mobile.ISuspensionHost.ShouldInvalidateState">
+            <summary>
+            Signals that the saved application state should be deleted, this
+            usually is called after an app has crashed
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Mobile.ISuspensionHost.SetupDefaultSuspendResume(ReactiveUI.Mobile.ISuspensionDriver)">
+            <summary>
+            Sets up the default suspend resume behavior, which is to use the
+            ISuspensionDriver to save / reload application state. Using this also
+            requires you to register an IApplicationRootState that will create a
+            new application root state from scratch.
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.Mobile.ISuspensionDriver">
+            <summary>
+            ISuspensionDriver represents a class that can load/save state to persistent
+            storage. Most platforms have a basic implementation of this class, but you
+            probably want to write your own.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Mobile.ISuspensionDriver.LoadState``1">
+            <summary>
+            Loads the application state from persistent storage
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Mobile.ISuspensionDriver.SaveState``1(``0)">
+            <summary>
+            Saves the application state to disk.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Mobile.ISuspensionDriver.InvalidateState">
+            <summary>
+            Invalidates the application state (i.e. deletes it from disk)
+            </summary>
         </member>
         <member name="M:ReactiveUI.RoutableViewModelMixin.WhenNavigatedTo(ReactiveUI.IRoutableViewModel,System.Func{System.IDisposable})">
             <summary>

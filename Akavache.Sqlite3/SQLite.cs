@@ -40,7 +40,7 @@ using Sqlite3Statement = System.IntPtr;
 
 namespace SQLite
 {
-	public class SQLiteException : System.Exception
+	internal class SQLiteException : System.Exception
 	{
 		public SQLite3.Result Result { get; private set; }
 
@@ -64,7 +64,7 @@ namespace SQLite
 	/// <summary>
 	/// Represents an open connection to a SQLite database.
 	/// </summary>
-	public class SQLiteConnection : IDisposable
+	internal class SQLiteConnection : IDisposable
 	{
 		private bool _open;
 		private TimeSpan _busyTimeout;
@@ -318,7 +318,7 @@ namespace SQLite
 			return count;
 		}
 
-		public class TableInfo
+		internal class TableInfo
 		{
 			public int cid { get; set; }
 
@@ -1093,7 +1093,7 @@ namespace SQLite
 	/// <summary>
 	/// Represents a parsed connection string.
 	/// </summary>
-	public class SQLiteConnectionString
+	internal class SQLiteConnectionString
 	{
 		public string ConnectionString { get; private set; }
 		public string DatabasePath { get; private set; }
@@ -1117,7 +1117,7 @@ namespace SQLite
 	}
 
     [AttributeUsage (AttributeTargets.Class)]
-	public class TableAttribute : Attribute
+	internal class TableAttribute : Attribute
 	{
 		public string Name { get; set; }
 
@@ -1128,7 +1128,7 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class ColumnAttribute : Attribute
+	internal class ColumnAttribute : Attribute
 	{
 		public string Name { get; set; }
 
@@ -1139,17 +1139,17 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class PrimaryKeyAttribute : Attribute
+	internal class PrimaryKeyAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class AutoIncrementAttribute : Attribute
+	internal class AutoIncrementAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class IndexedAttribute : Attribute
+	internal class IndexedAttribute : Attribute
 	{
 		public string Name { get; set; }
 		public int Order { get; set; }
@@ -1167,12 +1167,12 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class IgnoreAttribute : Attribute
+	internal class IgnoreAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class UniqueAttribute : IndexedAttribute
+	internal class UniqueAttribute : IndexedAttribute
 	{
 		public override bool Unique {
 			get { return true; }
@@ -1181,7 +1181,7 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class MaxLengthAttribute : Attribute
+	internal class MaxLengthAttribute : Attribute
 	{
 		public int Value { get; private set; }
 
@@ -1192,7 +1192,7 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	public class CollationAttribute: Attribute
+	internal class CollationAttribute: Attribute
 	{
 		public string Value { get; private set; }
 
@@ -1202,7 +1202,7 @@ namespace SQLite
 		}
 	}
 
-	public class TableMapping
+	internal class TableMapping
 	{
 		public Type MappedType { get; private set; }
 
@@ -1347,7 +1347,7 @@ namespace SQLite
 			}
 		}
 
-		public class Column
+		internal class Column
 		{
 			PropertyInfo _prop;
 
@@ -1397,7 +1397,7 @@ namespace SQLite
 		}
 	}
 
-	public static class Orm
+	internal static class Orm
 	{
 		public const int DefaultMaxStringLength = 140;
 
@@ -1509,7 +1509,7 @@ namespace SQLite
 		}
 	}
 
-	public class SQLiteCommand
+	internal class SQLiteCommand
 	{
 		SQLiteConnection _conn;
 		private List<Binding> _bindings;
@@ -1793,7 +1793,7 @@ namespace SQLite
 	/// <summary>
 	/// Since the insert never changed, we only need to prepare once.
 	/// </summary>
-	public class PreparedSqlLiteInsertCommand : IDisposable
+	internal class PreparedSqlLiteInsertCommand : IDisposable
 	{
 		public bool Initialized { get; set; }
 
@@ -1878,7 +1878,7 @@ namespace SQLite
 		}
 	}
 
-	public class TableQuery<T> : IEnumerable<T> where T : new()
+	internal class TableQuery<T> : IEnumerable<T> where T : new()
 	{
 		public SQLiteConnection Connection { get; private set; }
 

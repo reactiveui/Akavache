@@ -50,7 +50,7 @@ namespace SQLite
         IObservable<T> FirstOrDefaultAsync ();
     }
 
-    public class SQLiteAsyncConnection
+    internal class SQLiteAsyncConnection
     {
         SQLiteConnectionString _connectionString;
         SQLiteConnectionPool _pool;
@@ -237,7 +237,7 @@ namespace SQLite
         }
     }
 
-    public class CreateTablesResult
+    internal class CreateTablesResult
     {
         public Dictionary<Type, int> Results { get; private set; }
 
@@ -247,7 +247,7 @@ namespace SQLite
         }
     }
 
-    public class SQLiteConnectionPool
+    internal class SQLiteConnectionPool
     {
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
@@ -332,7 +332,7 @@ namespace SQLite
         }
     }
 
-    public class SQLiteConnectionWithoutLock : SQLiteConnection
+    internal class SQLiteConnectionWithoutLock : SQLiteConnection
     {
         public SQLiteConnectionWithoutLock (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
             : base (connectionString.DatabasePath, flags, connectionString.StoreDateTimeAsTicks)
