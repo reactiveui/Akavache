@@ -111,6 +111,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
+                    if (fixture is TestBlobCache) return;
                     fixture.InsertObject("key", input).First();
                 }
 
@@ -136,6 +137,8 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
+                    if (fixture is TestBlobCache) return;
+
                     fixture.InsertObject("key", input).First();
                 }
 
@@ -164,6 +167,8 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
+                    if (fixture is TestBlobCache) return;
+
                     fixture.InsertObject("key", input).First();
                 }
 
@@ -187,6 +192,8 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
+                    if (fixture is TestBlobCache) return;
+
                     fixture.InsertObject("key", input).First();
                 }
 
@@ -227,6 +234,9 @@ namespace Akavache.Tests
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
+
+                    // Testing persistence makes zero sense for TestBlobCache
+                    if (fixture is TestBlobCache) return;
                 }
 
                 using(var fixture = CreateBlobCache(path))
@@ -282,28 +292,6 @@ namespace Akavache.Tests
             }
         }
 
-
-        [Fact]
-        public void ApplicationStateShouldBeRoundtrippable()
-        {
-            string path;
-            var input = new DummyAppBootstrapper();
-            var expected = ((DummyRoutedViewModel) input.Router.NavigationStack[0]).ARandomGuid;
-            input.Router.Navigate.Execute(new DummyRoutedViewModel(input) {ARandomGuid = Guid.NewGuid()});
-
-            Console.WriteLine("After Nav Count: {0}", input.Router.NavigationStack.Count);
-
-            using(Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path)) 
-            {
-                fixture.InsertObject("state", input).First();
-
-                var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
-                var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
-                Assert.Equal(expected, output.ARandomGuid);
-            }
-        }
-
         [Fact]
         public void KeysByTypeTest()
         {
@@ -330,7 +318,7 @@ namespace Akavache.Tests
                 Assert.Equal(input.Length, fixture.GetAllKeys().Count());
                 Assert.Equal(input.Length, allObjectsCount);
 
-                fixture.InsertObject("Quux", new UserModel(null));
+                fixture.InsertObject("Quux", new UserModel(null)).Wait();
 
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
                 Assert.Equal(input.Length + 1, fixture.GetAllKeys().Count());
@@ -368,9 +356,16 @@ namespace Akavache.Tests
                         fixture.InsertObject("Bar", 10),
                         fixture.InsertObject("Baz", new UserObject() { Bio = "Bio", Blog = "Blog", Name = "Name" })
                     ).Last();
+
+                    var keys = fixture.GetAllKeys();
+                    Assert.Equal(3, keys.Count());
+                    Assert.True(keys.Any(x => x.Contains("Foo")));
+                    Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
 
                 fixture.Shutdown.Wait();
+                    
+                if (fixture is TestBlobCache) return;
 
                 using (fixture = CreateBlobCache(path))
                 {
