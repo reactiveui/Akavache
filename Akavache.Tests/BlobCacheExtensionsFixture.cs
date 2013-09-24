@@ -361,6 +361,7 @@ namespace Akavache.Tests
                 Assert.Equal(1, fixture.GetAllKeys().Count());
                 Assert.Equal(0, allObjectsCount);
 
+                fixture.Dispose();
                 fixture.Shutdown.Wait();
             }
         }
