@@ -261,10 +261,17 @@ namespace Akavache
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) objCache.InvalidateAllObjects<T>();
+            var ret = new AsyncSubject<Unit>();
 
-            return This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
+            This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
                 .ToObservable()
-                .SelectMany(This.Invalidate);
+                .SelectMany(This.Invalidate)
+                .Subscribe(
+                    _ => { },
+                    ex => ret.OnError(ex),
+                    () => { ret.OnNext(Unit.Default); ret.OnCompleted(); });
+
+            return ret;
         }
 
         internal static byte[] SerializeObject(object value)
