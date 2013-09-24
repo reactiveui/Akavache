@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Akavache.Sqlite3;
@@ -12,6 +13,7 @@ using ReactiveUI.Xaml;
 using ReactiveUI.Testing;
 using Xunit;
 using System.Threading;
+using System.Reactive.Concurrency;
 
 namespace Akavache.Tests
 {
@@ -101,124 +103,103 @@ namespace Akavache.Tests
         [Fact]
         public void ObjectsShouldBeRoundtrippable()
         {
-            new TestScheduler().With(sched =>
-            {
-                string path;
-                var input = new UserObject() {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"};
-                UserObject result;
+            string path;
+            var input = new UserObject() {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"};
+            UserObject result;
 
-                using (Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                using (var fixture = CreateBlobCache(path))
                 {
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        fixture.InsertObject("key", input);
-                    }
-                    sched.Start();
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        var action = fixture.GetObjectAsync<UserObject>("key");
-                        sched.Start();
-                        result = action.First();
-                    }
+                    fixture.InsertObject("key", input).First();
                 }
 
-                Assert.Equal(input.Blog, result.Blog);
-                Assert.Equal(input.Bio, result.Bio);
-                Assert.Equal(input.Name, result.Name);
-            });
+                using (var fixture = CreateBlobCache(path))
+                {
+                    result = fixture.GetObjectAsync<UserObject>("key").First();
+                }
+            }
+
+            Assert.Equal(input.Blog, result.Blog);
+            Assert.Equal(input.Bio, result.Bio);
+            Assert.Equal(input.Name, result.Name);
         }
 
         [Fact]
         public void ArraysShouldBeRoundtrippable()
         {
-            new TestScheduler().With(sched =>
-            {
-                string path;
-                var input = new[] {new UserObject {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"}, new UserObject {Bio = "zzz", Name = "sleepy", Blog = "http://example.com"}};
-                UserObject[] result;
+            string path;
+            var input = new[] {new UserObject {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"}, new UserObject {Bio = "zzz", Name = "sleepy", Blog = "http://example.com"}};
+            UserObject[] result;
 
-                using (Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                using (var fixture = CreateBlobCache(path))
                 {
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        fixture.InsertObject("key", input);
-                    }
-                    sched.Start();
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        var action = fixture.GetObjectAsync<UserObject[]>("key");
-                        sched.Start();
-                        result = action.First();
-                    }
+                    fixture.InsertObject("key", input).First();
                 }
 
-                Assert.Equal(input.First().Blog, result.First().Blog);
-                Assert.Equal(input.First().Bio, result.First().Bio);
-                Assert.Equal(input.First().Name, result.First().Name);
-                Assert.Equal(input.Last().Blog, result.Last().Blog);
-                Assert.Equal(input.Last().Bio, result.Last().Bio);
-                Assert.Equal(input.Last().Name, result.Last().Name);
-            });
+                using (var fixture = CreateBlobCache(path))
+                {
+                    result = fixture.GetObjectAsync<UserObject[]>("key").First();
+                }
+            }
+
+            Assert.Equal(input.First().Blog, result.First().Blog);
+            Assert.Equal(input.First().Bio, result.First().Bio);
+            Assert.Equal(input.First().Name, result.First().Name);
+            Assert.Equal(input.Last().Blog, result.Last().Blog);
+            Assert.Equal(input.Last().Bio, result.Last().Bio);
+            Assert.Equal(input.Last().Name, result.Last().Name);
         }
 
         [Fact]
         public void ObjectsCanBeCreatedUsingObjectFactory()
         {
-            new TestScheduler().With(sched =>
-            {
-                string path;
-                var input = new UserModel(new UserObject()) {Age = 123, Name = "Old"};
-                UserModel result;
+            string path;
+            var input = new UserModel(new UserObject()) {Age = 123, Name = "Old"};
+            UserModel result;
 
-                using (Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                using (var fixture = CreateBlobCache(path))
                 {
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        fixture.InsertObject("key", input);
-                    }
-                    sched.Start();
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        var action = fixture.GetObjectAsync<UserModel>("key");
-                        sched.Start();
-                        result = action.First();
-                    }
+                    fixture.InsertObject("key", input).First();
                 }
 
-                Assert.Equal(input.Age, result.Age);
-                Assert.Equal(input.Name, result.Name);
-            });
+                using (var fixture = CreateBlobCache(path))
+                {
+                    result = fixture.GetObjectAsync<UserModel>("key").First();
+                }
+            }
+
+            Assert.Equal(input.Age, result.Age);
+            Assert.Equal(input.Name, result.Name);
         }
 
         [Fact]
         public void ArraysShouldBeRoundtrippableUsingObjectFactory()
         {
-            new TestScheduler().With(sched =>
+            string path;
+            var input = new[] {new UserModel(new UserObject()) {Age = 123, Name = "Old"}, new UserModel(new UserObject()) {Age = 123, Name = "Old"}};
+            UserModel[] result;
+            using (Utility.WithEmptyDirectory(out path))
             {
-                string path;
-                var input = new[] {new UserModel(new UserObject()) {Age = 123, Name = "Old"}, new UserModel(new UserObject()) {Age = 123, Name = "Old"}};
-                UserModel[] result;
-
-                using (Utility.WithEmptyDirectory(out path))
+                using (var fixture = CreateBlobCache(path))
                 {
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        fixture.InsertObject("key", input);
-                    }
-                    sched.Start();
-                    using (var fixture = CreateBlobCache(path))
-                    {
-                        var action = fixture.GetObjectAsync<UserModel[]>("key");
-                        sched.Start();
-                        result = action.First();
-                    }
+                    fixture.InsertObject("key", input).First();
                 }
 
-                Assert.Equal(input.First().Age, result.First().Age);
-                Assert.Equal(input.First().Name, result.First().Name);
-                Assert.Equal(input.Last().Age, result.Last().Age);
-                Assert.Equal(input.Last().Name, result.Last().Name);
-            });
+                using (var fixture = CreateBlobCache(path))
+                {
+                    result = fixture.GetObjectAsync<UserModel[]>("key").First();
+                }
+            }
+
+            Assert.Equal(input.First().Age, result.First().Age);
+            Assert.Equal(input.First().Name, result.First().Name);
+            Assert.Equal(input.Last().Age, result.Last().Age);
+            Assert.Equal(input.Last().Name, result.Last().Name);
         }
 
         [Fact]
@@ -305,34 +286,70 @@ namespace Akavache.Tests
         [Fact]
         public void ApplicationStateShouldBeRoundtrippable()
         {
-            var resolver = new ModernDependencyResolver();
-            resolver.InitializeResolver();
-            resolver.InitializeAkavache();
+            string path;
+            var input = new DummyAppBootstrapper();
+            var expected = ((DummyRoutedViewModel) input.Router.NavigationStack[0]).ARandomGuid;
+            input.Router.Navigate.Execute(new DummyRoutedViewModel(input) {ARandomGuid = Guid.NewGuid()});
 
-            resolver.Register(() => new JsonSerializerSettings() {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore, 
-                TypeNameHandling = TypeNameHandling.All, 
-                ObjectCreationHandling = ObjectCreationHandling.Replace,
-            }, typeof(JsonSerializerSettings));
+            Console.WriteLine("After Nav Count: {0}", input.Router.NavigationStack.Count);
 
-            using (resolver.WithResolver()) 
+            using(Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path)) 
             {
-                string path;
-                var input = new DummyAppBootstrapper();
-                var expected = ((DummyRoutedViewModel) input.Router.NavigationStack[0]).ARandomGuid;
-                input.Router.Navigate.Execute(new DummyRoutedViewModel(input) {ARandomGuid = Guid.NewGuid()});
+                fixture.InsertObject("state", input).First();
 
-                Console.WriteLine("After Nav Count: {0}", input.Router.NavigationStack.Count);
+                var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
+                var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
+                Assert.Equal(expected, output.ARandomGuid);
+            }
+        }
 
-                using(Utility.WithEmptyDirectory(out path))
-                using (var fixture = CreateBlobCache(path)) 
+        [Fact]
+        public void KeysByTypeTest()
+        {
+            string path;
+            var input = new[] 
+            { 
+                "Foo",
+                "Bar",
+                "Baz"
+            };
+
+            var inputItems = input.Select(x => new UserObject() { Name = x, Bio = "A thing", }).ToArray();
+            var fixture = default(IBlobCache);
+
+            using (Utility.WithEmptyDirectory(out path))
+            using (fixture = CreateBlobCache(path))
+            {
+                foreach(var item in input.Zip(inputItems, (Key, Value) => new { Key, Value }))
                 {
-                    fixture.InsertObject("state", input).First();
-
-                    var result = fixture.GetObjectAsync<DummyAppBootstrapper>("state").First();
-                    var output = (DummyRoutedViewModel) result.Router.NavigationStack[0];
-                    Assert.Equal(expected, output.ARandomGuid);
+                    fixture.InsertObject(item.Key, item.Value).Wait();
                 }
+
+                var allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(input.Length, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length, allObjectsCount);
+
+                fixture.InsertObject("Quux", new UserModel(null));
+
+                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(input.Length + 1, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length, allObjectsCount);
+
+                fixture.InvalidateObject<UserObject>("Foo").Wait();
+
+                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(input.Length + 1 - 1, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length - 1, allObjectsCount);
+
+                fixture.InvalidateAllObjects<UserObject>().Wait();
+
+                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
+                Assert.Equal(1, fixture.GetAllKeys().Count());
+                Assert.Equal(0, allObjectsCount);
+
+                fixture.Dispose();
+                fixture.Shutdown.Wait();
             }
         }
 
@@ -370,7 +387,8 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new TEncryptedBlobCache(path);
+            BlobCache.ApplicationName = "TestRunner";
+            return new BlockingDisposeCache(new TEncryptedBlobCache(path));
         }
     }
 
@@ -378,7 +396,8 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
+            BlobCache.ApplicationName = "TestRunner";
+            return new BlockingDisposeObjectCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -386,7 +405,108 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db"));
+            BlobCache.ApplicationName = "TestRunner";
+            return new BlockingDisposeObjectCache(new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+        }
+    }
+
+    public class TestBlobCacheFixture : BlobCacheExtensionsFixture
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            BlobCache.ApplicationName = "TestRunner";
+            return new TestBlobCache();
+        }
+    }
+
+    class BlockingDisposeCache : IBlobCache
+    {
+        protected readonly IBlobCache _inner;
+        public BlockingDisposeCache(IBlobCache cache)
+        {
+            BlobCache.EnsureInitialized();
+            _inner = cache;
+        }
+
+        public virtual void Dispose()
+        {
+            _inner.Dispose();
+            _inner.Shutdown.Wait();
+        }
+
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
+        {
+            return _inner.Insert(key, data, absoluteExpiration);
+        }
+
+        public IObservable<byte[]> GetAsync(string key)
+        {
+            return _inner.GetAsync(key);
+        }
+
+        public IEnumerable<string> GetAllKeys()
+        {
+            return _inner.GetAllKeys();
+        }
+
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key)
+        {
+            return _inner.GetCreatedAt(key);
+        }
+
+        public IObservable<Unit> Flush()
+        {
+            return _inner.Flush();
+        }
+
+        public IObservable<Unit> Invalidate(string key)
+        {
+            return _inner.Invalidate(key);
+        }
+
+        public IObservable<Unit> InvalidateAll()
+        {
+            return _inner.InvalidateAll();
+        }
+
+        public IObservable<Unit> Shutdown
+        {
+            get { return _inner.Shutdown; }
+        }
+
+        public IScheduler Scheduler
+        {
+            get { return _inner.Scheduler; }
+        }
+    }
+
+    class BlockingDisposeObjectCache : BlockingDisposeCache, IObjectBlobCache
+    {
+        public BlockingDisposeObjectCache(IObjectBlobCache cache) : base(cache) { }
+
+        public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
+        {
+            return ((IObjectBlobCache)_inner).InsertObject(key, value, absoluteExpiration);
+        }
+
+        public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
+        {
+            return ((IObjectBlobCache)_inner).GetObjectAsync<T>(key, noTypePrefix);
+        }
+
+        public IObservable<IEnumerable<T>> GetAllObjects<T>()
+        {
+            return ((IObjectBlobCache)_inner).GetAllObjects<T>();
+        }
+
+        public IObservable<Unit> InvalidateObject<T>(string key)
+        {
+            return ((IObjectBlobCache)_inner).InvalidateObject<T>(key);
+        }
+
+        public IObservable<Unit> InvalidateAllObjects<T>()
+        {
+            return ((IObjectBlobCache)_inner).InvalidateAllObjects<T>();
         }
     }
 }
