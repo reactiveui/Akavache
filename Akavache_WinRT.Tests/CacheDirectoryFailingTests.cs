@@ -21,6 +21,8 @@ namespace Tests
 
         static MyPersistentBlobCache SetupCache(string cacheDirectory)
         {
+            BlobCache.EnsureInitialized();
+
             var fixture = new MyPersistentBlobCache(cacheDirectory);
             // ensuring we are working with a clear cache
             fixture.InvalidateAll();
