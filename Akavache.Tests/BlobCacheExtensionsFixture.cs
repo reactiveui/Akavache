@@ -333,7 +333,7 @@ namespace Akavache.Tests
                 Assert.Equal(input.Length, fixture.GetAllKeys().Count());
                 Assert.Equal(input.Length, allObjectsCount);
 
-                fixture.InsertObject("Quux", new UserModel(null));
+                fixture.InsertObject("Quux", new UserModel(null)).Wait();
 
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
                 Assert.Equal(input.Length + 1, fixture.GetAllKeys().Count());
