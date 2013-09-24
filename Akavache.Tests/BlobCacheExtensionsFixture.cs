@@ -227,6 +227,9 @@ namespace Akavache.Tests
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
+
+                    // Testing persistence makes zero sense for TestBlobCache
+                    if (fixture is TestBlobCache) return;
                 }
 
                 using(var fixture = CreateBlobCache(path))
@@ -368,9 +371,16 @@ namespace Akavache.Tests
                         fixture.InsertObject("Bar", 10),
                         fixture.InsertObject("Baz", new UserObject() { Bio = "Bio", Blog = "Blog", Name = "Name" })
                     ).Last();
+
+                    var keys = fixture.GetAllKeys();
+                    Assert.Equal(3, keys.Count());
+                    Assert.True(keys.Any(x => x.Contains("Foo")));
+                    Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
 
                 fixture.Shutdown.Wait();
+                    
+                if (fixture is TestBlobCache) return;
 
                 using (fixture = CreateBlobCache(path))
                 {
