@@ -20,11 +20,12 @@ namespace Akavache
 
         static BlobCache()
         {
-            // XXX: This is a hella hack
-            var mutableRegistration = RxApp.DependencyResolver as IMutableDependencyResolver;
-            if (RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>() == null && mutableRegistration != null)
+            // XXX: Everything is dumb. This is to trick RxUI into running its setup stuff in the ctor.
+            LogHost.Default.Debug("Scheduler is {0}, Dep Resolver is {1}", RxApp.TaskpoolScheduler, RxApp.DependencyResolver);
+
+            if (RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>() == null && RxApp.MutableResolver != null)
             {
-                mutableRegistration.InitializeAkavache();
+                RxApp.MutableResolver.InitializeAkavache();
             }
                 
             InMemory = new TestBlobCache(RxApp.TaskpoolScheduler);
