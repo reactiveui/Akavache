@@ -23,6 +23,17 @@ namespace Akavache
         IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
+        /// Inserts several keys into the database at one time. If any individual
+        /// insert fails, this operation should cancel the entire insert (i.e. it
+        /// should *not* partially succeed)
+        /// </summary>
+        /// <param name="keyValuePairs">The keys and values to insert.</param>
+        /// <param name="absoluteExpiration">An optional expiration date.
+        /// After the specified date, the key-value pair should be removed.</param>
+        /// <returns>A signal to indicate when the key has been inserted.</returns>
+        IObservable<Unit> InsertAll(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+
+        /// <summary>
         /// Retrieve a value from the key-value cache. If the key is not in
         /// the cache, this method should return an IObservable which
         /// OnError's with KeyNotFoundException.
@@ -100,6 +111,15 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A Future result representing the completion of the insert.</returns>
         IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null);
+
+        /// <summary>
+        /// Insert several objects into the cache, via the JSON serializer. 
+        /// Similarly to InsertAll, partial inserts should not happen.
+        /// </summary>
+        /// <param name="keyValuePairs">The data to insert into the cache</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the completion of the insert.</returns>
+        IObservable<Unit> InsertAllObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
         /// Get an object from the cache and deserialize it via the JSON
