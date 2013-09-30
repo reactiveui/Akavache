@@ -250,6 +250,96 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void FetchFunctionShouldDebounceConcurrentRequests()
+        {
+            (new TestScheduler()).With(sched =>
+            {
+                string path;
+                using (Utility.WithEmptyDirectory(out path))
+                {
+                    int callCount = 0;
+                    var fetcher = new Func<IObservable<int>>(() => 
+                    {
+                        callCount++;
+                        return Observable.Return(42).Delay(TimeSpan.FromMilliseconds(1000), sched);
+                    });
+
+                    var fixture = CreateBlobCache(path);
+                    try
+                    {
+                        var result1 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+
+                        Assert.Equal(0, result1.Count);
+
+                        sched.AdvanceToMs(250);
+
+                        // Nobody's returned yet, cache is empty, we should have called the fetcher
+                        // once to get a result
+                        var result2 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        Assert.Equal(0, result1.Count);
+                        Assert.Equal(0, result2.Count);
+                        Assert.Equal(1, callCount);
+
+                        sched.AdvanceToMs(750);
+
+                        // Same as above, result1-3 are all listening to the same fetch
+                        var result3 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        Assert.Equal(0, result1.Count);
+                        Assert.Equal(0, result2.Count);
+                        Assert.Equal(0, result3.Count);
+                        Assert.Equal(1, callCount);
+
+                        // Fetch returned, all three collections should have an item
+                        sched.AdvanceToMs(1250);
+                        Assert.Equal(1, result1.Count);
+                        Assert.Equal(1, result2.Count);
+                        Assert.Equal(1, result3.Count);
+                        Assert.Equal(1, callCount);
+
+                        // Making a new call, but the cache has an item, this shouldn't result
+                        // in a fetcher call either
+                        var result4 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        sched.AdvanceToMs(2500);
+                        Assert.Equal(1, result1.Count);
+                        Assert.Equal(1, result2.Count);
+                        Assert.Equal(1, result3.Count);
+                        Assert.Equal(1, result4.Count);
+                        Assert.Equal(1, callCount);
+
+                        // Making a new call, but with a new key - this *does* result in a fetcher
+                        // call. Result1-4 shouldn't get any new items, and at t=3000, we haven't
+                        // returned from the call made at t=2500 yet
+                        var result5 = fixture.GetOrFetchObject("bar", fetcher).CreateCollection();
+                        sched.AdvanceToMs(3000);
+                        Assert.Equal(1, result1.Count);
+                        Assert.Equal(1, result2.Count);
+                        Assert.Equal(1, result3.Count);
+                        Assert.Equal(1, result4.Count);
+                        Assert.Equal(0, result5.Count);
+                        Assert.Equal(2, callCount);
+
+                        // Everything is done, we should have one item in result5 now
+                        sched.AdvanceToMs(4000);
+                        Assert.Equal(1, result1.Count);
+                        Assert.Equal(1, result2.Count);
+                        Assert.Equal(1, result3.Count);
+                        Assert.Equal(1, result4.Count);
+                        Assert.Equal(1, result5.Count);
+                        Assert.Equal(2, callCount);
+                    }
+                    finally
+                    {
+                        // Since we're in TestScheduler, we can't use the normal 
+                        // using statement, we need to kick off the async dispose,
+                        // then start the scheduler to let it run
+                        fixture.Dispose();
+                        sched.Start();
+                    }
+                }
+            });
+        }
+
+        [Fact]
         public void FetchFunctionShouldPropagateThrownExceptionAsObservableException()
         {
             var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
