@@ -32,8 +32,6 @@ namespace Akavache
         }
 #endif
 
-        readonly ConcurrentDictionary<string, IObservable<byte[]>> inflightWebRequests = new ConcurrentDictionary<string, IObservable<byte[]>>();
-
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
         /// cache. If the data is already in the cache, this returns
@@ -47,18 +45,20 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var doFetch = new Func<KeyNotFoundException, IObservable<byte[]>>(_ => inflightWebRequests.GetOrAdd(url, __ => Observable.Defer(() =>
-            {
-                return MakeWebRequest(new Uri(url), headers)
-                    .SelectMany(x => ProcessAndCacheWebResponse(x, url, This, absoluteExpiration));
-            }).Multicast(new AsyncSubject<byte[]>()).RefCount()));
+            var doFetch = new Func<IObservable<byte[]>>(() => 
+                MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessAndCacheWebResponse(x, url, absoluteExpiration)));
 
-            IObservable<byte[]> dontcare;
-            var ret = fetchAlways ? doFetch(null) : This.GetAsync(url).Catch(doFetch);
-            return ret.Finally(() => inflightWebRequests.TryRemove(url, out dontcare));
+            if (fetchAlways)
+            {
+                return This.GetAndFetchLatest(url, doFetch, absoluteExpiration: absoluteExpiration).TakeLast(1);
+            }
+            else
+            {
+                return This.GetOrFetchObject(url, doFetch, absoluteExpiration);
+            }
         }
 
-        IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, IBlobCache cache, DateTimeOffset? absoluteExpiration)
+        IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
         {
             var hwr = (HttpWebResponse)wr;
             Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be.");
@@ -75,7 +75,6 @@ namespace Akavache
             }
 
             var ret = ms.ToArray();
-            cache.Insert(url, ret, absoluteExpiration);
             return Observable.Return(ret);
         }
 

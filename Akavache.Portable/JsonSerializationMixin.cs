@@ -95,10 +95,14 @@ namespace Akavache
             return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
             {
                 object dontcare;
-                return ((IObservable<T>)inflightFetchRequests.GetOrAdd(key, __ => (object)fetchFunc()))
+                var prefixedKey = This.GetHashCode().ToString() + key;
+
+                var result = Observable.Defer(() => fetchFunc())
                     .Do(x => This.InsertObject(key, x, absoluteExpiration))
-                    .Finally(() => inflightFetchRequests.TryRemove(key, out dontcare))
+                    .Finally(() => inflightFetchRequests.TryRemove(prefixedKey, out dontcare))
                     .Multicast(new AsyncSubject<T>()).RefCount();
+            
+                return (IObservable<T>)inflightFetchRequests.GetOrAdd(prefixedKey, result);
             });
         }
 
@@ -307,5 +311,4 @@ namespace Akavache
             return type.FullName + "___" + key;
         }
     }
-
 }
