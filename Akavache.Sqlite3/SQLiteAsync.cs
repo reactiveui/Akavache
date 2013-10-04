@@ -258,7 +258,7 @@ namespace SQLite
 
         public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount = null)
         {
-            this.connectionCount = connectionCount ?? 6;
+            this.connectionCount = connectionCount ?? 4;
             connInfo = Tuple.Create(connectionString, flags);
             Reset().Wait();
         }
