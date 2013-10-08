@@ -16,7 +16,7 @@ using SQLite;
 
 namespace Akavache.Sqlite3
 {
-    public class SqlitePersistentBlobCache : IObjectBlobCache, IEnableLogger
+    public class SqlitePersistentBlobCache : IObjectBlobCache, IBulkBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
         public IServiceProvider ServiceProvider { get; private set; }
@@ -75,6 +75,34 @@ namespace Akavache.Sqlite3
             var ret = BeforeWriteToDiskFilter(data, Scheduler)
                 .Do(x => element.Value = x)
                 .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
+        }
+
+        public IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            lock (_inflightCache) {
+                foreach(var kvp in keyValuePairs) _inflightCache.Invalidate(kvp.Key);
+            }
+
+            var elements = keyValuePairs.Select(kvp => new CacheElement()
+            {
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
+                Key = kvp.Key,
+                Value = kvp.Value,
+            }).ToList();
+
+            var encryptAllTheData = elements.ToObservable()
+                .Select(x => Observable.Defer(() => BeforeWriteToDiskFilter(x.Value, Scheduler))
+                    .Do(y => x.Value = y))
+                .Merge(4)
+                .TakeLast(1);
+
+            var ret = encryptAllTheData
+                .SelectMany(_ => _connection.InsertAllAsync(elements, "OR REPLACE").Select(_ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
@@ -282,6 +310,21 @@ namespace Akavache.Sqlite3
             return Observable.Throw<CacheElement>(
                 new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
+        }
+
+        public IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys)
+        {
+            throw new NotImplementedException();
         }
     }
 
