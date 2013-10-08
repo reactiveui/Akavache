@@ -31,7 +31,7 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.
         /// After the specified date, the key-value pair should be removed.</param>
         /// <returns>A signal to indicate when the key has been inserted.</returns>
-        IObservable<Unit> InsertAll(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+        IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
         /// Retrieve a value from the key-value cache. If the key is not in
@@ -41,6 +41,15 @@ namespace Akavache
         /// <param name="key">The key to return asynchronously.</param>
         /// <returns>A Future result representing the byte data.</returns>
         IObservable<byte[]> GetAsync(string key);
+
+        /// <summary>
+        /// Retrieve several values from the key-value cache. If any of 
+        /// the keys are not in the cache, this method should return an 
+        /// IObservable which OnError's with KeyNotFoundException.
+        /// </summary>
+        /// <param name="keys">The keys to return asynchronously.</param>
+        /// <returns>A Future result representing the byte data for each key.</returns>
+        IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys);
 
         /// <summary>
         /// Return all keys in the cache. Note that this method is normally
@@ -59,6 +68,14 @@ namespace Akavache
         IObservable<DateTimeOffset?> GetCreatedAt(string key);
 
         /// <summary>
+        /// Returns the time that the keys were added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The keys to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys);
+
+        /// <summary>
         /// This method guarantees that all in-flight inserts have completed
         /// and any indexes have been written to disk.
         /// </summary>
@@ -71,6 +88,13 @@ namespace Akavache
         /// </summary>
         /// <param name="key">The key to remove from the cache.</param>
         IObservable<Unit> Invalidate(string key);
+
+        /// <summary>
+        /// Remove several keys from the cache. If the key doesn't exist, this method
+        /// should do nothing and return (*not* throw KeyNotFoundException).
+        /// </summary>
+        /// <param name="key">The key to remove from the cache.</param>
+        IObservable<Unit> Invalidate(IEnumerable<string> keys);
 
         /// <summary>
         /// Invalidate all entries in the cache (i.e. clear it). Note that
