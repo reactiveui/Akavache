@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="BitmapImageExtensions.cs" />
     <Compile Include="BlobCache.cs" />
+    <Compile Include="BulkOperationsMixin.cs" />
     <Compile Include="CacheIndexEntry.cs" />
     <Compile Include="ConcurrentDictionary.cs" />
     <Compile Include="DependencyResolverMixin.cs" />
