@@ -140,15 +140,6 @@ namespace Akavache
         IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null);
 
         /// <summary>
-        /// Insert several objects into the cache, via the JSON serializer. 
-        /// Similarly to InsertAll, partial inserts should not happen.
-        /// </summary>
-        /// <param name="keyValuePairs">The data to insert into the cache</param>
-        /// <param name="absoluteExpiration">An optional expiration date.</param>
-        /// <returns>A Future result representing the completion of the insert.</returns>
-        IObservable<Unit> InsertAllObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
-
-        /// <summary>
         /// Get an object from the cache and deserialize it via the JSON
         /// serializer.
         /// </summary>
@@ -181,5 +172,36 @@ namespace Akavache
         /// <returns>
         /// A Future result representing the completion of the invalidation.</returns>
         IObservable<Unit> InvalidateAllObjects<T>();
+    }
+
+    public interface IObjectBulkBlobCache : IObjectBlobCache
+    {
+        /// <summary>
+        /// Insert several objects into the cache, via the JSON serializer. 
+        /// Similarly to InsertAll, partial inserts should not happen.
+        /// </summary>
+        /// <param name="keyValuePairs">The data to insert into the cache</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the completion of the insert.</returns>
+        IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+
+        /// <summary>
+        /// Get several objects from the cache and deserialize it via the JSON
+        /// serializer.
+        /// </summary>
+        /// <param name="keys">The key to look up in the cache.</param>
+        /// <param name="noTypePrefix">Use the exact key name instead of a
+        /// modified key name. If this is true, GetAllObjects will not find this object.</param>
+        /// <returns>A Future result representing the object in the cache.</returns>
+        IObservable<T> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false);
+
+        /// <summary>
+        /// Invalidates several objects from the cache. It is important that the Type
+        /// Parameter for this method be correct, and you cannot use 
+        /// IBlobCache.Invalidate to perform the same task.
+        /// </summary>
+        /// <param name="keys">The key to invalidate.</param>
+        /// <returns>A Future result representing the completion of the invalidation.</returns>
+        IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys);
     }
 }

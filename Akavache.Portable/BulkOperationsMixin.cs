@@ -49,5 +49,20 @@ namespace Akavache
                .SelectMany(x => This.Invalidate(x))
                .TakeLast(1);
         }
+
+        public static IObservable<Unit> InsertObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static IObservable<T> GetObjectsAsync<T>(this IBlobCache This, IEnumerable<string> keys, bool noTypePrefix = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static IObservable<Unit> InvalidateObjects<T>(this IBlobCache This, IEnumerable<string> keys)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
