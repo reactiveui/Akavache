@@ -869,14 +869,14 @@ namespace SQLite
 		/// <returns>
 		/// The number of rows added to the table.
 		/// </returns>
-		public int InsertAll (System.Collections.IEnumerable objects, bool beginTransaction = true)
+		public int InsertAll (System.Collections.IEnumerable objects, string extra, bool beginTransaction = true)
 		{
 			if (beginTransaction) {
 				BeginTransaction ();
 			}
 			var c = 0;
 			foreach (var r in objects) {
-				c += Insert (r);
+				c += Insert (r, extra);
 			}
 			if (beginTransaction) {
 				Commit ();
