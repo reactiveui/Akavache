@@ -133,10 +133,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-mobile.5.1.2\lib\WinRT45\ReactiveUI.Mobile.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Routing, Version=4.4.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-xaml.4.4.1\lib\WinRT45\ReactiveUI.Routing.dll</HintPath>
-    </Reference>
     <Reference Include="ReactiveUI.Xaml, Version=5.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-platforms.5.1.2\lib\WinRT45\ReactiveUI.Xaml.dll</HintPath>

@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Collections;
-using System.Runtime.Serialization;
-
-// ConcurrentDictionary.cs
+﻿// ConcurrentDictionary.cs
 //
 // Copyright (c) 2009 Jérémie "Garuma" Laval
 //
