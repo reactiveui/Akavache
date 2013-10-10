@@ -11,9 +11,11 @@ if ($SlnFileExists -eq $False) {
 ### Build the Release directory
 ###
 
-rmdir -r --force .\Release
+if (Test-Path .\Release) {
+	rmdir -r -force .\Release
+}
 
-foreach-object $Archs | %{mkdir -p ".\Release\$_"}
+foreach-object $Archs | %{mkdir -Path ".\Release\$_"}
 
 foreach-object $Archs | %{
     $currentArch = $_
