@@ -193,7 +193,7 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<T> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false);
+        IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false);
 
         /// <summary>
         /// Invalidates several objects from the cache. It is important that the Type

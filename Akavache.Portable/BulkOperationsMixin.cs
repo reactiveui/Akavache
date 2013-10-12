@@ -55,19 +55,39 @@ namespace Akavache
                .TakeLast(1);
         }
 
-        public static IObservable<Unit> InsertObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<IDictionary<string, T>> GetObjectsAsync<T>(this IBlobCache This, IEnumerable<string> keys, bool noTypePrefix = false)
         {
-            throw new NotImplementedException();
+            var bulkCache = This as IObjectBulkBlobCache;
+            if (bulkCache != null) return bulkCache.GetObjectsAsync<T>(keys);
+
+            return keys.ToObservable()
+                .SelectMany(x => 
+                {
+                    return This.GetObjectAsync<T>(x)
+                        .Select(y => new KeyValuePair<string, T>(x,y))
+                        .Catch<KeyValuePair<string, T>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, T>>());
+                })
+                .ToDictionary(k => k.Key, v => v.Value);           
         }
 
-        public static IObservable<T> GetObjectsAsync<T>(this IBlobCache This, IEnumerable<string> keys, bool noTypePrefix = false)
+        public static IObservable<Unit> InsertObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
-            throw new NotImplementedException();
+            var bulkCache = This as IObjectBulkBlobCache;
+            if (bulkCache != null) return bulkCache.InsertObjects(keyValuePairs, absoluteExpiration);
+
+            return keyValuePairs.ToObservable()
+                .SelectMany(x => This.InsertObject(x.Key, x.Value))
+                .TakeLast(1);
         }
 
         public static IObservable<Unit> InvalidateObjects<T>(this IBlobCache This, IEnumerable<string> keys)
         {
-            throw new NotImplementedException();
+            var bulkCache = This as IObjectBulkBlobCache;
+            if (bulkCache != null) return bulkCache.InvalidateObjects<T>(keys);
+
+            return keys.ToObservable()
+               .SelectMany(x => This.InvalidateObject<T>(x))
+               .TakeLast(1);
         }
     }
 }
