@@ -122,7 +122,8 @@ namespace Akavache.Sqlite3
         {
             if (disposed) return Observable.Throw<IDictionary<string, byte[]>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
 
-            return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE Key IN ?;", keys.ToArray())
+            string questionMarks = String.Join(",", keys.Select(_ => "?"));
+            return _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray())
                 .SelectMany(async xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
@@ -163,7 +164,8 @@ namespace Akavache.Sqlite3
         {
             if (disposed) return Observable.Throw<IDictionary<string, DateTimeOffset?>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
 
-            return _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE Key IN ?;", keys.ToArray())
+            var questionMarks = String.Join(",", keys.Select(_ => "?"));
+            return _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray())
                 .SelectMany(async xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
@@ -195,7 +197,8 @@ namespace Akavache.Sqlite3
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             lock (_inflightCache) foreach (var v in keys) { _inflightCache.Invalidate(v); }
 
-            return _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Key IN ?", keys.ToArray()).Select(_ => Unit.Default);
+            var questionMarks = String.Join(",", keys.Select(_ => "?"));
+            return _connection.ExecuteAsync(String.Format("DELETE FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()).Select(_ => Unit.Default);
         }
 
         public IObservable<Unit> InvalidateAll()
