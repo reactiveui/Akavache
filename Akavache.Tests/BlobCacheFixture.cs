@@ -211,6 +211,11 @@ namespace Akavache.Tests
         public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
     }
 
+    public class TEncryptedBlobCache : EncryptedBlobCache
+    {
+        public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
+    }
+
     public class PersistentBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
@@ -232,11 +237,6 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             return new TEncryptedBlobCache(path);
-        }
-
-        public class TEncryptedBlobCache : EncryptedBlobCache
-        {
-            public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
         }
     }
 
