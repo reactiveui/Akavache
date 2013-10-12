@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>reactiveui-platforms</id>
+    <version>5.2.0</version>
+    <authors>Paul Betts</authors>
+    <owners>Paul Betts</owners>
+    <licenseUrl>http://opensource.org/licenses/ms-pl.html</licenseUrl>
+    <projectUrl>http://www.reactiveui.net/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Platform specific extensions to ReactiveUI</description>
+    <language>en-us</language>
+    <dependencies>
+      <dependency id="reactiveui-core" version="[5.2.0]" />
+      <dependency id="Rx-Xaml" version="2.1.30214.0" />
+    </dependencies>
+  </metadata>
+</package>
