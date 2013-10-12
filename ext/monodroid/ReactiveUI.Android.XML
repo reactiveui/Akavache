@@ -20,6 +20,30 @@
             these are pretty gutted on some other platforms like Silverlight.
             </summary>
         </member>
+        <member name="F:ReactiveUI.Android.FlexibleCommandBinder.config">
+            <summary>
+            Configuration map
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Android.FlexibleCommandBinder.Register(System.Type,System.Int32,System.Func{System.Windows.Input.ICommand,System.Object,System.IObservable{System.Object},System.IDisposable})">
+            <summary>
+            Registers an observable factory for the specified type and property.
+            </summary>
+            <param name="type">Type.</param>
+            <param name="property">Property.</param>
+            <param name="createObservable">Create observable.</param>
+        </member>
+        <member name="M:ReactiveUI.Android.FlexibleCommandBinder.ForEvent(System.Windows.Input.ICommand,System.Object,System.IObservable{System.Object},System.String,System.String)">
+            <summary>
+            Creates a commands binding from event and a property
+            </summary>
+            <returns>The binding from event.</returns>
+            <param name="command">Command.</param>
+            <param name="target">Target.</param>
+            <param name="commandParameter">Command parameter.</param>
+            <param name="eventName">Event name.</param>
+            <param name="enablePropertyName">Enable property name.</param>
+        </member>
         <member name="T:ReactiveUI.PlatformUnitTestDetector">
             <summary>
             Because RxUI.dll is in a PLib, it doesn't have the SuperPowers it needs

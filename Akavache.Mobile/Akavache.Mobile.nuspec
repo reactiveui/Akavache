@@ -7,7 +7,7 @@
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="akavache" version="[3.0.2]" />
-      <dependency id="reactiveui-mobile" version="5.0.1" />
+      <dependency id="reactiveui-mobile" version="5.2.0" />
     </dependencies>
 
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>

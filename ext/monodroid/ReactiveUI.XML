@@ -1843,6 +1843,17 @@
             conforms to the spec described in IReactiveCommand.
             </summary>
         </member>
+        <member name="M:ReactiveUI.ReactiveCommand.CreateCombined(System.IObservable{System.Boolean},ReactiveUI.ReactiveCommand[])">
+            <summary>
+            This creates a ReactiveCommand that calls several child
+            ReactiveCommands when invoked. Its CanExecute will match the
+            combined result of the child CanExecutes (i.e. if any child
+            commands cannot execute, neither can the parent)
+            </summary>
+            <param name="canExecute">An Observable that determines whether the
+            parent command can execute</param>
+            <param name="commands">The commands to combine.</param>
+        </member>
         <member name="M:ReactiveUI.ReactiveCommand.RegisterAsync``1(System.Func{System.Object,System.IObservable{``0}})">
             <summary>
             Registers an asynchronous method to be called whenever the command
