@@ -16,7 +16,12 @@ namespace Akavache
             if (bulkCache != null) return bulkCache.GetAsync(keys);
 
             return keys.ToObservable()
-                .SelectMany(x => This.GetAsync(x).Select(y => new { Key = x, Value = y }))
+                .SelectMany(x => 
+                {
+                    return This.GetAsync(x)
+                        .Select(y => new KeyValuePair<string, byte[]>(x,y))
+                        .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, byte[]>>());
+                })
                 .ToDictionary(k => k.Key, v => v.Value);
         }
 
