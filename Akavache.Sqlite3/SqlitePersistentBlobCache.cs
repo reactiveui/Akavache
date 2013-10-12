@@ -305,14 +305,14 @@ namespace Akavache.Sqlite3
                         return new Dictionary<string, T>();
                     }
 
-                    await validXs.ToObservable()
-                        .Select(x => Observable.Defer(() => AfterReadFromDiskFilter(x.Value, Scheduler)
-                            .Do(y => x.Value = y)))
-                        .Merge(4);
+                    var ret = new Dictionary<string, T>();
+                    foreach(var x in validXs) 
+                    {
+                        x.Value = await AfterReadFromDiskFilter(x.Value, Scheduler);
+                        ret[x.Key] = await DeserializeObject<T>(x.Value);
+                    }
 
-                    return await validXs.ToObservable()
-                        .SelectMany(x => DeserializeObject<T>(x.Value).Select(y => new KeyValuePair<string, T>(x.Key, y)))
-                        .Aggregate(new Dictionary<string, T>(), (acc, x) => { acc.Add(x.Key, x.Value); return acc; });
+                    return ret;
                 })
                 .Multicast(new AsyncSubject<IDictionary<string, T>>())
                 .PermaRef();
