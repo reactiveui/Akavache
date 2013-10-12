@@ -80,7 +80,28 @@ namespace Akavache.Tests
             }
         }
 
+        [Fact]
+        public void InvalidateShouldTrashMultipleKeys()
+        {
+            var path = default(string);
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var data = new byte[] { 0x10, 0x20, 0x30, };
+                var keys = new[] { "Foo", "Bar", "Baz", };
 
+                foreach (var v in keys)
+                {
+                    fixture.Insert(v, data).First();
+                }
+
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+
+                fixture.Invalidate(keys).First();
+
+                Assert.Equal(0, fixture.GetAllKeys().Count());
+            }
+        }
     }
 
     class BlockingDisposeBulkCache : BlockingDisposeCache, IBulkBlobCache
