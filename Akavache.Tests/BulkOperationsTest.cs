@@ -38,6 +38,49 @@ namespace Akavache.Tests
                 Assert.Equal(keys.Count(), allData.Count());
             }
         }
+
+        [Fact]
+        public void GetAsyncShouldInvalidateOldKeys()
+        {
+            var path = default(string);
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var data = new byte[] { 0x10, 0x20, 0x30, };
+                var keys = new[] { "Foo", "Bar", "Baz", };
+
+                foreach (var v in keys)
+                {
+                    fixture.Insert(v, data, DateTimeOffset.MinValue).First();
+                }
+
+                var allData = fixture.GetAsync(keys).First();
+                Assert.Equal(0, allData.Count());
+                Assert.Equal(0, fixture.GetAllKeys().Count());
+            }
+        }
+
+        [Fact]
+        public void InsertShouldWorkWithMultipleKeys()
+        {
+            var path = default(string);
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var data = new byte[] { 0x10, 0x20, 0x30, };
+                var keys = new[] { "Foo", "Bar", "Baz", };
+
+                fixture.Insert(keys.ToDictionary(k => k, v => data)).First();
+
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+
+                var allData = fixture.GetAsync(keys).First();
+
+                Assert.Equal(keys.Count(), allData.Count());
+            }
+        }
+
+
     }
 
     class BlockingDisposeBulkCache : BlockingDisposeCache, IBulkBlobCache
