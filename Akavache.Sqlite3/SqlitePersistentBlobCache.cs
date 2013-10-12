@@ -263,7 +263,7 @@ namespace Akavache.Sqlite3
             return serializedElements
                 .SelectMany(x => x.ToObservable())
                 .Select(x => Observable.Defer(() => BeforeWriteToDiskFilter(x.Value, Scheduler))
-                    .Do(y => x.Value = y))
+                    .Select(y => { x.Value = y; return x; }))
                 .Merge(4)
                 .ToList()
                 .SelectMany(x => _connection.InsertAllAsync(x, "OR REPLACE").Select(_ => Unit.Default))
@@ -299,6 +299,11 @@ namespace Akavache.Sqlite3
                     }
 
                     var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
+
+                    if (validXs.Count == 0)
+                    {
+                        return new Dictionary<string, T>();
+                    }
 
                     await validXs.ToObservable()
                         .Select(x => Observable.Defer(() => AfterReadFromDiskFilter(x.Value, Scheduler)
