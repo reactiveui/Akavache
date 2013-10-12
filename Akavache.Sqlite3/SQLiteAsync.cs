@@ -193,10 +193,10 @@ namespace SQLite
             });
         }
 
-        public IObservable<int> InsertAllAsync (IEnumerable items)
+        public IObservable<int> InsertAllAsync (IEnumerable items, string extra)
         {
             return _pool.EnqueueConnectionOp(conn => {
-                return conn.InsertAll (items);
+                return conn.InsertAll (items, extra);
             });
         }
 

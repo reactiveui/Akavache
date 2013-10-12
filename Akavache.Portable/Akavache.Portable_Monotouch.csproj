@@ -79,6 +79,7 @@
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="ConcurrentDictionary.cs" />
     <Compile Include="BitmapImageExtensions.cs" />
+    <Compile Include="BulkOperationsMixin.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
 </Project>

@@ -83,6 +83,7 @@
     <Compile Include="RelativeTimeMixin.cs" />
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="BitmapImageExtensions.cs" />
+    <Compile Include="BulkOperationsMixin.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

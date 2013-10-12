@@ -33,6 +33,20 @@ namespace Akavache
         }
 
         /// <summary>
+        /// Insert several objects into the cache, via the JSON serializer. 
+        /// Similarly to InsertAll, partial inserts should not happen.
+        /// </summary>
+        /// <param name="keyValuePairs">The data to insert into the cache</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the completion of the insert.</returns>
+        public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return objCache.InsertAllObjects(keyValuePairs, absoluteExpiration);
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Get an object from the cache and deserialize it via the JSON
         /// serializer.
         /// </summary>
