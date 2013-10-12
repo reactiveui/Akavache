@@ -16,7 +16,7 @@ using SQLite;
 
 namespace Akavache.Sqlite3
 {
-    public class SqlitePersistentBlobCache : IObjectBlobCache, IBulkBlobCache, IEnableLogger
+    public class SqlitePersistentBlobCache : IObjectBlobCache, IObjectBulkBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
         public IServiceProvider ServiceProvider { get; private set; }
@@ -132,8 +132,14 @@ namespace Akavache.Sqlite3
                         await Invalidate(invalidXs.Select(x => x.Key));
                     }
 
-                    return xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime)
-                        .ToDictionary(k => k.Key, v => v.Value);
+                    var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
+
+                    await validXs.ToObservable()
+                        .Select(x => Observable.Defer(() => AfterReadFromDiskFilter(x.Value, Scheduler)
+                            .Do(y => x.Value = y)))
+                        .Merge(4);
+
+                    return validXs.ToDictionary(k => k.Key, v => v.Value);
                 });
         }
 

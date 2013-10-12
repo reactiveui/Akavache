@@ -8,7 +8,7 @@ using ReactiveUI;
 
 namespace Akavache.Sqlite3
 {
-    public class EncryptedBlobCache : SqlitePersistentBlobCache, ISecureBlobCache
+    public class EncryptedBlobCache : SqlitePersistentBlobCache, IObjectBlobCache, IBulkBlobCache, IObjectBulkBlobCache, ISecureBlobCache
     {
         public EncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler)
         {

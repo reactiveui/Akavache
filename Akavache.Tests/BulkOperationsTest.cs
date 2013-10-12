@@ -36,6 +36,7 @@ namespace Akavache.Tests
                 var allData = fixture.GetAsync(keys).First();
 
                 Assert.Equal(keys.Count(), allData.Count());
+                Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
             }
         }
 
@@ -77,6 +78,7 @@ namespace Akavache.Tests
                 var allData = fixture.GetAsync(keys).First();
 
                 Assert.Equal(keys.Count(), allData.Count());
+                Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
             }
         }
 
@@ -161,4 +163,11 @@ namespace Akavache.Tests
         }
     }
 
+    public class EncryptedSqliteBlobCacheBulkOperationsTests : BulkOperationsTests
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+        }
+    }
 }
