@@ -82,7 +82,8 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
-            lock (_inflightCache) {
+            lock (_inflightCache) 
+            {
                 foreach(var kvp in keyValuePairs) _inflightCache.Invalidate(kvp.Key);
             }
 
@@ -110,7 +111,8 @@ namespace Akavache.Sqlite3
         public IObservable<byte[]> GetAsync(string key)
         {
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
-            lock (_inflightCache) {
+            lock (_inflightCache) 
+            {
                 return _inflightCache.Get(key)
                     .Select(x => x.Value)
                     .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
@@ -238,6 +240,36 @@ namespace Akavache.Sqlite3
             return ret;
         }
 
+        public IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            lock (_inflightCache) 
+            {
+                foreach(var kvp in keyValuePairs) _inflightCache.Invalidate(kvp.Key);
+            }
+
+            var serializedElements = Observable.Start(() =>
+            {
+                return keyValuePairs.Select(x => new CacheElement()
+                {
+                    Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
+                    Key = x.Key,
+                    TypeName = typeof(T).FullName,
+                    Value = SerializeObject<T>(x.Value)
+                }).ToList();
+            }, Scheduler);
+
+            return serializedElements
+                .SelectMany(x => x.ToObservable())
+                .Select(x => Observable.Defer(() => BeforeWriteToDiskFilter(x.Value, Scheduler))
+                    .Do(y => x.Value = y))
+                .Merge(4)
+                .ToList()
+                .SelectMany(x => _connection.InsertAllAsync(x, "OR REPLACE").Select(_ => Unit.Default))
+                .Multicast(new AsyncSubject<Unit>()).PermaRef();
+        }
+
         public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
         {
             if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
@@ -246,8 +278,39 @@ namespace Akavache.Sqlite3
                 var ret = _inflightCache.Get(key);
                 return ret
                     .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
-                    .SelectMany(DeserializeObject<T>);
+                    .SelectMany(DeserializeObject<T>)
+                    .Multicast(new AsyncSubject<T>())
+                    .PermaRef();
             }
+        }
+
+        public IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false)
+        {
+            if (disposed) return Observable.Throw<IDictionary<string, T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            string questionMarks = String.Join(",", keys.Select(_ => "?"));
+            return _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray())
+                .SelectMany(async xs =>
+                {
+                    var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
+                    if (invalidXs.Count > 0)
+                    {
+                        await Invalidate(invalidXs.Select(x => x.Key));
+                    }
+
+                    var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
+
+                    await validXs.ToObservable()
+                        .Select(x => Observable.Defer(() => AfterReadFromDiskFilter(x.Value, Scheduler)
+                            .Do(y => x.Value = y)))
+                        .Merge(4);
+
+                    return await validXs.ToObservable()
+                        .SelectMany(x => DeserializeObject<T>(x.Value).Select(y => new KeyValuePair<string, T>(x.Key, y)))
+                        .Aggregate(new Dictionary<string, T>(), (acc, x) => { acc.Add(x.Key, x.Value); return acc; });
+                })
+                .Multicast(new AsyncSubject<IDictionary<string, T>>())
+                .PermaRef();
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
@@ -265,6 +328,12 @@ namespace Akavache.Sqlite3
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             return Invalidate(key);
+        }
+
+        public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
+        {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            return Invalidate(keys);
         }
 
         public IObservable<Unit> InvalidateAllObjects<T>()
@@ -362,8 +431,6 @@ namespace Akavache.Sqlite3
                 new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
         }
-
-
     }
 
     class CacheElement
