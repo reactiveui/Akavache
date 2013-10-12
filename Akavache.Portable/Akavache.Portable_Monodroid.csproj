@@ -153,6 +153,7 @@
     <Compile Include="RelativeTimeMixin.cs" />
     <Compile Include="TestBlobCache.cs" />
     <Compile Include="BitmapImageExtensions.cs" />
+    <Compile Include="BulkOperationsMixin.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
