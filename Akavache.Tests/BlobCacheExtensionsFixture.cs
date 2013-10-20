@@ -383,6 +383,49 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void GetOrFetchShouldRespectExpiration()
+        {
+            (new TestScheduler()).With(sched => 
+            {
+                string path;
+                using (Utility.WithEmptyDirectory(out path))
+                {
+                    var fixture = CreateBlobCache(path);
+                    using (fixture)
+                    {
+                        var result = default(string);
+                        fixture.GetOrFetchObject("foo",
+                            () => Observable.Return("bar"),
+                            sched.Now + TimeSpan.FromMilliseconds(1000))
+                            .Subscribe(x => result = x);
+
+                        sched.AdvanceByMs(250);
+                        Assert.Equal("bar", result);
+
+                        fixture.GetOrFetchObject("foo",
+                            () => Observable.Return("baz"),
+                            sched.Now + TimeSpan.FromMilliseconds(1000))
+                            .Subscribe(x => result = x);
+
+                        sched.AdvanceByMs(250);
+                        Assert.Equal("bar", result);
+
+                        sched.AdvanceByMs(1000);
+                        fixture.GetOrFetchObject("foo",
+                            () => Observable.Return("baz"),
+                            sched.Now + TimeSpan.FromMilliseconds(1000))
+                            .Subscribe(x => result = x);
+
+                        sched.AdvanceByMs(250);
+                        Assert.Equal("baz", result);
+                    }
+
+                    fixture.Shutdown.Wait();
+                }
+            });
+        }
+
+        [Fact]
         public void KeysByTypeTest()
         {
             string path;
@@ -500,7 +543,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new TestBlobCache();
+            return new TestBlobCache(RxApp.MainThreadScheduler);
         }
     }
 
