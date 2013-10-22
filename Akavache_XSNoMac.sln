@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Portable_Monotouch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_Monodroid", "Akavache.Mobile\Akavache.Mobile_Monodroid.csproj", "{192A477B-BB94-A3C1-F14E-E177EF9FEDB7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Http_Monotouch", "Akavache.Http\Akavache.Http_Monotouch.csproj", "{AA91337A-9E94-2DB1-8F1E-05E1FDA78FFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA91337A-9E94-2DB1-8F1E-05E1FDA78FFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA91337A-9E94-2DB1-8F1E-05E1FDA78FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA91337A-9E94-2DB1-8F1E-05E1FDA78FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA91337A-9E94-2DB1-8F1E-05E1FDA78FFC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F92A4778-B294-1AC1-084E-E177EF9FEDB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F92A4778-B294-1AC1-084E-E177EF9FEDB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F92A4778-B294-1AC1-084E-E177EF9FEDB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
