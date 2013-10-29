@@ -201,11 +201,11 @@ namespace Akavache
                     try {
                         ret = await fetchFunc();
                     } catch (Exception) {
-                        if (shouldInvalidateOnError) This.Invalidate(key);
+                        if (shouldInvalidateOnError) This.InvalidateObject<T>(key);
                         throw;
                     }
 
-                    await This.Invalidate(key);
+                    await This.InvalidateObject<T>(key);
                     await This.InsertObject(key, ret, absoluteExpiration);
                     return ret;
                 });

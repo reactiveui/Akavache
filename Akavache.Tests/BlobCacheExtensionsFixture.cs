@@ -426,6 +426,40 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void GetAndFetchLatestShouldInvalidateObjectOnError()
+        {
+            var fetcher = new Func<IObservable<string>>(() =>
+            {
+                throw new InvalidOperationException();
+            });
+
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                var fixture = CreateBlobCache(path);
+
+                using (fixture)
+                {
+                    if (fixture is TestBlobCache) return;
+
+                    fixture.InsertObject("foo", "bar").First();
+
+                    fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
+                        .Catch(Observable.Return("get and fetch latest error"))
+                        .First();
+
+                    var result = fixture.GetObjectAsync<string>("foo")
+                         .Catch(Observable.Return("get error"))
+                         .First();
+
+                    Assert.Equal("get error", result);
+                }
+
+                fixture.Shutdown.Wait();
+            }
+        }
+
+        [Fact]
         public void KeysByTypeTest()
         {
             string path;
