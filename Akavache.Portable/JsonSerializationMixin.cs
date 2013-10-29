@@ -160,6 +160,20 @@ namespace Akavache
         }
 
         /// <summary>
+        /// Returns the time that the key was added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The key to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache This, string key)
+        {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return This.GetCreatedAt(key);
+
+            return This.GetCreatedAt(GetTypePrefixedKey(key, typeof(T)));
+        }
+
+        /// <summary>
         /// This method attempts to returned a cached value, while
         /// simultaneously calling a Func to return the latest value. When the
         /// latest data comes back, it replaces what was previously in the
@@ -193,7 +207,7 @@ namespace Akavache
             DateTimeOffset? absoluteExpiration = null,
             bool shouldInvalidateOnError = false)
         {
-            var fetch = Observable.Defer(() => This.GetCreatedAt(key))
+            var fetch = Observable.Defer(() => This.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
                 .SelectMany(async _ => {
