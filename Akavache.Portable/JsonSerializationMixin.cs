@@ -33,6 +33,20 @@ namespace Akavache
         }
 
         /// <summary>
+        /// Insert several objects into the cache, via the JSON serializer. 
+        /// Similarly to InsertAll, partial inserts should not happen.
+        /// </summary>
+        /// <param name="keyValuePairs">The data to insert into the cache</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the completion of the insert.</returns>
+        public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return objCache.InsertAllObjects(keyValuePairs, absoluteExpiration);
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Get an object from the cache and deserialize it via the JSON
         /// serializer.
         /// </summary>
@@ -146,6 +160,20 @@ namespace Akavache
         }
 
         /// <summary>
+        /// Returns the time that the key was added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The key to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache This, string key)
+        {
+            var objCache = This as IObjectBlobCache;
+            if (objCache != null) return This.GetCreatedAt(key);
+
+            return This.GetCreatedAt(GetTypePrefixedKey(key, typeof(T)));
+        }
+
+        /// <summary>
         /// This method attempts to returned a cached value, while
         /// simultaneously calling a Func to return the latest value. When the
         /// latest data comes back, it replaces what was previously in the
@@ -179,7 +207,7 @@ namespace Akavache
             DateTimeOffset? absoluteExpiration = null,
             bool shouldInvalidateOnError = false)
         {
-            var fetch = Observable.Defer(() => This.GetCreatedAt(key))
+            var fetch = Observable.Defer(() => This.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
                 .SelectMany(async _ => {
@@ -187,11 +215,11 @@ namespace Akavache
                     try {
                         ret = await fetchFunc();
                     } catch (Exception) {
-                        if (shouldInvalidateOnError) This.Invalidate(key);
+                        if (shouldInvalidateOnError) This.InvalidateObject<T>(key);
                         throw;
                     }
 
-                    await This.Invalidate(key);
+                    await This.InvalidateObject<T>(key);
                     await This.InsertObject(key, ret, absoluteExpiration);
                     return ret;
                 });
@@ -250,7 +278,7 @@ namespace Akavache
         public static IObservable<Unit> InvalidateObject<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) objCache.InvalidateObject<T>(key);
+            if (objCache != null) return objCache.InvalidateObject<T>(key);
 
             return This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
         }
@@ -264,7 +292,7 @@ namespace Akavache
         public static IObservable<Unit> InvalidateAllObjects<T>(this IBlobCache This)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) objCache.InvalidateAllObjects<T>();
+            if (objCache != null) return objCache.InvalidateAllObjects<T>();
             var ret = new AsyncSubject<Unit>();
 
             This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))

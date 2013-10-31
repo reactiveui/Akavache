@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.0.2</version>
+    <version>3.1.1</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>    
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="Newtonsoft.Json" version="5.0.5" /> 
-      <dependency id="reactiveui-core" version="5.0.1" />
+      <dependency id="reactiveui-core" version="5.2.0" />
     </dependencies>
 
     <id>akavache.portable</id>
@@ -20,10 +20,10 @@
   </metadata>
 
   <files>
-    <file src="bin\Release\Akavache.Portable.*" target="lib\net45" />
-    <file src="bin\Release\Akavache.Portable.*" target="lib\wp8" />
-    <file src="bin\Release\Akavache.Portable.*" target="lib\NetCore45" />
-    <file src="bin\Release\Akavache.Portable.*" target="lib\portable-net45+win8+wp8" />
+    <file src="bin\Release\portable-net45+winrt45+wp8\Akavache.Portable.*" target="lib\net45" />
+    <file src="bin\Release\portable-net45+winrt45+wp8\Akavache.Portable.*" target="lib\wp8" />
+    <file src="bin\Release\portable-net45+winrt45+wp8\Akavache.Portable.*" target="lib\NetCore45" />
+    <file src="bin\Release\portable-net45+winrt45+wp8\Akavache.Portable.*" target="lib\portable-net45+win8+wp8" />
     <file src="bin\Release\MonoMac\Akavache.Portable.*" target="lib\MonoMac" />
     <file src="bin\Release\MonoAndroid\Akavache.Portable.*" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.Portable.*" target="lib\MonoTouch" />

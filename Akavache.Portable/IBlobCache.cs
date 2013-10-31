@@ -81,6 +81,44 @@ namespace Akavache
         IScheduler Scheduler { get; }
     }
 
+    public interface IBulkBlobCache : IBlobCache
+    {
+        /// <summary>
+        /// Inserts several keys into the database at one time. If any individual
+        /// insert fails, this operation should cancel the entire insert (i.e. it
+        /// should *not* partially succeed)
+        /// </summary>
+        /// <param name="keyValuePairs">The keys and values to insert.</param>
+        /// <param name="absoluteExpiration">An optional expiration date.
+        /// After the specified date, the key-value pair should be removed.</param>
+        /// <returns>A signal to indicate when the key has been inserted.</returns>
+        IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+
+        /// <summary>
+        /// Retrieve several values from the key-value cache. If any of 
+        /// the keys are not in the cache, this method should return an 
+        /// IObservable which OnError's with KeyNotFoundException.
+        /// </summary>
+        /// <param name="keys">The keys to return asynchronously.</param>
+        /// <returns>A Future result representing the byte data for each key.</returns>
+        IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys);
+
+        /// <summary>
+        /// Returns the time that the keys were added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The keys to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys);
+
+        /// <summary>
+        /// Remove several keys from the cache. If the key doesn't exist, this method
+        /// should do nothing and return (*not* throw KeyNotFoundException).
+        /// </summary>
+        /// <param name="key">The key to remove from the cache.</param>
+        IObservable<Unit> Invalidate(IEnumerable<string> keys);
+    }
+
     /// <summary>
     /// This interface indicates that the underlying BlobCache implementation
     /// encrypts or otherwise secures its persisted content. 
@@ -134,5 +172,36 @@ namespace Akavache
         /// <returns>
         /// A Future result representing the completion of the invalidation.</returns>
         IObservable<Unit> InvalidateAllObjects<T>();
+    }
+
+    public interface IObjectBulkBlobCache : IObjectBlobCache
+    {
+        /// <summary>
+        /// Insert several objects into the cache, via the JSON serializer. 
+        /// Similarly to InsertAll, partial inserts should not happen.
+        /// </summary>
+        /// <param name="keyValuePairs">The data to insert into the cache</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the completion of the insert.</returns>
+        IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+
+        /// <summary>
+        /// Get several objects from the cache and deserialize it via the JSON
+        /// serializer.
+        /// </summary>
+        /// <param name="keys">The key to look up in the cache.</param>
+        /// <param name="noTypePrefix">Use the exact key name instead of a
+        /// modified key name. If this is true, GetAllObjects will not find this object.</param>
+        /// <returns>A Future result representing the object in the cache.</returns>
+        IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false);
+
+        /// <summary>
+        /// Invalidates several objects from the cache. It is important that the Type
+        /// Parameter for this method be correct, and you cannot use 
+        /// IBlobCache.Invalidate to perform the same task.
+        /// </summary>
+        /// <param name="keys">The key to invalidate.</param>
+        /// <returns>A Future result representing the completion of the invalidation.</returns>
+        IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys);
     }
 }

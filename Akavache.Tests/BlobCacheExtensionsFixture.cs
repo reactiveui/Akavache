@@ -383,6 +383,118 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void GetOrFetchShouldRespectExpiration()
+        {
+            (new TestScheduler()).With(sched => 
+            {
+                string path;
+                using (Utility.WithEmptyDirectory(out path))
+                {
+                    var fixture = CreateBlobCache(path);
+                    using (fixture)
+                    {
+                        var result = default(string);
+                        fixture.GetOrFetchObject("foo",
+                            () => Observable.Return("bar"),
+                            sched.Now + TimeSpan.FromMilliseconds(1000))
+                            .Subscribe(x => result = x);
+
+                        sched.AdvanceByMs(250);
+                        Assert.Equal("bar", result);
+
+                        fixture.GetOrFetchObject("foo",
+                            () => Observable.Return("baz"),
+                            sched.Now + TimeSpan.FromMilliseconds(1000))
+                            .Subscribe(x => result = x);
+
+                        sched.AdvanceByMs(250);
+                        Assert.Equal("bar", result);
+
+                        sched.AdvanceByMs(1000);
+                        fixture.GetOrFetchObject("foo",
+                            () => Observable.Return("baz"),
+                            sched.Now + TimeSpan.FromMilliseconds(1000))
+                            .Subscribe(x => result = x);
+
+                        sched.AdvanceByMs(250);
+                        Assert.Equal("baz", result);
+                    }
+
+                    fixture.Shutdown.Wait();
+                }
+            });
+        }
+
+        [Fact]
+        public void GetAndFetchLatestShouldInvalidateObjectOnError()
+        {
+            var fetcher = new Func<IObservable<string>>(() =>
+            {
+                throw new InvalidOperationException();
+            });
+
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                var fixture = CreateBlobCache(path);
+
+                using (fixture)
+                {
+                    if (fixture is TestBlobCache) return;
+
+                    fixture.InsertObject("foo", "bar").First();
+
+                    fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
+                        .Catch(Observable.Return("get and fetch latest error"))
+                        .First();
+
+                    var result = fixture.GetObjectAsync<string>("foo")
+                         .Catch(Observable.Return("get error"))
+                         .First();
+
+                    Assert.Equal("get error", result);
+                }
+
+                fixture.Shutdown.Wait();
+            }
+        }
+
+        [Fact]
+        public void GetAndFetchLatestCallsFetchPredicate()
+        {
+            var fetchPredicateCalled = false;
+
+            Func<DateTimeOffset, bool> fetchPredicate = d =>
+            {
+                fetchPredicateCalled = true;
+
+                return true;
+            };
+
+            var fetcher = new Func<IObservable<string>>(() => Observable.Return("baz"));
+
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                var fixture = CreateBlobCache(path);
+
+                using (fixture)
+                {
+                    if (fixture is TestBlobCache) return;
+
+                    fixture.InsertObject("foo", "bar").First();
+
+                    fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate)
+                        .First();
+
+                    Assert.True(fetchPredicateCalled);
+                }
+
+                fixture.Shutdown.Wait();
+            }
+        }
+
+        [Fact]
         public void KeysByTypeTest()
         {
             string path;
@@ -500,7 +612,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new TestBlobCache();
+            return new TestBlobCache(RxApp.MainThreadScheduler);
         }
     }
 
