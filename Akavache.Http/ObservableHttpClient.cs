@@ -28,19 +28,24 @@ namespace Akavache
             shouldFetchContent = shouldFetchContent ?? (_ => true);
 
             var cancelSignal = new AsyncSubject<Unit>();
-            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(async (subj, ct) => {
-                try {
+            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(async (subj, ct) => 
+            {
+                try 
+                {
                     // NB: This stops HttpClient from trashing our token :-/
                     var cts = new CancellationTokenSource();
                     ct.Register(cts.Cancel);
 
                     var resp = await This.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
 
-                    if (!shouldFetchContent(resp)) {
+                    if (!shouldFetchContent(resp))
+                    {
                         resp.Content.Dispose();
                         cancelSignal.OnNext(Unit.Default);
                         cancelSignal.OnCompleted();
-                    } else {
+                    } 
+                    else 
+                    {
                         var target = new MemoryStream();
                         var source = await resp.Content.ReadAsStreamAsync();
 
@@ -49,7 +54,9 @@ namespace Akavache
                         subj.OnNext(Tuple.Create(resp, target.ToArray()));
                         subj.OnCompleted();
                     }
-                } catch (Exception ex) {
+                } 
+                catch (Exception ex) 
+                {
                     subj.OnError(ex);
                 }
             });
@@ -59,21 +66,25 @@ namespace Akavache
 
         static async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
         {
-            await Task.Run(async () => {
+            await Task.Run(async () => 
+            {
                 var buf = new byte[4096];
                 var read = 0;
 
-                do {
+                do 
+                {
                     read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
 
-                    if (read > 0) {
+                    if (read > 0) 
+                    {
                         target.Write(buf, 0, read);
                     }
                 } while (!ct.IsCancellationRequested && read > 0);
 
                 source.Dispose();
 
-                if (ct.IsCancellationRequested) {
+                if (ct.IsCancellationRequested) 
+                {
                     source.Dispose();
                     target.Dispose();
                     throw new OperationCanceledException();
