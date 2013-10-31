@@ -79,5 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ObservableHttpClient.cs" />
+    <Compile Include="Interfaces.cs" />
   </ItemGroup>
 </Project>
