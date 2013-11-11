@@ -22,12 +22,6 @@ namespace Akavache.Http
         HttpClient Client { get; set; }
     }
 
-    public interface IAkavacheCachePolicy
-    {
-        IObservable<Tuple<HttpResponseMessage, byte[]>> RetrieveCachedResponse(HttpRequestMessage message);
-        IObservable<Unit> SaveResponse(HttpResponseMessage response, byte[] body);
-    }
-
     public static class NetCache 
     {
         static IHttpScheduler speculative;
