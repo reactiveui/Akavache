@@ -16,7 +16,7 @@ namespace Akavache.Http
         BackgroundGuaranteed = 30,
     }
 
-    public interface INetCache
+    public interface IHttpScheduler
     {
         IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority);
         HttpClient Client { get; set; }
@@ -28,62 +28,13 @@ namespace Akavache.Http
         IObservable<Unit> SaveResponse(HttpResponseMessage response, byte[] body);
     }
 
-    public class StandardNetCache : INetCache
-    {
-        readonly IAkavacheCachePolicy httpCache;
-        readonly OperationQueue opQueue;
-        readonly int priorityBase;
-        readonly int retryCount;
-
-        public StandardNetCache(IAkavacheCachePolicy httpCache, OperationQueue opQueue = null, int priorityBase = 100, int retryCount = 3)
-        {
-            this.httpCache = httpCache; this.opQueue = opQueue; this.priorityBase = priorityBase; this.retryCount = retryCount;
-        }
-
-        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
-        {
-            return httpCache.RetrieveCachedResponse(request)
-                .SelectMany(resp =>
-                {
-                    if (resp != null) return Observable.Return(resp);
-                    return scheduleDirect(request, priority);
-                });
-        }
-
-        IObservable<Tuple<HttpResponseMessage, byte[]>> scheduleDirect(HttpRequestMessage request, int priority)
-        {
-            var rq = Observable.Defer(() => Client.SendAsyncObservable(request));
-            if (retryCount > 0) 
-            {
-                rq = rq.Retry(retryCount);
-            }
-
-            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(subj =>
-            {
-                var cancel = new AsyncSubject<Unit>();
-                var disp = opQueue.EnqueueObservableOperation(priorityBase + priority, null, cancel, () => rq).Subscribe(subj);
-
-                return Disposable.Create(() => 
-                {
-                    cancel.OnNext(Unit.Default);    
-                    cancel.OnCompleted();
-                    disp.Dispose();
-                });
-            });
-
-            return ret.PublishLast().RefCount();
-        }
-
-        public HttpClient Client { get; set; }
-    }
-
     public static class NetCache 
     {
-        static INetCache speculative;
-        [ThreadStatic] static INetCache unitTestSpeculative;
-        public static INetCache Speculative
+        static IHttpScheduler speculative;
+        [ThreadStatic] static IHttpScheduler unitTestSpeculative;
+        public static IHttpScheduler Speculative
         {
-            get { return unitTestSpeculative ?? speculative ?? RxApp.DependencyResolver.GetService<INetCache>("Speculative"); }
+            get { return unitTestSpeculative ?? speculative ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("Speculative"); }
             set 
             {
                 if (RxApp.InUnitTestRunner())
@@ -98,11 +49,11 @@ namespace Akavache.Http
             }
         }
                 
-        static INetCache userInitiated;
-        [ThreadStatic] static INetCache unitTestUserInitiated;
-        public static INetCache UserInitiated
+        static IHttpScheduler userInitiated;
+        [ThreadStatic] static IHttpScheduler unitTestUserInitiated;
+        public static IHttpScheduler UserInitiated
         {
-            get { return unitTestUserInitiated ?? userInitiated ?? RxApp.DependencyResolver.GetService<INetCache>("UserInitiated"); }
+            get { return unitTestUserInitiated ?? userInitiated ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("UserInitiated"); }
             set 
             {
                 if (RxApp.InUnitTestRunner())
@@ -117,11 +68,11 @@ namespace Akavache.Http
             }
         }
 
-        static INetCache background;
-        [ThreadStatic] static INetCache unitTestBackground;
-        public static INetCache Background
+        static IHttpScheduler background;
+        [ThreadStatic] static IHttpScheduler unitTestBackground;
+        public static IHttpScheduler Background
         {
-            get { return unitTestBackground ?? background ?? RxApp.DependencyResolver.GetService<INetCache>("Background"); }
+            get { return unitTestBackground ?? background ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("Background"); }
             set 
             {
                 if (RxApp.InUnitTestRunner())
@@ -132,6 +83,25 @@ namespace Akavache.Http
                 else
                 {
                     background = value;
+                }
+            }
+        }
+
+        static IHttpScheduler backgroundGuaranteed;
+        [ThreadStatic] static IHttpScheduler unitTestBackgroundGuaranteed;
+        public static IHttpScheduler BackgroundGuaranteed
+        {
+            get { return unitTestBackgroundGuaranteed ?? backgroundGuaranteed ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("BackgroundGuaranteed"); }
+            set 
+            {
+                if (RxApp.InUnitTestRunner())
+                {
+                    unitTestBackgroundGuaranteed = value;
+                    backgroundGuaranteed = backgroundGuaranteed ?? value;
+                }
+                else
+                {
+                    backgroundGuaranteed = value;
                 }
             }
         }

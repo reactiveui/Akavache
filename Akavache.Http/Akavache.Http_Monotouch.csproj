@@ -80,5 +80,6 @@
   <ItemGroup>
     <Compile Include="ObservableHttpClient.cs" />
     <Compile Include="Interfaces.cs" />
+    <Compile Include="HttpScheduler.cs" />
   </ItemGroup>
 </Project>
