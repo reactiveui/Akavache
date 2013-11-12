@@ -8,6 +8,40 @@ using Punchclock;
 
 namespace Akavache.Http
 {
+    public class CachingHttpScheduler : HttpScheduler
+    {
+        readonly IBlobCache blobCache = null;
+        readonly IHttpScheduler innerScheduler = null;
+        
+        public CachingHttpScheduler(IBlobCache blobCache = null, IHttpScheduler innerScheduler = null)
+        {
+            this.blobCache = blobCache ?? BlobCache.LocalMachine;
+            this.innerScheduler = innerScheduler ?? new HttpScheduler();
+            
+            // Things that are interesting:
+            // - If-None-Match
+            // - If-Modified-Since
+            // - If-Range
+            // - If-Unmodified-Since
+            // - Last-Modified
+            // - HEAD
+            // - Age
+            // - Cache-Control request
+            // - Cache-Control response
+            // - ETag
+            // - ServerDate
+            // - Expires
+            // - Pragma: no-cache
+            // - Retry-After + 503
+
+            // Things that are tricky
+            // - High prio rqs that satisfy a low prio pending request, we need
+            //   to cancel / dequeue the low prio underlying one and return the high-prio
+            //   one. (i.e. priority inversion)
+            // 
+        }
+    }
+
     public class HttpScheduler : IHttpScheduler
     {
         protected readonly OperationQueue opQueue;
@@ -34,7 +68,8 @@ namespace Akavache.Http
             var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(subj =>
             {
                 var cancel = new AsyncSubject<Unit>();
-                var disp = opQueue.EnqueueObservableOperation(priorityBase + priority, null, cancel, () => rq).Subscribe(subj);
+                var disp = opQueue.EnqueueObservableOperation(priorityBase + priority, null, cancel, () => rq)
+                    .Subscribe(subj);
 
                 return Disposable.Create(() => 
                 {
