@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive;
 using System.Reactive.Disposables;
 using Punchclock;
+using System.Collections.Generic;
+using System.Security.Cryptography;
 
 namespace Akavache.Http
 {
@@ -38,7 +42,46 @@ namespace Akavache.Http
             // - High prio rqs that satisfy a low prio pending request, we need
             //   to cancel / dequeue the low prio underlying one and return the high-prio
             //   one. (i.e. priority inversion)
-            // 
+        }
+
+        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
+        {
+            throw new NotImplementedException();
+        }
+
+        static string uniqueKeyForRequest(HttpRequestMessage request)
+        {
+            var ret = new[] 
+            {
+                request.RequestUri.AbsoluteUri,
+                request.Method.Method,
+                request.Headers.Accept.ConcatenateAll(x => x.CharSet + x.MediaType),
+                request.Headers.AcceptEncoding.ConcatenateAll(x => x.Value),
+                (request.Headers.Referrer ?? new Uri("http://example")).AbsolutePath,
+                request.Headers.UserAgent.ConcatenateAll(x => x.Product.ToString()),
+            }.Aggregate(new StringBuilder(), (acc, x) => { acc.AppendLine(x); return acc; });
+
+            if (request.Headers.Authorization != null) 
+            {
+                ret.AppendLine(request.Headers.Authorization.Parameter + request.Headers.Authorization.Scheme);
+            }
+
+            var sha1 = SHA1.Create();
+            var bytes = Encoding.UTF8.GetBytes(ret.ToString());
+            return BitConverter.ToString(sha1.ComputeHash(bytes)).Replace("-", "");
+        }
+    }
+
+    internal static class ConcatenateMixin
+    {
+        public static string ConcatenateAll<T>(this IEnumerable<T> This, Func<T, string> selector, char separator = '|')
+        {
+            return This.Aggregate(new StringBuilder(), (acc, x) => 
+            {
+                acc.Append(selector(x));
+                acc.Append(separator);
+                return acc;
+            }).ToString();
         }
     }
 
