@@ -47,6 +47,9 @@
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="Punchclock">
+      <HintPath>..\packages\Punchclock.1.0.1.1\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
+    </Reference>
     <Reference Include="ReactiveUI, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-core.5.2.0\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
@@ -65,6 +68,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
     </Reference>
@@ -102,6 +106,8 @@
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="BulkOperationsTest.cs" />
     <Compile Include="EncryptedBlobCacheFixture.cs" />
+    <Compile Include="Http\HttpSchedulerSharedTests.cs" />
+    <Compile Include="Http\TestHttpMessageHandler.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
     <Compile Include="Stresser.cs" />
     <Compile Include="Utility.cs" />
@@ -114,6 +120,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Http\Akavache.Http_Net45.csproj">
+      <Project>{9837ac44-ed0b-441d-add4-6750608d989d}</Project>
+      <Name>Akavache.Http_Net45</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
       <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
       <Name>Akavache.Portable</Name>
