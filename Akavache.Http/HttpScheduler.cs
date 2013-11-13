@@ -9,6 +9,7 @@ using System.Reactive.Disposables;
 using Punchclock;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Collections.Concurrent;
 
 namespace Akavache.Http
 {
@@ -16,6 +17,8 @@ namespace Akavache.Http
     {
         readonly IBlobCache blobCache = null;
         readonly IHttpScheduler innerScheduler = null;
+        readonly ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
+            new ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
         
         public CachingHttpScheduler(IBlobCache blobCache = null, IHttpScheduler innerScheduler = null)
         {
@@ -44,22 +47,40 @@ namespace Akavache.Http
             //   one. (i.e. priority inversion)
         }
 
-        public HttpClient Client { get; set; }
+        public HttpClient Client
+        {
+            get { return innerScheduler.Client; }
+            set { innerScheduler.Client = value; }
+        }
 
         public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
         {
-            throw new NotImplementedException();
+            var key = uniqueKeyForRequest(request);
+            var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
+
+            if (inflightDictionary.TryGetValue(key, out cache))
+            {
+                return cache;
+            }
+
+            var ret = innerScheduler.Schedule(request, priority)
+                .Finally(() => inflightDictionary.TryRemove(key, out cache))
+                .PublishLast()
+                .RefCount();
+
+            inflightDictionary.TryAdd(key, ret);
+            return ret;
         }
 
         static string uniqueKeyForRequest(HttpRequestMessage request)
         {
             var ret = new[] 
             {
-                request.RequestUri.AbsoluteUri,
+                request.RequestUri.ToString(),
                 request.Method.Method,
                 request.Headers.Accept.ConcatenateAll(x => x.CharSet + x.MediaType),
                 request.Headers.AcceptEncoding.ConcatenateAll(x => x.Value),
-                (request.Headers.Referrer ?? new Uri("http://example")).AbsolutePath,
+                (request.Headers.Referrer ?? new Uri("http://example")).AbsoluteUri,
                 request.Headers.UserAgent.ConcatenateAll(x => x.Product.ToString()),
             }.Aggregate(new StringBuilder(), (acc, x) => { acc.AppendLine(x); return acc; });
 
