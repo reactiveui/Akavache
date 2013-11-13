@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 
 namespace Akavache.Http
 {
-    public class CachingHttpScheduler : HttpScheduler
+    public class CachingHttpScheduler : IHttpScheduler
     {
         readonly IBlobCache blobCache = null;
         readonly IHttpScheduler innerScheduler = null;
@@ -43,6 +43,8 @@ namespace Akavache.Http
             //   to cancel / dequeue the low prio underlying one and return the high-prio
             //   one. (i.e. priority inversion)
         }
+
+        public HttpClient Client { get; set; }
 
         public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
         {
@@ -93,7 +95,7 @@ namespace Akavache.Http
 
         public HttpScheduler(OperationQueue opQueue = null, int priorityBase = 100, int retryCount = 3)
         {
-            this.opQueue = opQueue; 
+            this.opQueue = opQueue ?? new OperationQueue(); 
             this.priorityBase = priorityBase; 
             this.retryCount = retryCount;
         }
