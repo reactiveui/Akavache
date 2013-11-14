@@ -6,24 +6,26 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Threading;
 using System.Reactive.Threading.Tasks;
+using System.Reactive.Linq;
     
 namespace Akavache.Http.Tests
 {
     public class TestHttpMessageHandler : HttpMessageHandler
     {
-        Func<IObservable<HttpResponseMessage>> block;
-        public TestHttpMessageHandler(Func<IObservable<HttpResponseMessage>> createResult)
+        Func<HttpRequestMessage, IObservable<HttpResponseMessage>> block;
+        public TestHttpMessageHandler(Func<HttpRequestMessage, IObservable<HttpResponseMessage>> createResult)
         {
             block = createResult;
         }
 
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            // NB: We abuse await here so that the above throw gets marshalled 
-            // to a Task
-            return await block().ToTask();
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Observable.Throw<HttpResponseMessage>(new OperationCanceledException()).ToTask();
+            }
+
+            return block(request).ToTask();
         }
     }
 }

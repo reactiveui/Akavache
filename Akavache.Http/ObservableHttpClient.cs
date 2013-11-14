@@ -8,6 +8,7 @@ using System.Reactive.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Reactive;
+using ReactiveUI;
 
 namespace Akavache
 {
@@ -66,7 +67,7 @@ namespace Akavache
 
         static async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
         {
-            await Task.Run(async () => 
+            await Observable.Start(async () => 
             {
                 var buf = new byte[4096];
                 var read = 0;
@@ -89,7 +90,7 @@ namespace Akavache
                     target.Dispose();
                     throw new OperationCanceledException();
                 }
-            });
+            }, RxApp.TaskpoolScheduler).ToTask();
         }
     }
 }
