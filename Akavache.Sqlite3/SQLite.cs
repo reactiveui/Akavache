@@ -51,7 +51,7 @@ namespace SQLite
 	}
 
 	[Flags]
-	public enum SQLiteOpenFlags {
+	internal enum SQLiteOpenFlags {
 		ReadOnly = 1, ReadWrite = 2, Create = 4,
 		NoMutex = 0x8000, FullMutex = 0x10000,
 		SharedCache = 0x20000, PrivateCache = 0x40000,
@@ -2274,7 +2274,7 @@ namespace SQLite
 		}
     }
 
-	public static class SQLite3
+	internal static class SQLite3
 	{
 		public enum Result : int
 		{
@@ -2449,10 +2449,10 @@ namespace SQLite
 		}
 #else
 
-        public static Result Open(string filename, out Sqlite3.sqlite3 db)
-        {
-            return (Result) Sqlite3.sqlite3_open(filename, out db);
-        }
+		public static Result Open(string filename, out Sqlite3.sqlite3 db)
+		{
+			return (Result) Sqlite3.sqlite3_open(filename, out db);
+		}
 
 		public static Result Open(string filename, out Sqlite3.sqlite3 db, int flags, IntPtr zVfs)
 		{
