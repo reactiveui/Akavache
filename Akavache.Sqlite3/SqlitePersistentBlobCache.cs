@@ -309,7 +309,7 @@ namespace Akavache.Sqlite3
                         .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler)
                             .Select(val => { x.Value = val; return x; }))
                         .SelectMany(x => DeserializeObject<T>(x.Value)
-                            .Select(val => new { Key = x.Key, Value = val })
+                            .Select(val => new { Key = x.Key, Value = val }))
                         .ToDictionary(k => k.Key, v => v.Value);
                 })
                 .Multicast(new AsyncSubject<IDictionary<string, T>>())
