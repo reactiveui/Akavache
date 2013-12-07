@@ -19,7 +19,7 @@ namespace Akavache.Http
     public interface IHttpScheduler
     {
         IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority);
-        void ResetLimit();
+        void ResetLimit(long? maxBytesToRead = null);
 
         HttpClient Client { get; set; }
     }

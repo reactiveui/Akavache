@@ -126,7 +126,7 @@ namespace Akavache.Http.Tests
     {
         protected override IHttpScheduler CreateFixture()
         {
-            return new CachingHttpScheduler(new TestBlobCache(), new HttpScheduler());
+            return new CachingHttpScheduler(new HttpScheduler(), new TestBlobCache());
         }
     }
 }

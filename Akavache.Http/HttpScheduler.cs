@@ -82,9 +82,9 @@ namespace Akavache.Http
             return ret;
         }
 
-        public void ResetLimit()
+        public void ResetLimit(long? maxBytesToRead)
         {
-            innerScheduler.ResetLimit();
+            innerScheduler.ResetLimit(maxBytesToRead);
         }
 
         static string uniqueKeyForRequest(HttpRequestMessage request)
@@ -128,12 +128,11 @@ namespace Akavache.Http
         protected readonly OperationQueue opQueue;
         protected readonly int priorityBase;
         protected readonly int retryCount;
-        protected readonly Func<long> maxBytesRead = null;
 
-        protected long currentMax = Int64.MaxValue;
+        protected long? currentMax;
         protected long bytesRead;
 
-        public HttpScheduler(int priorityBase = 100, int retryCount = 3, Func<long> maxBytesRead = null, OperationQueue opQueue = null)
+        public HttpScheduler(int priorityBase = 100, int retryCount = 3, OperationQueue opQueue = null)
         {
             this.opQueue = opQueue ?? RxApp.DependencyResolver.GetService<OperationQueue>("Akavache.Http") ?? new OperationQueue();
             this.priorityBase = priorityBase; 
@@ -146,7 +145,7 @@ namespace Akavache.Http
 
         public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
         {
-            if (maxBytesRead != null && bytesRead >= currentMax)
+            if (currentMax != null && bytesRead >= currentMax.Value)
             {
                 return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));
             }
@@ -176,13 +175,10 @@ namespace Akavache.Http
             return ret.PublishLast().RefCount();
         }
 
-        public void ResetLimit()
+        public void ResetLimit(long? maxBytesToRead = null)
         {
             bytesRead = 0;
-
-            currentMax = maxBytesRead != null ?
-                maxBytesRead() :
-                Int64.MaxValue;
+            currentMax = maxBytesToRead;
         }
     }
 
