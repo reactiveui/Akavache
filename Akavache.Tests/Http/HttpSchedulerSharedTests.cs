@@ -112,6 +112,39 @@ namespace Akavache.Http.Tests
                 Assert.Equal(5, completedCount);
             });
         }
+
+        [Fact]
+        public void ScheduleAllShouldLetUsCancelEverything()
+        {
+            // NB: This is intentionally picked to be under the OperationQueue's
+            // default concurrency limit of 4
+            var resps = Enumerable.Range(0, 3)
+                .Select(_ => new AsyncSubject<HttpResponseMessage>())
+                .ToArray();
+
+            var currentResp = 0;
+            var client = new HttpClient(new TestHttpMessageHandler(_ => 
+                resps[(currentResp++) % resps.Length]));
+
+            var fixture = CreateFixture();
+            fixture.Client = client;
+
+            Assert.True(resps.All(x => x.HasObservers == false));
+
+            var disp = fixture.ScheduleAll(sched =>
+            {
+                resps.ToObservable()
+                    .SelectMany(_ => 
+                        sched.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri("http://example/" + Guid.NewGuid())), 3))
+                    .Subscribe();
+            });
+
+            Assert.True(resps.All(x => x.HasObservers == true));
+
+            disp.Dispose();
+
+            Assert.True(resps.All(x => x.HasObservers == false));
+        }
     }
 
     public class SanityTests
