@@ -79,6 +79,7 @@
     <Compile Include="HttpScheduler.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="ObservableHttpClient.cs" />
+    <Compile Include="Registrations.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
