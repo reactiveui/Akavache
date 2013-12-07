@@ -25,7 +25,7 @@ namespace Akavache.Http.Tests
                 return Observable.Throw<HttpResponseMessage>(new OperationCanceledException()).ToTask();
             }
 
-            return block(request).ToTask();
+            return block(request).ToTask(cancellationToken);
         }
     }
 }

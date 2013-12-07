@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Reactive;
 using ReactiveUI;
 
-namespace Akavache
+namespace Akavache.Http
 {
     public static class ObservableHttpClient
     {
