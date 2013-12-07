@@ -63,6 +63,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HttpSchedulerExtensions.cs" />
     <Compile Include="Interfaces.cs" />
   </ItemGroup>
   <ItemGroup>
