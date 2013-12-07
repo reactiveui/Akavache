@@ -10,6 +10,7 @@ using Punchclock;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using ReactiveUI;
 
 namespace Akavache.Http
 {
@@ -125,7 +126,7 @@ namespace Akavache.Http
 
         public HttpScheduler(OperationQueue opQueue = null, int priorityBase = 100, int retryCount = 3, long? maxBytesRead = null)
         {
-            this.opQueue = opQueue ?? new OperationQueue(); 
+            this.opQueue = opQueue ?? RxApp.DependencyResolver.GetService<OperationQueue>("Akavache.Http") ?? new OperationQueue();
             this.priorityBase = priorityBase; 
             this.retryCount = retryCount;
         }
