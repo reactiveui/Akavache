@@ -24,7 +24,7 @@ namespace Akavache.Http
         
         public CachingHttpScheduler(IBlobCache blobCache = null, IHttpScheduler innerScheduler = null)
         {
-            this.blobCache = blobCache ?? BlobCache.LocalMachine;
+            this.blobCache = blobCache;
             this.innerScheduler = innerScheduler ?? new HttpScheduler();
             
             // Things that are interesting:
@@ -53,6 +53,14 @@ namespace Akavache.Http
         {
             get { return innerScheduler.Client; }
             set { innerScheduler.Client = value; }
+        }
+
+        protected IBlobCache Cache
+        {
+            // NB: If we didn't look this up here, it would be impossible to
+            // override the cache that Akavache.Http uses since it would be
+            // saved off in the static ctor
+            get { return blobCache ?? BlobCache.LocalMachine; }
         }
 
         public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
