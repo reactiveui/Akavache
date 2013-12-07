@@ -17,6 +17,7 @@ namespace Akavache.Http
     {
         readonly IBlobCache blobCache = null;
         readonly IHttpScheduler innerScheduler = null;
+
         readonly ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
             new ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
         
@@ -72,6 +73,11 @@ namespace Akavache.Http
             return ret;
         }
 
+        public void ResetLimit()
+        {
+            innerScheduler.ResetLimit();
+        }
+
         static string uniqueKeyForRequest(HttpRequestMessage request)
         {
             var ret = new[] 
@@ -113,8 +119,11 @@ namespace Akavache.Http
         protected readonly OperationQueue opQueue;
         protected readonly int priorityBase;
         protected readonly int retryCount;
+        protected readonly long? maxBytesRead = null;
 
-        public HttpScheduler(OperationQueue opQueue = null, int priorityBase = 100, int retryCount = 3)
+        protected long bytesRead;
+
+        public HttpScheduler(OperationQueue opQueue = null, int priorityBase = 100, int retryCount = 3, long? maxBytesRead = null)
         {
             this.opQueue = opQueue ?? new OperationQueue(); 
             this.priorityBase = priorityBase; 
@@ -125,7 +134,14 @@ namespace Akavache.Http
 
         public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
         {
-            var rq = Observable.Defer(() => Client.SendAsyncObservable(request));
+            if (maxBytesRead != null && bytesRead >= maxBytesRead.Value) 
+            {
+                return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));
+            }
+
+            var rq = Observable.Defer(() => Client.SendAsyncObservable(request)
+                .Do(x => bytesRead += x.Item2.LongLength));
+
             if (retryCount > 0) 
             {
                 rq = rq.Retry(retryCount);
@@ -147,5 +163,17 @@ namespace Akavache.Http
 
             return ret.PublishLast().RefCount();
         }
+
+        public void ResetLimit()
+        {
+            bytesRead = 0;
+        }
+    }
+
+    public class SpeculationFinishedException : Exception
+    {
+        public SpeculationFinishedException() { }
+        public SpeculationFinishedException(string message) : base(message ) { }
+        public SpeculationFinishedException(string message, Exception inner) : base(message, inner) { }
     }
 }
