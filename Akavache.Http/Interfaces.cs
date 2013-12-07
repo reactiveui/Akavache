@@ -13,7 +13,7 @@ namespace Akavache.Http
         Speculative = 10,
         UserInitiated = 100,
         Background = 20,
-        BackgroundGuaranteed = 30,
+        //BackgroundGuaranteed = 30,
     }
 
     public interface IHttpScheduler
@@ -84,6 +84,7 @@ namespace Akavache.Http
             }
         }
 
+        /*
         static IHttpScheduler backgroundGuaranteed;
         [ThreadStatic] static IHttpScheduler unitTestBackgroundGuaranteed;
         public static IHttpScheduler BackgroundGuaranteed
@@ -102,5 +103,6 @@ namespace Akavache.Http
                 }
             }
         }
+        */
     }
 }
