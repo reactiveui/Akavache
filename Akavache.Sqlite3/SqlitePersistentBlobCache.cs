@@ -126,22 +126,22 @@ namespace Akavache.Sqlite3
 
             string questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray())
-                .SelectMany(async xs =>
+                .SelectMany(xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
-                    if (invalidXs.Count > 0)
-                    {
-                        await Invalidate(invalidXs.Select(x => x.Key));
-                    }
 
+                    var invalidate = (invalidXs.Count > 0) ?
+                        Invalidate(invalidXs.Select(x => x.Key)) :
+                        Observable.Return(Unit.Default);
+                                        
                     var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
 
-                    await validXs.ToObservable()
+                    return invalidate.SelectMany(_ => validXs.ToObservable())
                         .Select(x => Observable.Defer(() => AfterReadFromDiskFilter(x.Value, Scheduler)
                             .Do(y => x.Value = y)))
-                        .Merge(4);
-
-                    return validXs.ToDictionary(k => k.Key, v => v.Value);
+                        .Merge(4) 
+                        .Aggregate(Unit.Default, (acc,x) => acc)
+                        .Select(_ => validXs.ToDictionary(k => k.Key, v => v.Value));
                 });
         }
 
@@ -174,16 +174,17 @@ namespace Akavache.Sqlite3
 
             var questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray())
-                .SelectMany(async xs =>
+                .SelectMany(xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
-                    if (invalidXs.Count > 0)
-                    {
-                        await Invalidate(invalidXs.Select(x => x.Key));
-                    }
 
-                    return xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime)
-                        .ToDictionary(k => k.Key, v => new DateTimeOffset?(new DateTimeOffset(v.Expiration)));
+                    var invalidate = (invalidXs.Count > 0) ?
+                        Invalidate(invalidXs.Select(x => x.Key)) :
+                        Observable.Return(Unit.Default);
+
+                    return invalidate.Select(_ =>
+                        xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime)
+                            .ToDictionary(k => k.Key, v => new DateTimeOffset?(new DateTimeOffset(v.Expiration))));
                 });
         }
 
@@ -290,29 +291,26 @@ namespace Akavache.Sqlite3
 
             string questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray())
-                .SelectMany(async xs =>
+                .SelectMany(xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
-                    if (invalidXs.Count > 0)
-                    {
-                        await Invalidate(invalidXs.Select(x => x.Key));
-                    }
+                    var invalidate = (invalidXs.Count > 0) ?
+                        Invalidate(invalidXs.Select(x => x.Key)) :
+                        Observable.Return(Unit.Default);
 
                     var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
 
                     if (validXs.Count == 0)
                     {
-                        return new Dictionary<string, T>();
+                        return invalidate.Select(_ => new Dictionary<string, T>());
                     }
 
-                    var ret = new Dictionary<string, T>();
-                    foreach(var x in validXs) 
-                    {
-                        x.Value = await AfterReadFromDiskFilter(x.Value, Scheduler);
-                        ret[x.Key] = await DeserializeObject<T>(x.Value);
-                    }
-
-                    return ret;
+                    return validXs.ToObservable()
+                        .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler)
+                            .Select(val => { x.Value = val; return x; }))
+                        .SelectMany(x => DeserializeObject<T>(x.Value)
+                            .Select(val => new { Key = x.Key, Value = val }))
+                        .ToDictionary(k => k.Key, v => v.Value);
                 })
                 .Multicast(new AsyncSubject<IDictionary<string, T>>())
                 .PermaRef();
