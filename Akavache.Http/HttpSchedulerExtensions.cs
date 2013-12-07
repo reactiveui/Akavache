@@ -47,6 +47,11 @@ namespace Akavache.Http
             inner.ResetLimit(maxBytesToRead);
         }
 
+        public void CancelAll()
+        {
+            inner.CancelAll();
+        }
+
         public HttpClient Client
         {
             get { return inner.Client; }

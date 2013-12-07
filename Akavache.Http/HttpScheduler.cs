@@ -87,6 +87,11 @@ namespace Akavache.Http
             innerScheduler.ResetLimit(maxBytesToRead);
         }
 
+        public void CancelAll()
+        {
+            innerScheduler.CancelAll();
+        }
+
         static string uniqueKeyForRequest(HttpRequestMessage request)
         {
             var ret = new[] 
@@ -125,6 +130,7 @@ namespace Akavache.Http
 
     public class HttpScheduler : IHttpScheduler
     {
+        protected readonly Subject<Unit> cancelAllSignal = new Subject<Unit>();
         protected readonly OperationQueue opQueue;
         protected readonly int priorityBase;
         protected readonly int retryCount;
@@ -172,13 +178,21 @@ namespace Akavache.Http
                 });
             });
 
-            return ret.PublishLast().RefCount();
+            return ret.PublishLast().RefCount().TakeUntil(cancelAllSignal);
         }
 
         public void ResetLimit(long? maxBytesToRead = null)
         {
             bytesRead = 0;
             currentMax = maxBytesToRead;
+        }
+
+        public void CancelAll()
+        {
+            // NB: This is intentionally not completed, it is Hot - the current
+            // subscribers will be cleared out via the TakeUntil on the request,
+            // but new subscribers can just glom on to the signal
+            lock (cancelAllSignal) { cancelAllSignal.OnNext(Unit.Default); }
         }
     }
 
