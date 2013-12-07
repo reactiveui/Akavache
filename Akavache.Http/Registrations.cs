@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reactive.Concurrency;
 using Newtonsoft.Json;
 using ReactiveUI.Mobile;
+using ReactiveUI;
+using System.Reactive.Disposables;
 
 namespace Akavache.Http
 {
@@ -12,15 +15,47 @@ namespace Akavache.Http
     {
         public void Register(Action<Func<object>, Type, string> registerFunction)
         {
-            var background = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Background, 1));
-            registerFunction(() => background, typeof(IHttpScheduler), "Background");
+            var background = new Lazy<IHttpScheduler>(() =>
+            {
+                var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
+                var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Background, 1));
 
-            var userInitiated = new CachingHttpScheduler(new HttpScheduler((int)Priorities.UserInitiated, 3));
-            registerFunction(() => userInitiated, typeof(IHttpScheduler), "UserInitiated");
+                if (suspHost != null)
+                {
+                    suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
+                }
+                return ret;
+            });
+            registerFunction(() => background.Value, typeof(IHttpScheduler), "Background");
 
-            var speculative = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
-            speculative.ResetLimit(5 * 1048576);
-            registerFunction(() => speculative, typeof(IHttpScheduler), "Speculative");
+            var userInitiated = new Lazy<IHttpScheduler>(() =>
+            {
+                var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
+                var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.UserInitiated, 3));
+
+                if (suspHost != null)
+                {
+                    suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
+                }
+                return ret;
+            });
+            registerFunction(() => userInitiated.Value, typeof(IHttpScheduler), "UserInitiated");
+
+            var speculative = new Lazy<IHttpScheduler>(() =>
+            {
+                var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
+                var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
+                ret.ResetLimit(5 * 1048576);
+
+                if (suspHost != null)
+                {
+                    suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
+                    suspHost.IsUnpausing.Subscribe(_ => ret.ResetLimit(5 * 1048576));
+                }
+
+                return ret;
+            });
+            registerFunction(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
         }
     }
 }
