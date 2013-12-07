@@ -92,7 +92,7 @@ namespace Akavache.Http
                 return 512 * 1024;
             }
 
-            if (flags & NetworkReachabilityFlags.IsWWAN) {
+            if (flags.HasFlag(NetworkReachabilityFlags.IsWWAN)) {
                 return 5 * 1048576;
             }
 
