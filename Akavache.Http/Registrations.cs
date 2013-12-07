@@ -45,17 +45,31 @@ namespace Akavache.Http
             {
                 var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
-                ret.ResetLimit(5 * 1048576);
+                ret.ResetLimit(GetDataLimit());
 
                 if (suspHost != null)
                 {
                     suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
-                    suspHost.IsUnpausing.Subscribe(_ => ret.ResetLimit(5 * 1048576));
+                    suspHost.IsUnpausing.Subscribe(_ => ret.ResetLimit(GetDataLimit()));
                 }
 
                 return ret;
             });
             registerFunction(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
         }
+
+#if PORTABLE
+        static long GetDataLimit()
+        {
+            return 5 * 1048576;
+        }
+#endif
+
+#if NET45
+        static long GetDataLimit()
+        {
+            return 10 * 1048576;
+        }
+#endif
     }
 }
