@@ -21,8 +21,8 @@ namespace Akavache.Http
 
         readonly ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
             new ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
-        
-        public CachingHttpScheduler(IBlobCache blobCache = null, IHttpScheduler innerScheduler = null)
+
+        public CachingHttpScheduler(IHttpScheduler innerScheduler = null, IBlobCache blobCache = null)
         {
             this.blobCache = blobCache;
             this.innerScheduler = innerScheduler ?? new HttpScheduler();
@@ -128,22 +128,25 @@ namespace Akavache.Http
         protected readonly OperationQueue opQueue;
         protected readonly int priorityBase;
         protected readonly int retryCount;
-        protected readonly long? maxBytesRead = null;
+        protected readonly Func<long> maxBytesRead = null;
 
+        protected long currentMax = Int64.MaxValue;
         protected long bytesRead;
 
-        public HttpScheduler(OperationQueue opQueue = null, int priorityBase = 100, int retryCount = 3, long? maxBytesRead = null)
+        public HttpScheduler(int priorityBase = 100, int retryCount = 3, Func<long> maxBytesRead = null, OperationQueue opQueue = null)
         {
             this.opQueue = opQueue ?? RxApp.DependencyResolver.GetService<OperationQueue>("Akavache.Http") ?? new OperationQueue();
             this.priorityBase = priorityBase; 
             this.retryCount = retryCount;
+
+            ResetLimit();
         }
         
         public HttpClient Client { get; set; }
 
         public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
         {
-            if (maxBytesRead != null && bytesRead >= maxBytesRead.Value) 
+            if (maxBytesRead != null && bytesRead >= currentMax)
             {
                 return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));
             }
@@ -176,6 +179,10 @@ namespace Akavache.Http
         public void ResetLimit()
         {
             bytesRead = 0;
+
+            currentMax = maxBytesRead != null ?
+                maxBytesRead() :
+                Int64.MaxValue;
         }
     }
 
