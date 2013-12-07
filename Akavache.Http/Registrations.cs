@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reactive.Concurrency;
-using Newtonsoft.Json;
 using ReactiveUI.Mobile;
 using ReactiveUI;
 using System.Reactive.Disposables;
+using Windows.Networking.Connectivity;
 
 #if ANDROID
 using Android.App;
@@ -140,6 +140,19 @@ namespace Akavache.Http
                 default:
                     return 512 * 1024;
             }
+        }
+#endif
+
+#if WINRT
+        static long GetDataLimit()
+        {
+            var ci = NetworkInformation.GetConnectionProfiles().FirstOrDefault();
+            if (ci == null || ci.GetConnectionCost().NetworkCostType != NetworkCostType.Unrestricted)
+            {
+                return 512 * 1024;
+            }
+
+            return 5 * 1048576;
         }
 #endif
     }

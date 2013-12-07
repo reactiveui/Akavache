@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.IO;
 using System.Text;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -8,9 +9,15 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using Punchclock;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using ReactiveUI;
+
+#if WINRT
+using Windows.Security.Cryptography.Core;
+using System.Runtime.InteropServices.WindowsRuntime;
+#else
+using System.Security.Cryptography;
+#endif
 
 namespace Akavache.Http
 {
@@ -109,9 +116,16 @@ namespace Akavache.Http
                 ret.AppendLine(request.Headers.Authorization.Parameter + request.Headers.Authorization.Scheme);
             }
 
+#if WINRT
+            var sha1 = HashAlgorithmProvider.OpenAlgorithm(HashAlgorithmNames.Sha1);
+            var ms = new MemoryStream();
+            sha1.HashData(Encoding.UTF8.GetBytes(ret.ToString()).AsBuffer()).AsStream().CopyTo(ms);
+            return BitConverter.ToString(ms.ToArray()).Replace("-", "");
+#else
             var sha1 = SHA1.Create();
             var bytes = Encoding.UTF8.GetBytes(ret.ToString());
             return BitConverter.ToString(sha1.ComputeHash(bytes)).Replace("-", "");
+#endif
         }
     }
 
