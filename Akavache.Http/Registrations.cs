@@ -9,6 +9,10 @@ using ReactiveUI.Mobile;
 using ReactiveUI;
 using System.Reactive.Disposables;
 
+#if UIKIT
+using MonoTouch.SystemConfiguration;
+#endif
+
 namespace Akavache.Http
 {
     public class Registrations : IWantsToRegisterStuff
@@ -68,6 +72,24 @@ namespace Akavache.Http
 #if NET45
         static long GetDataLimit()
         {
+            return 10 * 1048576;
+        }
+#endif
+
+#if UIKIT
+        static long GetDataLimit()
+        {
+            var nm = new NetworkReachability("google.com");
+            var flags = default(NetworkReachabilityFlags);
+
+            if (!nm.TryGetFlags(out flags)) {
+                return 512 * 1024;
+            }
+
+            if (flags & NetworkReachabilityFlags.IsWWAN) {
+                return 5 * 1048576;
+            }
+
             return 10 * 1048576;
         }
 #endif
