@@ -7,7 +7,6 @@ using System.Reactive.Concurrency;
 using ReactiveUI.Mobile;
 using ReactiveUI;
 using System.Reactive.Disposables;
-using Windows.Networking.Connectivity;
 
 #if ANDROID
 using Android.App;
@@ -17,6 +16,10 @@ using Android.Telephony;
 
 #if UIKIT
 using MonoTouch.SystemConfiguration;
+#endif
+
+#if WINRT
+using Windows.Networking.Connectivity;
 #endif
 
 namespace Akavache.Http
