@@ -16,6 +16,7 @@ using Android.Telephony;
 
 #if UIKIT
 using MonoTouch.SystemConfiguration;
+using MonoTouch.CoreTelephony;
 #endif
 
 #if WINRT
@@ -95,11 +96,29 @@ namespace Akavache.Http
                 return 512 * 1024;
             }
 
-            if (flags.HasFlag(NetworkReachabilityFlags.IsWWAN)) {
+            if (!flags.HasFlag(NetworkReachabilityFlags.IsWWAN)) {
+                return 10 * 1048576;
+            }
+
+            var netInfo = new CTTelephonyNetworkInfo();
+            var r = netInfo.CurrentRadioAccessTechnology;
+            if (r == CTRadioAccessTechnology.CDMA1x || r == CTRadioAccessTechnology.Edge) 
+            {
+                return 512 * 1024;
+            }
+
+            if (new[] { CTRadioAccessTechnology.WCDMA, CTRadioAccessTechnology.HSDPA, 
+                CTRadioAccessTechnology.HSUPA, CTRadioAccessTechnology.EHRPD }.Contains(r)) 
+            {
+                return 2 * 1048576;
+            }
+
+            if (r == CTRadioAccessTechnology.LTE) 
+            {
                 return 5 * 1048576;
             }
 
-            return 10 * 1048576;
+            return 512 * 1024;
         }
 #endif
 
