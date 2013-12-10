@@ -85,10 +85,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_MonoMac.csproj">
-      <Project>{3EF05CA8-ED19-489C-AF42-11CFB65F7AE7}</Project>
-      <Name>Akavache.Portable_MonoMac</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

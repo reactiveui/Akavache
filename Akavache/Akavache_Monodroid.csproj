@@ -161,10 +161,4 @@
     <Compile Include="SimpleFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monodroid.csproj">
-      <Project>{F92A4778-B294-1AC1-084E-E177EF9FEDB7}</Project>
-      <Name>Akavache.Portable_Monodroid</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

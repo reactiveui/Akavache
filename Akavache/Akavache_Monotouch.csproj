@@ -77,10 +77,4 @@
     <Compile Include="CFNetworkHttpMixin.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monotouch.csproj">
-      <Project>{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}</Project>
-      <Name>Akavache.Portable_Monotouch</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>
