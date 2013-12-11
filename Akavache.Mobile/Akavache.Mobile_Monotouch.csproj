@@ -81,9 +81,5 @@
       <Project>{9091337A-9E94-4DBD-801E-05E1FDA78FFC}</Project>
       <Name>Akavache_Monotouch</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monotouch.csproj">
-      <Project>{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}</Project>
-      <Name>Akavache.Portable_Monotouch</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>

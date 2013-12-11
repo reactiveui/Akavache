@@ -24,6 +24,11 @@
     <DefineConstants>DEBUG;TRACE; MONO; APPKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,6 +38,11 @@
     <DefineConstants>TRACE; MONO; APPKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -84,10 +94,6 @@
   </Target>
   -->
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_MonoMac.csproj">
-      <Project>{3EF05CA8-ED19-489C-AF42-11CFB65F7AE7}</Project>
-      <Name>Akavache.Portable_MonoMac</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_MonoMac.csproj">
       <Project>{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}</Project>
       <Name>Akavache_MonoMac</Name>

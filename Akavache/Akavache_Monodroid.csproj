@@ -30,6 +30,7 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monoandroid</OutputPath>
+    <IntermediateOutputPath>bin\Debug\Monoandroid</IntermediateOutputPath>
     <DefineConstants>DEBUG;MONO; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -71,6 +72,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>bin\Release\Monoandroid</OutputPath>
+    <IntermediateOutputPath>obj\Release\Monoandroid</IntermediateOutputPath>
     <DefineConstants>MONO; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -159,12 +161,24 @@
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
+    <Compile Include="Portable\BitmapImageExtensions.cs" />
+    <Compile Include="Portable\BlobCache.cs" />
+    <Compile Include="Portable\BulkOperationsMixin.cs" />
+    <Compile Include="Portable\CacheIndexEntry.cs" />
+    <Compile Include="Portable\ConcurrentDictionary.cs" />
+    <Compile Include="Portable\DependencyResolverMixin.cs" />
+    <Compile Include="Portable\HttpMixin.cs" />
+    <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IKeyedOperationQueue.cs" />
+    <Compile Include="Portable\JsonSerializationMixin.cs" />
+    <Compile Include="Portable\KeyedOperationQueue.cs" />
+    <Compile Include="Portable\LoginInfo.cs" />
+    <Compile Include="Portable\LoginMixin.cs" />
+    <Compile Include="Portable\RelativeTimeMixin.cs" />
+    <Compile Include="Portable\TestBlobCache.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monodroid.csproj">
-      <Project>{F92A4778-B294-1AC1-084E-E177EF9FEDB7}</Project>
-      <Name>Akavache.Portable_Monodroid</Name>
-    </ProjectReference>
+    <Folder Include="Portable\" />
   </ItemGroup>
 </Project>

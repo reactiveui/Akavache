@@ -138,10 +138,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
-      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
-      <Name>Akavache.Portable</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
       <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
       <Name>Akavache_WinRT</Name>

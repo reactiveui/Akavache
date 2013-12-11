@@ -22,6 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\WinRT45\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\WinRT45\</IntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;NETFX_CORE; WINRT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -32,89 +33,39 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\WinRT45\</OutputPath>
+    <IntermediateOutputPath>obj\Release\WinRT45\</IntermediateOutputPath>
     <DefineConstants>TRACE;NETFX_CORE; WINRT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\WinRT45\Akavache.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\ARM\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
-    <OutputPath>bin\ARM\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="PersistentBlobCache.cs" />
+    <Compile Include="Portable\BitmapImageExtensions.cs" />
+    <Compile Include="Portable\BlobCache.cs" />
+    <Compile Include="Portable\BulkOperationsMixin.cs" />
+    <Compile Include="Portable\CacheIndexEntry.cs" />
+    <Compile Include="Portable\ConcurrentDictionary.cs" />
+    <Compile Include="Portable\DependencyResolverMixin.cs" />
+    <Compile Include="Portable\HttpMixin.cs" />
+    <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IKeyedOperationQueue.cs" />
+    <Compile Include="Portable\JsonSerializationMixin.cs" />
+    <Compile Include="Portable\KeyedOperationQueue.cs" />
+    <Compile Include="Portable\LoginInfo.cs" />
+    <Compile Include="Portable\LoginMixin.cs" />
+    <Compile Include="Portable\RelativeTimeMixin.cs" />
+    <Compile Include="Portable\TestBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="WinRTEncryptedBlobCache.cs" />
-    <Compile Include="WinRTFilesystemProvider.cs" />
-    <Compile Include="WinRTShims.cs" />
+    <Compile Include="WinRT\WinRTEncryptedBlobCache.cs" />
+    <Compile Include="WinRT\WinRTFilesystemProvider.cs" />
+    <Compile Include="WinRT\WinRTShims.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -124,6 +75,9 @@
     <Reference Include="ReactiveUI, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\reactiveui-core.5.2.0\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\packages\Splat.1.0.0\lib\NetCore45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -152,12 +106,6 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
-      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
-      <Name>Akavache.Portable</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
