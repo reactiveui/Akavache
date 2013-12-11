@@ -20,6 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\Mono\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\Mono\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE; MONO</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,6 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\Mono\</OutputPath>
+    <IntermediateOutputPath>obj\Release\Mono\</IntermediateOutputPath>
     <DefineConstants>TRACE; MONO</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
