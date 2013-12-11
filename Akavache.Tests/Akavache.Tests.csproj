@@ -114,10 +114,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable.csproj">
-      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
-      <Name>Akavache.Portable</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3_Net45.csproj">
       <Project>{d2edd1df-2f59-4d3c-9983-f5f66addfc2b}</Project>
       <Name>Akavache.Sqlite3_Net45</Name>
