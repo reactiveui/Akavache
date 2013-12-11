@@ -75,6 +75,21 @@
     <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
+    <Compile Include="Portable\BitmapImageExtensions.cs" />
+    <Compile Include="Portable\BlobCache.cs" />
+    <Compile Include="Portable\BulkOperationsMixin.cs" />
+    <Compile Include="Portable\CacheIndexEntry.cs" />
+    <Compile Include="Portable\ConcurrentDictionary.cs" />
+    <Compile Include="Portable\DependencyResolverMixin.cs" />
+    <Compile Include="Portable\HttpMixin.cs" />
+    <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IKeyedOperationQueue.cs" />
+    <Compile Include="Portable\JsonSerializationMixin.cs" />
+    <Compile Include="Portable\KeyedOperationQueue.cs" />
+    <Compile Include="Portable\LoginInfo.cs" />
+    <Compile Include="Portable\LoginMixin.cs" />
+    <Compile Include="Portable\RelativeTimeMixin.cs" />
+    <Compile Include="Portable\TestBlobCache.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
@@ -85,4 +100,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <Folder Include="Portable\" />
+  </ItemGroup>
 </Project>
