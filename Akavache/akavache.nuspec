@@ -8,6 +8,8 @@
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="Splat" version="1.0.0" />
+      <dependency id="Newtonsoft.Json" version="5.0.5" />
+      <dependency id="ReactiveUI-Core" version="5.2.0" />
     </dependencies>
     <id>akavache</id>
     <title>Akavache</title>
