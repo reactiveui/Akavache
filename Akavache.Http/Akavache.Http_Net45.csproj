@@ -41,7 +41,7 @@
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="Punchclock">
-      <HintPath>..\packages\Punchclock.1.0.1.1\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
+      <HintPath>..\packages\Punchclock.1.1.0\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

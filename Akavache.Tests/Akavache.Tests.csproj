@@ -48,7 +48,7 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="Punchclock">
-      <HintPath>..\packages\Punchclock.1.0.1.1\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
+      <HintPath>..\packages\Punchclock.1.1.0\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
