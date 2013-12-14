@@ -1,5 +1,6 @@
 ﻿using Akavache.Http;
 using Microsoft.Reactive.Testing;
+using Punchclock;
 using ReactiveUI;
 using ReactiveUI.Testing;
 using System;
@@ -209,7 +210,7 @@ namespace Akavache.Http.Tests
     {
         protected override IHttpScheduler CreateFixture()
         {
-            return new HttpScheduler();
+            return new HttpScheduler(opQueue: new OperationQueue(4));
         }
     }
 
@@ -217,7 +218,7 @@ namespace Akavache.Http.Tests
     {
         protected override IHttpScheduler CreateFixture()
         {
-            return new CachingHttpScheduler(new HttpScheduler(), new TestBlobCache());
+            return new CachingHttpScheduler(new HttpScheduler(opQueue: new OperationQueue(4)), new TestBlobCache());
         }
     }
 }
