@@ -4,7 +4,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
-using ReactiveUI;
 
 namespace Akavache.Sqlite3
 {

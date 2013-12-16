@@ -6,7 +6,7 @@ using Akavache;
 using Android.App;
 using Android.Content;
 
-namespace Akavache.Mobile
+namespace Akavache
 {
     public class AndroidFilesystemProvider : IFilesystemProvider
     {

@@ -57,6 +57,9 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>

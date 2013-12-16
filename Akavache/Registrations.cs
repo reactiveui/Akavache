@@ -6,8 +6,14 @@ using System.Threading.Tasks;
 
 #if UIKIT
 using MonoTouch.Foundation;
-#else
+#endif
+
+#if APPKIT
 using MonoMac.Foundation;
+#endif
+
+#if ANDROID
+using Android.App;
 #endif
 
 namespace Akavache

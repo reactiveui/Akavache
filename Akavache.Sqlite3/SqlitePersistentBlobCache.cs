@@ -11,8 +11,8 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using ReactiveUI;
 using SQLite;
+using Splat;
 
 namespace Akavache.Sqlite3
 {
