@@ -3,16 +3,14 @@ using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive;
 using System.Reactive.Linq;
-using ReactiveUI;
 
 #if UIKIT
 using MonoTouch.Foundation;
-using ReactiveUI.Mobile;
-namespace Akavache.Mobile
 #else
 using MonoMac.Foundation;
-namespace Akavache.Mac
 #endif
+
+namespace Akavache
 {
     public class MacFilesystemProvider : IFilesystemProvider
     {

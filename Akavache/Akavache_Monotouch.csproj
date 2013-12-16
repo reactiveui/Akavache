@@ -20,7 +20,7 @@
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monotouch</OutputPath>
     <IntermediateOutputPath>obj\Debug\Monotouch</IntermediateOutputPath>
-    <DefineConstants>DEBUG; MONO; IOS; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>DEBUG; MONO; UIKIT; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -33,7 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
-    <DefineConstants>MONO; IOS; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>MONO; UIKIT; XAMARIN_MOBILE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
@@ -92,6 +92,7 @@
     <Compile Include="Portable\LoginMixin.cs" />
     <Compile Include="Portable\RelativeTimeMixin.cs" />
     <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="MacFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>
