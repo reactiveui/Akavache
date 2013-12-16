@@ -152,15 +152,16 @@ namespace Akavache
         public static IScheduler MainThreadScheduler 
         {
             get { return MainThreadOverride ?? Locator.Current.GetService<IScheduler>("MainThread"); }
+            set { MainThreadOverride = value; }
         }
 
         #if PORTABLE
-        static IScheduler TaskPool;
-        public static IScheduler TaskPoolScheduler 
+        static IScheduler TaskpoolOverride;
+        public static IScheduler TaskpoolScheduler 
         {
             get 
             { 
-                var ret = MainThreadOverride ?? Locator.Current.GetService<IScheduler>("MainThread"); 
+                var ret = TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool"); 
                 if (ret == null) 
                 {
                     throw new Exception("Can't find a TaskPoolScheduler. You probably accidentally linked to the PCL Akavache in your app.");
@@ -168,12 +169,14 @@ namespace Akavache
 
                 return ret;
             }
+            set { TaskpoolOverride = value; }
         }
         #else
-        static IScheduler Taskpool;
+        static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 
         {
-            get { return MainThreadOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default; }
+            get { return TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default; }
+            set { TaskpoolOverride = value; }
         }
         #endif
     }
