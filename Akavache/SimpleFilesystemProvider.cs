@@ -24,7 +24,7 @@ namespace Akavache
 
         public IObservable<Unit> Delete(string path)
         {
-            return Observable.Start(() => File.Delete(path), RxApp.TaskpoolScheduler);
+            return Observable.Start(() => File.Delete(path), BlobCache.TaskpoolScheduler);
         }
                 
         public string GetDefaultRoamingCacheDirectory()

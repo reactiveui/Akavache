@@ -27,7 +27,7 @@ namespace Akavache.Sqlite3
 
         public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null, IServiceProvider serviceProvider = null)
         {
-            Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             ServiceProvider = serviceProvider;
 
             BlobCache.EnsureInitialized();

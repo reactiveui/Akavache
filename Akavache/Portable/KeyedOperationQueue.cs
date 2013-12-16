@@ -39,7 +39,7 @@ namespace Akavache
 
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
-            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             this.scheduler = scheduler;
             resultObs = queuedOps
                 .GroupBy(x => x.Key)

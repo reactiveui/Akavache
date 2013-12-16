@@ -59,6 +59,6 @@ namespace Akavache
     }
 
     class CEncryptedBlobCache : EncryptedBlobCache {
-        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, RxApp.TaskpoolScheduler) { }
+        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, BlobCache.TaskpoolScheduler) { }
     }
 }

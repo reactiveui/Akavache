@@ -24,7 +24,7 @@ namespace Akavache
                 {
                     fs = IsolatedStorageFile.GetUserStoreForApplication();
                     disp.Add(fs);
-                    disp.Add(Observable.Start(() => fs.OpenFile(path, mode, access, share), RxApp.TaskpoolScheduler).Select(x => (Stream)x).Subscribe(subj));
+                    disp.Add(Observable.Start(() => fs.OpenFile(path, mode, access, share), BlobCache.TaskpoolScheduler).Select(x => (Stream)x).Subscribe(subj));
                 }
                 catch(Exception ex)
                 {
@@ -60,7 +60,7 @@ namespace Akavache
                         acc = path;
                     }
                 }
-            }, RxApp.TaskpoolScheduler) ;
+            }, BlobCache.TaskpoolScheduler) ;
         }
 
         public IObservable<Unit> Delete(string path)
@@ -80,7 +80,7 @@ namespace Akavache
                     }
                     catch (FileNotFoundException) { }
                 }
-            }, RxApp.TaskpoolScheduler);
+            }, BlobCache.TaskpoolScheduler);
         }
 
         public string GetDefaultRoamingCacheDirectory()

@@ -147,5 +147,34 @@ namespace Akavache
 
             return ret.ToTask();
         }
+
+        static IScheduler MainThreadOverride;
+        public static IScheduler MainThreadScheduler 
+        {
+            get { return MainThreadOverride ?? Locator.Current.GetService<IScheduler>("MainThread"); }
+        }
+
+        #if PORTABLE
+        static IScheduler TaskPool;
+        public static IScheduler TaskPoolScheduler 
+        {
+            get 
+            { 
+                var ret = MainThreadOverride ?? Locator.Current.GetService<IScheduler>("MainThread"); 
+                if (ret == null) 
+                {
+                    throw new Exception("Can't find a TaskPoolScheduler. You probably accidentally linked to the PCL Akavache in your app.");
+                }
+
+                return ret;
+            }
+        }
+        #else
+        static IScheduler Taskpool;
+        public static IScheduler TaskpoolScheduler 
+        {
+            get { return MainThreadOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default; }
+        }
+        #endif
     }
 }

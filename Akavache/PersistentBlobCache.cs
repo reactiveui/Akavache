@@ -61,7 +61,7 @@ namespace Akavache
             }
 
             this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
-            this.Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            this.Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
 
             // Here, we're not actually caching the requests directly (i.e. as
             // byte[]s), but as the "replayed result of the request", in the
@@ -253,7 +253,7 @@ namespace Akavache
                 flushThreadSubscription.Dispose();
 
                 var waitOnAllInflight = memoizedRequests.CachedValues()
-                    .Select(x => x.LoggedCatch(this, Observable.Return(new byte[0])))
+                    .Select(x => x.Catch(Observable.Return(new byte[0])))
                     .Merge(8)
                     .Concat(Observable.Return(new byte[0]))
                     .Aggregate(Unit.Default, (acc, x) => acc);
@@ -419,6 +419,6 @@ namespace Akavache
 
     class CPersistentBlobCache : PersistentBlobCache
     {
-        public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, RxApp.TaskpoolScheduler) { }
+        public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, BlobCache.TaskpoolScheduler) { }
     }
 }

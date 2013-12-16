@@ -44,7 +44,7 @@ namespace Akavache
 
         public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
-            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             var ret = new AsyncSubject<Stream>();
 
             Observable.Start(() =>
@@ -176,7 +176,7 @@ namespace Akavache
                     This.Dispose();
                     destination.Dispose();
                 }
-            }, scheduler ?? RxApp.TaskpoolScheduler);
+            }, scheduler ?? BlobCache.TaskpoolScheduler);
 
 #if FALSE
             var reader = Observable.FromAsyncPattern<byte[], int, int, int>(This.BeginRead, This.EndRead);

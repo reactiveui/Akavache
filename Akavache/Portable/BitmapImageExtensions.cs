@@ -27,8 +27,7 @@ namespace Akavache
         {
             return This.GetAsync(key)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight))
-                .ObserveOn(RxApp.MainThreadScheduler);
+                .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>
