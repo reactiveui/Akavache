@@ -49,9 +49,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\mono\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\mono\ReactiveUI.dll</HintPath>
-    </Reference>
     <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <Private>False</Private>
     </Reference>
