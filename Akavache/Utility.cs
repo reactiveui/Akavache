@@ -9,7 +9,7 @@ using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading;
-using ReactiveUI;
+using Splat;
 
 #if WINRT
 using System.Reactive.Windows.Foundation;

@@ -8,7 +8,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using ReactiveUI;
+using Splat;
 using Akavache.Internal;
 
 namespace Akavache
@@ -313,13 +313,13 @@ namespace Akavache
 
         internal static byte[] SerializeObject<T>(T value)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>();
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
         }
 
         static IObservable<T> DeserializeObject<T>(byte[] x)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>();
 
             try
             {

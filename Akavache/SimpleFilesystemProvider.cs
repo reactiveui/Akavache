@@ -3,7 +3,7 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using ReactiveUI;
+using Splat;
 using System.Reflection;
 using System.Diagnostics;
 
@@ -29,21 +29,21 @@ namespace Akavache
                 
         public string GetDefaultRoamingCacheDirectory()
         {
-            return RxApp.InUnitTestRunner() ?
+            return ModeDetector.InUnitTestRunner() ?
                 Path.Combine(GetAssemblyDirectoryName(), "BlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
 
         public string GetDefaultSecretCacheDirectory()
         {
-            return RxApp.InUnitTestRunner() ?
+            return ModeDetector.InUnitTestRunner() ?
                 Path.Combine(GetAssemblyDirectoryName(), "SecretCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
         }
 
         public string GetDefaultLocalMachineCacheDirectory()
         {
-            return RxApp.InUnitTestRunner() ?
+            return ModeDetector.InUnitTestRunner() ?
                 Path.Combine(GetAssemblyDirectoryName(), "LocalBlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
         }

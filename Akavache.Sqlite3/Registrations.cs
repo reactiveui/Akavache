@@ -16,7 +16,7 @@ namespace Akavache.Sqlite3
         {
             // NB: We want the most recently registered fs, since there really 
             // only should be one 
-            var fs = RxApp.DependencyResolver.GetServices<IFilesystemProvider>().LastOrDefault();
+            var fs = Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
             if (fs == null)
             {
                 throw new Exception("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");

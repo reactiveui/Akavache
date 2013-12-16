@@ -11,7 +11,6 @@ using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
 using Newtonsoft.Json;
-using ReactiveUI;
 using Splat;
 
 namespace Akavache

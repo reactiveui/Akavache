@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Security.Cryptography;
-using ReactiveUI;
+using Splat;
 
 namespace Akavache
 {

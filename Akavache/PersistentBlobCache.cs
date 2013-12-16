@@ -13,7 +13,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
-using ReactiveUI;
+using Splat;
 using System.Collections.Concurrent;
 
 #if SILVERLIGHT
@@ -53,7 +53,7 @@ namespace Akavache
         {
             BlobCache.EnsureInitialized();
 
-            this.filesystem = filesystemProvider ?? RxApp.DependencyResolver.GetServices<IFilesystemProvider>().LastOrDefault();
+            this.filesystem = filesystemProvider ?? Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
 
             if (this.filesystem == null)
             {
@@ -99,7 +99,7 @@ namespace Akavache
 
             flushThreadSubscription = Disposable.Empty;
 
-            if (!RxApp.InUnitTestRunner())
+            if (!ModeDetector.InUnitTestRunner())
             {
                 flushThreadSubscription = actionTaken
                     .Where(_ => CacheIndex != null)

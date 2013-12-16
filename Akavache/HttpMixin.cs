@@ -88,7 +88,7 @@ namespace Akavache
             IObservable<WebResponse> request;
 
 #if !SILVERLIGHT && !WINRT
-            if (RxApp.InUnitTestRunner())
+            if (ModeDetector.InUnitTestRunner())
             {
                 request = Observable.Defer(() =>
                 {
