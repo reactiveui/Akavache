@@ -38,18 +38,6 @@ namespace Akavache.Mobile
 
             var akavacheDriver = new AkavacheDriver();
             registerFunction(() => akavacheDriver, typeof(ISuspensionDriver), null);
-
-#if APPKIT || UIKIT
-            BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
-            registerFunction(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
-#endif
-
-#if ANDROID
-            var ai = Application.Context.PackageManager.GetApplicationInfo(Application.Context.PackageName, 0);
-            BlobCache.ApplicationName = ai.LoadLabel(Application.Context.PackageManager);
-
-            registerFunction(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
-#endif
         }
     }
 }

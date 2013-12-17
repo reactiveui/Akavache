@@ -6,7 +6,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
-using ReactiveUI;
+using Splat;
 using System.Reactive.Subjects;
 
 namespace Akavache

@@ -11,8 +11,8 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using ReactiveUI;
 using SQLite;
+using Splat;
 
 namespace Akavache.Sqlite3
 {
@@ -27,7 +27,7 @@ namespace Akavache.Sqlite3
 
         public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null, IServiceProvider serviceProvider = null)
         {
-            Scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             ServiceProvider = serviceProvider;
 
             BlobCache.EnsureInitialized();
@@ -392,7 +392,7 @@ namespace Akavache.Sqlite3
 
         byte[] SerializeObject<T>(T value)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
             var ms = new MemoryStream();
             var serializer = JsonSerializer.Create(settings);
             var writer = new BsonWriter(ms);
@@ -403,7 +403,7 @@ namespace Akavache.Sqlite3
 
         IObservable<T> DeserializeObject<T>(byte[] data)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
             var serializer = JsonSerializer.Create(settings);
             var reader = new BsonReader(new MemoryStream(data));
 

@@ -8,7 +8,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using ReactiveUI;
+using Splat;
 using Akavache.Internal;
 
 namespace Akavache
@@ -210,18 +210,20 @@ namespace Akavache
             var fetch = Observable.Defer(() => This.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
-                .SelectMany(async _ => {
+                .SelectMany(_ => 
+                {
                     var ret = default(T);
-                    try {
-                        ret = await fetchFunc();
-                    } catch (Exception) {
-                        if (shouldInvalidateOnError) This.InvalidateObject<T>(key);
-                        throw;
-                    }
+                    var fetchObs = fetchFunc().Catch<T, Exception>(ex =>
+                    {
+                        var shouldInvalidate = shouldInvalidateOnError ?
+                            This.InvalidateObject<T>(key) :
+                            Observable.Return(Unit.Default);
+                        return shouldInvalidate.SelectMany(__ => Observable.Throw<T>(ex));
+                    });
 
-                    await This.InvalidateObject<T>(key);
-                    await This.InsertObject(key, ret, absoluteExpiration);
-                    return ret;
+                    return fetchObs
+                        .SelectMany(x => This.InvalidateObject<T>(key).Select(__ => x))
+                        .SelectMany(x => This.InsertObject(key, ret, absoluteExpiration).Select(__ => x));
                 });
 
             var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
@@ -313,13 +315,13 @@ namespace Akavache
 
         internal static byte[] SerializeObject<T>(T value)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>();
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
         }
 
         static IObservable<T> DeserializeObject<T>(byte[] x)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>();
 
             try
             {

@@ -69,11 +69,10 @@
     <AndroidLinkMode>None</AndroidLinkMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>bin\Release\Monoandroid</OutputPath>
     <IntermediateOutputPath>obj\Release\Monoandroid</IntermediateOutputPath>
-    <DefineConstants>MONO; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>MONO; XAMARIN_MOBILE; ANDROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
@@ -117,9 +116,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\monodroid\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
-    </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
     </Reference>
@@ -135,6 +131,7 @@
     <Reference Include="Splat">
       <HintPath>..\ext\monodroid\Splat.dll</HintPath>
     </Reference>
+    <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
@@ -179,6 +176,7 @@
     <Compile Include="Portable\LoginMixin.cs" />
     <Compile Include="Portable\RelativeTimeMixin.cs" />
     <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="AndroidFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>

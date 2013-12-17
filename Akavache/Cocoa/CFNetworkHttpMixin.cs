@@ -9,7 +9,7 @@ using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
-using ReactiveUI;
+using Splat;
 using System.Collections.Concurrent;
 using System.Net.Http;
 

@@ -160,7 +160,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AkavacheDriver.cs" />
     <Compile Include="Registrations.cs" />
-    <Compile Include="AndroidFilesystemProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akavache\Akavache_Monodroid.csproj">

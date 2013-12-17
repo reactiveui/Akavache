@@ -76,7 +76,7 @@ namespace Akavache
 
         /// <summary>
         /// The IScheduler used to defer operations. By default, this is
-        /// RxApp.TaskPoolScheduler.
+        /// BlobCache.TaskpoolScheduler.
         /// </summary>
         IScheduler Scheduler { get; }
     }
