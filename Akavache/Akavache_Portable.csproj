@@ -23,7 +23,7 @@
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\Portable-Net45+WinRT45+WP8\</OutputPath>
     <IntermediateOutputPath>obj\Debug\Portable-Net45+WinRT45+WP8\</IntermediateOutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -33,7 +33,7 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\Portable-Net45+WinRT45+WP8\</OutputPath>
     <IntermediateOutputPath>obj\Release\Portable-Net45+WinRT45+WP8\</IntermediateOutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Portable-Net45+WinRT45+WP8\Akavache.xml</DocumentationFile>
@@ -60,11 +60,8 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\portable-net45+wp80+win8\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.5.2.0\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
-    </Reference>
     <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.0.0\lib\Portable-Net45+WinRT45+WP8\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.1.0\lib\Portable-Net45+WinRT45+WP8\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Portable-Net45+WinRT45+WP8\System.Reactive.Core.dll</HintPath>
