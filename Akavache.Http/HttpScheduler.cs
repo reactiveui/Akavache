@@ -21,6 +21,13 @@ using System.Security.Cryptography;
 
 namespace Akavache.Http
 {
+    class HttpCacheEntry
+    {
+        public Dictionary<string, List<string>> Headers { get; set; }
+        public byte[] Data { get; set; }
+        public bool ShouldCheckResponseHeaders { get; set; }
+    }
+
     public class CachingHttpScheduler : IHttpScheduler
     {
         readonly IBlobCache blobCache = null;
@@ -72,7 +79,7 @@ namespace Akavache.Http
 
         public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
         {
-            var key = uniqueKeyForRequest(request);
+            var key = UniqueKeyForRequest(request);
             var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
 
             if (inflightDictionary.TryGetValue(key, out cache))
@@ -99,7 +106,15 @@ namespace Akavache.Http
             innerScheduler.CancelAll();
         }
 
-        static string uniqueKeyForRequest(HttpRequestMessage request)
+        static bool DefinitelyShouldntCache(HttpRequestMessage message)
+        {
+            if (message.Method != HttpMethod.Get) return true;
+            if (message.Headers.CacheControl.NoStore) return true;
+
+            return false;
+        }
+
+        static string UniqueKeyForRequest(HttpRequestMessage request)
         {
             var ret = new[] 
             {
