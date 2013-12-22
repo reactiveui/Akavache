@@ -13,6 +13,11 @@ namespace Akavache.Http
 {
     public static class HttpSchedulerExtensions
     {
+        public static IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(this IHttpScheduler This, HttpRequestMessage request, int priority)
+        {
+            return This.Schedule(request, priority, _ => true);
+        }
+
         public static IDisposable ScheduleAll(this IHttpScheduler This, Action<IHttpScheduler> block)
         {
             var cancel = new AsyncSubject<Unit>();
@@ -37,9 +42,9 @@ namespace Akavache.Http
             this.cancel = cancel;
         }
 
-        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
+        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
-            return inner.Schedule(request, priority).TakeUntil(cancel);
+            return inner.Schedule(request, priority, shouldFetchContent).TakeUntil(cancel);
         }
 
         public void ResetLimit(long? maxBytesToRead = null)

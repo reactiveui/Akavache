@@ -18,7 +18,7 @@ namespace Akavache.Http
 
     public interface IHttpScheduler
     {
-        IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority);
+        IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent);
         void ResetLimit(long? maxBytesToRead = null);
         void CancelAll();
 

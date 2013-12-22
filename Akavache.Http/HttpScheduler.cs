@@ -17,15 +17,59 @@ using Windows.Security.Cryptography.Core;
 using System.Runtime.InteropServices.WindowsRuntime;
 #else
 using System.Security.Cryptography;
+using System.Net;
 #endif
 
 namespace Akavache.Http
 {
     class HttpCacheEntry
     {
-        public Dictionary<string, List<string>> Headers { get; set; }
-        public byte[] Data { get; set; }
+        public string ETag { get; set; }
+        public DateTimeOffset? LastModified { get; set; }
         public bool ShouldCheckResponseHeaders { get; set; }
+        public HttpStatusCode Code { get; set; }
+
+        public Dictionary<string, List<string>> Headers { get; set; }
+        public Dictionary<string, List<string>> ContentHeaders { get; set; }
+        public byte[] Data { get; set; }
+
+        public bool UseCachedData(HttpResponseMessage response)
+        {
+            if (response.Headers.ETag != null && ETag != response.Headers.ETag.Tag)
+            {
+                return false;
+            }
+
+            if (response.Content.Headers.LastModified != null && LastModified != null && response.Content.Headers.LastModified > LastModified)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public static HttpCacheEntry FromResponse(HttpResponseMessage message, byte[] data)
+        {
+            return new HttpCacheEntry() {
+                ETag = message.Headers.ETag != null ? message.Headers.ETag.Tag : null,
+                LastModified = message.Content.Headers.LastModified,
+                Code = message.StatusCode,
+                Headers = message.Headers.ToDictionary(x => x.Key, x => x.Value.ToList()),
+                ContentHeaders = message.Content.Headers.ToDictionary(x => x.Key, x => x.Value.ToList()),
+            };
+        }
+
+        public HttpResponseMessage ToResponse()
+        {
+            var ret = new HttpResponseMessage(Code)
+            {
+                Content = new ByteArrayContent(Data),
+            };
+
+            foreach (var kvp in Headers) { ret.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value); }
+            foreach (var kvp in ContentHeaders) { ret.Content.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value); }
+            return ret;
+        }
     }
 
     public class CachingHttpScheduler : IHttpScheduler
@@ -77,20 +121,76 @@ namespace Akavache.Http
             get { return blobCache ?? BlobCache.LocalMachine; }
         }
 
-        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
+        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
             var key = UniqueKeyForRequest(request);
             var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
+            var ret = cache;
 
             if (inflightDictionary.TryGetValue(key, out cache))
             {
                 return cache;
             }
 
-            var ret = innerScheduler.Schedule(request, priority)
-                .Finally(() => inflightDictionary.TryRemove(key, out cache))
-                .PublishLast()
-                .RefCount();
+            if (request.Method != HttpMethod.Get || request.Headers.CacheControl.NoStore)
+            {
+                ret = Observable.Defer(() => innerScheduler.Schedule(request, priority, x => shouldFetchContent(x)))
+                    .Finally(() => inflightDictionary.TryRemove(key, out cache))
+                    .PublishLast().RefCount();
+            }
+
+            ret = blobCache.GetObjectAsync<HttpCacheEntry>(key).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
+                .SelectMany(async (cacheEntry, ct) =>
+                {
+                    var cancelSignal = new AsyncSubject<Unit>();
+                    ct.Register(() => { cancelSignal.OnNext(Unit.Default); cancelSignal.OnCompleted(); });
+
+                    if (cacheEntry != null && !cacheEntry.ShouldCheckResponseHeaders)  
+                    {
+                        return Tuple.Create(cacheEntry.ToResponse(), cacheEntry.Data);
+                    }
+
+                    var toConcat = Observable.Empty<Tuple<HttpResponseMessage, byte[]>>();
+                    var cacheIsValid = false;
+
+                    ct.ThrowIfCancellationRequested();
+                    var respWithData = await innerScheduler.Schedule(request, priority, respHeaders => 
+                    {
+                        if (!shouldFetchContent(respHeaders)) 
+                        {
+                            cancelSignal.OnNext(Unit.Default);
+                            cancelSignal.OnCompleted();
+                            return false;
+                        }
+
+                        if (cacheEntry.UseCachedData(respHeaders)) 
+                        {
+                            toConcat = Observable.Return(Tuple.Create(cacheEntry.ToResponse(), cacheEntry.Data));
+                            cacheIsValid = true;
+                            return false;
+                        }
+
+                        return true;
+                    }).TakeUntil(cancelSignal).Concat(Observable.Defer(() => toConcat));
+
+                    if (cancelSignal.IsCompleted || ct.IsCancellationRequested)
+                    {
+                        throw new OperationCanceledException();
+                    }
+
+                    if (DefinitelyShouldntCache(respWithData.Item1) || cacheIsValid)
+                    {
+                        return respWithData;
+                    }
+
+                    var expiryDate = CacheUntilDate(respWithData.Item1);
+                    var entry = HttpCacheEntry.FromResponse(respWithData.Item1, respWithData.Item2);
+                    entry.ShouldCheckResponseHeaders = (expiryDate == null);
+
+                    await blobCache.InsertObject(key, entry, expiryDate);
+                    return respWithData;
+                })
+                .Finally(() => inflightDictionary.TryRemove(key, out cache));
 
             inflightDictionary.TryAdd(key, ret);
             return ret;
@@ -106,12 +206,25 @@ namespace Akavache.Http
             innerScheduler.CancelAll();
         }
 
-        static bool DefinitelyShouldntCache(HttpRequestMessage message)
+        static bool DefinitelyShouldntCache(HttpResponseMessage message)
         {
-            if (message.Method != HttpMethod.Get) return true;
             if (message.Headers.CacheControl.NoStore) return true;
-
             return false;
+        }
+
+        static DateTimeOffset? CacheUntilDate(HttpResponseMessage message)
+        {
+            if (message.Headers.CacheControl.MaxAge != null) 
+            {
+                return RxApp.TaskpoolScheduler.Now + message.Headers.CacheControl.MaxAge;
+            }
+
+            if (message.Content.Headers.Expires != null)
+            {
+                return message.Content.Headers.Expires;
+            }
+
+            return null;
         }
 
         static string UniqueKeyForRequest(HttpRequestMessage request)
@@ -139,7 +252,7 @@ namespace Akavache.Http
 #else
             var sha1 = SHA1.Create();
             var bytes = Encoding.UTF8.GetBytes(ret.ToString());
-            return BitConverter.ToString(sha1.ComputeHash(bytes)).Replace("-", "");
+            return "HttpSchedulerCache_" + BitConverter.ToString(sha1.ComputeHash(bytes)).Replace("-", "");
 #endif
         }
     }
@@ -178,14 +291,14 @@ namespace Akavache.Http
         
         public HttpClient Client { get; set; }
 
-        public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority)
+        public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
             if (currentMax != null && bytesRead >= currentMax.Value)
             {
                 return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));
             }
 
-            var rq = Observable.Defer(() => Client.SendAsyncObservable(request)
+            var rq = Observable.Defer(() => Client.SendAsyncObservable(request, shouldFetchContent)
                 .Do(x => bytesRead += x.Item2.LongLength));
 
             if (retryCount > 0) 
