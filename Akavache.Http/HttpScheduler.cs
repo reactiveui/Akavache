@@ -132,7 +132,8 @@ namespace Akavache.Http
                 return cache;
             }
 
-            if (request.Method != HttpMethod.Get || request.Headers.CacheControl.NoStore)
+            if (request.Method != HttpMethod.Get || 
+                (request.Headers.CacheControl != null && request.Headers.CacheControl.NoStore))
             {
                 ret = Observable.Defer(() => innerScheduler.Schedule(request, priority, x => shouldFetchContent(x)))
                     .Finally(() => inflightDictionary.TryRemove(key, out cache))
@@ -163,7 +164,7 @@ namespace Akavache.Http
                             return false;
                         }
 
-                        if (cacheEntry.UseCachedData(respHeaders)) 
+                        if (cacheEntry != null && cacheEntry.UseCachedData(respHeaders)) 
                         {
                             toConcat = Observable.Return(Tuple.Create(cacheEntry.ToResponse(), cacheEntry.Data));
                             cacheIsValid = true;
@@ -208,13 +209,13 @@ namespace Akavache.Http
 
         static bool DefinitelyShouldntCache(HttpResponseMessage message)
         {
-            if (message.Headers.CacheControl.NoStore) return true;
+            if (message.Headers.CacheControl != null && message.Headers.CacheControl.NoStore) return true;
             return false;
         }
 
         static DateTimeOffset? CacheUntilDate(HttpResponseMessage message)
         {
-            if (message.Headers.CacheControl.MaxAge != null) 
+            if (message.Headers.CacheControl != null && message.Headers.CacheControl.MaxAge != null) 
             {
                 return RxApp.TaskpoolScheduler.Now + message.Headers.CacheControl.MaxAge;
             }
