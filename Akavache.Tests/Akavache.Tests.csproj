@@ -106,6 +106,7 @@
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="BulkOperationsTest.cs" />
     <Compile Include="EncryptedBlobCacheFixture.cs" />
+    <Compile Include="Http\CachedHttpSchedulerTests.cs" />
     <Compile Include="Http\HttpSchedulerSharedTests.cs" />
     <Compile Include="Http\TestHttpMessageHandler.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
