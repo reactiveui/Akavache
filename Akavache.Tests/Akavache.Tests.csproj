@@ -109,6 +109,7 @@
     <Compile Include="Http\CachedHttpSchedulerTests.cs" />
     <Compile Include="Http\HttpSchedulerSharedTests.cs" />
     <Compile Include="Http\TestHttpMessageHandler.cs" />
+    <Compile Include="IntegrationTestHelper.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
     <Compile Include="Stresser.cs" />
     <Compile Include="Utility.cs" />
@@ -118,6 +119,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Http\fixtures\ResponseWithETag" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

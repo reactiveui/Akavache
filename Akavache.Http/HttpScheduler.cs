@@ -56,6 +56,7 @@ namespace Akavache.Http
                 Code = message.StatusCode,
                 Headers = message.Headers.ToDictionary(x => x.Key, x => x.Value.ToList()),
                 ContentHeaders = message.Content.Headers.ToDictionary(x => x.Key, x => x.Value.ToList()),
+                Data = data,
             };
         }
 
@@ -134,9 +135,12 @@ namespace Akavache.Http
             if (request.Method != HttpMethod.Get || 
                 (request.Headers.CacheControl != null && request.Headers.CacheControl.NoStore))
             {
-                return Observable.Defer(() => innerScheduler.Schedule(request, priority, x => shouldFetchContent(x)))
+                var noCache = Observable.Defer(() => innerScheduler.Schedule(request, priority, x => shouldFetchContent(x)))
                     .Finally(() => inflightDictionary.TryRemove(key, out cache))
-                    .PublishLast().RefCount();
+                    .PublishLast();
+
+                noCache.Connect();
+                return noCache;
             }
 
             var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
@@ -180,6 +184,8 @@ namespace Akavache.Http
 
                     if (DefinitelyShouldntCache(respWithData.Item1) || cacheIsValid)
                     {
+                        cancelSignal.OnNext(Unit.Default);
+                        cancelSignal.OnCompleted();
                         return respWithData;
                     }
 
@@ -211,7 +217,9 @@ namespace Akavache.Http
 
         static bool DefinitelyShouldntCache(HttpResponseMessage message)
         {
+            if (!message.IsSuccessStatusCode) return true;
             if (message.Headers.CacheControl != null && message.Headers.CacheControl.NoStore) return true;
+
             return false;
         }
 
