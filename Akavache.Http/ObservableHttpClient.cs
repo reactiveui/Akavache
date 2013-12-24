@@ -50,7 +50,7 @@ namespace Akavache.Http
                         var target = new MemoryStream();
                         var source = await resp.Content.ReadAsStreamAsync();
 
-                        await copyToAsync(source, target, ct);
+                        await source.CopyToAsync(target, 4096, ct);
 
                         subj.OnNext(Tuple.Create(resp, target.ToArray()));
                         subj.OnCompleted();
@@ -63,34 +63,6 @@ namespace Akavache.Http
             });
 
             return ret.TakeUntil(cancelSignal).PublishLast().RefCount();
-        }
-
-        static async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
-        {
-            await Observable.Start(async () => 
-            {
-                var buf = new byte[4096];
-                var read = 0;
-
-                do 
-                {
-                    read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
-
-                    if (read > 0) 
-                    {
-                        target.Write(buf, 0, read);
-                    }
-                } while (!ct.IsCancellationRequested && read > 0);
-
-                source.Dispose();
-
-                if (ct.IsCancellationRequested) 
-                {
-                    source.Dispose();
-                    target.Dispose();
-                    throw new OperationCanceledException();
-                }
-            }, RxApp.TaskpoolScheduler).ToTask();
         }
     }
 }

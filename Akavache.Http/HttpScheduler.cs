@@ -125,7 +125,6 @@ namespace Akavache.Http
         {
             var key = UniqueKeyForRequest(request);
             var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
-            var ret = cache;
 
             if (inflightDictionary.TryGetValue(key, out cache))
             {
@@ -135,18 +134,18 @@ namespace Akavache.Http
             if (request.Method != HttpMethod.Get || 
                 (request.Headers.CacheControl != null && request.Headers.CacheControl.NoStore))
             {
-                ret = Observable.Defer(() => innerScheduler.Schedule(request, priority, x => shouldFetchContent(x)))
+                return Observable.Defer(() => innerScheduler.Schedule(request, priority, x => shouldFetchContent(x)))
                     .Finally(() => inflightDictionary.TryRemove(key, out cache))
                     .PublishLast().RefCount();
             }
 
-            ret = blobCache.GetObjectAsync<HttpCacheEntry>(key).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
+            var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
                 .SelectMany(async (cacheEntry, ct) =>
                 {
                     var cancelSignal = new AsyncSubject<Unit>();
                     ct.Register(() => { cancelSignal.OnNext(Unit.Default); cancelSignal.OnCompleted(); });
 
-                    if (cacheEntry != null && !cacheEntry.ShouldCheckResponseHeaders)  
+                    if (cacheEntry != null && !cacheEntry.ShouldCheckResponseHeaders)
                     {
                         return Tuple.Create(cacheEntry.ToResponse(), cacheEntry.Data);
                     }
@@ -155,16 +154,16 @@ namespace Akavache.Http
                     var cacheIsValid = false;
 
                     ct.ThrowIfCancellationRequested();
-                    var respWithData = await innerScheduler.Schedule(request, priority, respHeaders => 
+                    var respWithData = await innerScheduler.Schedule(request, priority, respHeaders =>
                     {
-                        if (!shouldFetchContent(respHeaders)) 
+                        if (!shouldFetchContent(respHeaders))
                         {
                             cancelSignal.OnNext(Unit.Default);
                             cancelSignal.OnCompleted();
                             return false;
                         }
 
-                        if (cacheEntry != null && cacheEntry.UseCachedData(respHeaders)) 
+                        if (cacheEntry != null && cacheEntry.UseCachedData(respHeaders))
                         {
                             toConcat = Observable.Return(Tuple.Create(cacheEntry.ToResponse(), cacheEntry.Data));
                             cacheIsValid = true;
@@ -191,7 +190,10 @@ namespace Akavache.Http
                     await blobCache.InsertObject(key, entry, expiryDate);
                     return respWithData;
                 })
-                .Finally(() => inflightDictionary.TryRemove(key, out cache));
+                .Finally(() => inflightDictionary.TryRemove(key, out cache))
+                .PublishLast();
+
+            ret.Connect();
 
             inflightDictionary.TryAdd(key, ret);
             return ret;
