@@ -183,6 +183,23 @@ namespace Akavache.Http.Tests
 
             Assert.True(resps.All(x => x.HasObservers == false));
         }
+
+        [Fact]
+        [Trait("Slow", "Very Yes")]
+        public async Task DownloadOurOwnRelease()
+        {
+            var input = @"https://github.com/akavache/Akavache/releases/download/3.2.0/Akavache.3.2.0.zip";
+            var fixture = CreateFixture();
+            fixture.Client = new HttpClient(new HttpClientHandler() {
+                AllowAutoRedirect = true,
+                MaxRequestContentBufferSize = 1048576 * 64,
+            });
+                        
+            var result = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri(input)), 5);
+
+            Assert.True(result.Item1.IsSuccessStatusCode);
+            Assert.Equal(8089690, result.Item2.Length);
+        }
     }
 
     public class SanityTests
