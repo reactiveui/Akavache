@@ -19,7 +19,8 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monotouch</OutputPath>
-    <DefineConstants>DEBUG; MONO; IOS; XAMARIN_MOBILE</DefineConstants>
+    <IntermediateOutputPath>obj\Debug\Monotouch</IntermediateOutputPath>
+    <DefineConstants>DEBUG; MONO; UIKIT; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -28,10 +29,11 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>bin\Release\Monotouch</OutputPath>
+    <IntermediateOutputPath>obj\Release\Monotouch</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
-    <DefineConstants>MONO; IOS; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>MONO; UIKIT; XAMARIN_MOBILE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
@@ -42,9 +44,6 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
@@ -59,6 +58,9 @@
       <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="Splat">
+      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
@@ -74,13 +76,27 @@
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="ProtectDataShim.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
-    <Compile Include="CFNetworkHttpMixin.cs" />
+    <Compile Include="Cocoa\CFNetworkHttpMixin.cs" />
+    <Compile Include="Portable\BitmapImageExtensions.cs" />
+    <Compile Include="Portable\BlobCache.cs" />
+    <Compile Include="Portable\BulkOperationsMixin.cs" />
+    <Compile Include="Portable\CacheIndexEntry.cs" />
+    <Compile Include="Portable\ConcurrentDictionary.cs" />
+    <Compile Include="Portable\DependencyResolverMixin.cs" />
+    <Compile Include="Portable\HttpMixin.cs" />
+    <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IKeyedOperationQueue.cs" />
+    <Compile Include="Portable\JsonSerializationMixin.cs" />
+    <Compile Include="Portable\KeyedOperationQueue.cs" />
+    <Compile Include="Portable\LoginInfo.cs" />
+    <Compile Include="Portable\LoginMixin.cs" />
+    <Compile Include="Portable\RelativeTimeMixin.cs" />
+    <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="MacFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Portable\Akavache.Portable_Monotouch.csproj">
-      <Project>{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}</Project>
-      <Name>Akavache.Portable_Monotouch</Name>
-    </ProjectReference>
+    <Folder Include="Cocoa\" />
+    <Folder Include="Portable\" />
   </ItemGroup>
 </Project>

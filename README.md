@@ -10,8 +10,8 @@ like memcached for desktop apps.
 
 Akavache is currently compatible with:
 
-* Xamarin.iOS / Xamarin.Android
-* Mono 3.x (including Xamarin.Mac)
+* Xamarin.iOS / Xamarin.Mac
+* Xamarin.Android
 * .NET 4.5 Desktop (WPF)
 * Windows Phone 8
 * WinRT (Windows Store)

@@ -4,6 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if UIKIT
+using MonoTouch.Foundation;
+#endif
+
+#if APPKIT
+using MonoMac.Foundation;
+#endif
+
+#if ANDROID
+using Android.App;
+#endif
+
 namespace Akavache
 {
     public class Registrations : IWantsToRegisterStuff
@@ -30,6 +42,18 @@ namespace Akavache
             registerFunction(() => secure.Value, typeof(ISecureBlobCache), null);
 
             registerFunction(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
+          
+#if APPKIT || UIKIT
+            BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
+            registerFunction(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
+#endif
+
+#if ANDROID
+            var ai = Application.Context.PackageManager.GetApplicationInfo(Application.Context.PackageName, 0);
+            BlobCache.ApplicationName = ai.LoadLabel(Application.Context.PackageManager);
+
+            registerFunction(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
+#endif
         }
     }
 }

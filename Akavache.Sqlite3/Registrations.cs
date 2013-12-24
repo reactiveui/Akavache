@@ -1,5 +1,4 @@
-﻿using ReactiveUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
+using Splat;
 
 namespace Akavache.Sqlite3
 {
@@ -16,7 +16,7 @@ namespace Akavache.Sqlite3
         {
             // NB: We want the most recently registered fs, since there really 
             // only should be one 
-            var fs = RxApp.DependencyResolver.GetServices<IFilesystemProvider>().LastOrDefault();
+            var fs = Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
             if (fs == null)
             {
                 throw new Exception("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
@@ -24,19 +24,19 @@ namespace Akavache.Sqlite3
 
             var localCache = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).Wait();
-                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), RxApp.TaskpoolScheduler);
+                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
             });
             registerFunction(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
 
             var userAccount = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).Wait();
-                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), RxApp.TaskpoolScheduler);
+                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
             });
             registerFunction(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
                 
             var secure = new Lazy<ISecureBlobCache>(() => {
                 fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).Wait();
-                return new EncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), RxApp.TaskpoolScheduler);
+                return new EncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), BlobCache.TaskpoolScheduler);
             });
             registerFunction(() => secure.Value, typeof(ISecureBlobCache), null);
         }

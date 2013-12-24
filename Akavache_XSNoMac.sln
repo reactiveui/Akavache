@@ -11,10 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Monodroid", "Akava
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3_Monodroid", "Akavache.Sqlite3\Akavache.Sqlite3_Monodroid.csproj", "{F92A477B-BB94-A3C1-084E-917AEF9FEDB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Portable_Monodroid", "Akavache.Portable\Akavache.Portable_Monodroid.csproj", "{F92A4778-B294-1AC1-084E-E177EF9FEDB7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Portable_Monotouch", "Akavache.Portable\Akavache.Portable_Monotouch.csproj", "{A091337A-FE94-0DB1-8F1E-05E1FDA78FFC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_Monodroid", "Akavache.Mobile\Akavache.Mobile_Monodroid.csproj", "{192A477B-BB94-A3C1-F14E-E177EF9FEDB7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Http_Monotouch", "Akavache.Http\Akavache.Http_Monotouch.csproj", "{AA91337A-9E94-2DB1-8F1E-05E1FDA78FFC}"
