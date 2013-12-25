@@ -5,9 +5,9 @@ using System.Reactive.Windows.Foundation;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Reactive.Linq;
 using System.Reflection;
-using ReactiveUI;
 using Windows.Security.Cryptography.DataProtection;
 using Windows.Storage;
+using Splat;
 
 namespace Akavache
 {
@@ -50,6 +50,6 @@ namespace Akavache
 
     class CEncryptedBlobCache : EncryptedBlobCache
     {
-        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, RxApp.TaskpoolScheduler) { }
+        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, BlobCache.TaskpoolScheduler) { }
     }
 }
