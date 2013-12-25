@@ -129,6 +129,9 @@
     <Reference Include="ReactiveUI">
       <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
     </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\ext\monodroid\Splat.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monodroid\System.Reactive.Core.dll</HintPath>
     </Reference>
