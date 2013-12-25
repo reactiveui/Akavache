@@ -48,12 +48,6 @@
     <Reference Include="Xamarin.Mobile">
       <HintPath>..\ext\monotouch\Xamarin.Mobile.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Cocoa">
-      <HintPath>..\ext\monotouch\ReactiveUI.Cocoa.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI.Mobile">
-      <HintPath>..\ext\monotouch\ReactiveUI.Mobile.dll</HintPath>
-    </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
     </Reference>
