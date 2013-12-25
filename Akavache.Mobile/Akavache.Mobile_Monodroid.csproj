@@ -113,18 +113,9 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mono.Android" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\monodroid\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Mobile">
-      <HintPath>..\ext\monodroid\Xamarin.Mobile.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Android" />
-    <Reference Include="ReactiveUI.Android">
-      <HintPath>..\ext\monodroid\ReactiveUI.Android.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI.Mobile">
-      <HintPath>..\ext\monodroid\ReactiveUI.Mobile.dll</HintPath>
     </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\ext\monodroid\ReactiveUI.dll</HintPath>
@@ -143,6 +134,9 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\ext\monodroid\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Mobile">
+      <HintPath>..\ext\monodroid\Xamarin.Mobile.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
