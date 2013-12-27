@@ -38,6 +38,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9407D902-E9CF-4CB6-B601-77CDF74B9475}"
 	ProjectSection(SolutionItems) = preProject
 		CommonAssemblyInfo.cs = CommonAssemblyInfo.cs
+		MakeRelease.ps1 = MakeRelease.ps1
 	EndProjectSection
 EndProject
 Global

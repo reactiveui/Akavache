@@ -72,4 +72,6 @@ Generated_Code #added for RIA/Silverlight projects
 Release/
 packages/
 
+AppPackages/
+
 *.userprefs
