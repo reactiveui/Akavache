@@ -70,5 +70,6 @@ Generated_Code #added for RIA/Silverlight projects
 # Custom
 
 Release/
+packages/
 
 Akavache_Mono.userprefs
