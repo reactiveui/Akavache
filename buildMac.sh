@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-xbuild Akavache_XSNoMac.sln /p:Configuration=Release
+/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool build '--configuration:Release|AnyCPU' Akavache_XSAll.sln
