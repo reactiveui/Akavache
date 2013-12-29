@@ -44,7 +44,7 @@ namespace Akavache.Http.Tests
 
             var rq = new HttpRequestMessage(HttpMethod.Get, "/");
             var result = fixture.Schedule(rq, 1)
-                .Timeout(TimeSpan.FromSeconds(2.0), RxApp.TaskpoolScheduler)
+                .Timeout(TimeSpan.FromSeconds(2.0), BlobCache.TaskpoolScheduler)
                 .First();
 
             Console.WriteLine(Encoding.UTF8.GetString(result.Item2));
