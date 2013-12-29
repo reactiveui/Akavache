@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 24 Dec 2013 03:16:30 GMT
+Etag: "12345"
+Server: gunicorn/0.17.4
+Content-Length: 118
+Connection: keep-alive
+
+{
+  "ETag": "12345",
+  "Content-Type": "text/plain; charset=UTF-8",
+  "Content-Length": "118",
+  "Server": "httpbin"
+}

@@ -72,6 +72,10 @@
     <Reference Include="ReactiveUI.Xaml">
       <HintPath>..\packages\reactiveui-platforms.5.99.0-beta\lib\WP8\ReactiveUI.Xaml.dll</HintPath>
     </Reference>
+    <Reference Include="Splat, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.1.1\lib\wp8\Splat.dll</HintPath>
+    </Reference>
     <Reference Include="Splat">
       <HintPath>..\packages\Splat.1.1.1\lib\wp8\Splat.dll</HintPath>
     </Reference>
