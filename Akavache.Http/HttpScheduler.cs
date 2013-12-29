@@ -11,13 +11,13 @@ using Punchclock;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using ReactiveUI;
+using System.Net;
 
 #if WINRT
 using Windows.Security.Cryptography.Core;
 using System.Runtime.InteropServices.WindowsRuntime;
 #else
 using System.Security.Cryptography;
-using System.Net;
 #endif
 
 namespace Akavache.Http
@@ -310,7 +310,7 @@ namespace Akavache.Http
             }
 
             var rq = Observable.Defer(() => Client.SendAsyncObservable(request, shouldFetchContent)
-                .Do(x => bytesRead += x.Item2.LongLength));
+                .Do(x => bytesRead += x.Item2.Length));
 
             if (retryCount > 0) 
             {
