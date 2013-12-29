@@ -1,24 +1,21 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.2.0</version>
+    <version>3.99.0-beta</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="[3.2.0]" />
+      <dependency id="akavache" version="[3.99.0-beta]" />
     </dependencies>
-
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-
     <id>akavache.sqlite3</id>
     <title>Akavache.SQLite3</title>
     <description>A backend for Akavache based on SQLite3, particularly recommended on mobile platforms.</description>
     <summary>A backend for Akavache based on SQLite3, particularly recommended on mobile platforms.</summary>
     <copyright>Copyright GitHub© 2012</copyright>
   </metadata>
-
   <files>
     <file src="bin\Release\Net45\Akavache.Sqlite3.*" target="lib\net45" />
     <file src="bin\Release\WinRT45\Akavache.Sqlite3.*" target="lib\NetCore45" />

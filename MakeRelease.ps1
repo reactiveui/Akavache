@@ -1,4 +1,6 @@
-﻿$Archs = { "Net45","WP8", "WinRT45", "Mono", "Monoandroid", "Monotouch", "Portable-Net45+WinRT45+WP8"}
+﻿Param([string]$version = $null)
+
+$Archs = { "Net45","WP8", "WinRT45", "Mono", "Monoandroid", "Monotouch", "Portable-Net45+WinRT45+WP8"}
 $Projects = {"Akavache", "Akavache.Sqlite3", "Akavache.Mobile"}
 
 $SlnFileExists = Test-Path ".\Akavache.sln"
@@ -15,6 +17,31 @@ if (Test-Path .\Release) {
 	rmdir -r -force .\Release
 }
 
+# Update Nuspecs if we have a version
+if($version) {
+    $nuspecs = ls -r Akavache*.nuspec
+
+    foreach($nuspec in $nuspecs) {
+        $xml = New-Object XML
+        $xml.Load($nuspec)
+        
+        # specify NS
+        $nsMgr = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
+        $nsMgr.AddNamespace("ns", "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd")
+
+        # PowerShell makes editing XML docs so easy!
+        $xml.package.metadata.version = "$version-beta"
+
+        # get the akavache dependencies and update them
+        $deps = $xml.SelectNodes("//ns:dependency[contains(@id, 'akavache')]", $nsMgr) 
+        foreach($dep in $deps) {
+            $dep.version = "[" + $version + "-beta]"
+        }
+        
+        $xml.Save($nuspec)
+    }
+}
+
 foreach-object $Archs | %{mkdir -Path ".\Release\$_"}
 
 foreach-object $Archs | %{
@@ -28,3 +55,10 @@ foreach-object $Archs | %{
 ls -r .\Release | ?{$_.FullName.Contains("Clousot")} | %{rm $_.FullName}
 
 ext\tools\xamarin-component.exe package component
+
+$specFiles = ls -r Akavache*.nuspec
+$specFiles | %{.\.nuget\NuGet.exe pack -symbols $_.FullName}
+
+$packages = ls -r Akavache*.nupkg
+
+$packages | %{mv $_.FullName .\Release}

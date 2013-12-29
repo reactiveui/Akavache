@@ -18,6 +18,11 @@
             only have to hope for the best :-/
             </summary>
         </member>
+        <member name="T:ReactiveUI.Cocoa.Cocoa.LinkerOverrides">
+            <summary>
+            This class exists to force the MT linker to include properties called by RxUI via reflection
+            </summary>
+        </member>
         <member name="T:ReactiveUI.Cocoa.NSRunloopScheduler">
             <summary>
             Provides a scheduler which will use the Cocoa main loop to schedule
@@ -85,13 +90,6 @@
             This binding type converter uses the built-in WPF component model
             conversions to get a whole bunch of conversions for free. Unfortunately,
             these are pretty gutted on some other platforms like Silverlight.
-            </summary>
-        </member>
-        <member name="T:ReactiveUI.PlatformUnitTestDetector">
-            <summary>
-            Because RxUI.dll is in a PLib, it doesn't have the SuperPowers it needs
-            to be able to really detect whether it's in a unit test runner. This class
-            is much better at it.
             </summary>
         </member>
         <member name="T:ReactiveUI.Cocoa.Registrations">
@@ -447,6 +445,402 @@
             A string representing the name of the property that has been changed.
             Leave <c>null</c> to let the runtime set to caller member name.
             </param>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.TableSectionInformation.Header">
+            <summary>
+            Gets or sets the header of this section.
+            </summary>
+            <value>The header, or null if a header shouldn't be used.</value>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.TableSectionInformation.Footer">
+            <summary>
+            Gets or sets the footer of this section.
+            </summary>
+            <value>The footer, or null if a footer shouldn't be used.</value>
+        </member>
+        <member name="T:ReactiveUI.Cocoa.TableSectionHeader">
+            <summary>
+            A header or footer of a table section.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.TableSectionHeader.View">
+            <summary>
+            Gets the function that creates the <see cref="T:MonoTouch.UIKit.UIView" />
+            used as header for this section.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.TableSectionHeader.Height">
+            <summary>
+            Gets the height of the header.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.TableSectionHeader.#ctor(System.Func{MonoTouch.UIKit.UIView},System.Single)">
+            <summary>
+            Initializes a new instance of the <see cref="T:ReactiveUI.Cocoa.TableSectionHeader" />
+            struct.
+            </summary>
+            <param name="view">Function that creates header's <see cref="T:MonoTouch.UIKit.UIView" />.</param>
+            <param name="height">Height of the header.</param>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewSource.Data">
+            <summary>
+            Gets or sets the data that should be displayed by this
+            <see cref="T:ReactiveUI.Cocoa.ReactiveTableViewSource" />.  You should
+            probably bind your view model to this property.
+            If the list implements <see cref="T:ReactiveUI.IReactiveNotifyCollectionChanged" />,
+            then the source will react to changes to the contents of the list as well.
+            </summary>
+            <value>The data.</value>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewSource.ElementSelected">
+            <summary>
+            Gets an IObservable that is a hook to <see cref="M:ReactiveUI.Cocoa.ReactiveTableViewSource.RowSelected(MonoTouch.UIKit.UITableView,MonoTouch.Foundation.NSIndexPath)" /> calls.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewSource.Changing">
+            <summary>
+            Represents an Observable that fires *before* a property is about to
+            be changed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveTableViewSource.Changed">
+            <summary>
+            Represents an Observable that fires *after* a property has changed.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSource.SuppressChangeNotifications">
+            <summary>
+            When this method is called, an object will not fire change
+            notifications (neither traditional nor Observable notifications)
+            until the return value is disposed.
+            </summary>
+            <returns>An object that, when disposed, reenables change
+            notifications.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSource.RaiseAndSetIfChanged``1(``0@,``0,System.String)">
+            <summary>
+            RaiseAndSetIfChanged fully implements a Setter for a read-write
+            property on a ReactiveObject, using CallerMemberName to raise the notification
+            and the ref to the backing field to set the property.
+            </summary>
+            <typeparam name="TObj">The type of the This.</typeparam>
+            <typeparam name="TRet">The type of the return value.</typeparam>
+            <param name="This">The <see cref="T:ReactiveUI.ReactiveObject" /> raising the notification.</param>
+            <param name="backingField">A Reference to the backing field for this
+            property.</param>
+            <param name="newValue">The new value.</param>
+            <param name="propertyName">The name of the property, usually
+            automatically provided through the CallerMemberName attribute.</param>
+            <returns>The newly set value, normally discarded.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSource.RaisePropertyChanged(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSource.RaisePropertyChanging(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="T:ReactiveUI.Cocoa.ReactiveTableViewSourceExtensions">
+            <summary>
+            Extension methods for <see cref="T:ReactiveUI.Cocoa.ReactiveTableViewSource" />.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSourceExtensions.BindTo``1(System.IObservable{System.Collections.Generic.IReadOnlyList{ReactiveUI.Cocoa.TableSectionInformation{``0}}},MonoTouch.UIKit.UITableView,System.Func{ReactiveUI.Cocoa.ReactiveTableViewSource,System.IDisposable})">
+            <summary>
+                <para>Extension method that binds an observable of a list of table
+            sections as the source of a <see cref="T:MonoTouch.UIKit.UITableView" />.</para>
+                <para>If your <see cref="!:IReadOnlyList" /> is also an instance of
+            <see cref="T:ReactiveUI.IReactiveNotifyCollectionChanged" />, then this method
+            will silently update the bindings whenever it changes as well.
+            Otherwise, it will just log a message.</para>
+            </summary>
+            <returns>The <see cref="T:System.IDisposable" /> used to dispose this binding.</returns>
+            <param name="sectionsObservable">Sections observable.</param>
+            <param name="tableView">Table view.</param>
+            <param name="initSource">Optionally initializes some property of
+            the <see cref="T:ReactiveUI.Cocoa.ReactiveTableViewSource" />.</param>
+            <typeparam name="TCell">Type of the <see cref="T:MonoTouch.UIKit.UITableViewCell" />.</typeparam>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSourceExtensions.BindTo``1(System.IObservable{ReactiveUI.IReactiveNotifyCollectionChanged},MonoTouch.UIKit.UITableView,MonoTouch.Foundation.NSString,System.Single,System.Action{``0},System.Func{ReactiveUI.Cocoa.ReactiveTableViewSource,System.IDisposable})">
+            <summary>
+            Extension method that binds an observable of a collection
+            as the source of a <see cref="T:MonoTouch.UIKit.UITableView" />.
+            </summary>
+            <returns>The <see cref="T:System.IDisposable" /> used to dispose this binding.</returns>
+            <param name="sourceObservable">Source collection observable.</param>
+            <param name="tableView">Table view.</param>
+            <param name="cellKey">Cell key.</param>
+            <param name="sizeHint">Size hint.</param>
+            <param name="initializeCellAction">Initialize cell action.</param>
+            <param name="initSource">Optionally initializes some property of
+            the <see cref="T:ReactiveUI.Cocoa.ReactiveTableViewSource" />.</param>
+            <typeparam name="TCell">Type of the <see cref="T:MonoTouch.UIKit.UITableViewCell" />.</typeparam>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveTableViewSourceExtensions.BindTo``1(System.IObservable{ReactiveUI.IReactiveNotifyCollectionChanged},MonoTouch.UIKit.UITableView,System.Single,System.Action{``0},System.Func{ReactiveUI.Cocoa.ReactiveTableViewSource,System.IDisposable})">
+            <summary>
+            Extension method that binds an observable of a collection
+            as the source of a <see cref="T:MonoTouch.UIKit.UITableView" />.  Also registers
+            the given class with an unspecified cellKey (you should probably
+            not specify any other cellKeys).
+            </summary>
+            <returns>The <see cref="T:System.IDisposable" /> used to dispose this binding.</returns>
+            <param name="sourceObservable">Source collection observable.</param>
+            <param name="tableView">Table view.</param>
+            <param name="sizeHint">Size hint.</param>
+            <param name="initializeCellAction">Initialize cell action.</param>
+            <param name="initSource">Optionally initializes some property of
+            the <see cref="T:ReactiveUI.Cocoa.ReactiveTableViewSource" />.</param>
+            <typeparam name="TCell">Type of the <see cref="T:MonoTouch.UIKit.UITableViewCell" />.</typeparam>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveCollectionViewCell.Changing">
+            <summary>
+            Represents an Observable that fires *before* a property is about to
+            be changed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveCollectionViewCell.Changed">
+            <summary>
+            Represents an Observable that fires *after* a property has changed.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewCell.SuppressChangeNotifications">
+            <summary>
+            When this method is called, an object will not fire change
+            notifications (neither traditional nor Observable notifications)
+            until the return value is disposed.
+            </summary>
+            <returns>An object that, when disposed, reenables change
+            notifications.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewCell.RaiseAndSetIfChanged``1(``0@,``0,System.String)">
+            <summary>
+            RaiseAndSetIfChanged fully implements a Setter for a read-write
+            property on a ReactiveObject, using CallerMemberName to raise the notification
+            and the ref to the backing field to set the property.
+            </summary>
+            <typeparam name="TObj">The type of the This.</typeparam>
+            <typeparam name="TRet">The type of the return value.</typeparam>
+            <param name="This">The <see cref="T:ReactiveUI.ReactiveObject" /> raising the notification.</param>
+            <param name="backingField">A Reference to the backing field for this
+            property.</param>
+            <param name="newValue">The new value.</param>
+            <param name="propertyName">The name of the property, usually
+            automatically provided through the CallerMemberName attribute.</param>
+            <returns>The newly set value, normally discarded.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewCell.RaisePropertyChanged(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewCell.RaisePropertyChanging(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveCollectionViewSource.Data">
+            <summary>
+            Gets or sets the data that should be displayed by this
+            <see cref="T:ReactiveUI.Cocoa.ReactiveCollectionViewSource" />.  You should
+            probably bind your view model to this property.
+            If the list implements <see cref="T:ReactiveUI.IReactiveNotifyCollectionChanged" />,
+            then the source will react to changes to the contents of the list as well.
+            </summary>
+            <value>The data.</value>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveCollectionViewSource.ElementSelected">
+            <summary>
+            Gets an IObservable that is a hook to <see cref="M:ReactiveUI.Cocoa.ReactiveCollectionViewSource.ItemSelected(MonoTouch.UIKit.UICollectionView,MonoTouch.Foundation.NSIndexPath)" /> calls.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveCollectionViewSource.Changing">
+            <summary>
+            Represents an Observable that fires *before* a property is about to
+            be changed.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.ReactiveCollectionViewSource.Changed">
+            <summary>
+            Represents an Observable that fires *after* a property has changed.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSource.SuppressChangeNotifications">
+            <summary>
+            When this method is called, an object will not fire change
+            notifications (neither traditional nor Observable notifications)
+            until the return value is disposed.
+            </summary>
+            <returns>An object that, when disposed, reenables change
+            notifications.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSource.RaiseAndSetIfChanged``1(``0@,``0,System.String)">
+            <summary>
+            RaiseAndSetIfChanged fully implements a Setter for a read-write
+            property on a ReactiveObject, using CallerMemberName to raise the notification
+            and the ref to the backing field to set the property.
+            </summary>
+            <typeparam name="TObj">The type of the This.</typeparam>
+            <typeparam name="TRet">The type of the return value.</typeparam>
+            <param name="This">The <see cref="T:ReactiveUI.ReactiveObject" /> raising the notification.</param>
+            <param name="backingField">A Reference to the backing field for this
+            property.</param>
+            <param name="newValue">The new value.</param>
+            <param name="propertyName">The name of the property, usually
+            automatically provided through the CallerMemberName attribute.</param>
+            <returns>The newly set value, normally discarded.</returns>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSource.RaisePropertyChanged(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSource.RaisePropertyChanging(System.String)">
+            <summary>
+            Use this method in your ReactiveObject classes when creating custom
+            properties where raiseAndSetIfChanged doesn't suffice.
+            </summary>
+            <param name="This">The instance of ReactiveObject on which the property has changed.</param>
+            <param name="propertyName">
+            A string representing the name of the property that has been changed.
+            Leave <c>null</c> to let the runtime set to caller member name.
+            </param>
+        </member>
+        <member name="T:ReactiveUI.Cocoa.ReactiveCollectionViewSourceExtensions">
+            <summary>
+            Extension methods for <see cref="T:ReactiveUI.Cocoa.ReactiveCollectionViewSource" />.
+            </summary>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSourceExtensions.BindTo``1(System.IObservable{System.Collections.Generic.IReadOnlyList{ReactiveUI.Cocoa.CollectionViewSectionInformation{``0}}},MonoTouch.UIKit.UICollectionView,System.Func{ReactiveUI.Cocoa.ReactiveCollectionViewSource,System.IDisposable})">
+            <summary>
+                <para>Extension method that binds an observable of a list of collection
+            sections as the source of a <see cref="T:MonoTouch.UIKit.UICollectionView" />.</para>
+                <para>If your <see cref="!:IReadOnlyList" /> is also an instance of
+            <see cref="T:ReactiveUI.IReactiveNotifyCollectionChanged" />, then this method
+            will silently update the bindings whenever it changes as well.
+            Otherwise, it will just log a message.</para>
+            </summary>
+            <returns>The <see cref="T:System.IDisposable" /> used to dispose this binding.</returns>
+            <param name="sectionsObservable">Sections observable.</param>
+            <param name="collectionView">Collection view.</param>
+            <param name="initSource">Optionally initializes some property of
+            the <see cref="T:ReactiveUI.Cocoa.ReactiveCollectionViewSource" />.</param>
+            <typeparam name="TCell">Type of the <see cref="T:MonoTouch.UIKit.UICollectionViewCell" />.</typeparam>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSourceExtensions.BindTo``1(System.IObservable{ReactiveUI.IReactiveNotifyCollectionChanged},MonoTouch.UIKit.UICollectionView,MonoTouch.Foundation.NSString,System.Action{``0},System.Func{ReactiveUI.Cocoa.ReactiveCollectionViewSource,System.IDisposable})">
+            <summary>
+            Extension method that binds an observable of a collection
+            as the source of a <see cref="T:MonoTouch.UIKit.UICollectionView" />.
+            </summary>
+            <returns>The <see cref="T:System.IDisposable" /> used to dispose this binding.</returns>
+            <param name="sourceObservable">Source collection observable.</param>
+            <param name="collectionView">Collection view.</param>
+            <param name="cellKey">Cell key.</param>
+            <param name="initializeCellAction">Initialize cell action.</param>
+            <param name="initSource">Optionally initializes some property of
+            the <see cref="T:ReactiveUI.Cocoa.ReactiveCollectionViewSource" />.</param>
+            <typeparam name="TCell">Type of the <see cref="T:MonoTouch.UIKit.UICollectionViewCell" />.</typeparam>
+        </member>
+        <member name="M:ReactiveUI.Cocoa.ReactiveCollectionViewSourceExtensions.BindTo``1(System.IObservable{ReactiveUI.IReactiveNotifyCollectionChanged},MonoTouch.UIKit.UICollectionView,System.Action{``0},System.Func{ReactiveUI.Cocoa.ReactiveCollectionViewSource,System.IDisposable})">
+            <summary>
+            Extension method that binds an observable of a collection
+            as the source of a <see cref="T:MonoTouch.UIKit.UICollectionView" />.  Also registers
+            the given class with an unspecified cellKey (you should probably
+            not specify any other cellKeys).
+            </summary>
+            <returns>The <see cref="T:System.IDisposable" /> used to dispose this binding.</returns>
+            <param name="sourceObservable">Source collection observable.</param>
+            <param name="collectionView">Collection view.</param>
+            <param name="initializeCellAction">Initialize cell action.</param>
+            <param name="initSource">Optionally initializes some property of
+            the <see cref="T:ReactiveUI.Cocoa.ReactiveCollectionViewSource" />.</param>
+            <typeparam name="TCell">Type of the <see cref="T:MonoTouch.UIKit.UICollectionViewCell" />.</typeparam>
+        </member>
+        <member name="T:ReactiveUI.Cocoa.IUICollViewAdapter`2">
+            <summary>
+            Interface used to extract a common API between <see cref="T:MonoTouch.UIKit.UITableView" />
+            and <see cref="T:MonoTouch.UIKit.UICollectionView" />.
+            </summary>
+        </member>
+        <member name="T:ReactiveUI.Cocoa.CommonReactiveSource`3">
+            <summary>
+            Internal class containing the common code between <see cref="T:ReactiveUI.Cocoa.ReactiveTableViewSource" />
+            and <see cref="T:ReactiveUI.Cocoa.ReactiveCollectionViewSource" />.
+            </summary>
+        </member>
+        <member name="F:ReactiveUI.Cocoa.CommonReactiveSource`3.mainDisp">
+            <summary>
+            Main disposable which is disposed when this object is disposed.
+            </summary>
+        </member>
+        <member name="F:ReactiveUI.Cocoa.CommonReactiveSource`3.setupDisp">
+            <summary>
+            Disposable used by the setup procedure.
+            </summary>
+        </member>
+        <member name="F:ReactiveUI.Cocoa.CommonReactiveSource`3.adapter">
+            <summary>
+            The adapter of the UIKit view.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.CommonReactiveSource`3.SectionInfo">
+            <summary>
+            Gets or sets the list of sections that this <see cref="!:CommonReactiveSource" />
+            should display.  Setting a new value always causes the table view to be reloaded.
+            If the list implements <see cref="T:ReactiveUI.IReactiveNotifyCollectionChanged" />,
+            then the source will react to changes to the contents of the list as well.
+            </summary>
+        </member>
+        <member name="F:ReactiveUI.Cocoa.CommonReactiveSource`3.sectionInfo">
+            <summary>
+            Field backing <see cref="P:ReactiveUI.Cocoa.CommonReactiveSource{`0,`1,`2}.SectionInfo" />.  Initialized to an empty
+            array in order to avoid null reference exceptions if the source is
+            used before a real section info has been set.
+            </summary>
+        </member>
+        <member name="P:ReactiveUI.Cocoa.CommonReactiveSource`3.DidPerformUpdates">
+            <summary>
+            IObservable that pushes a new value after the corresponding IUICollViewAdapter
+            finishes processing changes from the underlying collection. Due to the buffered
+            nature of the processing, the value is an IEnumerable of the changes.
+            </summary>
+            <value>An IEnumerable containing all the changes processed. Note that in
+            some cases those can be different than the change events published by the
+            underlying collection (for example the return value will contain a single
+            Reset event arg even though the collection did not send a Reset, but the adapter
+            performed a Reload nevertheless)</value>
         </member>
     </members>
 </doc>
