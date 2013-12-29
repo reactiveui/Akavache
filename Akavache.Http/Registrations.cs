@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reactive.Concurrency;
-using ReactiveUI.Mobile;
-using ReactiveUI;
 using System.Reactive.Disposables;
+using Splat;
 
 #if ANDROID
 using Android.App;
@@ -31,7 +30,7 @@ namespace Akavache.Http
         {
             var background = new Lazy<IHttpScheduler>(() =>
             {
-                var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
+                var suspHost = Locator.Current.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Background, 1));
 
                 if (suspHost != null)
@@ -44,7 +43,7 @@ namespace Akavache.Http
 
             var userInitiated = new Lazy<IHttpScheduler>(() =>
             {
-                var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
+                var suspHost = Locator.Current.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.UserInitiated, 3));
 
                 if (suspHost != null)
@@ -57,7 +56,7 @@ namespace Akavache.Http
 
             var speculative = new Lazy<IHttpScheduler>(() =>
             {
-                var suspHost = RxApp.DependencyResolver.GetService<ISuspensionHost>();
+                var suspHost = Locator.Current.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
                 ret.ResetLimit(GetDataLimit());
 

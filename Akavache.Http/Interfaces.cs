@@ -1,11 +1,11 @@
 using System;
 using System.Net.Http;
-using ReactiveUI;
 using Punchclock;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive;
 using System.Reactive.Disposables;
+using Splat;
 
 namespace Akavache.Http
 {
@@ -31,10 +31,10 @@ namespace Akavache.Http
         [ThreadStatic] static IHttpScheduler unitTestSpeculative;
         public static IHttpScheduler Speculative
         {
-            get { return unitTestSpeculative ?? speculative ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("Speculative"); }
+            get { return unitTestSpeculative ?? speculative ?? Locator.Current.GetService<IHttpScheduler>("Speculative"); }
             set 
             {
-                if (RxApp.InUnitTestRunner())
+                if (ModeDetector.InUnitTestRunner())
                 {
                     unitTestSpeculative = value;
                     speculative = speculative ?? value;
@@ -50,10 +50,10 @@ namespace Akavache.Http
         [ThreadStatic] static IHttpScheduler unitTestUserInitiated;
         public static IHttpScheduler UserInitiated
         {
-            get { return unitTestUserInitiated ?? userInitiated ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("UserInitiated"); }
+            get { return unitTestUserInitiated ?? userInitiated ?? Locator.Current.GetService<IHttpScheduler>("UserInitiated"); }
             set 
             {
-                if (RxApp.InUnitTestRunner())
+                if (ModeDetector.InUnitTestRunner())
                 {
                     unitTestUserInitiated = value;
                     userInitiated = userInitiated ?? value;
@@ -69,10 +69,10 @@ namespace Akavache.Http
         [ThreadStatic] static IHttpScheduler unitTestBackground;
         public static IHttpScheduler Background
         {
-            get { return unitTestBackground ?? background ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("Background"); }
+            get { return unitTestBackground ?? background ?? Locator.Current.GetService<IHttpScheduler>("Background"); }
             set 
             {
-                if (RxApp.InUnitTestRunner())
+                if (ModeDetector.InUnitTestRunner())
                 {
                     unitTestBackground = value;
                     background = background ?? value;
@@ -89,7 +89,7 @@ namespace Akavache.Http
         [ThreadStatic] static IHttpScheduler unitTestBackgroundGuaranteed;
         public static IHttpScheduler BackgroundGuaranteed
         {
-            get { return unitTestBackgroundGuaranteed ?? backgroundGuaranteed ?? RxApp.DependencyResolver.GetService<IHttpScheduler>("BackgroundGuaranteed"); }
+            get { return unitTestBackgroundGuaranteed ?? backgroundGuaranteed ?? Locator.Current.GetService<IHttpScheduler>("BackgroundGuaranteed"); }
             set 
             {
                 if (RxApp.InUnitTestRunner())

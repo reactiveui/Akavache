@@ -8,7 +8,6 @@ using System.Reactive.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Reactive;
-using ReactiveUI;
 
 namespace Akavache.Http
 {

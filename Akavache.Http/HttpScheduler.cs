@@ -10,8 +10,8 @@ using System.Reactive.Disposables;
 using Punchclock;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using ReactiveUI;
 using System.Net;
+using Splat;
 
 #if WINRT
 using Windows.Security.Cryptography.Core;
@@ -227,7 +227,7 @@ namespace Akavache.Http
         {
             if (message.Headers.CacheControl != null && message.Headers.CacheControl.MaxAge != null) 
             {
-                return RxApp.TaskpoolScheduler.Now + message.Headers.CacheControl.MaxAge;
+                return BlobCache.TaskpoolScheduler.Now + message.Headers.CacheControl.MaxAge;
             }
 
             if (message.Content.Headers.Expires != null)
@@ -293,7 +293,7 @@ namespace Akavache.Http
 
         public HttpScheduler(int priorityBase = 100, int retryCount = 3, OperationQueue opQueue = null)
         {
-            this.opQueue = opQueue ?? RxApp.DependencyResolver.GetService<OperationQueue>("Akavache.Http") ?? new OperationQueue();
+            this.opQueue = opQueue ?? Locator.Current.GetService<OperationQueue>("Akavache.Http") ?? new OperationQueue();
             this.priorityBase = priorityBase; 
             this.retryCount = retryCount;
 

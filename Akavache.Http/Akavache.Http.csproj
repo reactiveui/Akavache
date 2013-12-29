@@ -45,9 +45,6 @@
     <Reference Include="Punchclock">
       <HintPath>..\packages\Punchclock.1.1.0\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.5.2.0\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
-    </Reference>
     <Reference Include="Splat">
       <HintPath>..\packages\Splat.1.1.0\lib\NetCore45\Splat.dll</HintPath>
     </Reference>
