@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using Splat;
+using System.Reactive;
+using System.Reactive.Linq;
 
 #if ANDROID
 using Android.App;
@@ -28,14 +30,21 @@ namespace Akavache.Http
     {
         public void Register(Action<Func<object>, Type, string> registerFunction)
         {
+            // NB: This is an end-run around not having ReactiveUI as a reference
+            // but it being real damn useful at this point for detecting suspension
+            // ReactiveUI.Mobile sets up this Observable in its initializer
+            var shouldPersistState = Locator.Current.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                ?? Observable.Never<IDisposable>();
+            var isUnpausing = Locator.Current.GetService<IObservable<Unit>>("IsUnpausing") 
+                ?? Observable.Never<Unit>();
+
             var background = new Lazy<IHttpScheduler>(() =>
             {
-                var suspHost = Locator.Current.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Background, 1));
 
-                if (suspHost != null)
+                if (shouldPersistState != null)
                 {
-                    suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
+                    shouldPersistState.Subscribe(_ => ret.CancelAll());
                 }
                 return ret;
             });
@@ -43,12 +52,11 @@ namespace Akavache.Http
 
             var userInitiated = new Lazy<IHttpScheduler>(() =>
             {
-                var suspHost = Locator.Current.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.UserInitiated, 3));
 
-                if (suspHost != null)
+                if (shouldPersistState != null)
                 {
-                    suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
+                    shouldPersistState.Subscribe(_ => ret.CancelAll());
                 }
                 return ret;
             });
@@ -56,14 +64,13 @@ namespace Akavache.Http
 
             var speculative = new Lazy<IHttpScheduler>(() =>
             {
-                var suspHost = Locator.Current.GetService<ISuspensionHost>();
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
                 ret.ResetLimit(GetDataLimit());
 
-                if (suspHost != null)
+                if (shouldPersistState != null)
                 {
-                    suspHost.ShouldPersistState.Subscribe(_ => ret.CancelAll());
-                    suspHost.IsUnpausing.Subscribe(_ => ret.ResetLimit(GetDataLimit()));
+                    shouldPersistState.Subscribe(_ => ret.CancelAll());
+                    isUnpausing.Subscribe(_ => ret.ResetLimit(GetDataLimit()));
                 }
 
                 return ret;
