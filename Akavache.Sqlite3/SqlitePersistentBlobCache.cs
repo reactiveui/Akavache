@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using SQLite;
 using Splat;
+using System.Threading.Tasks;
 
 namespace Akavache.Sqlite3
 {
@@ -34,7 +35,6 @@ namespace Akavache.Sqlite3
             BlobCache.EnsureInitialized();
 
             _connection = new SQLiteAsyncConnection(databaseFile, storeDateTimeAsTicks: true);
-            _connection.CreateTableAsync<CacheElement>();
 
             _initializer = Initialize();
 
@@ -375,8 +375,59 @@ namespace Akavache.Sqlite3
 
         protected IObservable<Unit> Initialize()
         {
-            // Cool it worked
-            return Observable.Return(Unit.Default);
+            var ret = Observable.Create<Unit>(async subj =>
+            {
+                try
+                {
+                    await _connection.CreateTableAsync<CacheElement>();
+
+                    var schemaVersion = await GetSchemaVersion();
+
+                    if (schemaVersion < 2)
+                    {
+                        await _connection.ExecuteAsync("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;");
+                        await _connection.CreateTableAsync<CacheElement>();
+
+                        var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
+                        await _connection.ExecuteAsync(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
+                        await _connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;");
+                    
+                        await _connection.InsertAsync(new SchemaInfo() { Version = 2, });
+                    }
+
+                    subj.OnNext(Unit.Default);
+                    subj.OnCompleted();
+                }
+                catch (Exception ex)
+                {
+                    subj.OnError(ex);
+                }
+            });
+
+            return ret.PublishLast().PermaRef();
+        }
+
+        protected async Task<int> GetSchemaVersion()
+        {
+            bool shouldCreateSchemaTable = false;
+            int versionNumber = 0;
+
+            try 
+            {
+                versionNumber = await _connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
+            }
+            catch (Exception ex)
+            {
+                shouldCreateSchemaTable = true;
+            }
+
+            if (shouldCreateSchemaTable)
+            {
+                await _connection.CreateTableAsync<SchemaInfo>();
+                versionNumber = 1;
+            }
+
+            return versionNumber;
         }
 
         /// <summary>
@@ -461,6 +512,17 @@ namespace Akavache.Sqlite3
     }
 
     class CacheElement
+    {
+        [PrimaryKey]
+        public string Key { get; set; }
+
+        public string TypeName { get; set; }
+        public byte[] Value { get; set; }
+        public DateTime Expiration { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    class VersionOneCacheElement
     {
         [PrimaryKey]
         public string Key { get; set; }
