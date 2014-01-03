@@ -48,14 +48,11 @@
     <Reference Include="Xamarin.Mobile">
       <HintPath>..\ext\monotouch\Xamarin.Mobile.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI.Cocoa">
-      <HintPath>..\ext\monotouch\ReactiveUI.Cocoa.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI.Mobile">
-      <HintPath>..\ext\monotouch\ReactiveUI.Mobile.dll</HintPath>
-    </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
@@ -72,10 +69,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AkavacheDriver.cs" />
     <Compile Include="Registrations.cs" />
-    <Compile Include="MacFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>

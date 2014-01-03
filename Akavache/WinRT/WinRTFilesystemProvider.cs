@@ -10,9 +10,9 @@ using System.Reactive.Windows.Foundation;
 using System.Text;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using ReactiveUI;
 using Windows.Foundation;
 using Windows.Storage;
+using Splat;
 
 namespace Akavache
 {
@@ -49,7 +49,7 @@ namespace Akavache
                 .Select(x =>
                     StorageFolder.GetFolderFromPathAsync(String.Join("\\", paths.Take(paths.Length - x)))
                     .ToObservable()
-                    .LoggedCatch(this, Observable.Empty<StorageFolder>()))
+                    .Catch(Observable.Empty<StorageFolder>()))
                 .Concat()
                 .Take(1);
 

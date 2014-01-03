@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Security.Cryptography;
-using ReactiveUI;
+using Splat;
 
 namespace Akavache
 {
@@ -59,6 +59,6 @@ namespace Akavache
     }
 
     class CEncryptedBlobCache : EncryptedBlobCache {
-        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, RxApp.TaskpoolScheduler) { }
+        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, BlobCache.TaskpoolScheduler) { }
     }
 }

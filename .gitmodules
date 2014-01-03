@@ -1,0 +1,3 @@
+[submodule "deps/pierce"]
+	path = deps/pierce
+	url = https://github.com/paulcbetts/pierce.git

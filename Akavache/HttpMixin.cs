@@ -8,7 +8,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
-using ReactiveUI;
+using Splat;
 using System.Collections.Concurrent;
 
 #if SILVERLIGHT
@@ -88,7 +88,7 @@ namespace Akavache
             IObservable<WebResponse> request;
 
 #if !SILVERLIGHT && !WINRT
-            if (RxApp.InUnitTestRunner())
+            if (ModeDetector.InUnitTestRunner())
             {
                 request = Observable.Defer(() =>
                 {
@@ -96,7 +96,7 @@ namespace Akavache
 
                     if (content == null)
                     {
-                        return Observable.Start(() => hwr.GetResponse(), RxApp.TaskpoolScheduler);
+                        return Observable.Start(() => hwr.GetResponse(), BlobCache.TaskpoolScheduler);
                     }
 
                     var buf = Encoding.UTF8.GetBytes(content);
@@ -104,7 +104,7 @@ namespace Akavache
                     {
                         hwr.GetRequestStream().Write(buf, 0, buf.Length);
                         return hwr.GetResponse();
-                    }, RxApp.TaskpoolScheduler);
+                    }, BlobCache.TaskpoolScheduler);
                 });
             }
             else 
@@ -130,13 +130,13 @@ namespace Akavache
                             .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
                             .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
                             .Multicast(ret).Connect();
-                    }, RxApp.TaskpoolScheduler);
+                    }, BlobCache.TaskpoolScheduler);
 
                     return ret;
                 });
             }
 
-            return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), RxApp.TaskpoolScheduler).Retry(retries);
+            return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), BlobCache.TaskpoolScheduler).Retry(retries);
         }
 
         static WebRequest CreateWebRequest(Uri uri, IDictionary<string, string> headers)

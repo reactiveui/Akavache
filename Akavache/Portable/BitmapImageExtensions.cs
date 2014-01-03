@@ -11,7 +11,6 @@ using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
 using Newtonsoft.Json;
-using ReactiveUI;
 using Splat;
 
 namespace Akavache
@@ -28,8 +27,7 @@ namespace Akavache
         {
             return This.GetAsync(key)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight))
-                .ObserveOn(RxApp.MainThreadScheduler);
+                .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>
