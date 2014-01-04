@@ -35,7 +35,7 @@ using Akavache;
 
 namespace SQLite
 {
-    public interface IAsyncTableQuery<T> where T : new()
+    internal interface IAsyncTableQuery<T> where T : new()
     {
         IAsyncTableQuery<T> Where (Expression<Func<T, bool>> predExpr);
         IAsyncTableQuery<T> Skip (int n);
