@@ -342,10 +342,19 @@ namespace Akavache.Http
 
             if (retryCount > 0) ret = ret.Retry(retryCount);
 
-            return opQueue.EnqueueObservableOperation(priority, () => ret)
-                .TakeUntil(cancelAllSignal)
-                .PublishLast()
-                .PermaRef();
+            // NB: We have to do this double-create dance because Punchclock won't
+            // unsubscribe to the source if it's already in progress, if nobody is
+            // listening to the enqueued observable operation, we have to explicitly
+            // signal cancelation via the cancel observable. Weird. Who wrote this
+            // crap??!
+            return Observable.Create<Tuple<HttpResponseMessage, byte[]>>(subj =>
+            {
+                var cancel = new AsyncSubject<Unit>();
+
+                return new CompositeDisposable(
+                    Disposable.Create(() => { cancel.OnNext(Unit.Default); cancel.OnCompleted(); }),
+                    opQueue.EnqueueObservableOperation(priority, null, cancel, () => ret).Subscribe(subj));
+            }).TakeUntil(cancelAllSignal).PublishLast().RefCount();
         }
 
         public void ResetLimit(long? maxBytesToRead = null)
