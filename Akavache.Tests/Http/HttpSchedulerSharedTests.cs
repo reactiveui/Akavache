@@ -202,27 +202,6 @@ namespace Akavache.Http.Tests
         }
     }
 
-    public class SanityTests
-    {
-        [Fact]
-        public void WeCanCorrectlyDetectCancellationInTestMessageHandler()
-        {
-            var resp = new AsyncSubject<HttpResponseMessage>();
-            var fixture = new HttpClient(new TestHttpMessageHandler(_ => resp));
-
-            Assert.False(resp.HasObservers);
-
-            var disp = fixture.SendAsyncObservable(new HttpRequestMessage(HttpMethod.Get, new Uri("http://example")))
-                .Subscribe();
-
-            Assert.True(resp.HasObservers);
-
-            disp.Dispose();
-
-            Assert.False(resp.HasObservers);
-        }
-    }
-
     public class BaseHttpSchedulerSharedTests : HttpSchedulerSharedTests
     {
         protected override IHttpScheduler CreateFixture()

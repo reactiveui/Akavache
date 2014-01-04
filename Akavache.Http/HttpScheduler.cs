@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Net;
 using Splat;
+using System.Threading;
 
 #if WINRT
 using Windows.Security.Cryptography.Core;
@@ -78,8 +79,8 @@ namespace Akavache.Http
         readonly IBlobCache blobCache = null;
         readonly IHttpScheduler innerScheduler = null;
 
-        readonly ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
-            new ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
+        readonly ConcurrentDictionary<Tuple<string, int>, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
+            new ConcurrentDictionary<Tuple<string, int>, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
 
         public CachingHttpScheduler(IHttpScheduler innerScheduler = null, IBlobCache blobCache = null)
         {
@@ -105,7 +106,7 @@ namespace Akavache.Http
             // Things that are tricky
             // - High prio rqs that satisfy a low prio pending request, we need
             //   to cancel / dequeue the low prio underlying one and return the high-prio
-            //   one. (i.e. priority inversion)
+            //   one. (i.e. priority inversion) (FIXED)
         }
 
         public HttpClient Client
@@ -124,7 +125,7 @@ namespace Akavache.Http
 
         public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
-            var key = UniqueKeyForRequest(request);
+            var key = Tuple.Create(UniqueKeyForRequest(request), priority);
             var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
 
             if (inflightDictionary.TryGetValue(key, out cache))
@@ -143,7 +144,7 @@ namespace Akavache.Http
                 return noCache;
             }
 
-            var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
+            var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key.Item1).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
                 .SelectMany(async (cacheEntry, ct) =>
                 {
                     var cancelSignal = new AsyncSubject<Unit>();
@@ -193,7 +194,7 @@ namespace Akavache.Http
                     var entry = HttpCacheEntry.FromResponse(respWithData.Item1, respWithData.Item2);
                     entry.ShouldCheckResponseHeaders = (expiryDate == null);
 
-                    await blobCache.InsertObject(key, entry, expiryDate);
+                    await blobCache.InsertObject(key.Item1, entry, expiryDate);
                     return respWithData;
                 })
                 .Finally(() => inflightDictionary.TryRemove(key, out cache))
@@ -304,34 +305,56 @@ namespace Akavache.Http
 
         public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
-            if (currentMax != null && bytesRead >= currentMax.Value)
+            if (currentMax != null && bytesRead >= currentMax.Value) 
             {
                 return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));
             }
 
-            var rq = Observable.Defer(() => Client.SendAsyncObservable(request, shouldFetchContent)
-                .Do(x => bytesRead += x.Item2.Length));
-
-            if (retryCount > 0) 
+            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(async (subj, ct) => 
             {
-                rq = rq.Retry(retryCount);
-            }
+                var cts = new CancellationTokenSource();
+                ct.Register(() => cts.Cancel());
 
-            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(subj =>
-            {
-                var cancel = new AsyncSubject<Unit>();
-                var disp = opQueue.EnqueueObservableOperation(priorityBase + priority, null, cancel, () => rq)
-                    .Subscribe(subj);
-
-                return Disposable.Create(() => 
+                var resp = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                try 
                 {
-                    cancel.OnNext(Unit.Default);    
-                    cancel.OnCompleted();
-                    disp.Dispose();
-                });
+                    if (!shouldFetchContent(resp)) 
+                    {
+                        subj.OnNext(Tuple.Create(resp, default(byte[])));
+                        subj.OnCompleted();
+                        return;
+                    }
+
+                    var ms = new MemoryStream();
+                    using (var stream = await resp.Content.ReadAsStreamAsync()) 
+                    {
+                        await stream.CopyToAsync(ms, 4096, ct);
+                    }
+
+                    subj.OnNext(Tuple.Create(resp, ms.ToArray()));
+                    subj.OnCompleted();
+                } 
+                finally 
+                {
+                    resp.Content.Dispose();
+                }
             });
 
-            return ret.PublishLast().RefCount().TakeUntil(cancelAllSignal);
+            if (retryCount > 0) ret = ret.Retry(retryCount);
+
+            // NB: We have to do this double-create dance because Punchclock won't
+            // unsubscribe to the source if it's already in progress, if nobody is
+            // listening to the enqueued observable operation, we have to explicitly
+            // signal cancelation via the cancel observable. Weird. Who wrote this
+            // crap??!
+            return Observable.Create<Tuple<HttpResponseMessage, byte[]>>(subj =>
+            {
+                var cancel = new AsyncSubject<Unit>();
+
+                return new CompositeDisposable(
+                    Disposable.Create(() => { cancel.OnNext(Unit.Default); cancel.OnCompleted(); }),
+                    opQueue.EnqueueObservableOperation(priority, null, cancel, () => ret).Subscribe(subj));
+            }).TakeUntil(cancelAllSignal).PublishLast().RefCount();
         }
 
         public void ResetLimit(long? maxBytesToRead = null)

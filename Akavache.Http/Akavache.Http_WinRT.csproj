@@ -150,7 +150,6 @@
     <Compile Include="HttpScheduler.cs" />
     <Compile Include="HttpSchedulerExtensions.cs" />
     <Compile Include="Interfaces.cs" />
-    <Compile Include="ObservableHttpClient.cs" />
     <Compile Include="Registrations.cs" />
   </ItemGroup>
   <ItemGroup>
