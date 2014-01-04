@@ -341,7 +341,11 @@ namespace Akavache.Http
             });
 
             if (retryCount > 0) ret = ret.Retry(retryCount);
-            return opQueue.EnqueueObservableOperation(priority, () => ret);
+
+            return opQueue.EnqueueObservableOperation(priority, () => ret)
+                .TakeUntil(cancelAllSignal)
+                .PublishLast()
+                .PermaRef();
         }
 
         public void ResetLimit(long? maxBytesToRead = null)
