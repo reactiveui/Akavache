@@ -79,8 +79,8 @@ namespace Akavache.Http
         readonly IBlobCache blobCache = null;
         readonly IHttpScheduler innerScheduler = null;
 
-        readonly ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
-            new ConcurrentDictionary<string, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
+        readonly ConcurrentDictionary<Tuple<string, int>, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
+            new ConcurrentDictionary<Tuple<string, int>, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
 
         public CachingHttpScheduler(IHttpScheduler innerScheduler = null, IBlobCache blobCache = null)
         {
@@ -106,7 +106,7 @@ namespace Akavache.Http
             // Things that are tricky
             // - High prio rqs that satisfy a low prio pending request, we need
             //   to cancel / dequeue the low prio underlying one and return the high-prio
-            //   one. (i.e. priority inversion)
+            //   one. (i.e. priority inversion) (FIXED)
         }
 
         public HttpClient Client
@@ -125,7 +125,7 @@ namespace Akavache.Http
 
         public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
-            var key = UniqueKeyForRequest(request);
+            var key = Tuple.Create(UniqueKeyForRequest(request), priority);
             var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
 
             if (inflightDictionary.TryGetValue(key, out cache))
@@ -144,7 +144,7 @@ namespace Akavache.Http
                 return noCache;
             }
 
-            var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
+            var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key.Item1).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
                 .SelectMany(async (cacheEntry, ct) =>
                 {
                     var cancelSignal = new AsyncSubject<Unit>();
@@ -194,7 +194,7 @@ namespace Akavache.Http
                     var entry = HttpCacheEntry.FromResponse(respWithData.Item1, respWithData.Item2);
                     entry.ShouldCheckResponseHeaders = (expiryDate == null);
 
-                    await blobCache.InsertObject(key, entry, expiryDate);
+                    await blobCache.InsertObject(key.Item1, entry, expiryDate);
                     return respWithData;
                 })
                 .Finally(() => inflightDictionary.TryRemove(key, out cache))
