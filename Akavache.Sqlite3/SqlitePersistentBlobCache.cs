@@ -72,6 +72,7 @@ namespace Akavache.Sqlite3
             {
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
+                CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
             };
 
             var ret = _initializer
@@ -97,6 +98,7 @@ namespace Akavache.Sqlite3
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = kvp.Key,
                 Value = kvp.Value,
+                CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
             }).ToList();
 
             var encryptAllTheData = elements.ToObservable()
@@ -169,8 +171,8 @@ namespace Akavache.Sqlite3
             lock (_inflightCache) 
             {
                 return _inflightCache.Get(key)
-                    .Select(x => x.Expiration == DateTime.MaxValue ?
-                        default(DateTimeOffset?) : new DateTimeOffset(x.Expiration, TimeSpan.Zero))
+                    .Select(x => x.CreatedAt == DateTime.MaxValue ?
+                        default(DateTimeOffset?) : new DateTimeOffset(x.CreatedAt, TimeSpan.Zero))
                     .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
                     .Finally(() => { lock(_inflightCache) { _inflightCache.Invalidate(key); } } );
             }           
@@ -241,7 +243,8 @@ namespace Akavache.Sqlite3
             {
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
-                TypeName = typeof(T).FullName
+                TypeName = typeof(T).FullName,
+                CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
             };
 
             var ret = _initializer
@@ -270,7 +273,8 @@ namespace Akavache.Sqlite3
                     Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                     Key = x.Key,
                     TypeName = typeof(T).FullName,
-                    Value = SerializeObject<T>(x.Value)
+                    Value = SerializeObject<T>(x.Value),
+                    CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
                 }).ToList();
             }, Scheduler);
 
