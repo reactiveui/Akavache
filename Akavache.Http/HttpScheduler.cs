@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Net;
 using Splat;
+using System.Threading;
 
 #if WINRT
 using Windows.Security.Cryptography.Core;
@@ -304,34 +305,43 @@ namespace Akavache.Http
 
         public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
         {
-            if (currentMax != null && bytesRead >= currentMax.Value)
+            if (currentMax != null && bytesRead >= currentMax.Value) 
             {
                 return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));
             }
 
-            var rq = Observable.Defer(() => Client.SendAsyncObservable(request, shouldFetchContent)
-                .Do(x => bytesRead += x.Item2.Length));
-
-            if (retryCount > 0) 
+            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(async (subj, ct) => 
             {
-                rq = rq.Retry(retryCount);
-            }
+                var cts = new CancellationTokenSource();
+                ct.Register(() => cts.Cancel());
 
-            var ret = Observable.Create<Tuple<HttpResponseMessage, byte[]>>(subj =>
-            {
-                var cancel = new AsyncSubject<Unit>();
-                var disp = opQueue.EnqueueObservableOperation(priorityBase + priority, null, cancel, () => rq)
-                    .Subscribe(subj);
-
-                return Disposable.Create(() => 
+                var resp = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                try 
                 {
-                    cancel.OnNext(Unit.Default);    
-                    cancel.OnCompleted();
-                    disp.Dispose();
-                });
+                    if (!shouldFetchContent(resp)) 
+                    {
+                        subj.OnNext(Tuple.Create(resp, default(byte[])));
+                        subj.OnCompleted();
+                        return;
+                    }
+
+                    var ms = new MemoryStream();
+                    using (var stream = await resp.Content.ReadAsStreamAsync()) 
+                    {
+                        await stream.CopyToAsync(ms, 4096, ct);
+                    }
+
+                    subj.OnNext(Tuple.Create(resp, ms.ToArray()));
+                    subj.OnCompleted();
+                } 
+                finally 
+                {
+                    resp.Content.Dispose();
+                }
             });
 
-            return ret.PublishLast().RefCount().TakeUntil(cancelAllSignal);
+            if (retryCount > 0) ret = ret.Retry(retryCount);
+            return opQueue.EnqueueObservableOperation(priority, () => ret);
         }
 
         public void ResetLimit(long? maxBytesToRead = null)
