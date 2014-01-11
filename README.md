@@ -118,15 +118,15 @@ easier to get started.
 ## Unit Testing with Akavache
 
 By default, if Akavache detects that it is being run in a unit test runner, it
-will use the `TestBlobCache` implementation instead of the default
-implementation. `TestBlobCache` implements `IBlobCache` in memory
+will create a PersistentBlobCache in a temporary directory.
+
+Alternatively use the `TestBlobCache.OverrideGlobals` method to temporarily replace the
+`BlobCache.UserAccount` variables with a `TestBlobCache`.
+`TestBlobCache` implements `IBlobCache` in memory
 synchronously using a Dictionary instead of persisting to disk.
 
 This class can be explicitly created as well, and initialized to have specific
-contents to test cache hit / cache miss scenarios. Use the
-`TestBlobCache.OverrideGlobals` method to temporarily replace the
-`BlobCache.UserAccount` variables with a specific TestBlobCache.
-
+contents to test cache hit / cache miss scenarios.
 Testing expiration can also be done, using Rx's `TestScheduler`:
 
 ```cs
@@ -134,7 +134,8 @@ Testing expiration can also be done, using Rx's `TestScheduler`:
 public void TestSomeExpirationStuff()
 {
     (new TestScheduler()).With(sched => {
-        using (cache = TestBlobCache.OverrideGlobals(null, sched)) {
+        // Place any initial content in the dictionary
+        using (var cache = TestBlobCache.OverrideGlobals(new Dictionary<string, byte[]>(), sched)) {
             cache.Insert("foo", new byte[] { 1,2,3 }, TimeSpan.FromMilliseconds(100));
 
             sched.AdvanceByMs(50);
