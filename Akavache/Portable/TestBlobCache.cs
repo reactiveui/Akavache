@@ -108,12 +108,12 @@ namespace Akavache
             }
         }
 
-        public IEnumerable<string> GetAllKeys()
+        public IObservable<List<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
-                return cache.Keys.ToArray();
+                return Observable.Return(cache.Keys.ToList());
             }
         }
 
