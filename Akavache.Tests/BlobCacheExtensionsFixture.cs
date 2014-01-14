@@ -92,7 +92,7 @@ namespace Akavache.Tests
                 var fixture = CreateBlobCache(path);
                 using(fixture)
                 {
-                    var bytes = fixture.DownloadUrl(@"https://www.google.com/intl/en_com/images/srpr/logo3w.png").First();
+                    var bytes = fixture.DownloadUrl(@"http://httpbin.org/html").First();
                     Assert.True(bytes.Length > 0);
                 }
 
