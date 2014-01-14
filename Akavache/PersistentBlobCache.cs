@@ -194,10 +194,10 @@ namespace Akavache
             return Observable.Return<DateTimeOffset?>(value.CreatedAt);
         }
 
-        public IEnumerable<string> GetAllKeys()
+        public IObservable<List<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
-            return CacheIndex.Keys.ToArray();
+            return Observable.Return(CacheIndex.Keys.ToList());
         }
 
         public IObservable<Unit> Invalidate(string key)
