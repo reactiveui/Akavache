@@ -517,25 +517,25 @@ namespace Akavache.Tests
                 }
 
                 var allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(input.Length, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length, fixture.GetAllKeys().First().Count());
                 Assert.Equal(input.Length, allObjectsCount);
 
                 fixture.InsertObject("Quux", new UserModel(null)).Wait();
 
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(input.Length + 1, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length + 1, fixture.GetAllKeys().First().Count());
                 Assert.Equal(input.Length, allObjectsCount);
 
                 fixture.InvalidateObject<UserObject>("Foo").Wait();
 
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(input.Length + 1 - 1, fixture.GetAllKeys().Count());
+                Assert.Equal(input.Length + 1 - 1, fixture.GetAllKeys().First().Count());
                 Assert.Equal(input.Length - 1, allObjectsCount);
 
                 fixture.InvalidateAllObjects<UserObject>().Wait();
 
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(1, fixture.GetAllKeys().Count());
+                Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 Assert.Equal(0, allObjectsCount);
 
                 fixture.Dispose();
@@ -559,7 +559,7 @@ namespace Akavache.Tests
                         fixture.InsertObject("Baz", new UserObject() { Bio = "Bio", Blog = "Blog", Name = "Name" })
                     ).Last();
 
-                    var keys = fixture.GetAllKeys();
+                    var keys = fixture.GetAllKeys().First();
                     Assert.Equal(3, keys.Count());
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
@@ -571,7 +571,7 @@ namespace Akavache.Tests
 
                 using (fixture = CreateBlobCache(path))
                 {
-                    var keys = fixture.GetAllKeys();
+                    var keys = fixture.GetAllKeys().First();
                     Assert.Equal(3, keys.Count());
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
@@ -641,7 +641,7 @@ namespace Akavache.Tests
             return _inner.GetAsync(key);
         }
 
-        public IEnumerable<string> GetAllKeys()
+        public IObservable<List<string>> GetAllKeys()
         {
             return _inner.GetAllKeys();
         }

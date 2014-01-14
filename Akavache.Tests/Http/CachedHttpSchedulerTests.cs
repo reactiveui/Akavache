@@ -29,13 +29,13 @@ namespace Akavache.Http.Tests
                 MaxRequestContentBufferSize = 1048576 * 64,
             });
 
-            Assert.Equal(0, blobCache.GetAllKeys().Count());
+            Assert.Equal(0, blobCache.GetAllKeys().First().Count());
                         
             var result = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri(input)), 5);
 
             Assert.True(result.Item1.IsSuccessStatusCode);
             Assert.Equal(8089690, result.Item2.Length);
-            Assert.Equal(1, blobCache.GetAllKeys().Count());
+            Assert.Equal(1, blobCache.GetAllKeys().First().Count());
 
             var result2 = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri(input)), 3);
 
@@ -56,11 +56,11 @@ namespace Akavache.Http.Tests
                 MaxRequestContentBufferSize = 1048576 * 64,
             });
 
-            Assert.Equal(0, blobCache.GetAllKeys().Count());
+            Assert.Equal(0, blobCache.GetAllKeys().First().Count());
 
             var result = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri(input)), 5);
 
-            Assert.Equal(0, blobCache.GetAllKeys().Count());
+            Assert.Equal(0, blobCache.GetAllKeys().First().Count());
             Assert.False(result.Item1.IsSuccessStatusCode);
         }
 
@@ -77,11 +77,11 @@ namespace Akavache.Http.Tests
                 MaxRequestContentBufferSize = 1048576 * 64,
             });
 
-            Assert.Equal(0, blobCache.GetAllKeys().Count());
+            Assert.Equal(0, blobCache.GetAllKeys().First().Count());
 
             var result = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Post, new Uri(input)), 5);
 
-            Assert.Equal(0, blobCache.GetAllKeys().Count());
+            Assert.Equal(0, blobCache.GetAllKeys().First().Count());
             Assert.True(result.Item1.IsSuccessStatusCode);
         }
 
@@ -109,18 +109,18 @@ namespace Akavache.Http.Tests
                 return Observable.Return(response);
             }));
 
-            Assert.Equal(0, blobCache.GetAllKeys().Count());
+            Assert.Equal(0, blobCache.GetAllKeys().First().Count());
             Assert.Equal(0, requestCount);
 
             var result = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri(input)), 5);
 
-            Assert.Equal(1, blobCache.GetAllKeys().Count());
+            Assert.Equal(1, blobCache.GetAllKeys().First().Count());
             Assert.Equal(1, requestCount);
             Assert.True(result.Item2.Length > 0);
 
             var result2 = await fixture.Schedule(new HttpRequestMessage(HttpMethod.Get, new Uri(input)), 5);
 
-            Assert.Equal(1, blobCache.GetAllKeys().Count());
+            Assert.Equal(1, blobCache.GetAllKeys().First().Count());
             Assert.Equal(2, requestCount);
             Assert.True(result2.Item2.Length > 0);
         }

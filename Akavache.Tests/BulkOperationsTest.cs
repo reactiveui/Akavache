@@ -31,7 +31,7 @@ namespace Akavache.Tests
                     fixture.Insert(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 var allData = fixture.GetAsync(keys).First();
 
@@ -57,7 +57,7 @@ namespace Akavache.Tests
 
                 var allData = fixture.GetAsync(keys).First();
                 Assert.Equal(0, allData.Count());
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
 
@@ -73,7 +73,7 @@ namespace Akavache.Tests
 
                 fixture.Insert(keys.ToDictionary(k => k, v => data)).First();
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 var allData = fixture.GetAsync(keys).First();
 
@@ -97,11 +97,11 @@ namespace Akavache.Tests
                     fixture.Insert(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 fixture.Invalidate(keys).First();
 
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
     }
@@ -125,7 +125,7 @@ namespace Akavache.Tests
                     fixture.InsertObject(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 var allData = fixture.GetObjectsAsync<Tuple<string, int>>(keys).First();
 
@@ -151,7 +151,7 @@ namespace Akavache.Tests
 
                 var allData = fixture.GetObjectsAsync<Tuple<string, int>>(keys).First();
                 Assert.Equal(0, allData.Count());
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
 
@@ -167,7 +167,7 @@ namespace Akavache.Tests
 
                 fixture.InsertObjects(keys.ToDictionary(k => k, v => data)).First();
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 var allData = fixture.GetObjectsAsync<Tuple<string, int>>(keys).First();
 
@@ -191,11 +191,11 @@ namespace Akavache.Tests
                     fixture.InsertObject(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 fixture.InvalidateObjects<Tuple<string, int>>(keys).First();
 
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
     }
