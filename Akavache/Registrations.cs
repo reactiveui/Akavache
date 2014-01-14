@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
 
 namespace Akavache
 {
@@ -17,16 +18,27 @@ namespace Akavache
 #endif
             registerFunction(() => fs, typeof(IFilesystemProvider), null);
 
-            var localCache = new Lazy<IBlobCache>(() => 
-                new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs));
-            registerFunction(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
+            var localCache = default(Lazy<IBlobCache>);
+            var userAccount = default(Lazy<IBlobCache>);
+            var secure = default(Lazy<ISecureBlobCache>);
 
-            var userAccount = new Lazy<IBlobCache>(() => 
-                new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
+            if (!RxApp.InUnitTestRunner()) {
+                localCache = new Lazy<IBlobCache>(() =>
+                    new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs));
+
+                userAccount = new Lazy<IBlobCache>(() =>
+                    new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
+
+                secure = new Lazy<ISecureBlobCache>(() =>
+                    new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
+            } else {
+                localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
+                userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
+                secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
+            }
+
+            registerFunction(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
             registerFunction(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
-                
-            var secure = new Lazy<ISecureBlobCache>(() => 
-                new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
             registerFunction(() => secure.Value, typeof(ISecureBlobCache), null);
 
             registerFunction(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
