@@ -32,7 +32,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
     <DocumentationFile>bin\Release\Net40\Akavache.Sqlite3.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
