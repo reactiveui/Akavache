@@ -190,16 +190,16 @@ namespace Akavache.Tests
                         fixture.Insert("Bar", new byte[] { 4, 5, 6 }).First();
                         fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
 
-                        Assert.NotEqual(0, fixture.GetAllKeys().Count());
+                        Assert.NotEqual(0, fixture.GetAllKeys().First().Count());
 
                         fixture.InvalidateAll().First();
 
-                        Assert.Equal(0, fixture.GetAllKeys().Count());
+                        Assert.Equal(0, fixture.GetAllKeys().First().Count());
                     }
 
                     using (var fixture = CreateBlobCache(path)) 
                     {
-                        Assert.Equal(0, fixture.GetAllKeys().Count());
+                        Assert.Equal(0, fixture.GetAllKeys().First().Count());
                     }
                 });
             }

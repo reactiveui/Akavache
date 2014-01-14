@@ -76,14 +76,15 @@ namespace Akavache
             // NB: This isn't exactly thread-safe, but it's Close Enough(tm)
             // We make up for the fact that the keys could get kicked out
             // from under us via the Catch below
-            var matchingKeys = This.GetAllKeys()
-                .Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
-                .ToArray();
-
-            return matchingKeys.ToObservable()
-                .SelectMany(x => This.GetObjectAsync<T>(x, true).Catch(Observable.Empty<T>()))
+            return This.GetAllKeys()
+                .SelectMany(x => x
+                    .Where(y => 
+                        y.StartsWith(GetTypePrefixedKey("", typeof(T))))
+                    .ToObservable())
+                .SelectMany(x => This.GetObjectAsync<T>(x, true)
+                    .Catch(Observable.Empty<T>()))
                 .ToList()
-                .Select(x => (IEnumerable<T>) x);
+                .Select(x => (IEnumerable<T>)x);
         }
 
         /// <summary>
@@ -297,8 +298,10 @@ namespace Akavache
             if (objCache != null) return objCache.InvalidateAllObjects<T>();
             var ret = new AsyncSubject<Unit>();
 
-            This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
-                .ToObservable()
+            This.GetAllKeys()
+                .SelectMany(x => 
+                    x.Where(y => y.StartsWith(GetTypePrefixedKey("", typeof(T))))
+                    .ToObservable())
                 .SelectMany(This.Invalidate)
                 .Subscribe(
                     _ => { },

@@ -154,15 +154,13 @@ namespace Akavache.Sqlite3
                 });
         }
 
-        public IEnumerable<string> GetAllKeys()
+        public IObservable<List<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
 
             return _initializer
                 .SelectMany(_ => _connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement;"))
-                .First()
-                .Select(x => x.Key)
-                .ToArray();
+                .Select(x => x.Select(y => y.Key).ToList());
         }
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
