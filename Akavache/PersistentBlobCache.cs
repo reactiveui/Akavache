@@ -241,6 +241,11 @@ namespace Akavache
             return ret;
         }
 
+        public IObservable<Unit> Vacuum()
+        {
+            return Observable.Throw<Unit>(new NotImplementedException());
+        }
+
         public void Dispose()
         {
             if (disposed) return;
