@@ -122,6 +122,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Deprecated\Akavache.Deprecated_Net45.csproj">
+      <Project>{0f6fd159-fea6-4428-8521-781b8a0b31e8}</Project>
+      <Name>Akavache.Deprecated_Net45</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache.Http\Akavache.Http_Net45.csproj">
       <Project>{9837ac44-ed0b-441d-add4-6750608d989d}</Project>
       <Name>Akavache.Http_Net45</Name>

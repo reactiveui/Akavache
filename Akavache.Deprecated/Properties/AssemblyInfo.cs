@@ -36,4 +36,3 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("Akavache.Mac")]
 [assembly: InternalsVisibleTo("Akavache.Mobile")]
 [assembly: InternalsVisibleTo("Akavache.Http")]
-[assembly: InternalsVisibleTo("Akavache.Deprecated")]

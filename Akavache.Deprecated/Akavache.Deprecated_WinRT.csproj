@@ -6,11 +6,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{57655198-7A38-48A6-BF95-BE57B2C3D32D}</ProjectGuid>
+    <ProjectGuid>{DFE2625D-844E-4224-B6BC-4E9246AF9C62}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Akavache</RootNamespace>
-    <AssemblyName>Akavache</AssemblyName>
+    <RootNamespace>Akavache.Deprecated</RootNamespace>
+    <AssemblyName>Akavache.Deprecated</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -37,36 +37,16 @@
     <DefineConstants>TRACE;NETFX_CORE; WINRT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\WinRT45\Akavache.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\WinRT45\Akavache.Deprecated.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="HttpMixin.cs" />
-    <Compile Include="IFilesystemProvider.cs" />
-    <Compile Include="MD5.cs" />
-    <Compile Include="Portable\BitmapImageExtensions.cs" />
-    <Compile Include="Portable\BlobCache.cs" />
-    <Compile Include="Portable\BulkOperationsMixin.cs" />
-    <Compile Include="Portable\CacheIndexEntry.cs" />
-    <Compile Include="Portable\ConcurrentDictionary.cs" />
-    <Compile Include="Portable\DependencyResolverMixin.cs" />
-    <Compile Include="Portable\HttpMixin.cs" />
-    <Compile Include="Portable\IBlobCache.cs" />
-    <Compile Include="Portable\IKeyedOperationQueue.cs" />
-    <Compile Include="Portable\JsonSerializationMixin.cs" />
-    <Compile Include="Portable\KeyedOperationQueue.cs" />
-    <Compile Include="Portable\LoginInfo.cs" />
-    <Compile Include="Portable\LoginMixin.cs" />
-    <Compile Include="Portable\RelativeTimeMixin.cs" />
-    <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registrations.cs" />
-    <Compile Include="StreamMixins.cs" />
-    <Compile Include="Utility.cs" />
-    <Compile Include="WinRT\WinRTFilesystemProvider.cs" />
-    <Compile Include="WinRT\WinRTShims.cs" />
+    <Compile Include="WinRT\WinRTEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">
@@ -96,6 +76,12 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
+      <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
+      <Name>Akavache_WinRT</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
