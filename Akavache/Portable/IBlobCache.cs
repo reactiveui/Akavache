@@ -66,7 +66,16 @@ namespace Akavache
         /// this method is blocking and incurs a significant performance
         /// penalty if used while the cache is being used on other threads. 
         /// </summary>
+        /// <returns>A signal indicating when the invalidate is complete.</returns>
         IObservable<Unit> InvalidateAll();
+
+        /// <summary>
+        /// This method eagerly removes all expired keys from the blob cache, as
+        /// well as does any cleanup operations that makes sense (Hint: on SQLite3
+        /// it does a Vacuum)
+        /// </summary>
+        /// <returns>A signal indicating when the operation is complete.</returns>
+        IObservable<Unit> Vacuum();
 
         /// <summary>
         /// This Observable fires after the Dispose completes successfully, 
