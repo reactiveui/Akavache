@@ -373,7 +373,7 @@ namespace Akavache.Sqlite3
 
             var nowTime = BlobCache.TaskpoolScheduler.Now.UtcTicks;
             return _initializer
-                .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expiration >= ?;", nowTime))
+                .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expiration < ?;", nowTime))
                 .SelectMany(_ => Observable.Defer(() => _connection.ExecuteAsync("VACUUM;", nowTime).Retry(3)))
                 .Select(_ => Unit.Default);
         }

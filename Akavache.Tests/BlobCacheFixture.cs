@@ -226,6 +226,41 @@ namespace Akavache.Tests
                 }
             }
         }
+
+        [Fact]
+        public void VacuumDoesntPurgeKeysThatShouldBeThere()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path)) 
+            {
+                using (var fixture = CreateBlobCache(path)) 
+                {
+                    var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
+
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).First();
+                    fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).First();
+                    fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
+
+                    try 
+                    {
+                        fixture.Vacuum().First();
+                    } 
+                    catch (NotImplementedException) 
+                    {
+                        // NB: The old and busted cache will never have this, 
+                        // just make the test pass
+                    }
+
+                    Assert.Equal(1, fixture.GetAllKeys().First().Count());
+                }
+
+                using (var fixture = CreateBlobCache(path)) 
+                {
+                    if (fixture is TestBlobCache) return;
+                    Assert.Equal(1, fixture.GetAllKeys().First().Count());
+                }
+            }
+        }
     }
 
     public class TPersistentBlobCache : PersistentBlobCache
