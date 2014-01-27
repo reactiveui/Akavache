@@ -142,6 +142,18 @@ namespace Akavache
             return Observable.Return(Unit.Default);
         }
 
+        public IObservable<Unit> Vacuum()
+        {
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            lock (cache) 
+            {
+                var toDelete = cache.Where(x => x.Value.Item1.ExpiresAt >= BlobCache.TaskpoolScheduler.Now).ToArray();
+                foreach (var kvp in toDelete) cache.Remove(kvp.Key);
+            }
+
+            return Observable.Return(Unit.Default);
+        }
+
         public void Dispose()
         {
             Scheduler = null;
