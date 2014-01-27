@@ -28,7 +28,7 @@ namespace Akavache.Http
 {
     public class Registrations : IWantsToRegisterStuff
     {
-        public void Register(Action<Func<object>, Type, string> registerFunction)
+        public void Register(IMutableDependencyResolver resolver)
         {
             // NB: This is an end-run around not having ReactiveUI as a reference
             // but it being real damn useful at this point for detecting suspension
@@ -48,7 +48,7 @@ namespace Akavache.Http
                 }
                 return ret;
             });
-            registerFunction(() => background.Value, typeof(IHttpScheduler), "Background");
+            resolver.Register(() => background.Value, typeof(IHttpScheduler), "Background");
 
             var userInitiated = new Lazy<IHttpScheduler>(() =>
             {
@@ -60,7 +60,7 @@ namespace Akavache.Http
                 }
                 return ret;
             });
-            registerFunction(() => userInitiated.Value, typeof(IHttpScheduler), "UserInitiated");
+            resolver.Register(() => userInitiated.Value, typeof(IHttpScheduler), "UserInitiated");
 
             var speculative = new Lazy<IHttpScheduler>(() =>
             {
@@ -75,7 +75,7 @@ namespace Akavache.Http
 
                 return ret;
             });
-            registerFunction(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
+            resolver.Register(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
         }
 
 #if PORTABLE

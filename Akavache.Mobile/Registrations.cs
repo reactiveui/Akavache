@@ -5,31 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Splat;
 
-#if UIKIT
-using MonoTouch.Foundation;
-using ReactiveUI.Mobile;
-#endif
-
-#if APPKIT
-using MonoMac.Foundation;
-#endif
-
-#if ANDROID
-using Android.App;
-#endif
-
-#if APPKIT
-namespace Akavache.Mac
-#else
 namespace Akavache.Mobile
-#endif
 {
     public class Registrations : IWantsToRegisterStuff
     {
-        public void Register(Action<Func<object>, Type, string> registerFunction)
+        public void Register(IMutableDependencyResolver resolver)
         {
-            registerFunction(() => new JsonSerializerSettings() 
+            resolver.Register(() => new JsonSerializerSettings() 
             {
                 ObjectCreationHandling = ObjectCreationHandling.Replace,
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
@@ -37,7 +21,7 @@ namespace Akavache.Mobile
             }, typeof(JsonSerializerSettings), null);
 
             var akavacheDriver = new AkavacheDriver();
-            registerFunction(() => akavacheDriver, typeof(ISuspensionDriver), null);
+            resolver.Register(() => akavacheDriver, typeof(ISuspensionDriver), null);
         }
     }
 }

@@ -21,14 +21,14 @@ namespace Akavache
 {
     public class Registrations : IWantsToRegisterStuff
     {
-        public void Register(Action<Func<object>, Type, string> registerFunction)
+        public void Register(IMutableDependencyResolver resolver)
         {
 #if SILVERLIGHT || XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
-            registerFunction(() => fs, typeof(IFilesystemProvider), null);
+            resolver.Register(() => fs, typeof(IFilesystemProvider), null);
 
             var localCache = default(Lazy<IBlobCache>);
             var userAccount = default(Lazy<IBlobCache>);
@@ -49,22 +49,22 @@ namespace Akavache
                 secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
             }
 
-            registerFunction(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
-            registerFunction(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
-            registerFunction(() => secure.Value, typeof(ISecureBlobCache), null);
+            resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
+            resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
+            resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
 
-            registerFunction(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
+            resolver.Register(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
           
 #if APPKIT || UIKIT
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
-            registerFunction(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
+            resolver.Register(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
 
 #if ANDROID
             var ai = Application.Context.PackageManager.GetApplicationInfo(Application.Context.PackageName, 0);
             BlobCache.ApplicationName = ai.LoadLabel(Application.Context.PackageManager);
 
-            registerFunction(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
+            resolver.Register(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
         }
     }
