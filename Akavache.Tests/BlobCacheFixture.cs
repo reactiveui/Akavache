@@ -182,26 +182,48 @@ namespace Akavache.Tests
             string path;
             using (Utility.WithEmptyDirectory(out path)) 
             {
-                (Scheduler.TaskPool).With(sched =>
+                using (var fixture = CreateBlobCache(path)) 
                 {
-                    using (var fixture = CreateBlobCache(path)) 
-                    {
-                        fixture.Insert("Foo", new byte[] { 1, 2, 3 }).First();
-                        fixture.Insert("Bar", new byte[] { 4, 5, 6 }).First();
-                        fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 }).First();
+                    fixture.Insert("Bar", new byte[] { 4, 5, 6 }).First();
+                    fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
 
-                        Assert.NotEqual(0, fixture.GetAllKeys().First().Count());
+                    Assert.NotEqual(0, fixture.GetAllKeys().First().Count());
 
-                        fixture.InvalidateAll().First();
+                    fixture.InvalidateAll().First();
 
-                        Assert.Equal(0, fixture.GetAllKeys().First().Count());
-                    }
+                    Assert.Equal(0, fixture.GetAllKeys().First().Count());
+                }
 
-                    using (var fixture = CreateBlobCache(path)) 
-                    {
-                        Assert.Equal(0, fixture.GetAllKeys().First().Count());
-                    }
-                });
+                using (var fixture = CreateBlobCache(path)) 
+                {
+                    Assert.Equal(0, fixture.GetAllKeys().First().Count());
+                }
+            }
+        }
+
+        [Fact]
+        public void GetAllKeysShouldntReturnExpiredKeys()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path)) 
+            {
+                using (var fixture = CreateBlobCache(path)) 
+                {
+                    var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
+
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).First();
+                    fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).First();
+                    fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
+
+                    Assert.Equal(1, fixture.GetAllKeys().First().Count());
+                }
+
+                using (var fixture = CreateBlobCache(path)) 
+                {
+                    if (fixture is TestBlobCache) return;
+                    Assert.Equal(1, fixture.GetAllKeys().First().Count());
+                }
             }
         }
     }

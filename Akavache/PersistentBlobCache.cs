@@ -197,7 +197,7 @@ namespace Akavache
         public IObservable<List<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
-            return Observable.Return(CacheIndex.Keys.ToList());
+            return Observable.Return(CacheIndex.ToList().Where(x => x.Value.ExpiresAt == null || x.Value.ExpiresAt >= BlobCache.TaskpoolScheduler.Now).Select(x => x.Key).ToList());
         }
 
         public IObservable<Unit> Invalidate(string key)

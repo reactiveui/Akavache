@@ -58,7 +58,7 @@ namespace Akavache
         bool disposed;
         Dictionary<string, Tuple<CacheIndexEntry, byte[]>> cache = new Dictionary<string, Tuple<CacheIndexEntry, byte[]>>();
 
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
@@ -113,7 +113,10 @@ namespace Akavache
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
-                return Observable.Return(cache.Keys.ToList());
+                return Observable.Return(cache
+                    .Where(x => x.Value.Item1.ExpiresAt == null || x.Value.Item1.ExpiresAt >= BlobCache.TaskpoolScheduler.Now)
+                    .Select(x => x.Key)
+                    .ToList());
             }
         }
 
