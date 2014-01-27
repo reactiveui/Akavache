@@ -148,13 +148,6 @@ namespace Akavache
             return ret.ToTask();
         }
 
-        static IScheduler MainThreadOverride;
-        public static IScheduler MainThreadScheduler 
-        {
-            get { return MainThreadOverride ?? Locator.Current.GetService<IScheduler>("MainThread"); }
-            set { MainThreadOverride = value; }
-        }
-
         #if PORTABLE
         static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 
