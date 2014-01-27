@@ -158,8 +158,9 @@ namespace Akavache.Sqlite3
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
 
+            var now = BlobCache.TaskpoolScheduler.Now.UtcTicks;
             return _initializer
-                .SelectMany(_ => _connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement;"))
+                .SelectMany(_ => _connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement WHERE Expiration >= ?;", now))
                 .Select(x => x.Select(y => y.Key).ToList());
         }
 
@@ -363,6 +364,17 @@ namespace Akavache.Sqlite3
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             return _initializer
                 .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE TypeName=?;", typeof(T).FullName))
+                .Select(_ => Unit.Default);
+        }
+
+        public IObservable<Unit> Vacuum()
+        {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            var nowTime = BlobCache.TaskpoolScheduler.Now.UtcTicks;
+            return _initializer
+                .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expiration < ?;", nowTime))
+                .SelectMany(_ => Observable.Defer(() => _connection.ExecuteAsync("VACUUM;", nowTime).Retry(3)))
                 .Select(_ => Unit.Default);
         }
 

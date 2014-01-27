@@ -666,6 +666,11 @@ namespace Akavache.Tests
             return _inner.InvalidateAll();
         }
 
+        public IObservable<Unit> Vacuum()
+        {
+            return _inner.Vacuum();
+        }
+
         public IObservable<Unit> Shutdown
         {
             get { return _inner.Shutdown; }

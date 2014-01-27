@@ -106,7 +106,7 @@ namespace Akavache
             {
                 if (ModeDetector.InUnitTestRunner())
                 {
-                    secure = value;
+                    unitTestSecure = value;
                     secure = secure ?? value;
                 }
                 else
