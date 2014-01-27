@@ -30,17 +30,15 @@ namespace Akavache.Http
     {
         public void Register(IMutableDependencyResolver resolver)
         {
-            // NB: This is an end-run around not having ReactiveUI as a reference
-            // but it being real damn useful at this point for detecting suspension
-            // ReactiveUI.Mobile sets up this Observable in its initializer
-            var shouldPersistState = Locator.Current.GetService<IObservable<IDisposable>>("ShouldPersistState")
-                ?? Observable.Never<IDisposable>();
-            var isUnpausing = Locator.Current.GetService<IObservable<Unit>>("IsUnpausing") 
-                ?? Observable.Never<Unit>();
-
             var background = new Lazy<IHttpScheduler>(() =>
             {
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Background, 1));
+
+                // NB: This is an end-run around not having ReactiveUI as a reference
+                // but it being real damn useful at this point for detecting suspension
+                // Akavache.Mobile sets up this Observable in its initializer
+                var shouldPersistState = resolver.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                    ?? Observable.Never<IDisposable>(); 
 
                 if (shouldPersistState != null)
                 {
@@ -54,6 +52,9 @@ namespace Akavache.Http
             {
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.UserInitiated, 3));
 
+                var shouldPersistState = resolver.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                    ?? Observable.Never<IDisposable>();
+
                 if (shouldPersistState != null)
                 {
                     shouldPersistState.Subscribe(_ => ret.CancelAll());
@@ -66,6 +67,11 @@ namespace Akavache.Http
             {
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
                 ret.ResetLimit(GetDataLimit());
+
+                var shouldPersistState = resolver.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                    ?? Observable.Never<IDisposable>();
+                var isUnpausing = resolver.GetService<IObservable<Unit>>("IsUnpausing") 
+                    ?? Observable.Never<Unit>();
 
                 if (shouldPersistState != null)
                 {

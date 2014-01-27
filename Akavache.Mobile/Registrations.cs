@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Splat;
+using System.Reactive;
 
 namespace Akavache.Mobile
 {
@@ -22,6 +23,13 @@ namespace Akavache.Mobile
 
             var akavacheDriver = new AkavacheDriver();
             resolver.Register(() => akavacheDriver, typeof(ISuspensionDriver), null);
+
+            // NB: These correspond to the hacks in Akavache.Http's registrations
+            resolver.Register(() => resolver.GetService<ISuspensionHost>().ShouldPersistState,
+                typeof(IObservable<IDisposable>), "ShouldPersistState");
+
+            resolver.Register(() => resolver.GetService<ISuspensionHost>().IsUnpausing,
+                typeof(IObservable<Unit>), "IsUnpausing");
         }
     }
 }
