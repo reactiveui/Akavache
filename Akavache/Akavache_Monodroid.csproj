@@ -145,7 +145,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
@@ -180,7 +179,7 @@
     <Compile Include="Portable\TestBlobCache.cs" />
     <Compile Include="AndroidFilesystemProvider.cs" />
   </ItemGroup>
-    <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup />
 </Project>

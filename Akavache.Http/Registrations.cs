@@ -28,19 +28,17 @@ namespace Akavache.Http
 {
     public class Registrations : IWantsToRegisterStuff
     {
-        public void Register(Action<Func<object>, Type, string> registerFunction)
+        public void Register(IMutableDependencyResolver resolver)
         {
-            // NB: This is an end-run around not having ReactiveUI as a reference
-            // but it being real damn useful at this point for detecting suspension
-            // ReactiveUI.Mobile sets up this Observable in its initializer
-            var shouldPersistState = Locator.Current.GetService<IObservable<IDisposable>>("ShouldPersistState")
-                ?? Observable.Never<IDisposable>();
-            var isUnpausing = Locator.Current.GetService<IObservable<Unit>>("IsUnpausing") 
-                ?? Observable.Never<Unit>();
-
             var background = new Lazy<IHttpScheduler>(() =>
             {
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Background, 1));
+
+                // NB: This is an end-run around not having ReactiveUI as a reference
+                // but it being real damn useful at this point for detecting suspension
+                // Akavache.Mobile sets up this Observable in its initializer
+                var shouldPersistState = resolver.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                    ?? Observable.Never<IDisposable>(); 
 
                 if (shouldPersistState != null)
                 {
@@ -48,24 +46,32 @@ namespace Akavache.Http
                 }
                 return ret;
             });
-            registerFunction(() => background.Value, typeof(IHttpScheduler), "Background");
+            resolver.Register(() => background.Value, typeof(IHttpScheduler), "Background");
 
             var userInitiated = new Lazy<IHttpScheduler>(() =>
             {
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.UserInitiated, 3));
 
+                var shouldPersistState = resolver.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                    ?? Observable.Never<IDisposable>();
+
                 if (shouldPersistState != null)
                 {
                     shouldPersistState.Subscribe(_ => ret.CancelAll());
                 }
                 return ret;
             });
-            registerFunction(() => userInitiated.Value, typeof(IHttpScheduler), "UserInitiated");
+            resolver.Register(() => userInitiated.Value, typeof(IHttpScheduler), "UserInitiated");
 
             var speculative = new Lazy<IHttpScheduler>(() =>
             {
                 var ret = new CachingHttpScheduler(new HttpScheduler((int)Priorities.Speculative, 0));
                 ret.ResetLimit(GetDataLimit());
+
+                var shouldPersistState = resolver.GetService<IObservable<IDisposable>>("ShouldPersistState")
+                    ?? Observable.Never<IDisposable>();
+                var isUnpausing = resolver.GetService<IObservable<Unit>>("IsUnpausing") 
+                    ?? Observable.Never<Unit>();
 
                 if (shouldPersistState != null)
                 {
@@ -75,7 +81,7 @@ namespace Akavache.Http
 
                 return ret;
             });
-            registerFunction(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
+            resolver.Register(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
         }
 
 #if PORTABLE

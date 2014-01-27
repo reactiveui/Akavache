@@ -20,19 +20,29 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Mono\</OutputPath>
-    <IntermediateOutputPath>obj\Debug\Mono\</IntermediateOutputPath>
+    <OutputPath>bin\Debug\MonoMac\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\MonoMac\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE; MONO; APPKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\Mono\</OutputPath>
-    <IntermediateOutputPath>obj\Release\Mono\</IntermediateOutputPath>
+    <OutputPath>bin\Release\MonoMac\</OutputPath>
+    <IntermediateOutputPath>obj\Release\MonoMac\</IntermediateOutputPath>
     <DefineConstants>TRACE; MONO; APPKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -49,27 +59,17 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ext\mono\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Reactive.Interfaces, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Reactive.Linq, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Reactive.PlatformServices, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="System.Reactive.Core, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System.Reactive.Interfaces, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System.Reactive.Linq, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System.Reactive.PlatformServices, Version=2.1.30214.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="Splat">
       <HintPath>..\ext\mono\Splat.dll</HintPath>
     </Reference>
-    <Reference Include="XamMac, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065">
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="XamMac, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065" />
   </ItemGroup>
   <ItemGroup>
-  <Compile Include="..\CommonAssemblyInfo.cs">
+    <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />

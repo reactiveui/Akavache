@@ -10,7 +10,7 @@ namespace Akavache
 {
     internal interface IWantsToRegisterStuff
     {
-        void Register(Action<Func<object>, Type, string> registerFunction);
+        void Register(IMutableDependencyResolver resolverToUse);
     }
 
     public static class DependencyResolverMixin
@@ -42,7 +42,7 @@ namespace Akavache
                 if (registerTypeClass == null) continue;
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
-                registerer.Register((f, t, s) => This.Register(f, t, s));
+                registerer.Register(This);
             };
         }
     }

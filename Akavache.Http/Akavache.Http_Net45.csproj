@@ -83,6 +83,10 @@
     <Compile Include="HttpScheduler.cs" />
     <Compile Include="HttpSchedulerExtensions.cs" />
     <Compile Include="Interfaces.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Registrations.cs" />
   </ItemGroup>
   <ItemGroup>
