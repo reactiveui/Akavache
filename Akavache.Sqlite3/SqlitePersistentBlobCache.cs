@@ -366,6 +366,17 @@ namespace Akavache.Sqlite3
                 .Select(_ => Unit.Default);
         }
 
+        public IObservable<Unit> Vacuum()
+        {
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            var nowTime = BlobCache.TaskpoolScheduler.Now.UtcTicks;
+            return _initializer
+                .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expired >= ?;", nowTime))
+                .SelectMany(_ => Observable.Defer(() => _connection.ExecuteAsync("VACUUM;", nowTime).Retry(3)))
+                .Select(_ => Unit.Default);
+        }
+
         public void Dispose()
         {
             _connection.Shutdown()
