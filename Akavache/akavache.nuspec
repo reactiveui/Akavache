@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <version>3.99.0-beta</version>
@@ -11,7 +11,7 @@
       <dependency id="Newtonsoft.Json" version="5.0.8" />
       <dependency id="ReactiveUI-Core" version="5.99.0-beta" />
     </dependencies>
-    <id>akavache</id>
+    <id>akavache.core</id>
     <title>Akavache</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</description>
