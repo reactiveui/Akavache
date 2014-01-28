@@ -7,8 +7,9 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Security.Cryptography;
 using Splat;
+using Akavache;
 
-namespace Akavache
+namespace Akavache.Deprecated
 {
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {

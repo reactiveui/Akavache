@@ -15,12 +15,13 @@ using System.Text;
 using Newtonsoft.Json;
 using Splat;
 using System.Collections.Concurrent;
+using Akavache;
 
 #if SILVERLIGHT
 using Akavache.Internal;
 #endif
 
-namespace Akavache
+namespace Akavache.Deprecated
 {
     /// <summary>
     /// This class represents an asynchronous key-value store backed by a 
