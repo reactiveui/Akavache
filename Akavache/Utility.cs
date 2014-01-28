@@ -177,28 +177,6 @@ namespace Akavache
                     destination.Dispose();
                 }
             }, scheduler ?? BlobCache.TaskpoolScheduler);
-
-#if FALSE
-            var reader = Observable.FromAsyncPattern<byte[], int, int, int>(This.BeginRead, This.EndRead);
-            var writer = Observable.FromAsyncPattern<byte[], int, int>(destination.BeginWrite, destination.EndWrite);
-
-            //var bufs = new ThreadLocal<byte[]>(() => new byte[4096]);
-            var bufs = new Lazy<byte[]>(() => new byte[4096]);
-
-            var readStream = Observable.Defer(() => reader(bufs.Value, 0, 4096))
-                .Repeat()
-                .TakeWhile(x => x > 0);
-
-            var ret = readStream
-                .Select(x => writer(bufs.Value, 0, x))
-                .Concat()
-                .Aggregate(Unit.Default, (acc, _) => Unit.Default)
-                .Finally(() => { This.Dispose(); destination.Dispose(); })
-                .Multicast(new ReplaySubject<Unit>());
-
-            ret.Connect();
-            return ret;
-#endif
         }
 
         public static void Retry(this Action block, int retries = 3)
