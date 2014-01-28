@@ -58,13 +58,13 @@ BlobCache.UserAccount.InsertObject("toaster", myToaster);
 //
 
 // Using async/await
-var toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+var toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster");
 
 // or without async/await
 Toaster toaster;
 
-BlobCache.UserAccount.GetObjectAsync("toaster")
-    .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"))
+BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
+    .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"));
 ```
 
 ## Use SQLite3!
@@ -92,13 +92,13 @@ you would want to return a default value instead of failing:
 Toaster toaster;
 
 try {
-    toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+    toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster");
 } catch (KeyNotFoundException ex) {
     toaster = new Toaster();
 }
 
 // Or without async/await:
-toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
     .Catch(Observable.Return(new Toaster()));
 ```
 
