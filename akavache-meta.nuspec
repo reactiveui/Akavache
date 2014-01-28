@@ -7,8 +7,30 @@
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="Akavache.SQLite3" version "3.99.0-beta" />
+      <group targetFramework="MonoMac">
+        <dependency id="Akavache.SQLite3" version="3.99.0-beta" />
+      </group>
+      <group targetFramework="MonoTouch">
+        <dependency id="Akavache.SQLite3" version="3.99.0-beta" />
+      </group>
+      <group targetFramework="MonoAndroid">
+        <dependency id="Akavache.SQLite3" version="3.99.0-beta" />
+      </group>
+      <group targetFramework="WinRT">
+        <dependency id="Akavache.SQLite3" version="3.99.0-beta" />
+      </group>
+      <group targetFramework="Net45">
+        <dependency id="Akavache.SQLite3" version="3.99.0-beta" />
+      </group>
+      
+      <group targetFramework="WP8">
+        <dependency id="Akavache.Core" version="3.99.0-beta" />
+      </group>
+      <group targetFramework="Portable-Net45+WinRT45+WP8">
+        <dependency id="Akavache.Core" version="3.99.0-beta" />
+      </group>
     </dependencies>
+
     <id>akavache</id>
     <title>Akavache</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
