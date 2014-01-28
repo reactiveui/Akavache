@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0F6FD159-FEA6-4428-8521-781B8A0B31E8}</ProjectGuid>
+    <ProjectGuid>{0F6FD15A-1EA6-4428-8521-781B8A0B31E8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Deprecated</RootNamespace>
