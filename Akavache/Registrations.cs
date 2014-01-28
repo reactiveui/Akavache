@@ -30,24 +30,9 @@ namespace Akavache
 #endif
             resolver.Register(() => fs, typeof(IFilesystemProvider), null);
 
-            var localCache = default(Lazy<IBlobCache>);
-            var userAccount = default(Lazy<IBlobCache>);
-            var secure = default(Lazy<ISecureBlobCache>);
-
-            if (!ModeDetector.InUnitTestRunner()) {
-                localCache = new Lazy<IBlobCache>(() =>
-                    new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs));
-
-                userAccount = new Lazy<IBlobCache>(() =>
-                    new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
-
-                secure = new Lazy<ISecureBlobCache>(() =>
-                    new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
-            } else {
-                localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
-                userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
-                secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
-            }
+            var localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
+            var userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
+            var secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
 
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
