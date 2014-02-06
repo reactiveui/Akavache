@@ -14,6 +14,9 @@ using Splat;
 
 namespace Akavache
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class BlobCache
     {
         static string applicationName;
@@ -122,6 +125,9 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache InMemory { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void EnsureInitialized()
         {
             // NB: This method doesn't actually do anything, it just ensures 

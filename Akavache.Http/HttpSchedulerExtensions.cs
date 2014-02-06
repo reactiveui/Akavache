@@ -13,11 +13,24 @@ namespace Akavache.Http
 {
     public static class HttpSchedulerExtensions
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="request"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
         public static IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(this IHttpScheduler This, HttpRequestMessage request, int priority)
         {
             return This.Schedule(request, priority, _ => true);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="This"></param>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public static IDisposable ScheduleAll(this IHttpScheduler This, Action<IHttpScheduler> block)
         {
             var cancel = new AsyncSubject<Unit>();
@@ -63,5 +76,4 @@ namespace Akavache.Http
             set { inner.Client = value; }
         }
     }
-
 }

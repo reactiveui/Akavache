@@ -11,6 +11,9 @@ using System.Reactive.Subjects;
 
 namespace Akavache
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class TestBlobCache : ISecureBlobCache
     {
         public TestBlobCache() : this(null, null)

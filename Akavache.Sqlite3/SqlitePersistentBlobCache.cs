@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace Akavache.Sqlite3
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class SqlitePersistentBlobCache : IObjectBlobCache, IObjectBulkBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
