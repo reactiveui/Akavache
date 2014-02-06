@@ -33,7 +33,7 @@ using System.Threading.Tasks;
 using Akavache.Sqlite3;
 using Akavache;
 
-namespace SQLite
+namespace Akavache.Sqlite3.Internal
 {
     internal interface IAsyncTableQuery<T> where T : new()
     {
@@ -49,7 +49,7 @@ namespace SQLite
         IObservable<T> FirstOrDefaultAsync ();
     }
 
-    internal class SQLiteAsyncConnection
+    public class SQLiteAsyncConnection
     {
         SQLiteConnectionString _connectionString;
         SQLiteConnectionPool _pool;
@@ -236,7 +236,7 @@ namespace SQLite
         }
     }
 
-    internal class CreateTablesResult
+    public class CreateTablesResult
     {
         public Dictionary<Type, int> Results { get; private set; }
 
@@ -246,7 +246,7 @@ namespace SQLite
         }
     }
 
-    internal class SQLiteConnectionPool : IDisposable
+    public class SQLiteConnectionPool : IDisposable
     {
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
@@ -337,7 +337,7 @@ namespace SQLite
         }
     }
 
-    internal class SQLiteConnectionWithoutLock : SQLiteConnection
+    public class SQLiteConnectionWithoutLock : SQLiteConnection
     {
         public SQLiteConnectionWithoutLock (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
             : base (connectionString.DatabasePath, flags, connectionString.StoreDateTimeAsTicks)

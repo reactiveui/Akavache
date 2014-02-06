@@ -11,7 +11,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using SQLite;
+using Akavache.Sqlite3.Internal;
 using Splat;
 using System.Threading.Tasks;
 
