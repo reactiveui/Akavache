@@ -24,7 +24,7 @@
       </group>
       
       <group targetFramework="WP8">
-        <dependency id="Akavache.Core" version="3.99.0-beta" />
+        <dependency id="Akavache.Deprecated" version="3.99.0-beta" />
       </group>
       <group targetFramework="Portable-Net45+WinRT45+WP8">
         <dependency id="Akavache.Core" version="3.99.0-beta" />
