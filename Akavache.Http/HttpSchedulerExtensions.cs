@@ -13,11 +13,28 @@ namespace Akavache.Http
 {
     public static class HttpSchedulerExtensions
     {
+        /// <summary>
+        /// Sends an HTTP request to be sent with the specified priority
+        /// </summary>
+        /// <param name="request">The request to send</param>
+        /// <param name="priority">The relative priority for the class of
+        /// request. Use zero if you don't know.</param>
+        /// <returns>A Future result representing the HTTP response as well as
+        /// the body of the message.</returns>
         public static IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(this IHttpScheduler This, HttpRequestMessage request, int priority)
         {
             return This.Schedule(request, priority, _ => true);
         }
 
+        /// <summary>
+        /// This method allows you to schedule several requests in a group,
+        /// and cancel them all at once if necessary.
+        /// </summary>
+        /// <param name="block">Use the provided IHttpScheduler to schedule
+        /// requests. All requests scheduled will be canceled with the same
+        /// IDisposable returned.</param>
+        /// <returns>A value that when disposed, cancels all requests made in
+        /// the block.</returns>
         public static IDisposable ScheduleAll(this IHttpScheduler This, Action<IHttpScheduler> block)
         {
             var cancel = new AsyncSubject<Unit>();
@@ -31,7 +48,7 @@ namespace Akavache.Http
         }
     }
 
-    class CancellationWrapper : IHttpScheduler
+    class CancellationWrapper : ISpeculativeHttpScheduler
     {
         readonly IHttpScheduler inner;
         readonly IObservable<Unit> cancel;
@@ -49,7 +66,10 @@ namespace Akavache.Http
 
         public void ResetLimit(long? maxBytesToRead = null)
         {
-            inner.ResetLimit(maxBytesToRead);
+            var spec = inner as ISpeculativeHttpScheduler;
+            if (spec == null) return;
+
+            spec.ResetLimit(maxBytesToRead);
         }
 
         public void CancelAll()
@@ -63,5 +83,4 @@ namespace Akavache.Http
             set { inner.Client = value; }
         }
     }
-
 }

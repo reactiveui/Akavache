@@ -81,7 +81,7 @@ namespace Akavache.Http
 
                 return ret;
             });
-            resolver.Register(() => speculative.Value, typeof(IHttpScheduler), "Speculative");
+            resolver.Register(() => speculative.Value, typeof(ISpeculativeHttpScheduler), "Speculative");
         }
 
 #if PORTABLE

@@ -11,6 +11,10 @@ using System.Reactive.Subjects;
 
 namespace Akavache
 {
+    /// <summary>
+    /// This class is an IBlobCache backed by a simple in-memory Dictionary.
+    /// Use it for testing / mocking purposes
+    /// </summary>
     public class TestBlobCache : ISecureBlobCache
     {
         public TestBlobCache() : this(null, null)
