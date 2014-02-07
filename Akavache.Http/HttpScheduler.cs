@@ -369,6 +369,7 @@ namespace Akavache.Http
             // subscribers will be cleared out via the TakeUntil on the request,
             // but new subscribers can just glom on to the signal
             lock (cancelAllSignal) { cancelAllSignal.OnNext(Unit.Default); }
+            Client.CancelPendingRequests();
         }
     }
 
