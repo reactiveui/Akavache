@@ -9,7 +9,7 @@ using Windows.Security.Cryptography.DataProtection;
 using Windows.Storage;
 using Splat;
 
-namespace Akavache
+namespace Akavache.Deprecated
 {
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {

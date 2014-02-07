@@ -5,27 +5,16 @@ using System.Net.Http;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reactive.Disposables;
+using System.Threading;
 
 namespace Akavache.Http
 {
     public static class HttpSchedulerExtensions
     {
-        /// <summary>
-        /// Sends an HTTP request to be sent with the specified priority
-        /// </summary>
-        /// <param name="request">The request to send</param>
-        /// <param name="priority">The relative priority for the class of
-        /// request. Use zero if you don't know.</param>
-        /// <returns>A Future result representing the HTTP response as well as
-        /// the body of the message.</returns>
-        public static IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(this IHttpScheduler This, HttpRequestMessage request, int priority)
-        {
-            return This.Schedule(request, priority, _ => true);
-        }
-
         /// <summary>
         /// This method allows you to schedule several requests in a group,
         /// and cancel them all at once if necessary.
@@ -45,6 +34,20 @@ namespace Akavache.Http
                 cancel.OnNext(Unit.Default);
                 cancel.OnCompleted();
             });
+        }
+
+        public static Task<HttpResponseMessage> SendAsync(this IHttpScheduler This, HttpRequestMessage request, CancellationToken ct, int priority = 0)
+        {
+            return This.Schedule(request, priority, _ => true)
+                .Select(x =>
+                {
+                    var ret = x.Item1;
+                    var headers = ret.Content.Headers;
+                    ret.Content = new ByteArrayContent(x.Item2);
+                    foreach (var kvp in headers) ret.Content.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+                    return ret;
+                })
+                .ToTask(ct);
         }
     }
 
@@ -83,4 +86,94 @@ namespace Akavache.Http
             set { inner.Client = value; }
         }
     }
+
+    #region Boring HttpClient overloads
+    public static class HttpClientSchedulerExtensions
+    {
+        public static Task<HttpResponseMessage> DeleteAsync(this IHttpScheduler This, string requestUri, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Delete, requestUri), priority);
+        }
+
+        public static Task<HttpResponseMessage> DeleteAsync(this IHttpScheduler This, string requestUri, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Delete, requestUri), cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> DeleteAsync(this IHttpScheduler This, Uri requestUri, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Delete, requestUri), priority);
+        }
+
+        public static Task<HttpResponseMessage> DeleteAsync(this IHttpScheduler This, Uri requestUri, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Delete, requestUri), cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> GetAsync(this IHttpScheduler This, string requestUri, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Get, requestUri), priority);
+        }
+
+        public static Task<HttpResponseMessage> GetAsync(this IHttpScheduler This, string requestUri, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Get, requestUri), priority);
+        }
+
+        public static Task<HttpResponseMessage> GetAsync(this IHttpScheduler This, Uri requestUri, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Get, requestUri), priority);
+        }
+
+        public static Task<HttpResponseMessage> GetAsync(this IHttpScheduler This, Uri requestUri, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Get, requestUri), cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> PostAsync(this IHttpScheduler This, string requestUri, HttpContent content, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Post, requestUri) { Content = content }, priority);
+        }
+
+        public static Task<HttpResponseMessage> PostAsync(this IHttpScheduler This, string requestUri, HttpContent content, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Post, requestUri) { Content = content }, cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> PostAsync(this IHttpScheduler This, Uri requestUri, HttpContent content, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Post, requestUri) { Content = content }, priority);
+        }
+
+        public static Task<HttpResponseMessage> PostAsync(this IHttpScheduler This, Uri requestUri, HttpContent content, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Post, requestUri) { Content = content }, cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> PutAsync(this IHttpScheduler This, Uri requestUri, HttpContent content, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Put, requestUri) { Content = content }, priority);
+        }
+
+        public static Task<HttpResponseMessage> PutAsync(this IHttpScheduler This, Uri requestUri, HttpContent content, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Put, requestUri) { Content = content }, cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> PutAsync(this IHttpScheduler This, string requestUri, HttpContent content, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Put, requestUri) { Content = content }, priority);
+        }
+
+        public static Task<HttpResponseMessage> PutAsync(this IHttpScheduler This, string requestUri, HttpContent content, CancellationToken cancellationToken, int priority = 0)
+        {
+            return This.SendAsync(new HttpRequestMessage (HttpMethod.Put, requestUri) { Content = content }, cancellationToken, priority);
+        }
+
+        public static Task<HttpResponseMessage> SendAsync(this IHttpScheduler This, HttpRequestMessage request, int priority = 0)
+        {
+            return This.SendAsync(request, CancellationToken.None, priority);
+        }
+    }
+#endregion
 }
