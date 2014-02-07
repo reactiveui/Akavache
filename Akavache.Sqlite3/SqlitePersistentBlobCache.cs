@@ -11,7 +11,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using SQLite;
+using Akavache.Sqlite3.Internal;
 using Splat;
 using System.Threading.Tasks;
 
@@ -23,28 +23,26 @@ namespace Akavache.Sqlite3
     public class SqlitePersistentBlobCache : IObjectBlobCache, IObjectBulkBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
-        public IServiceProvider ServiceProvider { get; private set; }
+        public SQLiteAsyncConnection Connection { get; private set; }
 
-        readonly SQLiteAsyncConnection _connection;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> _inflightCache;
         readonly IObservable<Unit> _initializer;
         bool disposed = false;
 
-        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null, IServiceProvider serviceProvider = null)
+        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
             Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
-            ServiceProvider = serviceProvider;
 
             BlobCache.EnsureInitialized();
 
-            _connection = new SQLiteAsyncConnection(databaseFile, storeDateTimeAsTicks: true);
+            Connection = new SQLiteAsyncConnection(databaseFile, storeDateTimeAsTicks: true);
 
             _initializer = Initialize();
 
             _inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, ce) =>
             {
                 return _initializer
-                    .SelectMany(_ => _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE Key=? LIMIT 1;", key))
+                    .SelectMany(_ => Connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE Key=? LIMIT 1;", key))
                     .SelectMany(x =>
                     {
                         return (x.Count == 1) ?  Observable.Return(x[0]) : ObservableThrowKeyNotFoundException(key);
@@ -81,7 +79,7 @@ namespace Akavache.Sqlite3
             var ret = _initializer
                 .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
                 .Do(x => element.Value = x)
-                .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
+                .SelectMany(x => Connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
@@ -112,7 +110,7 @@ namespace Akavache.Sqlite3
 
             var ret = encryptAllTheData
                 .SelectMany(_ => _initializer)
-                .SelectMany(_ => _connection.InsertAllAsync(elements, "OR REPLACE").Select(__ => Unit.Default))
+                .SelectMany(_ => Connection.InsertAllAsync(elements, "OR REPLACE").Select(__ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
@@ -137,7 +135,7 @@ namespace Akavache.Sqlite3
 
             string questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _initializer
-                .SelectMany(_ => _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()))
+                .SelectMany(_ => Connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()))
                 .SelectMany(xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
@@ -163,7 +161,7 @@ namespace Akavache.Sqlite3
 
             var now = BlobCache.TaskpoolScheduler.Now.UtcTicks;
             return _initializer
-                .SelectMany(_ => _connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement WHERE Expiration >= ?;", now))
+                .SelectMany(_ => Connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement WHERE Expiration >= ?;", now))
                 .Select(x => x.Select(y => y.Key).ToList());
         }
 
@@ -186,7 +184,7 @@ namespace Akavache.Sqlite3
 
             var questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _initializer
-                .SelectMany(_ => _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()))
+                .SelectMany(_ => Connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()))
                 .SelectMany(xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
@@ -212,7 +210,7 @@ namespace Akavache.Sqlite3
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             lock(_inflightCache) _inflightCache.Invalidate(key);
             return _initializer.SelectMany(__ => 
-                _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Key=?;", key).Select(_ => Unit.Default));
+                Connection.ExecuteAsync("DELETE FROM CacheElement WHERE Key=?;", key).Select(_ => Unit.Default));
         }
 
         public IObservable<Unit> Invalidate(IEnumerable<string> keys)
@@ -222,7 +220,7 @@ namespace Akavache.Sqlite3
 
             var questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _initializer.SelectMany(__ => 
-                _connection.ExecuteAsync(String.Format("DELETE FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()).Select(_ => Unit.Default));
+                Connection.ExecuteAsync(String.Format("DELETE FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()).Select(_ => Unit.Default));
         }
 
         public IObservable<Unit> InvalidateAll()
@@ -230,7 +228,7 @@ namespace Akavache.Sqlite3
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             lock(_inflightCache) _inflightCache.InvalidateAll();
             return _initializer.SelectMany(__ => 
-                _connection.ExecuteAsync("DELETE FROM CacheElement;").Select(_ => Unit.Default));
+                Connection.ExecuteAsync("DELETE FROM CacheElement;").Select(_ => Unit.Default));
         }
 
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
@@ -252,7 +250,7 @@ namespace Akavache.Sqlite3
             var ret = _initializer
                 .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
                 .Do(x => element.Value = x)
-                .SelectMany(x => _connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
+                .SelectMany(x => Connection.InsertAsync(element, "OR REPLACE", typeof(CacheElement)).Select(_ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
@@ -286,7 +284,7 @@ namespace Akavache.Sqlite3
                     .Select(y => { x.Value = y; return x; }))
                 .Merge(4)
                 .ToList()
-                .SelectMany(x => _connection.InsertAllAsync(x, "OR REPLACE").Select(_ => Unit.Default))
+                .SelectMany(x => Connection.InsertAllAsync(x, "OR REPLACE").Select(_ => Unit.Default))
                 .Multicast(new AsyncSubject<Unit>());
 
             return _initializer.SelectMany(_ => ret.PermaRef());
@@ -312,7 +310,7 @@ namespace Akavache.Sqlite3
 
             string questionMarks = String.Join(",", keys.Select(_ => "?"));
             return _initializer
-                .SelectMany(_ => _connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()))
+                .SelectMany(_ => Connection.QueryAsync<CacheElement>(String.Format("SELECT * FROM CacheElement WHERE Key IN ({0});", questionMarks), keys.ToArray()))
                 .SelectMany(xs =>
                 {
                     var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
@@ -343,7 +341,7 @@ namespace Akavache.Sqlite3
             if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
 
             return _initializer
-                .SelectMany(_ => _connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName=?;", typeof(T).FullName))
+                .SelectMany(_ => Connection.QueryAsync<CacheElement>("SELECT * FROM CacheElement WHERE TypeName=?;", typeof(T).FullName))
                 .SelectMany(x => x.ToObservable())
                 .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
                 .SelectMany(DeserializeObject<T>)
@@ -366,7 +364,7 @@ namespace Akavache.Sqlite3
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
             return _initializer
-                .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE TypeName=?;", typeof(T).FullName))
+                .SelectMany(_ => Connection.ExecuteAsync("DELETE FROM CacheElement WHERE TypeName=?;", typeof(T).FullName))
                 .Select(_ => Unit.Default);
         }
 
@@ -376,14 +374,14 @@ namespace Akavache.Sqlite3
 
             var nowTime = BlobCache.TaskpoolScheduler.Now.UtcTicks;
             return _initializer
-                .SelectMany(_ => _connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expiration < ?;", nowTime))
-                .SelectMany(_ => Observable.Defer(() => _connection.ExecuteAsync("VACUUM;", nowTime).Retry(3)))
+                .SelectMany(_ => Connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expiration < ?;", nowTime))
+                .SelectMany(_ => Observable.Defer(() => Connection.ExecuteAsync("VACUUM;", nowTime).Retry(3)))
                 .Select(_ => Unit.Default);
         }
 
         public void Dispose()
         {
-            _connection.Shutdown()
+            Connection.Shutdown()
                 .Multicast(shutdown)
                 .PermaRef();
 
@@ -396,20 +394,20 @@ namespace Akavache.Sqlite3
             {
                 try
                 {
-                    await _connection.CreateTableAsync<CacheElement>();
+                    await Connection.CreateTableAsync<CacheElement>();
 
                     var schemaVersion = await GetSchemaVersion();
 
                     if (schemaVersion < 2)
                     {
-                        await _connection.ExecuteAsync("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;");
-                        await _connection.CreateTableAsync<CacheElement>();
+                        await Connection.ExecuteAsync("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;");
+                        await Connection.CreateTableAsync<CacheElement>();
 
                         var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
-                        await _connection.ExecuteAsync(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
-                        await _connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;");
+                        await Connection.ExecuteAsync(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
+                        await Connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;");
                     
-                        await _connection.InsertAsync(new SchemaInfo() { Version = 2, });
+                        await Connection.InsertAsync(new SchemaInfo() { Version = 2, });
                     }
 
                     subj.OnNext(Unit.Default);
@@ -431,7 +429,7 @@ namespace Akavache.Sqlite3
 
             try 
             {
-                versionNumber = await _connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
+                versionNumber = await Connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
             }
             catch (Exception ex)
             {
@@ -440,7 +438,7 @@ namespace Akavache.Sqlite3
 
             if (shouldCreateSchemaTable)
             {
-                await _connection.CreateTableAsync<SchemaInfo>();
+                await Connection.CreateTableAsync<SchemaInfo>();
                 versionNumber = 1;
             }
 

@@ -38,9 +38,9 @@ using Sqlite3DatabaseHandle = System.IntPtr;
 using Sqlite3Statement = System.IntPtr;
 #endif
 
-namespace SQLite
+namespace Akavache.Sqlite3.Internal
 {
-	internal class SQLiteException : System.Exception
+	public class SQLiteException : System.Exception
 	{
 		public SQLite3.Result Result { get; private set; }
 
@@ -51,7 +51,7 @@ namespace SQLite
 	}
 
 	[Flags]
-	internal enum SQLiteOpenFlags {
+	public enum SQLiteOpenFlags {
 		ReadOnly = 1, ReadWrite = 2, Create = 4,
 		NoMutex = 0x8000, FullMutex = 0x10000,
 		SharedCache = 0x20000, PrivateCache = 0x40000,
@@ -64,7 +64,7 @@ namespace SQLite
 	/// <summary>
 	/// Represents an open connection to a SQLite database.
 	/// </summary>
-	internal class SQLiteConnection : IDisposable
+	public class SQLiteConnection : IDisposable
 	{
 		private bool _open;
 		private TimeSpan _busyTimeout;
@@ -318,7 +318,7 @@ namespace SQLite
 			return count;
 		}
 
-		internal class TableInfo
+		public class TableInfo
 		{
 			public int cid { get; set; }
 
@@ -1093,7 +1093,7 @@ namespace SQLite
 	/// <summary>
 	/// Represents a parsed connection string.
 	/// </summary>
-	internal class SQLiteConnectionString
+	public class SQLiteConnectionString
 	{
 		public string ConnectionString { get; private set; }
 		public string DatabasePath { get; private set; }
@@ -1117,7 +1117,7 @@ namespace SQLite
 	}
 
     [AttributeUsage (AttributeTargets.Class)]
-	internal class TableAttribute : Attribute
+	public class TableAttribute : Attribute
 	{
 		public string Name { get; set; }
 
@@ -1128,7 +1128,7 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class ColumnAttribute : Attribute
+	public class ColumnAttribute : Attribute
 	{
 		public string Name { get; set; }
 
@@ -1139,17 +1139,17 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class PrimaryKeyAttribute : Attribute
+	public class PrimaryKeyAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class AutoIncrementAttribute : Attribute
+	public class AutoIncrementAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class IndexedAttribute : Attribute
+	public class IndexedAttribute : Attribute
 	{
 		public string Name { get; set; }
 		public int Order { get; set; }
@@ -1167,12 +1167,12 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class IgnoreAttribute : Attribute
+	public class IgnoreAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class UniqueAttribute : IndexedAttribute
+	public class UniqueAttribute : IndexedAttribute
 	{
 		public override bool Unique {
 			get { return true; }
@@ -1181,7 +1181,7 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class MaxLengthAttribute : Attribute
+	public class MaxLengthAttribute : Attribute
 	{
 		public int Value { get; private set; }
 
@@ -1192,7 +1192,7 @@ namespace SQLite
 	}
 
 	[AttributeUsage (AttributeTargets.Property)]
-	internal class CollationAttribute: Attribute
+	public class CollationAttribute: Attribute
 	{
 		public string Value { get; private set; }
 
@@ -1202,7 +1202,7 @@ namespace SQLite
 		}
 	}
 
-	internal class TableMapping
+	public class TableMapping
 	{
 		public Type MappedType { get; private set; }
 
@@ -1347,7 +1347,7 @@ namespace SQLite
 			}
 		}
 
-		internal class Column
+		public class Column
 		{
 			PropertyInfo _prop;
 
@@ -1509,7 +1509,7 @@ namespace SQLite
 		}
 	}
 
-	internal class SQLiteCommand
+	public class SQLiteCommand
 	{
 		SQLiteConnection _conn;
 		private List<Binding> _bindings;
@@ -1793,7 +1793,7 @@ namespace SQLite
 	/// <summary>
 	/// Since the insert never changed, we only need to prepare once.
 	/// </summary>
-	internal class PreparedSqlLiteInsertCommand : IDisposable
+	public class PreparedSqlLiteInsertCommand : IDisposable
 	{
 		public bool Initialized { get; set; }
 
@@ -1878,7 +1878,7 @@ namespace SQLite
 		}
 	}
 
-	internal class TableQuery<T> : IEnumerable<T> where T : new()
+	public class TableQuery<T> : IEnumerable<T> where T : new()
 	{
 		public SQLiteConnection Connection { get; private set; }
 
