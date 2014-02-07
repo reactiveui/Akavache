@@ -14,9 +14,6 @@ using Splat;
 
 namespace Akavache
 {
-    /// <summary>
-    /// 
-    /// </summary>
     public static class BlobCache
     {
         static string applicationName;

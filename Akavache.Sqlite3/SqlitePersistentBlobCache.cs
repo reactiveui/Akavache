@@ -18,7 +18,8 @@ using System.Threading.Tasks;
 namespace Akavache.Sqlite3
 {
     /// <summary>
-    /// 
+    /// This class represents an IBlobCache backed by a SQLite3 database, and
+    /// it is the default (and best!) implementation.
     /// </summary>
     public class SqlitePersistentBlobCache : IObjectBlobCache, IObjectBulkBlobCache, IEnableLogger
     {
