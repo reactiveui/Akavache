@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using Akavache.Deprecated;
 using Xunit;
 using Xunit.Extensions;
 

@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reactive.Disposables;
@@ -13,19 +14,6 @@ namespace Akavache.Http
 {
     public static class HttpSchedulerExtensions
     {
-        /// <summary>
-        /// Sends an HTTP request to be sent with the specified priority
-        /// </summary>
-        /// <param name="request">The request to send</param>
-        /// <param name="priority">The relative priority for the class of
-        /// request. Use zero if you don't know.</param>
-        /// <returns>A Future result representing the HTTP response as well as
-        /// the body of the message.</returns>
-        public static IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(this IHttpScheduler This, HttpRequestMessage request, int priority)
-        {
-            return This.Schedule(request, priority, _ => true);
-        }
-
         /// <summary>
         /// This method allows you to schedule several requests in a group,
         /// and cancel them all at once if necessary.
@@ -45,6 +33,18 @@ namespace Akavache.Http
                 cancel.OnNext(Unit.Default);
                 cancel.OnCompleted();
             });
+        }
+    }
+
+    public static class HttpClientSchedulerExtensions
+    {
+        public static Task<HttpResponseMessage> SendAsync(this IHttpScheduler This, HttpRequestMessage request, int priority = 0)
+        {
+            return This.Schedule(request, priority, _ => true)
+                .Select(x =>
+                {
+                })
+                .ToTask();
         }
     }
 
