@@ -74,15 +74,15 @@ namespace Akavache.Http
         }
     }
 
-    public class CachingHttpScheduler : IHttpScheduler
+    public class CachingHttpScheduler : ISpeculativeHttpScheduler
     {
         readonly IBlobCache blobCache = null;
-        readonly IHttpScheduler innerScheduler = null;
+        readonly ISpeculativeHttpScheduler innerScheduler = null;
 
         readonly ConcurrentDictionary<Tuple<string, int>, IObservable<Tuple<HttpResponseMessage, byte[]>>> inflightDictionary = 
             new ConcurrentDictionary<Tuple<string, int>, IObservable<Tuple<HttpResponseMessage, byte[]>>>();
 
-        public CachingHttpScheduler(IHttpScheduler innerScheduler = null, IBlobCache blobCache = null)
+        public CachingHttpScheduler(ISpeculativeHttpScheduler innerScheduler = null, IBlobCache blobCache = null)
         {
             this.blobCache = blobCache;
             this.innerScheduler = innerScheduler ?? new HttpScheduler();
@@ -282,7 +282,7 @@ namespace Akavache.Http
         }
     }
 
-    public class HttpScheduler : IHttpScheduler
+    public class HttpScheduler : ISpeculativeHttpScheduler
     {
         protected readonly Subject<Unit> cancelAllSignal = new Subject<Unit>();
         protected readonly OperationQueue opQueue;

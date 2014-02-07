@@ -59,10 +59,21 @@ namespace Akavache.Http
     /// reading data that may or may not be used by the user later, in order
     /// to improve response times should the user later request the data.
     /// </summary>
+    public interface ISpeculativeHttpScheduler : IHttpScheduler
+    {
+        /// <summary>
+        /// Resets the total limit of bytes to read. This is usually called
+        /// when the app resumes from suspend, to indicate that we should
+        /// fetch another set of data.
+        /// </summary>
+        /// <param name="maxBytesToRead"></param>
+        void ResetLimit(long? maxBytesToRead = null);
+    }
+
     public static class NetCache 
     {
-        static IHttpScheduler speculative;
-        [ThreadStatic] static IHttpScheduler unitTestSpeculative;
+        static ISpeculativeHttpScheduler speculative;
+        [ThreadStatic] static ISpeculativeHttpScheduler unitTestSpeculative;
 
         /// <summary>
         /// Speculative HTTP schedulers only allow a certain number of bytes to be
@@ -70,9 +81,9 @@ namespace Akavache.Http
         /// reading data that may or may not be used by the user later, in order
         /// to improve response times should the user later request the data.
         /// </summary>
-        public static IHttpScheduler Speculative
+        public static ISpeculativeHttpScheduler Speculative
         {
-            get { return unitTestSpeculative ?? speculative ?? Locator.Current.GetService<IHttpScheduler>("Speculative"); }
+            get { return unitTestSpeculative ?? speculative ?? Locator.Current.GetService<ISpeculativeHttpScheduler>("Speculative"); }
             set 
             {
                 if (ModeDetector.InUnitTestRunner())

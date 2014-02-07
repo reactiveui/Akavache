@@ -48,7 +48,7 @@ namespace Akavache.Http
         }
     }
 
-    class CancellationWrapper : IHttpScheduler
+    class CancellationWrapper : ISpeculativeHttpScheduler
     {
         readonly IHttpScheduler inner;
         readonly IObservable<Unit> cancel;
@@ -66,7 +66,10 @@ namespace Akavache.Http
 
         public void ResetLimit(long? maxBytesToRead = null)
         {
-            inner.ResetLimit(maxBytesToRead);
+            var spec = inner as ISpeculativeHttpScheduler;
+            if (spec == null) return;
+
+            spec.ResetLimit(maxBytesToRead);
         }
 
         public void CancelAll()
