@@ -11,19 +11,19 @@
       <dependency id="Newtonsoft.Json" version="5.0.8" />
       <dependency id="ReactiveUI-Core" version="5.99.0-beta" />
     </dependencies>
-    <id>akavache.deprecated</id>
+    <id>akavache.http</id>
     <title>Akavache</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The deprecated, filesystem-based backend for Akavache</description>
-    <summary>The deprecated, filesystem-based backend for Akavache</summary>
+    <description>An HttpClient-based cache for HTTP requests based on Akavache</description>
+    <summary>An HttpClient-based cache for HTTP requests based on Akavache</summary>
     <copyright>Copyright GitHub© 2012</copyright>
   </metadata>
   <files>
-    <file src="bin\Release\Net45\Akavache.Deprecated.*" target="lib\net45" />
-    <file src="bin\Release\WP8\Akavache.Deprecated.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Deprecated.*" target="lib\WinRT45" />
-    <file src="bin\Release\Mono\Akavache.Deprecated.*" target="lib\MonoMac" />
-    <file src="bin\Release\MonoAndroid\Akavache.Deprecated.*" target="lib\MonoAndroid" />
-    <file src="bin\Release\MonoTouch\Akavache.Deprecated.*" target="lib\MonoTouch" />
+    <file src="bin\Release\Net45\Akavache.Http.*" target="lib\net45" />
+    <file src="bin\Release\WP8\Akavache.Http.*" target="lib\wp8" />
+    <file src="bin\Release\WinRT45\Akavache.Http.*" target="lib\WinRT45" />
+    <file src="bin\Release\Mono\Akavache.Http.*" target="lib\MonoMac" />
+    <file src="bin\Release\MonoAndroid\Akavache.Http.*" target="lib\MonoAndroid" />
+    <file src="bin\Release\MonoTouch\Akavache.Http.*" target="lib\MonoTouch" />
   </files>
 </package>
