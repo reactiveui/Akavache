@@ -1,15 +1,14 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.99.0-beta</version>
+    <version>3.99.1-beta</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="Splat" version="1.1.1" />
-      <dependency id="Newtonsoft.Json" version="5.0.8" />
-      <dependency id="ReactiveUI-Core" version="5.99.0-beta" />
+      <dependency id="Newtonsoft.Json" version="6.0.1" />
     </dependencies>
     <id>akavache.core</id>
     <title>Akavache</title>
