@@ -40,7 +40,7 @@ namespace Akavache.Http
         /// be returned.</param>
         /// <returns>A Future result representing the HTTP response as well as
         /// the body of the message.</returns>
-        IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent);
+        IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent = null);
 
         /// <summary>
         /// Cancel all outstanding requests that are in-flight.

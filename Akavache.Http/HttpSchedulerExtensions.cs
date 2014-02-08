@@ -62,7 +62,7 @@ namespace Akavache.Http
             this.cancel = cancel;
         }
 
-        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
+        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent = null)
         {
             return inner.Schedule(request, priority, shouldFetchContent).TakeUntil(cancel);
         }

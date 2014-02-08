@@ -123,10 +123,11 @@ namespace Akavache.Http
             get { return blobCache ?? BlobCache.LocalMachine; }
         }
 
-        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
+        public IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent = null)
         {
             var key = Tuple.Create(UniqueKeyForRequest(request), priority);
             var cache = default(IObservable<Tuple<HttpResponseMessage, byte[]>>);
+            shouldFetchContent = shouldFetchContent ?? (_ => true);
 
             if (inflightDictionary.TryGetValue(key, out cache))
             {
@@ -303,8 +304,10 @@ namespace Akavache.Http
         
         public HttpClient Client { get; set; }
 
-        public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent)
+        public virtual IObservable<Tuple<HttpResponseMessage, byte[]>> Schedule(HttpRequestMessage request, int priority, Func<HttpResponseMessage, bool> shouldFetchContent = null)
         {
+            shouldFetchContent = shouldFetchContent ?? (_ => true);
+
             if (currentMax != null && bytesRead >= currentMax.Value) 
             {
                 return Observable.Throw<Tuple<HttpResponseMessage, byte[]>>(new SpeculationFinishedException("Ran out of bytes"));

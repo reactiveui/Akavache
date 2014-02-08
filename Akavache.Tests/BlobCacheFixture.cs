@@ -5,11 +5,14 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
+using Akavache.Deprecated;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
+
+using EncryptedBlobCache = Akavache.Deprecated.EncryptedBlobCache;
 
 namespace Akavache.Tests
 {
