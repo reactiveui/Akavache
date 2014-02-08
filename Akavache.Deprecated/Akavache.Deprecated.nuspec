@@ -12,7 +12,7 @@
       <dependency id="ReactiveUI-Core" version="5.99.3-beta" />
     </dependencies>
     <id>akavache.deprecated</id>
-    <title>Akavache</title>
+    <title>Akavache.Deprecated</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The deprecated, filesystem-based backend for Akavache</description>
     <summary>The deprecated, filesystem-based backend for Akavache</summary>

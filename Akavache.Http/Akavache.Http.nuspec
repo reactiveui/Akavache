@@ -1,18 +1,17 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.99.0-beta</version>
+    <version>3.99.1-beta</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="Splat" version="1.1.1" />
-      <dependency id="Newtonsoft.Json" version="5.0.8" />
-      <dependency id="ReactiveUI-Core" version="5.99.0-beta" />
+      <dependency id="Akavache.Core" version="3.99.1-beta" />
+      <dependency id="Punchclock" version="1.1.0" />
     </dependencies>
     <id>akavache.http</id>
-    <title>Akavache</title>
+    <title>Akavache.Http</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An HttpClient-based cache for HTTP requests based on Akavache</description>
     <summary>An HttpClient-based cache for HTTP requests based on Akavache</summary>
@@ -20,7 +19,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Net45\Akavache.Http.*" target="lib\net45" />
-    <file src="bin\Release\WP8\Akavache.Http.*" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.Http.*" target="lib\WinRT45" />
     <file src="bin\Release\MonoMac\Akavache.Http.*" target="lib\MonoMac" />
     <file src="bin\Release\MonoAndroid\Akavache.Http.*" target="lib\MonoAndroid" />

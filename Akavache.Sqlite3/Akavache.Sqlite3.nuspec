@@ -6,7 +6,7 @@
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache" version="[3.99.1-beta]" />
+      <dependency id="akavache.core" version="[3.99.1-beta]" />
     </dependencies>
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
