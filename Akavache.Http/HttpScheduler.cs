@@ -145,7 +145,7 @@ namespace Akavache.Http
                 return noCache;
             }
 
-            var ret = blobCache.GetObjectAsync<HttpCacheEntry>(key.Item1).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
+            var ret = Cache.GetObjectAsync<HttpCacheEntry>(key.Item1).Catch<HttpCacheEntry>(Observable.Return(default(HttpCacheEntry)))
                 .SelectMany(async (cacheEntry, ct) =>
                 {
                     var cancelSignal = new AsyncSubject<Unit>();
@@ -195,7 +195,7 @@ namespace Akavache.Http
                     var entry = HttpCacheEntry.FromResponse(respWithData.Item1, respWithData.Item2);
                     entry.ShouldCheckResponseHeaders = (expiryDate == null);
 
-                    await blobCache.InsertObject(key.Item1, entry, expiryDate);
+                    await Cache.InsertObject(key.Item1, entry, expiryDate);
                     return respWithData;
                 })
                 .Finally(() => inflightDictionary.TryRemove(key, out cache))
