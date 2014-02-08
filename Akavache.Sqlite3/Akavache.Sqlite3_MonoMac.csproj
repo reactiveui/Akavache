@@ -19,8 +19,8 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Mono\</OutputPath>
-    <IntermediateOutputPath>obj\Debug\Mono\</IntermediateOutputPath>
+    <OutputPath>bin\Debug\MonoMac\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\MonoMac\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE; MONO</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
