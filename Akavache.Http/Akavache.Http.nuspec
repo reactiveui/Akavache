@@ -22,7 +22,7 @@
     <file src="bin\Release\Net45\Akavache.Http.*" target="lib\net45" />
     <file src="bin\Release\WP8\Akavache.Http.*" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.Http.*" target="lib\WinRT45" />
-    <file src="bin\Release\Mono\Akavache.Http.*" target="lib\MonoMac" />
+    <file src="bin\Release\MonoMac\Akavache.Http.*" target="lib\MonoMac" />
     <file src="bin\Release\MonoAndroid\Akavache.Http.*" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.Http.*" target="lib\MonoTouch" />
   </files>

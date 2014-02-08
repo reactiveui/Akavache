@@ -91,7 +91,7 @@ namespace Akavache.Http
         }
 #endif
 
-#if NET45
+#if NET45 || APPKIT
         static long GetDataLimit()
         {
             return 10 * 1048576;

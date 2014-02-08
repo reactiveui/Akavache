@@ -29,8 +29,8 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\Mono\</OutputPath>
-    <IntermediateOutputPath>obj\Release\Mono\</IntermediateOutputPath>
+    <OutputPath>bin\Release\MonoMac\</OutputPath>
+    <IntermediateOutputPath>obj\Release\MonoMac\</IntermediateOutputPath>
     <DefineConstants>TRACE; MONO</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
