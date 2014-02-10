@@ -95,6 +95,4 @@
     <Compile Include="Portable\TestBlobCache.cs" />
     <Compile Include="MacFilesystemProvider.cs" />
   </ItemGroup>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
-  <ItemGroup />
 </Project>

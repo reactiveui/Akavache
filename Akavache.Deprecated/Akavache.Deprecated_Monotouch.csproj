@@ -72,8 +72,6 @@
     <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="Registrations.cs" />
   </ItemGroup>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
-  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Akavache\Akavache_Monotouch.csproj">
       <Project>{9091337A-9E94-4DBD-801E-05E1FDA78FFC}</Project>

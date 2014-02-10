@@ -151,7 +151,6 @@
   </Target>
   -->
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>
     <ProjectReference Include="..\Akavache\Akavache_Monodroid.csproj">
       <Project>{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}</Project>
