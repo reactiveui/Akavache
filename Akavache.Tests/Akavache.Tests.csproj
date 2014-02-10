@@ -49,13 +49,6 @@
     <Reference Include="Punchclock">
       <HintPath>..\packages\Punchclock.1.1.0\lib\Portable-Net45+WinRT45+WP8\Punchclock.dll</HintPath>
     </Reference>
-    <Reference Include="ReactiveUI, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\reactiveui-core.5.2.0\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI.Testing">
-      <HintPath>..\packages\reactiveui-testing.5.2.0\lib\net45\ReactiveUI.Testing.dll</HintPath>
-    </Reference>
     <Reference Include="ReactiveUI">
       <HintPath>..\packages\reactiveui-core.5.99.0-beta\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
