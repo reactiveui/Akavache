@@ -57,7 +57,7 @@ ls -r .\Release | ?{$_.FullName.Contains("Clousot")} | %{rm $_.FullName}
 ext\tools\xamarin-component.exe package component
 
 $specFiles = ls -r Akavache*.nuspec
-$specFiles | %{.\.nuget\NuGet.exe pack -symbols $_.FullName}
+$specFiles | %{.\tools\nuget\NuGet.exe pack -symbols $_.FullName}
 
 $packages = ls -r Akavache*.nupkg
 
