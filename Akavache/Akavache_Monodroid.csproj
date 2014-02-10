@@ -178,6 +178,5 @@
     <Compile Include="AndroidFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup />
 </Project>
