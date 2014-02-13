@@ -64,7 +64,7 @@
       <HintPath>..\packages\reactiveui-core.5.99.0-beta\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.1.1\lib\NetCore45\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.2.0\lib\NetCore45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <SpecificVersion>False</SpecificVersion>
