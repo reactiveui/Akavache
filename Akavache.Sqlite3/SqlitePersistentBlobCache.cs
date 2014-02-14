@@ -391,36 +391,23 @@ namespace Akavache.Sqlite3
 
         protected IObservable<Unit> Initialize()
         {
-            var ret = Observable.Create<Unit>(async subj =>
-            {
-                try
+            return Connection.CreateTableAsync<CacheElement>()
+                .SelectMany(_ => GetSchemaVersion())
+                .SelectMany(version => 
                 {
-                    await Connection.CreateTableAsync<CacheElement>();
+                    if (version >= 2) return Observable.Return(Unit.Default);
 
-                    var schemaVersion = await GetSchemaVersion();
+                    var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
 
-                    if (schemaVersion < 2)
-                    {
-                        await Connection.ExecuteAsync("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;");
-                        await Connection.CreateTableAsync<CacheElement>();
-
-                        var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
-                        await Connection.ExecuteAsync(String.Format(sql, RxApp.TaskpoolScheduler.Now.UtcDateTime.Ticks));
-                        await Connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;");
-                    
-                        await Connection.InsertAsync(new SchemaInfo() { Version = 2, });
-                    }
-
-                    subj.OnNext(Unit.Default);
-                    subj.OnCompleted();
-                }
-                catch (Exception ex)
-                {
-                    subj.OnError(ex);
-                }
-            });
-
-            return ret.PublishLast().PermaRef();
+                    return Connection.ExecuteAsync("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;")
+                        .SelectMany(_ => Connection.CreateTableAsync<CacheElement>())
+                        .SelectMany(_ => Connection.ExecuteAsync(String.Format(sql, RxApp.TaskpoolScheduler.Now.UtcDateTime.Ticks)))
+                        .SelectMany(_ => Connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;"))
+                        .SelectMany(_ => Connection.InsertAsync(new SchemaInfo() { Version = 2, }))
+                        .Select(_ => Unit.Default);
+                })
+                .PublishLast()
+                .PermaRef();
         }
 
         protected IObservable<int> GetSchemaVersion()
