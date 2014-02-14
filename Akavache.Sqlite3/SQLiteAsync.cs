@@ -31,12 +31,12 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
-using ReactiveUI;
 using Akavache;
+using ReactiveUI;
 
-namespace SQLite
+namespace Akavache.Sqlite3.Internal
 {
-    public interface IAsyncTableQuery<T> where T : new()
+    internal interface IAsyncTableQuery<T> where T : new()
     {
         IAsyncTableQuery<T> Where (Expression<Func<T, bool>> predExpr);
         IAsyncTableQuery<T> Skip (int n);
@@ -58,7 +58,7 @@ namespace SQLite
 
         public SQLiteAsyncConnection (string databasePath, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false)
         {
-            _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex | SQLiteOpenFlags.SharedCache);
+            _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex | SQLiteOpenFlags.SharedCache);
 
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
             _pool = new SQLiteConnectionPool(_connectionString, _flags);
@@ -193,10 +193,10 @@ namespace SQLite
             });
         }
 
-        public IObservable<int> InsertAllAsync (IEnumerable items)
+        public IObservable<int> InsertAllAsync (IEnumerable items, string extra)
         {
             return _pool.EnqueueConnectionOp(conn => {
-                return conn.InsertAll (items);
+                return conn.InsertAll (items, extra);
             });
         }
 
@@ -233,7 +233,7 @@ namespace SQLite
 
         public IObservable<Unit> Shutdown()
         {
-            return _pool.Reset();
+            return _pool.Reset(false);
         }
     }
 
@@ -247,7 +247,7 @@ namespace SQLite
         }
     }
 
-    public class SQLiteConnectionPool
+    public class SQLiteConnectionPool : IDisposable
     {
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
@@ -255,6 +255,7 @@ namespace SQLite
         List<Entry> connections;
         KeyedOperationQueue opQueue;
         int nextConnectionToUseAtomic = 0;
+        const int tableLockRetries = 3;
 
         public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount = null)
         {
@@ -268,47 +269,64 @@ namespace SQLite
             var idx = Interlocked.Increment(ref nextConnectionToUseAtomic) % connectionCount;
             var conn = connections[idx];
 
-            return opQueue.EnqueueOperation(idx.ToString(), () => 
+            if (connections == null)
+            {
+                Reset(true).Wait();
+            }
+
+            var makeRq = Observable.Defer(() => opQueue.EnqueueOperation(idx.ToString(), () => 
             {
                 return operation(conn.Connection);
+            }));
+
+            return makeRq.RetryWithBackoffStrategy(tableLockRetries, retryOnError: ex => 
+            {
+                var sqlex = ex as SQLiteException;
+                if (sqlex == null) return false;
+
+                return (sqlex.Result == SQLite3.Result.Locked ||
+                    sqlex.Result == SQLite3.Result.Busy);
             });
         }
 
         /// <summary>
         /// Closes all connections managed by this pool.
         /// </summary>
-        public IObservable<Unit> Reset ()
+        public IObservable<Unit> Reset (bool shouldReopen = true)
         {
             var shutdownQueue = Observable.Return(Unit.Default);
 
             if (opQueue != null)
             {
-                shutdownQueue = opQueue.ShutdownQueue().Finally(() => 
-                {
-                    foreach (var entry in connections) 
-                    {
-                        entry.OnApplicationSuspended ();
-                    }
-                });
+                shutdownQueue = opQueue.ShutdownQueue();
             }
 
             return shutdownQueue.Finally(() => 
             {
-                connections = Enumerable.Range(0, connectionCount)
-                    .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
-                    .ToList();
+                if (connections != null)
+                {
+                    foreach(var v in connections.Where(x => x != null && x.Connection != null))
+                    {
+                        v.OnApplicationSuspended();
+                    }
 
-                opQueue = new KeyedOperationQueue();
+                    connections = null;
+                }
+
+                if (shouldReopen)
+                {
+                    connections = Enumerable.Range(0, connectionCount)
+                        .Select(_ => new Entry(connInfo.Item1, connInfo.Item2))
+                        .ToList();
+
+                    opQueue = new KeyedOperationQueue();
+                }
             });
         }
 
-        /// <summary>
-        /// Call this method when the application is suspended.
-        /// </summary>
-        /// <remarks>Behaviour here is to close any open connections.</remarks>
-        public void ApplicationSuspended ()
+        public void Dispose()
         {
-            Reset().Wait();
+            Reset(false).Wait();
         }
 
         class Entry
@@ -337,5 +355,57 @@ namespace SQLite
         {
         }
     }
-}
 
+    public static class RetryWithBackoffMixin
+    {
+        /// <summary>
+        /// An exponential back off strategy which starts with 1 second and then 4, 9, 16...
+        /// </summary>
+        public static readonly Func<int, TimeSpan> ExponentialBackoff = 
+            n => TimeSpan.FromMilliseconds(Math.Pow(n, 2) * 20);
+
+        /// <summary>
+        /// Returns a cold observable which retries (re-subscribes to) the source observable on error up to the 
+        /// specified number of times or until it successfully terminates. Allows for customizable back off strategy.
+        /// </summary>
+        /// <param name="source">The source observable.</param>
+        /// <param name="retryCount">The number of attempts of running the source observable before failing.</param>
+        /// <param name="strategy">The strategy to use in backing off, exponential by default.</param>
+        /// <param name="retryOnError">A predicate determining for which exceptions to retry. Defaults to all</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns>
+        /// A cold observable which retries (re-subscribes to) the source observable on error up to the 
+        /// specified number of times or until it successfully terminates.
+        /// </returns>
+        public static IObservable<T> RetryWithBackoffStrategy<T>(
+            this IObservable<T> source, 
+            int retryCount = 3,
+            Func<int, TimeSpan> strategy = null,
+            Func<Exception, bool> retryOnError = null,
+            IScheduler scheduler = null)
+        {
+            strategy = strategy ?? ExponentialBackoff;
+            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+
+            if (retryOnError == null) 
+            {
+                retryOnError = _ => true;
+            }
+
+            int attempt = 0;
+
+            return Observable.Defer(() =>
+            {
+                return ((++attempt == 1) ? source : source.DelaySubscription(strategy(attempt - 1), scheduler))
+                    .Select(item => new Tuple<bool, T, Exception>(true, item, null))
+                    .Catch<Tuple<bool, T, Exception>, Exception>(e => retryOnError(e)
+                        ? Observable.Throw<Tuple<bool, T, Exception>>(e)
+                        : Observable.Return(new Tuple<bool, T, Exception>(false, default(T), e)));
+            })
+            .Retry(retryCount)
+            .SelectMany(t => t.Item1
+                ? Observable.Return(t.Item2)
+                : Observable.Throw<T>(t.Item3));
+        }
+    }
+}
