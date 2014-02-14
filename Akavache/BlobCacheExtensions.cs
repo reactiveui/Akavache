@@ -245,7 +245,7 @@ namespace Akavache
         public static IObservable<Unit> InvalidateObject<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) objCache.InvalidateObject<T>(key);
+            if (objCache != null) return objCache.InvalidateObject<T>(key);
 
             return This.Invalidate(GetTypePrefixedKey(key, typeof(T)));
         }
@@ -259,7 +259,7 @@ namespace Akavache
         public static IObservable<Unit> InvalidateAllObjects<T>(this IBlobCache This)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) objCache.InvalidateAllObjects<T>();
+            if (objCache != null) return objCache.InvalidateAllObjects<T>();
 
             return This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
                 .ToObservable()
