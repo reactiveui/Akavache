@@ -254,6 +254,7 @@ namespace Akavache.Sqlite3.Internal
         List<Entry> connections;
         KeyedOperationQueue opQueue;
         int nextConnectionToUseAtomic = 0;
+        const int tableLockRetries = 3;
 
         public SQLiteConnectionPool(SQLiteConnectionString connectionString, SQLiteOpenFlags flags, int? connectionCount = null)
         {
@@ -272,10 +273,27 @@ namespace Akavache.Sqlite3.Internal
                 Reset(true).Wait();
             }
 
-            return opQueue.EnqueueOperation(idx.ToString(), () => 
+            var makeRq = Observable.Defer(() => opQueue.EnqueueOperation(idx.ToString(), () => 
             {
                 return operation(conn.Connection);
+            }));
+
+            int currentCount = 0;
+            makeRq = makeRq.Catch<T, SQLiteException>(ex => {
+                if (ex.Result != SQLite3.Result.Busy && ex.Result != SQLite3.Result.Locked) 
+                {
+                    return Observable.Throw<T>(ex);
+                }
+
+                if (currentCount++ > tableLockRetries) 
+                {
+                    return Observable.Throw<T>(ex);
+                }
+
+                return makeRq;
             });
+
+            return makeRq;
         }
 
         /// <summary>
