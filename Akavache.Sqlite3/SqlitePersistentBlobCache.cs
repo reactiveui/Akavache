@@ -423,27 +423,17 @@ namespace Akavache.Sqlite3
             return ret.PublishLast().PermaRef();
         }
 
-        protected async Task<int> GetSchemaVersion()
+        protected IObservable<int> GetSchemaVersion()
         {
-            bool shouldCreateSchemaTable = false;
-            int versionNumber = 0;
+            return Connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1")
+                .Catch(Observable.Return(0))
+                .SelectMany(version => 
+                {
+                    if (version > 0) return Observable.Return(version);
 
-            try 
-            {
-                versionNumber = await Connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
-            }
-            catch (Exception ex)
-            {
-                shouldCreateSchemaTable = true;
-            }
-
-            if (shouldCreateSchemaTable)
-            {
-                await Connection.CreateTableAsync<SchemaInfo>();
-                versionNumber = 1;
-            }
-
-            return versionNumber;
+                    return Connection.CreateTableAsync<SchemaInfo>()
+                        .Select(_ => 1);
+                });
         }
 
         /// <summary>
