@@ -273,19 +273,18 @@ namespace Akavache.Sqlite3.Internal
                 Reset(true).Wait();
             }
 
-            var makeRq = Observable.Defer(() => opQueue.EnqueueOperation(idx.ToString(), () => 
-            {
-                return operation(conn.Connection);
-            }));
+            var makeRq = Observable.Defer(() => 
+                Observable.Start(() => operation(conn.Connection), BlobCache.TaskpoolScheduler));
 
-            return makeRq.RetryWithBackoffStrategy(tableLockRetries, retryOnError: ex => 
-            {
-                var sqlex = ex as SQLiteException;
-                if (sqlex == null) return false;
+            return opQueue.EnqueueObservableOperation(idx.ToString(), () => 
+                makeRq.RetryWithBackoffStrategy(tableLockRetries, retryOnError: ex =>
+                {
+                    var sqlex = ex as SQLiteException;
+                    if (sqlex == null)
+                        return false;
 
-                return (sqlex.Result == SQLite3.Result.Locked ||
-                    sqlex.Result == SQLite3.Result.Busy);
-            });
+                    return (sqlex.Result == SQLite3.Result.Locked || sqlex.Result == SQLite3.Result.Busy);
+                }));
         }
 
         /// <summary>
