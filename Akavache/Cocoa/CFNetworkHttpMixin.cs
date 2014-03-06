@@ -72,7 +72,6 @@ namespace Akavache
             var resp = await client.GetAsync(uri);
             var content = await resp.Content.ReadAsByteArrayAsync();
 
-            Console.WriteLine(content.Length);
             return content;
         }
     }
