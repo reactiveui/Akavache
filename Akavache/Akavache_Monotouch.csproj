@@ -79,7 +79,6 @@
     <Compile Include="Utility.cs" />
     <Compile Include="ProtectDataShim.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
-    <Compile Include="Cocoa\CFNetworkHttpMixin.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
@@ -96,6 +95,7 @@
     <Compile Include="Portable\RelativeTimeMixin.cs" />
     <Compile Include="Portable\TestBlobCache.cs" />
     <Compile Include="MacFilesystemProvider.cs" />
+    <Compile Include="HttpMixin.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
@@ -105,4 +105,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="Fody.targets" />
+  <ItemGroup>
+    <Folder Include="Cocoa\" />
+  </ItemGroup>
 </Project>
