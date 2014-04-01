@@ -148,7 +148,6 @@ namespace Akavache
                 }
                 catch (Exception ex)
                 {
-                    this.Log().WarnException("Failure running queued op", ex);
                     ret.OnError(ex);
                 }
             }, scheduler);
