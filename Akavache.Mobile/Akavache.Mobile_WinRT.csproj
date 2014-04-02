@@ -64,7 +64,7 @@
       <HintPath>..\packages\reactiveui-core.5.99.0-beta\lib\Portable-Net45+WinRT45+WP8\ReactiveUI.dll</HintPath>
     </Reference>
     <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.2.0\lib\NetCore45\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.3.0\lib\NetCore45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <SpecificVersion>False</SpecificVersion>
@@ -91,6 +91,9 @@
     <Reference Include="Xamarin.Mobile">
       <HintPath>..\packages\reactiveui-mobile.5.99.0-beta\lib\WinRT45\Xamarin.Mobile.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
