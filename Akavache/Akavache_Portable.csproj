@@ -98,12 +98,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <Content Include="FodyWeavers.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Fody.targets" />
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="Fody.targets" />
 </Project>

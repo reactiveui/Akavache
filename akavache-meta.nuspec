@@ -19,6 +19,12 @@
       <group targetFramework="WinRT">
         <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
       </group>
+      <group targetFramework="Win81">
+        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
+      </group>
+      <group targetFramework="Wpa81">
+        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
+      </group>
       <group targetFramework="Net45">
         <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
       </group>

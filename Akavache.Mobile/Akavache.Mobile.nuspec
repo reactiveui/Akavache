@@ -20,6 +20,7 @@
   <files>
     <file src="bin\Release\WP8\Akavache.Mobile.*" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.Mobile.*" target="lib\NetCore45" />
+    <file src="bin\Release\Portable-Win81+Wpa81\Akavache.Mobile.*" target="lib\Portable-Win81+Wpa81" />
     <file src="bin\Release\MonoAndroid\Akavache.Mobile.*" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.Mobile.*" target="lib\MonoTouch" />
   </files>

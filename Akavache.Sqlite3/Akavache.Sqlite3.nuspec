@@ -19,6 +19,7 @@
   <files>
     <file src="bin\Release\Net45\Akavache.Sqlite3.*" target="lib\net45" />
     <file src="bin\Release\WinRT45\Akavache.Sqlite3.*" target="lib\NetCore45" />
+    <file src="bin\Release\Portable-Win81+Wpa81\Akavache.Sqlite3.*" target="lib\Portable-Win81+Wpa81" />
     <file src="bin\Release\MonoMac\Akavache.Sqlite3.*" target="lib\MonoMac" />
     <file src="bin\Release\MonoAndroid\Akavache.Sqlite3.*" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.Sqlite3.*" target="lib\MonoTouch" />
