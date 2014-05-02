@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30324.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache", "Akavache\Akavache.csproj", "{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}"
@@ -12,8 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{4EB33A
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_WP7", "Akavache\Akavache_WP7.csproj", "{FA7384B4-9B7F-4121-8AFC-C3521398FE74}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_WP8", "Akavache\Akavache_WP8.csproj", "{A54279A3-3457-41DB-9166-67E05FD0E0B1}"
 EndProject
@@ -78,16 +78,6 @@ Global
 		{63DFC8D7-09B8-4CAB-8D39-77865037CF85}.Release|ARM.ActiveCfg = Release|Any CPU
 		{63DFC8D7-09B8-4CAB-8D39-77865037CF85}.Release|x64.ActiveCfg = Release|Any CPU
 		{63DFC8D7-09B8-4CAB-8D39-77865037CF85}.Release|x86.ActiveCfg = Release|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Release|ARM.ActiveCfg = Release|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Release|x64.ActiveCfg = Release|Any CPU
-		{FA7384B4-9B7F-4121-8AFC-C3521398FE74}.Release|x86.ActiveCfg = Release|Any CPU
 		{A54279A3-3457-41DB-9166-67E05FD0E0B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A54279A3-3457-41DB-9166-67E05FD0E0B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A54279A3-3457-41DB-9166-67E05FD0E0B1}.Debug|ARM.ActiveCfg = Debug|ARM
