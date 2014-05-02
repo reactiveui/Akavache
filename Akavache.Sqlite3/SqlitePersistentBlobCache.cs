@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
@@ -524,6 +525,21 @@ namespace Akavache.Sqlite3
             return Observable.Throw<CacheElement>(
                 new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
+        }
+    }
+
+    static class SelectManyLockExtensions
+    {
+        public static IObservable<TRet> SelectManyWithRead<T, TRet>(this IObservable<T> This, AsyncReaderWriterLock opLock, Func<T, IObservable<TRet>> selector)
+        {
+            return Observable.Using(ct => opLock.AcquireRead().ToTask(), 
+                (_, __) => Task.FromResult(This.SelectMany(selector)));
+        }
+
+        public static IObservable<TRet> SelectManyWithWrite<T, TRet>(this IObservable<T> This, AsyncReaderWriterLock opLock, Func<T, IObservable<TRet>> selector)
+        {
+            return Observable.Using(ct => opLock.AcquireWrite().ToTask(), 
+                (_, __) => Task.FromResult(This.SelectMany(selector)));
         }
     }
 
