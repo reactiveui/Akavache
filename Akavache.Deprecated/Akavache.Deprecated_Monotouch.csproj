@@ -78,4 +78,7 @@
       <Name>Akavache_Monotouch</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.Akavache.Deprecated_Monotouch.config" />
+  </ItemGroup>
 </Project>

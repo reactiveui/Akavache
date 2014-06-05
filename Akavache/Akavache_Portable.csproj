@@ -65,7 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Fody.targets" />
-    <None Include="packages.config" />
+    <None Include="packages.Akavache_Portable.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">

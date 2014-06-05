@@ -186,7 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Fody.targets" />
-    <None Include="packages.config" />
+    <None Include="packages.Akavache_Monodroid.config" />
   </ItemGroup>
   <Import Project="Fody.targets" />
 </Project>

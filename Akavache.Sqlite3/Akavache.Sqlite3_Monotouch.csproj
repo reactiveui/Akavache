@@ -79,4 +79,7 @@
       <Name>Akavache_Monotouch</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.Akavache.Sqlite3_Monotouch.config" />
+  </ItemGroup>
 </Project>

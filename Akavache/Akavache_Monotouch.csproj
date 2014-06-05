@@ -102,7 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Fody.targets" />
-    <None Include="packages.config" />
+    <None Include="packages.Akavache_Monotouch.config" />
   </ItemGroup>
   <Import Project="Fody.targets" />
   <ItemGroup>

@@ -82,4 +82,7 @@
       <Name>Akavache_Monotouch</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.Akavache.Mobile_Monotouch.config" />
+  </ItemGroup>
 </Project>
