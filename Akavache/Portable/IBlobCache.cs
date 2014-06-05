@@ -29,7 +29,7 @@ namespace Akavache
         /// </summary>
         /// <param name="key">The key to return asynchronously.</param>
         /// <returns>A Future result representing the byte data.</returns>
-        IObservable<byte[]> GetAsync(string key);
+        IObservable<byte[]> Get(string key);
 
         /// <summary>
         /// Return all keys in the cache. Note that this method is normally
@@ -110,7 +110,7 @@ namespace Akavache
         /// </summary>
         /// <param name="keys">The keys to return asynchronously.</param>
         /// <returns>A Future result representing the byte data for each key.</returns>
-        IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys);
+        IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys);
 
         /// <summary>
         /// Returns the time that the keys were added to the cache, or returns 
@@ -156,7 +156,7 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false);
+        IObservable<T> GetObject<T>(string key, bool noTypePrefix = false);
 
         /// <summary>
         /// Return all objects of a specific Type in the cache.
@@ -202,7 +202,7 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false);
+        IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false);
 
         /// <summary>
         /// Invalidates several objects from the cache. It is important that the Type
