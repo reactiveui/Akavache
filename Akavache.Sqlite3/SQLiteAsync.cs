@@ -153,7 +153,7 @@ namespace Akavache.Sqlite3.Internal
             });
         }
 
-        public IObservable<T> GetAsync<T>(object pk)
+        public IObservable<T> Get<T>(object pk)
             where T : new()
         {
             return _pool.EnqueueConnectionOp<T>(conn => {
@@ -169,7 +169,7 @@ namespace Akavache.Sqlite3.Internal
             });
         }
         
-        public IObservable<T> GetAsync<T> (Expression<Func<T, bool>> predicate)
+        public IObservable<T> Get<T> (Expression<Func<T, bool>> predicate)
             where T : new()
         {
             return _pool.EnqueueConnectionOp(conn => {

@@ -104,7 +104,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserObject>("key").First();
+                    result = fixture.GetObject<UserObject>("key").First();
                 }
             }
 
@@ -131,7 +131,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserObject[]>("key").First();
+                    result = fixture.GetObject<UserObject[]>("key").First();
                 }
             }
 
@@ -161,7 +161,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserModel>("key").First();
+                    result = fixture.GetObject<UserModel>("key").First();
                 }
             }
 
@@ -186,7 +186,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserModel[]>("key").First();
+                    result = fixture.GetObject<UserModel[]>("key").First();
                 }
             }
 
@@ -435,7 +435,7 @@ namespace Akavache.Tests
                         .Catch(Observable.Return("get and fetch latest error"))
                         .First();
 
-                    var result = fixture.GetObjectAsync<string>("foo")
+                    var result = fixture.GetObject<string>("foo")
                          .Catch(Observable.Return("get error"))
                          .First();
 
@@ -623,9 +623,9 @@ namespace Akavache.Tests
             return _inner.Insert(key, data, absoluteExpiration);
         }
 
-        public IObservable<byte[]> GetAsync(string key)
+        public IObservable<byte[]> Get(string key)
         {
-            return _inner.GetAsync(key);
+            return _inner.Get(key);
         }
 
         public IObservable<List<string>> GetAllKeys()
@@ -678,9 +678,9 @@ namespace Akavache.Tests
             return ((IObjectBlobCache)_inner).InsertObject(key, value, absoluteExpiration);
         }
 
-        public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
         {
-            return ((IObjectBlobCache)_inner).GetObjectAsync<T>(key, noTypePrefix);
+            return ((IObjectBlobCache)_inner).GetObject<T>(key, noTypePrefix);
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()

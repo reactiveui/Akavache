@@ -28,7 +28,7 @@ namespace Akavache.Tests
                 var stresser = new Stresser(new Action<string>[]
                 {
                     key => cache.Insert(key, Stresser.RandomData()),
-                    key => cache.GetAsync(key).First()
+                    key => cache.Get(key).First()
                 });
 
                 var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
@@ -54,9 +54,9 @@ namespace Akavache.Tests
                     key =>
                     {
                         cache.Insert(key, Stresser.RandomData());
-                        cache.GetAsync(key).First();
+                        cache.Get(key).First();
                     },
-                    key => cache.GetAsync(key).First(),
+                    key => cache.Get(key).First(),
                     key => cache.Invalidate(key).First()
                 }, uniqueKeyCount: 2);
 

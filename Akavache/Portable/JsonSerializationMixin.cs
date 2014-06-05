@@ -54,13 +54,13 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
+        public static IObservable<T> GetObject<T>(this IBlobCache This, string key, bool noTypePrefix = false)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.GetObjectAsync<T>(key, noTypePrefix);
+            if (objCache != null) return objCache.GetObject<T>(key, noTypePrefix);
             var theKey = noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T));
 
-            return This.GetAsync(theKey).SelectMany(DeserializeObject<T>);
+            return This.Get(theKey).SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace Akavache
                     .Where(y => 
                         y.StartsWith(GetTypePrefixedKey("", typeof(T))))
                     .ToObservable())
-                .SelectMany(x => This.GetObjectAsync<T>(x, true)
+                .SelectMany(x => This.GetObject<T>(x, true)
                     .Catch(Observable.Empty<T>()))
                 .ToList()
                 .Select(x => (IEnumerable<T>)x);
@@ -107,7 +107,7 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrFetchObject<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
-            return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
+            return This.GetObject<T>(key).Catch<T, Exception>(_ =>
             {
                 object dontcare;
                 var prefixedKey = This.GetHashCode().ToString() + key;
@@ -227,7 +227,7 @@ namespace Akavache
                         .SelectMany(x => This.InsertObject(key, ret, absoluteExpiration).Select(__ => x));
                 });
 
-            var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
+            var result = This.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
                 .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
 
             return result.SelectMany(x =>

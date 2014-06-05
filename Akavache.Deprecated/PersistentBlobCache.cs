@@ -139,7 +139,7 @@ namespace Akavache.Deprecated
             return err.Select(_ => Unit.Default);
         }
 
-        public IObservable<byte[]> GetAsync(string key)
+        public IObservable<byte[]> Get(string key)
         {
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("PersistentBlobCache"));
 
@@ -172,7 +172,7 @@ namespace Akavache.Deprecated
 
             // If we fail trying to fetch/write the key on disk, we want to
             // try again instead of replaying the same failure
-            ret.LogErrors("GetAsync")
+            ret.LogErrors("Get")
                .Subscribe(x => {}, ex => Invalidate(key));
 
             return ret;

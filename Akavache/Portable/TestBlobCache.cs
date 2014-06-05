@@ -78,7 +78,7 @@ namespace Akavache
             return Observable.Return(Unit.Default);
         }
 
-        public IObservable<byte[]> GetAsync(string key)
+        public IObservable<byte[]> Get(string key)
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)

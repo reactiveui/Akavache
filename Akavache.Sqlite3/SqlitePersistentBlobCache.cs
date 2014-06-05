@@ -118,7 +118,7 @@ namespace Akavache.Sqlite3
             return ret;
         }
 
-        public IObservable<byte[]> GetAsync(string key)
+        public IObservable<byte[]> Get(string key)
         {
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) 
@@ -130,7 +130,7 @@ namespace Akavache.Sqlite3
             }
         }
 
-        public IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys)
+        public IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys)
         {
             if (disposed) return Observable.Throw<IDictionary<string, byte[]>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
 
@@ -291,7 +291,7 @@ namespace Akavache.Sqlite3
             return _initializer.SelectMany(_ => ret.PermaRef());
         }
 
-        public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
         {
             if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             lock (_inflightCache) 
@@ -305,7 +305,7 @@ namespace Akavache.Sqlite3
             }
         }
 
-        public IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false)
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false)
         {
             if (disposed) return Observable.Throw<IDictionary<string, T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
 
