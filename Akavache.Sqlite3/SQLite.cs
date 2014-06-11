@@ -49,7 +49,7 @@ using Sqlite3Statement = Sqlite.Statement;
 #elif USE_SQLITEPCL_RAW
 using Sqlite3DatabaseHandle = SQLitePCL.sqlite3;
 using Sqlite3Statement = SQLitePCL.sqlite3_stmt;
-using Sqlite3 = SQLitePCL.raw;
+using Sqlite3Raw = SQLitePCL.raw;
 #else
 using Sqlite3DatabaseHandle = System.IntPtr;
 using Sqlite3Statement = System.IntPtr;
@@ -192,11 +192,11 @@ namespace Akavache.Sqlite3.Internal
 
 			DatabasePath = databasePath;
 
-#if NETFX_CORE
+#if NETFX_CORE && !USE_SQLITEPCL_RAW
 			SQLite3.SetDirectory(/*temp directory type*/2, Windows.Storage.ApplicationData.Current.TemporaryFolder.Path);
 #endif
 
-			Sqlite3DatabaseHandle handle;
+            Sqlite3DatabaseHandle handle;
 
 #if SILVERLIGHT || USE_CSHARP_SQLITE || USE_SQLITEPCL_RAW
             var r = SQLite3.Open (databasePath, out handle, (int)openFlags, IntPtr.Zero);
@@ -226,8 +226,8 @@ namespace Akavache.Sqlite3.Internal
 				ti.Name = "magic";
 			}
 		}
-	
-if !USE_SQLITEPCL_RAW
+
+#if !USE_SQLITEPCL_RAW
         public void EnableLoadExtension(int onoff)
         {
             SQLite3.Result r = SQLite3.EnableLoadExtension(Handle, onoff);
@@ -3132,7 +3132,7 @@ if !USE_SQLITEPCL_RAW
 #else
         public static Result Open(string filename, out Sqlite3DatabaseHandle db)
 		{
-			return (Result) Sqlite3.sqlite3_open(filename, out db);
+			return (Result)Sqlite3Raw.sqlite3_open(filename, out db);
 		}
 
 		public static Result Open(string filename, out Sqlite3DatabaseHandle db, int flags, IntPtr zVfs)
@@ -3140,30 +3140,30 @@ if !USE_SQLITEPCL_RAW
 #if USE_WP8_NATIVE_SQLITE
 			return (Result)Sqlite3.sqlite3_open_v2(filename, out db, flags, "");
 #else
-			return (Result)Sqlite3.sqlite3_open_v2(filename, out db, flags, null);
+			return (Result)Sqlite3Raw.sqlite3_open_v2(filename, out db, flags, null);
 #endif
 		}
 
 		public static Result Close(Sqlite3DatabaseHandle db)
 		{
-			return (Result)Sqlite3.sqlite3_close(db);
+			return (Result)Sqlite3Raw.sqlite3_close(db);
 		}
 
 		public static Result BusyTimeout(Sqlite3DatabaseHandle db, int milliseconds)
 		{
-			return (Result)Sqlite3.sqlite3_busy_timeout(db, milliseconds);
+			return (Result)Sqlite3Raw.sqlite3_busy_timeout(db, milliseconds);
 		}
 
 		public static int Changes(Sqlite3DatabaseHandle db)
 		{
-			return Sqlite3.sqlite3_changes(db);
+			return Sqlite3Raw.sqlite3_changes(db);
 		}
 
 		public static Sqlite3Statement Prepare2(Sqlite3DatabaseHandle db, string query)
 		{
 			Sqlite3Statement stmt = default(Sqlite3Statement);
 #if USE_WP8_NATIVE_SQLITE || USE_SQLITEPCL_RAW
-			var r = Sqlite3.sqlite3_prepare_v2(db, query, out stmt);
+			var r = Sqlite3Raw.sqlite3_prepare_v2(db, query, out stmt);
 #else
 			stmt = new Sqlite3Statement();
 			var r = Sqlite3.sqlite3_prepare_v2(db, query, -1, ref stmt, 0);
@@ -3177,52 +3177,52 @@ if !USE_SQLITEPCL_RAW
 
 		public static Result Step(Sqlite3Statement stmt)
 		{
-			return (Result)Sqlite3.sqlite3_step(stmt);
+			return (Result)Sqlite3Raw.sqlite3_step(stmt);
 		}
 
 		public static Result Reset(Sqlite3Statement stmt)
 		{
-			return (Result)Sqlite3.sqlite3_reset(stmt);
+			return (Result)Sqlite3Raw.sqlite3_reset(stmt);
 		}
 
 		public static Result Finalize(Sqlite3Statement stmt)
 		{
-			return (Result)Sqlite3.sqlite3_finalize(stmt);
+			return (Result)Sqlite3Raw.sqlite3_finalize(stmt);
 		}
 
 		public static long LastInsertRowid(Sqlite3DatabaseHandle db)
 		{
-			return Sqlite3.sqlite3_last_insert_rowid(db);
+			return Sqlite3Raw.sqlite3_last_insert_rowid(db);
 		}
 
 		public static string GetErrmsg(Sqlite3DatabaseHandle db)
 		{
-			return Sqlite3.sqlite3_errmsg(db);
+			return Sqlite3Raw.sqlite3_errmsg(db);
 		}
 
 		public static int BindParameterIndex(Sqlite3Statement stmt, string name)
 		{
-			return Sqlite3.sqlite3_bind_parameter_index(stmt, name);
+			return Sqlite3Raw.sqlite3_bind_parameter_index(stmt, name);
 		}
 
 		public static int BindNull(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_bind_null(stmt, index);
+			return Sqlite3Raw.sqlite3_bind_null(stmt, index);
 		}
 
 		public static int BindInt(Sqlite3Statement stmt, int index, int val)
 		{
-			return Sqlite3.sqlite3_bind_int(stmt, index, val);
+			return Sqlite3Raw.sqlite3_bind_int(stmt, index, val);
 		}
 
 		public static int BindInt64(Sqlite3Statement stmt, int index, long val)
 		{
-			return Sqlite3.sqlite3_bind_int64(stmt, index, val);
+			return Sqlite3Raw.sqlite3_bind_int64(stmt, index, val);
 		}
 
 		public static int BindDouble(Sqlite3Statement stmt, int index, double val)
 		{
-			return Sqlite3.sqlite3_bind_double(stmt, index, val);
+			return Sqlite3Raw.sqlite3_bind_double(stmt, index, val);
 		}
 
 		public static int BindText(Sqlite3Statement stmt, int index, string val, int n, IntPtr free)
@@ -3230,7 +3230,7 @@ if !USE_SQLITEPCL_RAW
 #if USE_WP8_NATIVE_SQLITE
 			return Sqlite3.sqlite3_bind_text(stmt, index, val, n);
 #elif USE_SQLITEPCL_RAW
-			return Sqlite3.sqlite3_bind_text(stmt, index, val);
+			return Sqlite3Raw.sqlite3_bind_text(stmt, index, val);
 #else
 			return Sqlite3.sqlite3_bind_text(stmt, index, val, n, null);
 #endif
@@ -3241,7 +3241,7 @@ if !USE_SQLITEPCL_RAW
 #if USE_WP8_NATIVE_SQLITE
 			return Sqlite3.sqlite3_bind_blob(stmt, index, val, n);
 #elif USE_SQLITEPCL_RAW
-			return Sqlite3.sqlite3_bind_blob(stmt, index, val);
+			return Sqlite3Raw.sqlite3_bind_blob(stmt, index, val);
 #else
 			return Sqlite3.sqlite3_bind_blob(stmt, index, val, n, null);
 #endif
@@ -3249,62 +3249,62 @@ if !USE_SQLITEPCL_RAW
 
 		public static int ColumnCount(Sqlite3Statement stmt)
 		{
-			return Sqlite3.sqlite3_column_count(stmt);
+			return Sqlite3Raw.sqlite3_column_count(stmt);
 		}
 
 		public static string ColumnName(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_name(stmt, index);
+			return Sqlite3Raw.sqlite3_column_name(stmt, index);
 		}
 
 		public static string ColumnName16(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_name(stmt, index);
+			return Sqlite3Raw.sqlite3_column_name(stmt, index);
 		}
 
 		public static ColType ColumnType(Sqlite3Statement stmt, int index)
 		{
-			return (ColType)Sqlite3.sqlite3_column_type(stmt, index);
+			return (ColType)Sqlite3Raw.sqlite3_column_type(stmt, index);
 		}
 
 		public static int ColumnInt(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_int(stmt, index);
+			return Sqlite3Raw.sqlite3_column_int(stmt, index);
 		}
 
 		public static long ColumnInt64(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_int64(stmt, index);
+			return Sqlite3Raw.sqlite3_column_int64(stmt, index);
 		}
 
 		public static double ColumnDouble(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_double(stmt, index);
+			return Sqlite3Raw.sqlite3_column_double(stmt, index);
 		}
 
 		public static string ColumnText(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_text(stmt, index);
+			return Sqlite3Raw.sqlite3_column_text(stmt, index);
 		}
 
 		public static string ColumnText16(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_text(stmt, index);
+			return Sqlite3Raw.sqlite3_column_text(stmt, index);
 		}
 
 		public static byte[] ColumnBlob(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_blob(stmt, index);
+			return Sqlite3Raw.sqlite3_column_blob(stmt, index);
 		}
 
 		public static int ColumnBytes(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_bytes(stmt, index);
+			return Sqlite3Raw.sqlite3_column_bytes(stmt, index);
 		}
 
 		public static string ColumnString(Sqlite3Statement stmt, int index)
 		{
-			return Sqlite3.sqlite3_column_text(stmt, index);
+			return Sqlite3Raw.sqlite3_column_text(stmt, index);
 		}
 
 		public static byte[] ColumnByteArray(Sqlite3Statement stmt, int index)
@@ -3321,7 +3321,7 @@ if !USE_SQLITEPCL_RAW
 
 		public static ExtendedResult ExtendedErrCode(Sqlite3DatabaseHandle db)
 		{
-			return (ExtendedResult)Sqlite3.sqlite3_extended_errcode(db);
+			return (ExtendedResult)Sqlite3Raw.sqlite3_extended_errcode(db);
 		}
 #endif
 
