@@ -31,7 +31,7 @@
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monoandroid</OutputPath>
     <IntermediateOutputPath>obj\Debug\Monoandroid</IntermediateOutputPath>
-    <DefineConstants>DEBUG;MONO; XAMARIN_MOBILE; ANDROID</DefineConstants>
+    <DefineConstants>DEBUG;MONO; XAMARIN_MOBILE; ANDROID; USE_SQLITEPCL_RAW; USE_NEW_REFLECTION_API</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
@@ -74,7 +74,7 @@
     <Optimize>True</Optimize>
     <OutputPath>bin\Release\Monoandroid</OutputPath>
     <IntermediateOutputPath>obj\Release\Monoandroid</IntermediateOutputPath>
-    <DefineConstants>MONO; XAMARIN_MOBILE; ANDROID</DefineConstants>
+    <DefineConstants>MONO; XAMARIN_MOBILE; ANDROID;USE_SQLITEPCL_RAW; USE_NEW_REFLECTION_API</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
@@ -113,8 +113,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net40+sl4+wp7+win8\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.3.2\lib\monoandroid\Splat.dll</HintPath>
+    <Reference Include="Splat, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.3.3\lib\monoandroid\Splat.dll</HintPath>
     </Reference>
     <Reference Include="SQLitePCL">
       <HintPath>..\packages\SQLitePCL.raw_basic.0.2.0-alpha\lib\MonoAndroid\SQLitePCL.dll</HintPath>

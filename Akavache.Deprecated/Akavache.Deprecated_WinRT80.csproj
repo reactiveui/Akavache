@@ -52,8 +52,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\netcore45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.3.2\lib\NetCore45\Splat.dll</HintPath>
+    <Reference Include="Splat, Version=1.3.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.3.3\lib\NetCore45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.2.4\lib\windows8\System.Reactive.Core.dll</HintPath>
@@ -78,13 +79,13 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
-      <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
-      <Name>Akavache_WinRT</Name>
-    </ProjectReference>
+    <None Include="packages.Akavache.Deprecated_WinRT80.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.Akavache.Deprecated_WinRT80.config" />
+    <ProjectReference Include="..\Akavache\Akavache_WinRT80.csproj">
+      <Project>{74ccfbb6-7a56-461f-8db6-93594bb4112e}</Project>
+      <Name>Akavache_WinRT80</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>

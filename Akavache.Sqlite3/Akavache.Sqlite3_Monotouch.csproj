@@ -20,7 +20,7 @@
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monotouch</OutputPath>
     <IntermediateOutputPath>obj\Debug\Monotouch</IntermediateOutputPath>
-    <DefineConstants>DEBUG; MONO; IOS</DefineConstants>
+    <DefineConstants>DEBUG;__IOS__;__MOBILE__; MONO; IOS; USE_SQLITEPCL_RAW; USE_NEW_REFLECTION_API</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -34,14 +34,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
-    <DefineConstants>MONO; IOS</DefineConstants>
+    <DefineConstants>__IOS__;__MOBILE__;MONO; IOS; USE_SQLITEPCL_RAW; USE_NEW_REFLECTION_API</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net40+sl4+wp7+win8\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.3.2\lib\monotouch\Splat.dll</HintPath>
+    <Reference Include="Splat, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.3.3\lib\monotouch\Splat.dll</HintPath>
     </Reference>
     <Reference Include="SQLitePCL">
       <HintPath>..\packages\SQLitePCL.raw_basic.0.2.0-alpha\lib\MonoTouch\SQLitePCL.dll</HintPath>
