@@ -47,7 +47,6 @@
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="MD5.cs" />
-    <Compile Include="ModuleInitializer.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
