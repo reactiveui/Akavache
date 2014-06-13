@@ -20,11 +20,12 @@ namespace Akavache
 
         static BlobCache()
         {
-            if (Locator.Current.GetService<IAkavacheHttpMixin>() == null && Locator.CurrentMutable != null)
+            Locator.RegisterResolverCallbackChanged(() => 
             {
+                if (Locator.CurrentMutable == null) return;
                 Locator.CurrentMutable.InitializeAkavache();
-            }
-                
+            });
+               
             InMemory = new TestBlobCache(Scheduler.Default);
         }
 
