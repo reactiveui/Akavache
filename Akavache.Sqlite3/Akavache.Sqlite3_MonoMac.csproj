@@ -47,15 +47,15 @@
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
     <Reference Include="Mono.Posix" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\mono\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System.Reactive.Core" />
     <Reference Include="System.Reactive.Interfaces" />
     <Reference Include="System.Reactive.Linq" />
     <Reference Include="System.Reactive.PlatformServices" />
     <Reference Include="Splat">
-      <HintPath>..\ext\mono\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.3.2\lib\MonoMac\Splat.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
