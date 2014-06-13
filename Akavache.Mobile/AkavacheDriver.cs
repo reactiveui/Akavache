@@ -12,7 +12,7 @@ namespace Akavache.Mobile
     {
         public IObservable<object> LoadState()
         {
-            return BlobCache.UserAccount.GetObjectAsync<object>("__AppState");
+            return BlobCache.UserAccount.GetObject<object>("__AppState");
         }
 
         public IObservable<Unit> SaveState(object state)

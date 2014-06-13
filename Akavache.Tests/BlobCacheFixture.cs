@@ -34,14 +34,14 @@ namespace Akavache.Tests
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
-                byte[] output1 = fixture.GetAsync("Foo").First();
-                byte[] output2 = fixture.GetAsync("Bar").First();
+                byte[] output1 = fixture.Get("Foo").First();
+                byte[] output2 = fixture.Get("Bar").First();
 
                 Assert.Throws<ArgumentNullException>(() =>
-                    fixture.GetAsync(null).First());
+                    fixture.Get(null).First());
 
                 Assert.Throws<KeyNotFoundException>(() =>
-                    fixture.GetAsync("Baz").First());
+                    fixture.Get("Baz").First());
 
                 Assert.Equal(3, output1.Length);
                 Assert.Equal(3, output2.Length);
@@ -71,7 +71,7 @@ namespace Akavache.Tests
 
                 using (var fixture2 = CreateBlobCache(path))
                 {
-                    var output = fixture2.GetAsync("Foo").First();
+                    var output = fixture2.Get("Foo").First();
                     Assert.Equal(3, output.Length);
                     Assert.Equal(1, output[0]);
                 }
@@ -88,13 +88,13 @@ namespace Akavache.Tests
             {
                 fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
 
-                var output = fixture.GetAsync("Foo").First();
+                var output = fixture.Get("Foo").First();
                 Assert.Equal(3, output.Length);
                 Assert.Equal(1, output[0]);
 
                 fixture.Insert("Foo", new byte[] { 4, 5 }).Wait();
 
-                output = fixture.GetAsync("Foo").First();
+                output = fixture.Get("Foo").First();
                 Assert.Equal(2, output.Length);
                 Assert.Equal(4, output[0]);
             }
@@ -119,7 +119,7 @@ namespace Akavache.Tests
 
                         byte[] result = null;
                         sched.AdvanceToMs(20);
-                        fixture.GetAsync("foo").Subscribe(x => result = x);
+                        fixture.Get("foo").Subscribe(x => result = x);
 
                         // Foo should still be active
                         sched.AdvanceToMs(50);
@@ -128,10 +128,10 @@ namespace Akavache.Tests
                         // From 100 < t < 500, foo should be inactive but bar should still work
                         bool shouldFail = true;
                         sched.AdvanceToMs(120);
-                        fixture.GetAsync("foo").Subscribe(
+                        fixture.Get("foo").Subscribe(
                             x => result = x,
                             ex => shouldFail = false);
-                        fixture.GetAsync("bar").Subscribe(x => result = x);
+                        fixture.Get("bar").Subscribe(x => result = x);
 
                         sched.AdvanceToMs(300);
                         Assert.False(shouldFail);
@@ -149,7 +149,7 @@ namespace Akavache.Tests
                     using (var fixture = CreateBlobCache(path))
                     {
                         byte[] result = null;
-                        fixture.GetAsync("bar").Subscribe(x => result = x);
+                        fixture.Get("bar").Subscribe(x => result = x);
                         sched.AdvanceToMs(400);
 
                         Assert.Equal(4, result[0]);
@@ -157,7 +157,7 @@ namespace Akavache.Tests
                         // At t=1000, everything is invalidated
                         bool shouldFail = true;
                         sched.AdvanceToMs(1000);
-                        fixture.GetAsync("bar").Subscribe(
+                        fixture.Get("bar").Subscribe(
                             x => result = x,
                             ex => shouldFail = false);
 

@@ -10,15 +10,15 @@ namespace Akavache
 {
     public static class BulkOperationsMixin
     {
-        public static IObservable<IDictionary<string, byte[]>> GetAsync(this IBlobCache This, IEnumerable<string> keys)
+        public static IObservable<IDictionary<string, byte[]>> Get(this IBlobCache This, IEnumerable<string> keys)
         {
             var bulkCache = This as IBulkBlobCache;
-            if (bulkCache != null) return bulkCache.GetAsync(keys);
+            if (bulkCache != null) return bulkCache.Get(keys);
 
             return keys.ToObservable()
                 .SelectMany(x => 
                 {
-                    return This.GetAsync(x)
+                    return This.Get(x)
                         .Select(y => new KeyValuePair<string, byte[]>(x,y))
                         .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, byte[]>>());
                 })
@@ -55,15 +55,15 @@ namespace Akavache
                .TakeLast(1);
         }
 
-        public static IObservable<IDictionary<string, T>> GetObjectsAsync<T>(this IBlobCache This, IEnumerable<string> keys, bool noTypePrefix = false)
+        public static IObservable<IDictionary<string, T>> GetObjects<T>(this IBlobCache This, IEnumerable<string> keys, bool noTypePrefix = false)
         {
             var bulkCache = This as IObjectBulkBlobCache;
-            if (bulkCache != null) return bulkCache.GetObjectsAsync<T>(keys);
+            if (bulkCache != null) return bulkCache.GetObjects<T>(keys);
 
             return keys.ToObservable()
                 .SelectMany(x => 
                 {
-                    return This.GetObjectAsync<T>(x)
+                    return This.GetObject<T>(x)
                         .Select(y => new KeyValuePair<string, T>(x,y))
                         .Catch<KeyValuePair<string, T>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, T>>());
                 })

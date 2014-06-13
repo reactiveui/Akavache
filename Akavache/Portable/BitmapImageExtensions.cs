@@ -24,7 +24,7 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImage(this IBlobCache This, string key, float? desiredWidth = null, float? desiredHeight = null)
         {
-            return This.GetAsync(key)
+            return This.Get(key)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight));
         }
