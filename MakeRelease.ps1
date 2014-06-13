@@ -1,6 +1,6 @@
 ﻿Param([string]$version = $null)
 
-$Archs = { "Net45","WP8", "WinRT45", "MonoMac", "Monoandroid", "Monotouch", "Portable-Net45+WinRT45+WP8"}
+$Archs = { "Net45","WP8", "WinRT45", "MonoMac", "Monoandroid", "Monotouch", "Portable-Net45+WinRT45+WP8", "Portable-Win81+Wpa81" }
 $Projects = {"Akavache", "Akavache.Sqlite3", "Akavache.Mobile", "Akavache.Http", "Akavache.Deprecated" }
 
 $SlnFileExists = Test-Path ".\Akavache.sln"

@@ -65,19 +65,6 @@ namespace Akavache.Tests
         }
     }
 
-    [DataContract]
-    public class DummyAppBootstrapper : IScreen
-    {
-        [DataMember]
-        public IRoutingState Router { get; protected set; }
-
-        public DummyAppBootstrapper()
-        {
-            Router = new RoutingState();
-            Router.NavigateAndReset.Execute(new DummyRoutedViewModel(this) { ARandomGuid =  Guid.NewGuid() });
-        }
-    }
-
     public abstract class BlobCacheExtensionsFixture
     {
         protected abstract IBlobCache CreateBlobCache(string path);

@@ -20,6 +20,7 @@
   </metadata>
   <files>
     <file src="bin\Release\Portable-Net45+WinRT45+WP8\Akavache.???" target="lib\Portable-Net45+WinRT45+WP8" />
+    <file src="bin\Release\Portable-Win81+Wpa81\Akavache.???" target="lib\Portable-Win81+Wpa81" />
     <file src="bin\Release\Net45\Akavache.???" target="lib\net45" />
     <file src="bin\Release\WP8\Akavache.???" target="lib\wp8" />
     <file src="bin\Release\WinRT45\Akavache.???" target="lib\WinRT45" />
