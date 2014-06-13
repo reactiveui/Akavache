@@ -159,7 +159,6 @@
     <Compile Include="IsolatedStorageProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
-    <Compile Include="ModuleInitializer.cs" />
     <Compile Include="ProtectDataShim.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />

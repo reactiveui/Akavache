@@ -86,7 +86,6 @@
     <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
-    <Compile Include="ModuleInitializer.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
