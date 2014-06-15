@@ -224,7 +224,7 @@ namespace Akavache
 
                     return fetchObs
                         .SelectMany(x => This.InvalidateObject<T>(key).Select(__ => x))
-                        .SelectMany(x => This.InsertObject(key, ret, absoluteExpiration).Select(__ => x));
+                        .SelectMany(x => This.InsertObject(key, x, absoluteExpiration).Select(__ => x));
                 });
 
             var result = This.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
