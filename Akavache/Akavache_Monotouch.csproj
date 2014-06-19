@@ -102,5 +102,4 @@
   <ItemGroup>
     <None Include="packages.Akavache_Monotouch.config" />
   </ItemGroup>
-  <Import Project="Fody.targets" />
 </Project>
