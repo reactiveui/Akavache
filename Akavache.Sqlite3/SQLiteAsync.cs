@@ -276,15 +276,7 @@ namespace Akavache.Sqlite3.Internal
             var makeRq = Observable.Defer(() => 
                 Observable.Start(() => operation(conn.Connection), BlobCache.TaskpoolScheduler));
 
-            return opQueue.EnqueueObservableOperation(idx.ToString(), () => 
-                makeRq.RetryWithBackoffStrategy(tableLockRetries, retryOnError: ex =>
-                {
-                    var sqlex = ex as SQLiteException;
-                    if (sqlex == null)
-                        return false;
-
-                    return (sqlex.Result == SQLite3.Result.Locked || sqlex.Result == SQLite3.Result.Busy);
-                }));
+            return opQueue.EnqueueObservableOperation(idx.ToString(), () => makeRq);
         }
 
         /// <summary>
@@ -407,4 +399,3 @@ namespace Akavache.Sqlite3.Internal
         }
     }
 }
-
