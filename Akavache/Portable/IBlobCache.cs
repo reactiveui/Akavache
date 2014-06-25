@@ -166,6 +166,14 @@ namespace Akavache
         IObservable<IEnumerable<T>> GetAllObjects<T>();
 
         /// <summary>
+        /// Returns the time that the object with the key was added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The key to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key);
+
+        /// <summary>
         /// Invalidates a single object from the cache. It is important that the Type
         /// Parameter for this method be correct, and you cannot use 
         /// IBlobCache.Invalidate to perform the same task.

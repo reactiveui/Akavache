@@ -169,7 +169,7 @@ namespace Akavache
         public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return This.GetCreatedAt(key);
+            if (objCache != null) return objCache.GetObjectCreatedAt<T>(key);
 
             return This.GetCreatedAt(GetTypePrefixedKey(key, typeof(T)));
         }
