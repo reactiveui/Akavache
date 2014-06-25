@@ -20,6 +20,72 @@ namespace Akavache.Tests.Performance
         [Fact]
         public async Task SequentialSimpleReads()
         {
+            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
+            {
+                var st = new Stopwatch();
+                var toFetch = Enumerable.Range(0, size)
+                    .Select(_ => keys[prng.Next(0, keys.Count - 1)])
+                    .ToArray();
+
+                st.Start();
+
+                foreach (var v in toFetch) {
+                    await cache.Get(v);
+                }
+
+                st.Stop();
+                return st.ElapsedMilliseconds;
+            });
+        }
+
+        [Fact]
+        public async Task SequentialBulkReads()
+        {
+            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
+            {
+                var st = new Stopwatch();
+
+                int count = 0;
+                var toFetch = Enumerable.Range(0, size)
+                    .Select(_ => keys[prng.Next(0, keys.Count - 1)])
+                    .GroupBy(_ => ++count / 32)
+                    .ToArray();
+
+                st.Start();
+
+                foreach (var group in toFetch) {
+                    await cache.Get(group);
+                }
+                                
+                st.Stop();
+                return st.ElapsedMilliseconds;
+            });
+        }
+
+        [Fact]
+        public async Task ParallelSimpleReads()
+        {
+            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
+            {
+                var st = new Stopwatch();
+                var toFetch = Enumerable.Range(0, size)
+                    .Select(_ => keys[prng.Next(0, keys.Count - 1)])
+                    .ToArray();
+
+                st.Start();
+
+                await toFetch.ToObservable(BlobCache.TaskpoolScheduler)
+                    .Select(x => Observable.Defer(() => cache.Get(x)))
+                    .Merge(32)
+                    .ToArray();
+
+                st.Stop();
+                return st.ElapsedMilliseconds;
+            });
+        }
+
+        public async Task GeneratePerfRangesForBlock(Func<IBlobCache, int, List<string>, Task<long>> block)
+        {
             var results = new Dictionary<int, long>();
             var dbName = default(string);
 
@@ -32,19 +98,7 @@ namespace Akavache.Tests.Performance
 
                 foreach (var size in GetPerfRanges())
                 {
-                    var st = new Stopwatch();
-                    var toFetch = Enumerable.Range(0, size)
-                        .Select(_ => keys[prng.Next(0, keys.Count - 1)])
-                        .ToArray();
-
-                    st.Start();
-
-                    foreach (var v in toFetch) {
-                        await cache.Get(v);
-                    }
-
-                    st.Stop();
-                    results[size] = st.ElapsedMilliseconds;
+                    results[size] = await block(cache, size, keys);
                 }
             }
 
@@ -99,14 +153,14 @@ namespace Akavache.Tests.Performance
 
         int[] GetPerfRanges()
         {
-            return new[] { 1, 10, 100, 1000, 10000, 100000 };
+            return new[] { 1, 10, 100, 1000, 10000, 100000, };
         }
 
         async Task<IBlobCache> GenerateAGiantDatabase(string path)
         {
             path = path ?? IntegrationTestHelper.GetIntegrationTestRootDirectory();
 
-            var giantDbSize = 100000;
+            var giantDbSize = GetPerfRanges().Last();
             var cache = CreateBlobCache(path);
 
             var keys = await cache.GetAllKeys();
