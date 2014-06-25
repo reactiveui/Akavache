@@ -98,11 +98,7 @@ namespace Akavache
                 Func = asyncCalculationFunc,
             };
 
-            lock (queuedOps)
-            {
-                queuedOps.OnNext(item);
-            }
-
+            queuedOps.OnNext(item);
             return item.Result;
         }
 
