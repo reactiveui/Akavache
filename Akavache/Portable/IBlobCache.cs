@@ -183,7 +183,7 @@ namespace Akavache
         IObservable<Unit> InvalidateAllObjects<T>();
     }
 
-    public interface IObjectBulkBlobCache : IObjectBlobCache
+    public interface IObjectBulkBlobCache : IObjectBlobCache, IBulkBlobCache
     {
         /// <summary>
         /// Insert several objects into the cache, via the JSON serializer. 

@@ -267,6 +267,7 @@ Global
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|x64.ActiveCfg = Release|Any CPU
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|x86.ActiveCfg = Release|Any CPU
+		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
