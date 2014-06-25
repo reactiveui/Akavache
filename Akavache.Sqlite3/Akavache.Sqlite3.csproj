@@ -16,9 +16,9 @@
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile32</TargetFrameworkProfile>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile78</TargetFrameworkProfile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -29,42 +29,32 @@
     <Compile Include="WinRTEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <TargetPlatform Include="Windows, Version=8.1" />
-    <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.Akavache.Sqlite3_WinRT.config" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.3.3\lib\Portable-Win81+Wpa81\Splat.dll</HintPath>
     </Reference>
     <Reference Include="SQLitePCL">
       <HintPath>..\packages\SQLitePCL.raw_basic.0.2.0-alpha\lib\portable-net45+netcore45+wpa81+wp8+MonoAndroid+MonoTouch\SQLitePCL.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
-      <HintPath>..\packages\Rx-Core.2.2.4\lib\portable-win81+wpa81\System.Reactive.Core.dll</HintPath>
+      <HintPath>..\packages\Rx-Core.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\packages\Rx-Interfaces.2.2.4\lib\portable-win81+wpa81\System.Reactive.Interfaces.dll</HintPath>
+      <HintPath>..\packages\Rx-Interfaces.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Linq">
-      <HintPath>..\packages\Rx-Linq.2.2.4\lib\portable-win81+wpa81\System.Reactive.Linq.dll</HintPath>
+      <HintPath>..\packages\Rx-Linq.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\portable-win81+wpa81\System.Reactive.PlatformServices.dll</HintPath>
+      <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.WindowsRuntime">
-      <HintPath>..\packages\Rx-WinRT.2.2.4\lib\portable-win81+wpa81\System.Reactive.WindowsRuntime.dll</HintPath>
+    <Reference Include="Splat">
+      <HintPath>..\packages\Splat.1.3.2\lib\Portable-net45+win+wpa81+wp80\Splat.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
-      <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
-      <Name>Akavache_WinRT</Name>
+    <ProjectReference Include="..\Akavache\Akavache_Portable.csproj">
+      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
+      <Name>Akavache_Portable</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
@@ -72,8 +62,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\Portable-Win81+Wpa81\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE; WINRT; USE_SQLITEPCL_RAW; USE_NEW_REFLECTION_API</DefineConstants>
+    <OutputPath>bin\Debug\Portable-Net45+Win8+WP8+Wpa81\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\Portable-Net45+WinRT45+WP8\</IntermediateOutputPath>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;USE_SQLITEPCL_RAW;USE_NEW_REFLECTION_API</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -81,8 +72,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Release\Portable-Win81+Wpa81\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE; WINRT; USE_SQLITEPCL_RAW</DefineConstants>
+    <OutputPath>bin\Release\Portable-Net45+Win8+WP8+Wpa81\</OutputPath>
+    <IntermediateOutputPath>obj\Release\Portable-Net45+WinRT45+WP8\</IntermediateOutputPath>
+    <DefineConstants>TRACE;NETFX_CORE; USE_SQLITEPCL_RAW; USE_NEW_REFLECTION_API</DefineConstants>
     <DocumentationFile>bin\x86\Release\Portable-Win81+Wpa81\Akavache.Sqlite3.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
