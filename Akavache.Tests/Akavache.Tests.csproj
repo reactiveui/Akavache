@@ -106,6 +106,10 @@
       <Project>{0f6fd159-fea6-4428-8521-781b8a0b31e8}</Project>
       <Name>Akavache.Deprecated_Net45</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj">
+      <Project>{241c47df-ca8e-4296-aa03-2c48bb646abd}</Project>
+      <Name>Akavache.Sqlite3</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_Net45.csproj">
       <Project>{b4e665e5-6caf-4414-a6e2-8de1c3bcf203}</Project>
       <Name>Akavache_Net45</Name>
