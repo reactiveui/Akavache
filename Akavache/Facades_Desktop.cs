@@ -13,7 +13,11 @@ namespace Akavache
         {
             var tcs = new TaskCompletionSource<byte[]>();
             try {
+#if SILVERLIGHT
+                tcs.TrySetResult(ProtectedData.Protect(block, null));
+#else
                 tcs.TrySetResult(ProtectedData.Protect(block, null, DataProtectionScope.CurrentUser));
+#endif
             } catch (Exception ex) {
                 tcs.TrySetException(ex);
             }
@@ -25,7 +29,11 @@ namespace Akavache
         {
             var tcs = new TaskCompletionSource<byte[]>();
             try {
+#if SILVERLIGHT
+                tcs.TrySetResult(ProtectedData.Unprotect(block, null));
+#else
                 tcs.TrySetResult(ProtectedData.Unprotect(block, null, DataProtectionScope.CurrentUser));
+#endif
             } catch (Exception ex) {
                 tcs.TrySetException(ex);
             }
