@@ -44,7 +44,6 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="HttpMixin.cs" />
-    <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
@@ -61,6 +60,8 @@
     <Compile Include="Portable\LoginMixin.cs" />
     <Compile Include="Portable\RelativeTimeMixin.cs" />
     <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="Portable\PortableUtility.cs" />
+    <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />

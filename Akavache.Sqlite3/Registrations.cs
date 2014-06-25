@@ -7,6 +7,7 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
 using Splat;
+using Akavache;
 
 namespace Akavache.Sqlite3
 {

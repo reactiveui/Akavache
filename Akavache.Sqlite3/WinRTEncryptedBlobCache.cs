@@ -1,12 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Reactive;
 using System.Reactive.Concurrency;
-using System.Reactive.Windows.Foundation;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Reactive.Threading.Tasks;
 using System.Reactive.Linq;
 using System.Reflection;
-using Windows.Security.Cryptography.DataProtection;
-using Windows.Storage;
 using Splat;
 
 namespace Akavache.Sqlite3
@@ -24,9 +22,7 @@ namespace Akavache.Sqlite3
                 return Observable.Return(data);
             }
 
-            var dpapi = new DataProtectionProvider("LOCAL=user");
-            return dpapi.ProtectAsync(data.AsBuffer()).ToObservable()
-                .Select(x => x.ToArray());
+            return Encryption.EncryptBlock(data).ToObservable();
         }
 
         protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
@@ -36,9 +32,7 @@ namespace Akavache.Sqlite3
                 return Observable.Return(data);
             }
 
-            var dpapi = new DataProtectionProvider();
-            return dpapi.UnprotectAsync(data.AsBuffer()).ToObservable()
-                .Select(x => x.ToArray());
+            return Encryption.DecryptBlock(data).ToObservable();
         }
     }
 }
