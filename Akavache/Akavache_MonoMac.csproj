@@ -89,6 +89,7 @@
     <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
+    <Compile Include="Facades_Desktop.cs" />
     <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />

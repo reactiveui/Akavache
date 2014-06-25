@@ -81,6 +81,7 @@
     <Compile Include="Utility.cs" />
     <Compile Include="ProtectDataShim.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
+    <Compile Include="Facades_Desktop.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />

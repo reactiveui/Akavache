@@ -83,6 +83,7 @@
     <Compile Include="IsolatedStorageProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
+    <Compile Include="Facades_Desktop.cs" />
     <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />

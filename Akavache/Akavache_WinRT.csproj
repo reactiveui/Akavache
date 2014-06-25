@@ -44,6 +44,7 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Facades_WinRT.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
