@@ -58,7 +58,7 @@ namespace Akavache.Deprecated
 
             if (this.filesystem == null)
             {
-                throw new Exception("No IFilesystemProvider available. This should never happen, your RxUI DependencyResolver is broken");
+                throw new Exception("No IFilesystemProvider available. This should never happen, your DependencyResolver is broken");
             }
 
             this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
