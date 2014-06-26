@@ -52,6 +52,16 @@
     <Compile Include="WinRT\WinRTEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
+      <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
+      <Name>Akavache_WinRT</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <TargetPlatform Include="Windows, Version=8.1" />
+    <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -71,21 +81,11 @@
       <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\portable-win81+wpa81\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Windows.Threading">
-      <HintPath>..\packages\Rx-XAML.2.2.4\lib\portable-win81+wpa81\System.Reactive.Windows.Threading.dll</HintPath>
+      <HintPath>..\packages\Rx-Xaml.2.2.4\lib\portable-win81+wpa81\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.WindowsRuntime">
       <HintPath>..\packages\Rx-WinRT.2.2.4\lib\portable-win81+wpa81\System.Reactive.WindowsRuntime.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_WinRT.csproj">
-      <Project>{57655198-7a38-48a6-bf95-be57b2c3d32d}</Project>
-      <Name>Akavache_WinRT</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <TargetPlatform Include="Windows, Version=8.1" />
-    <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.Akavache.Deprecated_WinRT.config" />

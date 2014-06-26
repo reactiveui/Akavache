@@ -72,9 +72,6 @@
     <Compile Include="WinRT\WinRTShims.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.Akavache_WinRT.config" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -111,5 +108,8 @@
   <ItemGroup>
     <TargetPlatform Include="Windows, Version=8.1" />
     <TargetPlatform Include="WindowsPhoneApp, Version=8.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.Akavache_WinRT.config" />
   </ItemGroup>
 </Project>
