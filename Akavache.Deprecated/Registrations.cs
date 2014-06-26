@@ -38,13 +38,13 @@ namespace Akavache.Deprecated
             userAccount = new Lazy<IBlobCache>(() =>
             {
                 var fs = resolver.GetService<IFilesystemProvider>();
-                return new CPersistentBlobCache(resolver.GetService<IFilesystemProvider>().GetDefaultRoamingCacheDirectory(), fs);
+                return new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs);
             });
 
             secure = new Lazy<ISecureBlobCache>(() =>
             {
                 var fs = resolver.GetService<IFilesystemProvider>();
-                return new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs);
+                return new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), resolver.GetService<IEncryptionProvider>(), fs);
             });
 
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
