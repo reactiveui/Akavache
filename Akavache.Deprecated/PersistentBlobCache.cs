@@ -195,8 +195,6 @@ namespace Akavache.Deprecated
 
             var path = GetPathForKey(key);
             var ret = Observable.Defer(() => filesystem.Delete(path))
-                    .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
-                    .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
                     .Retry(2)
                     .Do(_ => actionTaken.OnNext(Unit.Default));
 
@@ -310,8 +308,7 @@ namespace Akavache.Deprecated
                 .Retry(1)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                .Catch<byte[], FileNotFoundException>(ex => ObservableThrowKeyNotFoundException(key, ex))
-                .Catch<byte[], IsolatedStorageException>(ex => ObservableThrowKeyNotFoundException(key, ex))
+                .Catch<byte[], Exception>(ex => ObservableThrowKeyNotFoundException(key, ex))
                 .Do(_ =>
                 {
                     if (!synchronous && key != BlobCacheIndexKey)

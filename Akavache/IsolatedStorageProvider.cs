@@ -79,6 +79,7 @@ namespace Akavache
                         fs.DeleteFile(path);
                     }
                     catch (FileNotFoundException) { }
+                    catch (IsolatedStorageException) { }
                 }
             }, BlobCache.TaskpoolScheduler);
         }
