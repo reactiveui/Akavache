@@ -26,7 +26,7 @@ namespace Akavache
         public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertObject(key, value, absoluteExpiration);
+            if (objCache != null) return objCache.InsertObject<T>(key, value, absoluteExpiration);
 
             var bytes = SerializeObject(value);
             return This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
@@ -42,7 +42,7 @@ namespace Akavache
         public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertAllObjects(keyValuePairs, absoluteExpiration);
+            if (objCache != null) return objCache.InsertAllObjects<T>(keyValuePairs, absoluteExpiration);
             throw new NotImplementedException();
         }
 
