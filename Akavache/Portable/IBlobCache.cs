@@ -137,6 +137,13 @@ namespace Akavache
     /// </summary>
     public interface ISecureBlobCache : IBlobCache { }
 
+    /// <summary>
+    /// This interface indicates that the underlying BlobCache implementation
+    /// can handle objects and that the type of the object is part of the key. 
+    ///
+    /// By implementing this interface, you must guarantee that the type
+    /// of the object is part of the key.
+    /// </summary>
     public interface IObjectBlobCache : IBlobCache
     {
         /// <summary>
