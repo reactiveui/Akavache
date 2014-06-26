@@ -293,7 +293,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -333,7 +333,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 

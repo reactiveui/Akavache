@@ -25,13 +25,13 @@ namespace Akavache.Sqlite3
 
             var localCache = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).Wait();
-                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
+                return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
 
             var userAccount = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).Wait();
-                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
+                return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
                 

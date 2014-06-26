@@ -9,7 +9,7 @@ using Splat;
 
 namespace Akavache.Sqlite3
 {
-    public class EncryptedBlobCache : SqlitePersistentBlobCache, ISecureBlobCache
+    public class EncryptedBlobCache : SQLitePersistentBlobCache, ISecureBlobCache
     {
         public EncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler)
         {
