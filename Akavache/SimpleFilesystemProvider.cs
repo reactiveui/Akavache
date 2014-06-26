@@ -13,7 +13,7 @@ namespace Akavache
     {
         public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
         {
-            return Utility.SafeOpenFileAsync(path, mode, access, share, scheduler).Select(x => (Stream) x);
+            return Utility.SafeOpenFileAsync(path, mode, access, share, scheduler);
         }
 
         public IObservable<Unit> CreateRecursive(string path)

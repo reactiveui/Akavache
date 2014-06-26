@@ -16,11 +16,6 @@ namespace Akavache
             throw new NotImplementedException();
         }
 
-        public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
-        {
-            throw new NotImplementedException();
-        }
-
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
         {
             throw new NotImplementedException();
