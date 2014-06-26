@@ -45,7 +45,6 @@
     </Compile>
     <Compile Include="HttpMixin.cs" />
     <Compile Include="MD5.cs" />
-    <Compile Include="Facades_WinRT.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
@@ -54,6 +53,7 @@
     <Compile Include="Portable\DependencyResolverMixin.cs" />
     <Compile Include="Portable\HttpMixin.cs" />
     <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\IKeyedOperationQueue.cs" />
     <Compile Include="Portable\JsonSerializationMixin.cs" />
     <Compile Include="Portable\KeyedOperationQueue.cs" />
@@ -67,6 +67,7 @@
     <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
+    <Compile Include="WinRT\WinRTEncryptionProvider.cs" />
     <Compile Include="WinRT\WinRTFilesystemProvider.cs" />
     <Compile Include="WinRT\WinRTShims.cs" />
   </ItemGroup>
@@ -102,9 +103,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-WinRT.2.2.4\lib\windows8\System.Reactive.WindowsRuntime.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.Akavache_WinRT80.config" />

@@ -156,6 +156,8 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />
@@ -166,7 +168,6 @@
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
-    <Compile Include="Facades_Desktop.cs" />
     <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
@@ -184,7 +185,7 @@
     <Compile Include="Portable\RelativeTimeMixin.cs" />
     <Compile Include="Portable\PortableUtility.cs" />
     <Compile Include="Portable\TestBlobCache.cs" />
-    <Compile Include="AndroidFilesystemProvider.cs" />
+    <Compile Include="Android\AndroidFilesystemProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>

@@ -44,7 +44,6 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Facades.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
@@ -53,6 +52,7 @@
     <Compile Include="Portable\DependencyResolverMixin.cs" />
     <Compile Include="Portable\HttpMixin.cs" />
     <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\IKeyedOperationQueue.cs" />
     <Compile Include="Portable\JsonSerializationMixin.cs" />
     <Compile Include="Portable\KeyedOperationQueue.cs" />
