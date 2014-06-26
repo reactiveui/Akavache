@@ -49,7 +49,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Monotouch", "Akava
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_WinRT", "Akavache.Mobile\Akavache.Mobile_WinRT.csproj", "{3CC2AFD6-D25F-4C8E-BD4B-31486F368365}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Deprecated_WinRT", "Akavache.Deprecated\Akavache.Deprecated_WinRT.csproj", "{1FE2625D-844E-4224-B6BC-4E9246AF9C62}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Deprecated", "Akavache.Deprecated\Akavache.Deprecated.csproj", "{1FE2625D-844E-4224-B6BC-4E9246AF9C62}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Deprecated_WinRT80", "Akavache.Deprecated\Akavache.Deprecated_WinRT80.csproj", "{1FE7BA0A-C5FF-4074-AC63-5774878BE7E1}"
 EndProject
