@@ -25,10 +25,21 @@ namespace Akavache
         {
 #if SILVERLIGHT || XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
+#elif WINRT
+            var fs = new WinRTFilesystemProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
             resolver.Register(() => fs, typeof(IFilesystemProvider), null);
+
+#if WP8
+            var enc = new WP8EncryptionProvider();
+#elif WINRT
+            var enc = new WinRTEncryptionProvider();
+#else
+            var enc = new EncryptionProvider();
+#endif
+            resolver.Register(() => enc, typeof(IEncryptionProvider), null);
 
             var localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
             var userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
