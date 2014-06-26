@@ -13,53 +13,46 @@ namespace Akavache.Deprecated
 {
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
+        private readonly IEncryptionProvider encryption;
+
         protected EncryptedBlobCache(
-            string cacheDirectory = null, 
+            string cacheDirectory = null,
+            IEncryptionProvider encryptionProvider = null,
             IFilesystemProvider filesystemProvider = null, 
             IScheduler scheduler = null,
             Action<AsyncSubject<byte[]>> invalidatedCallback = null) 
             : base(cacheDirectory, filesystemProvider, scheduler, invalidatedCallback)
         {
+            this.encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>();
+
+            if (this.encryption == null)
+            {
+                throw new Exception("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
+            }
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
-            try
+            if (data.Length == 0)
             {
-#if SILVERLIGHT
-                var ret = Observable.Return(ProtectedData.Protect(data, null));
-#else
-                var ret = Observable.Return(ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser));
-#endif
-                return ret;
-            } 
-            catch(Exception ex)
-            {
-                return Observable.Throw<byte[]>(ex);
+                return Observable.Return(data);
             }
-            
+
+            return this.encryption.EncryptBlock(data);
         }
 
         protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
-            try
+            if (data.Length == 0)
             {
-#if SILVERLIGHT
-                var ret = Observable.Return(ProtectedData.Unprotect(data, null));
-#else
-                var ret = Observable.Return(ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser));
-#endif
-                return ret;
-            } 
-            catch(Exception ex)
-            {
-                return Observable.Throw<byte[]>(ex);
+                return Observable.Return(data);
             }
-        }
 
+            return this.encryption.DecryptBlock(data);
+        }
     }
 
     class CEncryptedBlobCache : EncryptedBlobCache {
-        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fsProvider) : base(cacheDirectory, fsProvider, BlobCache.TaskpoolScheduler) { }
+        public CEncryptedBlobCache(string cacheDirectory, IEncryptionProvider encryption, IFilesystemProvider fsProvider) : base(cacheDirectory, encryption, fsProvider, BlobCache.TaskpoolScheduler) { }
     }
 }
