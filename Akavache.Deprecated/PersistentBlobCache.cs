@@ -17,7 +17,7 @@ using Splat;
 using System.Collections.Concurrent;
 using Akavache;
 
-#if SILVERLIGHT
+#if WP8
 using Akavache.Internal;
 #endif
 
@@ -54,7 +54,7 @@ namespace Akavache.Deprecated
         {
             BlobCache.EnsureInitialized();
 
-            this.filesystem = filesystemProvider ?? Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
+            this.filesystem = filesystemProvider ?? Locator.Current.GetService<IFilesystemProvider>();
 
             if (this.filesystem == null)
             {
