@@ -304,7 +304,7 @@ namespace Akavache.Deprecated
 
             Func<IObservable<byte[]>> readResult = () => 
                 Observable.Defer(() => 
-                    filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler))
+                    filesystem.OpenFileForReadAsync(GetPathForKey(key), scheduler))
                 .Retry(1)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
@@ -337,7 +337,7 @@ namespace Akavache.Deprecated
             Func<IObservable<byte[]>> writeResult = () => BeforeWriteToDiskFilter(byteData, scheduler)
                 .Select(x => new MemoryStream(x))
                 .Zip(Observable.Defer(() => 
-                        filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler))
+                        filesystem.OpenFileForWriteAsync(path, scheduler))
                         .Retry(1),
                     (from, to) => new {from, to})
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
