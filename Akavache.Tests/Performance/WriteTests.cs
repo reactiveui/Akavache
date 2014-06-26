@@ -20,16 +20,55 @@ namespace Akavache.Tests.Performance
         [Fact]
         public async Task SequentialSimpleWrites()
         {
+            await GeneratePerfRangesForBlock(async (cache, size) => {
+                var toWrite = PerfHelper.GenerateRandomDatabaseContents(size);
+
+                var st = new Stopwatch();
+                st.Start();
+
+                foreach (var kvp in toWrite) {
+                    await cache.Insert(kvp.Key, kvp.Value);
+                }
+
+                st.Stop();
+                return st.ElapsedMilliseconds;
+            });
         }
 
         [Fact]
         public async Task SequentialBulkWrites()
         {
+            await GeneratePerfRangesForBlock(async (cache, size) => {
+                var toWrite = PerfHelper.GenerateRandomDatabaseContents(size);
+
+                var st = new Stopwatch();
+                st.Start();
+
+                await cache.Insert(toWrite);
+
+                st.Stop();
+                return st.ElapsedMilliseconds;
+            });
+
         }
 
         [Fact]
         public async Task ParallelSimpleWrites()
         { 
+            await GeneratePerfRangesForBlock(async (cache, size) => {
+                var toWrite = PerfHelper.GenerateRandomDatabaseContents(size);
+
+                var st = new Stopwatch();
+                st.Start();
+
+                await toWrite.ToObservable(BlobCache.TaskpoolScheduler)
+                    .Select(x => Observable.Defer(() => cache.Insert(x.Key, x.Value)))
+                    .Merge(32)
+                    .ToArray();
+
+                st.Stop();
+                return st.ElapsedMilliseconds;
+            });
         }
 
         public async Task GeneratePerfRangesForBlock(Func<IBlobCache, int, Task<long>> block)
@@ -56,7 +95,7 @@ namespace Akavache.Tests.Performance
         }
     }
 
-    public class Sqlite3ReadTests : WriteTests
+    public class Sqlite3WriteTests : WriteTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {

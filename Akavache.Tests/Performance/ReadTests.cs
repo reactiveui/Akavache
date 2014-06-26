@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Akavache.Tests.Performance
 {
-    public abstract class WriteTests
+    public abstract class ReadTests
     {
         protected abstract IBlobCache CreateBlobCache(string path);
         readonly Random prng = new Random();
@@ -127,7 +127,7 @@ namespace Akavache.Tests.Performance
 
     }
 
-    public class Sqlite3WriteTests : WriteTests
+    public class Sqlite3ReadTests : ReadTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {

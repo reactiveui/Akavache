@@ -20,11 +20,7 @@ namespace Akavache.Tests.Performance
             while (size > 0)
             {
                 var toWriteSize = Math.Min(4096, size);
-
-                var toWrite = Enumerable.Range(0, toWriteSize)
-                    .Select(_ => GenerateRandomKey())
-                    .Distinct()
-                    .ToDictionary(k => k, _ => GenerateRandomBytes());
+                var toWrite = GenerateRandomDatabaseContents(toWriteSize);
 
                 await targetCache.Insert(toWrite);
 
@@ -35,6 +31,16 @@ namespace Akavache.Tests.Performance
             }
 
             return ret;
+        }
+
+        public static Dictionary<string, byte[]> GenerateRandomDatabaseContents(int toWriteSize)
+        {
+            var toWrite = Enumerable.Range(0, toWriteSize)
+                .Select(_ => GenerateRandomKey())
+                .Distinct()
+                .ToDictionary(k => k, _ => GenerateRandomBytes());
+
+            return toWrite;
         }
 
         public static byte[] GenerateRandomBytes()
