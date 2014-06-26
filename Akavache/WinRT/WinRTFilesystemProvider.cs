@@ -16,7 +16,7 @@ using Splat;
 
 namespace Akavache
 {
-    public class SimpleFilesystemProvider : IFilesystemProvider, IEnableLogger
+    public class WinRTFilesystemProvider : IFilesystemProvider, IEnableLogger
     {
         readonly IDictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>> openFileStrategies
             = new Dictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>>
@@ -83,7 +83,7 @@ namespace Akavache
             return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
         }
 
-	public string GetDefaultSecretCacheDirectory()
+	    public string GetDefaultSecretCacheDirectory()
         {
             return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "SecretCache");
         }
