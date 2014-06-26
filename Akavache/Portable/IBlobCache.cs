@@ -160,10 +160,8 @@ namespace Akavache
         /// serializer.
         /// </summary>
         /// <param name="key">The key to look up in the cache.</param>
-        /// <param name="noTypePrefix">Use the exact key name instead of a
-        /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<T> GetObject<T>(string key, bool noTypePrefix = false);
+        IObservable<T> GetObject<T>(string key);
 
         /// <summary>
         /// Return all objects of a specific Type in the cache.
@@ -214,10 +212,8 @@ namespace Akavache
         /// serializer.
         /// </summary>
         /// <param name="keys">The key to look up in the cache.</param>
-        /// <param name="noTypePrefix">Use the exact key name instead of a
-        /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false);
+        IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys);
 
         /// <summary>
         /// Invalidates several objects from the cache. It is important that the Type
