@@ -9,9 +9,9 @@ using Splat;
 
 namespace Akavache.Sqlite3
 {
-    public class EncryptedBlobCache : SQLitePersistentBlobCache, ISecureBlobCache
+    public class SQLiteEncryptedBlobCache : SQLitePersistentBlobCache, ISecureBlobCache
     {
-        public EncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler)
+        public SQLiteEncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler)
         {
         }
 

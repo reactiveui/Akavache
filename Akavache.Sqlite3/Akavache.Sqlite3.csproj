@@ -26,7 +26,7 @@
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SQLitePersistentBlobCache.cs" />
-    <Compile Include="WinRTEncryptedBlobCache.cs" />
+    <Compile Include="SQLiteEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">
