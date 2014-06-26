@@ -273,7 +273,7 @@ namespace Akavache.Tests
 
     public class TEncryptedBlobCache : EncryptedBlobCache
     {
-        public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
+        public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, null, scheduler) { }
     }
 
     public class PersistentBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
@@ -304,7 +304,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
+            return new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
         }
     }
 }

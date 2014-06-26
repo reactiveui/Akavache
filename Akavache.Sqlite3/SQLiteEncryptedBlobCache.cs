@@ -1,27 +1,19 @@
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.IO;
+using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Reactive.Threading.Tasks;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Reflection;
-using System.Security.Cryptography;
 using Splat;
-using Akavache;
 
-namespace Akavache.Deprecated
+namespace Akavache.Sqlite3
 {
-    public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
+    public class SQLiteEncryptedBlobCache : SQLitePersistentBlobCache, ISecureBlobCache
     {
         private readonly IEncryptionProvider encryption;
 
-        protected EncryptedBlobCache(
-            string cacheDirectory = null,
-            IEncryptionProvider encryptionProvider = null,
-            IFilesystemProvider filesystemProvider = null, 
-            IScheduler scheduler = null,
-            Action<AsyncSubject<byte[]>> invalidatedCallback = null) 
-            : base(cacheDirectory, filesystemProvider, scheduler, invalidatedCallback)
+        public SQLiteEncryptedBlobCache(string databaseFile, IEncryptionProvider encryptionProvider = null, IScheduler scheduler = null) : base(databaseFile, scheduler)
         {
             this.encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>();
 
@@ -50,9 +42,5 @@ namespace Akavache.Deprecated
 
             return this.encryption.DecryptBlock(data);
         }
-    }
-
-    class CEncryptedBlobCache : EncryptedBlobCache {
-        public CEncryptedBlobCache(string cacheDirectory, IEncryptionProvider encryption, IFilesystemProvider fsProvider) : base(cacheDirectory, encryption, fsProvider, BlobCache.TaskpoolScheduler) { }
     }
 }

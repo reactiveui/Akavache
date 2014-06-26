@@ -192,7 +192,7 @@ namespace Akavache.Tests
             public EncryptedBlobCacheTester(
                 string cacheDirectory = null,
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
-                : base(cacheDirectory, null, null, invalidatedCallback)
+                : base(cacheDirectory, null, null, null, invalidatedCallback)
             {
             }
         }

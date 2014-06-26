@@ -17,7 +17,7 @@ using Splat;
 using System.Collections.Concurrent;
 using Akavache;
 
-#if SILVERLIGHT
+#if WP8
 using Akavache.Internal;
 #endif
 
@@ -54,11 +54,11 @@ namespace Akavache.Deprecated
         {
             BlobCache.EnsureInitialized();
 
-            this.filesystem = filesystemProvider ?? Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
+            this.filesystem = filesystemProvider ?? Locator.Current.GetService<IFilesystemProvider>();
 
             if (this.filesystem == null)
             {
-                throw new Exception("No IFilesystemProvider available. This should never happen, your RxUI DependencyResolver is broken");
+                throw new Exception("No IFilesystemProvider available. This should never happen, your DependencyResolver is broken");
             }
 
             this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();

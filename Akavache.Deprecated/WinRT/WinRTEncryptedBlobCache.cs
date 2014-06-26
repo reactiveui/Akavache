@@ -13,9 +13,17 @@ namespace Akavache.Deprecated
 {
     public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
-        protected EncryptedBlobCache(string cacheDirectory = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null)
+        private readonly IEncryptionProvider encryption;
+
+        protected EncryptedBlobCache(string cacheDirectory = null, IEncryptionProvider encryptionProvider = null, IFilesystemProvider filesystemProvider = null, IScheduler scheduler = null)
             : base(cacheDirectory, filesystemProvider, scheduler)
         {
+            this.encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>();
+
+            if (this.encryption == null)
+            {
+                throw new Exception("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
+            }
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
@@ -25,9 +33,7 @@ namespace Akavache.Deprecated
                 return Observable.Return(data);
             }
 
-            var dpapi = new DataProtectionProvider("LOCAL=user");
-            return dpapi.ProtectAsync(data.AsBuffer()).ToObservable()
-                .Select(x => x.ToArray());
+            return this.encryption.EncryptBlock(data);
         }
 
         protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
@@ -37,9 +43,7 @@ namespace Akavache.Deprecated
                 return Observable.Return(data);
             }
 
-            var dpapi = new DataProtectionProvider();
-            return dpapi.UnprotectAsync(data.AsBuffer()).ToObservable()
-                .Select(x => x.ToArray());
+            return this.encryption.DecryptBlock(data);
         }
 
         protected static string GetDefaultCacheDirectory()
@@ -50,6 +54,6 @@ namespace Akavache.Deprecated
 
     class CEncryptedBlobCache : EncryptedBlobCache
     {
-        public CEncryptedBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, BlobCache.TaskpoolScheduler) { }
+        public CEncryptedBlobCache(string cacheDirectory, IEncryptionProvider encryption, IFilesystemProvider fs) : base(cacheDirectory, encryption, fs, BlobCache.TaskpoolScheduler) { }
     }
 }

@@ -21,7 +21,7 @@ namespace Akavache.Sqlite3
     /// This class represents an IBlobCache backed by a SQLite3 database, and
     /// it is the default (and best!) implementation.
     /// </summary>
-    public class SqlitePersistentBlobCache : IObjectBlobCache, IObjectBulkBlobCache, IEnableLogger
+    public class SQLitePersistentBlobCache : IObjectBlobCache, IObjectBulkBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
         public SQLiteAsyncConnection Connection { get; private set; }
@@ -30,7 +30,7 @@ namespace Akavache.Sqlite3
         readonly IObservable<Unit> _initializer;
         bool disposed = false;
 
-        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
+        public SQLitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
             Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
 

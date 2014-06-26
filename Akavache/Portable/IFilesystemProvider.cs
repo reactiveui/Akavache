@@ -59,4 +59,40 @@ namespace Akavache
         /// <returns>The default roaming cache directory.</returns>
         string GetDefaultSecretCacheDirectory();
     }
+
 }
+
+// NB: I literally hate you to death, WinRT
+#if PORTABLE || NETFX_CORE
+namespace System.IO
+{
+    public enum FileMode
+    {
+        CreateNew = 1,
+        Create = 2,
+        Open = 3,
+        OpenOrCreate = 4,
+        Truncate = 5,
+        Append = 6,
+    }
+
+    [Flags]
+    public enum FileAccess
+    {
+        Read = 1,
+        Write = 2,
+        ReadWrite = 3,
+    }
+
+    [Flags]
+    public enum FileShare
+    {
+        None = 0,
+        Read = 1,
+        Write = 2,
+        ReadWrite = 3,
+        Delete = 4,
+        Inheritable = 16,
+    }
+}
+#endif

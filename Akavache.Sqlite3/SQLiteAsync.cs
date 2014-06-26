@@ -49,18 +49,22 @@ namespace Akavache.Sqlite3.Internal
         IObservable<T> FirstOrDefaultAsync ();
     }
 
-    public class SQLiteAsyncConnection
+    public partial class SQLiteAsyncConnection
     {
         SQLiteConnectionString _connectionString;
         SQLiteConnectionPool _pool;
-        SQLiteOpenFlags _flags;
-
-        public SQLiteAsyncConnection (string databasePath, SQLiteOpenFlags? flags = null, bool storeDateTimeAsTicks = false)
+        SQLiteOpenFlags _openFlags;
+		
+		public SQLiteAsyncConnection(string databasePath, bool storeDateTimeAsTicks = false)
+            : this(databasePath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex | SQLiteOpenFlags.SharedCache, storeDateTimeAsTicks)
         {
-            _flags = flags ?? (SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.NoMutex | SQLiteOpenFlags.SharedCache);
+        }
 
+        public SQLiteAsyncConnection(string databasePath, SQLiteOpenFlags openFlags, bool storeDateTimeAsTicks = false)
+        {
+            _openFlags = openFlags;
             _connectionString = new SQLiteConnectionString (databasePath, storeDateTimeAsTicks);
-            _pool = new SQLiteConnectionPool(_connectionString, _flags);
+            _pool = new SQLiteConnectionPool(_connectionString, _openFlags);
         }
 
         public IObservable<CreateTablesResult> CreateTableAsync<T> ()
@@ -199,6 +203,13 @@ namespace Akavache.Sqlite3.Internal
             });
         }
 
+        public IObservable<int> UpdateAllAsync(IEnumerable items)
+        {
+            return _pool.EnqueueConnectionOp(conn => {
+                return conn.UpdateAll(items);
+            });
+        }
+
         public IObservable<Unit> RunInTransactionAsync(Action<SQLiteConnection> action)
         {
             return _pool.EnqueueConnectionOp(conn => {
@@ -246,7 +257,7 @@ namespace Akavache.Sqlite3.Internal
         }
     }
 
-    public class SQLiteConnectionPool : IDisposable
+    class SQLiteConnectionPool : IDisposable
     {
         readonly int connectionCount;
         readonly Tuple<SQLiteConnectionString, SQLiteOpenFlags> connInfo;
@@ -346,7 +357,7 @@ namespace Akavache.Sqlite3.Internal
         }
     }
 
-    public class SQLiteConnectionWithoutLock : SQLiteConnection
+    class SQLiteConnectionWithoutLock : SQLiteConnection
     {
         public SQLiteConnectionWithoutLock (SQLiteConnectionString connectionString, SQLiteOpenFlags flags)
             : base (connectionString.DatabasePath, flags, connectionString.StoreDateTimeAsTicks)
