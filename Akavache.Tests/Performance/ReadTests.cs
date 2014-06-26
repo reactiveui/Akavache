@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Akavache.Tests.Performance
 {
-    public abstract class ReadTests
+    public abstract class WriteTests
     {
         protected abstract IBlobCache CreateBlobCache(string path);
         readonly Random prng = new Random();
@@ -96,7 +96,7 @@ namespace Akavache.Tests.Performance
                 var keys = await cache.GetAllKeys();
                 dbName = dbName ?? cache.GetType().Name;
 
-                foreach (var size in GetPerfRanges())
+                foreach (var size in PerfHelper.GetPerfRanges())
                 {
                     results[size] = await block(cache, size, keys);
                 }
@@ -108,71 +108,26 @@ namespace Akavache.Tests.Performance
             }
         }
 
-        async Task<List<string>> GenerateDatabase(IBlobCache targetCache, int size)
-        {
-            var ret = new List<string>();
-
-            // Write out in groups of 4096
-            while (size > 0)
-            {
-                var toWriteSize = Math.Min(4096, size);
-
-                var toWrite = Enumerable.Range(0, toWriteSize)
-                    .Select(_ => GenerateRandomKey())
-                    .Distinct()
-                    .ToDictionary(k => k, _ => GenerateRandomBytes());
-
-                await targetCache.Insert(toWrite);
-
-                foreach (var k in toWrite.Keys) ret.Add(k);
-
-                size -= toWrite.Count;
-                Console.WriteLine(size);
-            }
-
-            return ret;
-        }
-
-        byte[] GenerateRandomBytes()
-        {
-            var ret = new byte[prng.Next(1, 256)];
-
-            prng.NextBytes(ret);
-            return ret;
-        }
-
-        string GenerateRandomKey()
-        {
-            var bytes = GenerateRandomBytes();
-
-            // NB: Mask off the MSB and set bit 5 so we always end up with
-            // valid UTF-8 characters that aren't control characters
-            for (int i = 0; i < bytes.Length; i++) { bytes[i] = (byte)((bytes[i] & 0x7F) | 0x20); }
-            return Encoding.UTF8.GetString(bytes, 0, Math.Min(256, bytes.Length));
-        }
-
-        int[] GetPerfRanges()
-        {
-            return new[] { 1, 10, 100, 1000, 10000, 100000, };
-        }
-
         async Task<IBlobCache> GenerateAGiantDatabase(string path)
         {
             path = path ?? IntegrationTestHelper.GetIntegrationTestRootDirectory();
 
-            var giantDbSize = GetPerfRanges().Last();
+            var giantDbSize = PerfHelper.GetPerfRanges().Last();
             var cache = CreateBlobCache(path);
 
             var keys = await cache.GetAllKeys();
             if (keys.Count == giantDbSize) return cache;;
 
             await cache.InvalidateAll();
-            await GenerateDatabase(cache, giantDbSize);
+            await PerfHelper.GenerateDatabase(cache, giantDbSize);
+
             return cache;
         }
+
+
     }
 
-    public class Sqlite3ReadTests : ReadTests
+    public class Sqlite3WriteTests : WriteTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
