@@ -5,17 +5,16 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
-using System.Security.Cryptography;
 using Splat;
 using Akavache;
 
 namespace Akavache.Deprecated
 {
-    public abstract class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
+    public class EncryptedBlobCache : PersistentBlobCache, ISecureBlobCache
     {
         private readonly IEncryptionProvider encryption;
 
-        protected EncryptedBlobCache(
+        public EncryptedBlobCache(
             string cacheDirectory = null,
             IEncryptionProvider encryptionProvider = null,
             IFilesystemProvider filesystemProvider = null, 
@@ -50,9 +49,5 @@ namespace Akavache.Deprecated
 
             return this.encryption.DecryptBlock(data);
         }
-    }
-
-    class CEncryptedBlobCache : EncryptedBlobCache {
-        public CEncryptedBlobCache(string cacheDirectory, IEncryptionProvider encryption, IFilesystemProvider fsProvider) : base(cacheDirectory, encryption, fsProvider, BlobCache.TaskpoolScheduler) { }
     }
 }

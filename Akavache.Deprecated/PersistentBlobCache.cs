@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -16,10 +15,7 @@ using Newtonsoft.Json;
 using Splat;
 using System.Collections.Concurrent;
 using Akavache;
-
-#if WP8
 using Akavache.Internal;
-#endif
 
 namespace Akavache.Deprecated
 {
@@ -27,7 +23,7 @@ namespace Akavache.Deprecated
     /// This class represents an asynchronous key-value store backed by a 
     /// directory. It stores the last 'n' key requests in memory.
     /// </summary>
-    public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
+    public class PersistentBlobCache : IBlobCache, IEnableLogger
     {
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
 
@@ -46,7 +42,7 @@ namespace Akavache.Deprecated
 
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
 
-        protected PersistentBlobCache(
+        public PersistentBlobCache(
             string cacheDirectory = null, 
             IFilesystemProvider filesystemProvider = null, 
             IScheduler scheduler = null,
@@ -72,19 +68,7 @@ namespace Akavache.Deprecated
             memoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
                 (x, c) => FetchOrWriteBlobFromDisk(x, c, false), 20, invalidateCallback);
 
-            try
-            {
-                var dir = filesystem.CreateRecursive(CacheDirectory);
-#if WINRT
-                // NB: I don't want to talk about it.
-                dir.Wait();
-#endif
-            }
-            catch (Exception ex)
-            {
-                this.Log().FatalException("Couldn't create cache directory", ex);
-            }
-
+            
             var cacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
@@ -92,11 +76,7 @@ namespace Akavache.Deprecated
                      .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x));
 
-#if WINRT
-            CacheIndex = cacheIndex.First();
-#else
             cacheIndex.Subscribe(x => CacheIndex = x);
-#endif
 
             flushThreadSubscription = Disposable.Empty;
 
@@ -421,10 +401,5 @@ namespace Akavache.Deprecated
                 new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
         }
-    }
-
-    class CPersistentBlobCache : PersistentBlobCache
-    {
-        public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, BlobCache.TaskpoolScheduler) { }
     }
 }
