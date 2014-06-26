@@ -21,7 +21,9 @@ namespace Akavache
 
         public static async Task<byte[]> DecryptBlock(byte[] block)
         {
-            var dpapi = new DataProtectionProvider("LOCAL=user");
+            // Do not include a protectionDescriptor
+            // http://msdn.microsoft.com/en-us/library/windows/apps/windows.security.cryptography.dataprotection.dataprotectionprovider.unprotectasync.aspx
+            var dpapi = new DataProtectionProvider();
             var ret = await dpapi.UnprotectAsync(block.AsBuffer());
             return ret.ToArray();
         }
