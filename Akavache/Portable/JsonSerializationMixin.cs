@@ -108,7 +108,7 @@ namespace Akavache
             return This.GetObject<T>(key).Catch<T, Exception>(_ =>
             {
                 object dontcare;
-                var prefixedKey = This.GetHashCode().ToString() + GetTypePrefixedKey(key, typeof(T));
+                var prefixedKey = This.GetHashCode().ToString() + key;
 
                 var result = Observable.Defer(() => fetchFunc())
                     .Do(x => This.InsertObject(key, x, absoluteExpiration))
