@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7D1CF390-3620-4B79-AC2E-003AF152C48F}</ProjectGuid>
+    <ProjectGuid>{47D34AB1-5188-4D8C-B24F-3151C67CC8CC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache.Mobile</RootNamespace>
