@@ -26,7 +26,7 @@ namespace Akavache
                 Locator.CurrentMutable.InitializeAkavache();
             });
                
-            InMemory = new TestBlobCache(Scheduler.Default);
+            InMemory = new InMemoryBlobCache(Scheduler.Default);
         }
 
         /// <summary>

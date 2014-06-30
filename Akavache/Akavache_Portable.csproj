@@ -62,7 +62,7 @@
     <Compile Include="Portable\PortableUtility.cs" />
     <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Portable\RelativeTimeMixin.cs" />
-    <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="Portable\InMemoryBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

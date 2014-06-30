@@ -15,21 +15,21 @@ namespace Akavache
     /// This class is an IBlobCache backed by a simple in-memory Dictionary.
     /// Use it for testing / mocking purposes
     /// </summary>
-    public class TestBlobCache : ISecureBlobCache
+    public class InMemoryBlobCache : ISecureBlobCache
     {
-        public TestBlobCache() : this(null, null)
+        public InMemoryBlobCache() : this(null, null)
         {
         }
 
-        public TestBlobCache(IScheduler scheduler) : this(scheduler, null)
+        public InMemoryBlobCache(IScheduler scheduler) : this(scheduler, null)
         {
         }
 
-        public TestBlobCache(IEnumerable<KeyValuePair<string, byte[]>> initialContents) : this(null, initialContents)
+        public InMemoryBlobCache(IEnumerable<KeyValuePair<string, byte[]>> initialContents) : this(null, initialContents)
         {
         }
 
-        public TestBlobCache(IScheduler scheduler, IEnumerable<KeyValuePair<string, byte[]>> initialContents)
+        public InMemoryBlobCache(IScheduler scheduler, IEnumerable<KeyValuePair<string, byte[]>> initialContents)
         {
             Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
@@ -38,7 +38,7 @@ namespace Akavache
             }
         }
 
-        internal TestBlobCache(Action disposer, 
+        internal InMemoryBlobCache(Action disposer, 
             IScheduler scheduler, 
             IEnumerable<KeyValuePair<string, byte[]>> initialContents)
             : this(scheduler, initialContents)
@@ -64,7 +64,7 @@ namespace Akavache
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
                 cache[key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, absoluteExpiration), data);
@@ -174,7 +174,7 @@ namespace Akavache
             disposed = true;
         }
 
-        public static TestBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
+        public static InMemoryBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
@@ -187,7 +187,7 @@ namespace Akavache
                 BlobCache.UserAccount = user;
             });
 
-            var testCache = new TestBlobCache(resetBlobCache, scheduler, initialContents);
+            var testCache = new InMemoryBlobCache(resetBlobCache, scheduler, initialContents);
             BlobCache.LocalMachine = testCache;
             BlobCache.Secure = testCache;
             BlobCache.UserAccount = testCache;
@@ -195,12 +195,12 @@ namespace Akavache
             return testCache;
         }
 
-        public static TestBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler scheduler = null)
+        public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler scheduler = null)
         {
             return OverrideGlobals(scheduler, initialContents.ToArray());
         }
 
-        public static TestBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler scheduler = null)
+        public static InMemoryBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler scheduler = null)
         {
             var initialSerializedContents = initialContents
                 .Select(item => new KeyValuePair<string, byte[]>(item.Key, JsonSerializationMixin.SerializeObject(item.Value)))
