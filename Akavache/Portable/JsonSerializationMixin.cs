@@ -293,8 +293,8 @@ namespace Akavache
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) return objCache.InvalidateAllObjects<T>();
-            var ret = new AsyncSubject<Unit>();
 
+            var ret = new AsyncSubject<Unit>();
             This.GetAllKeys()
                 .SelectMany(x => 
                     x.Where(y => y.StartsWith(GetTypePrefixedKey("", typeof(T))))
