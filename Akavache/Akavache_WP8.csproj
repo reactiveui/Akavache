@@ -59,6 +59,7 @@
     <Compile Include="IsolatedStorageProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
+    <Compile Include="Portable\ExceptionHelper.cs" />
     <Compile Include="Portable\InMemoryBlobCache.cs" />
     <Compile Include="WP8\WP8EncryptionProvider.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />

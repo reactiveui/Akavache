@@ -151,6 +151,7 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="Portable\ExceptionHelper.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\InMemoryBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

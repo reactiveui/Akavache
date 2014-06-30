@@ -44,6 +44,7 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Portable\ExceptionHelper.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\InMemoryBlobCache.cs" />
     <Compile Include="WinRT\WinRTEncryptionProvider.cs" />

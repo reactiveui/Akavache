@@ -92,6 +92,7 @@
     <Compile Include="Portable\BulkOperationsMixin.cs" />
     <Compile Include="Portable\ConcurrentDictionary.cs" />
     <Compile Include="Portable\DependencyResolverMixin.cs" />
+    <Compile Include="Portable\ExceptionHelper.cs" />
     <Compile Include="Portable\HttpMixin.cs" />
     <Compile Include="Portable\IBlobCache.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />
