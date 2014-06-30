@@ -152,7 +152,7 @@ namespace Akavache
             return ret.ToTask();
         }
 
-        #if PORTABLE
+#if PORTABLE
         static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 
         {
@@ -168,13 +168,13 @@ namespace Akavache
             }
             set { TaskpoolOverride = value; }
         }
-        #else
+#else
         static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 
         {
             get { return TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default; }
             set { TaskpoolOverride = value; }
         }
-        #endif
+#endif
     }
 }

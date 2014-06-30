@@ -31,7 +31,7 @@ namespace Akavache
 
         public InMemoryBlobCache(IScheduler scheduler, IEnumerable<KeyValuePair<string, byte[]>> initialContents)
         {
-            Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
+            Scheduler = scheduler ?? CurrentThreadScheduler.Instance;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
             {
                 cache[item.Key] = new CacheEntry(null, item.Value, Scheduler.Now, null);
@@ -118,7 +118,7 @@ namespace Akavache
             return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
             if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>("InMemoryBlobCache");
 
@@ -169,7 +169,7 @@ namespace Akavache
             return Observable.Return(Unit.Default);
         }
 
-        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key)
         {
             if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<T>("InMemoryBlobCache");
 
@@ -181,31 +181,53 @@ namespace Akavache
                     return ExceptionHelper.ObservableThrowKeyNotFoundException<T>(key);
                 }
             }
+            if (entry.ExpiresAt != null && Scheduler.Now > entry.ExpiresAt.Value)
+            {
+                cache.Remove(key);
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<T>(key);
+            }
 
             T obj = DeserializeObject<T>(entry.Value);
 
             return Observable.Return(obj, Scheduler);
         }
 
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return this.GetCreatedAt(key);
+        }
+
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
             if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>("InMemoryBlobCache");
 
-            throw new NotImplementedException();
+            lock (cache)
+            {
+                return Observable.Return(cache
+                    .Where(x => x.Value.TypeName == typeof(T).FullName && (x.Value.ExpiresAt == null || x.Value.ExpiresAt >= Scheduler.Now))
+                    .Select(x => DeserializeObject<T>(x.Value.Value))
+                    .ToList(), Scheduler);
+            }
         }
 
         public IObservable<Unit> InvalidateObject<T>(string key)
         {
             if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
 
-            throw new NotImplementedException();
+            return this.Invalidate(key);
         }
 
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
 
-            throw new NotImplementedException();
+            lock (cache)
+            {
+                var toDelete = cache.Where(x => x.Value.TypeName == typeof(T).FullName);
+                foreach(var obj in toDelete) cache.Remove(obj.Key);
+            }
+
+            return Observable.Return(Unit.Default);
         }
 
         public IObservable<Unit> Vacuum()
@@ -214,7 +236,7 @@ namespace Akavache
 
             lock (cache)
             {
-                var toDelete = cache.Where(x => x.Value.ExpiresAt >= Scheduler.Now).ToArray();
+                var toDelete = cache.Where(x => x.Value.ExpiresAt >= Scheduler.Now);
                 foreach (var kvp in toDelete) cache.Remove(kvp.Key);
             }
 
