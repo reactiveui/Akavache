@@ -305,6 +305,11 @@ namespace Akavache.Sqlite3
             }
         }
 
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return this.GetCreatedAt(key);
+        }
+
         public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
         {
             if (disposed) return Observable.Throw<IDictionary<string, T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
