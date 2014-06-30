@@ -52,7 +52,6 @@
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
-    <Compile Include="Portable\CacheIndexEntry.cs" />
     <Compile Include="Portable\ConcurrentDictionary.cs" />
     <Compile Include="Portable\DependencyResolverMixin.cs" />
     <Compile Include="Portable\HttpMixin.cs" />

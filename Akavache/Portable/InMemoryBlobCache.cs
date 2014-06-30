@@ -34,7 +34,7 @@ namespace Akavache
             Scheduler = scheduler ?? System.Reactive.Concurrency.Scheduler.CurrentThread;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
             {
-                cache[item.Key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, null), item.Value);
+                cache[item.Key] = new CacheEntry(null, item.Value, Scheduler.Now, null);
             }
         }
 
@@ -60,14 +60,14 @@ namespace Akavache
 
         readonly IDisposable inner;
         bool disposed;
-        Dictionary<string, Tuple<CacheIndexEntry, byte[]>> cache = new Dictionary<string, Tuple<CacheIndexEntry, byte[]>>();
+        Dictionary<string, CacheEntry> cache = new Dictionary<string, CacheEntry>();
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
-                cache[key] = new Tuple<CacheIndexEntry, byte[]>(new CacheIndexEntry(Scheduler.Now, absoluteExpiration), data);
+                cache[key] = new CacheEntry(null, data, Scheduler.Now, absoluteExpiration);
             }
 
             return Observable.Return(Unit.Default);
@@ -83,19 +83,14 @@ namespace Akavache
             if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
-                if (!cache.ContainsKey(key))
-                {
-                    return Observable.Throw<byte[]>(new KeyNotFoundException());
-                }
-
-                var item = cache[key];
-                if (item.Item1.ExpiresAt != null && Scheduler.Now > item.Item1.ExpiresAt.Value)
+                CacheEntry entry;
+                if (!cache.TryGetValue(key, out entry) || (entry.ExpiresAt != null && Scheduler.Now > entry.ExpiresAt.Value))
                 {
                     cache.Remove(key);
                     return Observable.Throw<byte[]>(new KeyNotFoundException());
                 }
 
-                return Observable.Return(item.Item2, Scheduler);
+                return Observable.Return(entry.Value, Scheduler);
             }
         }
 
@@ -103,12 +98,13 @@ namespace Akavache
         {
             lock (cache)
             {
-                if (!cache.ContainsKey(key))
+                CacheEntry entry;
+                if (!cache.TryGetValue(key, out entry))
                 {
                     return Observable.Return<DateTimeOffset?>(null);
                 }
 
-                return Observable.Return<DateTimeOffset?>(cache[key].Item1.CreatedAt);
+                return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
             }
         }
 
@@ -118,7 +114,7 @@ namespace Akavache
             lock (cache)
             {
                 return Observable.Return(cache
-                    .Where(x => x.Value.Item1.ExpiresAt == null || x.Value.Item1.ExpiresAt >= Scheduler.Now)
+                    .Where(x => x.Value.ExpiresAt == null || x.Value.ExpiresAt >= Scheduler.Now)
                     .Select(x => x.Key)
                     .ToList());
             }
@@ -129,10 +125,7 @@ namespace Akavache
             if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
-                if (cache.ContainsKey(key))
-                {
-                    cache.Remove(key);
-                }
+                cache.Remove(key);
             }
 
             return Observable.Return(Unit.Default);
@@ -154,7 +147,7 @@ namespace Akavache
             if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache) 
             {
-                var toDelete = cache.Where(x => x.Value.Item1.ExpiresAt >= Scheduler.Now).ToArray();
+                var toDelete = cache.Where(x => x.Value.ExpiresAt >= Scheduler.Now).ToArray();
                 foreach (var kvp in toDelete) cache.Remove(kvp.Key);
             }
 
@@ -170,7 +163,8 @@ namespace Akavache
                 inner.Dispose();
             }
 
-            shutdown.OnNext(Unit.Default); shutdown.OnCompleted();
+            shutdown.OnNext(Unit.Default);
+            shutdown.OnCompleted();
             disposed = true;
         }
 
@@ -207,6 +201,22 @@ namespace Akavache
                 .ToArray();
 
             return OverrideGlobals(scheduler, initialSerializedContents);
+        }
+    }
+
+    public class CacheEntry
+    {
+        public DateTimeOffset CreatedAt { get; protected set; }
+        public DateTimeOffset? ExpiresAt { get; protected set; }
+        public string TypeName { get; protected set; }
+        public byte[] Value { get; protected set; }
+
+        public CacheEntry(string typeName, byte[] value, DateTimeOffset createdAt, DateTimeOffset? expiresAt)
+        {
+            TypeName = typeName;
+            Value = value;
+            CreatedAt = createdAt;
+            ExpiresAt = expiresAt;
         }
     }
 }
