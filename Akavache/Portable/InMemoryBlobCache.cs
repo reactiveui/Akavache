@@ -80,7 +80,7 @@ namespace Akavache
 
         public IObservable<byte[]> Get(string key)
         {
-            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
                 if (!cache.ContainsKey(key))
@@ -114,7 +114,7 @@ namespace Akavache
 
         public IObservable<List<string>> GetAllKeys()
         {
-            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
                 return Observable.Return(cache
@@ -126,7 +126,7 @@ namespace Akavache
 
         public IObservable<Unit> Invalidate(string key)
         {
-            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
                 if (cache.ContainsKey(key))
@@ -140,7 +140,7 @@ namespace Akavache
 
         public IObservable<Unit> InvalidateAll()
         {
-            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache)
             {
                 cache.Clear();
@@ -151,7 +151,7 @@ namespace Akavache
 
         public IObservable<Unit> Vacuum()
         {
-            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
             lock (cache) 
             {
                 var toDelete = cache.Where(x => x.Value.Item1.ExpiresAt >= Scheduler.Now).ToArray();

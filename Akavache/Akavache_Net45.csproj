@@ -97,12 +97,12 @@
     <Compile Include="Portable\IBlobCache.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\IKeyedOperationQueue.cs" />
+    <Compile Include="Portable\InMemoryBlobCache.cs" />
     <Compile Include="Portable\JsonSerializationMixin.cs" />
     <Compile Include="Portable\KeyedOperationQueue.cs" />
     <Compile Include="Portable\LoginInfo.cs" />
     <Compile Include="Portable\LoginMixin.cs" />
     <Compile Include="Portable\RelativeTimeMixin.cs" />
-    <Compile Include="Portable\TestBlobCache.cs" />
     <Compile Include="Portable\PortableUtility.cs" />
     <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
