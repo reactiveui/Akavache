@@ -15,7 +15,7 @@ namespace Akavache
     /// This class is an IBlobCache backed by a simple in-memory Dictionary.
     /// Use it for testing / mocking purposes
     /// </summary>
-    public class InMemoryBlobCache : ISecureBlobCache
+    public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogger
     {
         public InMemoryBlobCache() : this(null, null)
         {
@@ -64,7 +64,8 @@ namespace Akavache
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
             lock (cache)
             {
                 cache[key] = new CacheEntry(null, data, Scheduler.Now, absoluteExpiration);
@@ -75,42 +76,52 @@ namespace Akavache
 
         public IObservable<Unit> Flush()
         {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
             return Observable.Return(Unit.Default);
         }
 
         public IObservable<byte[]> Get(string key)
         {
-            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("InMemoryBlobCache");
+            
+            CacheEntry entry;
             lock (cache)
             {
-                CacheEntry entry;
-                if (!cache.TryGetValue(key, out entry) || (entry.ExpiresAt != null && Scheduler.Now > entry.ExpiresAt.Value))
+                if (!cache.TryGetValue(key, out entry))
                 {
-                    cache.Remove(key);
-                    return Observable.Throw<byte[]>(new KeyNotFoundException());
+                    return ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
                 }
-
-                return Observable.Return(entry.Value, Scheduler);
             }
+
+            if(entry.ExpiresAt != null && Scheduler.Now > entry.ExpiresAt.Value)
+            {
+                cache.Remove(key);
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
+            }
+
+            return Observable.Return(entry.Value, Scheduler);
         }
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>("InMemoryBlobCache");
+
+            CacheEntry entry;
             lock (cache)
-            {
-                CacheEntry entry;
+            {                
                 if (!cache.TryGetValue(key, out entry))
                 {
                     return Observable.Return<DateTimeOffset?>(null);
-                }
-
-                return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
+                }                
             }
+            return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
         }
 
         public IObservable<List<string>> GetAllKeys()
         {
-            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>("InMemoryBlobCache");
+
             lock (cache)
             {
                 return Observable.Return(cache
@@ -122,7 +133,8 @@ namespace Akavache
 
         public IObservable<Unit> Invalidate(string key)
         {
-            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
             lock (cache)
             {
                 cache.Remove(key);
@@ -133,7 +145,8 @@ namespace Akavache
 
         public IObservable<Unit> InvalidateAll()
         {
-            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
             lock (cache)
             {
                 cache.Clear();
@@ -142,10 +155,64 @@ namespace Akavache
             return Observable.Return(Unit.Default);
         }
 
+        public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
+        {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
+            var data = SerializeObject(value);
+
+            lock (cache)
+            {
+                cache[key] = new CacheEntry(typeof(T).FullName, data, Scheduler.Now, absoluteExpiration);
+            }
+
+            return Observable.Return(Unit.Default);
+        }
+
+        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
+        {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<T>("InMemoryBlobCache");
+
+            CacheEntry entry;
+            lock (cache)
+            {
+                if (!cache.TryGetValue(key, out entry))
+                {
+                    return ExceptionHelper.ObservableThrowKeyNotFoundException<T>(key);
+                }
+            }
+
+            T obj = DeserializeObject<T>(entry.Value);
+
+            return Observable.Return(obj, Scheduler);
+        }
+
+        public IObservable<IEnumerable<T>> GetAllObjects<T>()
+        {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>("InMemoryBlobCache");
+
+            throw new NotImplementedException();
+        }
+
+        public IObservable<Unit> InvalidateObject<T>(string key)
+        {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
+            throw new NotImplementedException();
+        }
+
+        public IObservable<Unit> InvalidateAllObjects<T>()
+        {
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
+            throw new NotImplementedException();
+        }
+
         public IObservable<Unit> Vacuum()
         {
-            if (disposed) throw new ObjectDisposedException("InMemoryBlobCache");
-            lock (cache) 
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+
+            lock (cache)
             {
                 var toDelete = cache.Where(x => x.Value.ExpiresAt >= Scheduler.Now).ToArray();
                 foreach (var kvp in toDelete) cache.Remove(kvp.Key);
