@@ -8,6 +8,9 @@ using System.Reactive.Linq;
 using System.Threading;
 using Splat;
 using System.Reactive.Subjects;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
+using System.IO;
 
 namespace Akavache
 {
@@ -257,6 +260,35 @@ namespace Akavache
             disposed = true;
         }
 
+        byte[] SerializeObject<T>(T value)
+        {
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var ms = new MemoryStream();
+            var serializer = JsonSerializer.Create(settings);
+            var writer = new BsonWriter(ms);
+
+            serializer.Serialize(writer, new ObjectWrapper<T>() { Value = value });
+            return ms.ToArray();
+        }
+
+        T DeserializeObject<T>(byte[] data)
+        {
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var serializer = JsonSerializer.Create(settings);
+            var reader = new BsonReader(new MemoryStream(data));
+
+            try
+            {
+                return serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+            }
+            catch (Exception ex)
+            {
+                this.Log().WarnException("Failed to deserialize data as boxed, we may be migrating from an old Akavache", ex);
+            }
+
+            return serializer.Deserialize<T>(reader);
+        }
+
         public static InMemoryBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
             var local = BlobCache.LocalMachine;
@@ -307,5 +339,11 @@ namespace Akavache
             CreatedAt = createdAt;
             ExpiresAt = expiresAt;
         }
+    }
+
+    interface IObjectWrapper { }
+    class ObjectWrapper<T> : IObjectWrapper
+    {
+        public T Value { get; set; }
     }
 }
