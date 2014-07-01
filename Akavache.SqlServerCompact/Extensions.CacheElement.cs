@@ -47,5 +47,21 @@ namespace Akavache.SqlServerCompact
             });
         }
 
+        internal static IObservable<Unit> Insert(this SqlConnection connection, CacheElement element)
+        {
+            return Observable.Start(() =>
+            {
+                var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO dbo.CacheElement (Key,TypeName,Value,CreatedAt,Expiration) VALUES (@Key, @TypeName, @Value, @CreatedAt, @Expiration)";
+                command.Parameters.AddWithValue("@Key", element.Key);
+                command.Parameters.AddWithValue("@TypeName", element.TypeName);
+                command.Parameters.AddWithValue("@Value", element.Value);
+                command.Parameters.AddWithValue("@CreatedAt", element.CreatedAt);
+                command.Parameters.AddWithValue("@Expiration", element.Expiration);
+                command.ExecuteNonQuery();
+            });
+        }
+
+
     }
 }

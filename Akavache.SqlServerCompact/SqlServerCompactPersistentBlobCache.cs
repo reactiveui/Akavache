@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Reactive;
@@ -56,20 +55,36 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            return Observable.Start(() =>
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlServerCompactPersistentBlobCache"));
+            lock (inflightCache) inflightCache.Invalidate(key);
+
+            var element = new CacheElement
             {
-                var connection = new SqlConnection();
-                var command = connection.CreateCommand();
-                command.CommandType = CommandType.TableDirect;
-                command.CommandText = "HAHAA";
-                var asyncResult = command.BeginExecuteNonQuery();
-                command.EndExecuteNonQuery(asyncResult);
-            });
+                Key = key,
+                Value = data,
+                CreatedAt = Scheduler.Now.UtcDateTime,
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue
+            };
+
+            var ret = initializer
+                .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
+                .Do(x => element.Value = x)
+                .SelectMany(x => Connection.Insert(element))
+                .Multicast(new AsyncSubject<Unit>());
+
+            return ret;
         }
 
         public IObservable<byte[]> Get(string key)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            lock (inflightCache)
+            {
+                return inflightCache.Get(key)
+                    .Select(x => x.Value)
+                    .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
+                    .Finally(() => { lock (inflightCache) { inflightCache.Invalidate(key); } });
+            }
         }
 
         public IObservable<List<string>> GetAllKeys()
@@ -165,6 +180,41 @@ namespace Akavache.SqlServerCompact
         }
 
         private SqlConnection Connection { get; set; }
+
+        /// <summary>
+        /// This method is called immediately before writing any data to disk.
+        /// Override this in encrypting data stores in order to encrypt the
+        /// data.
+        /// </summary>
+        /// <param name="data">The byte data about to be written to disk.</param>
+        /// <param name="scheduler">The scheduler to use if an operation has
+        /// to be deferred. If the operation can be done immediately, use
+        /// Observable.Return and ignore this parameter.</param>
+        /// <returns>A Future result representing the encrypted data</returns>
+        protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
+        {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return Observable.Return(data);
+        }
+
+        /// <summary>
+        /// This method is called immediately after reading any data to disk.
+        /// Override this in encrypting data stores in order to decrypt the
+        /// data.
+        /// </summary>
+        /// <param name="data">The byte data that has just been read from
+        /// disk.</param>
+        /// <param name="scheduler">The scheduler to use if an operation has
+        /// to be deferred. If the operation can be done immediately, use
+        /// Observable.Return and ignore this parameter.</param>
+        /// <returns>A Future result representing the decrypted data</returns>
+        protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
+        {
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return Observable.Return(data);
+        }
 
         protected IObservable<Unit> Initialize()
         {
