@@ -86,6 +86,9 @@ namespace Akavache.SqlServerCompact
                 var command = connection.CreateCommand();
                 command.CommandText = "INSERT INTO CacheElement ([Key],TypeName,Value,CreatedAt,Expiration) VALUES (@Key, @TypeName, @Value, @CreatedAt, @Expiration)";
                 command.Parameters.AddWithValue("Key", element.Key);
+                command.Parameters.AddWithValue("Value", element.Value);
+                command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
+                command.Parameters.AddWithValue("Expiration", element.Expiration);
                 if (String.IsNullOrWhiteSpace(element.TypeName))
                 {
                     command.Parameters.AddWithValue("TypeName", DBNull.Value);
@@ -94,9 +97,6 @@ namespace Akavache.SqlServerCompact
                 {
                     command.Parameters.AddWithValue("TypeName", element.TypeName);
                 }
-                command.Parameters.AddWithValue("Value", element.Value);
-                command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
-                command.Parameters.AddWithValue("Expiration", element.Expiration);
                 command.ExecuteNonQuery();
             });
         }
