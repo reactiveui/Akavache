@@ -118,7 +118,7 @@ namespace Akavache
             lock (cache)
             {
                 return Observable.Return(cache
-                    .Where(x => x.Value.Item1.ExpiresAt == null || x.Value.Item1.ExpiresAt >= BlobCache.TaskpoolScheduler.Now)
+                    .Where(x => x.Value.Item1.ExpiresAt == null || x.Value.Item1.ExpiresAt >= Scheduler.Now)
                     .Select(x => x.Key)
                     .ToList());
             }
@@ -154,7 +154,7 @@ namespace Akavache
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache) 
             {
-                var toDelete = cache.Where(x => x.Value.Item1.ExpiresAt >= BlobCache.TaskpoolScheduler.Now).ToArray();
+                var toDelete = cache.Where(x => x.Value.Item1.ExpiresAt >= Scheduler.Now).ToArray();
                 foreach (var kvp in toDelete) cache.Remove(kvp.Key);
             }
 

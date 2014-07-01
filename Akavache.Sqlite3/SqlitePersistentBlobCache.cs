@@ -74,7 +74,7 @@ namespace Akavache.Sqlite3
             {
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
-                CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
+                CreatedAt = Scheduler.Now.UtcDateTime,
             };
 
             var ret = _initializer
@@ -100,7 +100,7 @@ namespace Akavache.Sqlite3
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = kvp.Key,
                 Value = kvp.Value,
-                CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
+                CreatedAt = Scheduler.Now.UtcDateTime,
             }).ToList();
 
             var encryptAllTheData = elements.ToObservable()
@@ -160,7 +160,7 @@ namespace Akavache.Sqlite3
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
 
-            var now = BlobCache.TaskpoolScheduler.Now.UtcTicks;
+            var now = Scheduler.Now.UtcTicks;
             return _initializer
                 .SelectMany(_ => Connection.QueryAsync<CacheElement>("SELECT Key FROM CacheElement WHERE Expiration >= ?;", now))
                 .Select(x => x.Select(y => y.Key).ToList());
@@ -245,7 +245,7 @@ namespace Akavache.Sqlite3
                 Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
                 Key = key,
                 TypeName = typeof(T).FullName,
-                CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
+                CreatedAt = Scheduler.Now.UtcDateTime,
             };
 
             var ret = _initializer
@@ -275,7 +275,7 @@ namespace Akavache.Sqlite3
                     Key = x.Key,
                     TypeName = typeof(T).FullName,
                     Value = SerializeObject<T>(x.Value),
-                    CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
+                    CreatedAt = Scheduler.Now.UtcDateTime,
                 }).ToList();
             }, Scheduler);
 
@@ -378,7 +378,7 @@ namespace Akavache.Sqlite3
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
 
-            var nowTime = BlobCache.TaskpoolScheduler.Now.UtcTicks;
+            var nowTime = Scheduler.Now.UtcTicks;
             return _initializer
                 .SelectMany(_ => Connection.ExecuteAsync("DELETE FROM CacheElement WHERE Expiration < ?;", nowTime))
                 .SelectMany(_ => Observable.Defer(() => Connection.ExecuteAsync("VACUUM;", nowTime).Retry(3)))
@@ -410,7 +410,7 @@ namespace Akavache.Sqlite3
                         await Connection.CreateTableAsync<CacheElement>();
 
                         var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
-                        await Connection.ExecuteAsync(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
+                        await Connection.ExecuteAsync(String.Format(sql, Scheduler.Now.UtcDateTime.Ticks));
                         await Connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;");
                     
                         await Connection.InsertAsync(new SchemaInfo() { Version = 2, });
