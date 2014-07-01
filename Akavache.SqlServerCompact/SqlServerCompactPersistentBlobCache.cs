@@ -14,6 +14,8 @@ namespace Akavache.SqlServerCompact
 {
     public class SqlServerCompactPersistentBlobCache : IObjectBulkBlobCache, IEnableLogger
     {
+        const string typeName = "SqlServerCompactPersistentBlobCache";
+
         readonly IObservable<Unit> initializer;
         MemoizingMRUCache<string, IObservable<CacheElement>> inflightCache;
         readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
@@ -29,7 +31,7 @@ namespace Akavache.SqlServerCompact
             inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, ce) =>
             {
                 return initializer
-                    .SelectMany(_ => Connection.QueryCacheElement(key))
+                    .SelectMany(_ => Connection.QueryCacheById(key))
                     .SelectMany(x =>
                     {
                         return (x.Count == 1) ? Observable.Return(x[0]) : ObservableThrowKeyNotFoundException(key);
@@ -56,7 +58,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlServerCompactPersistentBlobCache"));
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException(typeName));
             lock (inflightCache) inflightCache.Invalidate(key);
 
             var element = new CacheElement
@@ -78,7 +80,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<byte[]> Get(string key)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException(typeName));
             lock (inflightCache)
             {
                 return inflightCache.Get(key)
@@ -90,7 +92,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<List<string>> GetAllKeys()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) throw new ObjectDisposedException(typeName);
 
             return initializer
                 .SelectMany(_ => Connection.QueryCacheByExpiration(BlobCache.TaskpoolScheduler.Now.UtcDateTime))
@@ -99,27 +101,45 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<DateTimeOffset?>(new ObjectDisposedException(typeName));
+            lock (inflightCache)
+            {
+                return inflightCache.Get(key)
+                    .Select(x => x.CreatedAt == DateTime.MaxValue ?
+                        default(DateTimeOffset?) : new DateTimeOffset(x.CreatedAt, TimeSpan.Zero))
+                    .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
+                    .Finally(() => { lock (inflightCache) { inflightCache.Invalidate(key); } });
+            }           
         }
 
         public IObservable<Unit> Flush()
         {
-            throw new NotImplementedException();
+            return Observable.Return(Unit.Default);
         }
 
         public IObservable<Unit> Invalidate(string key)
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException(typeName);
+            lock (inflightCache) inflightCache.Invalidate(key);
+            return initializer.SelectMany(_ => Connection.DeleteFromCache(key));
         }
 
         public IObservable<Unit> InvalidateAll()
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException(typeName);
+
+            return initializer.SelectMany(_ => Connection.DeleteAllFromCache());
         }
 
         public IObservable<Unit> Vacuum()
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            var nowTime = Scheduler.Now.UtcDateTime;
+            return initializer
+                .SelectMany(_ => Connection.DeleteExpiredElements(nowTime))
+                .SelectMany(_ => Observable.Defer(() => Connection.Vacuum(nowTime).Retry(3)))
+                .Select(_ => Unit.Default);
         }
 
         public IObservable<Unit> Shutdown { get { return shutdown; } }

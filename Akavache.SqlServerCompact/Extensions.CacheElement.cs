@@ -94,6 +94,42 @@ namespace Akavache.SqlServerCompact
             });
         }
 
+        internal static IObservable<Unit> DeleteFromCache(this SqlConnection connection, string key)
+        {
+            return Observable.Start(() =>
+            {
+                var command = connection.CreateCommand();
+                command.CommandText = "DELETE FROM CacheElement WHERE Key = @Key";
+                command.Parameters.AddWithValue("@Key", key);
+                command.ExecuteNonQuery();
+            });
+        }
 
+        internal static IObservable<Unit> DeleteAllFromCache(this SqlConnection connection)
+        {
+            return Observable.Start(() =>
+            {
+                var command = connection.CreateCommand();
+                command.CommandText = "DELETE FROM CacheElement";
+                command.ExecuteNonQuery();
+            });
+        }
+
+        internal static IObservable<Unit> DeleteExpiredElements(this SqlConnection connection, DateTime time)
+        {
+            return Observable.Start(() =>
+            {
+                var command = connection.CreateCommand();
+                command.CommandText = "DELETE FROM CacheElement WHERE Expiration < @expiration";
+                command.Parameters.AddWithValue("expiration", time);
+                command.ExecuteNonQuery();
+            });
+        }
+
+        // TODO: actually implement this based on notes here: http://technet.microsoft.com/en-us/library/ms172411(v=sql.110).aspx
+        internal static IObservable<Unit> Vacuum(this SqlConnection connection, DateTime time)
+        {
+            return Observable.Return(Unit.Default);
+        }
     }
 }
