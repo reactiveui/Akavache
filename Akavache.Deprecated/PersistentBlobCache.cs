@@ -175,7 +175,7 @@ namespace Akavache.Deprecated
             return Observable.Return<DateTimeOffset?>(value.CreatedAt);
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
             return Observable.Return(CacheIndex.ToList().Where(x => x.Value.ExpiresAt == null || x.Value.ExpiresAt >= BlobCache.TaskpoolScheduler.Now).Select(x => x.Key).ToList());
