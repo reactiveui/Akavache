@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.SqlServerCe;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -47,22 +48,7 @@ namespace Akavache.SqlServerCompact
                     var hasResult = result.Read();
                     if (hasResult)
                     {
-                        var cacheElement = new CacheElement
-                        {
-                            Key = result.GetFieldValue<string>(0),
-                            Value = result.GetFieldValue<byte[]>(2),
-                            CreatedAt = result.GetFieldValue<DateTime>(3),
-                            Expiration = result.GetFieldValue<DateTime>(4)
-                        };
-
-                        var typeName = result.GetValue(1);
-
-                        if (typeName != DBNull.Value)
-                        {
-                            cacheElement.TypeName = typeName.ToString();
-                        }
-
-                        list.Add(cacheElement);
+                        list.Add(MapToCacheElement(result));
                     }
                 }
                 return list;
@@ -85,15 +71,7 @@ namespace Akavache.SqlServerCompact
                     {
                         while (result.Read())
                         {
-                            var cacheElement = new CacheElement
-                            {
-                                Key = result.GetFieldValue<string>(0),
-                                TypeName = result.GetFieldValue<string>(1),
-                                Value = result.GetFieldValue<byte[]>(2),
-                                CreatedAt = result.GetFieldValue<DateTime>(3),
-                                Expiration = result.GetFieldValue<DateTime>(4)
-                            };
-                            list.Add(cacheElement);
+                            list.Add(MapToCacheElement(result));
                         }
                     }
                 }
@@ -159,6 +137,24 @@ namespace Akavache.SqlServerCompact
         internal static IObservable<Unit> Vacuum(this SqlCeConnection connection, DateTime time)
         {
             return Observable.Return(Unit.Default);
+        }
+
+        static CacheElement MapToCacheElement(DbDataReader result)
+        {
+            var cacheElement = new CacheElement
+            {
+                Key = result.GetFieldValue<string>(0),
+                Value = result.GetFieldValue<byte[]>(2),
+                CreatedAt = result.GetFieldValue<DateTime>(3),
+                Expiration = result.GetFieldValue<DateTime>(4)
+            };
+
+            var typeName = result.GetValue(1);
+            if (typeName != DBNull.Value)
+            {
+                cacheElement.TypeName = typeName.ToString();
+            }
+            return cacheElement;
         }
     }
 }
