@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Splat;
 
@@ -15,9 +16,12 @@ namespace Akavache.SqlServerCompact
     {
         readonly IObservable<Unit> initializer;
         MemoizingMRUCache<string, IObservable<CacheElement>> inflightCache;
+        readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
+        bool disposed = false;
 
-        public SqlServerCompactPersistentBlobCache(string databaseFile)
+        public SqlServerCompactPersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
+            Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             Connection = new SqlConnection(databaseFile);
 
             initializer = Initialize();
@@ -25,7 +29,7 @@ namespace Akavache.SqlServerCompact
             inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, ce) =>
             {
                 return initializer
-                    .SelectMany(_ => Connection.QueryElement(key))
+                    .SelectMany(_ => Connection.QueryCacheElement(key))
                     .SelectMany(x =>
                     {
                         return (x.Count == 1) ? Observable.Return(x[0]) : ObservableThrowKeyNotFoundException(key);
@@ -43,7 +47,11 @@ namespace Akavache.SqlServerCompact
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            if (disposed) return;
+
+            Connection.Dispose();
+
+            disposed = true;
         }
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
@@ -94,7 +102,7 @@ namespace Akavache.SqlServerCompact
             throw new NotImplementedException();
         }
 
-        public IObservable<Unit> Shutdown { get; private set; }
+        public IObservable<Unit> Shutdown { get { return shutdown; } }
         public IScheduler Scheduler { get; private set; }
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {

@@ -56,7 +56,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CacheElement.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Extensions.CacheElement.cs" />
     <Compile Include="SqlServerCompactPersistentBlobCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
