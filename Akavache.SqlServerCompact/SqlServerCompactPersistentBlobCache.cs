@@ -17,17 +17,20 @@ namespace Akavache.SqlServerCompact
     public class SqlServerCompactPersistentBlobCache : IObjectBulkBlobCache, IEnableLogger
     {
         const string typeName = "SqlServerCompactPersistentBlobCache";
+        readonly DateTime DateTimeMaxValueSqlServerCeCompatible = DateTime.MaxValue.AddMilliseconds(-1);
 
         readonly IObservable<Unit> initializer;
-        MemoizingMRUCache<string, IObservable<CacheElement>> inflightCache;
+        readonly MemoizingMRUCache<string, IObservable<CacheElement>> inflightCache;
         readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
-        bool disposed = false;
+        bool disposed;
+        readonly string databaseFile;
 
         public SqlServerCompactPersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
+            this.databaseFile = databaseFile;
             Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             var connectionString = BuildConnectionString(databaseFile);
-            Connection = new SqlConnection(connectionString);
+            Connection = new SqlCeConnection(connectionString);
 
             initializer = Initialize(connectionString);
 
@@ -74,7 +77,7 @@ namespace Akavache.SqlServerCompact
                 Key = key,
                 Value = data,
                 CreatedAt = Scheduler.Now.UtcDateTime,
-                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTimeMaxValueSqlServerCeCompatible
             };
 
             var ret = initializer
@@ -82,6 +85,8 @@ namespace Akavache.SqlServerCompact
                 .Do(x => element.Value = x)
                 .SelectMany(x => Connection.Insert(element))
                 .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
 
             return ret;
         }
@@ -212,7 +217,7 @@ namespace Akavache.SqlServerCompact
             throw new NotImplementedException();
         }
 
-        private SqlConnection Connection { get; set; }
+        private SqlCeConnection Connection { get; set; }
 
         /// <summary>
         /// This method is called immediately before writing any data to disk.
@@ -251,32 +256,36 @@ namespace Akavache.SqlServerCompact
 
         protected IObservable<Unit> Initialize(string connectionString)
         {
-            var ret = Observable.Create<Unit>(async subj =>
+            return Observable.Create<Unit>(async (obs) =>
             {
                 try
                 {
-                    await CreateDatabaseFile(connectionString);
-                    await Connection.CreateCacheElementTable();
-                    await GetSchemaVersion();
+                    if (!File.Exists(databaseFile))
+                    {
+                        await CreateDatabaseFile(connectionString);
+                    }
+                 
+                    // TODO: consider migrating tables and stuff
+                    var currentVersion = await GetSchemaVersion();
+                    
+                    var tableExists = await Connection.CacheElementsTableExists();
+                    if (!tableExists)
+                    {
+                        await Connection.CreateCacheElementTable();
+                    }
 
-                    subj.OnNext(Unit.Default);
-                    subj.OnCompleted();
+                    obs.OnNext(Unit.Default);
+                    obs.OnCompleted();
                 }
                 catch (Exception ex)
                 {
-                    subj.OnError(ex);
+                    obs.OnError(ex);
                 }
             });
-
-            var connectableObs = ret.PublishLast();
-            connectableObs.Connect();
-            return connectableObs;
         }
 
         static Task CreateDatabaseFile(string connectionString)
         {
-            // TODO: don't do this if the file exists
-
             return Task.Run(() =>
             {
                 var en = new SqlCeEngine(connectionString);

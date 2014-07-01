@@ -22,8 +22,8 @@ namespace Akavache.SqlServerCompact.Tests
                     var result = await fixture.Get("something");
 
                     Assert.Equal(3, result[0]);
-                    Assert.Equal(3, result[0]);
-                    Assert.Equal(3, result[0]);
+                    Assert.Equal(4, result[1]);
+                    Assert.Equal(5, result[2]);
                 }
             }
         }
