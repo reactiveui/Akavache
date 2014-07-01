@@ -126,7 +126,7 @@ namespace Akavache.Deprecated
             if (IsKeyStale(key))
             {
                 Invalidate(key);
-                return ObservableThrowKeyNotFoundException(key);
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
             }
 
             AsyncSubject<byte[]> ret;
@@ -308,7 +308,7 @@ namespace Akavache.Deprecated
                 .Retry(1)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                .Catch<byte[], Exception>(ex => ObservableThrowKeyNotFoundException(key, ex))
+                .Catch<byte[], Exception>(ex => ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key, ex))
                 .Do(_ =>
                 {
                     if (!synchronous && key != BlobCacheIndexKey)
@@ -391,12 +391,17 @@ namespace Akavache.Deprecated
         {
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
+    }
 
-        static IObservable<byte[]> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
+    public class CacheIndexEntry
+    {
+        public DateTimeOffset CreatedAt { get; protected set; }
+        public DateTimeOffset? ExpiresAt { get; protected set; }
+
+        public CacheIndexEntry(DateTimeOffset createdAt, DateTimeOffset? expiresAt)
         {
-            return Observable.Throw<byte[]>(
-                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
-                "The given key '{0}' was not present in the cache.", key), innerException));
+            CreatedAt = createdAt;
+            ExpiresAt = expiresAt;
         }
     }
 }
