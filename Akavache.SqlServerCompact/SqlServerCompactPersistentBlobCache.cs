@@ -302,7 +302,7 @@ namespace Akavache.SqlServerCompact
 
             try
             {
-                versionNumber = await Connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
+                versionNumber = await Connection.GetSchemaVersion();
             }
             catch (Exception)
             {
