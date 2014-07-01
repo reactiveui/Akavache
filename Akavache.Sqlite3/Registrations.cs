@@ -37,7 +37,7 @@ namespace Akavache.Sqlite3
                 
             var secure = new Lazy<ISecureBlobCache>(() => {
                 fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).Wait();
-                return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), resolver.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
+                return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
         }
