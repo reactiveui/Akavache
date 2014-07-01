@@ -620,7 +620,7 @@ namespace Akavache.Tests
             return _inner.Get(key);
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
             return _inner.GetAllKeys();
         }
