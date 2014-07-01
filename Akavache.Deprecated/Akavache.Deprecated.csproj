@@ -26,7 +26,7 @@
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\Portable-Net45+Win8+WP8+Wpa81\</OutputPath>
     <IntermediateOutputPath>obj\Debug\Portable-Win81+Wpa81\</IntermediateOutputPath>
-    <DefineConstants>TRACE;DEBUG; WINRT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -35,7 +35,7 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\Portable-Net45+Win8+WP8+Wpa81\</OutputPath>
     <IntermediateOutputPath>obj\Release\Portable-Win81+Wpa81\</IntermediateOutputPath>
-    <DefineConstants>TRACE; WINRT</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Portable-Net45+Win8+WP8+Wpa81\Akavache.Deprecated.XML</DocumentationFile>

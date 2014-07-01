@@ -33,12 +33,6 @@
     <Compile Include="SQLiteEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache_Portable.csproj">
-      <Project>{EB73ADDD-2FE9-44C0-A1AB-20709B979B64}</Project>
-      <Name>Akavache_Portable</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -63,6 +57,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.Akavache.Sqlite3.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache\Akavache_Portable.csproj">
+      <Project>{eb73addd-2fe9-44c0-a1ab-20709b979b64}</Project>
+      <Name>Akavache_Portable</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
