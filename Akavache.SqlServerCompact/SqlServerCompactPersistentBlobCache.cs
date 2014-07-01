@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -89,7 +90,11 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<List<string>> GetAllKeys()
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            return initializer
+                .SelectMany(_ => Connection.QueryCacheByExpiration(BlobCache.TaskpoolScheduler.Now.UtcDateTime))
+                .Select(x => x.Select(y => y.Key).ToList());
         }
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)

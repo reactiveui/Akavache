@@ -18,7 +18,7 @@ namespace Akavache.SqlServerCompact
             });
         }
 
-        internal static IObservable<List<CacheElement>> QueryCacheElement(this SqlConnection connection, string key)
+        internal static IObservable<List<CacheElement>> QueryCacheById(this SqlConnection connection, string key)
         {
             return Observable.Start(() =>
             {
@@ -41,6 +41,38 @@ namespace Akavache.SqlServerCompact
                             Expiration = result.GetFieldValue<DateTime>(4)
                         };
                         list.Add(cacheElement);
+                    }
+                }
+                return list;
+            });
+        }
+
+        internal static IObservable<List<CacheElement>> QueryCacheByExpiration(this SqlConnection connection, DateTime time)
+        {
+            return Observable.Start(() =>
+            {
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT Key,TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE Expiration >= @Expiration";
+                command.Parameters.AddWithValue("Expiration", time);
+
+                var list = new List<CacheElement>();
+
+                using (var result = command.ExecuteReader())
+                {
+                    if (result.HasRows)
+                    {
+                        while (result.Read())
+                        {
+                            var cacheElement = new CacheElement
+                            {
+                                Key = result.GetFieldValue<string>(0),
+                                TypeName = result.GetFieldValue<string>(1),
+                                Value = result.GetFieldValue<byte[]>(2),
+                                CreatedAt = result.GetFieldValue<DateTime>(3),
+                                Expiration = result.GetFieldValue<DateTime>(4)
+                            };
+                            list.Add(cacheElement);
+                        }
                     }
                 }
                 return list;
