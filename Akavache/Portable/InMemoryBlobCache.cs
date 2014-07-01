@@ -51,13 +51,6 @@ namespace Akavache
 
         public IScheduler Scheduler { get; protected set; }
 
-        IServiceProvider serviceProvider;
-        public IServiceProvider ServiceProvider
-        {
-            get { return serviceProvider; }
-            set { serviceProvider = value; }
-        }
-
         readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
         public IObservable<Unit> Shutdown { get { return shutdown; } }
 
