@@ -229,9 +229,9 @@ namespace Akavache.Tests
             return _inner.InsertObjects(keyValuePairs, absoluteExpiration);
         }
 
-        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false)
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
         {
-            return _inner.GetObjects<T>(keys, noTypePrefix);
+            return _inner.GetObjects<T>(keys);
         }
 
         public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
@@ -247,6 +247,11 @@ namespace Akavache.Tests
         public IObservable<T> GetObject<T>(string key)
         {
             return _inner.GetObject<T>(key);
+        }
+
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return _inner.GetObjectCreatedAt<T>(key);
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
