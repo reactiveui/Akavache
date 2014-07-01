@@ -13,7 +13,7 @@ namespace Akavache.SqlServerCompact
             return Observable.Start(() =>
             {
                 var command = connection.CreateCommand();
-                command.CommandText = "CREATE TABLE dbo.CacheElement (Key NVARCHAR(max) PRIMARY KEY, TypeName NVARCHAR(max) NOT NULL, Value VARBINARY(max) NOT NULL, CreatedAt DATETIME NOT NULL, Expiration DATETIME NOT NULL)";
+                command.CommandText = "CREATE TABLE dbo.CacheElement (Key NVARCHAR(max) PRIMARY KEY, TypeName NVARCHAR(max), Value VARBINARY(max) NOT NULL, CreatedAt DATETIME NOT NULL, Expiration DATETIME NOT NULL)";
                 command.ExecuteNonQuery();
             });
         }
