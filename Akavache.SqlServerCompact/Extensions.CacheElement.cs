@@ -10,11 +10,14 @@ namespace Akavache.SqlServerCompact
     {
         internal static IObservable<Unit> CreateCacheElementTable(this SqlConnection connection)
         {
-            return Observable.Start(() =>
+            return Observable.Defer(async () =>
             {
+                await Ensure.IsOpen(connection);
                 var command = connection.CreateCommand();
                 command.CommandText = "CREATE TABLE dbo.CacheElement (Key NVARCHAR(max) PRIMARY KEY, TypeName NVARCHAR(max), Value VARBINARY(max) NOT NULL, CreatedAt DATETIME NOT NULL, Expiration DATETIME NOT NULL)";
                 command.ExecuteNonQuery();
+
+                return Observable.Return(Unit.Default);
             });
         }
 

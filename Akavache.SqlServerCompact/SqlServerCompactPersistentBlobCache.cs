@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Data.SqlServerCe;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -24,9 +26,10 @@ namespace Akavache.SqlServerCompact
         public SqlServerCompactPersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
             Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
-            Connection = new SqlConnection(databaseFile);
+            var connectionString = BuildConnectionString(databaseFile);
+            Connection = new SqlConnection(connectionString);
 
-            initializer = Initialize();
+            initializer = Initialize(connectionString);
 
             inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, ce) =>
             {
@@ -45,6 +48,11 @@ namespace Akavache.SqlServerCompact
                         return Observable.Return(x);
                     });
             }, 10);
+        }
+
+        string BuildConnectionString(string databaseFile)
+        {
+            return String.Format("Data Source={0};Persist Security Info=False;", databaseFile);
         }
 
         public void Dispose()
@@ -109,7 +117,7 @@ namespace Akavache.SqlServerCompact
                         default(DateTimeOffset?) : new DateTimeOffset(x.CreatedAt, TimeSpan.Zero))
                     .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
                     .Finally(() => { lock (inflightCache) { inflightCache.Invalidate(key); } });
-            }           
+            }
         }
 
         public IObservable<Unit> Flush()
@@ -241,12 +249,13 @@ namespace Akavache.SqlServerCompact
             return Observable.Return(data);
         }
 
-        protected IObservable<Unit> Initialize()
+        protected IObservable<Unit> Initialize(string connectionString)
         {
             var ret = Observable.Create<Unit>(async subj =>
             {
                 try
                 {
+                    await CreateDatabaseFile(connectionString);
                     await Connection.CreateCacheElementTable();
                     await GetSchemaVersion();
 
@@ -262,6 +271,17 @@ namespace Akavache.SqlServerCompact
             var connectableObs = ret.PublishLast();
             connectableObs.Connect();
             return connectableObs;
+        }
+
+        static Task CreateDatabaseFile(string connectionString)
+        {
+            // TODO: don't do this if the file exists
+
+            return Task.Run(() =>
+            {
+                var en = new SqlCeEngine(connectionString);
+                en.CreateDatabase();
+            });
         }
 
         protected async Task<int> GetSchemaVersion()

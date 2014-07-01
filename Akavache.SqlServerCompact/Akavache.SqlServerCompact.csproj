@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CacheElement.cs" />
+    <Compile Include="Ensure.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Extensions.CacheElement.cs" />
     <Compile Include="SqlServerCompactPersistentBlobCache.cs" />
