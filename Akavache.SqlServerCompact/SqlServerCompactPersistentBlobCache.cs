@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Data.SqlServerCe;
 using System.Globalization;
 using System.IO;
@@ -22,16 +21,19 @@ namespace Akavache.SqlServerCompact
         readonly IObservable<Unit> initializer;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> inflightCache;
         readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
-        bool disposed;
         readonly string databaseFile;
+
+        bool disposed;
 
         public SqlServerCompactPersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
             this.databaseFile = databaseFile;
-            Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
-            var connectionString = BuildConnectionString(databaseFile);
-            Connection = new SqlCeConnection(connectionString);
 
+            Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
+
+            var connectionString = BuildConnectionString(databaseFile);
+
+            Connection = new SqlCeConnection(connectionString);
             initializer = Initialize(connectionString);
 
             inflightCache = new MemoizingMRUCache<string, IObservable<CacheElement>>((key, ce) =>
@@ -53,7 +55,7 @@ namespace Akavache.SqlServerCompact
             }, 10);
         }
 
-        string BuildConnectionString(string databaseFile)
+        static string BuildConnectionString(string databaseFile)
         {
             return String.Format("Data Source={0};Persist Security Info=False;", databaseFile);
         }
@@ -295,8 +297,8 @@ namespace Akavache.SqlServerCompact
 
         protected async Task<int> GetSchemaVersion()
         {
-            bool shouldCreateSchemaTable = false;
-            int versionNumber = 0;
+            var shouldCreateSchemaTable = false;
+            var versionNumber = 0;
 
             try
             {

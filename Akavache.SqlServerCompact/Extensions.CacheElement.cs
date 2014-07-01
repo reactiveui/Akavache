@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Akavache.SqlServerCompact
 {
-    public static partial class Extensions
+    internal static partial class Extensions
     {
         internal static async Task<bool> CacheElementsTableExists(this SqlCeConnection connection)
         {
@@ -35,8 +35,10 @@ namespace Akavache.SqlServerCompact
 
         internal static IObservable<List<CacheElement>> QueryCacheById(this SqlCeConnection connection, string key)
         {
-            return Observable.Start(() =>
+            return Observable.StartAsync(async () =>
             {
+                await Ensure.IsOpen(connection);
+
                 var command = connection.CreateCommand();
                 command.CommandText = "SELECT TOP 1 [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] = @ID";
                 command.Parameters.AddWithValue("ID", key);
@@ -48,7 +50,7 @@ namespace Akavache.SqlServerCompact
                     var hasResult = result.Read();
                     if (hasResult)
                     {
-                        list.Add(MapToCacheElement(result));
+                        list.Add(CacheElement.FromDataReader(result));
                     }
                 }
                 return list;
@@ -57,8 +59,10 @@ namespace Akavache.SqlServerCompact
 
         internal static IObservable<List<CacheElement>> QueryCacheByExpiration(this SqlCeConnection connection, DateTime time)
         {
-            return Observable.Start(() =>
+            return Observable.StartAsync(async () =>
             {
+                await Ensure.IsOpen(connection);
+
                 var command = connection.CreateCommand();
                 command.CommandText = "SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE Expiration >= @Expiration";
                 command.Parameters.AddWithValue("Expiration", time);
@@ -71,7 +75,7 @@ namespace Akavache.SqlServerCompact
                     {
                         while (result.Read())
                         {
-                            list.Add(MapToCacheElement(result));
+                            list.Add(CacheElement.FromDataReader(result));
                         }
                     }
                 }
@@ -81,8 +85,10 @@ namespace Akavache.SqlServerCompact
 
         internal static IObservable<Unit> Insert(this SqlCeConnection connection, CacheElement element)
         {
-            return Observable.Start(() =>
+            return Observable.StartAsync(async () =>
             {
+                await Ensure.IsOpen(connection);
+
                 var command = connection.CreateCommand();
                 command.CommandText = "INSERT INTO CacheElement ([Key],TypeName,Value,CreatedAt,Expiration) VALUES (@Key, @TypeName, @Value, @CreatedAt, @Expiration)";
                 command.Parameters.AddWithValue("Key", element.Key);
@@ -103,8 +109,10 @@ namespace Akavache.SqlServerCompact
 
         internal static IObservable<Unit> DeleteFromCache(this SqlCeConnection connection, string key)
         {
-            return Observable.Start(() =>
+            return Observable.StartAsync(async () =>
             {
+                await Ensure.IsOpen(connection);
+
                 var command = connection.CreateCommand();
                 command.CommandText = "DELETE FROM CacheElement WHERE [Key] = @Key";
                 command.Parameters.AddWithValue("@Key", key);
@@ -114,8 +122,10 @@ namespace Akavache.SqlServerCompact
 
         internal static IObservable<Unit> DeleteAllFromCache(this SqlCeConnection connection)
         {
-            return Observable.Start(() =>
+            return Observable.StartAsync(async () =>
             {
+                await Ensure.IsOpen(connection);
+
                 var command = connection.CreateCommand();
                 command.CommandText = "DELETE FROM CacheElement";
                 command.ExecuteNonQuery();
@@ -124,8 +134,10 @@ namespace Akavache.SqlServerCompact
 
         internal static IObservable<Unit> DeleteExpiredElements(this SqlCeConnection connection, DateTime time)
         {
-            return Observable.Start(() =>
+            return Observable.StartAsync(async () =>
             {
+                await Ensure.IsOpen(connection);
+
                 var command = connection.CreateCommand();
                 command.CommandText = "DELETE FROM CacheElement WHERE Expiration < @expiration";
                 command.Parameters.AddWithValue("expiration", time);
@@ -137,24 +149,6 @@ namespace Akavache.SqlServerCompact
         internal static IObservable<Unit> Vacuum(this SqlCeConnection connection, DateTime time)
         {
             return Observable.Return(Unit.Default);
-        }
-
-        static CacheElement MapToCacheElement(DbDataReader result)
-        {
-            var cacheElement = new CacheElement
-            {
-                Key = result.GetFieldValue<string>(0),
-                Value = result.GetFieldValue<byte[]>(2),
-                CreatedAt = result.GetFieldValue<DateTime>(3),
-                Expiration = result.GetFieldValue<DateTime>(4)
-            };
-
-            var typeName = result.GetValue(1);
-            if (typeName != DBNull.Value)
-            {
-                cacheElement.TypeName = typeName.ToString();
-            }
-            return cacheElement;
         }
     }
 }
