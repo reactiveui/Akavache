@@ -266,10 +266,14 @@ namespace Akavache.SqlServerCompact
                     {
                         await CreateDatabaseFile(connectionString);
                     }
-                 
-                    // TODO: consider migrating tables and stuff
-                    var currentVersion = await GetSchemaVersion();
-                    
+
+                    var schemaVersion = await GetSchemaVersion();
+                    if (schemaVersion < 1)
+                    {
+                        // TODO: consider migrating tables and stuff
+                        await Connection.InsertSchemaVersion(1);
+                    }
+
                     var tableExists = await Connection.CacheElementsTableExists();
                     if (!tableExists)
                     {

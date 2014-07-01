@@ -28,5 +28,18 @@ namespace Akavache.SqlServerCompact
             command.CommandText = "SELECT TOP 1 Version from SchemaInfo ORDER BY Version DESC";
             return await command.ExecuteNonQueryAsync();
         }
+
+        internal static IObservable<Unit> InsertSchemaVersion(this SqlCeConnection connection, int version)
+        {
+            return Observable.StartAsync(async () =>
+            {
+                await Ensure.IsOpen(connection);
+
+                var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO SchemaInfo (Version) VALUES (@Version)";
+                command.Parameters.AddWithValue("Version", version);
+                await command.ExecuteNonQueryAsync();
+            });
+        }
     }
 }
