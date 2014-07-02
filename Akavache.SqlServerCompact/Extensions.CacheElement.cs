@@ -87,7 +87,8 @@ namespace Akavache.SqlServerCompact
         internal static IObservable<Unit> InsertAll(this SqlCeConnection connection, IEnumerable<CacheElement> elements)
         {
             return elements.ToObservable()
-                .SelectMany(connection.InsertOrUpdate);
+                .Select(connection.InsertOrUpdate)
+                .Merge(4);
         }
 
         internal static IObservable<Unit> InsertOrUpdate(this SqlCeConnection connection, CacheElement element)
