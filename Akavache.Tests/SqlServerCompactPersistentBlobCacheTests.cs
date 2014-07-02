@@ -1,10 +1,11 @@
 ﻿using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Akavache.SqlServerCompact;
 using Akavache.Tests;
 using Xunit;
 
-namespace Akavache.SqlServerCompact.Tests
+namespace Akavache.Tests
 {
     public class SqlServerCompactPersistentBlobCacheTests
     {
