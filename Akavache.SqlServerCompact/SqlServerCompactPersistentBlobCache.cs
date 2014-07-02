@@ -340,35 +340,24 @@ namespace Akavache.SqlServerCompact
 
         protected IObservable<Unit> Initialize(string connectionString)
         {
-            return Observable.Create<Unit>(async (obs) =>
+            if (File.Exists(databaseFile))
             {
-                try
+                return Observable.StartAsync(async () =>
                 {
-                    if (!File.Exists(databaseFile))
-                    {
-                        await CreateDatabaseFile(connectionString);
-                    }
-
                     var schemaVersion = await GetSchemaVersion();
                     if (schemaVersion < 1)
                     {
-                        // TODO: consider migrating tables and stuff
-                        await Connection.InsertSchemaVersion(1);
+                        // TODO: migrating tables and stuff
                     }
+                });
+            }
 
-                    var tableExists = await Connection.CacheElementsTableExists();
-                    if (!tableExists)
-                    {
-                        await Connection.CreateCacheElementTable();
-                    }
-
-                    obs.OnNext(Unit.Default);
-                    obs.OnCompleted();
-                }
-                catch (Exception ex)
-                {
-                    obs.OnError(ex);
-                }
+            return Observable.StartAsync(async () =>
+            {
+                await CreateDatabaseFile(connectionString);
+                await Connection.CreateSchemaInfoTable();
+                await Connection.InsertSchemaVersion(1);
+                await Connection.CreateCacheElementTable();
             });
         }
 
