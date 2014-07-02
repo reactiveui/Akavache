@@ -96,7 +96,6 @@ namespace Akavache.Tests.Performance
         }
     }
 
-    /*
     public class Sqlite3WriteTests : WriteTests
     {
         protected override IBlobCache CreateBlobCache(string path)
@@ -104,7 +103,6 @@ namespace Akavache.Tests.Performance
             return new SqlitePersistentBlobCache(Path.Combine(path, "blob.db"));
         }
     }
-    */
 
     public class SqlCompactWriteTests : WriteTests
     {
