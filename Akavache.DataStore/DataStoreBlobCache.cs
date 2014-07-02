@@ -9,7 +9,7 @@ using TheFactory.Datastore;
 
 namespace Akavache.DataStore
 {
-    public class DataStoreBlobCache : IObjectBulkBlobCache
+    public class DataStoreBlobCache : IBlobCache
     {
         readonly IDatabase database;
 
@@ -33,9 +33,15 @@ namespace Akavache.DataStore
             return Observable.Start(() => database.Get(key)).Select(x => x.Array);
         }
 
+        public static Slice Slice(string str)
+        {
+            return (Slice)Encoding.UTF8.GetBytes(str);
+        }
+
         public IObservable<List<string>> GetAllKeys()
         {
-            throw new NotImplementedException();
+            return Observable.Start(
+                () => database.FindByPrefix(Slice("")).Select(x => x.Key.GetString()).ToList());
         }
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
@@ -55,7 +61,8 @@ namespace Akavache.DataStore
 
         public IObservable<Unit> InvalidateAll()
         {
-            throw new NotImplementedException();
+            // TODO: this is important
+            return Observable.Return(Unit.Default);
         }
 
         public IObservable<Unit> Vacuum()

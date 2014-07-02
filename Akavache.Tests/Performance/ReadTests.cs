@@ -7,7 +7,10 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Akavache.DataStore;
 using Akavache.Sqlite3;
+using Splat;
+using TheFactory.FileSystem;
 using Xunit;
 
 namespace Akavache.Tests.Performance
@@ -127,11 +130,21 @@ namespace Akavache.Tests.Performance
 
     }
 
-    public class Sqlite3ReadTests : ReadTests
+    //public class Sqlite3ReadTests : ReadTests
+    //{
+    //    protected override IBlobCache CreateBlobCache(string path)
+    //    {
+    //        return new SqlitePersistentBlobCache(Path.Combine(path, "blob.db"));
+    //    }
+    //}
+
+    public class DataStoreReadTests : ReadTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new SqlitePersistentBlobCache(Path.Combine(path, "blob.db"));
+            Locator.CurrentMutable.Register(() => new DesktopFileSystem(), typeof(IFileSystem));
+
+            return new DataStoreBlobCache(Path.Combine(path, "blob.db"));
         }
     }
 }
