@@ -4,15 +4,14 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Akavache.SqlServerCompact;
-using Akavache.Tests;
 using Xunit;
 
 namespace Akavache.Tests
 {
     public class SqlServerCompactPersistentBlobCacheTests : IDisposable
     {
-        IDisposable directoryToDispose;
-        string databaseFile;
+        readonly IDisposable directoryToDispose;
+        readonly string databaseFile;
 
         public SqlServerCompactPersistentBlobCacheTests()
         {
