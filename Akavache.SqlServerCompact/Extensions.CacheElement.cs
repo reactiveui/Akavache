@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlServerCe;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -48,6 +49,29 @@ namespace Akavache.SqlServerCompact
                 {
                     var hasResult = result.Read();
                     if (hasResult)
+                    {
+                        list.Add(CacheElement.FromDataReader(result));
+                    }
+                }
+                return list;
+            });
+        }
+
+        internal static IObservable<List<CacheElement>> QueryCacheById(this SqlCeConnection connection, IEnumerable<string> keys)
+        {
+            return Observable.StartAsync(async () =>
+            {
+                await Ensure.IsOpen(connection);
+
+                var command = connection.CreateCommand();
+                var concatKeys = String.Join(",", keys.Select(s => String.Format("'{0}'", s)));
+                command.CommandText = String.Format("SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] IN ({0})", concatKeys);
+
+                var list = new List<CacheElement>();
+
+                using (var result = command.ExecuteReader())
+                {
+                    while (result.Read())
                     {
                         list.Add(CacheElement.FromDataReader(result));
                     }

@@ -217,7 +217,27 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<IDictionary<string, byte[]>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return initializer
+                .SelectMany(_ => Connection.QueryCacheById(keys))
+                .SelectMany(xs =>
+                {
+                    var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
+
+                    var invalidate = (invalidXs.Count > 0) ?
+                        Invalidate(invalidXs.Select(x => x.Key)) :
+                        Observable.Return(Unit.Default);
+
+                    var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
+
+                    return invalidate.SelectMany(_ => validXs.ToObservable())
+                        .Select(x => Observable.Defer(() => AfterReadFromDiskFilter(x.Value, Scheduler)
+                            .Do(y => x.Value = y)))
+                        .Merge(4)
+                        .Aggregate(Unit.Default, (acc, x) => acc)
+                        .Select(_ => validXs.ToDictionary(k => k.Key, v => v.Value));
+                });
         }
 
         public IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys)
