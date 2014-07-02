@@ -87,7 +87,7 @@ namespace Akavache.SqlServerCompact
             var ret = initializer
                 .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
                 .Do(x => element.Value = x)
-                .SelectMany(x => Connection.Insert(element))
+                .SelectMany(x => Connection.InsertOrUpdate(element))
                 .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();
@@ -182,7 +182,7 @@ namespace Akavache.SqlServerCompact
             var ret = initializer
                 .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
                 .Do(x => element.Value = x)
-                .SelectMany(x => Connection.Insert(element))
+                .SelectMany(x => Connection.InsertOrUpdate(element))
                 .Multicast(new AsyncSubject<Unit>());
 
             ret.Connect();

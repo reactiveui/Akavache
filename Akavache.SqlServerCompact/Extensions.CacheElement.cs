@@ -47,8 +47,8 @@ namespace Akavache.SqlServerCompact
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT TOP 1 [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] = @ID";
-                    command.Parameters.AddWithValue("ID", key);
+                    command.CommandText = "SELECT TOP 1 [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] = @Key";
+                    command.Parameters.AddWithValue("Key", key);
                     return CacheElement.FromDataReader(command);
                 }
             });
@@ -87,33 +87,71 @@ namespace Akavache.SqlServerCompact
         internal static IObservable<Unit> InsertAll(this SqlCeConnection connection, IEnumerable<CacheElement> elements)
         {
             return elements.ToObservable()
-                .SelectMany(connection.Insert);
+                .SelectMany(connection.InsertOrUpdate);
         }
 
-        internal static IObservable<Unit> Insert(this SqlCeConnection connection, CacheElement element)
+        internal static IObservable<Unit> InsertOrUpdate(this SqlCeConnection connection, CacheElement element)
         {
             return Observable.StartAsync(async () =>
             {
                 await Ensure.IsOpen(connection);
+                var items = await connection.QueryCacheById(element.Key);
 
-                using (var command = connection.CreateCommand())
+                if (items.Count > 0)
                 {
-                    command.CommandText = "INSERT INTO CacheElement ([Key],TypeName,Value,CreatedAt,Expiration) VALUES (@Key, @TypeName, @Value, @CreatedAt, @Expiration)";
-                    command.Parameters.AddWithValue("Key", element.Key);
-                    command.Parameters.AddWithValue("Value", element.Value);
-                    command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
-                    command.Parameters.AddWithValue("Expiration", element.Expiration);
-                    if (String.IsNullOrWhiteSpace(element.TypeName))
-                    {
-                        command.Parameters.AddWithValue("TypeName", DBNull.Value);
-                    }
-                    else
-                    {
-                        command.Parameters.AddWithValue("TypeName", element.TypeName);
-                    }
-                    await command.ExecuteNonQueryAsync();
+                    await connection.Update(element);
+                }
+                else
+                {
+                    await connection.Insert(element);
                 }
             });
+        }
+
+        internal static async Task Insert(this SqlCeConnection connection, CacheElement element)
+        {
+            await Ensure.IsOpen(connection);
+
+            using (var command = connection.CreateCommand())
+            {
+                command.Parameters.AddWithValue("Key", element.Key);
+                command.Parameters.AddWithValue("Value", element.Value);
+                command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
+                command.Parameters.AddWithValue("Expiration", element.Expiration);
+                if (String.IsNullOrWhiteSpace(element.TypeName))
+                {
+                    command.Parameters.AddWithValue("TypeName", DBNull.Value);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("TypeName", element.TypeName);
+                }
+
+                command.CommandText = "INSERT INTO CacheElement ([Key],TypeName,Value,CreatedAt,Expiration) VALUES (@Key, @TypeName, @Value, @CreatedAt, @Expiration)";
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        static async Task Update(this SqlCeConnection connection, CacheElement element)
+        {
+            using (var command = connection.CreateCommand())
+            {
+                command.Parameters.AddWithValue("Key", element.Key);
+                command.Parameters.AddWithValue("Value", element.Value);
+                command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
+                command.Parameters.AddWithValue("Expiration", element.Expiration);
+                if (String.IsNullOrWhiteSpace(element.TypeName))
+                {
+                    command.Parameters.AddWithValue("TypeName", DBNull.Value);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("TypeName", element.TypeName);
+                }
+
+                command.CommandText = "UPDATE CacheElement SET TypeName = @TypeName, Value = @Value, CreatedAt = @CreatedAt, Expiration = @Expiration WHERE [Key]=@Key\r\n";
+                await command.ExecuteNonQueryAsync();
+            }
         }
 
         internal static IObservable<Unit> DeleteFromCache(this SqlCeConnection connection, string key)

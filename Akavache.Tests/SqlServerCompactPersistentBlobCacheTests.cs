@@ -37,6 +37,22 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public async Task CanOverwriteSomeBytes()
+        {
+            using (var fixture = new SqlServerCompactPersistentBlobCache(databaseFile))
+            {
+                await fixture.Insert("something", new byte[] { 3, 4, 5 });
+                await fixture.Insert("something", new byte[] { 6, 7, 8 });
+
+                var result = await fixture.Get("something");
+
+                Assert.Equal(6, result[0]);
+                Assert.Equal(7, result[1]);
+                Assert.Equal(8, result[2]);
+            }
+        }
+
+        [Fact]
         public async Task CanInsertManyItems()
         {
             using (var fixture = new SqlServerCompactPersistentBlobCache(databaseFile))
