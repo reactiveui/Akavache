@@ -17,9 +17,11 @@ namespace Akavache.SqlServerCompact
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CacheElement'";
-                var reader = command.ExecuteReader();
-                var hasRows = reader.Read();
-                return hasRows;
+                using (var reader = command.ExecuteReader())
+                {
+                    var hasRows = reader.Read();
+                    return hasRows;
+                }
             }
         }
 
@@ -47,18 +49,7 @@ namespace Akavache.SqlServerCompact
                 {
                     command.CommandText = "SELECT TOP 1 [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] = @ID";
                     command.Parameters.AddWithValue("ID", key);
-
-                    var list = new List<CacheElement>();
-
-                    using (var result = command.ExecuteReader())
-                    {
-                        var hasResult = result.Read();
-                        if (hasResult)
-                        {
-                            list.Add(CacheElement.FromDataReader(result));
-                        }
-                    }
-                    return list;
+                    return CacheElement.FromDataReader(command);
                 }
             });
         }
@@ -73,17 +64,7 @@ namespace Akavache.SqlServerCompact
                 {
                     var concatKeys = String.Join(",", keys.Select(s => String.Format("'{0}'", s)));
                     command.CommandText = String.Format("SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] IN ({0})", concatKeys);
-
-                    var list = new List<CacheElement>();
-
-                    using (var result = command.ExecuteReader())
-                    {
-                        while (result.Read())
-                        {
-                            list.Add(CacheElement.FromDataReader(result));
-                        }
-                    }
-                    return list;
+                    return CacheElement.FromDataReader(command);
                 }
             });
         }
@@ -97,17 +78,7 @@ namespace Akavache.SqlServerCompact
                 var command = connection.CreateCommand();
                 command.CommandText = "SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE Expiration >= @Expiration";
                 command.Parameters.AddWithValue("Expiration", time);
-
-                var list = new List<CacheElement>();
-
-                using (var result = command.ExecuteReader())
-                {
-                    while (result.Read())
-                    {
-                        list.Add(CacheElement.FromDataReader(result));
-                    }
-                }
-                return list;
+                return CacheElement.FromDataReader(command);
             });
         }
 
@@ -140,7 +111,7 @@ namespace Akavache.SqlServerCompact
                     {
                         command.Parameters.AddWithValue("TypeName", element.TypeName);
                     }
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
             });
         }

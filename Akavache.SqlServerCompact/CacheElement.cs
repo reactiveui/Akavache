@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.SqlServerCe;
 
 namespace Akavache.SqlServerCompact
 {
@@ -27,6 +29,22 @@ namespace Akavache.SqlServerCompact
                 cacheElement.TypeName = typeName.ToString();
             }
             return cacheElement;
+        }
+
+        internal static List<CacheElement> FromDataReader(SqlCeCommand command)
+        {
+            var list = new List<CacheElement>();
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(FromDataReader(reader));
+                }
+
+                reader.Close();
+            }
+            return list;
         }
     }
 }
