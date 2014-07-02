@@ -186,7 +186,33 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            lock (inflightCache)
+            {
+                foreach (var kvp in keyValuePairs) inflightCache.Invalidate(kvp.Key);
+            }
+
+            var elements = keyValuePairs.Select(kvp => new CacheElement()
+            {
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTimeMaxValueSqlServerCeCompatible,
+                Key = kvp.Key,
+                Value = kvp.Value,
+                CreatedAt = Scheduler.Now.UtcDateTime,
+            }).ToList();
+
+            var encryptAllTheData = elements.ToObservable()
+                .Select(x => Observable.Defer(() => BeforeWriteToDiskFilter(x.Value, Scheduler))
+                    .Do(y => x.Value = y))
+                .Merge(4)
+                .TakeLast(1);
+
+            var ret = encryptAllTheData
+                .SelectMany(_ => initializer)
+                .SelectMany(_ => Connection.InsertAll(elements))
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
         public IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys)

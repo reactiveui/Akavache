@@ -82,6 +82,14 @@ namespace Akavache.SqlServerCompact
             });
         }
 
+
+        // TODO: this seems legit https://www.nuget.org/packages/ErikEJ.SqlCeBulkCopy
+        internal static IObservable<Unit> InsertAll(this SqlCeConnection connection, IEnumerable<CacheElement> elements)
+        {
+            return elements.ToObservable()
+                .SelectMany(connection.Insert);
+        }
+
         internal static IObservable<Unit> Insert(this SqlCeConnection connection, CacheElement element)
         {
             return Observable.StartAsync(async () =>
