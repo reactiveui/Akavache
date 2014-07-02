@@ -225,7 +225,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) throw new ObjectDisposedException(typeName);
             return initializer
                 .SelectMany(_ => Connection.DeleteAllFromCache<T>());
         }
@@ -316,12 +316,68 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException(typeName));
+
+            lock (inflightCache)
+            {
+                foreach (var kvp in keyValuePairs) inflightCache.Invalidate(kvp.Key);
+            }
+
+            var serializedElements = Observable.Start(() =>
+            {
+                return keyValuePairs.Select(x => new CacheElement()
+                {
+                    Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
+                    Key = x.Key,
+                    TypeName = typeof(T).FullName,
+                    Value = SerializeObject<T>(x.Value),
+                    CreatedAt = BlobCache.TaskpoolScheduler.Now.UtcDateTime,
+                }).ToList();
+            }, Scheduler);
+
+            var ret = serializedElements
+                .SelectMany(x => x.ToObservable())
+                .Select(x => Observable.Defer(() => BeforeWriteToDiskFilter(x.Value, Scheduler))
+                    .Select(y => { x.Value = y; return x; }))
+                .Merge(4)
+                .ToList()
+                .SelectMany(x => Connection.InsertAll(x))
+                .Multicast(new AsyncSubject<Unit>());
+
+            return initializer.Do(_ => ret.Connect());
         }
 
         public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<IDictionary<string, T>>(new ObjectDisposedException(typeName));
+
+            var ret = initializer
+                .SelectMany(_ => Connection.QueryCacheById(keys))
+                .SelectMany(xs =>
+                {
+                    var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
+                    var invalidate = (invalidXs.Count > 0) ?
+                        Invalidate(invalidXs.Select(x => x.Key)) :
+                        Observable.Return(Unit.Default);
+
+                    var validXs = xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime).ToList();
+
+                    if (validXs.Count == 0)
+                    {
+                        return invalidate.Select(_ => new Dictionary<string, T>());
+                    }
+
+                    return validXs.ToObservable()
+                        .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler)
+                            .Select(val => { x.Value = val; return x; }))
+                        .SelectMany(x => DeserializeObject<T>(x.Value)
+                            .Select(val => new { Key = x.Key, Value = val }))
+                        .ToDictionary(k => k.Key, v => v.Value);
+                })
+                .Multicast(new AsyncSubject<IDictionary<string, T>>());
+
+            ret.Connect();
+            return ret;
         }
 
         public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
