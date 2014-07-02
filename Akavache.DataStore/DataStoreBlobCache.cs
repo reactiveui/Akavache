@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Text;
 using TheFactory.Datastore;
 
@@ -10,21 +11,21 @@ namespace Akavache.DataStore
 {
     public class DataStoreBlobCache : IObjectBulkBlobCache
     {
-        IDatabase database;
+        readonly IDatabase database;
 
         public DataStoreBlobCache(string path)
         {
-            database = Database.Open(path);
+            database = Database.Open(path, new Options { CreateIfMissing = true, DeleteOnClose = false });
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            database.Dispose();
         }
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            throw new NotImplementedException();
+            return Observable.Start(() => database.Put(key, new Slice(data, 0, data.Length)));
         }
 
         public IObservable<byte[]> Get(string key)
