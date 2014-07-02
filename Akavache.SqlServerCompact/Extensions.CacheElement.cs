@@ -62,8 +62,19 @@ namespace Akavache.SqlServerCompact
 
                 using (var command = connection.CreateCommand())
                 {
-                    var concatKeys = String.Join(",", keys.Select(s => String.Format("'{0}'", s)));
-                    command.CommandText = String.Format("SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] IN ({0})", concatKeys);
+                    var keyList = keys.ToList();
+                    var keyNames = Enumerable.Range(0, keyList.Count)
+                        .Select(x => "@k" + x.ToString())
+                        .ToList();
+
+                    command.CommandText = String.Format("SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] IN ({0})", 
+                        String.Join(",", keyNames));
+
+                    for (int i=0; i < keyList.Count; i++) 
+                    {
+                        command.Parameters.AddWithValue(keyNames[i], keyList[i]);
+                    }
+
                     return CacheElement.FromDataReader(command);
                 }
             });
