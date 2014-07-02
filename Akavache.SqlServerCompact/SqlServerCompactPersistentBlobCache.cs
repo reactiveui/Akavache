@@ -288,7 +288,22 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<IDictionary<string, DateTimeOffset?>>(new ObjectDisposedException(typeName));
+
+            return initializer
+                .SelectMany(_ => Connection.QueryCacheById(keys))
+                .SelectMany(xs =>
+                {
+                    var invalidXs = xs.Where(x => x.Expiration < Scheduler.Now.UtcDateTime).ToList();
+
+                    var invalidate = (invalidXs.Count > 0) ?
+                        Invalidate(invalidXs.Select(x => x.Key)) :
+                        Observable.Return(Unit.Default);
+
+                    return invalidate.Select(_ =>
+                        xs.Where(x => x.Expiration >= Scheduler.Now.UtcDateTime)
+                            .ToDictionary(k => k.Key, v => new DateTimeOffset?(new DateTimeOffset(v.Expiration))));
+                });
         }
 
         public IObservable<Unit> Invalidate(IEnumerable<string> keys)
