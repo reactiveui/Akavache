@@ -225,7 +225,9 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            return initializer
+                .SelectMany(_ => Connection.DeleteAllFromCache<T>());
         }
 
         public IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
@@ -291,7 +293,10 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> Invalidate(IEnumerable<string> keys)
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException(typeName);
+            lock (inflightCache) foreach (var v in keys) { inflightCache.Invalidate(v); }
+
+            return initializer.SelectMany(_ => keys.ToObservable().SelectMany(k => Connection.DeleteFromCache(k)));
         }
 
         public IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
@@ -306,7 +311,8 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException(typeName);
+            return Invalidate(keys);
         }
 
         private SqlCeConnection Connection { get; set; }

@@ -196,6 +196,21 @@ namespace Akavache.SqlServerCompact
             });
         }
 
+        internal static IObservable<Unit> DeleteAllFromCache<T>(this SqlCeConnection connection)
+        {
+            return Observable.StartAsync(async () =>
+            {
+                await Ensure.IsOpen(connection);
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "DELETE FROM CacheElement WHERE TypeName = @TypeName";
+                    command.Parameters.AddWithValue("TypeName", typeof(T).FullName);
+                    command.ExecuteNonQuery();
+                }
+            });
+        }
+
         internal static IObservable<Unit> DeleteExpiredElements(this SqlCeConnection connection, DateTime time)
         {
             return Observable.StartAsync(async () =>
