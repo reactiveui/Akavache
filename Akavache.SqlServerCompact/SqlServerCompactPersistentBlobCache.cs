@@ -150,7 +150,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> Vacuum()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) throw new ObjectDisposedException(typeName);
 
             var nowTime = Scheduler.Now.UtcDateTime;
             return initializer
@@ -165,7 +165,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException(typeName));
 
             var data = SerializeObject(value);
 
@@ -191,7 +191,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
         {
-            if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<T>(new ObjectDisposedException(typeName));
             lock (inflightCache)
             {
                 var ret = inflightCache.Get(key)
@@ -207,7 +207,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
-            if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException(typeName));
 
             return initializer
                 .SelectMany(_ => Connection.QueryCacheByType<T>())
@@ -219,7 +219,8 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> InvalidateObject<T>(string key)
         {
-            throw new NotImplementedException();
+            if (disposed) throw new ObjectDisposedException(typeName);
+            return Invalidate(key);
         }
 
         public IObservable<Unit> InvalidateAllObjects<T>()
@@ -229,7 +230,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException(typeName));
             lock (inflightCache)
             {
                 foreach (var kvp in keyValuePairs) inflightCache.Invalidate(kvp.Key);
@@ -260,7 +261,7 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys)
         {
-            if (disposed) return Observable.Throw<IDictionary<string, byte[]>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<IDictionary<string, byte[]>>(new ObjectDisposedException(typeName));
 
             return initializer
                 .SelectMany(_ => Connection.QueryCacheById(keys))
@@ -322,7 +323,7 @@ namespace Akavache.SqlServerCompact
         /// <returns>A Future result representing the encrypted data</returns>
         protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException(typeName));
 
             return Observable.Return(data);
         }
@@ -340,7 +341,7 @@ namespace Akavache.SqlServerCompact
         /// <returns>A Future result representing the decrypted data</returns>
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException(typeName));
 
             return Observable.Return(data);
         }
