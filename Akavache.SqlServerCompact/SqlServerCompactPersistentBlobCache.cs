@@ -9,6 +9,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using Splat;
 
 namespace Akavache.SqlServerCompact
@@ -158,15 +160,49 @@ namespace Akavache.SqlServerCompact
         }
 
         public IObservable<Unit> Shutdown { get { return shutdown; } }
+
         public IScheduler Scheduler { get; private set; }
+
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            var data = SerializeObject(value);
+
+            lock (inflightCache) inflightCache.Invalidate(key);
+
+            var element = new CacheElement()
+            {
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTimeMaxValueSqlServerCeCompatible,
+                Key = key,
+                TypeName = typeof(T).FullName,
+                CreatedAt = Scheduler.Now.UtcDateTime,
+            };
+
+            var ret = initializer
+                .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
+                .Do(x => element.Value = x)
+                .SelectMany(x => Connection.Insert(element))
+                .Multicast(new AsyncSubject<Unit>());
+
+            ret.Connect();
+            return ret;
         }
 
         public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            lock (inflightCache)
+            {
+                var ret = inflightCache.Get(key)
+                    .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
+                    .SelectMany(DeserializeObject<T>)
+                    .Multicast(new AsyncSubject<T>());
+
+                ret.Connect();
+
+                return ret;
+            }
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
@@ -368,11 +404,56 @@ namespace Akavache.SqlServerCompact
             return versionNumber;
         }
 
+        static byte[] SerializeObject<T>(T value)
+        {
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var ms = new MemoryStream();
+            var serializer = JsonSerializer.Create(settings);
+            var writer = new BsonWriter(ms);
+
+            serializer.Serialize(writer, new ObjectWrapper<T> { Value = value });
+            return ms.ToArray();
+        }
+
+        IObservable<T> DeserializeObject<T>(byte[] data)
+        {
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            var serializer = JsonSerializer.Create(settings);
+            var reader = new BsonReader(new MemoryStream(data));
+
+            try
+            {
+                try
+                {
+                    var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+                    return Observable.Return(boxedVal);
+                }
+                catch (Exception ex)
+                {
+                    this.Log().WarnException("Failed to deserialize data as boxed, we may be migrating from an old Akavache", ex);
+                }
+
+                var rawVal = serializer.Deserialize<T>(reader);
+                return Observable.Return(rawVal);
+            }
+            catch (Exception ex)
+            {
+                return Observable.Throw<T>(ex);
+            }
+        }
+
+
         static IObservable<CacheElement> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
         {
             return Observable.Throw<CacheElement>(
                 new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
+        }
+
+        interface IObjectWrapper { }
+        class ObjectWrapper<T> : IObjectWrapper
+        {
+            public T Value { get; set; }
         }
     }
 }

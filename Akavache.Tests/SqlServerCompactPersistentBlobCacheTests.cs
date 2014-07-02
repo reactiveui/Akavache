@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -55,6 +56,30 @@ namespace Akavache.Tests
                     Assert.Equal(7, result["third"][0]);
                 }
             }
+        }
+
+        [Fact]
+        public async Task CanInsertAPlainObject()
+        {
+            string directory;
+            using (Utility.WithTempDirectory(out directory))
+            {
+                var file = Path.Combine(directory, "database.sdf");
+                using (var fixture = new SqlServerCompactPersistentBlobCache(file))
+                {
+                    var item = new SomeObject { HotGuid = Guid.NewGuid() };
+                    await fixture.InsertObject("some-key", item);
+
+                    var result = await fixture.GetObject<SomeObject>("some-key");
+
+                    Assert.Equal(item.HotGuid, result.HotGuid);
+                }
+            }
+        }
+
+        public class SomeObject
+        {
+            public Guid HotGuid { get; set; }
         }
     }
 }
