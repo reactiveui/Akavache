@@ -207,7 +207,14 @@ namespace Akavache.SqlServerCompact
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
-            throw new NotImplementedException();
+            if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return initializer
+                .SelectMany(_ => Connection.QueryCacheByType<T>())
+                .SelectMany(x => x.ToObservable())
+                .SelectMany(x => AfterReadFromDiskFilter(x.Value, Scheduler))
+                .SelectMany(DeserializeObject<T>)
+                .ToList();
         }
 
         public IObservable<Unit> InvalidateObject<T>(string key)

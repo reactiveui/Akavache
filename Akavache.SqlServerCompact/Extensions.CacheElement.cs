@@ -82,6 +82,18 @@ namespace Akavache.SqlServerCompact
             });
         }
 
+        internal static IObservable<List<CacheElement>> QueryCacheByType<T>(this SqlCeConnection connection)
+        {
+            return Observable.StartAsync(async () =>
+            {
+                await Ensure.IsOpen(connection);
+
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE TypeName >= @TypeName";
+                command.Parameters.AddWithValue("TypeName", typeof(T).FullName);
+                return CacheElement.FromDataReader(command);
+            });
+        }
 
         // TODO: this seems legit https://www.nuget.org/packages/ErikEJ.SqlCeBulkCopy
         internal static IObservable<Unit> InsertAll(this SqlCeConnection connection, IEnumerable<CacheElement> elements)
