@@ -13,7 +13,7 @@ using Splat;
 
 namespace Akavache.SqlServerCompact
 {
-    public class SqlServerCompactPersistentBlobCache : IObjectBulkBlobCache, IEnableLogger
+    public class SqlServerCompactPersistentBlobCache : IBlobCache, IEnableLogger
     {
         const string typeName = "SqlServerCompactPersistentBlobCache";
         readonly DateTime DateTimeMaxValueSqlServerCeCompatible = DateTime.MaxValue.AddMilliseconds(-1);
