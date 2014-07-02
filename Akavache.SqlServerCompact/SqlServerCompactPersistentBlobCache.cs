@@ -18,7 +18,7 @@ namespace Akavache.SqlServerCompact
     public class SqlServerCompactPersistentBlobCache : IObjectBulkBlobCache, IEnableLogger
     {
         const string typeName = "SqlServerCompactPersistentBlobCache";
-        readonly DateTime DateTimeMaxValueSqlServerCeCompatible = DateTime.MaxValue.AddMilliseconds(-1);
+        readonly DateTime dateTimeMaxValueSqlServerCeCompatible = DateTime.MaxValue.AddMilliseconds(-1);
 
         readonly IObservable<Unit> initializer;
         readonly MemoizingMRUCache<string, IObservable<CacheElement>> inflightCache;
@@ -81,7 +81,7 @@ namespace Akavache.SqlServerCompact
                 Key = key,
                 Value = data,
                 CreatedAt = Scheduler.Now.UtcDateTime,
-                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTimeMaxValueSqlServerCeCompatible
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : dateTimeMaxValueSqlServerCeCompatible
             };
 
             var ret = initializer
@@ -122,7 +122,7 @@ namespace Akavache.SqlServerCompact
             lock (inflightCache)
             {
                 return inflightCache.Get(key)
-                    .Select(x => x.CreatedAt == DateTime.MaxValue ?
+                    .Select(x => x.CreatedAt == dateTimeMaxValueSqlServerCeCompatible ?
                         default(DateTimeOffset?) : new DateTimeOffset(x.CreatedAt, TimeSpan.Zero))
                     .Catch<DateTimeOffset?, KeyNotFoundException>(_ => Observable.Return(default(DateTimeOffset?)))
                     .Finally(() => { lock (inflightCache) { inflightCache.Invalidate(key); } });
@@ -173,7 +173,7 @@ namespace Akavache.SqlServerCompact
 
             var element = new CacheElement()
             {
-                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTimeMaxValueSqlServerCeCompatible,
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : dateTimeMaxValueSqlServerCeCompatible,
                 Key = key,
                 TypeName = typeof(T).FullName,
                 CreatedAt = Scheduler.Now.UtcDateTime,
@@ -240,7 +240,7 @@ namespace Akavache.SqlServerCompact
 
             var elements = keyValuePairs.Select(kvp => new CacheElement()
             {
-                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTimeMaxValueSqlServerCeCompatible,
+                Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : dateTimeMaxValueSqlServerCeCompatible,
                 Key = kvp.Key,
                 Value = kvp.Value,
                 CreatedAt = Scheduler.Now.UtcDateTime,
@@ -327,7 +327,7 @@ namespace Akavache.SqlServerCompact
             {
                 return keyValuePairs.Select(x => new CacheElement()
                 {
-                    Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : DateTime.MaxValue,
+                    Expiration = absoluteExpiration != null ? absoluteExpiration.Value.UtcDateTime : dateTimeMaxValueSqlServerCeCompatible,
                     Key = x.Key,
                     TypeName = typeof(T).FullName,
                     Value = SerializeObject<T>(x.Value),
