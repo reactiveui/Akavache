@@ -70,7 +70,7 @@ namespace Akavache.SqlServerCompact
 
                 using (var result = command.ExecuteReader())
                 {
-                    if (result.HasRows)
+                    //if (result.HasRows)
                     {
                         while (result.Read())
                         {
