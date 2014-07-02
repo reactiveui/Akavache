@@ -30,7 +30,7 @@ namespace Akavache.DataStore
 
         public IObservable<byte[]> Get(string key)
         {
-            throw new NotImplementedException();
+            return Observable.Start(() => database.Get(key)).Select(x => x.Array);
         }
 
         public IObservable<List<string>> GetAllKeys()
