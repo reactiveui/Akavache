@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlServerCe;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -33,7 +36,9 @@ namespace Akavache.SqlServerCompact
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "CREATE TABLE CacheElement ([Key] NVARCHAR(4000) PRIMARY KEY, TypeName NVARCHAR(4000), Value image NOT NULL, CreatedAt DATETIME NOT NULL, Expiration DATETIME NOT NULL)";
+                    command.CommandText = "CREATE TABLE CacheElement ([Key] NVARCHAR(4000) NOT NULL, TypeName NVARCHAR(4000) NULL, Value image NOT NULL, CreatedAt DATETIME NOT NULL, Expiration DATETIME NOT NULL)";
+                    command.ExecuteNonQuery();
+                    command.CommandText = "ALTER TABLE [CacheElement] ADD CONSTRAINT [PK_CacheElement] PRIMARY KEY ([Key]);";
                     command.ExecuteNonQuery();
                 }
             });
@@ -47,9 +52,16 @@ namespace Akavache.SqlServerCompact
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT TOP 1 [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] = @Key";
-                    command.Parameters.AddWithValue("Key", key);
-                    return CacheElement.FromDataReader(command);
+                    PrepareCommand(key, command);
+                    var list = new List<CacheElement>();
+                    using (var dataReader = command.ExecuteReader())
+                    {
+                        if (dataReader.Read())
+                        {
+                            list.Add(CacheElement.FromDataReader(dataReader));
+                        }
+                    }
+                    return list;
                 }
             });
         }
@@ -63,8 +75,9 @@ namespace Akavache.SqlServerCompact
                 using (var command = connection.CreateCommand())
                 {
                     var keyList = keys.ToList();
+                    var y = 0;
                     var keyNames = Enumerable.Range(0, keyList.Count)
-                        .Select(x => "@k" + x.ToString())
+                        .Select(x => "@k" + x.ToString(CultureInfo.InvariantCulture))
                         .ToList();
 
                     command.CommandText = String.Format("SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE [Key] IN ({0})", 
@@ -100,13 +113,12 @@ namespace Akavache.SqlServerCompact
                 await Ensure.IsOpen(connection);
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE TypeName >= @TypeName";
+                command.CommandText = "SELECT [Key],TypeName,Value,CreatedAt,Expiration FROM CacheElement WHERE TypeName = @TypeName";
                 command.Parameters.AddWithValue("TypeName", typeof(T).FullName);
                 return CacheElement.FromDataReader(command);
             });
         }
 
-        // TODO: this seems legit https://www.nuget.org/packages/ErikEJ.SqlCeBulkCopy
         internal static IObservable<Unit> InsertAll(this SqlCeConnection connection, IEnumerable<CacheElement> elements)
         {
             return elements.ToObservable()
@@ -123,7 +135,7 @@ namespace Akavache.SqlServerCompact
 
                 if (items.Count > 0)
                 {
-                    await connection.Update(element);
+                    connection.Update(element);
                 }
                 else
                 {
@@ -138,45 +150,56 @@ namespace Akavache.SqlServerCompact
 
             using (var command = connection.CreateCommand())
             {
-                command.Parameters.AddWithValue("Key", element.Key);
-                command.Parameters.AddWithValue("Value", element.Value);
-                command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
-                command.Parameters.AddWithValue("Expiration", element.Expiration);
-                if (String.IsNullOrWhiteSpace(element.TypeName))
-                {
-                    command.Parameters.AddWithValue("TypeName", DBNull.Value);
-                }
-                else
-                {
-                    command.Parameters.AddWithValue("TypeName", element.TypeName);
-                }
+                command.CommandType = CommandType.TableDirect;
+                command.CommandText = "CacheElement";
 
-                command.CommandText = "INSERT INTO CacheElement ([Key],TypeName,Value,CreatedAt,Expiration) VALUES (@Key, @TypeName, @Value, @CreatedAt, @Expiration)";
-                await command.ExecuteNonQueryAsync();
+                using (var resultSet = command.ExecuteResultSet(ResultSetOptions.Updatable))
+                {
+                    
+                    var record = resultSet.CreateRecord();
+                    record.SetString(0, element.Key);
+                    if (String.IsNullOrWhiteSpace(element.TypeName))
+                    {
+                        record.SetValue(1, DBNull.Value);
+                    }
+                    else
+                    {
+                        record.SetString(1, element.TypeName);
+                    }
+                    record.SetValue(2, element.Value);
+                    record.SetDateTime(3, element.CreatedAt);
+                    record.SetDateTime(4, element.Expiration);
+                    resultSet.Insert(record);
+                }
             }
         }
 
-        static async Task Update(this SqlCeConnection connection, CacheElement element)
+        static void Update(this SqlCeConnection connection, CacheElement element)
         {
             using (var command = connection.CreateCommand())
             {
-                command.Parameters.AddWithValue("Key", element.Key);
-                command.Parameters.AddWithValue("Value", element.Value);
-                command.Parameters.AddWithValue("CreatedAt", element.CreatedAt);
-                command.Parameters.AddWithValue("Expiration", element.Expiration);
-                if (String.IsNullOrWhiteSpace(element.TypeName))
+                PrepareCommand(element.Key, command);
+                using (var record = command.ExecuteResultSet(ResultSetOptions.Updatable))
                 {
-                    command.Parameters.AddWithValue("TypeName", DBNull.Value);
+                    if (record.Read())
+                    {
+                        if (String.IsNullOrWhiteSpace(element.TypeName))
+                        {
+                            record.SetValue(1, DBNull.Value);
+                        }
+                        else
+                        {
+                            record.SetString(1, element.TypeName);
+                        }
+                        record.SetValue(2, element.Value);
+                        record.SetDateTime(3, element.CreatedAt);
+                        record.SetDateTime(4, element.Expiration);
+                        record.Update();
+                    }
                 }
-                else
-                {
-                    command.Parameters.AddWithValue("TypeName", element.TypeName);
-                }
-
-                command.CommandText = "UPDATE CacheElement SET TypeName = @TypeName, Value = @Value, CreatedAt = @CreatedAt, Expiration = @Expiration WHERE [Key]=@Key\r\n";
-                await command.ExecuteNonQueryAsync();
             }
         }
+
 
         internal static IObservable<Unit> DeleteFromCache(this SqlCeConnection connection, string key)
         {
@@ -186,9 +209,14 @@ namespace Akavache.SqlServerCompact
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "DELETE FROM CacheElement WHERE [Key] = @Key";
-                    command.Parameters.AddWithValue("@Key", key);
-                    command.ExecuteNonQuery();
+                    PrepareCommand(key, command);
+                    using (var record = command.ExecuteResultSet(ResultSetOptions.Updatable))
+                    {
+                        if (record.Read())
+                        {
+                            record.Delete();
+                        }
+                    }
                 }
             });
         }
@@ -241,6 +269,16 @@ namespace Akavache.SqlServerCompact
         internal static IObservable<Unit> Vacuum(this SqlCeConnection connection, DateTime time)
         {
             return Observable.Return(Unit.Default);
+        }
+
+        private static void PrepareCommand(string key, SqlCeCommand command)
+        {
+            command.CommandType = CommandType.TableDirect;
+            command.CommandText = "CacheElement";
+            command.IndexName = "PK_CacheElement";
+            var start = new object[1];
+            start[0] = new SqlString(key);
+            command.SetRange(DbRangeOptions.Match, start, null);
         }
     }
 }
