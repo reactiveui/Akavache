@@ -19,9 +19,21 @@ namespace Akavache.Sqlite3
         public const int OperationQueueChunkSize = 32;
     }
 
+    enum OperationType 
+    {
+        BulkSelectSqliteOperation,
+        BulkSelectByTypeSqliteOperation,
+        BulkInsertSqliteOperation,
+        BulkInvalidateSqliteOperation,
+        BulkInvalidateByTypeSqliteOperation,
+        InvalidateAllSqliteOperation,
+        VacuumSqliteOperation,
+        GetKeysSqliteOperation,
+    }
+
     interface IPreparedSqliteOperation : IEnableLogger, IDisposable { }
 
-    sealed class BulkInsertSqliteOperation : IPreparedSqliteOperation
+    class BulkInsertSqliteOperation : IPreparedSqliteOperation
     {
         sqlite3_stmt insertOp = null;
         IDisposable inner;
@@ -80,7 +92,7 @@ namespace Akavache.Sqlite3
         }
     }
 
-    sealed class BulkSelectSqliteOperation : IPreparedSqliteOperation
+    class BulkSelectSqliteOperation : IPreparedSqliteOperation
     {
         sqlite3_stmt[] selectOps = null;
         IDisposable inner;
@@ -150,7 +162,14 @@ namespace Akavache.Sqlite3
         }
     }
 
-    sealed class BulkInvalidateSqliteOperation : IPreparedSqliteOperation
+    // NB: This just makes OperationQueue's life easier by giving it a type
+    // name.
+    class BulkSelectByTypeSqliteOperation : BulkSelectSqliteOperation
+    {
+        public BulkSelectByTypeSqliteOperation(SQLiteConnection conn) : base(conn, true) { }
+    }
+
+    class BulkInvalidateSqliteOperation : IPreparedSqliteOperation
     {
         sqlite3_stmt[] deleteOps = null;
         IDisposable inner;
@@ -206,7 +225,14 @@ namespace Akavache.Sqlite3
         }
     }
 
-    sealed class InvalidateAllSqliteOperation : IPreparedSqliteOperation
+    // NB: This just makes OperationQueue's life easier by giving it a type
+    // name.
+    class BulkInvalidateByTypeSqliteOperation : BulkInvalidateSqliteOperation
+    {
+        public BulkInvalidateByTypeSqliteOperation(SQLiteConnection conn) : base(conn, true) { }
+    }
+
+    class InvalidateAllSqliteOperation : IPreparedSqliteOperation
     {
         SQLiteConnection conn;
         IDisposable inner;
@@ -216,7 +242,7 @@ namespace Akavache.Sqlite3
             this.conn = conn;
         }
 
-        public Action PrepareToExecute(IEnumerable<CacheElement> toInsert)
+        public Action PrepareToExecute()
         {
             return () => this.Checked(raw.sqlite3_exec(conn.Handle, "DELETE FROM CacheElement"));
         }
@@ -224,7 +250,7 @@ namespace Akavache.Sqlite3
         public void Dispose() { }
     }
 
-    sealed class VacuumSqliteOperation : IPreparedSqliteOperation
+    class VacuumSqliteOperation : IPreparedSqliteOperation
     {
         sqlite3_stmt vacuumOp = null;
         IScheduler scheduler;
@@ -267,7 +293,7 @@ namespace Akavache.Sqlite3
         }
     }
 
-    sealed class GetKeysSqliteOperation : IPreparedSqliteOperation
+    class GetKeysSqliteOperation : IPreparedSqliteOperation
     {
         sqlite3_stmt selectOp = null;
         IScheduler scheduler;

@@ -21,6 +21,7 @@
     <TargetFrameworkProfile>Profile78</TargetFrameworkProfile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="OperationQueue.cs" />
     <Compile Include="Operations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registrations.cs" />
