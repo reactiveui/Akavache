@@ -61,7 +61,7 @@ namespace Akavache.Sqlite3.Internal
 	{
 		public SQLite3.Result Result { get; private set; }
 
-		protected SQLiteException (SQLite3.Result r, string message) : base(message)
+		public SQLiteException (SQLite3.Result r, string message) : base(message)
 		{
 			Result = r;
 		}
