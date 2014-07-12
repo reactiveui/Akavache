@@ -59,6 +59,25 @@ namespace Akavache.Tests
             });
         }
 
+        public static IDisposable WithTempDirectory(out string directoryPath)
+        {
+            var tempDirectory = Path.GetTempPath();
+
+            var di = new DirectoryInfo(Path.Combine(tempDirectory, Guid.NewGuid().ToString()));
+            if (di.Exists)
+            {
+                DeleteDirectory(di.FullName);
+            }
+
+            di.Create();
+
+            directoryPath = di.FullName;
+            return Disposable.Create(() =>
+            {
+                DeleteDirectory(di.FullName);
+            });
+        }
+
         public static void Retry(this Action block, int retries = 2)
         {
             while (true)

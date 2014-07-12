@@ -97,6 +97,7 @@
     <Compile Include="Performance\WriteTests.cs" />
     <Compile Include="Performance\ReadTests.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
+    <Compile Include="SqlServerCompactPersistentBlobCacheTests.cs" />
     <Compile Include="Stresser.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="UtilityTests.cs" />
@@ -112,6 +113,10 @@
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj">
       <Project>{241c47df-ca8e-4296-aa03-2c48bb646abd}</Project>
       <Name>Akavache.Sqlite3</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Akavache.SqlServerCompact\Akavache.SqlServerCompact.csproj">
+      <Project>{d2e29edf-5e3e-439d-83b3-6bf6c4e40035}</Project>
+      <Name>Akavache.SqlServerCompact</Name>
     </ProjectReference>
     <ProjectReference Include="..\Akavache\Akavache_Net45.csproj">
       <Project>{b4e665e5-6caf-4414-a6e2-8de1c3bcf203}</Project>

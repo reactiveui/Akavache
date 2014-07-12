@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
+using Akavache.SqlServerCompact;
 using Xunit;
 
 namespace Akavache.Tests.Performance
@@ -95,11 +96,20 @@ namespace Akavache.Tests.Performance
         }
     }
 
+    /*
     public class Sqlite3WriteTests : WriteTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             return new SqlitePersistentBlobCache(Path.Combine(path, "blob.db"));
+        }
+    }*/
+
+    public class SqlCompactWriteTests : WriteTests
+    {
+        protected override IBlobCache CreateBlobCache(string path)
+        {
+            return new SqlServerCompactPersistentBlobCache(Path.Combine(path, "blob.db"));
         }
     }
 }
