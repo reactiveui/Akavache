@@ -14,6 +14,8 @@ using Newtonsoft.Json.Bson;
 using Akavache.Sqlite3.Internal;
 using Splat;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Reactive.Disposables;
 
 namespace Akavache.Sqlite3
 {
@@ -24,9 +26,11 @@ namespace Akavache.Sqlite3
     public class SqlitePersistentBlobCacheNext : IObjectBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
-        public SQLiteAsyncConnection Connection { get; private set; }
+        public SQLiteConnection Connection { get; private set; }
 
         readonly IObservable<Unit> _initializer;
+        readonly SqliteOperationQueue opQueue;
+        IDisposable queueThread;
         bool disposed = false;
 
         public SqlitePersistentBlobCacheNext(string databaseFile, IScheduler scheduler = null)
@@ -35,7 +39,9 @@ namespace Akavache.Sqlite3
 
             BlobCache.EnsureInitialized();
 
-            Connection = new SQLiteAsyncConnection(databaseFile, storeDateTimeAsTicks: true);
+            Connection = new SQLiteConnection(databaseFile, storeDateTimeAsTicks: true);
+            opQueue = new SqliteOperationQueue(Connection, Scheduler);
+            queueThread = opQueue.Start();
 
             _initializer = Initialize();
         }
@@ -46,53 +52,99 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            var item = new CacheElement() {
+                Key = key,
+                Value = data,
+                Expiration = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime,
+            };
+
+            return _initializer.SelectMany(_ => opQueue.Insert(new[] { item }))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<byte[]> Get(string key)
         {
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
+                .Select(x => x[0].Value)
+                .PublishLast().PermaRef();
         }
 
         public IObservable<List<string>> GetAllKeys()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) return Observable.Throw<List<string>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return _initializer.SelectMany(_ => opQueue.GetAllKeys())
+                .PublishLast().PermaRef();
         }
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
             if (disposed) return Observable.Throw<DateTimeOffset?>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
+                .Select(x => (DateTimeOffset?)new DateTimeOffset(x[0].CreatedAt, TimeSpan.Zero))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<Unit> Flush()
         {
-            // NB: We don't need to sync metadata when using SQLite3
-            return Observable.Return(Unit.Default);
+            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return _initializer.SelectMany(_ => opQueue.Flush())
+                .PublishLast().PermaRef();
         }
 
         public IObservable<Unit> Invalidate(string key)
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            return _initializer.SelectMany(_ => opQueue.Invalidate(new[] { key }))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<Unit> InvalidateAll()
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            return _initializer.SelectMany(_ => opQueue.InvalidateAll())
+                .PublishLast().PermaRef();
         }
 
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             var data = SerializeObject(value);
+            var item = new CacheElement() {
+                Key = key,
+                Value = data,
+                Expiration = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime,
+            };
+
+            return _initializer.SelectMany(_ => opQueue.Insert(new[] { item }))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
         {
             if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
+                .SelectMany(x => DeserializeObject<T>(x[0].Value))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
             if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+
+            return _initializer.SelectMany(_ => opQueue.SelectTypes(new[] { typeof(T).FullName })
+                .SelectMany(x => x.ToObservable()
+                    .SelectMany(y => DeserializeObject<T>(y.Value))
+                    .ToList()))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<Unit> InvalidateObject<T>(string key)
@@ -104,16 +156,25 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            return _initializer.SelectMany(_ => opQueue.InvalidateTypes(new[] { typeof(T).FullName }))
+                .PublishLast().PermaRef();
         }
 
         public IObservable<Unit> Vacuum()
         {
             if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+
+            return _initializer.SelectMany(_ => opQueue.Vacuum())
+                .PublishLast().PermaRef();
         }
 
         public void Dispose()
         {
-            Connection.Shutdown()
+            var disp = Interlocked.Exchange(ref queueThread, null);
+            if (disp == null) return;
+
+            Observable.Start(() => queueThread.Dispose(), Scheduler)
                 .Multicast(shutdown)
                 .PermaRef();
 
@@ -126,20 +187,20 @@ namespace Akavache.Sqlite3
             {
                 try
                 {
-                    await Connection.CreateTableAsync<CacheElement>();
+                    Connection.CreateTable<CacheElement>();
 
-                    var schemaVersion = await GetSchemaVersion();
+                    var schemaVersion = GetSchemaVersion();
 
                     if (schemaVersion < 2)
                     {
-                        await Connection.ExecuteAsync("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;");
-                        await Connection.CreateTableAsync<CacheElement>();
+                        Connection.Execute("ALTER TABLE CacheElement RENAME TO VersionOneCacheElement;");
+                        Connection.CreateTable<CacheElement>();
 
                         var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
-                        await Connection.ExecuteAsync(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
-                        await Connection.ExecuteAsync("DROP TABLE VersionOneCacheElement;");
+                        Connection.Execute(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
+                        Connection.Execute("DROP TABLE VersionOneCacheElement;");
                     
-                        await Connection.InsertAsync(new SchemaInfo() { Version = 2, });
+                        Connection.Insert(new SchemaInfo() { Version = 2, });
                     }
 
                     subj.OnNext(Unit.Default);
@@ -154,14 +215,14 @@ namespace Akavache.Sqlite3
             return ret.PublishLast().PermaRef();
         }
 
-        protected async Task<int> GetSchemaVersion()
+        protected int GetSchemaVersion()
         {
             bool shouldCreateSchemaTable = false;
             int versionNumber = 0;
 
             try 
             {
-                versionNumber = await Connection.ExecuteScalarAsync<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
+                versionNumber = Connection.ExecuteScalar<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
             }
             catch (Exception ex)
             {
@@ -170,7 +231,7 @@ namespace Akavache.Sqlite3
 
             if (shouldCreateSchemaTable)
             {
-                await Connection.CreateTableAsync<SchemaInfo>();
+                Connection.CreateTable<SchemaInfo>();
                 versionNumber = 1;
             }
 
