@@ -131,7 +131,7 @@ namespace Akavache.Tests.Performance
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new SqlitePersistentBlobCache(Path.Combine(path, "blob.db"));
+            return new SqlitePersistentBlobCacheNext(Path.Combine(path, "blob.db"));
         }
     }
 }
