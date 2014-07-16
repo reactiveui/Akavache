@@ -29,7 +29,7 @@ namespace Akavache.Sqlite3
         public SQLiteConnection Connection { get; private set; }
 
         readonly IObservable<Unit> _initializer;
-        readonly SqliteOperationQueue opQueue;
+        SqliteOperationQueue opQueue;
         IDisposable queueThread;
         bool disposed = false;
 
@@ -40,9 +40,6 @@ namespace Akavache.Sqlite3
             BlobCache.EnsureInitialized();
 
             Connection = new SQLiteConnection(databaseFile, storeDateTimeAsTicks: true);
-            opQueue = new SqliteOperationQueue(Connection, Scheduler);
-            queueThread = opQueue.Start();
-
             _initializer = Initialize();
         }
 
@@ -174,7 +171,7 @@ namespace Akavache.Sqlite3
             var disp = Interlocked.Exchange(ref queueThread, null);
             if (disp == null) return;
 
-            Observable.Start(() => queueThread.Dispose(), Scheduler)
+            Observable.Start(() => disp.Dispose(), Scheduler)
                 .Multicast(shutdown)
                 .PermaRef();
 
@@ -202,6 +199,11 @@ namespace Akavache.Sqlite3
                     
                         Connection.Insert(new SchemaInfo() { Version = 2, });
                     }
+
+                    // NB: We have to do this here because you can't prepare
+                    // statements until you've got the backing table
+                    opQueue = new SqliteOperationQueue(Connection, Scheduler);
+                    queueThread = opQueue.Start();
 
                     subj.OnNext(Unit.Default);
                     subj.OnCompleted();
