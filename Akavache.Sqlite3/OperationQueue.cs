@@ -14,6 +14,7 @@ using Akavache.Sqlite3.Internal;
 using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 using System.Threading;
 using System.Reactive.Disposables;
+using SQLitePCL;
 
 namespace Akavache.Sqlite3
 {
@@ -29,6 +30,8 @@ namespace Akavache.Sqlite3
         readonly InvalidateAllSqliteOperation invalidateAll;
         readonly VacuumSqliteOperation vacuum;
         readonly GetKeysSqliteOperation getAllKeys;
+        readonly BeginTransactionSqliteOperation begin;
+        readonly CommitTransactionSqliteOperation commit;
 
         BlockingCollection<Tuple<OperationType, IEnumerable, object>> operationQueue = 
             new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
@@ -43,6 +46,8 @@ namespace Akavache.Sqlite3
             invalidateAll = new InvalidateAllSqliteOperation(conn);
             vacuum = new VacuumSqliteOperation(conn, scheduler);
             getAllKeys = new GetKeysSqliteOperation(conn, scheduler);
+            begin = new BeginTransactionSqliteOperation(conn);
+            commit = new CommitTransactionSqliteOperation(conn);
         }
 
         IDisposable start;
@@ -172,6 +177,8 @@ namespace Akavache.Sqlite3
 
         void ProcessItems(List<Tuple<OperationType, IEnumerable, object>> toProcess)
         {
+            begin.PrepareToExecute()();
+
             foreach (var item in toProcess) 
             {
                 switch (item.Item1) {
@@ -203,6 +210,8 @@ namespace Akavache.Sqlite3
                     throw new ArgumentException("Unknown operation");
                 }
             }
+
+            commit.PrepareToExecute()();
         }
 
         void MarshalCompletion<T>(object completion, Func<T> block)
