@@ -10,8 +10,8 @@ like memcached for desktop apps.
 
 Akavache is currently compatible with:
 
-* Xamarin.iOS / Xamarin.Android
-* Mono 3.x (including Xamarin.Mac)
+* Xamarin.iOS / Xamarin.Mac
+* Xamarin.Android
 * .NET 4.5 Desktop (WPF)
 * Windows Phone 8
 * WinRT (Windows Store)
@@ -58,13 +58,13 @@ BlobCache.UserAccount.InsertObject("toaster", myToaster);
 //
 
 // Using async/await
-var toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+var toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster");
 
 // or without async/await
 Toaster toaster;
 
-BlobCache.UserAccount.GetObjectAsync("toaster")
-    .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"))
+BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
+    .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"));
 ```
 
 ## Use SQLite3!
@@ -92,13 +92,13 @@ you would want to return a default value instead of failing:
 Toaster toaster;
 
 try {
-    toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+    toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster");
 } catch (KeyNotFoundException ex) {
     toaster = new Toaster();
 }
 
 // Or without async/await:
-toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
     .Catch(Observable.Return(new Toaster()));
 ```
 

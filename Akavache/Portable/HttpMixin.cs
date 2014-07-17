@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ReactiveUI;
+using Splat;
 
 namespace Akavache
 {
@@ -27,7 +27,7 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var mixin = RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>();
+            var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
             return mixin.DownloadUrl(This, url, headers, fetchAlways, absoluteExpiration);
         }
     }

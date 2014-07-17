@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using Akavache.Deprecated;
 using Xunit;
 using Xunit.Extensions;
 
@@ -27,7 +28,7 @@ namespace Akavache.Tests
                 var stresser = new Stresser(new Action<string>[]
                 {
                     key => cache.Insert(key, Stresser.RandomData()),
-                    key => cache.GetAsync(key).First()
+                    key => cache.Get(key).First()
                 });
 
                 var exceptions = stresser.RunActions(TimeSpan.FromSeconds(2));
@@ -53,9 +54,9 @@ namespace Akavache.Tests
                     key =>
                     {
                         cache.Insert(key, Stresser.RandomData());
-                        cache.GetAsync(key).First();
+                        cache.Get(key).First();
                     },
-                    key => cache.GetAsync(key).First(),
+                    key => cache.Get(key).First(),
                     key => cache.Invalidate(key).First()
                 }, uniqueKeyCount: 2);
 
@@ -191,7 +192,7 @@ namespace Akavache.Tests
             public EncryptedBlobCacheTester(
                 string cacheDirectory = null,
                 Action<AsyncSubject<byte[]>> invalidatedCallback = null)
-                : base(cacheDirectory, null, null, invalidatedCallback)
+                : base(cacheDirectory, null, null, null, invalidatedCallback)
             {
             }
         }

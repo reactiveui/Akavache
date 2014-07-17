@@ -6,11 +6,15 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
-using ReactiveUI;
+using Splat;
 using System.Reactive.Subjects;
 
 namespace Akavache
 {
+    /// <summary>
+    /// This class is an IBlobCache backed by a simple in-memory Dictionary.
+    /// Use it for testing / mocking purposes
+    /// </summary>
     public class TestBlobCache : ISecureBlobCache
     {
         public TestBlobCache() : this(null, null)
@@ -58,7 +62,7 @@ namespace Akavache
         bool disposed;
         Dictionary<string, Tuple<CacheIndexEntry, byte[]>> cache = new Dictionary<string, Tuple<CacheIndexEntry, byte[]>>();
 
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = new DateTimeOffset?())
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
@@ -74,7 +78,7 @@ namespace Akavache
             return Observable.Return(Unit.Default);
         }
 
-        public IObservable<byte[]> GetAsync(string key)
+        public IObservable<byte[]> Get(string key)
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
@@ -108,12 +112,15 @@ namespace Akavache
             }
         }
 
-        public IEnumerable<string> GetAllKeys()
+        public IObservable<List<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("TestBlobCache");
             lock (cache)
             {
-                return cache.Keys.ToArray();
+                return Observable.Return(cache
+                    .Where(x => x.Value.Item1.ExpiresAt == null || x.Value.Item1.ExpiresAt >= Scheduler.Now)
+                    .Select(x => x.Key)
+                    .ToList());
             }
         }
 
@@ -137,6 +144,18 @@ namespace Akavache
             lock (cache)
             {
                 cache.Clear();
+            }
+
+            return Observable.Return(Unit.Default);
+        }
+
+        public IObservable<Unit> Vacuum()
+        {
+            if (disposed) throw new ObjectDisposedException("TestBlobCache");
+            lock (cache) 
+            {
+                var toDelete = cache.Where(x => x.Value.Item1.ExpiresAt >= Scheduler.Now).ToArray();
+                foreach (var kvp in toDelete) cache.Remove(kvp.Key);
             }
 
             return Observable.Return(Unit.Default);

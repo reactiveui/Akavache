@@ -4,7 +4,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using ReactiveUI;
+using Splat;
 
 namespace Akavache
 {
@@ -39,7 +39,7 @@ namespace Akavache
 
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
-            scheduler = scheduler ?? RxApp.TaskpoolScheduler;
+            scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             this.scheduler = scheduler;
             resultObs = queuedOps
                 .GroupBy(x => x.Key)
@@ -98,11 +98,7 @@ namespace Akavache
                 Func = asyncCalculationFunc,
             };
 
-            lock (queuedOps)
-            {
-                queuedOps.OnNext(item);
-            }
-
+            queuedOps.OnNext(item);
             return item.Result;
         }
 

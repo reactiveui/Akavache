@@ -4,13 +4,13 @@ using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using Newtonsoft.Json;
-using ReactiveUI;
 using System.Reactive;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Splat;
 
 namespace Akavache
 {
@@ -20,15 +20,13 @@ namespace Akavache
 
         static BlobCache()
         {
-            // XXX: Everything is dumb. This is to trick RxUI into running its setup stuff in the ctor.
-            LogHost.Default.Debug("Scheduler is {0}, Dep Resolver is {1}", RxApp.TaskpoolScheduler, RxApp.DependencyResolver);
-
-            if (RxApp.DependencyResolver.GetService<IAkavacheHttpMixin>() == null && RxApp.MutableResolver != null)
+            Locator.RegisterResolverCallbackChanged(() => 
             {
-                RxApp.MutableResolver.InitializeAkavache();
-            }
-                
-            InMemory = new TestBlobCache(RxApp.TaskpoolScheduler);
+                if (Locator.CurrentMutable == null) return;
+                Locator.CurrentMutable.InitializeAkavache();
+            });
+               
+            InMemory = new TestBlobCache(Scheduler.Default);
         }
 
         /// <summary>
@@ -62,10 +60,10 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get { return unitTestLocalMachine ?? localMachine ?? RxApp.DependencyResolver.GetService<IBlobCache>("LocalMachine"); }
+            get { return unitTestLocalMachine ?? localMachine ?? Locator.Current.GetService<IBlobCache>("LocalMachine"); }
             set 
             {
-                if (RxApp.InUnitTestRunner())
+                if (ModeDetector.InUnitTestRunner())
                 {
                     unitTestLocalMachine = value;
                     localMachine = localMachine ?? value;
@@ -84,9 +82,9 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return unitTestUserAccount ?? userAccount ?? RxApp.DependencyResolver.GetService<IBlobCache>("UserAccount"); }
+            get { return unitTestUserAccount ?? userAccount ?? Locator.Current.GetService<IBlobCache>("UserAccount"); }
             set {
-                if (RxApp.InUnitTestRunner())
+                if (ModeDetector.InUnitTestRunner())
                 {
                     unitTestUserAccount = value;
                     userAccount = userAccount ?? value;
@@ -104,12 +102,12 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get { return unitTestSecure ?? secure ?? RxApp.DependencyResolver.GetService<ISecureBlobCache>(); }
+            get { return unitTestSecure ?? secure ?? Locator.Current.GetService<ISecureBlobCache>(); }
             set 
             {
-                if (RxApp.InUnitTestRunner())
+                if (ModeDetector.InUnitTestRunner())
                 {
-                    secure = value;
+                    unitTestSecure = value;
                     secure = secure ?? value;
                 }
                 else
@@ -125,6 +123,9 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache InMemory { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void EnsureInitialized()
         {
             // NB: This method doesn't actually do anything, it just ensures 
@@ -150,5 +151,30 @@ namespace Akavache
 
             return ret.ToTask();
         }
+
+        #if PORTABLE
+        static IScheduler TaskpoolOverride;
+        public static IScheduler TaskpoolScheduler 
+        {
+            get 
+            { 
+                var ret = TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool"); 
+                if (ret == null) 
+                {
+                    throw new Exception("Can't find a TaskPoolScheduler. You probably accidentally linked to the PCL Akavache in your app.");
+                }
+
+                return ret;
+            }
+            set { TaskpoolOverride = value; }
+        }
+        #else
+        static IScheduler TaskpoolOverride;
+        public static IScheduler TaskpoolScheduler 
+        {
+            get { return TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default; }
+            set { TaskpoolOverride = value; }
+        }
+        #endif
     }
 }

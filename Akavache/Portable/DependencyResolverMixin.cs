@@ -4,13 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using ReactiveUI;
+using Splat;
 
 namespace Akavache
 {
     internal interface IWantsToRegisterStuff
     {
-        void Register(Action<Func<object>, Type, string> registerFunction);
+        void Register(IMutableDependencyResolver resolverToUse);
     }
 
     public static class DependencyResolverMixin
@@ -24,7 +24,9 @@ namespace Akavache
             var namespaces = new[] { 
                 "Akavache",
                 "Akavache.Mac",
+                "Akavache.Deprecated",
                 "Akavache.Mobile",
+                "Akavache.Http",
                 "Akavache.Sqlite3",
             };
 
@@ -38,11 +40,11 @@ namespace Akavache
                 var targetType = ns + ".Registrations";
                 string fullName = targetType + ", " + assmName.FullName.Replace(assmName.Name, ns);
 
-                var registerTypeClass = Reflection.ReallyFindType(fullName, false);
+                var registerTypeClass = Type.GetType(fullName, false);
                 if (registerTypeClass == null) continue;
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
-                registerer.Register((f, t, s) => This.Register(f, t, s));
+                registerer.Register(This);
             };
         }
     }

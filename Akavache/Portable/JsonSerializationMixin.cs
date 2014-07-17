@@ -8,7 +8,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using ReactiveUI;
+using Splat;
 using Akavache.Internal;
 
 namespace Akavache
@@ -26,7 +26,7 @@ namespace Akavache
         public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertObject(key, value, absoluteExpiration);
+            if (objCache != null) return objCache.InsertObject<T>(key, value, absoluteExpiration);
 
             var bytes = SerializeObject(value);
             return This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
@@ -42,7 +42,7 @@ namespace Akavache
         public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertAllObjects(keyValuePairs, absoluteExpiration);
+            if (objCache != null) return objCache.InsertAllObjects<T>(keyValuePairs, absoluteExpiration);
             throw new NotImplementedException();
         }
 
@@ -54,13 +54,12 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        public static IObservable<T> GetObjectAsync<T>(this IBlobCache This, string key, bool noTypePrefix = false)
+        public static IObservable<T> GetObject<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.GetObjectAsync<T>(key, noTypePrefix);
-            var theKey = noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T));
+            if (objCache != null) return objCache.GetObject<T>(key);
 
-            return This.GetAsync(theKey).SelectMany(DeserializeObject<T>);
+            return This.Get(GetTypePrefixedKey(key, typeof(T))).SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>
@@ -76,14 +75,14 @@ namespace Akavache
             // NB: This isn't exactly thread-safe, but it's Close Enough(tm)
             // We make up for the fact that the keys could get kicked out
             // from under us via the Catch below
-            var matchingKeys = This.GetAllKeys()
-                .Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
-                .ToArray();
-
-            return matchingKeys.ToObservable()
-                .SelectMany(x => This.GetObjectAsync<T>(x, true).Catch(Observable.Empty<T>()))
-                .ToList()
-                .Select(x => (IEnumerable<T>) x);
+            return This.GetAllKeys()
+                .SelectMany(x => x
+                    .Where(y => 
+                        y.StartsWith(GetTypePrefixedKey("", typeof(T))))
+                    .ToObservable())
+                .SelectMany(x => This.GetObject<T>(x)
+                    .Catch(Observable.Empty<T>()))
+                .ToList();
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrFetchObject<T>(this IBlobCache This, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
-            return This.GetObjectAsync<T>(key).Catch<T, Exception>(_ =>
+            return This.GetObject<T>(key).Catch<T, Exception>(_ =>
             {
                 object dontcare;
                 var prefixedKey = This.GetHashCode().ToString() + key;
@@ -168,7 +167,7 @@ namespace Akavache
         public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return This.GetCreatedAt(key);
+            if (objCache != null) return objCache.GetObjectCreatedAt<T>(key);
 
             return This.GetCreatedAt(GetTypePrefixedKey(key, typeof(T)));
         }
@@ -210,21 +209,22 @@ namespace Akavache
             var fetch = Observable.Defer(() => This.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x != false)
-                .SelectMany(async _ => {
-                    var ret = default(T);
-                    try {
-                        ret = await fetchFunc();
-                    } catch (Exception) {
-                        if (shouldInvalidateOnError) This.InvalidateObject<T>(key);
-                        throw;
-                    }
+                .SelectMany(_ => 
+                {
+                    var fetchObs = fetchFunc().Catch<T, Exception>(ex =>
+                    {
+                        var shouldInvalidate = shouldInvalidateOnError ?
+                            This.InvalidateObject<T>(key) :
+                            Observable.Return(Unit.Default);
+                        return shouldInvalidate.SelectMany(__ => Observable.Throw<T>(ex));
+                    });
 
-                    await This.InvalidateObject<T>(key);
-                    await This.InsertObject(key, ret, absoluteExpiration);
-                    return ret;
+                    return fetchObs
+                        .SelectMany(x => This.InvalidateObject<T>(key).Select(__ => x))
+                        .SelectMany(x => This.InsertObject<T>(key, x, absoluteExpiration).Select(__ => x));
                 });
 
-            var result = This.GetObjectAsync<T>(key).Select(x => new Tuple<T, bool>(x, true))
+            var result = This.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
                 .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
 
             return result.SelectMany(x =>
@@ -293,10 +293,12 @@ namespace Akavache
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) return objCache.InvalidateAllObjects<T>();
-            var ret = new AsyncSubject<Unit>();
 
-            This.GetAllKeys().Where(x => x.StartsWith(GetTypePrefixedKey("", typeof(T))))
-                .ToObservable()
+            var ret = new AsyncSubject<Unit>();
+            This.GetAllKeys()
+                .SelectMany(x => 
+                    x.Where(y => y.StartsWith(GetTypePrefixedKey("", typeof(T))))
+                    .ToObservable())
                 .SelectMany(This.Invalidate)
                 .Subscribe(
                     _ => { },
@@ -313,13 +315,13 @@ namespace Akavache
 
         internal static byte[] SerializeObject<T>(T value)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>();
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
         }
 
         static IObservable<T> DeserializeObject<T>(byte[] x)
         {
-            var settings = RxApp.DependencyResolver.GetService<JsonSerializerSettings>();
+            var settings = Locator.Current.GetService<JsonSerializerSettings>();
 
             try
             {

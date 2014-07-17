@@ -3,9 +3,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9091337A-9E94-4DBD-801E-05E1FDA78FFC}</ProjectGuid>
+    <ProjectGuid>{9091337C-9E94-4DBD-801E-05E1FDA78FFC}</ProjectGuid>
     <ProjectTypeGuids>{6BC8ED88-2882-458C-8E55-DFD12B67127B};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <RootNamespace>Akavache</RootNamespace>
@@ -13,6 +13,7 @@
     <AssemblyName>Akavache</AssemblyName>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>false</RestorePackages>
+    <FodyPath>..\packages\Fody.1.20.0.0</FodyPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -20,7 +21,7 @@
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug\Monotouch</OutputPath>
     <IntermediateOutputPath>obj\Debug\Monotouch</IntermediateOutputPath>
-    <DefineConstants>DEBUG; MONO; IOS; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>DEBUG; MONO; UIKIT; XAMARIN_MOBILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -33,53 +34,57 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
-    <DefineConstants>MONO; IOS; XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>MONO; UIKIT; XAMARIN_MOBILE</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net40+sl4+wp7+win8\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Splat.1.3.3\lib\monotouch\Splat.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Reactive.Core, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Core.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Interfaces.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Linq.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ext\monotouch\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\ext\monotouch\ReactiveUI.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Core">
-      <HintPath>..\ext\monotouch\System.Reactive.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\ext\monotouch\System.Reactive.Interfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Linq">
-      <HintPath>..\ext\monotouch\System.Reactive.Linq.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\ext\monotouch\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net.Http" />
-    <Reference Include="Splat">
-      <HintPath>..\ext\monotouch\Splat.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="EncryptedBlobCache.cs" />
-    <Compile Include="IFilesystemProvider.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="PersistentBlobCache.cs" />
     <Compile Include="ProtectDataShim.cs" />
     <Compile Include="SimpleFilesystemProvider.cs" />
-    <Compile Include="Cocoa\CFNetworkHttpMixin.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
@@ -95,10 +100,15 @@
     <Compile Include="Portable\LoginMixin.cs" />
     <Compile Include="Portable\RelativeTimeMixin.cs" />
     <Compile Include="Portable\TestBlobCache.cs" />
+    <Compile Include="Portable\IFilesystemProvider.cs" />
+    <Compile Include="Portable\PortableUtility.cs" />
+    <Compile Include="MacFilesystemProvider.cs" />
+    <Compile Include="HttpMixin.cs" />
   </ItemGroup>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <ItemGroup>
     <Folder Include="Cocoa\" />
-    <Folder Include="Portable\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.Akavache_Monotouch.config" />
   </ItemGroup>
 </Project>

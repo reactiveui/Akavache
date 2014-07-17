@@ -10,8 +10,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
-using Newtonsoft.Json;
-using ReactiveUI;
 using Splat;
 
 namespace Akavache
@@ -26,10 +24,9 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImage(this IBlobCache This, string key, float? desiredWidth = null, float? desiredHeight = null)
         {
-            return This.GetAsync(key)
+            return This.Get(key)
                 .SelectMany(ThrowOnBadImageBuffer)
-                .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight))
-                .ObserveOn(RxApp.MainThreadScheduler);
+                .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight));
         }
 
         /// <summary>

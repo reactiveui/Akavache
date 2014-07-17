@@ -3,7 +3,7 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using ReactiveUI;
+using Splat;
 using System.Reflection;
 using System.Diagnostics;
 
@@ -11,9 +11,14 @@ namespace Akavache
 {
     public class SimpleFilesystemProvider : IFilesystemProvider
     {
-        public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
+        public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
-            return Utility.SafeOpenFileAsync(path, mode, access, share, scheduler).Select(x => (Stream) x);
+            return Utility.SafeOpenFileAsync(path, FileMode.Open, FileAccess.Read, FileShare.Read, scheduler);
+        }
+
+        public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler)
+        {
+            return Utility.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler);
         }
 
         public IObservable<Unit> CreateRecursive(string path)
@@ -24,26 +29,26 @@ namespace Akavache
 
         public IObservable<Unit> Delete(string path)
         {
-            return Observable.Start(() => File.Delete(path), RxApp.TaskpoolScheduler);
+            return Observable.Start(() => File.Delete(path), BlobCache.TaskpoolScheduler);
         }
                 
         public string GetDefaultRoamingCacheDirectory()
         {
-            return RxApp.InUnitTestRunner() ?
+            return ModeDetector.InUnitTestRunner() ?
                 Path.Combine(GetAssemblyDirectoryName(), "BlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "BlobCache");
         }
 
         public string GetDefaultSecretCacheDirectory()
         {
-            return RxApp.InUnitTestRunner() ?
+            return ModeDetector.InUnitTestRunner() ?
                 Path.Combine(GetAssemblyDirectoryName(), "SecretCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), BlobCache.ApplicationName, "SecretCache");
         }
 
         public string GetDefaultLocalMachineCacheDirectory()
         {
-            return RxApp.InUnitTestRunner() ?
+            return ModeDetector.InUnitTestRunner() ?
                 Path.Combine(GetAssemblyDirectoryName(), "LocalBlobCache") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BlobCache.ApplicationName, "BlobCache");
         }

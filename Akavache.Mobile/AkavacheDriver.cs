@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Linq;
-using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Mobile;
+using Splat;
+using Newtonsoft.Json;
 
 namespace Akavache.Mobile
 {
     public class AkavacheDriver : ISuspensionDriver, IEnableLogger
     {
-        public IObservable<T> LoadState<T>() where T : class, IApplicationRootState
+        public IObservable<object> LoadState()
         {
-            return BlobCache.UserAccount.GetObjectAsync<T>("__AppState");
+            return BlobCache.UserAccount.GetObject<object>("__AppState");
         }
 
-        public IObservable<Unit> SaveState<T>(T state) where T : class, IApplicationRootState
+        public IObservable<Unit> SaveState(object state)
         {
             return BlobCache.UserAccount.InsertObject("__AppState", state)
                 .SelectMany(BlobCache.UserAccount.Flush());
@@ -22,8 +23,7 @@ namespace Akavache.Mobile
 
         public IObservable<Unit> InvalidateState()
         {
-            BlobCache.UserAccount.InvalidateObject<object>("__AppState");
-            return Observable.Return(Unit.Default);
+            return BlobCache.UserAccount.InvalidateObject<object>("__AppState");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Akavache.Tests
         protected abstract IBlobCache CreateBlobCache(string path);
 
         [Fact]
-        public void GetAsyncShouldWorkWithMultipleKeys()
+        public void GetShouldWorkWithMultipleKeys()
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
@@ -31,9 +31,9 @@ namespace Akavache.Tests
                     fixture.Insert(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
-                var allData = fixture.GetAsync(keys).First();
+                var allData = fixture.Get(keys).First();
 
                 Assert.Equal(keys.Count(), allData.Count());
                 Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
@@ -41,7 +41,7 @@ namespace Akavache.Tests
         }
 
         [Fact]
-        public void GetAsyncShouldInvalidateOldKeys()
+        public void GetShouldInvalidateOldKeys()
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
@@ -55,9 +55,9 @@ namespace Akavache.Tests
                     fixture.Insert(v, data, DateTimeOffset.MinValue).First();
                 }
 
-                var allData = fixture.GetAsync(keys).First();
+                var allData = fixture.Get(keys).First();
                 Assert.Equal(0, allData.Count());
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
 
@@ -73,9 +73,9 @@ namespace Akavache.Tests
 
                 fixture.Insert(keys.ToDictionary(k => k, v => data)).First();
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
-                var allData = fixture.GetAsync(keys).First();
+                var allData = fixture.Get(keys).First();
 
                 Assert.Equal(keys.Count(), allData.Count());
                 Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
@@ -97,11 +97,11 @@ namespace Akavache.Tests
                     fixture.Insert(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 fixture.Invalidate(keys).First();
 
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
     }
@@ -111,7 +111,7 @@ namespace Akavache.Tests
         protected abstract IBlobCache CreateBlobCache(string path);
 
         [Fact]
-        public void GetAsyncShouldWorkWithMultipleKeys()
+        public void GetShouldWorkWithMultipleKeys()
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
@@ -125,9 +125,9 @@ namespace Akavache.Tests
                     fixture.InsertObject(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
-                var allData = fixture.GetObjectsAsync<Tuple<string, int>>(keys).First();
+                var allData = fixture.GetObjects<Tuple<string, int>>(keys).First();
 
                 Assert.Equal(keys.Count(), allData.Count());
                 Assert.True(allData.All(x => x.Value.Item1 == data.Item1 && x.Value.Item2 == data.Item2));
@@ -135,7 +135,7 @@ namespace Akavache.Tests
         }
 
         [Fact]
-        public void GetAsyncShouldInvalidateOldKeys()
+        public void GetShouldInvalidateOldKeys()
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
@@ -149,9 +149,9 @@ namespace Akavache.Tests
                     fixture.InsertObject(v, data, DateTimeOffset.MinValue).First();
                 }
 
-                var allData = fixture.GetObjectsAsync<Tuple<string, int>>(keys).First();
+                var allData = fixture.GetObjects<Tuple<string, int>>(keys).First();
                 Assert.Equal(0, allData.Count());
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
 
@@ -167,9 +167,9 @@ namespace Akavache.Tests
 
                 fixture.InsertObjects(keys.ToDictionary(k => k, v => data)).First();
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
-                var allData = fixture.GetObjectsAsync<Tuple<string, int>>(keys).First();
+                var allData = fixture.GetObjects<Tuple<string, int>>(keys).First();
 
                 Assert.Equal(keys.Count(), allData.Count());
                 Assert.True(allData.All(x => x.Value.Item1 == data.Item1 && x.Value.Item2 == data.Item2));
@@ -191,11 +191,11 @@ namespace Akavache.Tests
                     fixture.InsertObject(v, data).First();
                 }
 
-                Assert.Equal(keys.Count(), fixture.GetAllKeys().Count());
+                Assert.Equal(keys.Count(), fixture.GetAllKeys().First().Count());
 
                 fixture.InvalidateObjects<Tuple<string, int>>(keys).First();
 
-                Assert.Equal(0, fixture.GetAllKeys().Count());
+                Assert.Equal(0, fixture.GetAllKeys().First().Count());
             }
         }
     }
@@ -209,9 +209,9 @@ namespace Akavache.Tests
             return _inner.Insert(keyValuePairs, absoluteExpiration);
         }
 
-        public IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys)
+        public IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys)
         {
-            return _inner.GetAsync(keys);
+            return _inner.Get(keys);
         }
 
         public IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys)
@@ -229,9 +229,9 @@ namespace Akavache.Tests
             return _inner.InsertObjects(keyValuePairs, absoluteExpiration);
         }
 
-        public IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false)
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false)
         {
-            return _inner.GetObjectsAsync<T>(keys, noTypePrefix);
+            return _inner.GetObjects<T>(keys, noTypePrefix);
         }
 
         public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
@@ -244,9 +244,9 @@ namespace Akavache.Tests
             return _inner.InsertObject<T>(key, value, absoluteExpiration);
         }
 
-        public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key)
         {
-            return _inner.GetObjectAsync<T>(key, noTypePrefix);
+            return _inner.GetObject<T>(key);
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
@@ -262,6 +262,16 @@ namespace Akavache.Tests
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             return _inner.InvalidateAllObjects<T>();
+        }
+
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
+        {
+            return _inner.GetObjects<T>(keys);
+        }
+
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return _inner.GetObjectCreatedAt<T>(key);
         }
     }
 
@@ -293,7 +303,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -301,7 +311,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.SQLiteEncryptedBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -333,7 +343,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -341,7 +351,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.SQLiteEncryptedBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 }

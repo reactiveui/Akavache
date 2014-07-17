@@ -8,13 +8,13 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using ReactiveUI;
+using Splat;
 
 namespace Akavache
 {
     public class IsolatedStorageProvider : IFilesystemProvider
     {
-        public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
+        public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
             return Observable.Create<Stream>(subj =>
             {
@@ -24,9 +24,30 @@ namespace Akavache
                 {
                     fs = IsolatedStorageFile.GetUserStoreForApplication();
                     disp.Add(fs);
-                    disp.Add(Observable.Start(() => fs.OpenFile(path, mode, access, share), RxApp.TaskpoolScheduler).Select(x => (Stream)x).Subscribe(subj));
+                    disp.Add(Observable.Start(() => fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read), BlobCache.TaskpoolScheduler).Subscribe(subj));
                 }
                 catch(Exception ex)
+                {
+                    subj.OnError(ex);
+                }
+
+                return disp;
+            });
+        }
+
+        public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler)
+        {
+            return Observable.Create<Stream>(subj =>
+            {
+                var disp = new CompositeDisposable();
+                IsolatedStorageFile fs = null;
+                try
+                {
+                    fs = IsolatedStorageFile.GetUserStoreForApplication();
+                    disp.Add(fs);
+                    disp.Add(Observable.Start(() => fs.OpenFile(path, FileMode.Create, FileAccess.Write, FileShare.None), BlobCache.TaskpoolScheduler).Subscribe(subj));
+                }
+                catch (Exception ex)
                 {
                     subj.OnError(ex);
                 }
@@ -60,7 +81,7 @@ namespace Akavache
                         acc = path;
                     }
                 }
-            }, RxApp.TaskpoolScheduler) ;
+            }, BlobCache.TaskpoolScheduler) ;
         }
 
         public IObservable<Unit> Delete(string path)
@@ -79,8 +100,9 @@ namespace Akavache
                         fs.DeleteFile(path);
                     }
                     catch (FileNotFoundException) { }
+                    catch (IsolatedStorageException) { }
                 }
-            }, RxApp.TaskpoolScheduler);
+            }, BlobCache.TaskpoolScheduler);
         }
 
         public string GetDefaultRoamingCacheDirectory()
