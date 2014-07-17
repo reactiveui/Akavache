@@ -150,8 +150,8 @@ namespace Akavache.Sqlite3
                         var key = selectList[idx++];
                         var ce = new CacheElement() {
                             Key = key, TypeName = key,
-                            Value = raw.sqlite3_column_blob(selectOp, 2),
-                            Expiration = new DateTime(raw.sqlite3_column_int64(selectOp, 3)),
+                            Value = raw.sqlite3_column_blob(selectOp, 0),
+                            Expiration = new DateTime(raw.sqlite3_column_int64(selectOp, 1)),
                         };
 
                         result.Add(ce);
@@ -429,7 +429,7 @@ namespace Akavache.Sqlite3
 
                     while (this.Checked(raw.sqlite3_step(selectOp)) == SQLite3.Result.Row) 
                     {
-                        result.Add(raw.sqlite3_column_text(selectOp, 1));
+                        result.Add(raw.sqlite3_column_text(selectOp, 0));
                     }
                 } 
                 finally 
