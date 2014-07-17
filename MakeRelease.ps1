@@ -55,7 +55,7 @@ foreach-object $Archs | %{
 ls -r .\Release | ?{$_.FullName.Contains("Clousot")} | %{rm $_.FullName}
 
 $specFiles = ls -r [Aa]kavache*.nuspec
-$specFiles | %{.\tools\nuget\NuGet.exe pack -symbols $_.FullName}
+$specFiles | %{.\.nuget\NuGet.exe pack -symbols $_.FullName}
 
 $packages = ls -r Akavache*.nupkg
 
