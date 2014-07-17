@@ -89,7 +89,6 @@
     <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="Facades_Desktop.cs" />
     <Compile Include="Portable\IFilesystemProvider.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
@@ -108,6 +107,9 @@
     <Compile Include="Portable\TestBlobCache.cs" />
     <Compile Include="Portable\PortableUtility.cs" />
     <Compile Include="MacFilesystemProvider.cs" />
+    <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="ProtectDataShim.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
