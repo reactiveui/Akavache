@@ -21,11 +21,15 @@
     <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AsyncLock.cs" />
+    <Compile Include="BlockingCollection.cs" />
+    <Compile Include="OperationQueue.cs" />
+    <Compile Include="Operations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
-    <Compile Include="SQLitePersistentBlobCache.cs" />
+    <Compile Include="SqlitePersistentBlobCacheNext.cs" />
     <Compile Include="SQLiteEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +59,9 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\portable-windows8+net45+wp8\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Splat">
+      <HintPath>..\packages\Splat.1.3.3\lib\Portable-net45+win+wpa81+wp80\Splat.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -678,9 +678,9 @@ namespace Akavache.Tests
             return ((IObjectBlobCache)_inner).InsertObject(key, value, absoluteExpiration);
         }
 
-        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key)
         {
-            return ((IObjectBlobCache)_inner).GetObject<T>(key, noTypePrefix);
+            return ((IObjectBlobCache)_inner).GetObject<T>(key);
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
@@ -696,6 +696,11 @@ namespace Akavache.Tests
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             return ((IObjectBlobCache)_inner).InvalidateAllObjects<T>();
+        }
+
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return ((IObjectBlobCache)_inner).GetObjectCreatedAt<T>(key);
         }
     }
 }

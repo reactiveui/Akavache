@@ -103,6 +103,9 @@
     <Compile Include="BulkOperationsTest.cs" />
     <Compile Include="EncryptedBlobCacheFixture.cs" />
     <Compile Include="IntegrationTestHelper.cs" />
+    <Compile Include="Performance\PerfHelper.cs" />
+    <Compile Include="Performance\WriteTests.cs" />
+    <Compile Include="Performance\ReadTests.cs" />
     <Compile Include="PersistentBlobCacheTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stresser.cs" />

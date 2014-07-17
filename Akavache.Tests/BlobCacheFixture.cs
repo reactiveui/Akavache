@@ -5,13 +5,13 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Akavache.Deprecated;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
-
 using EncryptedBlobCache = Akavache.Deprecated.EncryptedBlobCache;
 
 namespace Akavache.Tests
@@ -21,21 +21,20 @@ namespace Akavache.Tests
         protected abstract IBlobCache CreateBlobCache(string path);
 
         [Fact]
-        public void CacheShouldBeAbleToGetAndInsertBlobs()
+        public async Task CacheShouldBeAbleToGetAndInsertBlobs()
         {
             string path;
             using (Utility.WithEmptyDirectory(out path))
-            using (TestUtils.WithScheduler(Scheduler.CurrentThread))
             using (var fixture = CreateBlobCache(path)) 
             {
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-                fixture.Insert("Bar", new byte[] { 4, 5, 6 });
+                await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                await fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
-                byte[] output1 = fixture.Get("Foo").First();
-                byte[] output2 = fixture.Get("Bar").First();
+                byte[] output1 = await fixture.Get("Foo");
+                byte[] output2 = await fixture.Get("Bar");
 
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Get(null).First());
