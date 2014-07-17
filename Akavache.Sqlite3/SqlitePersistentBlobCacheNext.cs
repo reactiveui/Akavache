@@ -49,6 +49,7 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (key == null || data == null) return Observable.Throw<Unit>(new ArgumentNullException());
 
             var item = new CacheElement() {
                 Key = key,
@@ -63,9 +64,12 @@ namespace Akavache.Sqlite3
         public IObservable<byte[]> Get(string key)
         {
             if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (key == null) return Observable.Throw<byte[]>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
-                .Select(x => x[0].Value)
+                .SelectMany(x => x.Count == 1 ? 
+                    Observable.Return(x[0].Value) :
+                    Observable.Throw<byte[]>(new KeyNotFoundException()))
                 .PublishLast().PermaRef();
         }
 
@@ -80,9 +84,12 @@ namespace Akavache.Sqlite3
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
             if (disposed) return Observable.Throw<DateTimeOffset?>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (key == null) return Observable.Throw<DateTimeOffset?>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
-                .Select(x => (DateTimeOffset?)new DateTimeOffset(x[0].CreatedAt, TimeSpan.Zero))
+                .Select(x => x.Count == 1 ?
+                    (DateTimeOffset?)new DateTimeOffset(x[0].CreatedAt, TimeSpan.Zero) :
+                    default(DateTimeOffset?))
                 .PublishLast().PermaRef();
         }
 
@@ -113,6 +120,8 @@ namespace Akavache.Sqlite3
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (key == null) return Observable.Throw<Unit>(new ArgumentNullException());
+
             var data = SerializeObject(value);
             var item = new CacheElement() {
                 Key = key,
@@ -127,9 +136,12 @@ namespace Akavache.Sqlite3
         public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
         {
             if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (key == null) return Observable.Throw<T>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
-                .SelectMany(x => DeserializeObject<T>(x[0].Value))
+                .SelectMany(x => x.Count == 1 ? 
+                    DeserializeObject<T>(x[0].Value) :
+                    Observable.Throw<T>(new KeyNotFoundException()))
                 .PublishLast().PermaRef();
         }
 
