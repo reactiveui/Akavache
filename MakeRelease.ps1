@@ -1,7 +1,7 @@
 ﻿Param([string]$version = $null)
 
-$Archs = { "Net45","WP8", "WinRT45", "MonoMac", "Monoandroid", "Monotouch", "Portable-Net45+WinRT45+WP8", "Portable-Win81+Wpa81" }
-$Projects = {"Akavache", "Akavache.Sqlite3", "Akavache.Mobile", "Akavache.Http", "Akavache.Deprecated" }
+$Archs = { "Net45","WP8", "WinRT45", "MonoMac", "Monoandroid", "Monotouch", "Portable-Net45+Win8+WP8+Wpa81", "Portable-Win81+Wpa81" }
+$Projects = {"Akavache", "Akavache.Sqlite3", "Akavache.Mobile", "Akavache.Deprecated" }
 
 $SlnFileExists = Test-Path ".\Akavache.sln"
 if ($SlnFileExists -eq $False) {
@@ -54,9 +54,7 @@ foreach-object $Archs | %{
 
 ls -r .\Release | ?{$_.FullName.Contains("Clousot")} | %{rm $_.FullName}
 
-ext\tools\xamarin-component.exe package component
-
-$specFiles = ls -r Akavache*.nuspec
+$specFiles = ls -r [Aa]kavache*.nuspec
 $specFiles | %{.\tools\nuget\NuGet.exe pack -symbols $_.FullName}
 
 $packages = ls -r Akavache*.nupkg
