@@ -24,7 +24,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\Portable-Net45+Win8+WP8+Wpa81\</OutputPath>
-    <IntermediateOutputPath>obj\Debug\Portable-Net45+WinRT45+WP8\</IntermediateOutputPath>
+    <IntermediateOutputPath>obj\Debug\Portable-Net45+Win8+WP8+Wpa81\</IntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -34,7 +34,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\Portable-Net45+Win8+WP8+Wpa81\</OutputPath>
-    <IntermediateOutputPath>obj\Release\Portable-Net45+WinRT45+WP8\</IntermediateOutputPath>
+    <IntermediateOutputPath>obj\Release\Portable-Net45+Win8+WP8+Wpa81\</IntermediateOutputPath>
     <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -53,6 +53,7 @@
     <Compile Include="Portable\DependencyResolverMixin.cs" />
     <Compile Include="Portable\HttpMixin.cs" />
     <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\IKeyedOperationQueue.cs" />
     <Compile Include="Portable\JsonSerializationMixin.cs" />
     <Compile Include="Portable\KeyedOperationQueue.cs" />

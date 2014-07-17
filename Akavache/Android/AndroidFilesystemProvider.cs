@@ -12,9 +12,14 @@ namespace Akavache
     {
         readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
 
-        public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
+        public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
-            return _inner.SafeOpenFileAsync(path, mode, access, share, scheduler);
+            return _inner.OpenFileForReadAsync(path, scheduler);
+        }
+
+        public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler)
+        {
+            return _inner.OpenFileForWriteAsync(path, scheduler);
         }
 
         public IObservable<Unit> CreateRecursive(string path)

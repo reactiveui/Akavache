@@ -23,7 +23,7 @@ namespace Akavache.Sqlite3
     /// This class represents an IBlobCache backed by a SQLite3 database, and
     /// it is the default (and best!) implementation.
     /// </summary>
-    public class SqlitePersistentBlobCache : IObjectBlobCache, IEnableLogger
+    public class SQLitePersistentBlobCache : IObjectBlobCache, IEnableLogger
     {
         public IScheduler Scheduler { get; private set; }
         public SQLiteConnection Connection { get; private set; }
@@ -33,7 +33,7 @@ namespace Akavache.Sqlite3
         IDisposable queueThread;
         bool disposed = false;
 
-        public SqlitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
+        public SQLitePersistentBlobCache(string databaseFile, IScheduler scheduler = null)
         {
             Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
 
@@ -93,6 +93,11 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return GetCreatedAt(key);
+        }
+
         public IObservable<Unit> Flush()
         {
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
@@ -133,7 +138,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key)
         {
             if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             if (key == null) return Observable.Throw<T>(new ArgumentNullException());

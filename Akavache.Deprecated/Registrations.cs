@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Splat;
@@ -25,30 +26,32 @@ namespace Akavache.Deprecated
         {
             if (ModeDetector.InUnitTestRunner()) return;
 
-            var localCache = default(Lazy<IBlobCache>);
-            var userAccount = default(Lazy<IBlobCache>);
-            var secure = default(Lazy<ISecureBlobCache>);
-
-            localCache = new Lazy<IBlobCache>(() =>
+            // NB: We want the most recently registered fs, since there really 
+            // only should be one 
+            var fs = Locator.Current.GetService<IFilesystemProvider>();
+            if (fs == null)
             {
-                var fs = resolver.GetService<IFilesystemProvider>();
-                return new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs);
-            });
+                throw new Exception("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
+            }
 
-            userAccount = new Lazy<IBlobCache>(() =>
-            {
-                var fs = resolver.GetService<IFilesystemProvider>();
-                return new CPersistentBlobCache(resolver.GetService<IFilesystemProvider>().GetDefaultRoamingCacheDirectory(), fs);
+            var localCache = new Lazy<IBlobCache>(() => {
+                fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).Wait();
+                return new PersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs, BlobCache.TaskpoolScheduler);
             });
-
-            secure = new Lazy<ISecureBlobCache>(() =>
-            {
-                var fs = resolver.GetService<IFilesystemProvider>();
-                return new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs);
-            });
-
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
+
+            var userAccount = new Lazy<IBlobCache>(() =>
+            {
+                fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).Wait();
+                return new PersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs, BlobCache.TaskpoolScheduler);
+            });
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
+
+            var secure = new Lazy<ISecureBlobCache>(() =>
+            {
+                fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).Wait();
+                return new EncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), resolver.GetService<IEncryptionProvider>(), fs, BlobCache.TaskpoolScheduler);
+            });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
         }
     }

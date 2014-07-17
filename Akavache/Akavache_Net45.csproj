@@ -51,17 +51,24 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reactive.Core">
+    <Reference Include="System.Reactive.Core, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-Core.2.2.4\lib\net45\System.Reactive.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Interfaces">
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-Interfaces.2.2.4\lib\net45\System.Reactive.Interfaces.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Linq">
+    <Reference Include="System.Reactive.Linq, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-Linq.2.2.4\lib\net45\System.Reactive.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.PlatformServices">
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-PlatformServices.2.2.4\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Windows.Threading">
+      <HintPath>..\packages\Rx-XAML.2.2.4\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Xaml" />
@@ -76,10 +83,10 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Facades_Desktop.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="MD5.cs" />
     <Compile Include="MD5Managed.cs" />
+    <Compile Include="EncryptionProvider.cs" />
     <Compile Include="Portable\BitmapImageExtensions.cs" />
     <Compile Include="Portable\BlobCache.cs" />
     <Compile Include="Portable\BulkOperationsMixin.cs" />
@@ -88,6 +95,7 @@
     <Compile Include="Portable\DependencyResolverMixin.cs" />
     <Compile Include="Portable\HttpMixin.cs" />
     <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\IKeyedOperationQueue.cs" />
     <Compile Include="Portable\JsonSerializationMixin.cs" />
     <Compile Include="Portable\KeyedOperationQueue.cs" />
@@ -102,9 +110,6 @@
     <Compile Include="SimpleFilesystemProvider.cs" />
     <Compile Include="StreamMixins.cs" />
     <Compile Include="Utility.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.Akavache_Net45.config" />

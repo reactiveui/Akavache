@@ -9,10 +9,18 @@ using Splat;
 
 namespace Akavache.Sqlite3
 {
-    public class EncryptedBlobCache : SqlitePersistentBlobCache, ISecureBlobCache
+    public class SQLiteEncryptedBlobCache : SQLitePersistentBlobCache, ISecureBlobCache
     {
-        public EncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler)
+        private readonly IEncryptionProvider encryption;
+
+        public SQLiteEncryptedBlobCache(string databaseFile, IEncryptionProvider encryptionProvider = null, IScheduler scheduler = null) : base(databaseFile, scheduler)
         {
+            this.encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>();
+
+            if (this.encryption == null)
+            {
+                throw new Exception("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
+            }
         }
 
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
@@ -22,7 +30,7 @@ namespace Akavache.Sqlite3
                 return Observable.Return(data);
             }
 
-            return Encryption.EncryptBlock(data).ToObservable();
+            return this.encryption.EncryptBlock(data);
         }
 
         protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
@@ -32,7 +40,7 @@ namespace Akavache.Sqlite3
                 return Observable.Return(data);
             }
 
-            return Encryption.DecryptBlock(data).ToObservable();
+            return this.encryption.DecryptBlock(data);
         }
     }
 }
