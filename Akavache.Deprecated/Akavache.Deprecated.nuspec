@@ -18,11 +18,6 @@
     <copyright>Copyright GitHub© 2012</copyright>
   </metadata>
   <files>
-    <file src="bin\Release\Net45\Akavache.Deprecated.*" target="lib\net45" />
-    <file src="bin\Release\WP8\Akavache.Deprecated.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Deprecated.*" target="lib\WinRT45" />
-    <file src="bin\Release\MonoMac\Akavache.Deprecated.*" target="lib\MonoMac" />
-    <file src="bin\Release\MonoAndroid\Akavache.Deprecated.*" target="lib\MonoAndroid" />
-    <file src="bin\Release\MonoTouch\Akavache.Deprecated.*" target="lib\MonoTouch" />
+    <file src="bin\Release\Portable-Net45+Win8+WP8+Wpa81\Akavache.Deprecated.*" target="lib\Portable-Net45+Win8+WP8+Wpa81" />
   </files>
 </package>
