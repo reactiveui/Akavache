@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
@@ -15,10 +16,11 @@ using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 using System.Threading;
 using System.Reactive.Disposables;
 using SQLitePCL;
+using Splat;
 
 namespace Akavache.Sqlite3
 {
-    class SqliteOperationQueue
+    class SqliteOperationQueue : IEnableLogger
     {
         readonly AsyncLock flushLock = new AsyncLock();
         readonly IScheduler scheduler;
@@ -82,7 +84,18 @@ namespace Akavache.Sqlite3
                             toProcess.Add(item);
                         }
 
-                        ProcessItems(toProcess);
+                        try
+                        {
+                            ProcessItems(toProcess);
+                        }
+                        catch (SQLiteException ex)
+                        {
+                            // NB: If ProcessItems Failed, it explicitly means
+                            // that the "BEGIN TRANSACTION" failed and that items
+                            // have **not** been processed. We should add them back
+                            // to the queue
+                            foreach (var v in toProcess) operationQueue.Add(v);
+                        }
                     }
                 }
             });
