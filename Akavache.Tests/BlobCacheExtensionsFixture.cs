@@ -581,7 +581,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeObjectCache(new SqlitePersistentBlobCacheNext(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeObjectCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 

@@ -30,7 +30,6 @@
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SqlitePersistentBlobCacheNext.cs" />
-    <Compile Include="SqlitePersistentBlobCache.cs" />
     <Compile Include="WinRTEncryptedBlobCache.cs" />
   </ItemGroup>
   <ItemGroup>
