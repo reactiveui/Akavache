@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
@@ -15,10 +16,11 @@ using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 using System.Threading;
 using System.Reactive.Disposables;
 using SQLitePCL;
+using Splat;
 
 namespace Akavache.Sqlite3
 {
-    class SqliteOperationQueue
+    class SqliteOperationQueue : IEnableLogger
     {
         readonly AsyncLock flushLock = new AsyncLock();
         readonly IScheduler scheduler;
@@ -82,7 +84,18 @@ namespace Akavache.Sqlite3
                             toProcess.Add(item);
                         }
 
-                        ProcessItems(toProcess);
+                        try 
+                        {
+                            ProcessItems(toProcess);
+                        } 
+                        catch (SQLiteException ex) 
+                        {
+                            // NB: If ProcessItems Failed, it explicitly means 
+                            // that the "BEGIN TRANSACTION" failed and that items
+                            // have **not** been processed. We should add them back
+                            // to the queue
+                            foreach (var v in toProcess) operationQueue.Add(v);
+                        }
                     }
                 }
             });
@@ -180,44 +193,54 @@ namespace Akavache.Sqlite3
 
         void ProcessItems(List<Tuple<OperationType, IEnumerable, object>> toProcess)
         {
+            var commitResult = new AsyncSubject<Unit>();
             begin.PrepareToExecute()();
 
             foreach (var item in toProcess) 
             {
                 switch (item.Item1) {
                 case OperationType.BulkInsertSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInsertKey.PrepareToExecute((IEnumerable<CacheElement>)item.Item2));
+                    MarshalCompletion(item.Item3, bulkInsertKey.PrepareToExecute((IEnumerable<CacheElement>)item.Item2), commitResult);
                     break;
                 case OperationType.BulkInvalidateByTypeSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInvalidateType.PrepareToExecute((IEnumerable<string>)item.Item2));
+                    MarshalCompletion(item.Item3, bulkInvalidateType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
                     break;
                 case OperationType.BulkInvalidateSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInvalidateKey.PrepareToExecute((IEnumerable<string>)item.Item2));
+                    MarshalCompletion(item.Item3, bulkInvalidateKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
                     break;
                 case OperationType.BulkSelectByTypeSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkSelectType.PrepareToExecute((IEnumerable<string>)item.Item2));
+                    MarshalCompletion(item.Item3, bulkSelectType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
                     break;
                 case OperationType.BulkSelectSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkSelectKey.PrepareToExecute((IEnumerable<string>)item.Item2));
+                    MarshalCompletion(item.Item3, bulkSelectKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
                     break;
                 case OperationType.GetKeysSqliteOperation:
-                    MarshalCompletion(item.Item3, getAllKeys.PrepareToExecute());
+                    MarshalCompletion(item.Item3, getAllKeys.PrepareToExecute(), commitResult);
                     break;
                 case OperationType.InvalidateAllSqliteOperation:
-                    MarshalCompletion(item.Item3, invalidateAll.PrepareToExecute());
+                    MarshalCompletion(item.Item3, invalidateAll.PrepareToExecute(), commitResult);
                     break;
                 case OperationType.VacuumSqliteOperation:
-                    MarshalCompletion(item.Item3, vacuum.PrepareToExecute());
+                    MarshalCompletion(item.Item3, vacuum.PrepareToExecute(), commitResult);
                     break;
                 default:
                     throw new ArgumentException("Unknown operation");
                 }
             }
 
-            commit.PrepareToExecute()();
+            try 
+            {
+                commit.PrepareToExecute()();
+                commitResult.OnNext(Unit.Default);
+                commitResult.OnCompleted();
+            } 
+            catch (Exception ex) 
+            {
+                commitResult.OnError(ex);
+            }
         }
 
-        void MarshalCompletion<T>(object completion, Func<T> block)
+        void MarshalCompletion<T>(object completion, Func<T> block, IObservable<Unit> commitResult)
         {
             var subj = (AsyncSubject<T>)completion;
             try 
@@ -229,7 +252,11 @@ namespace Akavache.Sqlite3
                 scheduler.Schedule(() => 
                 {
                     subj.OnNext(result);
-                    subj.OnCompleted();
+
+                    commitResult
+                        .SelectMany(_ => Observable.Empty<T>())
+                        .Multicast(subj)
+                        .PermaRef();
                 });
             }
             catch (Exception ex)
@@ -238,7 +265,7 @@ namespace Akavache.Sqlite3
             }
         }
 
-        void MarshalCompletion(object completion, Action block)
+        void MarshalCompletion(object completion, Action block, IObservable<Unit> commitResult)
         {
             var subj = (AsyncSubject<Unit>)completion;
             try 
@@ -248,7 +275,11 @@ namespace Akavache.Sqlite3
                 scheduler.Schedule(() => 
                 {
                     subj.OnNext(Unit.Default);
-                    subj.OnCompleted();
+
+                    commitResult
+                        .SelectMany(_ => Observable.Empty<Unit>())
+                        .Multicast(subj)
+                        .PermaRef();
                 });
             }
             catch (Exception ex)
