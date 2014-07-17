@@ -21,6 +21,7 @@ namespace Akavache.Sqlite3
     class SqliteOperationQueue
     {
         readonly AsyncLock flushLock = new AsyncLock();
+        readonly IScheduler scheduler;
 
         readonly BulkSelectSqliteOperation bulkSelectKey;
         readonly BulkSelectByTypeSqliteOperation bulkSelectType;
@@ -38,6 +39,8 @@ namespace Akavache.Sqlite3
 
         public SqliteOperationQueue(SQLiteConnection conn, IScheduler scheduler)
         {
+            this.scheduler = scheduler;
+
             bulkSelectKey = new BulkSelectSqliteOperation(conn, false);
             bulkSelectType = new BulkSelectByTypeSqliteOperation(conn);
             bulkInsertKey = new BulkInsertSqliteOperation(conn);
@@ -219,12 +222,19 @@ namespace Akavache.Sqlite3
             var subj = (AsyncSubject<T>)completion;
             try 
             {
-                subj.OnNext(block());
-                subj.OnCompleted();
+                var result = block();
+                
+                // NB: We do this in a scheduled result to stop First() and friends
+                // from blowing up
+                scheduler.Schedule(() => 
+                {
+                    subj.OnNext(result);
+                    subj.OnCompleted();
+                });
             }
             catch (Exception ex)
             {
-                subj.OnError(ex);
+                scheduler.Schedule(() => subj.OnError(ex));
             }
         }
 
@@ -234,11 +244,16 @@ namespace Akavache.Sqlite3
             try 
             {
                 block();
-                subj.OnNext(Unit.Default); subj.OnCompleted();
+
+                scheduler.Schedule(() => 
+                {
+                    subj.OnNext(Unit.Default);
+                    subj.OnCompleted();
+                });
             }
             catch (Exception ex)
             {
-                subj.OnError(ex);
+                scheduler.Schedule(() => subj.OnError(ex));
             }
         }
     }
