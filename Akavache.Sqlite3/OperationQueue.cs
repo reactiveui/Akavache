@@ -41,8 +41,8 @@ namespace Akavache.Sqlite3
         {
             this.scheduler = scheduler;
 
-            bulkSelectKey = new BulkSelectSqliteOperation(conn, false);
-            bulkSelectType = new BulkSelectByTypeSqliteOperation(conn);
+            bulkSelectKey = new BulkSelectSqliteOperation(conn, false, scheduler);
+            bulkSelectType = new BulkSelectByTypeSqliteOperation(conn, scheduler);
             bulkInsertKey = new BulkInsertSqliteOperation(conn);
             bulkInvalidateKey = new BulkInvalidateSqliteOperation(conn, false);
             bulkInvalidateType = new BulkInvalidateByTypeSqliteOperation(conn);

@@ -77,10 +77,9 @@ namespace Akavache.Sqlite3
                             this.Checked(raw.sqlite3_bind_text(insertOp, 2, v.TypeName));
                         }
 
-                        this.Checked(raw.sqlite3_bind_text(insertOp, 2, v.TypeName ?? ""));
                         this.Checked(raw.sqlite3_bind_blob(insertOp, 3, v.Value));
-                        this.Checked(raw.sqlite3_bind_int64(insertOp, 4, v.Expiration.ToUniversalTime().Ticks));
-                        this.Checked(raw.sqlite3_bind_int64(insertOp, 5, v.CreatedAt.ToUniversalTime().Ticks));
+                        this.Checked(raw.sqlite3_bind_int64(insertOp, 4, v.Expiration.Ticks));
+                        this.Checked(raw.sqlite3_bind_int64(insertOp, 5, v.CreatedAt.Ticks));
 
                         this.Checked(raw.sqlite3_step(insertOp));
                     } 
@@ -102,12 +101,14 @@ namespace Akavache.Sqlite3
     {
         sqlite3_stmt[] selectOps = null;
         IDisposable inner;
+        IScheduler sched;
 
-        public BulkSelectSqliteOperation(SQLiteConnection conn, bool useTypeInsteadOfKey)
+        public BulkSelectSqliteOperation(SQLiteConnection conn, bool useTypeInsteadOfKey, IScheduler scheduler)
         {
             var qs = new StringBuilder("?");
             var column = useTypeInsteadOfKey ? "TypeName" : "Key";
             Connection = conn;
+            sched = scheduler;
 
             selectOps = Enumerable.Range(1, Constants.OperationQueueChunkSize)
                 .Select(x => {
@@ -134,6 +135,8 @@ namespace Akavache.Sqlite3
             if (selectList.Count == 0) return () => new List<CacheElement>();
 
             var selectOp = selectOps[selectList.Count - 1];
+            var now = sched.Now;
+
             return (() => 
             {
                 var result = new List<CacheElement>();
@@ -148,13 +151,14 @@ namespace Akavache.Sqlite3
                     while (this.Checked(raw.sqlite3_step(selectOp)) == SQLite3.Result.Row) 
                     {
                         var key = selectList[idx++];
+                        
                         var ce = new CacheElement() {
                             Key = key, TypeName = key,
                             Value = raw.sqlite3_column_blob(selectOp, 0),
                             Expiration = new DateTime(raw.sqlite3_column_int64(selectOp, 1)),
                         };
 
-                        result.Add(ce);
+                        if (now.UtcTicks <= ce.Expiration.Ticks) result.Add(ce);
                     }
                 } 
                 finally 
@@ -176,7 +180,7 @@ namespace Akavache.Sqlite3
     // name.
     class BulkSelectByTypeSqliteOperation : BulkSelectSqliteOperation
     {
-        public BulkSelectByTypeSqliteOperation(SQLiteConnection conn) : base(conn, true) { }
+        public BulkSelectByTypeSqliteOperation(SQLiteConnection conn, IScheduler sched) : base(conn, true, sched) { }
     }
 
     class BulkInvalidateSqliteOperation : IPreparedSqliteOperation
@@ -393,8 +397,6 @@ namespace Akavache.Sqlite3
             Interlocked.Exchange(ref inner, Disposable.Empty).Dispose();
         }
     }
-
-
 
     class GetKeysSqliteOperation : IPreparedSqliteOperation
     {
