@@ -199,6 +199,20 @@ namespace Akavache.Sqlite3
         {
             var ret = Observable.Create<Unit>(async subj =>
             {
+                // NB: This is in its own try block because depending on the 
+                // platform, we may not have a modern SQLite3, where these
+                // PRAGMAs are supported. These aren't critical, so let them
+                // fail silently
+                try 
+                {
+                    Connection.Execute("PRAGMA synchronous=OFF");
+                    Connection.Execute("PRAGMA journal_mode=WAL");
+                    Connection.Execute("PRAGMA temp_store=MEMORY");
+                }
+                catch (SQLiteException) 
+                {
+                }
+
                 try
                 {
                     Connection.CreateTable<CacheElement>();
