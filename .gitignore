@@ -190,3 +190,5 @@ FakesAssemblies/
 Release/
 AppPackages/
 *.userprefs
+
+.DS_Store
