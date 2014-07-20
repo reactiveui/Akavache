@@ -5,18 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-using System.Reactive.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Reactive;
-
-using Akavache.Sqlite3.Internal;
-using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 using System.Threading;
-using System.Reactive.Disposables;
+using Akavache.Sqlite3.Internal;
 using SQLitePCL;
 using Splat;
+
+using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 
 namespace Akavache.Sqlite3
 {
@@ -55,6 +55,12 @@ namespace Akavache.Sqlite3
             commit = new CommitTransactionSqliteOperation(conn);
         }
 
+        // NB: This constructor is used for testing operation coalescing,
+        // don't actually use it for reals
+        internal SqliteOperationQueue()
+        {
+        }
+         
         IDisposable start;
         public IDisposable Start()
         {
@@ -86,7 +92,7 @@ namespace Akavache.Sqlite3
 
                         try 
                         {
-                            ProcessItems(toProcess);
+                            ProcessItems(CoalesceOperations(toProcess));
                         } 
                         catch (SQLiteException ex) 
                         {
@@ -106,7 +112,7 @@ namespace Akavache.Sqlite3
                 task.Wait();
 
                 var newQueue = new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
-                ProcessItems(Interlocked.Exchange(ref operationQueue, newQueue).ToList());
+                ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
                 start = null;
             }));
         }
@@ -122,7 +128,7 @@ namespace Akavache.Sqlite3
                     var newQueue = new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
                     var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
 
-                    ProcessItems(existingItems);
+                    ProcessItems(CoalesceOperations(existingItems));
                 }
             }).ToObservable();
         }
@@ -191,6 +197,11 @@ namespace Akavache.Sqlite3
             return ret;
         }
 
+        internal List<Tuple<OperationType, IEnumerable, object>> DumpQueue()
+        {
+            return operationQueue.ToList();
+        }
+
         void ProcessItems(List<Tuple<OperationType, IEnumerable, object>> toProcess)
         {
             var commitResult = new AsyncSubject<Unit>();
@@ -238,6 +249,11 @@ namespace Akavache.Sqlite3
             {
                 commitResult.OnError(ex);
             }
+        }
+
+        static internal List<Tuple<OperationType, IEnumerable, object>> CoalesceOperations(List<Tuple<OperationType, IEnumerable, object>> inputItems)
+        {
+            return inputItems;
         }
 
         void MarshalCompletion<T>(object completion, Func<T> block, IObservable<Unit> commitResult)
