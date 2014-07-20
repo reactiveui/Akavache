@@ -359,12 +359,12 @@ namespace Akavache.Sqlite3
 
     class CommitTransactionSqliteOperation : IPreparedSqliteOperation
     {
-        sqlite3_stmt vacuumOp = null;
+        sqlite3_stmt commitOp = null;
         IDisposable inner;
 
         public CommitTransactionSqliteOperation(SQLiteConnection conn)
         {
-            var result = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "COMMIT TRANSACTION", out vacuumOp);
+            var result = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "COMMIT TRANSACTION", out commitOp);
             Connection = conn;
 
             if (result != SQLite3.Result.OK) 
@@ -372,7 +372,7 @@ namespace Akavache.Sqlite3
                 throw new SQLiteException(result, "Couldn't prepare statement");
             }
 
-            inner = vacuumOp;
+            inner = commitOp;
         }
 
         public SQLiteConnection Connection { get; protected set; }
@@ -383,11 +383,11 @@ namespace Akavache.Sqlite3
             {
                 try 
                 {
-                    this.Checked(raw.sqlite3_step(vacuumOp));
+                    this.Checked(raw.sqlite3_step(commitOp));
                 } 
                 finally 
                 {
-                    this.Checked(raw.sqlite3_reset(vacuumOp));
+                    this.Checked(raw.sqlite3_reset(commitOp));
                 }
             });
         }
