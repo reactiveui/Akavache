@@ -20,7 +20,7 @@ using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 
 namespace Akavache.Sqlite3
 {
-    class SqliteOperationQueue : IEnableLogger, IDisposable
+    partial class SqliteOperationQueue : IEnableLogger, IDisposable
     {
         readonly AsyncLock flushLock = new AsyncLock();
         readonly IScheduler scheduler;
@@ -209,33 +209,34 @@ namespace Akavache.Sqlite3
 
             foreach (var item in toProcess) 
             {
-                switch (item.Item1) {
-                case OperationType.BulkInsertSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInsertKey.PrepareToExecute((IEnumerable<CacheElement>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkInvalidateByTypeSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInvalidateType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkInvalidateSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInvalidateKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkSelectByTypeSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkSelectType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkSelectSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkSelectKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.GetKeysSqliteOperation:
-                    MarshalCompletion(item.Item3, getAllKeys.PrepareToExecute(), commitResult);
-                    break;
-                case OperationType.InvalidateAllSqliteOperation:
-                    MarshalCompletion(item.Item3, invalidateAll.PrepareToExecute(), commitResult);
-                    break;
-                case OperationType.VacuumSqliteOperation:
-                    MarshalCompletion(item.Item3, vacuum.PrepareToExecute(), commitResult);
-                    break;
-                default:
-                    throw new ArgumentException("Unknown operation");
+                switch (item.Item1) 
+                {
+                    case OperationType.BulkInsertSqliteOperation:
+                        MarshalCompletion(item.Item3, bulkInsertKey.PrepareToExecute((IEnumerable<CacheElement>)item.Item2), commitResult);
+                        break;
+                    case OperationType.BulkInvalidateByTypeSqliteOperation:
+                        MarshalCompletion(item.Item3, bulkInvalidateType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
+                        break;
+                    case OperationType.BulkInvalidateSqliteOperation:
+                        MarshalCompletion(item.Item3, bulkInvalidateKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
+                        break;
+                    case OperationType.BulkSelectByTypeSqliteOperation:
+                        MarshalCompletion(item.Item3, bulkSelectType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
+                        break;
+                    case OperationType.BulkSelectSqliteOperation:
+                        MarshalCompletion(item.Item3, bulkSelectKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
+                        break;
+                    case OperationType.GetKeysSqliteOperation:
+                        MarshalCompletion(item.Item3, getAllKeys.PrepareToExecute(), commitResult);
+                        break;
+                    case OperationType.InvalidateAllSqliteOperation:
+                        MarshalCompletion(item.Item3, invalidateAll.PrepareToExecute(), commitResult);
+                        break;
+                    case OperationType.VacuumSqliteOperation:
+                        MarshalCompletion(item.Item3, vacuum.PrepareToExecute(), commitResult);
+                        break;
+                    default:
+                        throw new ArgumentException("Unknown operation");
                 }
             }
 
@@ -249,11 +250,6 @@ namespace Akavache.Sqlite3
             {
                 commitResult.OnError(ex);
             }
-        }
-
-        static internal List<Tuple<OperationType, IEnumerable, object>> CoalesceOperations(List<Tuple<OperationType, IEnumerable, object>> inputItems)
-        {
-            return inputItems;
         }
 
         void MarshalCompletion<T>(object completion, Func<T> block, IObservable<Unit> commitResult)
