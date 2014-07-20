@@ -189,6 +189,7 @@ namespace Akavache.Sqlite3
             if (disp == null) return;
 
             Observable.Start(() => disp.Dispose(), Scheduler)
+                .Do(_ => Connection.Dispose())
                 .Multicast(shutdown)
                 .PermaRef();
 
