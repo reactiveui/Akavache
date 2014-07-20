@@ -20,7 +20,7 @@ using Splat;
 
 namespace Akavache.Sqlite3
 {
-    class SqliteOperationQueue : IEnableLogger
+    class SqliteOperationQueue : IEnableLogger, IDisposable
     {
         readonly AsyncLock flushLock = new AsyncLock();
         readonly IScheduler scheduler;
@@ -286,6 +286,17 @@ namespace Akavache.Sqlite3
             {
                 scheduler.Schedule(() => subj.OnError(ex));
             }
+        }
+
+        public void Dispose()
+        {
+            var toDispose = new IDisposable[] {
+                bulkSelectKey, bulkSelectType, bulkInsertKey, bulkInvalidateKey,
+                bulkInvalidateType, invalidateAll, vacuum, getAllKeys, begin, 
+                commit,
+            };
+
+            foreach (var v in toDispose) v.Dispose();
         }
     }
 }
