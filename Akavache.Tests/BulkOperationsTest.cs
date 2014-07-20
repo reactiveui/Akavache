@@ -275,27 +275,11 @@ namespace Akavache.Tests
         }
     }
 
-    public class PersistentBlobCacheBulkTests : BulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TPersistentBlobCache(path));
-        }
-    }
-
     public class TestBlobCacheBulkOperationsTests : BulkOperationsTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             return new BlockingDisposeBulkCache(new TestBlobCache(RxApp.TaskpoolScheduler));
-        }
-    }
-
-    public class EncryptedBlobCacheBulkOperationsTests : BulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TEncryptedBlobCache(path));
         }
     }
 
@@ -315,27 +299,11 @@ namespace Akavache.Tests
         }
     }
 
-    public class PersistentBlobCacheObjectBulkTests : ObjectBulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TPersistentBlobCache(path));
-        }
-    }
-
     public class TestBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             return new BlockingDisposeBulkCache(new TestBlobCache(RxApp.TaskpoolScheduler));
-        }
-    }
-
-    public class EncryptedBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TEncryptedBlobCache(path));
         }
     }
 

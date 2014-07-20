@@ -567,15 +567,6 @@ namespace Akavache.Tests
         }
     }
 
-    public class PersistentBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeCache(new TEncryptedBlobCache(path));
-        }
-    }
-
     public class SqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
     {
         protected override IBlobCache CreateBlobCache(string path)

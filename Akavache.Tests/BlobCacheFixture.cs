@@ -6,13 +6,11 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Akavache.Deprecated;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
-using EncryptedBlobCache = Akavache.Deprecated.EncryptedBlobCache;
 
 namespace Akavache.Tests
 {
@@ -265,37 +263,11 @@ namespace Akavache.Tests
         }
     }
 
-    public class TPersistentBlobCache : PersistentBlobCache
-    {
-        public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
-    }
-
-    public class TEncryptedBlobCache : EncryptedBlobCache
-    {
-        public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, null, scheduler) { }
-    }
-
-    public class PersistentBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new TPersistentBlobCache(path);
-        }
-    }
-
     public class TestBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             return new TestBlobCache(RxApp.TaskpoolScheduler);
-        }
-    }
-
-    public class EncryptedBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new TEncryptedBlobCache(path);
         }
     }
 
