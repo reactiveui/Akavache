@@ -28,6 +28,8 @@ namespace Akavache.Sqlite3
         public IScheduler Scheduler { get; private set; }
         public SQLiteConnection Connection { get; private set; }
 
+        static readonly object disposeGate = 42;
+
         readonly IObservable<Unit> _initializer;
         SqliteOperationQueue opQueue;
         IDisposable queueThread;
@@ -188,11 +190,26 @@ namespace Akavache.Sqlite3
             var disp = Interlocked.Exchange(ref queueThread, null);
             if (disp == null) return;
 
-            Observable.Start(() => disp.Dispose(), Scheduler)
-                .Do(_ => Connection.Dispose())
-                .Multicast(shutdown)
-                .PermaRef();
+            var cleanup = Observable.Start(() => 
+            {
+                // NB: While we intentionally dispose the operation queue 
+                // from a background thread so that we don't park the UI
+                // while we're waiting for background operations to 
+                // complete, we must serialize calls to sqlite3_close or
+                // else SQLite3 will start throwing back "busy" at us.
+                //
+                // We intentionally serialize even the shutdown of the
+                // background queue to be extra paranoid about not getting
+                // 'busy' while cleaning up.
+                lock (disposeGate) 
+                {
+                    disp.Dispose();
+                    opQueue.Dispose();
+                    Connection.Dispose();
+                } 
+            }, Scheduler);
 
+            cleanup.Multicast(shutdown).PermaRef();
             disposed = true;
         }
 
