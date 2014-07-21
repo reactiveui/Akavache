@@ -473,7 +473,7 @@ namespace Akavache.Tests
                     fixture.InsertObject("foo", "bar").First();
 
                     fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate)
-                        .First();
+                        .Last();
 
                     Assert.True(fetchPredicateCalled);
                 }
