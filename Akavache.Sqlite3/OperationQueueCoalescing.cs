@@ -49,7 +49,7 @@ namespace Akavache.Sqlite3
                 OperationType.BulkSelectSqliteOperation
             };
 
-            foreach (var key in groupedOps.Keys)
+            foreach (var key in groupedOps.Keys.ToList())
             {
                 // NB: We generally don't want to optimize any op that doesn't
                 // have a key
