@@ -53,13 +53,17 @@ namespace Akavache.Sqlite3
             if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
             if (key == null || data == null) return Observable.Throw<Unit>(new ArgumentNullException());
 
-            var item = new CacheElement() {
-                Key = key,
-                Value = data,
-                Expiration = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime,
-            };
+            var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
+            var createdAt = Scheduler.Now.UtcDateTime;
 
-            return _initializer.SelectMany(_ => opQueue.Insert(new[] { item }))
+            return _initializer
+                .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
+                .SelectMany(encData => opQueue.Insert(new[] { new CacheElement() { 
+                    Key = key, 
+                    Value = encData, 
+                    CreatedAt = createdAt, 
+                    Expiration = exp, 
+                }}))
                 .PublishLast().PermaRef();
         }
 
@@ -72,6 +76,7 @@ namespace Akavache.Sqlite3
                 .SelectMany(x => x.Count() == 1 ? 
                     Observable.Return(x.First().Value) :
                     Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
                 .PublishLast().PermaRef();
         }
 
@@ -130,13 +135,18 @@ namespace Akavache.Sqlite3
             if (key == null) return Observable.Throw<Unit>(new ArgumentNullException());
 
             var data = SerializeObject(value);
-            var item = new CacheElement() {
-                Key = key,
-                Value = data,
-                Expiration = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime,
-            };
+            var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
+            var createdAt = Scheduler.Now.UtcDateTime;
 
-            return _initializer.SelectMany(_ => opQueue.Insert(new[] { item }))
+            return _initializer
+                .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
+                .SelectMany(encData => opQueue.Insert(new[] { new CacheElement() {
+                    Key = key,
+                    TypeName = typeof(T).FullName,
+                    Value = encData,
+                    CreatedAt = createdAt,
+                    Expiration = exp,
+                }}))
                 .PublishLast().PermaRef();
         }
 
@@ -147,8 +157,10 @@ namespace Akavache.Sqlite3
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
                 .SelectMany(x => x.Count() == 1 ? 
-                    DeserializeObject<T>(x.First().Value) :
-                    Observable.Throw<T>(new KeyNotFoundException()))
+                    Observable.Return(x.First().Value) :
+                    Observable.Throw<byte[]>(new KeyNotFoundException()))
+                .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
+                .SelectMany(x => DeserializeObject<T>(x))
                 .PublishLast().PermaRef();
         }
 
@@ -158,7 +170,8 @@ namespace Akavache.Sqlite3
 
             return _initializer.SelectMany(_ => opQueue.SelectTypes(new[] { typeof(T).FullName })
                 .SelectMany(x => x.ToObservable()
-                    .SelectMany(y => DeserializeObject<T>(y.Value))
+                    .SelectMany(y => AfterReadFromDiskFilter(y.Value, Scheduler))
+                    .SelectMany(y => DeserializeObject<T>(y))
                     .ToList()))
                 .PublishLast().PermaRef();
         }
