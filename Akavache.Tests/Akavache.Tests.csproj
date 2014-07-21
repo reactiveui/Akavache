@@ -101,6 +101,7 @@
     <Compile Include="BlobCacheExtensionsFixture.cs" />
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="BulkOperationsTest.cs" />
+    <Compile Include="CoalescerTests.cs" />
     <Compile Include="IntegrationTestHelper.cs" />
     <Compile Include="Performance\PerfHelper.cs" />
     <Compile Include="Performance\WriteTests.cs" />
