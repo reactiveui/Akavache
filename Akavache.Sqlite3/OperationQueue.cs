@@ -133,17 +133,17 @@ namespace Akavache.Sqlite3
             }).ToObservable();
         }
 
-        public AsyncSubject<List<CacheElement>> Select(IEnumerable<string> keys)
+        public AsyncSubject<IEnumerable<CacheElement>> Select(IEnumerable<string> keys)
         {
-            var ret = new AsyncSubject<List<CacheElement>>();
+            var ret = new AsyncSubject<IEnumerable<CacheElement>>();
             
             operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectSqliteOperation, keys, ret));
             return ret;
         }
 
-        public AsyncSubject<List<CacheElement>> SelectTypes(IEnumerable<string> types)
+        public AsyncSubject<IEnumerable<CacheElement>> SelectTypes(IEnumerable<string> types)
         {
-            var ret = new AsyncSubject<List<CacheElement>>();
+            var ret = new AsyncSubject<IEnumerable<CacheElement>>();
             
             operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectByTypeSqliteOperation, types, ret));
             return ret;

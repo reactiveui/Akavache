@@ -56,7 +56,8 @@ namespace Akavache.Sqlite3
                 if (key == nullKey) continue;
 
                 groupedOps[key] = toDedup
-                    .Aggregate((IEnumerable<Tuple<OperationType, IEnumerable, object>>)groupedOps[key], (acc, x) => MultipleOpsTurnIntoSingleOp(acc, x))
+                    .Aggregate((IEnumerable<Tuple<OperationType, IEnumerable, object>>)groupedOps[key], 
+                        (acc, x) => MultipleOpsTurnIntoSingleOp(acc, x))
                     .ToList();
             }
 
