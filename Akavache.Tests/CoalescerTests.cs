@@ -65,11 +65,9 @@ namespace Akavache.Tests
 
             var result = SqliteOperationQueue.CoalesceOperations(fixture.DumpQueue());
 
-            Assert.Equal(2, result.Count);
+            Assert.Equal(1, result.Count);
             Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].Item1);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[1].Item1);
-            Assert.Equal(1, result[0].Item2.Cast<string>().Count());
-            Assert.Equal(1, result[0].Item2.Cast<string>().Count());
+            Assert.Equal(2, result[0].Item2.Cast<string>().Count());
         }
     }
 }

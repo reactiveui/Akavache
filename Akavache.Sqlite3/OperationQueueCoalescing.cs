@@ -110,30 +110,33 @@ namespace Akavache.Sqlite3
         static IEnumerable<Tuple<OperationType, IEnumerable, object>> MultipleOpsTurnIntoSingleOp(IEnumerable<Tuple<OperationType, IEnumerable, object>> itemsWithSameKey, OperationType opTypeToDedup)
         {
             var currentWrites = default(List<Tuple<OperationType, IEnumerable, object>>);
-            return itemsWithSameKey.SelectMany(op =>
+            foreach (var item in itemsWithSameKey) 
             {
-                if (op.Item1 == opTypeToDedup)
+                if (item.Item1 == opTypeToDedup) 
                 {
                     currentWrites = currentWrites ?? new List<Tuple<OperationType, IEnumerable, object>>();
-                    currentWrites.Add(op);
-
-                    return Enumerable.Empty<Tuple<OperationType, IEnumerable, object>>();
+                    currentWrites.Add(item);
+                    continue;
                 }
 
-                if (currentWrites == null) return new[] { op };
+                if (currentWrites != null) 
+                {
+                    yield return new Tuple<OperationType, IEnumerable, object>(
+                        currentWrites[0].Item1, currentWrites[0].Item2,
+                        CombineSubjectsByOperation(currentWrites[0].Item3, currentWrites.Skip(1).Select(x => x.Item3), opTypeToDedup));
 
-                var firstItem = currentWrites[0];
-                var newSubj = CombineSubjects(
-                    (AsyncSubject<byte[]>)firstItem.Item3,
-                    currentWrites.Skip(1).Select(x => (AsyncSubject<byte[]>)x.Item3));
+                    currentWrites = null;
+                }
 
-                currentWrites = null;
+                yield return item;
+            }
 
-                return new[] { 
-                    new Tuple<OperationType, IEnumerable, object>(firstItem.Item1, firstItem.Item2, newSubj), 
-                    op
-                };
-            });
+            if (currentWrites != null) 
+            {
+                yield return new Tuple<OperationType, IEnumerable, object>(
+                    currentWrites[0].Item1, currentWrites[0].Item2,
+                    CombineSubjectsByOperation(currentWrites[0].Item3, currentWrites.Skip(1).Select(x => x.Item3), opTypeToDedup));
+            }
         }
 
         static Tuple<OperationType, IEnumerable, object> GroupUnrelatedSelects(IEnumerable<Tuple<OperationType, IEnumerable, object>> unrelatedInserts)
@@ -223,6 +226,24 @@ namespace Akavache.Sqlite3
                     return default(string);
                 default:
                     throw new ArgumentException("Unknown operation");
+            }
+        }
+
+        static object CombineSubjectsByOperation(object source, IEnumerable<object> subjs, OperationType opType)
+        {
+            switch (opType) 
+            {
+                case OperationType.BulkSelectSqliteOperation:
+                    return CombineSubjects<IEnumerable<CacheElement>>(
+                        (AsyncSubject<IEnumerable<CacheElement>>)source,
+                        subjs.Cast<AsyncSubject<IEnumerable<CacheElement>>>());
+                case OperationType.BulkInsertSqliteOperation:
+                case OperationType.BulkInvalidateSqliteOperation:
+                    return CombineSubjects<Unit>(
+                        (AsyncSubject<Unit>)source,
+                        subjs.Cast<AsyncSubject<Unit>>());
+                default:
+                    throw new ArgumentException("Invalid operation type");
             }
         }
 
