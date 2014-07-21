@@ -169,6 +169,10 @@ namespace Akavache.Sqlite3
             ex =>
             {
                 foreach (var v in elementMap.Values) v.OnError(ex);
+            },
+            () => 
+            { 
+                foreach (var v in elementMap.Values) v.OnCompleted(); 
             });
 
             return new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectSqliteOperation, elementMap.Keys, subj);
