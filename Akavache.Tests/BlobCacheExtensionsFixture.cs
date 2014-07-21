@@ -417,7 +417,7 @@ namespace Akavache.Tests
         {
             var fetcher = new Func<IObservable<string>>(() =>
             {
-                throw new InvalidOperationException();
+                return Observable.Throw<string>(new InvalidOperationException());
             });
 
             string path;
@@ -433,6 +433,7 @@ namespace Akavache.Tests
 
                     fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
                         .Catch(Observable.Return("get and fetch latest error"))
+                        .ToList()
                         .First();
 
                     var result = fixture.GetObject<string>("foo")

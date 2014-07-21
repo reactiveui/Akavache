@@ -168,15 +168,6 @@ namespace Akavache.Tests
         }
 
         [Fact]
-        public void DisposedCacheThrowsObjectDisposedException()
-        {
-            var cache = CreateBlobCache("somepath");
-            cache.Dispose();
-
-            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }).First());
-        }
-
-        [Fact]
         public void InvalidateAllReallyDoesInvalidateEverything()
         {
             string path;
