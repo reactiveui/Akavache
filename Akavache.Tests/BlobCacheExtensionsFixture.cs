@@ -417,7 +417,7 @@ namespace Akavache.Tests
         {
             var fetcher = new Func<IObservable<string>>(() =>
             {
-                throw new InvalidOperationException();
+                return Observable.Throw<string>(new InvalidOperationException());
             });
 
             string path;
@@ -433,6 +433,7 @@ namespace Akavache.Tests
 
                     fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
                         .Catch(Observable.Return("get and fetch latest error"))
+                        .ToList()
                         .First();
 
                     var result = fixture.GetObject<string>("foo")
@@ -472,7 +473,7 @@ namespace Akavache.Tests
                     fixture.InsertObject("foo", "bar").First();
 
                     fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate)
-                        .First();
+                        .Last();
 
                     Assert.True(fetchPredicateCalled);
                 }
@@ -564,15 +565,6 @@ namespace Akavache.Tests
                     Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
             }
-        }
-    }
-
-    public class PersistentBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeCache(new TEncryptedBlobCache(path));
         }
     }
 
