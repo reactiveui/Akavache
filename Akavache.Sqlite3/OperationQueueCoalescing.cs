@@ -95,6 +95,8 @@ namespace Akavache.Sqlite3
                 {
                     switch (group.Key)
                     {
+                        case OperationType.BulkSelectSqliteOperation:
+                            return new[] { GroupUnrelatedSelects(group) };
                         case OperationType.BulkInsertSqliteOperation:
                             return new[] { GroupUnrelatedInserts(group) };
                         case OperationType.BulkInvalidateSqliteOperation:
@@ -136,7 +138,37 @@ namespace Akavache.Sqlite3
 
         static Tuple<OperationType, IEnumerable, object> GroupUnrelatedSelects(IEnumerable<Tuple<OperationType, IEnumerable, object>> unrelatedInserts)
         {
-            throw new NotImplementedException();
+            var subj = new AsyncSubject<IEnumerable<CacheElement>>();
+            var elementMap = new Dictionary<string, AsyncSubject<IEnumerable<CacheElement>>>();
+
+            foreach (var v in unrelatedInserts)
+            {
+                var key = ((IEnumerable<string>)v.Item2).First();
+                elementMap [key] = (AsyncSubject<IEnumerable<CacheElement>>)v.Item3;
+            }
+
+            subj.Subscribe(items =>
+            {
+                var resultMap = items.ToDictionary(k => k.Key, v => v);
+                foreach (var v in elementMap.Keys) 
+                {
+                    if (resultMap.ContainsKey(v)) 
+                    {
+                        elementMap[v].OnNext(EnumerableEx.Return(resultMap[v]));
+                        elementMap[v].OnCompleted();
+                    }
+                    else
+                    {
+                        elementMap[v].OnError(new KeyNotFoundException());
+                    }
+                }
+            }, 
+            ex =>
+            {
+                foreach (var v in elementMap.Values) v.OnError(ex);
+            });
+
+            return new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectSqliteOperation, elementMap.Keys, subj);
         }
 
         static Tuple<OperationType, IEnumerable, object> GroupUnrelatedInserts(IEnumerable<Tuple<OperationType, IEnumerable, object>> unrelatedInserts)
@@ -198,6 +230,14 @@ namespace Akavache.Sqlite3
         {
             foreach (var v in subjs) source.Subscribe(v);
             return source;
+        }
+    }
+
+    static class EnumerableEx
+    {
+        public static IEnumerable<T> Return<T>(T value)
+        {
+            yield return value;
         }
     }
 }
