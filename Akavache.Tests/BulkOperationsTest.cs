@@ -268,16 +268,6 @@ namespace Akavache.Tests
         {
             return _inner.InvalidateAllObjects<T>();
         }
-
-        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
-        {
-            return _inner.GetObjects<T>(keys);
-        }
-
-        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
-        {
-            return _inner.GetObjectCreatedAt<T>(key);
-        }
     }
 
     public class InMemoryBlobCacheBulkOperationsTests : BulkOperationsTests
