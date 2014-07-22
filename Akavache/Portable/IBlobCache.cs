@@ -37,7 +37,7 @@ namespace Akavache
         /// to be accurate with respect to in-flight requests.
         /// </summary>
         /// <returns>A list of valid keys for the cache.</returns>
-        IObservable<List<string>> GetAllKeys();
+        IObservable<IEnumerable<string>> GetAllKeys();
 
         /// <summary>
         /// Returns the time that the key was added to the cache, or returns 

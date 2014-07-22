@@ -58,8 +58,8 @@ namespace Akavache.Tests
                 var fixture = CreateBlobCache(path);
                 using (fixture)
                 {
-                    // TestBlobCache isn't round-trippable by design
-                    if (fixture is TestBlobCache) return;
+                    // InMemoryBlobCache isn't round-trippable by design
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.Insert("Foo", new byte[] {1, 2, 3});
                 }
@@ -110,7 +110,7 @@ namespace Akavache.Tests
 
                     using (var fixture = CreateBlobCache(path))
                     {
-                        wasTestCache = fixture is TestBlobCache;
+                        wasTestCache = fixture is InMemoryBlobCache;
                         fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
                         fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
 
@@ -135,7 +135,7 @@ namespace Akavache.Tests
                         Assert.Equal(4, result[0]);
                     }
 
-                    // NB: TestBlobCache is not serializable by design
+                    // NB: InMemoryBlobCache is not serializable by design
                     if (wasTestCache) return;
 
                     sched.AdvanceToMs(350);
@@ -212,7 +212,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path)) 
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
             }
@@ -247,18 +247,18 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path)) 
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
             }
         }
     }
 
-    public class TestBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
+    public class InMemoryBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new TestBlobCache(RxApp.TaskpoolScheduler);
+            return new InMemoryBlobCache(RxApp.TaskpoolScheduler);
         }
     }
 

@@ -50,7 +50,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             if (key == null || data == null) return Observable.Throw<Unit>(new ArgumentNullException());
 
             var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
@@ -69,20 +69,20 @@ namespace Akavache.Sqlite3
 
         public IObservable<byte[]> Get(string key)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache");
             if (key == null) return Observable.Throw<byte[]>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
                 .SelectMany(x => x.Count() == 1 ? 
                     Observable.Return(x.First().Value) :
-                    Observable.Throw<byte[]>(new KeyNotFoundException()))
+                    ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key))
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
                 .PublishLast().PermaRef();
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
-            if (disposed) return Observable.Throw<List<string>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.GetAllKeys())
                 .PublishLast().PermaRef();
@@ -90,7 +90,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
-            if (disposed) return Observable.Throw<DateTimeOffset?>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>("SqlitePersistentBlobCache");
             if (key == null) return Observable.Throw<DateTimeOffset?>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
@@ -107,7 +107,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> Flush()
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.Flush())
                 .PublishLast().PermaRef();
@@ -115,7 +115,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> Invalidate(string key)
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.Invalidate(new[] { key }))
                 .PublishLast().PermaRef();
@@ -123,7 +123,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> InvalidateAll()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.InvalidateAll())
                 .PublishLast().PermaRef();
@@ -131,7 +131,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
-            if (disposed) return Observable.Throw<Unit>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             if (key == null) return Observable.Throw<Unit>(new ArgumentNullException());
 
             var data = SerializeObject(value);
@@ -152,13 +152,13 @@ namespace Akavache.Sqlite3
 
         public IObservable<T> GetObject<T>(string key)
         {
-            if (disposed) return Observable.Throw<T>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<T>("SqlitePersistentBlobCache");
             if (key == null) return Observable.Throw<T>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
                 .SelectMany(x => x.Count() == 1 ? 
                     Observable.Return(x.First().Value) :
-                    Observable.Throw<byte[]>(new KeyNotFoundException()))
+                    ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key))
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
                 .SelectMany(x => DeserializeObject<T>(x))
                 .PublishLast().PermaRef();
@@ -166,7 +166,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
-            if (disposed) return Observable.Throw<IEnumerable<T>>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.SelectTypes(new[] { typeof(T).FullName })
                 .SelectMany(x => x.ToObservable()
@@ -178,13 +178,13 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> InvalidateObject<T>(string key)
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             return Invalidate(key);
         }
 
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.InvalidateTypes(new[] { typeof(T).FullName }))
                 .PublishLast().PermaRef();
@@ -192,7 +192,7 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> Vacuum()
         {
-            if (disposed) throw new ObjectDisposedException("SqlitePersistentBlobCache");
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
 
             return _initializer.SelectMany(_ => opQueue.Vacuum())
                 .PublishLast().PermaRef();
@@ -236,9 +236,9 @@ namespace Akavache.Sqlite3
                 // fail silently
                 try 
                 {
-                    Connection.Execute("PRAGMA synchronous=OFF");
                     Connection.Execute("PRAGMA journal_mode=WAL");
                     Connection.Execute("PRAGMA temp_store=MEMORY");
+                    Connection.Execute("PRAGMA synchronous=OFF");
                 }
                 catch (SQLiteException) 
                 {
@@ -314,7 +314,7 @@ namespace Akavache.Sqlite3
         /// <returns>A Future result representing the encrypted data</returns>
         protected virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache");
 
             return Observable.Return(data);
         }
@@ -332,7 +332,7 @@ namespace Akavache.Sqlite3
         /// <returns>A Future result representing the decrypted data</returns>
         protected virtual IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
-            if (disposed) return Observable.Throw<byte[]>(new ObjectDisposedException("SqlitePersistentBlobCache"));
+            if (disposed) return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache");
 
             return Observable.Return(data);
         }
@@ -373,13 +373,6 @@ namespace Akavache.Sqlite3
             {
                 return Observable.Throw<T>(ex);
             }           
-        }
-
-        static IObservable<CacheElement> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
-        {
-            return Observable.Throw<CacheElement>(
-                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
-                "The given key '{0}' was not present in the cache.", key), innerException));
         }
     }
 

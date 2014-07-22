@@ -229,9 +229,9 @@ namespace Akavache.Tests
             return _inner.InsertObjects(keyValuePairs, absoluteExpiration);
         }
 
-        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false)
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
         {
-            return _inner.GetObjects<T>(keys, noTypePrefix);
+            return _inner.GetObjects<T>(keys);
         }
 
         public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
@@ -249,6 +249,11 @@ namespace Akavache.Tests
             return _inner.GetObject<T>(key);
         }
 
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return _inner.GetObjectCreatedAt<T>(key);
+        }
+
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
             return _inner.GetAllObjects<T>();
@@ -263,23 +268,13 @@ namespace Akavache.Tests
         {
             return _inner.InvalidateAllObjects<T>();
         }
-
-        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
-        {
-            return _inner.GetObjects<T>(keys);
-        }
-
-        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
-        {
-            return _inner.GetObjectCreatedAt<T>(key);
-        }
     }
 
-    public class TestBlobCacheBulkOperationsTests : BulkOperationsTests
+    public class InMemoryBlobCacheBulkOperationsTests : BulkOperationsTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new TestBlobCache(RxApp.TaskpoolScheduler));
+            return new BlockingDisposeBulkCache(new InMemoryBlobCache(RxApp.TaskpoolScheduler));
         }
     }
 
@@ -299,11 +294,11 @@ namespace Akavache.Tests
         }
     }
 
-    public class TestBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
+    public class InMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new TestBlobCache(RxApp.TaskpoolScheduler));
+            return new BlockingDisposeBulkCache(new InMemoryBlobCache(RxApp.TaskpoolScheduler));
         }
     }
 
