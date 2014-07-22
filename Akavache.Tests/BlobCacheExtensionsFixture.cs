@@ -98,7 +98,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
                     fixture.InsertObject("key", input).First();
                 }
 
@@ -124,7 +124,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("key", input).First();
                 }
@@ -154,7 +154,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("key", input).First();
                 }
@@ -179,7 +179,7 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("key", input).First();
                 }
@@ -222,8 +222,8 @@ namespace Akavache.Tests
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
 
-                    // Testing persistence makes zero sense for TestBlobCache
-                    if (fixture is TestBlobCache) return;
+                    // Testing persistence makes zero sense for InMemoryBlobCache
+                    if (fixture is InMemoryBlobCache) return;
                 }
 
                 using(var fixture = CreateBlobCache(path))
@@ -427,7 +427,7 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("foo", "bar").First();
 
@@ -468,7 +468,7 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("foo", "bar").First();
 
@@ -555,7 +555,7 @@ namespace Akavache.Tests
 
                 fixture.Shutdown.Wait();
                     
-                if (fixture is TestBlobCache) return;
+                if (fixture is InMemoryBlobCache) return;
 
                 using (fixture = CreateBlobCache(path))
                 {
@@ -586,12 +586,12 @@ namespace Akavache.Tests
         }
     }
 
-    public class TestBlobCacheFixture : BlobCacheExtensionsFixture
+    public class InMemoryBlobCacheFixture : BlobCacheExtensionsFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new TestBlobCache(RxApp.MainThreadScheduler);
+            return new InMemoryBlobCache(RxApp.MainThreadScheduler);
         }
     }
 
@@ -620,7 +620,7 @@ namespace Akavache.Tests
             return _inner.Get(key);
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
             return _inner.GetAllKeys();
         }

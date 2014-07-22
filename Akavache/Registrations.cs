@@ -41,9 +41,9 @@ namespace Akavache
 #endif
             resolver.Register(() => enc, typeof(IEncryptionProvider), null);
 
-            var localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
-            var userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
-            var secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
+            var localCache = new Lazy<IBlobCache>(() => new InMemoryBlobCache());
+            var userAccount = new Lazy<IBlobCache>(() => new InMemoryBlobCache());
+            var secure = new Lazy<ISecureBlobCache>(() => new InMemoryBlobCache());
 
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
