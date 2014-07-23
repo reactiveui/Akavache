@@ -134,5 +134,27 @@ namespace Akavache.Tests
             outSub.OnCompleted();
             Assert.Equal(4, output.Count);
         }
+
+        [Fact]
+        public void InterpolatedOpsDontGetDeduped()
+        {
+            var fixture = new SqliteOperationQueue();
+            fixture.Select(new[] { "Foo" });
+            fixture.Insert(new[] { new CacheElement() { Key = "Foo", Value = new byte[] { 1,2,3 } } });
+            fixture.Select(new[] { "Foo" });
+            fixture.Insert(new[] { new CacheElement() { Key = "Foo", Value = new byte[] { 4,5,6 } } });
+
+            var queue = fixture.DumpQueue();
+            var result = SqliteOperationQueue.CoalesceOperations(queue);
+
+            Assert.Equal(4, result.Count);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].Item1);
+            Assert.Equal(OperationType.BulkInsertSqliteOperation, result[1].Item1);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[2].Item1);
+            Assert.Equal(OperationType.BulkInsertSqliteOperation, result[3].Item1);
+
+            Assert.Equal(1, result[1].Item2.Cast<CacheElement>().First().Value[0]);
+            Assert.Equal(4, result[3].Item2.Cast<CacheElement>().First().Value[0]);
+        }
     }
 }
