@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.99.2-beta</version>
+    <version>4.0.0</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache.core" version="[3.99.2-beta]" />
+      <dependency id="akavache.core" version="[4.0.0]" />
       <dependency id="reactiveui-mobile" version="6.0.1" />
     </dependencies>
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
