@@ -122,7 +122,7 @@ namespace Akavache.Sqlite3
 
                 if (currentWrites != null) 
                 {
-                    if (currentWrites.Count == 1 && false) 
+                    if (currentWrites.Count == 1)
                     {
                         yield return currentWrites[0];
                     } 
