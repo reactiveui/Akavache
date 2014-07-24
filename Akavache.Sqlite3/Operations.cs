@@ -420,7 +420,7 @@ namespace Akavache.Sqlite3
 
         public SQLiteConnection Connection { get; protected set; }
 
-        public Func<List<string>> PrepareToExecute()
+        public Func<IEnumerable<string>> PrepareToExecute()
         {
             return () => 
             {

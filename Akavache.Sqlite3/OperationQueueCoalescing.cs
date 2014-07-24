@@ -24,18 +24,18 @@ namespace Akavache.Sqlite3
     {
         const string nullKey = "___THIS_IS_THE_NULL_KEY_HOPE_NOBODY_PICKS_IT_FFS_____";
 
-        static internal List<Tuple<OperationType, IEnumerable, object>> CoalesceOperations(List<Tuple<OperationType, IEnumerable, object>> inputItems)
+        static internal List<OperationQueueItem> CoalesceOperations(List<OperationQueueItem> inputItems)
         {
-            var ret = new List<Tuple<OperationType, IEnumerable, object>>();
+            var ret = new List<OperationQueueItem>();
 
             // 1. GroupBy key, then by original order
-            var groupedOps = new Dictionary<string, List<Tuple<OperationType, IEnumerable, object>>>();
+            var groupedOps = new Dictionary<string, List<OperationQueueItem>>();
             foreach (var v in inputItems)
             {
                 var key = GetKeyFromTuple(v) ?? nullKey;
                 if (!groupedOps.ContainsKey(key))
                 {
-                    groupedOps.Add(key, new List<Tuple<OperationType, IEnumerable, object>>());
+                    groupedOps.Add(key, new List<OperationQueueItem>());
                 }
 
                 var list = groupedOps[key];
@@ -56,14 +56,14 @@ namespace Akavache.Sqlite3
                 if (key == nullKey) continue;
 
                 groupedOps[key] = toDedup
-                    .Aggregate((IEnumerable<Tuple<OperationType, IEnumerable, object>>)groupedOps[key], 
+                    .Aggregate((IEnumerable<OperationQueueItem>)groupedOps[key],
                         (acc, x) => MultipleOpsTurnIntoSingleOp(acc, x))
                     .ToList();
             }
 
             while (groupedOps.Count > 0)
             {
-                var toProcess = new List<Tuple<OperationType, IEnumerable, object>>();
+                var toProcess = new List<OperationQueueItem>();
                 var toRemove = new List<string>();
 
                 // 3. Take all the *first* items from every group 
@@ -88,7 +88,7 @@ namespace Akavache.Sqlite3
             return ret;
         }
 
-        static IEnumerable<Tuple<OperationType, IEnumerable, object>> CoalesceUnrelatedItems(IEnumerable<Tuple<OperationType, IEnumerable, object>> items)
+        static IEnumerable<OperationQueueItem> CoalesceUnrelatedItems(IEnumerable<OperationQueueItem> items)
         {
             return items.GroupBy(x => x.Item1)
                 .SelectMany(group =>
@@ -102,20 +102,20 @@ namespace Akavache.Sqlite3
                         case OperationType.BulkInvalidateSqliteOperation:
                             return new[] { GroupUnrelatedDeletes(group) };
                         default:
-                            return (IEnumerable<Tuple<OperationType, IEnumerable, object>>)group;
+                            return (IEnumerable<OperationQueueItem>)group;
                     }
                 });
         }
 
-        static IEnumerable<Tuple<OperationType, IEnumerable, object>> MultipleOpsTurnIntoSingleOp(IEnumerable<Tuple<OperationType, IEnumerable, object>> itemsWithSameKey, OperationType opTypeToDedup)
+        static IEnumerable<OperationQueueItem> MultipleOpsTurnIntoSingleOp(IEnumerable<OperationQueueItem> itemsWithSameKey, OperationType opTypeToDedup)
         {
-            var currentWrites = default(List<Tuple<OperationType, IEnumerable, object>>);
+            var currentWrites = default(List<OperationQueueItem>);
 
             foreach (var item in itemsWithSameKey) 
             {
                 if (item.Item1 == opTypeToDedup) 
                 {
-                    currentWrites = currentWrites ?? new List<Tuple<OperationType, IEnumerable, object>>();
+                    currentWrites = currentWrites ?? new List<OperationQueueItem>();
                     currentWrites.Add(item);
                     continue;
                 }
@@ -128,7 +128,7 @@ namespace Akavache.Sqlite3
                     } 
                     else 
                     {
-                        yield return new Tuple<OperationType, IEnumerable, object>(
+                        yield return new OperationQueueItem(
                             currentWrites[0].Item1, currentWrites[0].Item2,
                             CombineSubjectsByOperation(currentWrites[0].Item3, currentWrites.Skip(1).Select(x => x.Item3), opTypeToDedup));
                     }
@@ -141,13 +141,13 @@ namespace Akavache.Sqlite3
 
             if (currentWrites != null) 
             {
-                yield return new Tuple<OperationType, IEnumerable, object>(
+                yield return new OperationQueueItem(
                     currentWrites[0].Item1, currentWrites[0].Item2,
                     CombineSubjectsByOperation(currentWrites[0].Item3, currentWrites.Skip(1).Select(x => x.Item3), opTypeToDedup));
             }
         }
 
-        static Tuple<OperationType, IEnumerable, object> GroupUnrelatedSelects(IEnumerable<Tuple<OperationType, IEnumerable, object>> unrelatedSelects)
+        static OperationQueueItem GroupUnrelatedSelects(IEnumerable<OperationQueueItem> unrelatedSelects)
         {
             var subj = new AsyncSubject<IEnumerable<CacheElement>>();
             var elementMap = new Dictionary<string, AsyncSubject<IEnumerable<CacheElement>>>();
@@ -185,10 +185,10 @@ namespace Akavache.Sqlite3
                 foreach (var v in elementMap.Values) v.OnCompleted(); 
             });
 
-            return new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectSqliteOperation, elementMap.Keys, subj);
+            return new OperationQueueItem(OperationType.BulkSelectSqliteOperation, elementMap.Keys, subj);
         }
 
-        static Tuple<OperationType, IEnumerable, object> GroupUnrelatedInserts(IEnumerable<Tuple<OperationType, IEnumerable, object>> unrelatedInserts)
+        static OperationQueueItem GroupUnrelatedInserts(IEnumerable<OperationQueueItem> unrelatedInserts)
         {
             var subj = new AsyncSubject<Unit>();
             if (unrelatedInserts.Count() == 1) return unrelatedInserts.First();
@@ -199,11 +199,11 @@ namespace Akavache.Sqlite3
                 return (IEnumerable<CacheElement>)x.Item2;
             }).ToList();
  
-            return new Tuple<OperationType, IEnumerable, object>(
+            return new OperationQueueItem(
                 OperationType.BulkInsertSqliteOperation, elements, subj);
         }
 
-        static Tuple<OperationType, IEnumerable, object> GroupUnrelatedDeletes(IEnumerable<Tuple<OperationType, IEnumerable, object>> unrelatedDeletes)
+        static OperationQueueItem GroupUnrelatedDeletes(IEnumerable<OperationQueueItem> unrelatedDeletes)
         {
             var subj = new AsyncSubject<Unit>();
             if (unrelatedDeletes.Count() == 1) return unrelatedDeletes.First();
@@ -214,11 +214,11 @@ namespace Akavache.Sqlite3
                 return (IEnumerable<string>)x.Item2;
             }).ToList();
  
-            return new Tuple<OperationType, IEnumerable, object>(
+            return new OperationQueueItem(
                 OperationType.BulkInvalidateSqliteOperation, elements, subj);
         }
 
-        static string GetKeyFromTuple(Tuple<OperationType, IEnumerable, object> item)
+        static string GetKeyFromTuple(OperationQueueItem item)
         {
             // NB: This method assumes that the input tuples only have a 
             // single item, which the OperationQueue input methods guarantee

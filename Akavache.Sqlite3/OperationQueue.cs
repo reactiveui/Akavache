@@ -36,8 +36,8 @@ namespace Akavache.Sqlite3
         readonly BeginTransactionSqliteOperation begin;
         readonly CommitTransactionSqliteOperation commit;
 
-        BlockingCollection<Tuple<OperationType, IEnumerable, object>> operationQueue = 
-            new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
+        BlockingCollection<OperationQueueItem> operationQueue =
+            new BlockingCollection<OperationQueueItem>();
 
         public SqliteOperationQueue(SQLiteConnection conn, IScheduler scheduler)
         {
@@ -69,7 +69,7 @@ namespace Akavache.Sqlite3
             bool shouldQuit = false;
             var task = Task.Run(async () => 
             {
-                var toProcess = new List<Tuple<OperationType, IEnumerable, object>>();
+                var toProcess = new List<OperationQueueItem>();
 
                 while (!shouldQuit) 
                 {
@@ -81,7 +81,7 @@ namespace Akavache.Sqlite3
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        var item = default(Tuple<OperationType, IEnumerable, object>);
+                        var item = default(OperationQueueItem);
                         if (!operationQueue.TryTake(out item, 2000)) continue;
 
                         toProcess.Add(item);
@@ -94,7 +94,7 @@ namespace Akavache.Sqlite3
                         {
                             ProcessItems(CoalesceOperations(toProcess));
                         } 
-                        catch (SQLiteException ex) 
+                        catch (SQLiteException)
                         {
                             // NB: If ProcessItems Failed, it explicitly means 
                             // that the "BEGIN TRANSACTION" failed and that items
@@ -111,7 +111,7 @@ namespace Akavache.Sqlite3
                 shouldQuit = true;
                 task.Wait();
 
-                var newQueue = new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
+                var newQueue = new BlockingCollection<OperationQueueItem>();
                 ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
                 start = null;
             }));
@@ -125,7 +125,7 @@ namespace Akavache.Sqlite3
             {
                 using (await flushLock.LockAsync()) 
                 {
-                    var newQueue = new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
+                    var newQueue = new BlockingCollection<OperationQueueItem>();
                     var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
 
                     ProcessItems(CoalesceOperations(existingItems));
@@ -137,7 +137,7 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<IEnumerable<CacheElement>>();
             
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectSqliteOperation, keys, ret));
+            operationQueue.Add(OperationQueueItem.CreateSelect(OperationType.BulkSelectSqliteOperation, keys, ret));
             return ret;
         }
 
@@ -145,7 +145,7 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<IEnumerable<CacheElement>>();
             
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectByTypeSqliteOperation, types, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.BulkSelectByTypeSqliteOperation, types, ret));
             return ret;
         }
 
@@ -153,7 +153,7 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<Unit>();
             
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkInsertSqliteOperation, items, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.BulkInsertSqliteOperation, items, ret));
             return ret;
         }
 
@@ -161,7 +161,7 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<Unit>();
                 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkInvalidateSqliteOperation, keys, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.BulkInvalidateSqliteOperation, keys, ret));
             return ret;
         }
 
@@ -169,7 +169,7 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<Unit>();
 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkInvalidateByTypeSqliteOperation, types, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.BulkInvalidateByTypeSqliteOperation, types, ret));
             return ret;
         }
 
@@ -177,7 +177,7 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<Unit>();
             
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.InvalidateAllSqliteOperation, null, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.InvalidateAllSqliteOperation, null, ret));
             return ret;
         }
 
@@ -185,24 +185,24 @@ namespace Akavache.Sqlite3
         {
             var ret = new AsyncSubject<Unit>();
 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.VacuumSqliteOperation, null, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.VacuumSqliteOperation, null, ret));
             return ret;
         }
 
-        public AsyncSubject<List<string>> GetAllKeys()
+        public AsyncSubject<IEnumerable<string>> GetAllKeys()
         {
-            var ret = new AsyncSubject<List<string>>();
+            var ret = new AsyncSubject<IEnumerable<string>>();
 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.GetKeysSqliteOperation, null, ret));
+            operationQueue.Add(new OperationQueueItem(OperationType.GetKeysSqliteOperation, null, ret));
             return ret;
         }
 
-        internal List<Tuple<OperationType, IEnumerable, object>> DumpQueue()
+        internal List<OperationQueueItem> DumpQueue()
         {
             return operationQueue.ToList();
         }
 
-        void ProcessItems(List<Tuple<OperationType, IEnumerable, object>> toProcess)
+        void ProcessItems(List<OperationQueueItem> toProcess)
         {
             var commitResult = new AsyncSubject<Unit>();
             begin.PrepareToExecute()();
@@ -309,6 +309,33 @@ namespace Akavache.Sqlite3
             };
 
             foreach (var v in toDispose) v.Dispose();
+        }
+    }
+
+    class OperationQueueItem
+    {
+        public OperationType OperationType { get; set; }
+        public IEnumerable Parameters { get; set; }
+        public object Completion { get; set; }
+
+        public static OperationQueueItem CreateInsertOrInvalidate(OperationType opType, IEnumerable<CacheElement> toInsert)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = toInsert, Completion = new AsyncSubject<Unit>() };
+        }
+
+        public static OperationQueueItem CreateSelect(OperationType opType, IEnumerable<string> toSelect)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = toSelect, Completion = new AsyncSubject<IEnumerable<CacheElement>>() };
+        }
+
+        public static OperationQueueItem CreateUnit(OperationType opType, IEnumerable<string> toSelect)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = null, Completion = new AsyncSubject<Unit>() };
+        }
+
+        public static OperationQueueItem CreateGetAllKeys()
+        {
+            return new OperationQueueItem() { OperationType = OperationType.GetKeysSqliteOperation, Parameters = null, Completion = new AsyncSubject<IEnumerable<string>>() };
         }
     }
 }
