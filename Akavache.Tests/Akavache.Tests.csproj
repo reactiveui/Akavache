@@ -101,6 +101,7 @@
     <Compile Include="BlobCacheExtensionsFixture.cs" />
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="BulkOperationsTest.cs" />
+    <Compile Include="CoalescerTests.cs" />
     <Compile Include="IntegrationTestHelper.cs" />
     <Compile Include="Performance\PerfHelper.cs" />
     <Compile Include="Performance\WriteTests.cs" />
@@ -125,6 +126,7 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

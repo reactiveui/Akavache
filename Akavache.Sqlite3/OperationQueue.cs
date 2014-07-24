@@ -5,22 +5,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-using System.Reactive.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Reactive;
-
-using Akavache.Sqlite3.Internal;
-using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 using System.Threading;
-using System.Reactive.Disposables;
+using Akavache.Sqlite3.Internal;
 using SQLitePCL;
 using Splat;
 
+using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
+
 namespace Akavache.Sqlite3
 {
-    class SqliteOperationQueue : IEnableLogger, IDisposable
+    partial class SqliteOperationQueue : IEnableLogger, IDisposable
     {
         readonly AsyncLock flushLock = new AsyncLock();
         readonly IScheduler scheduler;
@@ -36,8 +36,8 @@ namespace Akavache.Sqlite3
         readonly BeginTransactionSqliteOperation begin;
         readonly CommitTransactionSqliteOperation commit;
 
-        BlockingCollection<Tuple<OperationType, IEnumerable, object>> operationQueue = 
-            new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
+        BlockingCollection<OperationQueueItem> operationQueue =
+            new BlockingCollection<OperationQueueItem>();
 
         public SqliteOperationQueue(SQLiteConnection conn, IScheduler scheduler)
         {
@@ -55,6 +55,12 @@ namespace Akavache.Sqlite3
             commit = new CommitTransactionSqliteOperation(conn);
         }
 
+        // NB: This constructor is used for testing operation coalescing,
+        // don't actually use it for reals
+        internal SqliteOperationQueue()
+        {
+        }
+         
         IDisposable start;
         public IDisposable Start()
         {
@@ -63,7 +69,7 @@ namespace Akavache.Sqlite3
             bool shouldQuit = false;
             var task = Task.Run(async () => 
             {
-                var toProcess = new List<Tuple<OperationType, IEnumerable, object>>();
+                var toProcess = new List<OperationQueueItem>();
 
                 while (!shouldQuit) 
                 {
@@ -75,7 +81,7 @@ namespace Akavache.Sqlite3
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        var item = default(Tuple<OperationType, IEnumerable, object>);
+                        var item = default(OperationQueueItem);
                         if (!operationQueue.TryTake(out item, 2000)) continue;
 
                         toProcess.Add(item);
@@ -86,9 +92,9 @@ namespace Akavache.Sqlite3
 
                         try 
                         {
-                            ProcessItems(toProcess);
+                            ProcessItems(CoalesceOperations(toProcess));
                         } 
-                        catch (SQLiteException ex) 
+                        catch (SQLiteException)
                         {
                             // NB: If ProcessItems Failed, it explicitly means 
                             // that the "BEGIN TRANSACTION" failed and that items
@@ -105,8 +111,8 @@ namespace Akavache.Sqlite3
                 shouldQuit = true;
                 task.Wait();
 
-                var newQueue = new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
-                ProcessItems(Interlocked.Exchange(ref operationQueue, newQueue).ToList());
+                var newQueue = new BlockingCollection<OperationQueueItem>();
+                ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
                 start = null;
             }));
         }
@@ -119,112 +125,118 @@ namespace Akavache.Sqlite3
             {
                 using (await flushLock.LockAsync()) 
                 {
-                    var newQueue = new BlockingCollection<Tuple<OperationType, IEnumerable, object>>();
+                    var newQueue = new BlockingCollection<OperationQueueItem>();
                     var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
 
-                    ProcessItems(existingItems);
+                    ProcessItems(CoalesceOperations(existingItems));
                 }
             }).ToObservable();
         }
 
-        public AsyncSubject<List<CacheElement>> Select(IEnumerable<string> keys)
+        public AsyncSubject<IEnumerable<CacheElement>> Select(IEnumerable<string> keys)
         {
-            var ret = new AsyncSubject<List<CacheElement>>();
-            
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectSqliteOperation, keys, ret));
-            return ret;
+            var ret = OperationQueueItem.CreateSelect(OperationType.BulkSelectSqliteOperation, keys);
+            operationQueue.Add(ret);
+
+            return ret.CompletionAsElements;
         }
 
-        public AsyncSubject<List<CacheElement>> SelectTypes(IEnumerable<string> types)
+        public AsyncSubject<IEnumerable<CacheElement>> SelectTypes(IEnumerable<string> types)
         {
-            var ret = new AsyncSubject<List<CacheElement>>();
-            
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkSelectByTypeSqliteOperation, types, ret));
-            return ret;
+            var ret = OperationQueueItem.CreateSelect(OperationType.BulkSelectByTypeSqliteOperation, types);
+            operationQueue.Add(ret);
+
+            return ret.CompletionAsElements;
         }
 
         public AsyncSubject<Unit> Insert(IEnumerable<CacheElement> items)
         {
-            var ret = new AsyncSubject<Unit>();
-            
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkInsertSqliteOperation, items, ret));
-            return ret;
+            var ret = OperationQueueItem.CreateInsert(OperationType.BulkInsertSqliteOperation, items);
+            operationQueue.Add(ret);
+
+            return ret.CompletionAsUnit;
         }
 
         public AsyncSubject<Unit> Invalidate(IEnumerable<string> keys)
         {
-            var ret = new AsyncSubject<Unit>();
-                
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkInvalidateSqliteOperation, keys, ret));
-            return ret;
+            var ret = OperationQueueItem.CreateInvalidate(OperationType.BulkInvalidateSqliteOperation, keys);
+            operationQueue.Add(ret);
+
+            return ret.CompletionAsUnit;
         }
 
         public AsyncSubject<Unit> InvalidateTypes(IEnumerable<string> types)
         {
-            var ret = new AsyncSubject<Unit>();
+            var ret = OperationQueueItem.CreateInvalidate(OperationType.BulkInvalidateByTypeSqliteOperation, types);
+            operationQueue.Add(ret);
 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.BulkInvalidateByTypeSqliteOperation, types, ret));
-            return ret;
+            return ret.CompletionAsUnit;
         }
 
         public AsyncSubject<Unit> InvalidateAll()
         {
-            var ret = new AsyncSubject<Unit>();
-            
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.InvalidateAllSqliteOperation, null, ret));
-            return ret;
+            var ret = OperationQueueItem.CreateUnit(OperationType.InvalidateAllSqliteOperation);
+            operationQueue.Add(ret);
+
+            return ret.CompletionAsUnit;
         }
 
         public AsyncSubject<Unit> Vacuum()
         {
-            var ret = new AsyncSubject<Unit>();
+            var ret = OperationQueueItem.CreateUnit(OperationType.VacuumSqliteOperation);
+            operationQueue.Add(ret);
 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.VacuumSqliteOperation, null, ret));
-            return ret;
+            return ret.CompletionAsUnit;
         }
 
-        public AsyncSubject<List<string>> GetAllKeys()
+        public AsyncSubject<IEnumerable<string>> GetAllKeys()
         {
-            var ret = new AsyncSubject<List<string>>();
+            var ret = OperationQueueItem.CreateGetAllKeys();
+            operationQueue.Add(ret);
 
-            operationQueue.Add(new Tuple<OperationType, IEnumerable, object>(OperationType.GetKeysSqliteOperation, null, ret));
-            return ret;
+            return ret.CompletionAsKeys;
         }
 
-        void ProcessItems(List<Tuple<OperationType, IEnumerable, object>> toProcess)
+        internal List<OperationQueueItem> DumpQueue()
+        {
+            return operationQueue.ToList();
+        }
+
+        void ProcessItems(List<OperationQueueItem> toProcess)
         {
             var commitResult = new AsyncSubject<Unit>();
             begin.PrepareToExecute()();
 
             foreach (var item in toProcess) 
             {
-                switch (item.Item1) {
-                case OperationType.BulkInsertSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInsertKey.PrepareToExecute((IEnumerable<CacheElement>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkInvalidateByTypeSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInvalidateType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkInvalidateSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkInvalidateKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkSelectByTypeSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkSelectType.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.BulkSelectSqliteOperation:
-                    MarshalCompletion(item.Item3, bulkSelectKey.PrepareToExecute((IEnumerable<string>)item.Item2), commitResult);
-                    break;
-                case OperationType.GetKeysSqliteOperation:
-                    MarshalCompletion(item.Item3, getAllKeys.PrepareToExecute(), commitResult);
-                    break;
-                case OperationType.InvalidateAllSqliteOperation:
-                    MarshalCompletion(item.Item3, invalidateAll.PrepareToExecute(), commitResult);
-                    break;
-                case OperationType.VacuumSqliteOperation:
-                    MarshalCompletion(item.Item3, vacuum.PrepareToExecute(), commitResult);
-                    break;
-                default:
-                    throw new ArgumentException("Unknown operation");
+                switch (item.OperationType)
+                {
+                    case OperationType.BulkInsertSqliteOperation:
+                        MarshalCompletion(item.Completion, bulkInsertKey.PrepareToExecute(item.ParametersAsElements), commitResult);
+                        break;
+                    case OperationType.BulkInvalidateByTypeSqliteOperation:
+                        MarshalCompletion(item.Completion, bulkInvalidateType.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        break;
+                    case OperationType.BulkInvalidateSqliteOperation:
+                        MarshalCompletion(item.Completion, bulkInvalidateKey.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        break;
+                    case OperationType.BulkSelectByTypeSqliteOperation:
+                        MarshalCompletion(item.Completion, bulkSelectType.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        break;
+                    case OperationType.BulkSelectSqliteOperation:
+                        MarshalCompletion(item.Completion, bulkSelectKey.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        break;
+                    case OperationType.GetKeysSqliteOperation:
+                        MarshalCompletion(item.Completion, getAllKeys.PrepareToExecute(), commitResult);
+                        break;
+                    case OperationType.InvalidateAllSqliteOperation:
+                        MarshalCompletion(item.Completion, invalidateAll.PrepareToExecute(), commitResult);
+                        break;
+                    case OperationType.VacuumSqliteOperation:
+                        MarshalCompletion(item.Completion, vacuum.PrepareToExecute(), commitResult);
+                        break;
+                    default:
+                        throw new ArgumentException("Unknown operation");
                 }
             }
 
@@ -297,6 +309,63 @@ namespace Akavache.Sqlite3
             };
 
             foreach (var v in toDispose) v.Dispose();
+        }
+    }
+
+    class OperationQueueItem
+    {
+        public OperationType OperationType { get; set; }
+        public IEnumerable Parameters { get; set; }
+        public object Completion { get; set; }
+
+        public static OperationQueueItem CreateInsert(OperationType opType, IEnumerable<CacheElement> toInsert, AsyncSubject<Unit> completion = null)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = toInsert, Completion = completion ?? new AsyncSubject<Unit>() };
+        }
+
+        public static OperationQueueItem CreateInvalidate(OperationType opType, IEnumerable<string> toInvalidate, AsyncSubject<Unit> completion = null)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = toInvalidate, Completion = completion ?? new AsyncSubject<Unit>() };
+        }
+
+        public static OperationQueueItem CreateSelect(OperationType opType, IEnumerable<string> toSelect, AsyncSubject<IEnumerable<CacheElement>> completion = null)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = toSelect, Completion = completion ?? new AsyncSubject<IEnumerable<CacheElement>>() };
+        }
+
+        public static OperationQueueItem CreateUnit(OperationType opType, AsyncSubject<Unit> completion = null)
+        {
+            return new OperationQueueItem() { OperationType = opType, Parameters = null, Completion = completion ?? new AsyncSubject<Unit>() };
+        }
+
+        public static OperationQueueItem CreateGetAllKeys()
+        {
+            return new OperationQueueItem() { OperationType = OperationType.GetKeysSqliteOperation, Parameters = null, Completion = new AsyncSubject<IEnumerable<string>>() };
+        }
+
+        public IEnumerable<CacheElement> ParametersAsElements
+        {
+            get { return (IEnumerable<CacheElement>)Parameters; }
+        }
+
+        public IEnumerable<string> ParametersAsKeys
+        {
+            get { return (IEnumerable<string>)Parameters; }
+        }
+
+        public AsyncSubject<Unit> CompletionAsUnit
+        {
+            get { return (AsyncSubject<Unit>)Completion; }
+        }
+
+        public AsyncSubject<IEnumerable<CacheElement>> CompletionAsElements
+        {
+            get { return (AsyncSubject<IEnumerable<CacheElement>>)Completion; }
+        }
+
+        public AsyncSubject<IEnumerable<string>> CompletionAsKeys
+        {
+            get { return (AsyncSubject<IEnumerable<string>>)Completion; }
         }
     }
 }

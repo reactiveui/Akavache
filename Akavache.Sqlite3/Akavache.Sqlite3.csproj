@@ -34,6 +34,7 @@
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SqlitePersistentBlobCacheNext.cs" />
     <Compile Include="SQLiteEncryptedBlobCache.cs" />
+    <Compile Include="OperationQueueCoalescing.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">

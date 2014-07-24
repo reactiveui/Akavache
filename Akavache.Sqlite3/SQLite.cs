@@ -1480,11 +1480,6 @@ namespace Akavache.Sqlite3.Internal
 			return count;
 		}
 
-		~SQLiteConnection ()
-		{
-			Dispose (false);
-		}
-
 		public void Dispose ()
 		{
 			Dispose (true);

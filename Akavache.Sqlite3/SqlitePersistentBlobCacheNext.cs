@@ -73,8 +73,8 @@ namespace Akavache.Sqlite3
             if (key == null) return Observable.Throw<byte[]>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
-                .SelectMany(x => x.Count == 1 ? 
-                    Observable.Return(x[0].Value) :
+                .SelectMany(x => x.Count() == 1 ? 
+                    Observable.Return(x.First().Value) :
                     ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key))
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
                 .PublishLast().PermaRef();
@@ -94,8 +94,8 @@ namespace Akavache.Sqlite3
             if (key == null) return Observable.Throw<DateTimeOffset?>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
-                .Select(x => x.Count == 1 ?
-                    (DateTimeOffset?)new DateTimeOffset(x[0].CreatedAt, TimeSpan.Zero) :
+                .Select(x => x.Count() == 1 ?
+                    (DateTimeOffset?)new DateTimeOffset(x.First().CreatedAt, TimeSpan.Zero) :
                     default(DateTimeOffset?))
                 .PublishLast().PermaRef();
         }
@@ -156,8 +156,8 @@ namespace Akavache.Sqlite3
             if (key == null) return Observable.Throw<T>(new ArgumentNullException());
 
             return _initializer.SelectMany(_ => opQueue.Select(new[] { key }))
-                .SelectMany(x => x.Count == 1 ? 
-                    Observable.Return(x[0].Value) :
+                .SelectMany(x => x.Count() == 1 ? 
+                    Observable.Return(x.First().Value) :
                     ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key))
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
                 .SelectMany(x => DeserializeObject<T>(x))
@@ -236,9 +236,9 @@ namespace Akavache.Sqlite3
                 // fail silently
                 try 
                 {
-                    Connection.Execute("PRAGMA synchronous=OFF");
                     Connection.Execute("PRAGMA journal_mode=WAL");
                     Connection.Execute("PRAGMA temp_store=MEMORY");
+                    Connection.Execute("PRAGMA synchronous=OFF");
                 }
                 catch (SQLiteException) 
                 {

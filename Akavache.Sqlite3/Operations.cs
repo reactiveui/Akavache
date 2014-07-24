@@ -129,7 +129,7 @@ namespace Akavache.Sqlite3
 
         public SQLiteConnection Connection { get; protected set; }
 
-        public Func<List<CacheElement>> PrepareToExecute(IEnumerable<string> toSelect)
+        public Func<IEnumerable<CacheElement>> PrepareToExecute(IEnumerable<string> toSelect)
         {
             var selectList = toSelect.ToList();
             if (selectList.Count == 0) return () => new List<CacheElement>();
@@ -420,7 +420,7 @@ namespace Akavache.Sqlite3
 
         public SQLiteConnection Connection { get; protected set; }
 
-        public Func<List<string>> PrepareToExecute()
+        public Func<IEnumerable<string>> PrepareToExecute()
         {
             return () => 
             {
