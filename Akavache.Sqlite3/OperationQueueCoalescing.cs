@@ -90,7 +90,7 @@ namespace Akavache.Sqlite3
 
         static IEnumerable<OperationQueueItem> CoalesceUnrelatedItems(IEnumerable<OperationQueueItem> items)
         {
-            return items.GroupBy(x => x.Item1)
+            return items.GroupBy(x => x.OperationType)
                 .SelectMany(group =>
                 {
                     switch (group.Key)
@@ -113,7 +113,7 @@ namespace Akavache.Sqlite3
 
             foreach (var item in itemsWithSameKey) 
             {
-                if (item.Item1 == opTypeToDedup) 
+                if (item.OperationType == opTypeToDedup)
                 {
                     currentWrites = currentWrites ?? new List<OperationQueueItem>();
                     currentWrites.Add(item);
@@ -128,9 +128,13 @@ namespace Akavache.Sqlite3
                     } 
                     else 
                     {
-                        yield return new OperationQueueItem(
-                            currentWrites[0].Item1, currentWrites[0].Item2,
-                            CombineSubjectsByOperation(currentWrites[0].Item3, currentWrites.Skip(1).Select(x => x.Item3), opTypeToDedup));
+                        yield return new OperationQueueItem()
+                        {
+                            OperationType = currentWrites[0].OperationType,
+                            Parameters = currentWrites[0].Parameters,
+                            Completion = CombineSubjectsByOperation(
+                                currentWrites[0].Completion, currentWrites.Skip(1).Select(x => x.Completion), opTypeToDedup),
+                        };
                     }
 
                     currentWrites = null;
@@ -141,26 +145,31 @@ namespace Akavache.Sqlite3
 
             if (currentWrites != null) 
             {
-                yield return new OperationQueueItem(
-                    currentWrites[0].Item1, currentWrites[0].Item2,
-                    CombineSubjectsByOperation(currentWrites[0].Item3, currentWrites.Skip(1).Select(x => x.Item3), opTypeToDedup));
+                yield return new OperationQueueItem()
+                {
+                    OperationType = currentWrites[0].OperationType,
+                    Parameters = currentWrites[0].Parameters,
+                    Completion = CombineSubjectsByOperation(
+                        currentWrites[0].Completion, currentWrites.Skip(1).Select(x => x.Completion), opTypeToDedup),
+                };
             }
         }
 
         static OperationQueueItem GroupUnrelatedSelects(IEnumerable<OperationQueueItem> unrelatedSelects)
         {
-            var subj = new AsyncSubject<IEnumerable<CacheElement>>();
             var elementMap = new Dictionary<string, AsyncSubject<IEnumerable<CacheElement>>>();
 
             if (unrelatedSelects.Count() == 1) return unrelatedSelects.First();
 
             foreach (var v in unrelatedSelects)
             {
-                var key = ((IEnumerable<string>)v.Item2).First();
-                elementMap [key] = (AsyncSubject<IEnumerable<CacheElement>>)v.Item3;
+                var key = v.ParametersAsKeys.First();
+                elementMap[key] = v.CompletionAsElements;
             }
 
-            subj.Subscribe(items =>
+            var ret = OperationQueueItem.CreateSelect(OperationType.BulkSelectSqliteOperation, elementMap.Keys);
+
+            ret.CompletionAsElements.Subscribe(items =>
             {
                 var resultMap = items.ToDictionary(k => k.Key, v => v);
                 foreach (var v in elementMap.Keys) 
@@ -185,21 +194,21 @@ namespace Akavache.Sqlite3
                 foreach (var v in elementMap.Values) v.OnCompleted(); 
             });
 
-            return new OperationQueueItem(OperationType.BulkSelectSqliteOperation, elementMap.Keys, subj);
+            return ret;
         }
 
         static OperationQueueItem GroupUnrelatedInserts(IEnumerable<OperationQueueItem> unrelatedInserts)
         {
-            var subj = new AsyncSubject<Unit>();
             if (unrelatedInserts.Count() == 1) return unrelatedInserts.First();
 
+            var subj = new AsyncSubject<Unit>();
             var elements = unrelatedInserts.SelectMany(x =>
             {
-                subj.Subscribe((AsyncSubject<Unit>)x.Item3);
-                return (IEnumerable<CacheElement>)x.Item2;
+                subj.Subscribe(x.CompletionAsUnit);
+                return x.ParametersAsElements;
             }).ToList();
- 
-            return new OperationQueueItem(
+
+            return OperationQueueItem.CreateInsert(
                 OperationType.BulkInsertSqliteOperation, elements, subj);
         }
 
@@ -210,11 +219,11 @@ namespace Akavache.Sqlite3
 
             var elements = unrelatedDeletes.SelectMany(x =>
             {
-                subj.Subscribe((AsyncSubject<Unit>)x.Item3);
-                return (IEnumerable<string>)x.Item2;
+                subj.Subscribe(x.CompletionAsUnit);
+                return x.ParametersAsKeys;
             }).ToList();
  
-            return new OperationQueueItem(
+            return OperationQueueItem.CreateInvalidate(
                 OperationType.BulkInvalidateSqliteOperation, elements, subj);
         }
 
@@ -222,18 +231,18 @@ namespace Akavache.Sqlite3
         {
             // NB: This method assumes that the input tuples only have a 
             // single item, which the OperationQueue input methods guarantee
-            switch (item.Item1)
+            switch (item.OperationType)
             {
                 case OperationType.BulkInsertSqliteOperation:
-                    return ((IEnumerable<CacheElement>)item.Item2).First().Key;
+                    return (item.ParametersAsElements).First().Key;
                 case OperationType.BulkInvalidateByTypeSqliteOperation:
                     return default(string);
                 case OperationType.BulkInvalidateSqliteOperation:
-                    return ((IEnumerable<string>)item.Item2).First();
+                    return (item.ParametersAsKeys).First();
                 case OperationType.BulkSelectByTypeSqliteOperation:
                     return default(string);
                 case OperationType.BulkSelectSqliteOperation:
-                    return ((IEnumerable<string>)item.Item2).First();
+                    return (item.ParametersAsKeys).First();
                 case OperationType.GetKeysSqliteOperation:
                     return default(string);
                 case OperationType.InvalidateAllSqliteOperation:

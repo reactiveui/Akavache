@@ -318,24 +318,24 @@ namespace Akavache.Sqlite3
         public IEnumerable Parameters { get; set; }
         public object Completion { get; set; }
 
-        public static OperationQueueItem CreateInsert(OperationType opType, IEnumerable<CacheElement> toInsert)
+        public static OperationQueueItem CreateInsert(OperationType opType, IEnumerable<CacheElement> toInsert, AsyncSubject<Unit> completion = null)
         {
-            return new OperationQueueItem() { OperationType = opType, Parameters = toInsert, Completion = new AsyncSubject<Unit>() };
+            return new OperationQueueItem() { OperationType = opType, Parameters = toInsert, Completion = completion ?? new AsyncSubject<Unit>() };
         }
 
-        public static OperationQueueItem CreateInvalidate(OperationType opType, IEnumerable<string> toInvalidate)
+        public static OperationQueueItem CreateInvalidate(OperationType opType, IEnumerable<string> toInvalidate, AsyncSubject<Unit> completion = null)
         {
-            return new OperationQueueItem() { OperationType = opType, Parameters = toInvalidate, Completion = new AsyncSubject<Unit>() };
+            return new OperationQueueItem() { OperationType = opType, Parameters = toInvalidate, Completion = completion ?? new AsyncSubject<Unit>() };
         }
 
-        public static OperationQueueItem CreateSelect(OperationType opType, IEnumerable<string> toSelect)
+        public static OperationQueueItem CreateSelect(OperationType opType, IEnumerable<string> toSelect, AsyncSubject<IEnumerable<CacheElement>> completion = null)
         {
-            return new OperationQueueItem() { OperationType = opType, Parameters = toSelect, Completion = new AsyncSubject<IEnumerable<CacheElement>>() };
+            return new OperationQueueItem() { OperationType = opType, Parameters = toSelect, Completion = completion ?? new AsyncSubject<IEnumerable<CacheElement>>() };
         }
 
-        public static OperationQueueItem CreateUnit(OperationType opType)
+        public static OperationQueueItem CreateUnit(OperationType opType, AsyncSubject<Unit> completion = null)
         {
-            return new OperationQueueItem() { OperationType = opType, Parameters = null, Completion = new AsyncSubject<Unit>() };
+            return new OperationQueueItem() { OperationType = opType, Parameters = null, Completion = completion ?? new AsyncSubject<Unit>() };
         }
 
         public static OperationQueueItem CreateGetAllKeys()
