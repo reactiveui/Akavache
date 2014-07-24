@@ -20,17 +20,17 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Foo" });
 
             var queue = fixture.DumpQueue();
-            var subj = queue[0].Item3 as AsyncSubject<IEnumerable<CacheElement>>;
+            var subj = queue[0].CompletionAsElements;
             var output = subj.CreateCollection();
             Assert.Equal(0, output.Count);
 
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(1, result.Count);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].Item1);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].OperationType);
 
             // Make sure the input gets a result when we signal the output's subject
-            var outSub = ((AsyncSubject<IEnumerable<CacheElement>>)result[0].Item3);
+            var outSub = (result[0].CompletionAsElements);
 
             Assert.Equal(0, output.Count);
             outSub.OnNext(new[] { new CacheElement() { Key = "Foo" }});
@@ -47,17 +47,17 @@ namespace Akavache.Tests
             fixture.Invalidate(new[] { "Baz" });
 
             var queue = fixture.DumpQueue();
-            var subj = queue[0].Item3 as AsyncSubject<IEnumerable<CacheElement>>;
+            var subj = queue[0].CompletionAsElements;
             var output = subj.CreateCollection();
             Assert.Equal(0, output.Count);
 
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(3, result.Count);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].Item1);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].OperationType);
 
             // Make sure the input gets a result when we signal the output's subject
-            var outSub = ((AsyncSubject<IEnumerable<CacheElement>>)result[0].Item3);
+            var outSub = (result[0].CompletionAsElements);
 
             Assert.Equal(0, output.Count);
             outSub.OnNext(new[] { new CacheElement() { Key = "Foo" }});
@@ -75,21 +75,21 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Baz" });
 
             var queue = fixture.DumpQueue();
-            var output = queue.Where(x => x.Item1 == OperationType.BulkSelectSqliteOperation)
-                .Select(x => (AsyncSubject<IEnumerable<CacheElement>>)x.Item3)
+            var output = queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
+                .Select(x => x.CompletionAsElements)
                 .Merge()
                 .CreateCollection();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(2, result.Count);
 
-            var item = result.Single(x => x.Item1 == OperationType.BulkSelectSqliteOperation);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, item.Item1);
-            Assert.Equal(3, item.Item2.Cast<string>().Count());
+            var item = result.Single(x => x.OperationType == OperationType.BulkSelectSqliteOperation);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, item.OperationType);
+            Assert.Equal(3, item.ParametersAsKeys.Count());
 
             // All three of the input Selects should get a value when we signal
             // our output Select
-            var outSub = ((AsyncSubject<IEnumerable<CacheElement>>)item.Item3);
+            var outSub = item.CompletionAsElements;
             var fakeResult = new[] {
                 new CacheElement() { Key = "Foo" },
                 new CacheElement() { Key = "Bar" },
@@ -112,22 +112,22 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Foo" });
 
             var queue = fixture.DumpQueue();
-            var output = queue.Where(x => x.Item1 == OperationType.BulkSelectSqliteOperation)
-                .Select(x => (AsyncSubject<IEnumerable<CacheElement>>)x.Item3)
+            var output = queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
+                .Select(x => x.CompletionAsElements)
                 .Merge()
                 .CreateCollection();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(1, result.Count);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].Item1);
-            Assert.Equal(2, result[0].Item2.Cast<string>().Count());
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].OperationType);
+            Assert.Equal(2, result[0].ParametersAsKeys.Count());
 
             var fakeResult = new[] {
                 new CacheElement() { Key = "Foo" },
                 new CacheElement() { Key = "Bar" },
             };
 
-            var outSub = ((AsyncSubject<IEnumerable<CacheElement>>)result[0].Item3);
+            var outSub = result[0].CompletionAsElements;
 
             Assert.Equal(0, output.Count);
             outSub.OnNext(fakeResult);
@@ -148,13 +148,13 @@ namespace Akavache.Tests
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(4, result.Count);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].Item1);
-            Assert.Equal(OperationType.BulkInsertSqliteOperation, result[1].Item1);
-            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[2].Item1);
-            Assert.Equal(OperationType.BulkInsertSqliteOperation, result[3].Item1);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[0].OperationType);
+            Assert.Equal(OperationType.BulkInsertSqliteOperation, result[1].OperationType);
+            Assert.Equal(OperationType.BulkSelectSqliteOperation, result[2].OperationType);
+            Assert.Equal(OperationType.BulkInsertSqliteOperation, result[3].OperationType);
 
-            Assert.Equal(1, result[1].Item2.Cast<CacheElement>().First().Value[0]);
-            Assert.Equal(4, result[3].Item2.Cast<CacheElement>().First().Value[0]);
+            Assert.Equal(1, result[1].ParametersAsElements.First().Value[0]);
+            Assert.Equal(4, result[3].ParametersAsElements.First().Value[0]);
         }
     }
 }
