@@ -236,17 +236,12 @@ namespace Akavache.Sqlite3
                 case OperationType.BulkInsertSqliteOperation:
                     return (item.ParametersAsElements).First().Key;
                 case OperationType.BulkInvalidateByTypeSqliteOperation:
-                    return default(string);
                 case OperationType.BulkInvalidateSqliteOperation:
-                    return (item.ParametersAsKeys).First();
-                case OperationType.BulkSelectByTypeSqliteOperation:
-                    return default(string);
                 case OperationType.BulkSelectSqliteOperation:
+                case OperationType.BulkSelectByTypeSqliteOperation:
                     return (item.ParametersAsKeys).First();
                 case OperationType.GetKeysSqliteOperation:
-                    return default(string);
                 case OperationType.InvalidateAllSqliteOperation:
-                    return default(string);
                 case OperationType.VacuumSqliteOperation:
                     return default(string);
                 default:
