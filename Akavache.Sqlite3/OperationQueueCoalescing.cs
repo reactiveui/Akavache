@@ -28,6 +28,15 @@ namespace Akavache.Sqlite3
         {
             var ret = new List<OperationQueueItem>();
 
+            if (inputItems.Any(x => x.OperationType == OperationType.GetKeysSqliteOperation ||
+                x.OperationType == OperationType.InvalidateAllSqliteOperation))
+            {
+                // NB: GetAllKeys and InvalidateAll results are highly dependent 
+                // on ordering, and we're not smart enough at the moment to return
+                // the right results.
+                return inputItems;
+            }
+
             // 1. GroupBy key, then by original order
             var groupedOps = new Dictionary<string, List<OperationQueueItem>>();
             foreach (var v in inputItems)
