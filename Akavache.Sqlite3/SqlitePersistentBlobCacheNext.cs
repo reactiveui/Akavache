@@ -236,7 +236,8 @@ namespace Akavache.Sqlite3
                 // fail silently
                 try 
                 {
-                    Connection.Execute("PRAGMA journal_mode=WAL");
+                    // NB: Setting journal_mode returns a row, nfi
+                    Connection.ExecuteScalar<int>("PRAGMA journal_mode=WAL");
                     Connection.Execute("PRAGMA temp_store=MEMORY");
                     Connection.Execute("PRAGMA synchronous=OFF");
                 }
