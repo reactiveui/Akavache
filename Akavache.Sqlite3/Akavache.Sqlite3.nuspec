@@ -19,5 +19,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Portable-Net45+Win8+WP8+Wpa81\Akavache.Sqlite3.*" target="lib\Portable-Net45+Win8+WP8+Wpa81" />
+    <file src="content\*" target="content" />
   </files>
 </package>
