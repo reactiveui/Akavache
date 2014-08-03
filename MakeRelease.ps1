@@ -9,6 +9,12 @@ if ($SlnFileExists -eq $False) {
     exit -1
 }
 
+$MSBuildLocation = "C:\Program Files (x86)\MSBuild\12.0\bin"
+
+& ".\.nuget\NuGet.exe" restore .\Akavache.sln
+& "$MSBuildLocation\MSBuild.exe" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /maxcpucount:1 .\Akavache.sln
+
+
 ###
 ### Build the Release directory
 ###
