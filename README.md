@@ -15,6 +15,7 @@ Akavache is currently compatible with:
 * .NET 4.5 Desktop (WPF)
 * Windows Phone 8
 * WinRT (Windows Store)
+* Windows Phone 8.1 Universal Apps
 
 ## What does that mean?
 
@@ -50,8 +51,10 @@ throwaway or per-machine (such as images) in `BlobCache.LocalMachine`.
 The most straightforward way to use Akavache is via the object extensions:
 
 ```cs
+using System.Reactive;   // IMPORTANT - this makes await work!
+
 var myToaster = new Toaster();
-BlobCache.UserAccount.InsertObject("toaster", myToaster);
+await BlobCache.UserAccount.InsertObject("toaster", myToaster);
 
 //
 // ...later, in another part of town...
