@@ -21,6 +21,7 @@ namespace Akavache.Sqlite3
 
     enum OperationType 
     {
+        DoNothing,
         BulkSelectSqliteOperation,
         BulkSelectByTypeSqliteOperation,
         BulkInsertSqliteOperation,
