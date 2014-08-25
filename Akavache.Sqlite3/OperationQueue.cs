@@ -81,8 +81,7 @@ namespace Akavache.Sqlite3
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        var item = default(OperationQueueItem);
-                        if (!operationQueue.TryTake(out item, 30 * 1000)) continue;
+                        var item = operationQueue.Take();
 
                         toProcess.Add(item);
                         while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) 
