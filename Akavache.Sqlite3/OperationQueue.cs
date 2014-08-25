@@ -82,7 +82,7 @@ namespace Akavache.Sqlite3
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
                         var item = default(OperationQueueItem);
-                        if (!operationQueue.TryTake(out item, 2000)) continue;
+                        if (!operationQueue.TryTake(out item, 30 * 1000)) continue;
 
                         toProcess.Add(item);
                         while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) 
@@ -109,6 +109,11 @@ namespace Akavache.Sqlite3
             return (start = Disposable.Create(() => 
             {
                 shouldQuit = true;
+
+                // NB: We add a "DoNothing" operation so that the thread waiting
+                // on an item will always have one instead of waiting the full timeout
+                // before we can exit
+                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
                 task.Wait();
 
                 var newQueue = new BlockingCollection<OperationQueueItem>();
@@ -123,6 +128,11 @@ namespace Akavache.Sqlite3
 
             return Task.Run(async () => 
             {
+                // NB: We add a "DoNothing" operation so that the thread waiting
+                // on an item will always have one instead of waiting the full timeout
+                // before we can run the flush
+                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
+
                 using (await flushLock.LockAsync()) 
                 {
                     var newQueue = new BlockingCollection<OperationQueueItem>();
@@ -211,6 +221,8 @@ namespace Akavache.Sqlite3
             {
                 switch (item.OperationType)
                 {
+                    case OperationType.DoNothing:
+                        break;
                     case OperationType.BulkInsertSqliteOperation:
                         MarshalCompletion(item.Completion, bulkInsertKey.PrepareToExecute(item.ParametersAsElements), commitResult);
                         break;
