@@ -67,7 +67,7 @@ namespace Akavache.Sqlite3
             if (start != null) return start;
 
             bool shouldQuit = false;
-            var task = Task.Run(async () => 
+            var task = new Task(async () => 
             {
                 var toProcess = new List<OperationQueueItem>();
 
@@ -104,7 +104,9 @@ namespace Akavache.Sqlite3
                         }
                     }
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
+
+            task.Start();
 
             return (start = Disposable.Create(() => 
             {
