@@ -14,6 +14,7 @@ using ReactiveUI.Testing;
 using Xunit;
 using System.Threading;
 using System.Reactive.Concurrency;
+using System.Threading.Tasks;
 
 namespace Akavache.Tests
 {
@@ -70,7 +71,7 @@ namespace Akavache.Tests
         protected abstract IBlobCache CreateBlobCache(string path);
 
         [Fact]
-        public void DownloadUrlTest()
+        public async Task DownloadUrlTest()
         {
             string path;
 
@@ -384,8 +385,6 @@ namespace Akavache.Tests
                     Assert.Equal("one", result.Item1);
                     Assert.Equal("two", result.Item2);
                 }
-
-                fixture.Shutdown.Wait();
             }
         }
 
@@ -426,8 +425,6 @@ namespace Akavache.Tests
                         sched.AdvanceByMs(250);
                         Assert.Equal("baz", result);
                     }
-
-                    fixture.Shutdown.Wait();
                 }
             });
         }
@@ -462,8 +459,6 @@ namespace Akavache.Tests
 
                     Assert.Equal("get error", result);
                 }
-
-                fixture.Shutdown.Wait();
             }
         }
 
@@ -497,8 +492,6 @@ namespace Akavache.Tests
 
                     Assert.True(fetchPredicateCalled);
                 }
-
-                fixture.Shutdown.Wait();
             }
         }
 
@@ -545,14 +538,11 @@ namespace Akavache.Tests
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
                 Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 Assert.Equal(0, allObjectsCount);
-
-                fixture.Dispose();
-                fixture.Shutdown.Wait();
             }
         }
 
         [Fact]
-        public void GetAllKeysSmokeTest()
+        public async Task GetAllKeysSmokeTest()
         {
             string path;
 
@@ -572,8 +562,6 @@ namespace Akavache.Tests
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
-
-                fixture.Shutdown.Wait();
                     
                 if (fixture is InMemoryBlobCache) return;
 
