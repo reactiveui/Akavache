@@ -82,8 +82,28 @@ namespace Akavache.Tests
                     var bytes = fixture.DownloadUrl(@"http://httpbin.org/html").First();
                     Assert.True(bytes.Length > 0);
                 }
+            }
+        }
 
-                fixture.Shutdown.Wait();
+        [Fact]
+        public async Task GettingNonExistentKeyShouldThrow()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                Exception thrown = null;
+                try
+                {
+                    var result = await fixture.GetObject<UserObject>("WEIFJWPIEFJ")
+                        .Timeout(TimeSpan.FromSeconds(3));
+                }
+                catch (Exception ex)
+                {
+                    thrown = ex;
+                }
+
+                Assert.True(thrown.GetType() == typeof(KeyNotFoundException));
             }
         }
 
