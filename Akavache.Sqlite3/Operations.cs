@@ -115,7 +115,7 @@ namespace Akavache.Sqlite3
                 .Select(x => {
                     var stmt = default(sqlite3_stmt);
                     var result = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle,
-                        String.Format("SELECT Key,TypeName,Value,Expiration FROM CacheElement WHERE {0} In ({1})", column, qs), out stmt);
+                        String.Format("SELECT Key,TypeName,Value,Expiration,CreatedAt FROM CacheElement WHERE {0} In ({1})", column, qs), out stmt);
 
                     var error = raw.sqlite3_errmsg(conn.Handle);
                     if (result != SQLite3.Result.OK) throw new SQLiteException(result, "Couldn't prepare statement: " + error);
@@ -155,6 +155,7 @@ namespace Akavache.Sqlite3
                             TypeName = raw.sqlite3_column_text(selectOp, 1), 
                             Value = raw.sqlite3_column_blob(selectOp, 2),
                             Expiration = new DateTime(raw.sqlite3_column_int64(selectOp, 3)),
+                            CreatedAt = new DateTime(raw.sqlite3_column_int64(selectOp, 4)),
                         };
 
                         if (now.UtcTicks <= ce.Expiration.Ticks) result.Add(ce);
