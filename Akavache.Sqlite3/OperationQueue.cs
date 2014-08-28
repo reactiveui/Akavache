@@ -62,26 +62,32 @@ namespace Akavache.Sqlite3
         }
          
         IDisposable start;
+        CancellationTokenSource shouldQuit;
         public IDisposable Start()
         {
             if (start != null) return start;
 
-            bool shouldQuit = false;
+            shouldQuit = new CancellationTokenSource();
             var task = new Task(async () => 
             {
                 var toProcess = new List<OperationQueueItem>();
 
-                while (!shouldQuit) 
+                while (!shouldQuit.IsCancellationRequested) 
                 {
                     toProcess.Clear();
 
-                    using (await flushLock.LockAsync()) 
+                    using (await flushLock.LockAsync(shouldQuit.Token)) 
                     {
                         // NB: We special-case the first item because we want to 
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        var item = operationQueue.Take();
+                        var item = operationQueue.Take(shouldQuit.Token);
+
+                        // NB: We explicitly want to bail out *here* because we 
+                        // never want to bail out in the middle of processing 
+                        // operations, to guarantee that we won't orphan them
+                        if (shouldQuit.IsCancellationRequested && item == null) break;
 
                         toProcess.Add(item);
                         while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) 
@@ -109,12 +115,7 @@ namespace Akavache.Sqlite3
 
             return (start = Disposable.Create(() => 
             {
-                shouldQuit = true;
-
-                // NB: We add a "DoNothing" operation so that the thread waiting
-                // on an item will always have one instead of waiting the full timeout
-                // before we can exit
-                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
+                shouldQuit.Cancel();
                 task.Wait();
 
                 var newQueue = new BlockingCollection<OperationQueueItem>();
