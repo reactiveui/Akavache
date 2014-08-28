@@ -15,9 +15,9 @@ namespace Akavache.Sqlite3.Internal
             m_releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
-        public Task<IDisposable> LockAsync()
+        public Task<IDisposable> LockAsync(CancellationToken ct = default(CancellationToken))
         {
-            var wait = m_semaphore.WaitAsync();
+            var wait = m_semaphore.WaitAsync(ct);
 
             return wait.IsCompleted ?
                 m_releaser :
