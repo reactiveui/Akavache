@@ -62,26 +62,32 @@ namespace Akavache.Sqlite3
         }
          
         IDisposable start;
+        CancellationTokenSource shouldQuit;
         public IDisposable Start()
         {
             if (start != null) return start;
 
-            bool shouldQuit = false;
+            shouldQuit = new CancellationTokenSource();
             var task = new Task(async () => 
             {
                 var toProcess = new List<OperationQueueItem>();
 
-                while (!shouldQuit) 
+                while (!shouldQuit.IsCancellationRequested) 
                 {
                     toProcess.Clear();
 
-                    using (await flushLock.LockAsync()) 
+                    using (await flushLock.LockAsync(shouldQuit.Token)) 
                     {
                         // NB: We special-case the first item because we want to 
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        var item = operationQueue.Take();
+                        var item = operationQueue.Take(shouldQuit.Token);
+
+                        // NB: We explicitly want to bail out *here* because we 
+                        // never want to bail out in the middle of processing 
+                        // operations, to guarantee that we won't orphan them
+                        if (shouldQuit.IsCancellationRequested && item == null) break;
 
                         toProcess.Add(item);
                         while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) 
@@ -109,13 +115,12 @@ namespace Akavache.Sqlite3
 
             return (start = Disposable.Create(() => 
             {
-                shouldQuit = true;
-
-                // NB: We add a "DoNothing" operation so that the thread waiting
-                // on an item will always have one instead of waiting the full timeout
-                // before we can exit
-                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
-                task.Wait();
+                shouldQuit.Cancel();
+                try 
+                {
+                    task.Wait();
+                } 
+                catch (OperationCanceledException) { }
 
                 var newQueue = new BlockingCollection<OperationQueueItem>();
                 ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
@@ -256,12 +261,18 @@ namespace Akavache.Sqlite3
             try 
             {
                 commit.PrepareToExecute()();
-                commitResult.OnNext(Unit.Default);
-                commitResult.OnCompleted();
+
+                // NB: We do this in a scheduled result to stop a deadlock in
+                // First and friends
+                scheduler.Schedule(() => 
+                {
+                    commitResult.OnNext(Unit.Default);
+                    commitResult.OnCompleted();
+                });
             } 
             catch (Exception ex) 
             {
-                commitResult.OnError(ex);
+                scheduler.Schedule(() => commitResult.OnError(ex));
             }
         }
 
@@ -272,17 +283,12 @@ namespace Akavache.Sqlite3
             {
                 var result = block();
                 
-                // NB: We do this in a scheduled result to stop First() and friends
-                // from blowing up
-                scheduler.Schedule(() => 
-                {
-                    subj.OnNext(result);
+                subj.OnNext(result);
 
-                    commitResult
-                        .SelectMany(_ => Observable.Empty<T>())
-                        .Multicast(subj)
-                        .PermaRef();
-                });
+                commitResult
+                    .SelectMany(_ => Observable.Empty<T>())
+                    .Multicast(subj)
+                    .PermaRef();
             }
             catch (Exception ex)
             {
@@ -297,19 +303,16 @@ namespace Akavache.Sqlite3
             {
                 block();
 
-                scheduler.Schedule(() => 
-                {
-                    subj.OnNext(Unit.Default);
+                subj.OnNext(Unit.Default);
 
-                    commitResult
-                        .SelectMany(_ => Observable.Empty<Unit>())
-                        .Multicast(subj)
-                        .PermaRef();
-                });
+                commitResult
+                    .SelectMany(_ => Observable.Empty<Unit>())
+                    .Multicast(subj)
+                    .PermaRef();
             }
             catch (Exception ex)
             {
-                scheduler.Schedule(() => subj.OnError(ex));
+                subj.OnError(ex);
             }
         }
 
