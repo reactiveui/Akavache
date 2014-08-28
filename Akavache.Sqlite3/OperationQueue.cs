@@ -116,7 +116,11 @@ namespace Akavache.Sqlite3
             return (start = Disposable.Create(() => 
             {
                 shouldQuit.Cancel();
-                task.Wait();
+                try 
+                {
+                    task.Wait();
+                } 
+                catch (OperationCanceledException) { }
 
                 var newQueue = new BlockingCollection<OperationQueueItem>();
                 ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
