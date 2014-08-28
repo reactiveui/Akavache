@@ -257,12 +257,18 @@ namespace Akavache.Sqlite3
             try 
             {
                 commit.PrepareToExecute()();
-                commitResult.OnNext(Unit.Default);
-                commitResult.OnCompleted();
+
+                // NB: We do this in a scheduled result to stop a deadlock in
+                // First and friends
+                scheduler.Schedule(() => 
+                {
+                    commitResult.OnNext(Unit.Default);
+                    commitResult.OnCompleted();
+                });
             } 
             catch (Exception ex) 
             {
-                commitResult.OnError(ex);
+                scheduler.Schedule(() => commitResult.OnError(ex));
             }
         }
 
@@ -273,17 +279,12 @@ namespace Akavache.Sqlite3
             {
                 var result = block();
                 
-                // NB: We do this in a scheduled result to stop First() and friends
-                // from blowing up
-                scheduler.Schedule(() => 
-                {
-                    subj.OnNext(result);
+                subj.OnNext(result);
 
-                    commitResult
-                        .SelectMany(_ => Observable.Empty<T>())
-                        .Multicast(subj)
-                        .PermaRef();
-                });
+                commitResult
+                    .SelectMany(_ => Observable.Empty<T>())
+                    .Multicast(subj)
+                    .PermaRef();
             }
             catch (Exception ex)
             {
@@ -298,19 +299,16 @@ namespace Akavache.Sqlite3
             {
                 block();
 
-                scheduler.Schedule(() => 
-                {
-                    subj.OnNext(Unit.Default);
+                subj.OnNext(Unit.Default);
 
-                    commitResult
-                        .SelectMany(_ => Observable.Empty<Unit>())
-                        .Multicast(subj)
-                        .PermaRef();
-                });
+                commitResult
+                    .SelectMany(_ => Observable.Empty<Unit>())
+                    .Multicast(subj)
+                    .PermaRef();
             }
             catch (Exception ex)
             {
-                scheduler.Schedule(() => subj.OnError(ex));
+                subj.OnError(ex);
             }
         }
 
