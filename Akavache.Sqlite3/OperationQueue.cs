@@ -82,7 +82,15 @@ namespace Akavache.Sqlite3
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        var item = operationQueue.Take(shouldQuit.Token);
+                        var item = default(OperationQueueItem);
+                        try 
+                        {
+                            item = operationQueue.Take(shouldQuit.Token);
+                        } 
+                        catch (OperationCanceledException) 
+                        {
+                            break;
+                        }
 
                         // NB: We explicitly want to bail out *here* because we 
                         // never want to bail out in the middle of processing 
@@ -115,9 +123,9 @@ namespace Akavache.Sqlite3
 
             return (start = Disposable.Create(() => 
             {
-                shouldQuit.Cancel();
                 try 
                 {
+                    shouldQuit.Cancel();
                     task.Wait();
                 } 
                 catch (OperationCanceledException) { }
