@@ -41,7 +41,7 @@
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.4.1\lib\Portable-net45+win+wpa81+wp80\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.5.0\lib\Portable-net45+win+wpa81+wp80\Splat.dll</HintPath>
     </Reference>
     <Reference Include="SQLitePCL.raw">
       <HintPath>..\packages\SQLitePCL.raw_basic.0.5.0\lib\portable-net45+netcore45+wpa81+wp8+MonoAndroid+MonoTouch\SQLitePCL.raw.dll</HintPath>
