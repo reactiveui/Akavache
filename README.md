@@ -73,16 +73,16 @@ BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
 ## Use SQLite3!
 
 Akavache also ships with a separate `IBlobCache` implementation in the
-`akavache.sqlite3` NuGet package which supports every platform except for
+`akavache.sqlite3` NuGet package which supports every platform, including
 WP8.
 
-While the default implementation is still quite usable, the SQLite3
-implementation has a number of speed and concurrency advantages, and is
-**recommended for all new applications**. It's not the default because it
-requires a native DLL (`sqlite3.dll`) which is a bit more work to set up. See
-[the Sqlite3 README](/Akavache.Sqlite3/sqlite3-hint.txt) for more info.
+To use it, simply include `Akavache.Sqlite3.dll`. On Windows-based platforms,
+you also need to do the following:
 
-To use it, simply include `Akavache.Sqlite3.dll`
+* Set your build to a specific configuration (x86, amd64, or ARM), don't use
+  AnyCPU because of sqlite3.dll
+* On WinRT, you must include the Microsoft Visual C++ Runtime Extension 
+  project.
 
 ## Handling Errors
 
