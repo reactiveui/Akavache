@@ -51,7 +51,7 @@ throwaway or per-machine (such as images) in `BlobCache.LocalMachine`.
 The most straightforward way to use Akavache is via the object extensions:
 
 ```cs
-using System.Reactive;   // IMPORTANT - this makes await work!
+using System.Reactive.Linq;   // IMPORTANT - this makes await work!
 
 var myToaster = new Toaster();
 await BlobCache.UserAccount.InsertObject("toaster", myToaster);
@@ -107,7 +107,7 @@ toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
 
 ## Examining Akavache caches
 
-Using [Akavache Explorer](https://github.com/xpaulbettsx/AkavacheExplorer), you
+Using [Akavache Explorer](https://github.com/paulcbetts/AkavacheExplorer), you
 can dig into Akavache repos for debugging purposes to see what has been stored.
 
 ![](http://f.cl.ly/items/2D3Y0L0k262X0U0y3B0e/Image%202012.05.07%206:57:48%20PM.png)
