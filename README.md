@@ -38,6 +38,30 @@ added to support:
 - Fetching and loading Images and URLs from the Internet
 - Storing and automatically encrypting User Credentials
 
+## Platform-specific notes
+
+* **Xamarin.iOS / Xamarin.Mac 32-bit** - No issues.
+
+* **Xamarin.Android** - No issues.
+
+* **.NET 4.5 Desktop (WPF)** - You must mark your application as `x86`, or else
+  you will get a strange runtime error about SQLitePCL_Raw not loading correctly.
+
+* **Windows Phone 8.0** - You must mark your application as `x86` or `ARM`, or
+  else you will get a strange runtime error about SQLitePCL_Raw not loading
+  correctly.
+
+* **WinRT (Windows Store)** - You must mark your application as `x86` or `ARM`, or
+  else you will get a strange runtime error about SQLitePCL_Raw not loading
+  correctly. You must *also* ensure that the Microsoft Visual C++ runtime is added
+  to your project. This means that you must submit several versions of your app
+  to the Store to support ARM.
+
+* **Windows Phone 8.1 Universal Apps** - You must mark your application as `x86`
+  or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
+  loading correctly. You must *also* ensure that the Microsoft Visual C++ runtime
+  is added to your project.
+
 ### Getting Started
 
 Interacting with Akavache is primarily done through an object called
