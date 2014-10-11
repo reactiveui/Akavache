@@ -7,7 +7,7 @@ settings) as well as cached local data that expires.
 
 ![Dat Logo](http://f.cl.ly/items/2R3d1o122m090K0W081L/Akavache.png)
 
-## Where can I use it?
+### Where can I use it?
 
 Akavache is currently compatible with:
 
@@ -18,7 +18,7 @@ Akavache is currently compatible with:
 * WinRT (Windows Store)
 * Windows Phone 8.1 Universal Apps
 
-## What does that mean?
+### What does that mean?
 
 Downloading and storing remote data from the internet while still keeping the
 UI responsive is a task that nearly every modern application needs to do.
@@ -38,7 +38,7 @@ added to support:
 - Fetching and loading Images and URLs from the Internet
 - Storing and automatically encrypting User Credentials
 
-## Getting Started
+### Getting Started
 
 Interacting with Akavache is primarily done through an object called
 `BlobCache`. At App startup, you must first set your app's name via
@@ -70,7 +70,7 @@ BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
     .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"));
 ```
 
-## Handling Errors
+### Handling Errors
 
 When a key is not present in the cache, GetObject throws a
 KeyNotFoundException (or more correctly, OnError's the IObservable). Often,
@@ -90,20 +90,20 @@ toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
     .Catch(Observable.Return(new Toaster()));
 ```
 
-## Examining Akavache caches
+### Examining Akavache caches
 
 Using [Akavache Explorer](https://github.com/paulcbetts/AkavacheExplorer), you
 can dig into Akavache repos for debugging purposes to see what has been stored.
 
 ![](http://f.cl.ly/items/2D3Y0L0k262X0U0y3B0e/Image%202012.05.07%206:57:48%20PM.png)
 
-## What's this Global Variable nonsense? Why can't I use $FAVORITE_IOC_LIBRARY
+### What's this Global Variable nonsense? Why can't I use $FAVORITE_IOC_LIBRARY
 
 You totally can. Just instantiate `PersistentBlobCache` or
 `EncryptedBlobCache` instead - the static variables are there just to make it
 easier to get started.
 
-## Unit Testing with Akavache
+### Unit Testing with Akavache
 
 By default, if Akavache detects that it is being run in a unit test runner, it
 will use the `TestBlobCache` implementation instead of the default
