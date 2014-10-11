@@ -219,3 +219,62 @@ IObservable<Unit> Flush();
 // underlying database
 IObservable<Unit> Vacuum();
 ```
+
+## Extension Method Documentation
+
+On top of every `IBlobCache` object, there are extension methods that help with
+common application scenarios:
+
+```cs
+/*
+ * Username / Login Methods (only available on ISecureBlobCache)
+ */
+
+// Save login information for the given host
+IObservable<Unit> SaveLogin(string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null);
+
+// Load information for the given host
+IObservable<LoginInfo> GetLoginAsync(string host = "default");
+
+// Erase information for the given host
+IObservable<Unit> EraseLogin(string host = "default");
+
+/*
+ * Downloading and caching URLs and Images
+ */
+
+// Download a file as a byte array
+IObservable<byte[]> DownloadUrl(string url,
+    IDictionary<string, string> headers = null,
+    bool fetchAlways = false,
+    DateTimeOffset? absoluteExpiration = null);
+
+// Load a given key as an image
+IObservable<IBitmap> LoadImage(string key, float? desiredWidth = null, float? desiredHeight = null);
+
+// Download an image from the network and load it
+IObservable<IBitmap> LoadImageFromUrl(string url,
+    bool fetchAlways = false,
+    float? desiredWidth = null,
+    float? desiredHeight = null,
+    DateTimeOffset? absoluteExpiration = null);
+
+/*
+ * Composite operations
+ */
+
+// Attempt to return an object from the cache. If the item doesn't
+// exist or returns an error, call a Func to return the latest
+// version of an object and insert the result in the cache.
+IObservable<T> GetOrFetchObject<T>(string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null);
+
+// Like GetOrFetchObject, but isn't async
+IObservable<T> GetOrCreateObject<T>(string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null);
+
+// Immediately return a cached version of an object if available, but *always*
+// also execute fetchFunc to retrieve the latest version of an object.
+IObservable<T> GetAndFetchLatest<T>(string key,
+    Func<Task<T>> fetchFunc,
+    Func<DateTimeOffset, bool> fetchPredicate = null,
+    DateTimeOffset? absoluteExpiration = null);
+```
