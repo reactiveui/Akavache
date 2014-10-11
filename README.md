@@ -99,8 +99,8 @@ can dig into Akavache repos for debugging purposes to see what has been stored.
 
 ### What's this Global Variable nonsense? Why can't I use $FAVORITE_IOC_LIBRARY
 
-You totally can. Just instantiate `PersistentBlobCache` or
-`EncryptedBlobCache` instead - the static variables are there just to make it
+You totally can. Just instantiate `SQLitePersistentBlobCache` or
+`SQLiteEncryptedBlobCache` instead - the static variables are there just to make it
 easier to get started.
 
 ### Unit Testing with Akavache
