@@ -126,3 +126,96 @@ can dig into Akavache repos for debugging purposes to see what has been stored.
 You totally can. Just instantiate `SQLitePersistentBlobCache` or
 `SQLiteEncryptedBlobCache` instead - the static variables are there just to make it
 easier to get started.
+
+
+
+## Basic Method Documentation
+
+Every blob cache supports the basic raw operations given below (some of them are
+not implemented directly, but are added on via extension methods):
+
+```cs
+/*
+ * Get items from the store
+ */
+
+// Get a single item
+IObservable<byte[]> Get(string key);
+
+// Get a list of items
+IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys);
+
+// Get an object serialized via InsertObject
+IObservable<T> GetObject<T>(string key);
+
+// Get all objects of type T
+IObservable<IEnumerable<T>> GetAllObjects<T>();
+
+// Get a list of objects given a list of keys
+IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys);
+
+/*
+ * Save items to the store
+ */
+
+// Insert a single item
+IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null);
+
+// Insert a set of items
+IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+
+// Insert a single object
+IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null);
+
+// Insert a group of objects
+IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null);
+
+/*
+ * Remove items from the store
+ */
+
+// Delete a single item
+IObservable<Unit> Invalidate(string key);
+
+// Delete a list of items
+IObservable<Unit> Invalidate(IEnumerable<string> keys);
+
+// Delete a single object (do *not* use Invalidate for items inserted with InsertObject!)
+IObservable<Unit> InvalidateObject<T>(string key);
+
+// Deletes a list of objects
+IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys);
+
+// Deletes all items (regardless if they are objects or not)
+IObservable<Unit> InvalidateAll();
+
+// Deletes all objects of type T
+IObservable<Unit> InvalidateAllObjects<T>();
+
+/*
+ * Get Metadata about items
+ */
+
+// Return a list of all keys. Use for debugging purposes only.
+IObservable<IEnumerable<string>> GetAllKeys();
+
+// Return the time which an item was created
+IObservable<DateTimeOffset?> GetCreatedAt(string key);
+
+// Return the time which an object of type T was created
+IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key);
+
+// Return the time which a list of keys were created
+IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys);
+
+/*
+ * Utility methods
+ */
+
+// Attempt to ensure all outstanding operations are written to disk
+IObservable<Unit> Flush();
+
+// Preemptively drop all expired keys and run SQLite's VACUUM method on the
+// underlying database
+IObservable<Unit> Vacuum();
+```
