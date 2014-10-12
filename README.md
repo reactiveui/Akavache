@@ -75,7 +75,7 @@ throwaway or per-machine (such as images) in `BlobCache.LocalMachine`.
 The most straightforward way to use Akavache is via the object extensions:
 
 ```cs
-using System.Reactive;   // IMPORTANT - this makes await work!
+using System.Reactive.Linq;   // IMPORTANT - this makes await work!
 
 var myToaster = new Toaster();
 await BlobCache.UserAccount.InsertObject("toaster", myToaster);
