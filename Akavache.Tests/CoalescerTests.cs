@@ -163,7 +163,7 @@ namespace Akavache.Tests
         }
 
         [Fact]
-        public async Task GRoupedRequestsWithDifferentKeysReturnEmptyResultIfItemsDontExist()
+        public async Task GroupedRequestsWithDifferentKeysReturnEmptyResultIfItemsDontExist()
         {
             string path;
 
