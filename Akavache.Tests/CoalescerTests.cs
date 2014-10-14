@@ -4,14 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
-using Akavache.Sqlite3.Internal;
-using Microsoft.Reactive.Testing;
 using ReactiveUI;
-using ReactiveUI.Testing;
 using Xunit;
 
 namespace Akavache.Tests
