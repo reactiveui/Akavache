@@ -186,12 +186,13 @@ namespace Akavache.Sqlite3
                     if (resultMap.ContainsKey(v)) 
                     {
                         elementMap[v].OnNext(EnumerableEx.Return(resultMap[v]));
-                        elementMap[v].OnCompleted();
                     }
                     else
                     {
-                        elementMap[v].OnError(new KeyNotFoundException());
+                        elementMap[v].OnNext(Enumerable.Empty<CacheElement>());
                     }
+
+                    elementMap[v].OnCompleted();
                 }
             }, 
             ex =>

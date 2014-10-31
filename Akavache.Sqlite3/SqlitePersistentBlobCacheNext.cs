@@ -45,6 +45,16 @@ namespace Akavache.Sqlite3
             _initializer = Initialize();
         }
 
+        internal void ReplaceOperationQueue(SqliteOperationQueue queue)
+        {
+            _initializer.Wait();
+
+            opQueue.Dispose();
+
+            opQueue = queue;
+            opQueue.Start();
+        }
+
         readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
         public IObservable<Unit> Shutdown { get { return shutdown; } }
 

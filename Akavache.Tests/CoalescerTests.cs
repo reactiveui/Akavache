@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -155,6 +156,27 @@ namespace Akavache.Tests
 
             Assert.Equal(1, result[1].ParametersAsElements.First().Value[0]);
             Assert.Equal(4, result[3].ParametersAsElements.First().Value[0]);
+        }
+
+        [Fact]
+        public async Task GroupedRequestsWithDifferentKeysReturnEmptyResultIfItemsDontExist()
+        {
+            string path;
+
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                using (var cache = new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")))
+                {
+                    var queue = new SqliteOperationQueue(cache.Connection, BlobCache.TaskpoolScheduler);
+                    var request = queue.Select(new[] { "Foo" });
+                    var unrelatedRequest = queue.Select(new[] { "Bar" });
+
+                    cache.ReplaceOperationQueue(queue);
+
+                    Assert.Equal(0, (await request).Count());
+                    Assert.Equal(0, (await unrelatedRequest).Count());
+                }
+            }
         }
     }
 }
