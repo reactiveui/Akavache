@@ -45,17 +45,7 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var doFetch = new Func<IObservable<byte[]>>(() => 
-                MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessAndCacheWebResponse(x, url, absoluteExpiration)));
-
-            if (fetchAlways)
-            {
-                return This.GetAndFetchLatest(url, doFetch, absoluteExpiration: absoluteExpiration).TakeLast(1);
-            }
-            else
-            {
-                return This.GetOrFetchObject(url, doFetch, absoluteExpiration);
-            }
+            return This.DownloadUrl(url, url, headers, fetchAlways, absoluteExpiration);
         }
 
         /// <summary>
