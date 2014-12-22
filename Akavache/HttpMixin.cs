@@ -62,20 +62,25 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache This, string key, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var doFetch = new Func<IObservable<byte[]>>(() =>
-                MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessAndCacheWebResponse(x, url, absoluteExpiration)));
+            var doFetch = MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
+            var fetchAndCache = doFetch.SelectMany(x => This.Insert(key, x, absoluteExpiration).Select(_ => x));
 
-            if (fetchAlways)
+            var ret = default(IObservable<byte[]>);
+            if (!fetchAlways)
             {
-                return This.GetAndFetchLatest(key, doFetch, absoluteExpiration: absoluteExpiration).TakeLast(1);
+                ret = This.Get(key).Catch(fetchAndCache);
             }
-            else
+            else 
             {
-                return This.GetOrFetchObject(key, doFetch, absoluteExpiration);
+                ret = fetchAndCache;
             }
+
+            var conn = ret.PublishLast();
+            conn.Connect();
+            return conn;
         }
 
-        IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
+        IObservable<byte[]> ProcessWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
         {
             var hwr = (HttpWebResponse)wr;
             Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be.");
