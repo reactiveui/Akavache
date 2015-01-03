@@ -31,6 +31,7 @@
     <EnablePackageSigning>false</EnablePackageSigning>
     <IncludeMonoRuntime>false</IncludeMonoRuntime>
     <UseSGen>false</UseSGen>
+    <UseRefCounting>false</UseRefCounting>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -44,6 +45,7 @@
     <EnablePackageSigning>false</EnablePackageSigning>
     <IncludeMonoRuntime>false</IncludeMonoRuntime>
     <UseSGen>false</UseSGen>
+    <UseRefCounting>false</UseRefCounting>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -57,9 +59,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
     <Reference Include="Mono.Posix" />
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.6.0\lib\MonoMac\Splat.dll</HintPath>
-    </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
     </Reference>
@@ -76,6 +75,9 @@
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="XamMac, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065" />
+    <Reference Include="Splat">
+      <HintPath>..\packages\Splat.1.6.0\lib\MonoMac\Splat.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs">
