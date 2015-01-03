@@ -4,7 +4,9 @@ using System.Reactive.Concurrency;
 using System.Reactive;
 using System.Reactive.Linq;
 
-#if UIKIT
+#if UNIFIED
+using Foundation;
+#elif UIKIT
 using MonoTouch.Foundation;
 #else
 using MonoMac.Foundation;
