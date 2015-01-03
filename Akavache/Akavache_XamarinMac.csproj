@@ -5,25 +5,26 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{3EF05CA8-ED19-489C-AF42-71C4B6507AE7}</ProjectGuid>
-    <ProjectTypeGuids>{42C0BBD9-55CE-4FC1-8D90-A7348ABAFB23};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{1EF05CAB-AD19-489C-AC42-71C4B6507AE7}</ProjectGuid>
+    <ProjectTypeGuids>{A3F8F2AB-B479-4A4A-A458-A89E7DC349F1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Akavache</RootNamespace>
     <AssemblyName>Akavache</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\Akavache\</SolutionDir>
     <RestorePackages>false</RestorePackages>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FodyPath>..\packages\Fody.1.20.0.0</FodyPath>
+    <TargetFrameworkIdentifier>Xamarin.Mac</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\MonoMac\</OutputPath>
-    <IntermediateOutputPath>obj\Debug\MonoMac\</IntermediateOutputPath>
-    <DefineConstants>DEBUG;TRACE; MONO; APPKIT</DefineConstants>
+    <OutputPath>bin\Debug\Xamarin.Mac10\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\Xamarin.Mac10\</IntermediateOutputPath>
+    <DefineConstants>DEBUG; TRACE; MONO; APPKIT; UNIFIED</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <EnableCodeSigning>false</EnableCodeSigning>
@@ -34,9 +35,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\MonoMac\</OutputPath>
-    <IntermediateOutputPath>obj\Release\MonoMac\</IntermediateOutputPath>
-    <DefineConstants>TRACE; MONO; APPKIT</DefineConstants>
+    <OutputPath>bin\Release\Xamarin.Mac10\</OutputPath>
+    <IntermediateOutputPath>obj\Release\Xamarin.Mac10\</IntermediateOutputPath>
+    <DefineConstants>TRACE; MONO; APPKIT; UNIFIED</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <EnableCodeSigning>false</EnableCodeSigning>
@@ -57,8 +58,9 @@
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
     <Reference Include="Mono.Posix" />
+    <Reference Include="Xamarin.Mac" />
     <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.5.0\lib\MonoMac\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.5.0\lib\Xamarin.Mac10\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
@@ -75,7 +77,7 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="XamMac, Version=0.0.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065" />
+
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs">
@@ -122,5 +124,5 @@
   <ItemGroup>
     <Folder Include="Portable\" />
   </ItemGroup>
-  <Import Project="Fody.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" /><Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>
