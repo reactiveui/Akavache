@@ -64,7 +64,7 @@
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\portable-net40+sl4+wp7+win8\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.5.0\lib\monotouch\Splat.dll</HintPath>
+      <HintPath>..\packages\Splat.1.6.0\lib\monotouch\Splat.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
