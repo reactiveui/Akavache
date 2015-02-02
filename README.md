@@ -85,12 +85,12 @@ await BlobCache.UserAccount.InsertObject("toaster", myToaster);
 //
 
 // Using async/await
-var toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster");
+var toaster = await BlobCache.UserAccount.GetObject<Toaster>("toaster");
 
 // or without async/await
 Toaster toaster;
 
-BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
+BlobCache.UserAccount.GetObject<Toaster>("toaster")
     .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"));
 ```
 
