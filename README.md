@@ -44,8 +44,7 @@ added to support:
 
 * **Xamarin.Android** - No issues.
 
-* **.NET 4.5 Desktop (WPF)** - You must mark your application as `x86`, or else
-  you will get a strange runtime error about SQLitePCL_Raw not loading correctly.
+* **.NET 4.5 Desktop (WPF)** - No issues
 
 * **Windows Phone 8.0** - You must mark your application as `x86` or `ARM`, or
   else you will get a strange runtime error about SQLitePCL_Raw not loading
