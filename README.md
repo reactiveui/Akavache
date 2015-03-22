@@ -76,6 +76,9 @@ The most straightforward way to use Akavache is via the object extensions:
 ```cs
 using System.Reactive.Linq;   // IMPORTANT - this makes await work!
 
+// Make sure you set the application name before doing any inserts or gets
+BlobCache.ApplicationName = "AkavacheExperiment";
+
 var myToaster = new Toaster();
 await BlobCache.UserAccount.InsertObject("toaster", myToaster);
 
