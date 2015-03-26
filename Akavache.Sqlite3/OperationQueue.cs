@@ -217,8 +217,8 @@ namespace Akavache.Sqlite3
         {
             // Vacuum is a special snowflake. We want to delete all the expired rows before
             // actually vacuuming. Unfortunately vacuum can't be run in a transaction so we'll
-            // do the delete first, then claim an exclusive lock on the queue, drain it and
-            // run our vacuum op without any transactions.
+            // claim an exclusive lock on the queue, drain it and run the delete first before
+            // running our vacuum op without any transactions.
             var ret = new AsyncSubject<Unit>();
 
             Task.Run(async () =>
