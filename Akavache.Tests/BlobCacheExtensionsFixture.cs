@@ -583,6 +583,39 @@ namespace Akavache.Tests
             BlobCache.ApplicationName = "TestRunner";
             return new BlockingDisposeObjectCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
+
+        [Fact]
+        public void VacuumCompactsDatabase()
+        {
+            string path;
+
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                string dbPath = Path.Combine(path, "sqlite.db");
+
+                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
+                {
+                    Assert.True(File.Exists(dbPath));
+
+                    byte[] buf = new byte[256 * 1024];
+                    var rnd = new Random();
+                    rnd.NextBytes(buf);
+
+                    fixture.Insert("dummy", buf).Wait();
+                }
+
+                var size = new FileInfo(dbPath).Length;
+                Assert.True(size > 0);
+
+                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
+                {
+                    fixture.InvalidateAll().Wait();
+                    fixture.Vacuum().Wait();
+                }
+
+                Assert.True(new FileInfo(dbPath).Length < size);
+            }
+        }
     }
 
     public class EncryptedSqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
