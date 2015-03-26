@@ -253,6 +253,7 @@ namespace Akavache.Sqlite3
                 case OperationType.GetKeysSqliteOperation:
                 case OperationType.InvalidateAllSqliteOperation:
                 case OperationType.VacuumSqliteOperation:
+                case OperationType.DeleteExpiredSqliteOperation:
                 case OperationType.DoNothing:
                     return default(string);
                 default:

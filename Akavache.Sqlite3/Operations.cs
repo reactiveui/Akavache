@@ -29,6 +29,7 @@ namespace Akavache.Sqlite3
         BulkInvalidateByTypeSqliteOperation,
         InvalidateAllSqliteOperation,
         VacuumSqliteOperation,
+        DeleteExpiredSqliteOperation,
         GetKeysSqliteOperation,
     }
 
@@ -272,21 +273,14 @@ namespace Akavache.Sqlite3
 
     class VacuumSqliteOperation : IPreparedSqliteOperation
     {
-        sqlite3_stmt deleteOp = null;
         sqlite3_stmt vacuumOp = null;
         IScheduler scheduler;
         IDisposable inner;
 
         public VacuumSqliteOperation(SQLiteConnection conn, IScheduler scheduler)
         {
-            var deleteResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "DELETE FROM CacheElement WHERE Expiration < ?", out deleteOp);
             var vacuumResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "VACUUM", out vacuumOp);
             Connection = conn;
-
-            if (deleteResult != SQLite3.Result.OK) 
-            {
-                throw new SQLiteException(deleteResult, "Couldn't prepare delete statement");
-            }
 
             if (vacuumResult != SQLite3.Result.OK)
             {
@@ -294,7 +288,7 @@ namespace Akavache.Sqlite3
             }
 
             this.scheduler = scheduler;
-            inner = new CompositeDisposable(deleteOp, vacuumOp);
+            inner = vacuumOp;
         }
 
         public SQLiteConnection Connection { get; protected set; }
@@ -307,14 +301,57 @@ namespace Akavache.Sqlite3
             {
                 try 
                 {
-                    this.Checked(raw.sqlite3_bind_int64(deleteOp, 1, now));
-                    this.Checked(raw.sqlite3_step(deleteOp));
                     this.Checked(raw.sqlite3_step(vacuumOp));
                 } 
                 finally 
                 {
-                    this.Checked(raw.sqlite3_reset(deleteOp));
                     this.Checked(raw.sqlite3_reset(vacuumOp));
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            Interlocked.Exchange(ref inner, Disposable.Empty).Dispose();
+        }
+    }
+
+    class DeleteExpiredSqliteOperation : IPreparedSqliteOperation
+    {
+        sqlite3_stmt deleteOp = null;
+        IScheduler scheduler;
+        IDisposable inner;
+
+        public DeleteExpiredSqliteOperation(SQLiteConnection conn, IScheduler scheduler)
+        {
+            var deleteResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "DELETE FROM CacheElement WHERE Expiration < ?", out deleteOp);
+            Connection = conn;
+
+            if (deleteResult != SQLite3.Result.OK)
+            {
+                throw new SQLiteException(deleteResult, "Couldn't prepare delete statement");
+            }
+
+            this.scheduler = scheduler;
+            inner = deleteOp;
+        }
+
+        public SQLiteConnection Connection { get; protected set; }
+
+        public Action PrepareToExecute()
+        {
+            var now = scheduler.Now.UtcTicks;
+
+            return new Action(() =>
+            {
+                try
+                {
+                    this.Checked(raw.sqlite3_bind_int64(deleteOp, 1, now));
+                    this.Checked(raw.sqlite3_step(deleteOp));
+                }
+                finally
+                {
+                    this.Checked(raw.sqlite3_reset(deleteOp));
                 }
             });
         }

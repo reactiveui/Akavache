@@ -32,6 +32,7 @@ namespace Akavache.Sqlite3
         readonly BulkInvalidateByTypeSqliteOperation bulkInvalidateType;
         readonly InvalidateAllSqliteOperation invalidateAll;
         readonly VacuumSqliteOperation vacuum;
+        readonly DeleteExpiredSqliteOperation deleteExpired;
         readonly GetKeysSqliteOperation getAllKeys;
         readonly BeginTransactionSqliteOperation begin;
         readonly CommitTransactionSqliteOperation commit;
@@ -50,6 +51,7 @@ namespace Akavache.Sqlite3
             bulkInvalidateType = new BulkInvalidateByTypeSqliteOperation(conn);
             invalidateAll = new InvalidateAllSqliteOperation(conn);
             vacuum = new VacuumSqliteOperation(conn, scheduler);
+            deleteExpired = new DeleteExpiredSqliteOperation(conn, scheduler);
             getAllKeys = new GetKeysSqliteOperation(conn, scheduler);
             begin = new BeginTransactionSqliteOperation(conn);
             commit = new CommitTransactionSqliteOperation(conn);
@@ -258,6 +260,9 @@ namespace Akavache.Sqlite3
                     case OperationType.InvalidateAllSqliteOperation:
                         MarshalCompletion(item.Completion, invalidateAll.PrepareToExecute(), commitResult);
                         break;
+                    case OperationType.DeleteExpiredSqliteOperation:
+                        MarshalCompletion(item.Completion, deleteExpired.PrepareToExecute(), commitResult);
+                        break;
                     case OperationType.VacuumSqliteOperation:
                         commit.PrepareToExecute()();
                         MarshalCompletion(item.Completion, vacuum.PrepareToExecute(), commitResult);
@@ -330,7 +335,7 @@ namespace Akavache.Sqlite3
         {
             var toDispose = new IDisposable[] {
                 bulkSelectKey, bulkSelectType, bulkInsertKey, bulkInvalidateKey,
-                bulkInvalidateType, invalidateAll, vacuum, getAllKeys, begin, 
+                bulkInvalidateType, invalidateAll, vacuum, deleteExpired, getAllKeys, begin, 
                 commit,
             };
 
