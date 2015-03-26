@@ -259,7 +259,9 @@ namespace Akavache.Sqlite3
                         MarshalCompletion(item.Completion, invalidateAll.PrepareToExecute(), commitResult);
                         break;
                     case OperationType.VacuumSqliteOperation:
+                        commit.PrepareToExecute()();
                         MarshalCompletion(item.Completion, vacuum.PrepareToExecute(), commitResult);
+                        begin.PrepareToExecute()();
                         break;
                     default:
                         throw new ArgumentException("Unknown operation");

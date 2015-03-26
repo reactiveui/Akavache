@@ -272,22 +272,29 @@ namespace Akavache.Sqlite3
 
     class VacuumSqliteOperation : IPreparedSqliteOperation
     {
+        sqlite3_stmt deleteOp = null;
         sqlite3_stmt vacuumOp = null;
         IScheduler scheduler;
         IDisposable inner;
 
         public VacuumSqliteOperation(SQLiteConnection conn, IScheduler scheduler)
         {
-            var result = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "DELETE FROM CacheElement WHERE Expiration < ?; VACUUM", out vacuumOp);
+            var deleteResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "DELETE FROM CacheElement WHERE Expiration < ?", out deleteOp);
+            var vacuumResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "VACUUM", out vacuumOp);
             Connection = conn;
 
-            if (result != SQLite3.Result.OK) 
+            if (deleteResult != SQLite3.Result.OK) 
             {
-                throw new SQLiteException(result, "Couldn't prepare statement");
+                throw new SQLiteException(deleteResult, "Couldn't prepare delete statement");
+            }
+
+            if (vacuumResult != SQLite3.Result.OK)
+            {
+                throw new SQLiteException(vacuumResult, "Couldn't prepare vacuum statement");
             }
 
             this.scheduler = scheduler;
-            inner = vacuumOp;
+            inner = new CompositeDisposable(deleteOp, vacuumOp);
         }
 
         public SQLiteConnection Connection { get; protected set; }
@@ -300,11 +307,13 @@ namespace Akavache.Sqlite3
             {
                 try 
                 {
-                    this.Checked(raw.sqlite3_bind_int64(vacuumOp, 1, now));
+                    this.Checked(raw.sqlite3_bind_int64(deleteOp, 1, now));
+                    this.Checked(raw.sqlite3_step(deleteOp));
                     this.Checked(raw.sqlite3_step(vacuumOp));
                 } 
                 finally 
                 {
+                    this.Checked(raw.sqlite3_reset(deleteOp));
                     this.Checked(raw.sqlite3_reset(vacuumOp));
                 }
             });
