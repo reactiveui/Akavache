@@ -151,12 +151,18 @@ namespace Akavache.Sqlite3
 
                 using (await flushLock.LockAsync()) 
                 {
-                    var newQueue = new BlockingCollection<OperationQueueItem>();
-                    var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
-
-                    ProcessItems(CoalesceOperations(existingItems));
+                    FlushInternal();
                 }
             }).ToObservable();
+        }
+
+        // NB: Callers must hold flushLock to call this
+        void FlushInternal()
+        {
+            var newQueue = new BlockingCollection<OperationQueueItem>();
+            var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
+
+            ProcessItems(CoalesceOperations(existingItems));
         }
 
         public AsyncSubject<IEnumerable<CacheElement>> Select(IEnumerable<string> keys)
@@ -209,19 +215,40 @@ namespace Akavache.Sqlite3
 
         public AsyncSubject<Unit> Vacuum()
         {
-            var deleteRet = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
-            operationQueue.Add(deleteRet);
+            // Vacuum is a special snowflake. We want to delete all the expired rows before
+            // actually vacuuming. Unfortunately vacuum can't be run in a transaction so we'll
+            // do the delete first, then claim an exclusive lock on the queue, drain it and
+            // run our vacuum op without any transactions.
+            var ret = new AsyncSubject<Unit>();
 
-            var vacuumRet = OperationQueueItem.CreateUnit(OperationType.VacuumSqliteOperation);
-            operationQueue.Add(vacuumRet);
+            Task.Run(async () =>
+            {
+                // NB: We add a "DoNothing" operation so that the thread waiting
+                // on an item will always have one instead of waiting the full timeout
+                // before we can run the flush
+                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
 
-            var subject = new AsyncSubject<Unit>();
+                using (await flushLock.LockAsync())
+                {
+                    var deleteOp = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
+                    operationQueue.Add(deleteOp);
 
-            Observable.Concat(deleteRet.CompletionAsUnit, vacuumRet.CompletionAsUnit)
-                .Multicast(subject)
-                .PermaRef();
+                    FlushInternal();
 
-            return subject;
+                    await deleteOp.CompletionAsUnit;
+
+                    var vacuumOp = OperationQueueItem.CreateUnit(OperationType.VacuumSqliteOperation);
+
+                    MarshalCompletion(vacuumOp.Completion, vacuum.PrepareToExecute(), Observable.Return(Unit.Default));
+
+                    await vacuumOp.CompletionAsUnit;
+                }
+            })
+            .ToObservable()
+            .Multicast(ret)
+            .PermaRef();
+
+            return ret;
         }
 
         public AsyncSubject<IEnumerable<string>> GetAllKeys()
@@ -240,6 +267,7 @@ namespace Akavache.Sqlite3
         void ProcessItems(List<OperationQueueItem> toProcess)
         {
             var commitResult = new AsyncSubject<Unit>();
+
             begin.PrepareToExecute()();
 
             foreach (var item in toProcess) 
@@ -273,10 +301,7 @@ namespace Akavache.Sqlite3
                         MarshalCompletion(item.Completion, deleteExpired.PrepareToExecute(), commitResult);
                         break;
                     case OperationType.VacuumSqliteOperation:
-                        commit.PrepareToExecute()();
-                        MarshalCompletion(item.Completion, vacuum.PrepareToExecute(), commitResult);
-                        begin.PrepareToExecute()();
-                        break;
+                        throw new ArgumentException("Vacuum operation can't run inside transaction");
                     default:
                         throw new ArgumentException("Unknown operation");
                 }
