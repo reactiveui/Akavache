@@ -245,6 +245,7 @@ namespace Akavache.Sqlite3
                 }
             })
             .ToObservable()
+            .ObserveOn(scheduler)
             .Multicast(ret)
             .PermaRef();
 
