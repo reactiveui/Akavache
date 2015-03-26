@@ -209,10 +209,19 @@ namespace Akavache.Sqlite3
 
         public AsyncSubject<Unit> Vacuum()
         {
-            var ret = OperationQueueItem.CreateUnit(OperationType.VacuumSqliteOperation);
-            operationQueue.Add(ret);
+            var deleteRet = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
+            operationQueue.Add(deleteRet);
 
-            return ret.CompletionAsUnit;
+            var vacuumRet = OperationQueueItem.CreateUnit(OperationType.VacuumSqliteOperation);
+            operationQueue.Add(vacuumRet);
+
+            var subject = new AsyncSubject<Unit>();
+
+            Observable.Concat(deleteRet.CompletionAsUnit, vacuumRet.CompletionAsUnit)
+                .Multicast(subject)
+                .PermaRef();
+
+            return subject;
         }
 
         public AsyncSubject<IEnumerable<string>> GetAllKeys()
