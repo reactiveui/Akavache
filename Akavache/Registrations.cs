@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Splat;
 
-#if UIKIT
+#if UNIFIED
+using Foundation;
+#elif UIKIT
 using MonoTouch.Foundation;
-#endif
-
-#if APPKIT
+#elif APPKIT
 using MonoMac.Foundation;
 #endif
 

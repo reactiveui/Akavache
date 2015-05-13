@@ -186,12 +186,13 @@ namespace Akavache.Sqlite3
                     if (resultMap.ContainsKey(v)) 
                     {
                         elementMap[v].OnNext(EnumerableEx.Return(resultMap[v]));
-                        elementMap[v].OnCompleted();
                     }
                     else
                     {
-                        elementMap[v].OnError(new KeyNotFoundException());
+                        elementMap[v].OnNext(Enumerable.Empty<CacheElement>());
                     }
+
+                    elementMap[v].OnCompleted();
                 }
             }, 
             ex =>
@@ -252,6 +253,8 @@ namespace Akavache.Sqlite3
                 case OperationType.GetKeysSqliteOperation:
                 case OperationType.InvalidateAllSqliteOperation:
                 case OperationType.VacuumSqliteOperation:
+                case OperationType.DeleteExpiredSqliteOperation:
+                case OperationType.DoNothing:
                     return default(string);
                 default:
                     throw new ArgumentException("Unknown operation");

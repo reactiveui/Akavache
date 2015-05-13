@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>4.0.0</version>
+    <version>4.1.1</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache.core" version="[4.0.0]" />
-      <dependency id="SQLitePCL.raw_basic" version="0.4.0-alpha" />
+      <dependency id="akavache.core" version="[4.1.1]" />
+      <dependency id="SQLitePCL.raw_basic" version="0.7.0" />
     </dependencies>
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -19,5 +19,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Portable-Net45+Win8+WP8+Wpa81\Akavache.Sqlite3.*" target="lib\Portable-Net45+Win8+WP8+Wpa81" />
+    <file src="content\*" target="content" />
   </files>
 </package>

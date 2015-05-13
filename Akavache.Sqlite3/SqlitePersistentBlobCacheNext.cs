@@ -45,6 +45,16 @@ namespace Akavache.Sqlite3
             _initializer = Initialize();
         }
 
+        internal void ReplaceOperationQueue(SqliteOperationQueue queue)
+        {
+            _initializer.Wait();
+
+            opQueue.Dispose();
+
+            opQueue = queue;
+            opQueue.Start();
+        }
+
         readonly AsyncSubject<Unit> shutdown = new AsyncSubject<Unit>();
         public IObservable<Unit> Shutdown { get { return shutdown; } }
 
@@ -236,7 +246,8 @@ namespace Akavache.Sqlite3
                 // fail silently
                 try 
                 {
-                    Connection.Execute("PRAGMA journal_mode=WAL");
+                    // NB: Setting journal_mode returns a row, nfi
+                    Connection.ExecuteScalar<int>("PRAGMA journal_mode=WAL");
                     Connection.Execute("PRAGMA temp_store=MEMORY");
                     Connection.Execute("PRAGMA synchronous=OFF");
                 }

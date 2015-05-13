@@ -219,7 +219,7 @@ namespace Akavache
 
             lock (cache)
             {
-                var toDelete = cache.Where(x => x.Value.TypeName == typeof(T).FullName);
+                var toDelete = cache.Where(x => x.Value.TypeName == typeof(T).FullName).ToArray();
                 foreach(var obj in toDelete) cache.Remove(obj.Key);
             }
 

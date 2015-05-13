@@ -21,6 +21,7 @@ namespace Akavache.Sqlite3
 
     enum OperationType 
     {
+        DoNothing,
         BulkSelectSqliteOperation,
         BulkSelectByTypeSqliteOperation,
         BulkInsertSqliteOperation,
@@ -28,6 +29,7 @@ namespace Akavache.Sqlite3
         BulkInvalidateByTypeSqliteOperation,
         InvalidateAllSqliteOperation,
         VacuumSqliteOperation,
+        DeleteExpiredSqliteOperation,
         GetKeysSqliteOperation,
     }
 
@@ -114,7 +116,7 @@ namespace Akavache.Sqlite3
                 .Select(x => {
                     var stmt = default(sqlite3_stmt);
                     var result = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle,
-                        String.Format("SELECT Value,Expiration FROM CacheElement WHERE {0} In ({1})", column, qs), out stmt);
+                        String.Format("SELECT Key,TypeName,Value,Expiration,CreatedAt FROM CacheElement WHERE {0} In ({1})", column, qs), out stmt);
 
                     var error = raw.sqlite3_errmsg(conn.Handle);
                     if (result != SQLite3.Result.OK) throw new SQLiteException(result, "Couldn't prepare statement: " + error);
@@ -147,15 +149,14 @@ namespace Akavache.Sqlite3
                         this.Checked(raw.sqlite3_bind_text(selectOp, i+1, selectList[i]));
                     }
 
-                    int idx = 0;
                     while (this.Checked(raw.sqlite3_step(selectOp)) == SQLite3.Result.Row) 
                     {
-                        var key = selectList[idx++];
-                        
                         var ce = new CacheElement() {
-                            Key = key, TypeName = key,
-                            Value = raw.sqlite3_column_blob(selectOp, 0),
-                            Expiration = new DateTime(raw.sqlite3_column_int64(selectOp, 1)),
+                            Key = raw.sqlite3_column_text(selectOp, 0), 
+                            TypeName = raw.sqlite3_column_text(selectOp, 1), 
+                            Value = raw.sqlite3_column_blob(selectOp, 2),
+                            Expiration = new DateTime(raw.sqlite3_column_int64(selectOp, 3)),
+                            CreatedAt = new DateTime(raw.sqlite3_column_int64(selectOp, 4)),
                         };
 
                         if (now.UtcTicks <= ce.Expiration.Ticks) result.Add(ce);
@@ -278,12 +279,12 @@ namespace Akavache.Sqlite3
 
         public VacuumSqliteOperation(SQLiteConnection conn, IScheduler scheduler)
         {
-            var result = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "DELETE FROM CacheElement WHERE Expiration < ?; VACUUM", out vacuumOp);
+            var vacuumResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "VACUUM", out vacuumOp);
             Connection = conn;
 
-            if (result != SQLite3.Result.OK) 
+            if (vacuumResult != SQLite3.Result.OK)
             {
-                throw new SQLiteException(result, "Couldn't prepare statement");
+                throw new SQLiteException(vacuumResult, "Couldn't prepare vacuum statement");
             }
 
             this.scheduler = scheduler;
@@ -300,12 +301,57 @@ namespace Akavache.Sqlite3
             {
                 try 
                 {
-                    this.Checked(raw.sqlite3_bind_int64(vacuumOp, 1, now));
                     this.Checked(raw.sqlite3_step(vacuumOp));
                 } 
                 finally 
                 {
                     this.Checked(raw.sqlite3_reset(vacuumOp));
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            Interlocked.Exchange(ref inner, Disposable.Empty).Dispose();
+        }
+    }
+
+    class DeleteExpiredSqliteOperation : IPreparedSqliteOperation
+    {
+        sqlite3_stmt deleteOp = null;
+        IScheduler scheduler;
+        IDisposable inner;
+
+        public DeleteExpiredSqliteOperation(SQLiteConnection conn, IScheduler scheduler)
+        {
+            var deleteResult = (SQLite3.Result)raw.sqlite3_prepare_v2(conn.Handle, "DELETE FROM CacheElement WHERE Expiration < ?", out deleteOp);
+            Connection = conn;
+
+            if (deleteResult != SQLite3.Result.OK)
+            {
+                throw new SQLiteException(deleteResult, "Couldn't prepare delete statement");
+            }
+
+            this.scheduler = scheduler;
+            inner = deleteOp;
+        }
+
+        public SQLiteConnection Connection { get; protected set; }
+
+        public Action PrepareToExecute()
+        {
+            var now = scheduler.Now.UtcTicks;
+
+            return new Action(() =>
+            {
+                try
+                {
+                    this.Checked(raw.sqlite3_bind_int64(deleteOp, 1, now));
+                    this.Checked(raw.sqlite3_step(deleteOp));
+                }
+                finally
+                {
+                    this.Checked(raw.sqlite3_reset(deleteOp));
                 }
             });
         }
