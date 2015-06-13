@@ -24,19 +24,19 @@ namespace Akavache.Sqlite3
             }
 
             var localCache = new Lazy<IBlobCache>(() =>{
-                fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).Wait();
+                fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
                 return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
 
             var userAccount = new Lazy<IBlobCache>(() =>{
-                fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).Wait();
+                fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
                 return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
                 
             var secure = new Lazy<ISecureBlobCache>(() => {
-                fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).Wait();
+                fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
                 return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
