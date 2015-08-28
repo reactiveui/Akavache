@@ -231,7 +231,13 @@ namespace Akavache
                     return Observable.Return(Unit.Default);
                 }
             }
-            public IScheduler Scheduler { get; }
+            public IScheduler Scheduler
+            {
+                get
+                {
+                    return null;
+                }
+            }
         }
     }
 }
