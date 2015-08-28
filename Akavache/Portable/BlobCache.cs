@@ -48,6 +48,7 @@ namespace Akavache
         static IBlobCache localMachine;
         static IBlobCache userAccount;
         static ISecureBlobCache secure;
+        static bool shutdownRequested;
 
         [ThreadStatic] static IBlobCache unitTestLocalMachine;
         [ThreadStatic] static IBlobCache unitTestUserAccount;
@@ -60,7 +61,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get { return unitTestLocalMachine ?? localMachine ?? Locator.Current.GetService<IBlobCache>("LocalMachine"); }
+            get { return unitTestLocalMachine ?? localMachine ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("LocalMachine"); }
             set 
             {
                 if (ModeDetector.InUnitTestRunner())
@@ -82,7 +83,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return unitTestUserAccount ?? userAccount ?? Locator.Current.GetService<IBlobCache>("UserAccount"); }
+            get { return unitTestUserAccount ?? userAccount ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("UserAccount"); }
             set {
                 if (ModeDetector.InUnitTestRunner())
                 {
@@ -102,7 +103,7 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get { return unitTestSecure ?? secure ?? Locator.Current.GetService<ISecureBlobCache>(); }
+            get { return unitTestSecure ?? secure ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<ISecureBlobCache>(); }
             set 
             {
                 if (ModeDetector.InUnitTestRunner())
@@ -141,6 +142,7 @@ namespace Akavache
         /// down.</returns>
         public static Task Shutdown()
         {
+            shutdownRequested = true;
             var toDispose = new[] { LocalMachine, UserAccount, Secure, InMemory, };
 
             var ret = toDispose.Select(x =>
@@ -176,5 +178,60 @@ namespace Akavache
             set { TaskpoolOverride = value; }
         }
 #endif
+        private class ShutdownBlobCache : ISecureBlobCache
+        {
+            public void Dispose()
+            {
+            }
+
+            public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
+            {
+                return null;
+            }
+
+            public IObservable<byte[]> Get(string key)
+            {
+                return null;
+            }
+
+            public IObservable<IEnumerable<string>> GetAllKeys()
+            {
+                return null;
+            }
+
+            public IObservable<DateTimeOffset?> GetCreatedAt(string key)
+            {
+                return null;
+            }
+
+            public IObservable<Unit> Flush()
+            {
+                return null;
+            }
+
+            public IObservable<Unit> Invalidate(string key)
+            {
+                return null;
+            }
+
+            public IObservable<Unit> InvalidateAll()
+            {
+                return null;
+            }
+
+            public IObservable<Unit> Vacuum()
+            {
+                return null;
+            }
+
+            IObservable<Unit> IBlobCache.Shutdown
+            {
+                get
+                {
+                    return Observable.Return(Unit.Default);
+                }
+            }
+            public IScheduler Scheduler { get; }
+        }
     }
 }
