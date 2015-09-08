@@ -224,19 +224,12 @@ namespace Akavache
                 return null;
             }
 
-            IObservable<Unit> IBlobCache.Shutdown
-            {
-                get
-                {
-                    return Observable.Return(Unit.Default);
-                }
+            IObservable<Unit> IBlobCache.Shutdown {
+                get { return Observable.Return(Unit.Default); }
             }
-            public IScheduler Scheduler
-            {
-                get
-                {
-                    return System.Reactive.Concurrency.Scheduler.Immediate;
-                }
+
+            public IScheduler Scheduler {
+                get { return System.Reactive.Concurrency.Scheduler.Immediate; }
             }
         }
     }
