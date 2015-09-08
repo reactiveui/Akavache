@@ -235,7 +235,7 @@ namespace Akavache
             {
                 get
                 {
-                    return null;
+                    return System.Reactive.Concurrency.Scheduler.Immediate;
                 }
             }
         }
