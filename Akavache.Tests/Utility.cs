@@ -15,23 +15,31 @@ namespace Akavache.Tests
         {
             // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
 
-            var di = new DirectoryInfo(directoryPath);
-            var files = di.EnumerateFiles();
-            var dirs = di.EnumerateDirectories();
-
-            foreach (var file in files)
+            try 
             {
-                File.SetAttributes(file.FullName, FileAttributes.Normal);
-                (new Action(() => file.Delete())).Retry();
-            }
+                var di = new DirectoryInfo(directoryPath);
+                var files = di.EnumerateFiles();
+                var dirs = di.EnumerateDirectories();
 
-            foreach (var dir in dirs)
+                foreach (var file in files)
+                {
+                    File.SetAttributes(file.FullName, FileAttributes.Normal);
+                    (new Action(() => file.Delete())).Retry();
+                }
+
+                foreach (var dir in dirs)
+                {
+                    DeleteDirectory(dir.FullName);
+                }
+
+                File.SetAttributes(directoryPath, FileAttributes.Normal);
+                Directory.Delete(directoryPath, false);
+            } 
+            catch (Exception ex) 
             {
-                DeleteDirectory(dir.FullName);
+                Console.Error.WriteLine("***** Failed to clean up!! *****");
+                Console.Error.WriteLine(ex);
             }
-
-            File.SetAttributes(directoryPath, FileAttributes.Normal);
-            Directory.Delete(directoryPath, false);
         }
 
         public static IDisposable WithEmptyDirectory(out string directoryPath)

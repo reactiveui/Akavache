@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using ReactiveUI.Mobile;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Splat;
 using System.Reactive;
+using ReactiveUI;
+using System.Reactive.Concurrency;
 
 namespace Akavache.Mobile
 {
@@ -30,6 +31,8 @@ namespace Akavache.Mobile
 
             resolver.Register(() => resolver.GetService<ISuspensionHost>().IsUnpausing,
                 typeof(IObservable<Unit>), "IsUnpausing");
+
+            resolver.Register(() => RxApp.TaskpoolScheduler, typeof(IScheduler), "Taskpool");
         }
     }
 }

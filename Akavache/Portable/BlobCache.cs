@@ -20,12 +20,13 @@ namespace Akavache
 
         static BlobCache()
         {
-            if (Locator.Current.GetService<IAkavacheHttpMixin>() == null && Locator.CurrentMutable != null)
+            Locator.RegisterResolverCallbackChanged(() => 
             {
+                if (Locator.CurrentMutable == null) return;
                 Locator.CurrentMutable.InitializeAkavache();
-            }
-                
-            InMemory = new TestBlobCache(Scheduler.Default);
+            });
+               
+            InMemory = new InMemoryBlobCache(Scheduler.Default);
         }
 
         /// <summary>
@@ -47,6 +48,7 @@ namespace Akavache
         static IBlobCache localMachine;
         static IBlobCache userAccount;
         static ISecureBlobCache secure;
+        static bool shutdownRequested;
 
         [ThreadStatic] static IBlobCache unitTestLocalMachine;
         [ThreadStatic] static IBlobCache unitTestUserAccount;
@@ -59,7 +61,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get { return unitTestLocalMachine ?? localMachine ?? Locator.Current.GetService<IBlobCache>("LocalMachine"); }
+            get { return unitTestLocalMachine ?? localMachine ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("LocalMachine"); }
             set 
             {
                 if (ModeDetector.InUnitTestRunner())
@@ -81,7 +83,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get { return unitTestUserAccount ?? userAccount ?? Locator.Current.GetService<IBlobCache>("UserAccount"); }
+            get { return unitTestUserAccount ?? userAccount ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("UserAccount"); }
             set {
                 if (ModeDetector.InUnitTestRunner())
                 {
@@ -101,12 +103,12 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get { return unitTestSecure ?? secure ?? Locator.Current.GetService<ISecureBlobCache>(); }
+            get { return unitTestSecure ?? secure ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<ISecureBlobCache>(); }
             set 
             {
                 if (ModeDetector.InUnitTestRunner())
                 {
-                    secure = value;
+                    unitTestSecure = value;
                     secure = secure ?? value;
                 }
                 else
@@ -122,6 +124,9 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache InMemory { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void EnsureInitialized()
         {
             // NB: This method doesn't actually do anything, it just ensures 
@@ -137,6 +142,7 @@ namespace Akavache
         /// down.</returns>
         public static Task Shutdown()
         {
+            shutdownRequested = true;
             var toDispose = new[] { LocalMachine, UserAccount, Secure, InMemory, };
 
             var ret = toDispose.Select(x =>
@@ -148,14 +154,7 @@ namespace Akavache
             return ret.ToTask();
         }
 
-        static IScheduler MainThreadOverride;
-        public static IScheduler MainThreadScheduler 
-        {
-            get { return MainThreadOverride ?? Locator.Current.GetService<IScheduler>("MainThread"); }
-            set { MainThreadOverride = value; }
-        }
-
-        #if PORTABLE
+#if PORTABLE
         static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 
         {
@@ -171,13 +170,67 @@ namespace Akavache
             }
             set { TaskpoolOverride = value; }
         }
-        #else
+#else
         static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 
         {
             get { return TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default; }
             set { TaskpoolOverride = value; }
         }
-        #endif
+#endif
+        private class ShutdownBlobCache : ISecureBlobCache
+        {
+            public void Dispose()
+            {
+            }
+
+            public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
+            {
+                return null;
+            }
+
+            public IObservable<byte[]> Get(string key)
+            {
+                return null;
+            }
+
+            public IObservable<IEnumerable<string>> GetAllKeys()
+            {
+                return null;
+            }
+
+            public IObservable<DateTimeOffset?> GetCreatedAt(string key)
+            {
+                return null;
+            }
+
+            public IObservable<Unit> Flush()
+            {
+                return null;
+            }
+
+            public IObservable<Unit> Invalidate(string key)
+            {
+                return null;
+            }
+
+            public IObservable<Unit> InvalidateAll()
+            {
+                return null;
+            }
+
+            public IObservable<Unit> Vacuum()
+            {
+                return null;
+            }
+
+            IObservable<Unit> IBlobCache.Shutdown {
+                get { return Observable.Return(Unit.Default); }
+            }
+
+            public IScheduler Scheduler {
+                get { return System.Reactive.Concurrency.Scheduler.Immediate; }
+            }
+        }
     }
 }

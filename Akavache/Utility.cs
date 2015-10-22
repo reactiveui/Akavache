@@ -42,6 +42,7 @@ namespace Akavache
 #endif
         }
 
+#if !WINRT
         public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
@@ -58,7 +59,7 @@ namespace Akavache
                         FileMode.OpenOrCreate,
                     };
 
-#if !WINRT
+
                     // NB: We do this (even though it's incorrect!) because
                     // throwing lots of 1st chance exceptions makes debugging
                     // obnoxious, as well as a bug in VS where it detects
@@ -68,7 +69,6 @@ namespace Akavache
                         ret.OnError(new FileNotFoundException());
                         return;
                     }
-#endif
 
 #if SILVERLIGHT
                     Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Select(x => (Stream)x).Subscribe(ret);
@@ -78,11 +78,6 @@ namespace Akavache
                         var ufi = new Mono.Unix.UnixFileInfo (path);
                         return ufi.Open (mode, access);
                     }, scheduler).Cast<Stream>().Subscribe(ret);
-#elif WINRT
-                    StorageFile.GetFileFromPathAsync(path).ToObservable()
-                        .SelectMany(x => x.OpenAsync(access == FileAccess.Read ? FileAccessMode.Read : FileAccessMode.ReadWrite).ToObservable())
-                        .Select(x => x.AsStream())
-                        .Subscribe(ret);
 #else
                     Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
 #endif
@@ -96,7 +91,6 @@ namespace Akavache
             return ret;
         }
 
-#if !WINRT
         public static void CreateRecursive(this DirectoryInfo This)
         {
             This.SplitFullPath().Aggregate((parent, dir) =>
@@ -177,28 +171,6 @@ namespace Akavache
                     destination.Dispose();
                 }
             }, scheduler ?? BlobCache.TaskpoolScheduler);
-
-#if FALSE
-            var reader = Observable.FromAsyncPattern<byte[], int, int, int>(This.BeginRead, This.EndRead);
-            var writer = Observable.FromAsyncPattern<byte[], int, int>(destination.BeginWrite, destination.EndWrite);
-
-            //var bufs = new ThreadLocal<byte[]>(() => new byte[4096]);
-            var bufs = new Lazy<byte[]>(() => new byte[4096]);
-
-            var readStream = Observable.Defer(() => reader(bufs.Value, 0, 4096))
-                .Repeat()
-                .TakeWhile(x => x > 0);
-
-            var ret = readStream
-                .Select(x => writer(bufs.Value, 0, x))
-                .Concat()
-                .Aggregate(Unit.Default, (acc, _) => Unit.Default)
-                .Finally(() => { This.Dispose(); destination.Dispose(); })
-                .Multicast(new ReplaySubject<Unit>());
-
-            ret.Connect();
-            return ret;
-#endif
         }
 
         public static void Retry(this Action block, int retries = 3)
@@ -221,30 +193,5 @@ namespace Akavache
             }
         }
 
-        public static T Retry<T>(this Func<T> block, int retries = 3)
-        {
-            while (true)
-            {
-                try
-                {
-                    T ret = block();
-                    return ret;
-                }
-                catch (Exception)
-                {
-                    retries--;
-                    if (retries == 0)
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-        internal static IObservable<T> PermaRef<T>(this IConnectableObservable<T> This)
-        {
-            This.Connect();
-            return This;
-        }
     }
 }

@@ -29,7 +29,7 @@ namespace Akavache
         /// <returns>A Future result representing the user/password Tuple.</returns>
         public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache This, string host = "default")
         {
-            return This.GetObjectAsync<Tuple<string, string>>("login:" + host).Select(x => new LoginInfo(x));
+            return This.GetObject<Tuple<string, string>>("login:" + host).Select(x => new LoginInfo(x));
         }
 
         /// <summary>

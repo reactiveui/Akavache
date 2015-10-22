@@ -16,29 +16,26 @@ using Splat;
 
 namespace Akavache
 {
-    public class SimpleFilesystemProvider : IFilesystemProvider, IEnableLogger
+    public class WinRTFilesystemProvider : IFilesystemProvider, IEnableLogger
     {
-        readonly IDictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>> openFileStrategies
-            = new Dictionary<FileMode, Func<StorageFolder, string, IAsyncOperation<StorageFile>>>
-        {
-            { FileMode.Create, (f,name) => f.CreateFileAsync(name) },
-            { FileMode.CreateNew, (f,name) => f.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting) },
-            { FileMode.Open, (f,name) => f.GetFileAsync(name) },
-            { FileMode.OpenOrCreate, (f,name) => f.CreateFileAsync(name, CreationCollisionOption.OpenIfExists) },
-            { FileMode.Truncate, (f,name) => null }, // ???
-            { FileMode.Append, (f,name) => null } // ???
-        };
-
-        public IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler)
+        public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
             var folder = Path.GetDirectoryName(path);
             var name = Path.GetFileName(path);
 
             return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
-                .SelectMany(x => openFileStrategies[mode](x, name).ToObservable())
-                .SelectMany(x => access == FileAccess.Read ?
-                    x.OpenStreamForReadAsync().ToObservable() :
-                    x.OpenStreamForWriteAsync().ToObservable());
+                .SelectMany(x => x.GetFileAsync(name).ToObservable())
+                .SelectMany(x => x.OpenStreamForReadAsync().ToObservable());
+        }
+
+        public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler)
+        {
+            var folder = Path.GetDirectoryName(path);
+            var name = Path.GetFileName(path);
+
+            return StorageFolder.GetFolderFromPathAsync(folder).ToObservable()
+                .SelectMany(x => x.CreateFileAsync(name, CreationCollisionOption.ReplaceExisting).ToObservable())
+                .SelectMany(x => x.OpenStreamForWriteAsync().ToObservable());
         }
 
         public IObservable<Unit> CreateRecursive(string path)
@@ -83,7 +80,7 @@ namespace Akavache
             return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
         }
 
-	public string GetDefaultSecretCacheDirectory()
+	    public string GetDefaultSecretCacheDirectory()
         {
             return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "SecretCache");
         }
