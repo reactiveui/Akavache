@@ -150,20 +150,10 @@ namespace Akavache.Sqlite3
 
         public IObservable<Unit> Flush()
         {
-            var ret = new AsyncSubject<Unit>();
+            var noop = OperationQueueItem.CreateUnit(OperationType.DoNothing);
+            operationQueue.Add(noop);
 
-            return Task.Run(async () => 
-            {
-                // NB: We add a "DoNothing" operation so that the thread waiting
-                // on an item will always have one instead of waiting the full timeout
-                // before we can run the flush
-                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
-
-                using (await flushLock.LockAsync()) 
-                {
-                    FlushInternal();
-                }
-            }).ToObservable();
+            return noop.CompletionAsUnit;
         }
 
         // NB: Callers must hold flushLock to call this
