@@ -300,6 +300,7 @@ namespace Akavache.Sqlite3
                 switch (item.OperationType)
                 {
                     case OperationType.DoNothing:
+                        MarshalCompletion(item.Completion, () => { }, commitResult);
                         break;
                     case OperationType.BulkInsertSqliteOperation:
                         MarshalCompletion(item.Completion, bulkInsertKey.PrepareToExecute(item.ParametersAsElements), commitResult);
