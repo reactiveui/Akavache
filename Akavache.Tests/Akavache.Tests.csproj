@@ -103,6 +103,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncLockTests.cs" />
     <Compile Include="BlobCacheExtensionsFixture.cs" />
     <Compile Include="BlobCacheFixture.cs" />
     <Compile Include="BulkOperationsTest.cs" />
