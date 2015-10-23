@@ -78,7 +78,18 @@ namespace Akavache.Sqlite3
                 {
                     toProcess.Clear();
 
-                    using (await flushLock.LockAsync(shouldQuit.Token)) 
+                    IDisposable @lock = null;
+
+                    try
+                    {
+                        @lock = await flushLock.LockAsync(shouldQuit.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+
+                    using (@lock)
                     {
                         // NB: We special-case the first item because we want to 
                         // in the empty list case, we want to wait until we have an item.
