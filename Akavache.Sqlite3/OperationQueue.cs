@@ -233,10 +233,6 @@ namespace Akavache.Sqlite3
 
             Task.Run(async () =>
             {
-                // NB: We add a "DoNothing" operation so that the thread waiting
-                // on an item will always have one instead of waiting the full timeout
-                // before we can run the flush
-
                 IDisposable @lock = null;
                 try
                 {
