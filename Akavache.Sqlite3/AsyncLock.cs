@@ -19,10 +19,13 @@ namespace Akavache.Sqlite3.Internal
         {
             var wait = m_semaphore.WaitAsync(ct);
 
-            return wait.IsCompleted ?
-                m_releaser :
-                wait.ContinueWith((_, state) => (IDisposable)state,
-                    m_releaser.Result, CancellationToken.None,
+            // Happy path. We synchronously acquired the lock.
+            if (wait.IsCompleted && !wait.IsFaulted)
+                return m_releaser;
+
+            return wait
+                .ContinueWith((_, state) => (IDisposable)state,
+                    m_releaser.Result, ct,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
