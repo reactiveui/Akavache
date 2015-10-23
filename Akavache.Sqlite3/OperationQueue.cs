@@ -132,8 +132,7 @@ namespace Akavache.Sqlite3
                 } 
                 catch (OperationCanceledException) { }
 
-                var newQueue = new BlockingCollection<OperationQueueItem>();
-                ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
+                FlushInternal();
                 start = null;
             }));
         }
