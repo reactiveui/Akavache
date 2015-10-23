@@ -299,7 +299,7 @@ namespace Akavache.Sqlite3
             {
                 versionNumber = Connection.ExecuteScalar<int>("SELECT Version from SchemaInfo ORDER BY Version DESC LIMIT 1");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 shouldCreateSchemaTable = true;
             }
