@@ -143,7 +143,11 @@ namespace Akavache.Sqlite3
                 } 
                 catch (OperationCanceledException) { }
 
-                FlushInternal();
+                using (flushLock.LockAsync().Result)
+                {
+                    FlushInternal();
+                }
+
                 start = null;
             }));
         }
