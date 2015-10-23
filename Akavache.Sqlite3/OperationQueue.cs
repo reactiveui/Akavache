@@ -236,10 +236,24 @@ namespace Akavache.Sqlite3
                 // NB: We add a "DoNothing" operation so that the thread waiting
                 // on an item will always have one instead of waiting the full timeout
                 // before we can run the flush
-                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
 
-                using (await flushLock.LockAsync())
+                IDisposable @lock = null;
+                try
                 {
+                    // NB. While the documentation for SemaphoreSlim (which powers AsyncLock)
+                    // doesn't guarantee ordering the actual (current) implementation[1]
+                    // uses a linked list to queue incoming requests so by adding ourselves
+                    // to the queue first and then sending a no-op to the main queue to
+                    // force it to finish up and release the lock we avoid any potential
+                    // race condition where the main queue reclaims the lock before we
+                    // have had a chance to acquire it.
+                    //
+                    // 1. http://referencesource.microsoft.com/#mscorlib/system/threading/SemaphoreSlim.cs,d57f52e0341a581f
+                    var lockTask = flushLock.LockAsync(shouldQuit.Token);
+                    operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
+
+                    @lock = await lockTask;
+
                     var deleteOp = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
                     operationQueue.Add(deleteOp);
 
@@ -252,6 +266,10 @@ namespace Akavache.Sqlite3
                     MarshalCompletion(vacuumOp.Completion, vacuum.PrepareToExecute(), Observable.Return(Unit.Default));
 
                     await vacuumOp.CompletionAsUnit;
+                }
+                finally
+                {
+                    if (@lock != null) @lock.Dispose();
                 }
             })
             .ToObservable()
