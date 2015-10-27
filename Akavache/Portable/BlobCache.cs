@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using System.Reactive;
 using System.Threading.Tasks;
 using System.Reflection;
@@ -123,6 +124,18 @@ namespace Akavache
         /// this cache will be lost when the application restarts.
         /// </summary>
         public static ISecureBlobCache InMemory { get; set; }
+
+        /// <summary>
+        /// Allows the DateTimeKind handling for BSON readers to be forced.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// By default, <see cref="BsonReader"/> uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and <see cref="BsonWriter"/>
+        /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
+        /// use some other <c>DateTimeKind</c>, you can set this value.
+        /// </para>
+        /// </remarks>
+        public static DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <summary>
         /// 

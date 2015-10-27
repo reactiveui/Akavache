@@ -269,6 +269,12 @@ namespace Akavache
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
             var serializer = JsonSerializer.Create(settings);
             var reader = new BsonReader(new MemoryStream(data));
+            var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
+
+            if (forcedDateTimeKind.HasValue)
+            {
+                reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+            }
 
             try
             {
