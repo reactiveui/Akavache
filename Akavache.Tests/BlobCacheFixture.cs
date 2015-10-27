@@ -280,6 +280,31 @@ namespace Akavache.Tests
                 }
             }
         }
+
+        [Fact]
+        public void DateTimeKindCanBeForced()
+        {
+            var before = BlobCache.ForcedDateTimeKind;
+            BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+
+            try
+            {
+                string path;
+
+                using (Utility.WithEmptyDirectory(out path))
+                using (var fixture = CreateBlobCache(path))
+                {
+                    var value = DateTime.UtcNow;
+                    fixture.InsertObject("key", value).First();
+                    var result = fixture.GetObject<DateTime>("key").First();
+                    Assert.Equal(DateTimeKind.Utc, result.Kind);
+                }
+            }
+            finally
+            {
+                BlobCache.ForcedDateTimeKind = before;
+            }
+        }
     }
 
     public class InMemoryBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
