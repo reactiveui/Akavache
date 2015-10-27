@@ -78,7 +78,18 @@ namespace Akavache.Sqlite3
                 {
                     toProcess.Clear();
 
-                    using (await flushLock.LockAsync(shouldQuit.Token)) 
+                    IDisposable @lock = null;
+
+                    try
+                    {
+                        @lock = await flushLock.LockAsync(shouldQuit.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+
+                    using (@lock)
                     {
                         // NB: We special-case the first item because we want to 
                         // in the empty list case, we want to wait until we have an item.
@@ -132,28 +143,21 @@ namespace Akavache.Sqlite3
                 } 
                 catch (OperationCanceledException) { }
 
-                var newQueue = new BlockingCollection<OperationQueueItem>();
-                ProcessItems(CoalesceOperations(Interlocked.Exchange(ref operationQueue, newQueue).ToList()));
+                using (flushLock.LockAsync().Result)
+                {
+                    FlushInternal();
+                }
+
                 start = null;
             }));
         }
 
         public IObservable<Unit> Flush()
         {
-            var ret = new AsyncSubject<Unit>();
+            var noop = OperationQueueItem.CreateUnit(OperationType.DoNothing);
+            operationQueue.Add(noop);
 
-            return Task.Run(async () => 
-            {
-                // NB: We add a "DoNothing" operation so that the thread waiting
-                // on an item will always have one instead of waiting the full timeout
-                // before we can run the flush
-                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
-
-                using (await flushLock.LockAsync()) 
-                {
-                    FlushInternal();
-                }
-            }).ToObservable();
+            return noop.CompletionAsUnit;
         }
 
         // NB: Callers must hold flushLock to call this
@@ -223,13 +227,23 @@ namespace Akavache.Sqlite3
 
             Task.Run(async () =>
             {
-                // NB: We add a "DoNothing" operation so that the thread waiting
-                // on an item will always have one instead of waiting the full timeout
-                // before we can run the flush
-                operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
-
-                using (await flushLock.LockAsync())
+                IDisposable @lock = null;
+                try
                 {
+                    // NB. While the documentation for SemaphoreSlim (which powers AsyncLock)
+                    // doesn't guarantee ordering the actual (current) implementation[1]
+                    // uses a linked list to queue incoming requests so by adding ourselves
+                    // to the queue first and then sending a no-op to the main queue to
+                    // force it to finish up and release the lock we avoid any potential
+                    // race condition where the main queue reclaims the lock before we
+                    // have had a chance to acquire it.
+                    //
+                    // 1. http://referencesource.microsoft.com/#mscorlib/system/threading/SemaphoreSlim.cs,d57f52e0341a581f
+                    var lockTask = flushLock.LockAsync(shouldQuit.Token);
+                    operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
+
+                    @lock = await lockTask;
+
                     var deleteOp = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
                     operationQueue.Add(deleteOp);
 
@@ -242,6 +256,10 @@ namespace Akavache.Sqlite3
                     MarshalCompletion(vacuumOp.Completion, vacuum.PrepareToExecute(), Observable.Return(Unit.Default));
 
                     await vacuumOp.CompletionAsUnit;
+                }
+                finally
+                {
+                    if (@lock != null) @lock.Dispose();
                 }
             })
             .ToObservable()
@@ -276,6 +294,7 @@ namespace Akavache.Sqlite3
                 switch (item.OperationType)
                 {
                     case OperationType.DoNothing:
+                        MarshalCompletion(item.Completion, () => { }, commitResult);
                         break;
                     case OperationType.BulkInsertSqliteOperation:
                         MarshalCompletion(item.Completion, bulkInsertKey.PrepareToExecute(item.ParametersAsElements), commitResult);

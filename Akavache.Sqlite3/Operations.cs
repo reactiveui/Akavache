@@ -253,7 +253,6 @@ namespace Akavache.Sqlite3
     class InvalidateAllSqliteOperation : IPreparedSqliteOperation
     {
         SQLiteConnection conn;
-        IDisposable inner;
 
         public InvalidateAllSqliteOperation(SQLiteConnection conn)
         {
