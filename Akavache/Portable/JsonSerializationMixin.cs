@@ -42,7 +42,7 @@ namespace Akavache
         public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertAllObjects<T>(keyValuePairs, absoluteExpiration);
+            if (objCache != null) return objCache.InsertObjects<T>(keyValuePairs, absoluteExpiration);
             throw new NotImplementedException();
         }
 
