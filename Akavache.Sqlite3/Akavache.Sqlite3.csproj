@@ -31,7 +31,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registrations.cs" />
     <Compile Include="SQLite.cs" />
-    <Compile Include="SQLiteAsync.cs" />
     <Compile Include="SqlitePersistentBlobCacheNext.cs" />
     <Compile Include="SQLiteEncryptedBlobCache.cs" />
     <Compile Include="OperationQueueCoalescing.cs" />
