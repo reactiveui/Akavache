@@ -404,16 +404,6 @@ namespace Akavache.Sqlite3
         public DateTime CreatedAt { get; set; }
     }
 
-    class VersionOneCacheElement
-    {
-        [PrimaryKey]
-        public string Key { get; set; }
-
-        public string TypeName { get; set; }
-        public byte[] Value { get; set; }
-        public DateTime Expiration { get; set; }
-    }
-
     class SchemaInfo
     {
         public int Version { get; set; }
