@@ -14,6 +14,7 @@ using ReactiveUI.Testing;
 using Xunit;
 using System.Threading;
 using System.Reactive.Concurrency;
+using System.Threading.Tasks;
 
 namespace Akavache.Tests
 {
@@ -65,25 +66,12 @@ namespace Akavache.Tests
         }
     }
 
-    [DataContract]
-    public class DummyAppBootstrapper : IScreen
-    {
-        [DataMember]
-        public IRoutingState Router { get; protected set; }
-
-        public DummyAppBootstrapper()
-        {
-            Router = new RoutingState();
-            Router.NavigateAndReset.Execute(new DummyRoutedViewModel(this) { ARandomGuid =  Guid.NewGuid() });
-        }
-    }
-
     public abstract class BlobCacheExtensionsFixture
     {
         protected abstract IBlobCache CreateBlobCache(string path);
 
         [Fact]
-        public void DownloadUrlTest()
+        public async Task DownloadUrlTest()
         {
             string path;
 
@@ -95,8 +83,28 @@ namespace Akavache.Tests
                     var bytes = fixture.DownloadUrl(@"http://httpbin.org/html").First();
                     Assert.True(bytes.Length > 0);
                 }
+            }
+        }
 
-                fixture.Shutdown.Wait();
+        [Fact]
+        public async Task GettingNonExistentKeyShouldThrow()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                Exception thrown = null;
+                try
+                {
+                    var result = await fixture.GetObject<UserObject>("WEIFJWPIEFJ")
+                        .Timeout(TimeSpan.FromSeconds(3));
+                }
+                catch (Exception ex)
+                {
+                    thrown = ex;
+                }
+
+                Assert.True(thrown.GetType() == typeof(KeyNotFoundException));
             }
         }
 
@@ -111,13 +119,13 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
                     fixture.InsertObject("key", input).First();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserObject>("key").First();
+                    result = fixture.GetObject<UserObject>("key").First();
                 }
             }
 
@@ -137,14 +145,14 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("key", input).First();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserObject[]>("key").First();
+                    result = fixture.GetObject<UserObject[]>("key").First();
                 }
             }
 
@@ -167,14 +175,14 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("key", input).First();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserModel>("key").First();
+                    result = fixture.GetObject<UserModel>("key").First();
                 }
             }
 
@@ -192,14 +200,14 @@ namespace Akavache.Tests
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("key", input).First();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObjectAsync<UserModel[]>("key").First();
+                    result = fixture.GetObject<UserModel[]>("key").First();
                 }
             }
 
@@ -235,8 +243,8 @@ namespace Akavache.Tests
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
 
-                    // Testing persistence makes zero sense for TestBlobCache
-                    if (fixture is TestBlobCache) return;
+                    // Testing persistence makes zero sense for InMemoryBlobCache
+                    if (fixture is InMemoryBlobCache) return;
                 }
 
                 using(var fixture = CreateBlobCache(path))
@@ -249,7 +257,7 @@ namespace Akavache.Tests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void FetchFunctionShouldDebounceConcurrentRequests()
         {
             (new TestScheduler()).With(sched =>
@@ -377,12 +385,10 @@ namespace Akavache.Tests
                     Assert.Equal("one", result.Item1);
                     Assert.Equal("two", result.Item2);
                 }
-
-                fixture.Shutdown.Wait();
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void GetOrFetchShouldRespectExpiration()
         {
             (new TestScheduler()).With(sched => 
@@ -419,8 +425,6 @@ namespace Akavache.Tests
                         sched.AdvanceByMs(250);
                         Assert.Equal("baz", result);
                     }
-
-                    fixture.Shutdown.Wait();
                 }
             });
         }
@@ -430,7 +434,7 @@ namespace Akavache.Tests
         {
             var fetcher = new Func<IObservable<string>>(() =>
             {
-                throw new InvalidOperationException();
+                return Observable.Throw<string>(new InvalidOperationException());
             });
 
             string path;
@@ -440,22 +444,21 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("foo", "bar").First();
 
                     fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
                         .Catch(Observable.Return("get and fetch latest error"))
+                        .ToList()
                         .First();
 
-                    var result = fixture.GetObjectAsync<string>("foo")
+                    var result = fixture.GetObject<string>("foo")
                          .Catch(Observable.Return("get error"))
                          .First();
 
                     Assert.Equal("get error", result);
                 }
-
-                fixture.Shutdown.Wait();
             }
         }
 
@@ -480,17 +483,15 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.InsertObject("foo", "bar").First();
 
                     fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate)
-                        .First();
+                        .Last();
 
                     Assert.True(fetchPredicateCalled);
                 }
-
-                fixture.Shutdown.Wait();
             }
         }
 
@@ -537,14 +538,11 @@ namespace Akavache.Tests
                 allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
                 Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 Assert.Equal(0, allObjectsCount);
-
-                fixture.Dispose();
-                fixture.Shutdown.Wait();
             }
         }
 
         [Fact]
-        public void GetAllKeysSmokeTest()
+        public async Task GetAllKeysSmokeTest()
         {
             string path;
 
@@ -564,10 +562,8 @@ namespace Akavache.Tests
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
-
-                fixture.Shutdown.Wait();
                     
-                if (fixture is TestBlobCache) return;
+                if (fixture is InMemoryBlobCache) return;
 
                 using (fixture = CreateBlobCache(path))
                 {
@@ -580,21 +576,45 @@ namespace Akavache.Tests
         }
     }
 
-    public class PersistentBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeCache(new TEncryptedBlobCache(path));
-        }
-    }
-
     public class SqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeObjectCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeObjectCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+        }
+
+        [Fact]
+        public void VacuumCompactsDatabase()
+        {
+            string path;
+
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                string dbPath = Path.Combine(path, "sqlite.db");
+
+                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
+                {
+                    Assert.True(File.Exists(dbPath));
+
+                    byte[] buf = new byte[256 * 1024];
+                    var rnd = new Random();
+                    rnd.NextBytes(buf);
+
+                    fixture.Insert("dummy", buf).Wait();
+                }
+
+                var size = new FileInfo(dbPath).Length;
+                Assert.True(size > 0);
+
+                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
+                {
+                    fixture.InvalidateAll().Wait();
+                    fixture.Vacuum().Wait();
+                }
+
+                Assert.True(new FileInfo(dbPath).Length < size);
+            }
         }
     }
 
@@ -603,16 +623,16 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeObjectCache(new Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeObjectCache(new Sqlite3.SQLiteEncryptedBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
-    public class TestBlobCacheFixture : BlobCacheExtensionsFixture
+    public class InMemoryBlobCacheFixture : BlobCacheExtensionsFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new TestBlobCache(RxApp.MainThreadScheduler);
+            return new InMemoryBlobCache(RxApp.MainThreadScheduler);
         }
     }
 
@@ -636,12 +656,12 @@ namespace Akavache.Tests
             return _inner.Insert(key, data, absoluteExpiration);
         }
 
-        public IObservable<byte[]> GetAsync(string key)
+        public IObservable<byte[]> Get(string key)
         {
-            return _inner.GetAsync(key);
+            return _inner.Get(key);
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
             return _inner.GetAllKeys();
         }
@@ -666,6 +686,11 @@ namespace Akavache.Tests
             return _inner.InvalidateAll();
         }
 
+        public IObservable<Unit> Vacuum()
+        {
+            return _inner.Vacuum();
+        }
+
         public IObservable<Unit> Shutdown
         {
             get { return _inner.Shutdown; }
@@ -686,9 +711,9 @@ namespace Akavache.Tests
             return ((IObjectBlobCache)_inner).InsertObject(key, value, absoluteExpiration);
         }
 
-        public IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key)
         {
-            return ((IObjectBlobCache)_inner).GetObjectAsync<T>(key, noTypePrefix);
+            return ((IObjectBlobCache)_inner).GetObject<T>(key);
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
@@ -704,6 +729,11 @@ namespace Akavache.Tests
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             return ((IObjectBlobCache)_inner).InvalidateAllObjects<T>();
+        }
+
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return ((IObjectBlobCache)_inner).GetObjectCreatedAt<T>(key);
         }
     }
 }

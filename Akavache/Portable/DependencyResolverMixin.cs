@@ -24,6 +24,7 @@ namespace Akavache
             var namespaces = new[] { 
                 "Akavache",
                 "Akavache.Mac",
+                "Akavache.Deprecated",
                 "Akavache.Mobile",
                 "Akavache.Sqlite3",
             };

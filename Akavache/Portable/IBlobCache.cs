@@ -29,7 +29,7 @@ namespace Akavache
         /// </summary>
         /// <param name="key">The key to return asynchronously.</param>
         /// <returns>A Future result representing the byte data.</returns>
-        IObservable<byte[]> GetAsync(string key);
+        IObservable<byte[]> Get(string key);
 
         /// <summary>
         /// Return all keys in the cache. Note that this method is normally
@@ -37,7 +37,7 @@ namespace Akavache
         /// to be accurate with respect to in-flight requests.
         /// </summary>
         /// <returns>A list of valid keys for the cache.</returns>
-        IObservable<List<string>> GetAllKeys();
+        IObservable<IEnumerable<string>> GetAllKeys();
 
         /// <summary>
         /// Returns the time that the key was added to the cache, or returns 
@@ -66,7 +66,16 @@ namespace Akavache
         /// this method is blocking and incurs a significant performance
         /// penalty if used while the cache is being used on other threads. 
         /// </summary>
+        /// <returns>A signal indicating when the invalidate is complete.</returns>
         IObservable<Unit> InvalidateAll();
+
+        /// <summary>
+        /// This method eagerly removes all expired keys from the blob cache, as
+        /// well as does any cleanup operations that makes sense (Hint: on SQLite3
+        /// it does a Vacuum)
+        /// </summary>
+        /// <returns>A signal indicating when the operation is complete.</returns>
+        IObservable<Unit> Vacuum();
 
         /// <summary>
         /// This Observable fires after the Dispose completes successfully, 
@@ -101,7 +110,7 @@ namespace Akavache
         /// </summary>
         /// <param name="keys">The keys to return asynchronously.</param>
         /// <returns>A Future result representing the byte data for each key.</returns>
-        IObservable<IDictionary<string, byte[]>> GetAsync(IEnumerable<string> keys);
+        IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys);
 
         /// <summary>
         /// Returns the time that the keys were added to the cache, or returns 
@@ -128,6 +137,10 @@ namespace Akavache
     /// </summary>
     public interface ISecureBlobCache : IBlobCache { }
 
+    /// <summary>
+    /// This interface indicates that the underlying BlobCache implementation
+    /// can handle objects. 
+    /// </summary>
     public interface IObjectBlobCache : IBlobCache
     {
         /// <summary>
@@ -144,10 +157,8 @@ namespace Akavache
         /// serializer.
         /// </summary>
         /// <param name="key">The key to look up in the cache.</param>
-        /// <param name="noTypePrefix">Use the exact key name instead of a
-        /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<T> GetObjectAsync<T>(string key, bool noTypePrefix = false);
+        IObservable<T> GetObject<T>(string key);
 
         /// <summary>
         /// Return all objects of a specific Type in the cache.
@@ -155,6 +166,14 @@ namespace Akavache
         /// <returns>A Future result representing all objects in the cache
         /// with the specified Type.</returns>
         IObservable<IEnumerable<T>> GetAllObjects<T>();
+
+        /// <summary>
+        /// Returns the time that the object with the key was added to the cache, or returns 
+        /// null if the key isn't in the cache.
+        /// </summary>
+        /// <param name="key">The key to return the date for.</param>
+        /// <returns>The date the key was created on.</returns>
+        IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key);
 
         /// <summary>
         /// Invalidates a single object from the cache. It is important that the Type
@@ -174,7 +193,7 @@ namespace Akavache
         IObservable<Unit> InvalidateAllObjects<T>();
     }
 
-    public interface IObjectBulkBlobCache : IObjectBlobCache
+    public interface IObjectBulkBlobCache : IObjectBlobCache, IBulkBlobCache
     {
         /// <summary>
         /// Insert several objects into the cache, via the JSON serializer. 
@@ -190,10 +209,8 @@ namespace Akavache
         /// serializer.
         /// </summary>
         /// <param name="keys">The key to look up in the cache.</param>
-        /// <param name="noTypePrefix">Use the exact key name instead of a
-        /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<IDictionary<string, T>> GetObjectsAsync<T>(IEnumerable<string> keys, bool noTypePrefix = false);
+        IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys);
 
         /// <summary>
         /// Invalidates several objects from the cache. It is important that the Type

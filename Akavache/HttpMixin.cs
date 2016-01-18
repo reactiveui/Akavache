@@ -45,20 +45,42 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache This, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var doFetch = new Func<IObservable<byte[]>>(() => 
-                MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessAndCacheWebResponse(x, url, absoluteExpiration)));
-
-            if (fetchAlways)
-            {
-                return This.GetAndFetchLatest(url, doFetch, absoluteExpiration: absoluteExpiration).TakeLast(1);
-            }
-            else
-            {
-                return This.GetOrFetchObject(url, doFetch, absoluteExpiration);
-            }
+            return This.DownloadUrl(url, url, headers, fetchAlways, absoluteExpiration);
         }
 
-        IObservable<byte[]> ProcessAndCacheWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
+        /// <summary>
+        /// Download data from an HTTP URL and insert the result into the
+        /// cache. If the data is already in the cache, this returns
+        /// a cached value. An explicit key is provided rather than the URL itself.
+        /// </summary>
+        /// <param name="key">The key to store with.</param>
+        /// <param name="url">The URL to download.</param>
+        /// <param name="headers">An optional Dictionary containing the HTTP
+        /// request headers.</param>
+        /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>The data downloaded from the URL.</returns>
+        public IObservable<byte[]> DownloadUrl(IBlobCache This, string key, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        {
+            var doFetch = MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
+            var fetchAndCache = doFetch.SelectMany(x => This.Insert(key, x, absoluteExpiration).Select(_ => x));
+
+            var ret = default(IObservable<byte[]>);
+            if (!fetchAlways)
+            {
+                ret = This.Get(key).Catch(fetchAndCache);
+            }
+            else 
+            {
+                ret = fetchAndCache;
+            }
+
+            var conn = ret.PublishLast();
+            conn.Connect();
+            return conn;
+        }
+
+        IObservable<byte[]> ProcessWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
         {
             var hwr = (HttpWebResponse)wr;
             Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be.");

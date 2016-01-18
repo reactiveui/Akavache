@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Splat;
 
-#if UIKIT
+#if UNIFIED
+using Foundation;
+#elif UIKIT
 using MonoTouch.Foundation;
-#endif
-
-#if APPKIT
+#elif APPKIT
 using MonoMac.Foundation;
 #endif
 
@@ -25,29 +25,25 @@ namespace Akavache
         {
 #if SILVERLIGHT || XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
+#elif WINRT
+            var fs = new WinRTFilesystemProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
             resolver.Register(() => fs, typeof(IFilesystemProvider), null);
 
-            var localCache = default(Lazy<IBlobCache>);
-            var userAccount = default(Lazy<IBlobCache>);
-            var secure = default(Lazy<ISecureBlobCache>);
+#if WP8
+            var enc = new WP8EncryptionProvider();
+#elif WINRT
+            var enc = new WinRTEncryptionProvider();
+#else
+            var enc = new EncryptionProvider();
+#endif
+            resolver.Register(() => enc, typeof(IEncryptionProvider), null);
 
-            if (!ModeDetector.InUnitTestRunner()) {
-                localCache = new Lazy<IBlobCache>(() =>
-                    new CPersistentBlobCache(fs.GetDefaultLocalMachineCacheDirectory(), fs));
-
-                userAccount = new Lazy<IBlobCache>(() =>
-                    new CPersistentBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
-
-                secure = new Lazy<ISecureBlobCache>(() =>
-                    new CEncryptedBlobCache(fs.GetDefaultRoamingCacheDirectory(), fs));
-            } else {
-                localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
-                userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
-                secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
-            }
+            var localCache = new Lazy<IBlobCache>(() => new InMemoryBlobCache());
+            var userAccount = new Lazy<IBlobCache>(() => new InMemoryBlobCache());
+            var secure = new Lazy<ISecureBlobCache>(() => new InMemoryBlobCache());
 
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");

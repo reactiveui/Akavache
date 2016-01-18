@@ -8,32 +8,6 @@ using Windows.Storage.Streams;
 
 namespace System.IO
 {
-    public enum FileMode
-    {
-        CreateNew,
-        Create,
-        Open,
-        OpenOrCreate,
-        Truncate,
-        Append,
-    }
-
-    public enum FileAccess
-    {
-        Read,
-        Write,
-        ReadWrite,
-    }
-
-    public enum FileShare
-    {
-        None,
-        Read,
-        Write,
-        ReadWrite,
-        Delete,
-    }
-
     public static class MicrosoftStreamExtensions
     {
         public static IRandomAccessStream AsRandomAccessStream(this Stream stream)
