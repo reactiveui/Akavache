@@ -31,7 +31,7 @@ namespace Akavache
             if (bulkCache != null) return bulkCache.Insert(keyValuePairs, absoluteExpiration);
 
             return keyValuePairs.ToObservable()
-                .SelectMany(x => This.Insert(x.Key, x.Value))
+                .SelectMany(x => This.Insert(x.Key, x.Value, absoluteExpiration))
                 .TakeLast(1);
         }
 
@@ -76,7 +76,7 @@ namespace Akavache
             if (bulkCache != null) return bulkCache.InsertObjects(keyValuePairs, absoluteExpiration);
 
             return keyValuePairs.ToObservable()
-                .SelectMany(x => This.InsertObject(x.Key, x.Value))
+                .SelectMany(x => This.InsertObject(x.Key, x.Value, absoluteExpiration))
                 .TakeLast(1);
         }
 

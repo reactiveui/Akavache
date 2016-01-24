@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Splat;
 
-#if UIKIT
+#if UNIFIED
+using Foundation;
+#elif UIKIT
 using MonoTouch.Foundation;
-#endif
-
-#if APPKIT
+#elif APPKIT
 using MonoMac.Foundation;
 #endif
 
@@ -25,14 +25,25 @@ namespace Akavache
         {
 #if SILVERLIGHT || XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
+#elif WINRT
+            var fs = new WinRTFilesystemProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
             resolver.Register(() => fs, typeof(IFilesystemProvider), null);
 
-            var localCache = new Lazy<IBlobCache>(() => new TestBlobCache());
-            var userAccount = new Lazy<IBlobCache>(() => new TestBlobCache());
-            var secure = new Lazy<ISecureBlobCache>(() => new TestBlobCache());
+#if WP8
+            var enc = new WP8EncryptionProvider();
+#elif WINRT
+            var enc = new WinRTEncryptionProvider();
+#else
+            var enc = new EncryptionProvider();
+#endif
+            resolver.Register(() => enc, typeof(IEncryptionProvider), null);
+
+            var localCache = new Lazy<IBlobCache>(() => new InMemoryBlobCache());
+            var userAccount = new Lazy<IBlobCache>(() => new InMemoryBlobCache());
+            var secure = new Lazy<ISecureBlobCache>(() => new InMemoryBlobCache());
 
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");

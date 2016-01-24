@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -16,10 +15,7 @@ using Newtonsoft.Json;
 using Splat;
 using System.Collections.Concurrent;
 using Akavache;
-
-#if SILVERLIGHT
 using Akavache.Internal;
-#endif
 
 namespace Akavache.Deprecated
 {
@@ -27,7 +23,7 @@ namespace Akavache.Deprecated
     /// This class represents an asynchronous key-value store backed by a 
     /// directory. It stores the last 'n' key requests in memory.
     /// </summary>
-    public abstract class PersistentBlobCache : IBlobCache, IEnableLogger
+    public class PersistentBlobCache : IBlobCache, IEnableLogger
     {
         readonly MemoizingMRUCache<string, AsyncSubject<byte[]>> memoizedRequests;
 
@@ -46,7 +42,7 @@ namespace Akavache.Deprecated
 
         const string BlobCacheIndexKey = "__THISISTHEINDEX__FFS_DONT_NAME_A_FILE_THIS™";
 
-        protected PersistentBlobCache(
+        public PersistentBlobCache(
             string cacheDirectory = null, 
             IFilesystemProvider filesystemProvider = null, 
             IScheduler scheduler = null,
@@ -54,11 +50,11 @@ namespace Akavache.Deprecated
         {
             BlobCache.EnsureInitialized();
 
-            this.filesystem = filesystemProvider ?? Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
+            this.filesystem = filesystemProvider ?? Locator.Current.GetService<IFilesystemProvider>();
 
             if (this.filesystem == null)
             {
-                throw new Exception("No IFilesystemProvider available. This should never happen, your RxUI DependencyResolver is broken");
+                throw new Exception("No IFilesystemProvider available. This should never happen, your DependencyResolver is broken");
             }
 
             this.CacheDirectory = cacheDirectory ?? filesystem.GetDefaultRoamingCacheDirectory();
@@ -72,19 +68,7 @@ namespace Akavache.Deprecated
             memoizedRequests = new MemoizingMRUCache<string, AsyncSubject<byte[]>>(
                 (x, c) => FetchOrWriteBlobFromDisk(x, c, false), 20, invalidateCallback);
 
-            try
-            {
-                var dir = filesystem.CreateRecursive(CacheDirectory);
-#if WINRT
-                // NB: I don't want to talk about it.
-                dir.Wait();
-#endif
-            }
-            catch (Exception ex)
-            {
-                this.Log().FatalException("Couldn't create cache directory", ex);
-            }
-
+            
             var cacheIndex = FetchOrWriteBlobFromDisk(BlobCacheIndexKey, null, true)
                 .Catch(Observable.Return(new byte[0]))
                 .Select(x => Encoding.UTF8.GetString(x, 0, x.Length).Split('\n')
@@ -92,11 +76,7 @@ namespace Akavache.Deprecated
                      .ToDictionary(y => y.Key, y => y.Value))
                 .Select(x => new ConcurrentDictionary<string, CacheIndexEntry>(x));
 
-#if WINRT
-            CacheIndex = cacheIndex.First();
-#else
             cacheIndex.Subscribe(x => CacheIndex = x);
-#endif
 
             flushThreadSubscription = Disposable.Empty;
 
@@ -146,7 +126,7 @@ namespace Akavache.Deprecated
             if (IsKeyStale(key))
             {
                 Invalidate(key);
-                return ObservableThrowKeyNotFoundException(key);
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
             }
 
             AsyncSubject<byte[]> ret;
@@ -195,7 +175,7 @@ namespace Akavache.Deprecated
             return Observable.Return<DateTimeOffset?>(value.CreatedAt);
         }
 
-        public IObservable<List<string>> GetAllKeys()
+        public IObservable<IEnumerable<string>> GetAllKeys()
         {
             if (disposed) throw new ObjectDisposedException("PersistentBlobCache");
             return Observable.Return(CacheIndex.ToList().Where(x => x.Value.ExpiresAt == null || x.Value.ExpiresAt >= BlobCache.TaskpoolScheduler.Now).Select(x => x.Key).ToList());
@@ -215,8 +195,6 @@ namespace Akavache.Deprecated
 
             var path = GetPathForKey(key);
             var ret = Observable.Defer(() => filesystem.Delete(path))
-                    .Catch<Unit, FileNotFoundException>(_ => Observable.Return(Unit.Default))
-                    .Catch<Unit, IsolatedStorageException>(_ => Observable.Return(Unit.Default))
                     .Retry(2)
                     .Do(_ => actionTaken.OnNext(Unit.Default));
 
@@ -326,12 +304,11 @@ namespace Akavache.Deprecated
 
             Func<IObservable<byte[]>> readResult = () => 
                 Observable.Defer(() => 
-                    filesystem.SafeOpenFileAsync(GetPathForKey(key), FileMode.Open, FileAccess.Read, FileShare.Read, scheduler))
+                    filesystem.OpenFileForReadAsync(GetPathForKey(key), scheduler))
                 .Retry(1)
                 .SelectMany(x => x.CopyToAsync(ms, scheduler))
                 .SelectMany(x => AfterReadFromDiskFilter(ms.ToArray(), scheduler))
-                .Catch<byte[], FileNotFoundException>(ex => ObservableThrowKeyNotFoundException(key, ex))
-                .Catch<byte[], IsolatedStorageException>(ex => ObservableThrowKeyNotFoundException(key, ex))
+                .Catch<byte[], Exception>(ex => ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key, ex))
                 .Do(_ =>
                 {
                     if (!synchronous && key != BlobCacheIndexKey)
@@ -360,7 +337,7 @@ namespace Akavache.Deprecated
             Func<IObservable<byte[]>> writeResult = () => BeforeWriteToDiskFilter(byteData, scheduler)
                 .Select(x => new MemoryStream(x))
                 .Zip(Observable.Defer(() => 
-                        filesystem.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler))
+                        filesystem.OpenFileForWriteAsync(path, scheduler))
                         .Retry(1),
                     (from, to) => new {from, to})
                 .SelectMany(x => x.from.CopyToAsync(x.to, scheduler))
@@ -414,17 +391,17 @@ namespace Akavache.Deprecated
         {
             return Path.Combine(CacheDirectory, Utility.GetMd5Hash(key));
         }
-
-        static IObservable<byte[]> ObservableThrowKeyNotFoundException(string key, Exception innerException = null)
-        {
-            return Observable.Throw<byte[]>(
-                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
-                "The given key '{0}' was not present in the cache.", key), innerException));
-        }
     }
 
-    class CPersistentBlobCache : PersistentBlobCache
+    public class CacheIndexEntry
     {
-        public CPersistentBlobCache(string cacheDirectory, IFilesystemProvider fs) : base(cacheDirectory, fs, BlobCache.TaskpoolScheduler) { }
+        public DateTimeOffset CreatedAt { get; protected set; }
+        public DateTimeOffset? ExpiresAt { get; protected set; }
+
+        public CacheIndexEntry(DateTimeOffset createdAt, DateTimeOffset? expiresAt)
+        {
+            CreatedAt = createdAt;
+            ExpiresAt = expiresAt;
+        }
     }
 }

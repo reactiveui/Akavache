@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.99.1-beta</version>
+    <version>4.1.2</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <dependency id="akavache.core" version="[3.99.1-beta]" />
-      <dependency id="reactiveui-mobile" version="5.99.3-beta" />
+      <dependency id="akavache.core" version="[4.1.2]" />
+      <dependency id="reactiveui-mobile" version="6.3.0" />
     </dependencies>
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -19,7 +19,7 @@
   </metadata>
   <files>
     <file src="bin\Release\WP8\Akavache.Mobile.*" target="lib\wp8" />
-    <file src="bin\Release\WinRT45\Akavache.Mobile.*" target="lib\NetCore45" />
+    <file src="bin\Release\Win8\Akavache.Mobile.*" target="lib\Win8" />
     <file src="bin\Release\Portable-Win81+Wpa81\Akavache.Mobile.*" target="lib\Portable-Win81+Wpa81" />
     <file src="bin\Release\MonoAndroid\Akavache.Mobile.*" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.Mobile.*" target="lib\MonoTouch" />

@@ -61,7 +61,7 @@ namespace Akavache.Sqlite3.Internal
 	{
 		public SQLite3.Result Result { get; private set; }
 
-		protected SQLiteException (SQLite3.Result r, string message) : base(message)
+		public SQLiteException (SQLite3.Result r, string message) : base(message)
 		{
 			Result = r;
 		}
@@ -1478,11 +1478,6 @@ namespace Akavache.Sqlite3.Internal
 			if (count > 0)
 				OnTableChanged (map, NotifyTableChangedAction.Delete);
 			return count;
-		}
-
-		~SQLiteConnection ()
-		{
-			Dispose (false);
 		}
 
 		public void Dispose ()

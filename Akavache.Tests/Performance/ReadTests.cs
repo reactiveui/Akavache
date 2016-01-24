@@ -98,7 +98,7 @@ namespace Akavache.Tests.Performance
 
                 foreach (var size in PerfHelper.GetPerfRanges())
                 {
-                    results[size] = await block(cache, size, keys);
+                    results[size] = await block(cache, size, keys.ToList());
                 }
             }
 
@@ -116,7 +116,7 @@ namespace Akavache.Tests.Performance
             var cache = CreateBlobCache(path);
 
             var keys = await cache.GetAllKeys();
-            if (keys.Count == giantDbSize) return cache;;
+            if (keys.Count() == giantDbSize) return cache;;
 
             await cache.InvalidateAll();
             await PerfHelper.GenerateDatabase(cache, giantDbSize);
@@ -127,11 +127,11 @@ namespace Akavache.Tests.Performance
 
     }
 
-    public class Sqlite3ReadTests : ReadTests
+    public abstract class Sqlite3ReadTests : ReadTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new SqlitePersistentBlobCache(Path.Combine(path, "blob.db"));
+            return new SQLitePersistentBlobCache(Path.Combine(path, "blob.db"));
         }
     }
 }

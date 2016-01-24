@@ -5,14 +5,12 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
-using Akavache.Deprecated;
+using System.Threading.Tasks;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
-
-using EncryptedBlobCache = Akavache.Deprecated.EncryptedBlobCache;
 
 namespace Akavache.Tests
 {
@@ -21,21 +19,20 @@ namespace Akavache.Tests
         protected abstract IBlobCache CreateBlobCache(string path);
 
         [Fact]
-        public void CacheShouldBeAbleToGetAndInsertBlobs()
+        public async Task CacheShouldBeAbleToGetAndInsertBlobs()
         {
             string path;
             using (Utility.WithEmptyDirectory(out path))
-            using (TestUtils.WithScheduler(Scheduler.CurrentThread))
             using (var fixture = CreateBlobCache(path)) 
             {
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-                fixture.Insert("Bar", new byte[] { 4, 5, 6 });
+                await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                await fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
-                byte[] output1 = fixture.Get("Foo").First();
-                byte[] output2 = fixture.Get("Bar").First();
+                byte[] output1 = await fixture.Get("Foo");
+                byte[] output2 = await fixture.Get("Bar");
 
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Get(null).First());
@@ -61,8 +58,8 @@ namespace Akavache.Tests
                 var fixture = CreateBlobCache(path);
                 using (fixture)
                 {
-                    // TestBlobCache isn't round-trippable by design
-                    if (fixture is TestBlobCache) return;
+                    // InMemoryBlobCache isn't round-trippable by design
+                    if (fixture is InMemoryBlobCache) return;
 
                     fixture.Insert("Foo", new byte[] {1, 2, 3});
                 }
@@ -74,6 +71,34 @@ namespace Akavache.Tests
                     var output = fixture2.Get("Foo").First();
                     Assert.Equal(3, output.Length);
                     Assert.Equal(1, output[0]);
+                }
+            }
+        }
+
+        public void CreatedAtShouldBeSetAutomaticallyAndBeRetrievable()
+        {
+            string path;
+
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                var fixture = CreateBlobCache(path);
+                DateTimeOffset roughCreationTime;
+                using (fixture)
+                {
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
+                    roughCreationTime = fixture.Scheduler.Now;
+                }
+
+                fixture.Shutdown.Wait();
+
+                using (var fixture2 = CreateBlobCache(path))
+                {
+                    var createdAt = fixture2.GetCreatedAt("Foo").Wait();
+
+                    Assert.InRange(
+                        actual: createdAt.Value,
+                        low: roughCreationTime - TimeSpan.FromSeconds(1),
+                        high: roughCreationTime);
                 }
             }
         }
@@ -100,7 +125,7 @@ namespace Akavache.Tests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void CacheShouldRespectExpiration()
         {
             string path;
@@ -113,7 +138,7 @@ namespace Akavache.Tests
 
                     using (var fixture = CreateBlobCache(path))
                     {
-                        wasTestCache = fixture is TestBlobCache;
+                        wasTestCache = fixture is InMemoryBlobCache;
                         fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
                         fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
 
@@ -138,7 +163,7 @@ namespace Akavache.Tests
                         Assert.Equal(4, result[0]);
                     }
 
-                    // NB: TestBlobCache is not serializable by design
+                    // NB: InMemoryBlobCache is not serializable by design
                     if (wasTestCache) return;
 
                     sched.AdvanceToMs(350);
@@ -168,15 +193,6 @@ namespace Akavache.Tests
                     sched.Start();
                 });
             }
-        }
-
-        [Fact]
-        public void DisposedCacheThrowsObjectDisposedException()
-        {
-            var cache = CreateBlobCache("somepath");
-            cache.Dispose();
-
-            Assert.Throws<ObjectDisposedException>(() => cache.Insert("key", new byte[] { }).First());
         }
 
         [Fact]
@@ -224,7 +240,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path)) 
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
             }
@@ -259,44 +275,43 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path)) 
                 {
-                    if (fixture is TestBlobCache) return;
+                    if (fixture is InMemoryBlobCache) return;
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
             }
         }
-    }
 
-    public class TPersistentBlobCache : PersistentBlobCache
-    {
-        public TPersistentBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
-    }
-
-    public class TEncryptedBlobCache : EncryptedBlobCache
-    {
-        public TEncryptedBlobCache(string cacheDirectory = null, IScheduler scheduler = null) : base(cacheDirectory, null, scheduler) { }
-    }
-
-    public class PersistentBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
+        [Fact]
+        public void DateTimeKindCanBeForced()
         {
-            return new TPersistentBlobCache(path);
+            var before = BlobCache.ForcedDateTimeKind;
+            BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+
+            try
+            {
+                string path;
+
+                using (Utility.WithEmptyDirectory(out path))
+                using (var fixture = CreateBlobCache(path))
+                {
+                    var value = DateTime.UtcNow;
+                    fixture.InsertObject("key", value).First();
+                    var result = fixture.GetObject<DateTime>("key").First();
+                    Assert.Equal(DateTimeKind.Utc, result.Kind);
+                }
+            }
+            finally
+            {
+                BlobCache.ForcedDateTimeKind = before;
+            }
         }
     }
 
-    public class TestBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
+    public class InMemoryBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new TestBlobCache(RxApp.TaskpoolScheduler);
-        }
-    }
-
-    public class EncryptedBlobCacheInterfaceFixture : BlobCacheInterfaceFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new TEncryptedBlobCache(path);
+            return new InMemoryBlobCache(RxApp.TaskpoolScheduler);
         }
     }
 
@@ -304,7 +319,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
+            return new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db"));
         }
     }
 }

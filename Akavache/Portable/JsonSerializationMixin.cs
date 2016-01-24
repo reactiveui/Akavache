@@ -26,7 +26,7 @@ namespace Akavache
         public static IObservable<Unit> InsertObject<T>(this IBlobCache This, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertObject(key, value, absoluteExpiration);
+            if (objCache != null) return objCache.InsertObject<T>(key, value, absoluteExpiration);
 
             var bytes = SerializeObject(value);
             return This.Insert(GetTypePrefixedKey(key, typeof(T)), bytes, absoluteExpiration);
@@ -42,7 +42,7 @@ namespace Akavache
         public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.InsertAllObjects(keyValuePairs, absoluteExpiration);
+            if (objCache != null) return objCache.InsertObjects<T>(keyValuePairs, absoluteExpiration);
             throw new NotImplementedException();
         }
 
@@ -54,13 +54,12 @@ namespace Akavache
         /// <param name="noTypePrefix">Use the exact key name instead of a
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        public static IObservable<T> GetObject<T>(this IBlobCache This, string key, bool noTypePrefix = false)
+        public static IObservable<T> GetObject<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return objCache.GetObject<T>(key, noTypePrefix);
-            var theKey = noTypePrefix ? key : GetTypePrefixedKey(key, typeof(T));
+            if (objCache != null) return objCache.GetObject<T>(key);
 
-            return This.Get(theKey).SelectMany(DeserializeObject<T>);
+            return This.Get(GetTypePrefixedKey(key, typeof(T))).SelectMany(DeserializeObject<T>);
         }
 
         /// <summary>
@@ -81,10 +80,9 @@ namespace Akavache
                     .Where(y => 
                         y.StartsWith(GetTypePrefixedKey("", typeof(T))))
                     .ToObservable())
-                .SelectMany(x => This.GetObject<T>(x, true)
+                .SelectMany(x => This.GetObject<T>(x)
                     .Catch(Observable.Empty<T>()))
-                .ToList()
-                .Select(x => (IEnumerable<T>)x);
+                .ToList();
         }
 
         /// <summary>
@@ -169,7 +167,7 @@ namespace Akavache
         public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache This, string key)
         {
             var objCache = This as IObjectBlobCache;
-            if (objCache != null) return This.GetCreatedAt(key);
+            if (objCache != null) return objCache.GetObjectCreatedAt<T>(key);
 
             return This.GetCreatedAt(GetTypePrefixedKey(key, typeof(T)));
         }
@@ -213,7 +211,6 @@ namespace Akavache
                 .Where(x => x != false)
                 .SelectMany(_ => 
                 {
-                    var ret = default(T);
                     var fetchObs = fetchFunc().Catch<T, Exception>(ex =>
                     {
                         var shouldInvalidate = shouldInvalidateOnError ?
@@ -224,7 +221,7 @@ namespace Akavache
 
                     return fetchObs
                         .SelectMany(x => This.InvalidateObject<T>(key).Select(__ => x))
-                        .SelectMany(x => This.InsertObject(key, x, absoluteExpiration).Select(__ => x));
+                        .SelectMany(x => This.InsertObject<T>(key, x, absoluteExpiration).Select(__ => x));
                 });
 
             var result = This.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
@@ -296,8 +293,8 @@ namespace Akavache
         {
             var objCache = This as IObjectBlobCache;
             if (objCache != null) return objCache.InvalidateAllObjects<T>();
-            var ret = new AsyncSubject<Unit>();
 
+            var ret = new AsyncSubject<Unit>();
             This.GetAllKeys()
                 .SelectMany(x => 
                     x.Where(y => y.StartsWith(GetTypePrefixedKey("", typeof(T))))

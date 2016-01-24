@@ -2,7 +2,6 @@
 using System.Reactive;
 using System.Reactive.Linq;
 using ReactiveUI;
-using ReactiveUI.Mobile;
 using Splat;
 using Newtonsoft.Json;
 

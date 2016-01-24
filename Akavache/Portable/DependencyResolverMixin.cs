@@ -26,7 +26,6 @@ namespace Akavache
                 "Akavache.Mac",
                 "Akavache.Deprecated",
                 "Akavache.Mobile",
-                "Akavache.Http",
                 "Akavache.Sqlite3",
             };
 

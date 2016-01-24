@@ -17,27 +17,27 @@ namespace Akavache.Sqlite3
         {
             // NB: We want the most recently registered fs, since there really 
             // only should be one 
-            var fs = Locator.Current.GetServices<IFilesystemProvider>().LastOrDefault();
+            var fs = Locator.Current.GetService<IFilesystemProvider>();
             if (fs == null)
             {
                 throw new Exception("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
             }
 
             var localCache = new Lazy<IBlobCache>(() =>{
-                fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).Wait();
-                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
+                fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
+                return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
 
             var userAccount = new Lazy<IBlobCache>(() =>{
-                fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).Wait();
-                return new SqlitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
+                fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
+                return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
                 
             var secure = new Lazy<ISecureBlobCache>(() => {
-                fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).Wait();
-                return new EncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), BlobCache.TaskpoolScheduler);
+                fs.CreateRecursive(fs.GetDefaultSecretCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
+                return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
         }

@@ -229,9 +229,9 @@ namespace Akavache.Tests
             return _inner.InsertObjects(keyValuePairs, absoluteExpiration);
         }
 
-        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys, bool noTypePrefix = false)
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
         {
-            return _inner.GetObjects<T>(keys, noTypePrefix);
+            return _inner.GetObjects<T>(keys);
         }
 
         public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
@@ -244,9 +244,14 @@ namespace Akavache.Tests
             return _inner.InsertObject<T>(key, value, absoluteExpiration);
         }
 
-        public IObservable<T> GetObject<T>(string key, bool noTypePrefix = false)
+        public IObservable<T> GetObject<T>(string key)
         {
-            return _inner.GetObject<T>(key, noTypePrefix);
+            return _inner.GetObject<T>(key);
+        }
+
+        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
+        {
+            return _inner.GetObjectCreatedAt<T>(key);
         }
 
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
@@ -265,27 +270,11 @@ namespace Akavache.Tests
         }
     }
 
-    public class PersistentBlobCacheBulkTests : BulkOperationsTests
+    public class InMemoryBlobCacheBulkOperationsTests : BulkOperationsTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new TPersistentBlobCache(path));
-        }
-    }
-
-    public class TestBlobCacheBulkOperationsTests : BulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TestBlobCache(RxApp.TaskpoolScheduler));
-        }
-    }
-
-    public class EncryptedBlobCacheBulkOperationsTests : BulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TEncryptedBlobCache(path));
+            return new BlockingDisposeBulkCache(new InMemoryBlobCache(RxApp.TaskpoolScheduler));
         }
     }
 
@@ -293,7 +282,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -301,31 +290,15 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.SQLiteEncryptedBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
-    public class PersistentBlobCacheObjectBulkTests : ObjectBulkOperationsTests
+    public class InMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new TPersistentBlobCache(path));
-        }
-    }
-
-    public class TestBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TestBlobCache(RxApp.TaskpoolScheduler));
-        }
-    }
-
-    public class EncryptedBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new BlockingDisposeBulkCache(new TEncryptedBlobCache(path));
+            return new BlockingDisposeBulkCache(new InMemoryBlobCache(RxApp.TaskpoolScheduler));
         }
     }
 
@@ -333,7 +306,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new SqlitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 
@@ -341,7 +314,7 @@ namespace Akavache.Tests
     {
         protected override IBlobCache CreateBlobCache(string path)
         {
-            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.EncryptedBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeBulkCache(new Akavache.Sqlite3.SQLiteEncryptedBlobCache(Path.Combine(path, "sqlite.db")));
         }
     }
 }

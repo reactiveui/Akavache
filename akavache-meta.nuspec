@@ -1,40 +1,13 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>3.99.1-beta</version>
+    <version>4.1.2</version>
     <authors>GitHub</authors>
     <owners>Paul Betts</owners>
     <licenseUrl>https://github.com/github/Akavache/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
-      <group targetFramework="MonoMac">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="MonoTouch">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="MonoAndroid">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="WinRT">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="Win81">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="Wpa81">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="Net45">
-        <dependency id="Akavache.SQLite3" version="3.99.1-beta" />
-      </group>
-      
-      <group targetFramework="WP8">
-        <dependency id="Akavache.Deprecated" version="3.99.1-beta" />
-      </group>
-      <group targetFramework="Portable-Net45+WinRT45+WP8">
-        <dependency id="Akavache.Core" version="3.99.1-beta" />
-      </group>
+      <dependency id="Akavache.SQLite3" version="[4.1.2]" />
     </dependencies>
 
     <id>akavache</id>
