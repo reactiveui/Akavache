@@ -23,7 +23,7 @@ namespace Akavache
     {
         public void Register(IMutableDependencyResolver resolver)
         {
-#if SILVERLIGHT || XAMARIN_MOBILE
+#if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
 #elif WINRT
             var fs = new WinRTFilesystemProvider();
