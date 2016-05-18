@@ -44,6 +44,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Deprecated", "Akav
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3", "Akavache.Sqlite3\Akavache.Sqlite3.csproj", "{241C47DF-CA8E-4296-AA03-2C48BB646ABD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Realm", "Realm", "{2CC94B54-3E8A-4191-BD86-53AE3C938CC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Realm", "Akavache.Realm\Akavache.Realm.csproj", "{AC17254E-0460-49A7-9100-0E59910C6E09}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -155,6 +159,14 @@ Global
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{AC17254E-0460-49A7-9100-0E59910C6E09}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -167,5 +179,6 @@ Global
 		{3CC2AFD6-D25F-4C8E-BD4B-31486F368365} = {D3FCAC54-DE89-4D3D-AAFD-68A378A7A9F1}
 		{1FE2625D-844E-4224-B6BC-4E9246AF9C62} = {403A7511-EACE-4DEA-9CE9-61592FB87C7B}
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD} = {9E059863-7633-4919-B6A7-627D80186383}
+		{AC17254E-0460-49A7-9100-0E59910C6E09} = {2CC94B54-3E8A-4191-BD86-53AE3C938CC4}
 	EndGlobalSection
 EndGlobal
