@@ -400,6 +400,7 @@ namespace Akavache.Sqlite3
 
         public string TypeName { get; set; }
         public byte[] Value { get; set; }
+        [Indexed()]
         public DateTime Expiration { get; set; }
         public DateTime CreatedAt { get; set; }
     }
