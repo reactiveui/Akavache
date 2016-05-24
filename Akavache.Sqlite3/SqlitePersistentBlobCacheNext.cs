@@ -398,10 +398,14 @@ namespace Akavache.Sqlite3
         [PrimaryKey]
         public string Key { get; set; }
 
+        [Indexed]
         public string TypeName { get; set; }
+
         public byte[] Value { get; set; }
-        [Indexed()]
+
+        [Indexed]
         public DateTime Expiration { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 
