@@ -19,6 +19,7 @@
   </metadata>
   <files>
     <file src="bin\Release\WP8\Akavache.Mobile.*" target="lib\wp8" />
+    <file src="bin\Release\Win8\Akavache.Mobile.*" target="lib\Win8" />
     <file src="bin\Release\Portable-Win81+Wpa81\Akavache.Mobile.*" target="lib\Portable-Win81+Wpa81" />
     <file src="bin\Release\MonoAndroid\Akavache.Mobile.*" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.Mobile.*" target="lib\MonoTouch" />
