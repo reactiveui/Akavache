@@ -12,6 +12,13 @@
         <dependency id="Splat" version="1.6.0" />
         <dependency id="Newtonsoft.Json" version="6.0.3" />
       </group>
+      <group targetFramework="win8">
+        <dependency id="Rx-Main" version="2.2.5" />
+        <dependency id="Splat" version="1.6.0" />
+        <dependency id="Rx-Xaml" version="2.2.5" />
+        <dependency id="Rx-WinRT" version="2.2.5" />
+        <dependency id="Newtonsoft.Json" version="6.0.3" />
+      </group>
       <group targetFramework="wp8">
         <dependency id="Rx-Main" version="2.2.5" />
         <dependency id="Splat" version="1.6.0" />
@@ -46,6 +53,7 @@
     <file src="bin\Release\Portable-Win81+Wpa81\Akavache.???" target="lib\Portable-Win81+Wpa81" />
     <file src="bin\Release\Net45\Akavache.???" target="lib\net45" />
     <file src="bin\Release\WP8\Akavache.???" target="lib\wp8" />
+    <file src="bin\Release\Win8\Akavache.???" target="lib\Win8" />
     <file src="bin\Release\MonoMac\Akavache.???" target="lib\MonoMac" />
     <file src="bin\Release\MonoAndroid\Akavache.???" target="lib\MonoAndroid" />
     <file src="bin\Release\MonoTouch\Akavache.???" target="lib\MonoTouch" />
