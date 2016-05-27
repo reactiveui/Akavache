@@ -116,6 +116,16 @@ toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
     .Catch(Observable.Return(new Toaster()));
 ```
 
+### Shutting Down
+
+Critical to the integrity of your Akavache cache is the `BlobCache.Shutdown()` method. You *must* call this when your application shuts down. Moreover, be sure to wait for the result:
+
+```cs
+BlobCache.Shutdown().Wait();
+```
+
+Failure to do this may mean that queued items are not flushed to the cache.
+
 ### Examining Akavache caches
 
 Using [Akavache Explorer](https://github.com/paulcbetts/AkavacheExplorer), you
