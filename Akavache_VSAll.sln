@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{0306DEFB-B42E-48C4-8D03-2AC9E860ADC1}"
 EndProject
@@ -32,17 +32,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deprecated", "Deprecated", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_Monodroid", "Akavache.Mobile\Akavache.Mobile_Monodroid.csproj", "{192A477B-BB94-A3C1-F14E-E177EF9FEDB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_Monotouch", "Akavache.Mobile\Akavache.Mobile_Monotouch.csproj", "{FA91337A-9E94-4DBD-801E-05E1FDA78FFC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_XamarinIOS", "Akavache.Mobile\Akavache.Mobile_XamarinIOS.csproj", "{FA91337A-9E94-4DBD-801E-05E1FDA78FFC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Monodroid", "Akavache\Akavache_Monodroid.csproj", "{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_Monotouch", "Akavache\Akavache_Monotouch.csproj", "{9091337C-9E94-4DBD-801E-05E1FDA78FFC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Mobile_WinRT", "Akavache.Mobile\Akavache.Mobile_WinRT.csproj", "{3CC2AFD6-D25F-4C8E-BD4B-31486F368365}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Deprecated", "Akavache.Deprecated\Akavache.Deprecated.csproj", "{1FE2625D-844E-4224-B6BC-4E9246AF9C62}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3", "Akavache.Sqlite3\Akavache.Sqlite3.csproj", "{241C47DF-CA8E-4296-AA03-2C48BB646ABD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache_XamarinIOS", "Akavache\Akavache_XamarinIOS.csproj", "{F091337A-1E94-4DBD-801E-05E1FDA78FFC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,14 +123,6 @@ Global
 		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{F92A477B-BB94-A3C1-084E-E177EF9FEDB7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{9091337C-9E94-4DBD-801E-05E1FDA78FFC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{3CC2AFD6-D25F-4C8E-BD4B-31486F368365}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3CC2AFD6-D25F-4C8E-BD4B-31486F368365}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CC2AFD6-D25F-4C8E-BD4B-31486F368365}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -155,6 +147,14 @@ Global
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{241C47DF-CA8E-4296-AA03-2C48BB646ABD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F091337A-1E94-4DBD-801E-05E1FDA78FFC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
