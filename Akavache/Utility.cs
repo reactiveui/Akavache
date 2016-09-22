@@ -72,12 +72,6 @@ namespace Akavache
 
 #if SILVERLIGHT
                     Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Select(x => (Stream)x).Subscribe(ret);
-#elif MONO && !XAMARIN_MOBILE
-                    Observable.Start (() => 
-                    {
-                        var ufi = new Mono.Unix.UnixFileInfo (path);
-                        return ufi.Open (mode, access);
-                    }, scheduler).Cast<Stream>().Subscribe(ret);
 #else
                     Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
 #endif
