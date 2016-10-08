@@ -221,7 +221,9 @@ namespace Akavache.Sqlite3.Internal
 		
 		static SQLiteConnection ()
 		{
-			if (_preserveDuringLinkMagic) {
+            SQLitePCL.Batteries.Init();
+
+            if (_preserveDuringLinkMagic) {
 				var ti = new ColumnInfo ();
 				ti.Name = "magic";
 			}
