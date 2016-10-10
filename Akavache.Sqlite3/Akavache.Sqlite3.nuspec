@@ -7,7 +7,7 @@
     <projectUrl>https://github.com/github/Akavache</projectUrl>
     <dependencies>
       <dependency id="akavache.core" version="[4.1.2]" />
-      <dependency id="SQLitePCL.raw" version="0.8.6" />
+      <dependency id="SQLitePCLRaw.bundle_green" version="1.1.0" />
     </dependencies>
     <licenseUrl>https://raw.github.com/github/Akavache/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
