@@ -81,12 +81,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Splat.1.6.0\lib\Net45\Splat.dll</HintPath>
     </Reference>
-    <Reference Include="SQLitePCLRaw.batteries_green, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a84b7dcfb1391f7f, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCLRaw.bundle_green.1.1.0\lib\net45\SQLitePCLRaw.batteries_green.dll</HintPath>
+    <Reference Include="SQLitePCLRaw.batteries_e_sqlite3, Version=1.0.0.0, Culture=neutral, PublicKeyToken=17faffbb2a73a73f, processorArchitecture=MSIL">
+      <HintPath>..\packages\SQLitePCLRaw.bundle_e_sqlite3.1.1.0\lib\net45\SQLitePCLRaw.batteries_e_sqlite3.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="SQLitePCLRaw.batteries_v2, Version=1.0.0.0, Culture=neutral, PublicKeyToken=8226ea5df37bcae9, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCLRaw.bundle_green.1.1.0\lib\net45\SQLitePCLRaw.batteries_v2.dll</HintPath>
+      <HintPath>..\packages\SQLitePCLRaw.bundle_e_sqlite3.1.1.0\lib\net45\SQLitePCLRaw.batteries_v2.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="SQLitePCLRaw.core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1488e028ca7ab535, processorArchitecture=MSIL">
