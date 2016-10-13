@@ -70,6 +70,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>True</Optimize>
+    <DebugType>pdbonly</DebugType>
     <OutputPath>bin\Release\Monoandroid</OutputPath>
     <IntermediateOutputPath>obj\Release\Monoandroid</IntermediateOutputPath>
     <DefineConstants>MONO; XAMARIN_MOBILE; ANDROID</DefineConstants>
