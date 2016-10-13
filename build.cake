@@ -243,7 +243,7 @@ Task("Publish")
 //////////////////////////////////////////////////////////////////////
 
 Task("Default")
-    .IsDependentOn("Package")
+    .IsDependentOn("Publish")
     .Does (() =>
 {
 });
