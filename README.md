@@ -15,7 +15,6 @@ Akavache is currently compatible with:
 * Xamarin.iOS / Xamarin.Mac
 * Xamarin.Android
 * .NET 4.5 Desktop (WPF)
-* Windows Phone 8
 * WinRT (Windows Store)
 * Windows Phone 8.1 Universal Apps
 * Windows 10 (Universal Windows Platform)
@@ -47,10 +46,6 @@ added to support:
 * **Xamarin.Android** - No issues.
 
 * **.NET 4.5 Desktop (WPF)** - No issues
-
-* **Windows Phone 8.0** - You must mark your application as `x86` or `ARM`, or
-  else you will get a strange runtime error about SQLitePCL_Raw not loading
-  correctly.
 
 * **WinRT (Windows Store)** - You must mark your application as `x86` or `ARM`, or
   else you will get a strange runtime error about SQLitePCL_Raw not loading
