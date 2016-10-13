@@ -1,13 +1,39 @@
 version: 1.0.{build}
+branches:
+    except:
+    - akavache5-master
+    - akavache6-master
+    - master
+
+build_script:
+    - ps: >-
+        ./bootstrap.ps1
+
+        ./build.cmd
+
+artifacts:
+    - path: artifacts/*
+    - path: '**/bin/*'
+
+-
+
+branches:
+  only:
+  - akavache5-master
+  - akavache6-master
+  - master
+
 environment:
   NUGET_SOURCE: https://www.myget.org/F/akavache/api/v2/package
   NUGET_APIKEY:
     secure: YP/3KxC2ffsuHNaolPXj66JVGzSjON9FcR2S2OEzn9c6SV14oPzUh1ySyeT+G+aA
-build_script:
-- ps: >-
-    ./bootstrap.ps1
 
-    ./build.cmd
+build_script:
+    - ps: >-
+        ./bootstrap.ps1
+
+        ./build.cmd Publish
+
 artifacts:
-- path: artifacts/*
-- path: '**/bin/*'
+    - path: artifacts/*
+    - path: '**/bin/*'
