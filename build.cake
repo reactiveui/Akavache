@@ -8,8 +8,9 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 
-#tool GitVersion.CommandLine
-#tool GitLink
+#tool "GitReleaseManager"
+#tool "GitVersion.CommandLine"
+#tool "GitLink"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -37,8 +38,7 @@ var isRunningOnAppVeyor = AppVeyor.IsRunningOnAppVeyor;
 var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
 var isRepository = StringComparer.OrdinalIgnoreCase.Equals("akavache/akavache", AppVeyor.Environment.Repository.Name);
 
-var isReleaseBranch = StringComparer.OrdinalIgnoreCase.Equals("release", AppVeyor.Environment.Repository.Branch);
-var isMasterBranch = StringComparer.OrdinalIgnoreCase.Equals("master", AppVeyor.Environment.Repository.Branch);
+var isReleaseBranch = StringComparer.OrdinalIgnoreCase.Equals("master", AppVeyor.Environment.Repository.Branch);
 var isTagged = AppVeyor.Environment.Repository.Tag.IsTag;
 
 var githubOwner = "akavache";
@@ -51,6 +51,7 @@ var majorMinorPatch = gitVersion.MajorMinorPatch;
 var semVersion = gitVersion.SemVer;
 var informationalVersion = gitVersion.InformationalVersion;
 var nugetVersion = gitVersion.NuGetVersion;
+var buildVersion = gitVersion.FullBuildMetaData;
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
@@ -84,7 +85,7 @@ Action<string, string> Package = (nuspec, basePath) =>
         Tags                     = new [] {  "Akavache", "Cache", "Xamarin", "Sqlite3", "Magic" },
         ReleaseNotes             = new [] { string.Format("{0}/releases", githubUrl) },
 
-        Symbols                  = true,
+        Symbols                  = false,
         Verbosity                = NuGetVerbosity.Detailed,
         OutputDirectory          = artifactDirectory,
         BasePath                 = basePath,
@@ -151,7 +152,7 @@ Task("UpdateAppVeyorBuildNumber")
     .WithCriteria(() => isRunningOnAppVeyor)
     .Does(() =>
 {
-    AppVeyor.UpdateBuildVersion(informationalVersion);
+    AppVeyor.UpdateBuildVersion(buildVersion);
 });
 
 Task("UpdateAssemblyInfo")
@@ -205,6 +206,12 @@ Task("PublishPackages")
     .WithCriteria(() => isRepository)
     .Does (() =>
 {
+    if (isReleaseBranch && !isTagged)
+    {
+        Information("Packages will not be published as this release has not been tagged.");
+        return;
+    }
+
     // Resolve the API key.
     var apiKey = EnvironmentVariable("NUGET_APIKEY");
     if (string.IsNullOrEmpty(apiKey))
@@ -223,18 +230,11 @@ Task("PublishPackages")
     {
         // only push the package which was created during this build run.
         var packagePath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".nupkg"));
-        var symbolsPath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".symbols.nupkg"));
 
         // Push the package.
         NuGetPush(packagePath, new NuGetPushSettings {
             Source = source,
             ApiKey = apiKey
-        });
-
-        // Push the symbols
-        NuGetPush(symbolsPath, new NuGetPushSettings {
-           Source = source,
-           ApiKey = apiKey
         });
     }
 });
@@ -275,7 +275,7 @@ Task("PublishRelease")
     .WithCriteria(() => !local)
     .WithCriteria(() => !isPullRequest)
     .WithCriteria(() => isRepository)
-    .WithCriteria(() => isMasterBranch)
+    .WithCriteria(() => isReleaseBranch)
     .WithCriteria(() => isTagged)
     .Does (() =>
 {
@@ -296,10 +296,8 @@ Task("PublishRelease")
     {
         // only push the package which was created during this build run.
         var packagePath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".nupkg"));
-        var symbolsPath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".symbols.nupkg"));
 
         GitReleaseManagerAddAssets(username, token, githubOwner, githubRepository, majorMinorPatch, packagePath);
-        GitReleaseManagerAddAssets(username, token, githubOwner, githubRepository, majorMinorPatch, symbolsPath); 
     }
 
     GitReleaseManagerClose(username, token, githubOwner, githubRepository, majorMinorPatch);
