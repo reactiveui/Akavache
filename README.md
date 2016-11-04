@@ -1,4 +1,5 @@
-## Akavache: An Asynchronous Key-Value Store for Native Applications
+## Akavache: An Asynchronous Key-Value Store for Native Applications [![Build status](https://ci.appveyor.com/api/projects/status/4kret7d2wqtd47dk/branch/akavache5-master?svg=true)](https://ci.appveyor.com/project/ghuntley/akavache/branch/akavache5-master)
+
 
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
 store created for writing desktop and mobile applications in C#, based on
@@ -11,12 +12,12 @@ settings) as well as cached local data that expires.
 
 Akavache is currently compatible with:
 
-* Xamarin.iOS / Xamarin.Mac 32-bit
+* Xamarin.iOS / Xamarin.Mac
 * Xamarin.Android
 * .NET 4.5 Desktop (WPF)
-* Windows Phone 8
 * WinRT (Windows Store)
 * Windows Phone 8.1 Universal Apps
+* Windows 10 (Universal Windows Platform)
 
 ### What does that mean?
 
@@ -40,15 +41,11 @@ added to support:
 
 ## Platform-specific notes
 
-* **Xamarin.iOS / Xamarin.Mac 32-bit** - No issues.
+* **Xamarin.iOS / Xamarin.Mac** - No issues.
 
 * **Xamarin.Android** - No issues.
 
 * **.NET 4.5 Desktop (WPF)** - No issues
-
-* **Windows Phone 8.0** - You must mark your application as `x86` or `ARM`, or
-  else you will get a strange runtime error about SQLitePCL_Raw not loading
-  correctly.
 
 * **WinRT (Windows Store)** - You must mark your application as `x86` or `ARM`, or
   else you will get a strange runtime error about SQLitePCL_Raw not loading
@@ -57,6 +54,11 @@ added to support:
   to the Store to support ARM.
 
 * **Windows Phone 8.1 Universal Apps** - You must mark your application as `x86`
+  or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
+  loading correctly. You must *also* ensure that the Microsoft Visual C++ runtime
+  is added to your project.
+
+* **Windows 10 (Universal Windows Platform)** - You must mark your application as `x86`
   or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
   loading correctly. You must *also* ensure that the Microsoft Visual C++ runtime
   is added to your project.
