@@ -12,6 +12,6 @@
     <summary>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</summary>
   </metadata>
   <files>
-    <file src="RELEASENOTES.MD"  />
+    <file src="LICENSE"  />
   </files>
 </package>

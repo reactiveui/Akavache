@@ -8,8 +8,9 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 
-#tool GitVersion.CommandLine
-#tool GitLink
+#tool "GitReleaseManager"
+#tool "GitVersion.CommandLine"
+#tool "GitLink"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -25,34 +26,38 @@ if (string.IsNullOrWhiteSpace(target))
 // PREPARATION
 //////////////////////////////////////////////////////////////////////
 
-// should MSBuild & GitLink treat any errors as warnings.
+// Should MSBuild & GitLink treat any errors as warnings?
 var treatWarningsAsErrors = false;
 
-// Get whether or not this is a local build.
+// Build configuration
 var local = BuildSystem.IsLocalBuild;
 var isRunningOnUnix = IsRunningOnUnix();
 var isRunningOnWindows = IsRunningOnWindows();
 
-//var isRunningOnBitrise = Bitrise.IsRunningOnBitrise;
 var isRunningOnAppVeyor = AppVeyor.IsRunningOnAppVeyor;
 var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
-
 var isRepository = StringComparer.OrdinalIgnoreCase.Equals("akavache/akavache", AppVeyor.Environment.Repository.Name);
 
-// Parse release notes.
-var releaseNotes = ParseReleaseNotes("RELEASENOTES.md");
+var isReleaseBranch = StringComparer.OrdinalIgnoreCase.Equals("master", AppVeyor.Environment.Repository.Branch);
+var isTagged = AppVeyor.Environment.Repository.Tag.IsTag;
 
-// Get version.
-var version = releaseNotes.Version.ToString();
-var epoch = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-var gitSha = GitVersion().Sha;
+var githubOwner = "akavache";
+var githubRepository = "akavache";
+var githubUrl = string.Format("https://github.com/{0}/{1}", githubOwner, githubRepository);
 
-var semVersion = local ? string.Format("{0}.{1}", version, epoch) : string.Format("{0}.{1}", version, epoch);
+// Version
+var gitVersion = GitVersion();
+var majorMinorPatch = gitVersion.MajorMinorPatch;
+var semVersion = gitVersion.SemVer;
+var informationalVersion = gitVersion.InformationalVersion;
+var nugetVersion = gitVersion.NuGetVersion;
+var buildVersion = gitVersion.FullBuildMetaData;
 
-// Define directories.
+// Artifacts
 var artifactDirectory = "./artifacts/";
+var packageWhitelist = new[] { "Akavache", "Akavache.Core", "Akavache.Deprecated", "Akavache.Mobile", "Akavache.Sqlite3" };
 
-// Define global marcos.
+// Macros
 Action Abort = () => { throw new Exception("a non-recoverable fatal error occurred."); };
 
 Action<string> RestorePackages = (solution) =>
@@ -70,17 +75,17 @@ Action<string, string> Package = (nuspec, basePath) =>
         Authors                  = new [] { "Paul Betts" },
         Owners                   = new [] { "paulcbetts" },
 
-        ProjectUrl               = new Uri("https://github.com/akavache/akavache/"),
+        ProjectUrl               = new Uri(githubUrl),
         IconUrl                  = new Uri("https://avatars0.githubusercontent.com/u/5924219?v=3&s=200"),
         LicenseUrl               = new Uri("https://opensource.org/licenses/MIT"),
         Copyright                = "Copyright (c) GitHub",
         RequireLicenseAcceptance = false,
 
-        Version                  = semVersion,
+        Version                  = nugetVersion,
         Tags                     = new [] {  "Akavache", "Cache", "Xamarin", "Sqlite3", "Magic" },
-        ReleaseNotes             = new List<string>(releaseNotes.Notes),
+        ReleaseNotes             = new [] { string.Format("{0}/releases", githubUrl) },
 
-        Symbols                  = true,
+        Symbols                  = false,
         Verbosity                = NuGetVerbosity.Detailed,
         OutputDirectory          = artifactDirectory,
         BasePath                 = basePath,
@@ -90,7 +95,7 @@ Action<string, string> Package = (nuspec, basePath) =>
 Action<string> SourceLink = (solutionFileName) =>
 {
     GitLink("./", new GitLinkSettings() {
-        RepositoryUrl = "https://github.com/akavache/akavache",
+        RepositoryUrl = githubUrl,
         SolutionFileName = solutionFileName,
         
         // nb: I would love to set this to `treatErrorsAsWarnings` which defaults to `false` but GitLink trips over Akavache.Tests :/
@@ -104,12 +109,12 @@ Action<string> SourceLink = (solutionFileName) =>
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
 ///////////////////////////////////////////////////////////////////////////////
-Setup(() =>
+Setup((context) =>
 {
-    Information("Building version {0} of Akavache.", semVersion);
+    Information("Building version {0} of Akavache. (isTagged: {1})", informationalVersion, isTagged);
 });
 
-Teardown(() =>
+Teardown((context) =>
 {
     // Executed AFTER the last task.
 });
@@ -123,10 +128,8 @@ Task("Build")
     .IsDependentOn("UpdateAssemblyInfo")
     .Does (() =>
 {
-    Action<string> build = (filename) =>
+    Action<string> build = (solution) =>
     {
-        var solution = System.IO.Path.Combine("./src/", filename);
-
         // UWP (project.json) needs to be restored before it will build.
         RestorePackages(solution);
 
@@ -142,14 +145,14 @@ Task("Build")
         SourceLink(solution);
     };
 
-    build("Akavache.sln");
+    build("./src/Akavache.sln");
 });
 
 Task("UpdateAppVeyorBuildNumber")
     .WithCriteria(() => isRunningOnAppVeyor)
     .Does(() =>
 {
-    AppVeyor.UpdateBuildVersion(semVersion);
+    AppVeyor.UpdateBuildVersion(buildVersion);
 });
 
 Task("UpdateAssemblyInfo")
@@ -160,9 +163,9 @@ Task("UpdateAssemblyInfo")
 
     CreateAssemblyInfo(file, new AssemblyInfoSettings {
         Product = "Akavache",
-        Version = version,
-        FileVersion = version,
-        InformationalVersion = semVersion,
+        Version = majorMinorPatch,
+        FileVersion = majorMinorPatch,
+        InformationalVersion = informationalVersion,
         Copyright = "Copyright (c) Paul Betts"
     });
 });
@@ -176,11 +179,11 @@ Task("RunUnitTests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    // XUnit2("./src/Akavache.Tests/bin/x64/Release/Akavache.Tests.dll", new XUnit2Settings {
-    //     OutputDirectory = artifactDirectory,
-    //     XmlReportV1 = false,
-    //     NoAppDomain = true
-    // });
+    XUnit2("./src/Akavache.Tests/bin/x64/Release/Akavache.Tests.dll", new XUnit2Settings {
+        OutputDirectory = artifactDirectory,
+        XmlReportV1 = false,
+        NoAppDomain = false // Akavache.Tests requires AppDomain otherwise it does not resolve System.Reactive.*
+    });
 });
 
 Task("Package")
@@ -195,7 +198,7 @@ Task("Package")
     Package("./src/Akavache.Sqlite3.nuspec", "./src/Akavache.Sqlite3");
 });
 
-Task("Publish")
+Task("PublishPackages")
     .IsDependentOn("RunUnitTests")
     .IsDependentOn("Package")
     .WithCriteria(() => !local)
@@ -203,6 +206,12 @@ Task("Publish")
     .WithCriteria(() => isRepository)
     .Does (() =>
 {
+    if (isReleaseBranch && !isTagged)
+    {
+        Information("Packages will not be published as this release has not been tagged.");
+        return;
+    }
+
     // Resolve the API key.
     var apiKey = EnvironmentVariable("NUGET_APIKEY");
     if (string.IsNullOrEmpty(apiKey))
@@ -217,25 +226,81 @@ Task("Publish")
     }
 
     // only push whitelisted packages.
-    foreach(var package in new[] { "Akavache", "Akavache.Core", "Akavache.Deprecated", "Akavache.Mobile", "Akavache.Sqlite3" })
+    foreach(var package in packageWhitelist)
     {
         // only push the package which was created during this build run.
-        var packagePath = artifactDirectory + File(string.Concat(package, ".", semVersion, ".nupkg"));
-        var symbolsPath = artifactDirectory + File(string.Concat(package, ".", semVersion, ".symbols.nupkg"));
+        var packagePath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".nupkg"));
 
         // Push the package.
         NuGetPush(packagePath, new NuGetPushSettings {
             Source = source,
             ApiKey = apiKey
         });
-
-        // Push the symbols
-        NuGetPush(symbolsPath, new NuGetPushSettings {
-           Source = source,
-           ApiKey = apiKey
-        });
-
     }
+});
+
+Task("CreateRelease")
+    .IsDependentOn("RunUnitTests")
+    .IsDependentOn("Package")
+    .WithCriteria(() => !local)
+    .WithCriteria(() => !isPullRequest)
+    .WithCriteria(() => isRepository)
+    .WithCriteria(() => isReleaseBranch)
+    .WithCriteria(() => !isTagged)
+    .Does (() =>
+{
+    var username = EnvironmentVariable("GITHUB_USERNAME");
+    if (string.IsNullOrEmpty(username))
+    {
+        throw new Exception("The GITHUB_USERNAME environment variable is not defined.");
+    }
+
+    var token = EnvironmentVariable("GITHUB_TOKEN");
+    if (string.IsNullOrEmpty(token))
+    {
+        throw new Exception("The GITHUB_TOKEN environment variable is not defined.");
+    }
+
+    GitReleaseManagerCreate(username, token, githubOwner, githubRepository, new GitReleaseManagerCreateSettings {
+        Milestone         = majorMinorPatch,
+        Name              = majorMinorPatch,
+        Prerelease        = true,
+        TargetCommitish   = "master"
+    });
+});
+
+Task("PublishRelease")
+    .IsDependentOn("RunUnitTests")
+    .IsDependentOn("Package")
+    .WithCriteria(() => !local)
+    .WithCriteria(() => !isPullRequest)
+    .WithCriteria(() => isRepository)
+    .WithCriteria(() => isReleaseBranch)
+    .WithCriteria(() => isTagged)
+    .Does (() =>
+{
+    var username = EnvironmentVariable("GITHUB_USERNAME");
+    if (string.IsNullOrEmpty(username))
+    {
+        throw new Exception("The GITHUB_USERNAME environment variable is not defined.");
+    }
+
+    var token = EnvironmentVariable("GITHUB_TOKEN");
+    if (string.IsNullOrEmpty(token))
+    {
+        throw new Exception("The GITHUB_TOKEN environment variable is not defined.");
+    }
+
+    // only push whitelisted packages.
+    foreach(var package in packageWhitelist)
+    {
+        // only push the package which was created during this build run.
+        var packagePath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".nupkg"));
+
+        GitReleaseManagerAddAssets(username, token, githubOwner, githubRepository, majorMinorPatch, packagePath);
+    }
+
+    GitReleaseManagerClose(username, token, githubOwner, githubRepository, majorMinorPatch);
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -243,9 +308,12 @@ Task("Publish")
 //////////////////////////////////////////////////////////////////////
 
 Task("Default")
-    .IsDependentOn("Publish")
+    .IsDependentOn("CreateRelease")
+    .IsDependentOn("PublishPackages")
+    .IsDependentOn("PublishRelease")
     .Does (() =>
 {
+
 });
 
 
