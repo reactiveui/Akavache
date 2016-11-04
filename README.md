@@ -1,4 +1,4 @@
-## Akavache: An Asynchronous Key-Value Store for Native Applications [![Build status](https://ci.appveyor.com/api/projects/status/4kret7d2wqtd47dk/branch/akavache5-master?svg=true)](https://ci.appveyor.com/project/ghuntley/akavache/branch/akavache5-master)
+## Akavache: An Asynchronous Key-Value Store for Native Applications [![Build status](https://ci.appveyor.com/api/projects/status/4kret7d2wqtd47dk/branch/master?svg=true)](https://ci.appveyor.com/project/ghuntley/akavache/branch/master)
 
 
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
@@ -15,7 +15,6 @@ Akavache is currently compatible with:
 * Xamarin.iOS / Xamarin.Mac
 * Xamarin.Android
 * .NET 4.5 Desktop (WPF)
-* WinRT (Windows Store)
 * Windows Phone 8.1 Universal Apps
 * Windows 10 (Universal Windows Platform)
 
@@ -46,12 +45,6 @@ added to support:
 * **Xamarin.Android** - No issues.
 
 * **.NET 4.5 Desktop (WPF)** - No issues
-
-* **WinRT (Windows Store)** - You must mark your application as `x86` or `ARM`, or
-  else you will get a strange runtime error about SQLitePCL_Raw not loading
-  correctly. You must *also* ensure that the Microsoft Visual C++ runtime is added
-  to your project. This means that you must submit several versions of your app
-  to the Store to support ARM.
 
 * **Windows Phone 8.1 Universal Apps** - You must mark your application as `x86`
   or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
