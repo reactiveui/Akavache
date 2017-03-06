@@ -85,6 +85,8 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Portable\IBlobCacheProvider.cs" />
+    <Compile Include="Portable\InMemoryBlobCacheProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="MD5.cs" />
@@ -123,9 +125,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <Folder Include="Portable\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>

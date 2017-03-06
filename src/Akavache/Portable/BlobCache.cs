@@ -167,6 +167,63 @@ namespace Akavache
             return ret.ToTask();
         }
 
+
+        /// <summary>
+        /// Returns a new ISecureBlobCache with every call. This is used to create a Secure Blob Cache
+        /// for you to use and manage from your own application
+        /// </summary> 
+        public static ISecureBlobCache SecureCreateNew()
+        {
+            return SecureCreateNew("secret.db");
+        }
+
+        /// <summary>
+        /// Returns a new ISecureBlobCache with every call. This is used to create a Secure Blob Cache
+        /// for you to use and manage from your own application
+        /// </summary> 
+        public static ISecureBlobCache SecureCreateNew(string fileName)
+        {
+            return Locator.Current.GetService<IBlobCacheProvider>().CreateSecure(fileName);
+        }
+
+
+        /// <summary>
+        /// Returns a new IBlobCache with every call. This is used to create a Local Blob Cache
+        /// for you to use and manage from your own application
+        /// </summary>
+        public static IBlobCache LocalMachineCreateNew()
+        {
+            return LocalMachineCreateNew("blobs.db");
+        }
+
+        /// <summary>
+        /// Returns a new IBlobCache with every call. This is used to create a Local Blob Cache
+        /// for you to use and manage from your own application
+        /// </summary>
+        public static IBlobCache LocalMachineCreateNew(string fileName)
+        {
+            return Locator.Current.GetService<IBlobCacheProvider>().CreateLocalMachine(fileName);
+        }
+
+
+        /// <summary>
+        /// Returns a new IBlobCache with every call. This is used to create a User Blob Cache
+        /// for you to use and manage from your own application
+        /// </summary>
+        public static IBlobCache UserAccountCreateNew()
+        {
+            return UserAccountCreateNew("userblobs.db");
+        }
+
+        /// <summary>
+        /// Returns a new IBlobCache with every call. This is used to create a User Blob Cache
+        /// for you to use and manage from your own application
+        /// </summary>
+        public static IBlobCache UserAccountCreateNew(string fileName)
+        {
+            return Locator.Current.GetService<IBlobCacheProvider>().CreateUserAccount(fileName);
+        }
+
 #if PORTABLE
         static IScheduler TaskpoolOverride;
         public static IScheduler TaskpoolScheduler 

@@ -153,8 +153,10 @@
     </Compile>
     <Compile Include="EncryptionProvider.cs" />
     <Compile Include="Portable\ExceptionHelper.cs" />
+    <Compile Include="Portable\IBlobCacheProvider.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\InMemoryBlobCache.cs" />
+    <Compile Include="Portable\InMemoryBlobCacheProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HttpMixin.cs" />
     <Compile Include="IsolatedStorageProvider.cs" />

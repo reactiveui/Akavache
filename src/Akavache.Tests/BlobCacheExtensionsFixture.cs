@@ -616,6 +616,52 @@ namespace Akavache.Tests
                 Assert.True(new FileInfo(dbPath).Length < size);
             }
         }
+
+
+        [Fact]
+        public void CreateLocalCache()
+        {
+            BlobCache.ApplicationName = "TestRunner";
+            var cache1 = (SQLitePersistentBlobCache)BlobCache.LocalMachineCreateNew();
+            var cache2 = (SQLitePersistentBlobCache)BlobCache.LocalMachineCreateNew();
+
+            Assert.Equal(BlobCache.LocalMachine, BlobCache.LocalMachine);
+            Assert.NotNull(cache1);
+            Assert.NotNull(cache2);
+            Assert.NotEqual(cache1, cache2);
+
+            Assert.True(cache1.Connection.DatabasePath.EndsWith("\\blobs.db"));
+        }
+
+        [Fact]
+        public void CreateSecureCache()
+        {
+            BlobCache.ApplicationName = "TestRunner";
+            var cache1 = (SQLitePersistentBlobCache)BlobCache.SecureCreateNew();
+            var cache2 = (SQLitePersistentBlobCache)BlobCache.SecureCreateNew();
+
+            Assert.Equal(BlobCache.Secure, BlobCache.Secure);
+            Assert.NotNull(cache1);
+            Assert.NotNull(cache2);
+            Assert.NotEqual(cache1, cache2);
+
+            Assert.True(cache1.Connection.DatabasePath.EndsWith("\\secret.db"));
+        }
+
+        [Fact]
+        public void CreateUserAccountCache()
+        {
+            BlobCache.ApplicationName = "TestRunner";
+            var cache1 = (SQLitePersistentBlobCache)BlobCache.UserAccountCreateNew();
+            var cache2 = (SQLitePersistentBlobCache)BlobCache.UserAccountCreateNew();
+
+            Assert.Equal(BlobCache.UserAccount, BlobCache.UserAccount);
+            Assert.NotNull(cache1);
+            Assert.NotNull(cache2);
+            Assert.NotEqual(cache1, cache2);
+
+            Assert.True(cache1.Connection.DatabasePath.EndsWith("\\userblobs.db"));
+        }
     }
 
     public class EncryptedSqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture

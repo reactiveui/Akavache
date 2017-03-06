@@ -96,9 +96,11 @@
     <Compile Include="Portable\ExceptionHelper.cs" />
     <Compile Include="Portable\HttpMixin.cs" />
     <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IBlobCacheProvider.cs" />
     <Compile Include="Portable\IEncryptionProvider.cs" />
     <Compile Include="Portable\IKeyedOperationQueue.cs" />
     <Compile Include="Portable\InMemoryBlobCache.cs" />
+    <Compile Include="Portable\InMemoryBlobCacheProvider.cs" />
     <Compile Include="Portable\JsonSerializationMixin.cs" />
     <Compile Include="Portable\KeyedOperationQueue.cs" />
     <Compile Include="Portable\LoginInfo.cs" />
