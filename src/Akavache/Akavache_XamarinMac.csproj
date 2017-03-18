@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1EF05CAB-AD19-489C-AC42-71C4B6507AE7}</ProjectGuid>
+    <ProjectTypeGuids>{A3F8F2AB-B479-4A4A-A458-A89E7DC349F1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Akavache</RootNamespace>
+    <AssemblyName>Akavache</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\Akavache\</SolutionDir>
+    <RestorePackages>false</RestorePackages>
+    <TargetFrameworkIdentifier>Xamarin.Mac</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\Xamarin.Mac10\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\Xamarin.Mac10\</IntermediateOutputPath>
+    <DefineConstants>DEBUG; TRACE; MONO; APPKIT; UNIFIED</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <UseSGen>false</UseSGen>
+    <UseRefCounting>false</UseRefCounting>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <OutputPath>bin\Release\Xamarin.Mac10\</OutputPath>
+    <IntermediateOutputPath>obj\Release\Xamarin.Mac10\</IntermediateOutputPath>
+    <DefineConstants>TRACE; MONO; APPKIT; UNIFIED</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <UseSGen>false</UseSGen>
+    <UseRefCounting>false</UseRefCounting>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="Mono.Posix" />
+    <Reference Include="Xamarin.Mac" />
+    <Reference Include="Splat">
+      <HintPath>..\packages\Splat.1.6.0\lib\Xamarin.Mac10\Splat.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>Properties\CommonAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="HttpMixin.cs" />
+    <Compile Include="MD5.cs" />
+    <Compile Include="MD5Managed.cs" />
+    <Compile Include="Registrations.cs" />
+    <Compile Include="SimpleFilesystemProvider.cs" />
+    <Compile Include="StreamMixins.cs" />
+    <Compile Include="Utility.cs" />
+    <Compile Include="Portable\IFilesystemProvider.cs" />
+    <Compile Include="Portable\BitmapImageExtensions.cs" />
+    <Compile Include="Portable\BlobCache.cs" />
+    <Compile Include="Portable\BulkOperationsMixin.cs" />
+    <Compile Include="Portable\ConcurrentDictionary.cs" />
+    <Compile Include="Portable\DependencyResolverMixin.cs" />
+    <Compile Include="Portable\HttpMixin.cs" />
+    <Compile Include="Portable\IBlobCache.cs" />
+    <Compile Include="Portable\IKeyedOperationQueue.cs" />
+    <Compile Include="Portable\JsonSerializationMixin.cs" />
+    <Compile Include="Portable\KeyedOperationQueue.cs" />
+    <Compile Include="Portable\LoginInfo.cs" />
+    <Compile Include="Portable\LoginMixin.cs" />
+    <Compile Include="Portable\RelativeTimeMixin.cs" />
+    <Compile Include="Portable\PortableUtility.cs" />
+    <Compile Include="MacFilesystemProvider.cs" />
+    <Compile Include="EncryptionProvider.cs" />
+    <Compile Include="ProtectDataShim.cs" />
+    <Compile Include="Portable\IEncryptionProvider.cs" />
+    <Compile Include="Portable\InMemoryBlobCache.cs" />
+    <Compile Include="Portable\ExceptionHelper.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <Folder Include="Portable\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
+</Project>
