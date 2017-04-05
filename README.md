@@ -146,7 +146,15 @@ You totally can. Just instantiate `SQLitePersistentBlobCache` or
 `SQLiteEncryptedBlobCache` instead - the static variables are there just to make it
 easier to get started.
 
+### DateTime/DateTimeOffset Considerations ###
 
+By default JSON.NET's BSON implementation writes `DateTime` as UTC and reads it back in local time.
+To override the reader's behavior you can set `BlobCache.ForcedDateTimeKind` as in the following example:
+
+```cs
+// Sets the reader to return DateTime/DateTimeOffset in UTC.
+BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+```
 
 ## Basic Method Documentation
 
