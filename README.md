@@ -65,14 +65,14 @@ Interacting with Akavache is primarily done through an object called
 #### Choose a location
 There are four build-in locations, that have some magic applied on some systems:
 
-* `BlobCache.LocalMachine` - Cached data. This data may gets deleted without notification.
-* `BlobCache.UserAccount` - User settings. Some system may 
+* `BlobCache.LocalMachine` - Cached data. This data may get deleted without notification.
+* `BlobCache.UserAccount` - User settings. Some systems backup this data to the cloud.
 * `BlobCache.Secure` - For saving sensitive data - like credentials.
 * `BlobCache.InMemory` - A database, kept in memory. The data is stored for the lifetime of the app. 
 
 #### The magic
 
-* **Xamarin.iOS** will may remove data, stored in `BlobCache.LocalMachine`, to free up disk space (only if your app is not running). The locations `BlobCache.UserAccount` and `BlobCache.Secure` will be backed up to iCloud and iTunes. (https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW1)
+* **Xamarin.iOS** may remove data, stored in `BlobCache.LocalMachine`, to free up disk space (only if your app is not running). The locations `BlobCache.UserAccount` and `BlobCache.Secure` will be backed up to iCloud and iTunes. (https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW1)
 * **Xamarin.Android** may also start deleting data, stored in `BlobCache.LocalMachine`, if the system runs out of disk space. It isn't clearly specified if your app could be running while the system is cleaning this up. (https://developer.android.com/reference/android/content/Context.html#getCacheDir%28%29)
 * **Windows 10 (UWP)** will replicate `BlobCache.UserAccount` and `BlobCache.Secure` to the cloud and synchronize it to all user devices on which the app is installed (https://msdn.microsoft.com/en-us/library/windows/apps/hh465094.aspx)
 
