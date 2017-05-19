@@ -232,7 +232,7 @@ namespace Akavache
 
             lock (cache)
             {
-                var toDelete = cache.Where(x => x.Value.ExpiresAt >= Scheduler.Now);
+                var toDelete = cache.Where(x => x.Value.ExpiresAt <= Scheduler.Now);
                 foreach (var kvp in toDelete) cache.Remove(kvp.Key);
             }
 
