@@ -221,7 +221,7 @@ namespace Akavache.Sqlite3.Internal
 		
 		static SQLiteConnection ()
 		{
-            SQLitePCL.Batteries.Init();
+            SQLitePCL.Batteries_V2.Init();
 
             if (_preserveDuringLinkMagic) {
 				var ti = new ColumnInfo ();
