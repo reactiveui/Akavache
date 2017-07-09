@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,26 +12,12 @@ using System.Threading.Tasks;
 using Splat;
 using System.Collections.Concurrent;
 
-#if SILVERLIGHT
-using Akavache.Internal;
-#endif
-
-#if SILVERLIGHT
-using System.Net.Browser;
-#endif
 
 namespace Akavache
 {
 
     public class AkavacheHttpMixin : IAkavacheHttpMixin
     {
-#if SILVERLIGHT
-        static AkavacheHttpMixin()
-        {
-            WebRequest.RegisterPrefix("http://", WebRequestCreator.ClientHttp);
-            WebRequest.RegisterPrefix("https://", WebRequestCreator.ClientHttp);
-        }
-#endif
 
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
@@ -109,7 +96,7 @@ namespace Akavache
         {
             IObservable<WebResponse> request;
 
-#if !SILVERLIGHT && !WINRT
+#if !WINDOWS_UWP
             if (ModeDetector.InUnitTestRunner())
             {
                 request = Observable.Defer(() =>

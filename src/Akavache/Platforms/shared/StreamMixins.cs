@@ -1,8 +1,9 @@
+
 using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
 
-#if WINRT
+#if WINDOWS_UWP
 using System.Reactive.Threading.Tasks;
 #endif
 
@@ -12,7 +13,7 @@ namespace System
     {
         public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
         {
-#if WINRT
+#if WINDOWS_UWP
             return This.WriteAsync(data, start, length).ToObservable();
 #else
             var ret = new AsyncSubject<Unit>();

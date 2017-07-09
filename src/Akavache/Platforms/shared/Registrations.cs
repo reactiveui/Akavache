@@ -1,16 +1,13 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Splat;
 
-#if UNIFIED
+#if COCOA
 using Foundation;
-#elif UIKIT
-using MonoTouch.Foundation;
-#elif APPKIT
-using MonoMac.Foundation;
 #endif
 
 #if ANDROID
@@ -23,18 +20,24 @@ namespace Akavache
     {
         public void Register(IMutableDependencyResolver resolver)
         {
-#if SILVERLIGHT || XAMARIN_MOBILE
+
+
+//TODO SHANE in theory all the types could just be FileSystemProvider
+//and then have no if defs
+#if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
-#elif WINRT
+#elif WINDOWS_UWP
             var fs = new WinRTFilesystemProvider();
+#elif COCOA
+            var fs = new MacFilesystemProvider();
+#elif ANDROID
+            var fs = new AndroidFilesystemProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
             resolver.Register(() => fs, typeof(IFilesystemProvider), null);
 
-#if WP8
-            var enc = new WP8EncryptionProvider();
-#elif WINRT
+#if WINDOWS_UWP
             var enc = new WinRTEncryptionProvider();
 #else
             var enc = new EncryptionProvider();
@@ -50,17 +53,14 @@ namespace Akavache
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
 
             resolver.Register(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
-          
-#if APPKIT || UIKIT
+
+#if COCOA
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
-            resolver.Register(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
 
 #if ANDROID
             var ai = Application.Context.PackageManager.GetApplicationInfo(Application.Context.PackageName, 0);
             BlobCache.ApplicationName = ai.LoadLabel(Application.Context.PackageManager);
-
-            resolver.Register(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
         }
     }

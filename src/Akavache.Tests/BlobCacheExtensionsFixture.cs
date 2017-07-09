@@ -9,7 +9,6 @@ using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using Newtonsoft.Json;
 using ReactiveUI;
-
 using ReactiveUI.Testing;
 using Xunit;
 using System.Threading;

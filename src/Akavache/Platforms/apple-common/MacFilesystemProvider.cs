@@ -3,14 +3,8 @@ using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive;
 using System.Reactive.Linq;
-
-#if UNIFIED
 using Foundation;
-#elif UIKIT
-using MonoTouch.Foundation;
-#else
-using MonoMac.Foundation;
-#endif
+
 
 namespace Akavache
 {

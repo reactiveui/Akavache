@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,7 @@ using System.Text;
 using System.Threading;
 using Splat;
 
-#if WINRT
+#if WINDOWS_UWP
 using System.Reactive.Windows.Foundation;
 using Windows.Storage;
 #endif
@@ -22,7 +23,7 @@ namespace Akavache
     {
         public static string GetMd5Hash(string input)
         {
-#if WINRT
+#if WINDOWS_UWP
             // NB: Technically, we could do this everywhere, but if we did this
             // upgrade, we may return different strings than we used to (i.e. 
             // formatting-wise), which would break old caches.
@@ -42,7 +43,7 @@ namespace Akavache
 #endif
         }
 
-#if !WINRT
+#if !WINDOWS_UWP
         public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
         {
             scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
@@ -70,11 +71,7 @@ namespace Akavache
                         return;
                     }
 
-#if SILVERLIGHT
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096), scheduler).Select(x => (Stream)x).Subscribe(ret);
-#else
                     Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
-#endif
                 }
                 catch (Exception ex)
                 {
@@ -133,7 +130,7 @@ namespace Akavache
 
         public static IObservable<Unit> CopyToAsync(this Stream This, Stream destination, IScheduler scheduler = null)
         {
-#if WINRT
+#if WINDOWS_UWP
             return This.CopyToAsync(destination).ToObservable()
                 .Do(x =>
                 {
