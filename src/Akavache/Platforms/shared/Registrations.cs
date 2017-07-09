@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,18 +19,10 @@ namespace Akavache
     {
         public void Register(IMutableDependencyResolver resolver)
         {
-
-
-//TODO SHANE in theory all the types could just be FileSystemProvider
-//and then have no if defs
 #if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
 #elif WINDOWS_UWP
             var fs = new WinRTFilesystemProvider();
-#elif COCOA
-            var fs = new MacFilesystemProvider();
-#elif ANDROID
-            var fs = new AndroidFilesystemProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
@@ -56,11 +47,14 @@ namespace Akavache
 
 #if COCOA
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
+            resolver.Register(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
 
 #if ANDROID
             var ai = Application.Context.PackageManager.GetApplicationInfo(Application.Context.PackageName, 0);
             BlobCache.ApplicationName = ai.LoadLabel(Application.Context.PackageManager);
+
+            resolver.Register(() => new AndroidFilesystemProvider(), typeof(IFilesystemProvider), null);
 #endif
         }
     }
