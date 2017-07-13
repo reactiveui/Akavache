@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net452</TargetFrameworks>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,12 +12,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="1.9.2" />
+    <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.console" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Splat" Version="2.0.0" />
     <PackageReference Include="System.Reactive" Version="3.1.1" />
+    <PackageReference Include="reactiveui" Version="7.5.0-alpha0030" />
+    <PackageReference Include="reactiveui-testing" Version="7.5.0-alpha0030" />
+    <PackageReference Include="System.Reactive.Interfaces" Version="3.1.1" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.v110_xp" Version="1.1.7" />
   </ItemGroup>
 
 
@@ -32,6 +38,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
     <ProjectReference Include="..\Akavache\Akavache.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup> 
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
