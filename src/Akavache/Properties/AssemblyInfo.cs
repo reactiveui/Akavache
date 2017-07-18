@@ -4,6 +4,4 @@ using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("Akavache.Tests")]
 [assembly: InternalsVisibleTo("Akavache.Sqlite3")]
-[assembly: InternalsVisibleTo("Akavache.Mac")]
 [assembly: InternalsVisibleTo("Akavache.Mobile")]
-[assembly: InternalsVisibleTo("Akavache.Deprecated")]
