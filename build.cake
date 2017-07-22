@@ -3,6 +3,8 @@
 //////////////////////////////////////////////////////////////////////
 
 #addin "Cake.FileHelpers"
+#addin "Cake.Coveralls"
+#addin "Cake.PinNuGetDependency"
 
 //////////////////////////////////////////////////////////////////////
 // TOOLS
@@ -10,7 +12,10 @@
 
 #tool "GitReleaseManager"
 #tool "GitVersion.CommandLine"
-#tool "GitLink"
+#tool "coveralls.io"
+#tool "OpenCover"
+#tool "ReportGenerator"
+#tool nuget:?package=vswhere
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -31,13 +36,10 @@ var treatWarningsAsErrors = false;
 
 // Build configuration
 var local = BuildSystem.IsLocalBuild;
-var isRunningOnUnix = IsRunningOnUnix();
-var isRunningOnWindows = IsRunningOnWindows();
-
-var isRunningOnAppVeyor = AppVeyor.IsRunningOnAppVeyor;
 var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
 var isRepository = StringComparer.OrdinalIgnoreCase.Equals("akavache/akavache", AppVeyor.Environment.Repository.Name);
 
+var isDevelopBranch = StringComparer.OrdinalIgnoreCase.Equals("develop", AppVeyor.Environment.Repository.Branch);
 var isReleaseBranch = StringComparer.OrdinalIgnoreCase.Equals("master", AppVeyor.Environment.Repository.Branch);
 var isTagged = AppVeyor.Environment.Repository.Tag.IsTag;
 
@@ -48,63 +50,16 @@ var githubUrl = string.Format("https://github.com/{0}/{1}", githubOwner, githubR
 // Version
 var gitVersion = GitVersion();
 var majorMinorPatch = gitVersion.MajorMinorPatch;
-var semVersion = gitVersion.SemVer;
 var informationalVersion = gitVersion.InformationalVersion;
 var nugetVersion = gitVersion.NuGetVersion;
 var buildVersion = gitVersion.FullBuildMetaData;
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
-var packageWhitelist = new[] { "Akavache", "Akavache.Core", "Akavache.Deprecated", "Akavache.Mobile", "Akavache.Sqlite3" };
+var packageWhitelist = new[] { "Akavache", "Akavache-Core", "Akavache-Mobile", "Akavache-Sqlite3" };
 
 // Macros
 Action Abort = () => { throw new Exception("a non-recoverable fatal error occurred."); };
-
-Action<string> RestorePackages = (solution) =>
-{
-    NuGetRestore(solution);
-};
-
-Action<string, string> Package = (nuspec, basePath) =>
-{
-    CreateDirectory(artifactDirectory);
-
-    Information("Packaging {0} using {1} as the BasePath.", nuspec, basePath);
-
-    NuGetPack(nuspec, new NuGetPackSettings {
-        Authors                  = new [] { "Paul Betts" },
-        Owners                   = new [] { "paulcbetts" },
-
-        ProjectUrl               = new Uri(githubUrl),
-        IconUrl                  = new Uri("https://avatars0.githubusercontent.com/u/5924219?v=3&s=200"),
-        LicenseUrl               = new Uri("https://opensource.org/licenses/MIT"),
-        Copyright                = "Copyright (c) GitHub",
-        RequireLicenseAcceptance = false,
-
-        Version                  = nugetVersion,
-        Tags                     = new [] {  "Akavache", "Cache", "Xamarin", "Sqlite3", "Magic" },
-        ReleaseNotes             = new [] { string.Format("{0}/releases", githubUrl) },
-
-        Symbols                  = false,
-        Verbosity                = NuGetVerbosity.Detailed,
-        OutputDirectory          = artifactDirectory,
-        BasePath                 = basePath,
-    });
-};
-
-Action<string> SourceLink = (solutionFileName) =>
-{
-    GitLink("./", new GitLinkSettings() {
-        RepositoryUrl = githubUrl,
-        SolutionFileName = solutionFileName,
-        
-        // nb: I would love to set this to `treatErrorsAsWarnings` which defaults to `false` but GitLink trips over Akavache.Tests :/
-        // Handling project 'Akavache.Tests'
-        //   No pdb file found for 'Akavache.Tests', is project built in 'Release' mode with pdb files enabled? Expected file is 'C:\Dropbox\OSS\akavache\Akavache\src\Akavache.Tests\Akavache.Tests.pdb'
-        ErrorsAsWarnings = true, 
-    });
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
@@ -112,6 +67,7 @@ Action<string> SourceLink = (solutionFileName) =>
 Setup((context) =>
 {
     Information("Building version {0} of Akavache. (isTagged: {1})", informationalVersion, isTagged);
+    CreateDirectory(artifactDirectory);
 });
 
 Teardown((context) =>
@@ -122,80 +78,88 @@ Teardown((context) =>
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
+Task("UpdateAppVeyorBuildNumber")
+    .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
+    .Does(() =>
+{
+    AppVeyor.UpdateBuildVersion(buildVersion);
+
+}).ReportError(exception =>
+{  
+    // When a build starts, the initial identifier is an auto-incremented value supplied by AppVeyor. 
+    // As part of the build script, this version in AppVeyor is changed to be the version obtained from
+    // GitVersion. This identifier is purely cosmetic and is used by the core team to correlate a build
+    // with the pull-request. In some circumstances, such as restarting a failed/cancelled build the
+    // identifier in AppVeyor will be already updated and default behaviour is to throw an
+    // exception/cancel the build when in fact it is safe to swallow.
+    // See https://github.com/reactiveui/ReactiveUI/issues/1262
+
+    Warning("Build with version {0} already exists.", buildVersion);
+});
+
 
 Task("Build")
-    .IsDependentOn("RestorePackages")
-    .IsDependentOn("UpdateAssemblyInfo")
     .Does (() =>
 {
     Action<string> build = (solution) =>
     {
-        // UWP (project.json) needs to be restored before it will build.
-        RestorePackages(solution);
-
         Information("Building {0}", solution);
 
-        MSBuild(solution, new MSBuildSettings()
-            .SetConfiguration("Release")
-            .WithProperty("NoWarn", "1591") // ignore missing XML doc warnings
+		FilePath msBuildPath = VSWhereLatest().CombineWithFilePath("./MSBuild/15.0/Bin/MSBuild.exe");
+
+        MSBuild(solution, new MSBuildSettings() {
+                ToolPath= msBuildPath
+            }
+            .WithTarget("restore;pack")
+            .WithProperty("PackageOutputPath",  MakeAbsolute(Directory(artifactDirectory)).ToString())
             .WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
+            .SetConfiguration("Release")
+            // Due to https://github.com/NuGet/Home/issues/4790 and https://github.com/NuGet/Home/issues/4337 we
+            // have to pass a version explicitly
+            .WithProperty("Version", nugetVersion.ToString())
             .SetVerbosity(Verbosity.Minimal)
             .SetNodeReuse(false));
-
-        SourceLink(solution);
+			 
     };
 
     build("./src/Akavache.sln");
-});
-
-Task("UpdateAppVeyorBuildNumber")
-    .WithCriteria(() => isRunningOnAppVeyor)
-    .Does(() =>
-{
-    AppVeyor.UpdateBuildVersion(buildVersion);
-});
-
-Task("UpdateAssemblyInfo")
-    .IsDependentOn("UpdateAppVeyorBuildNumber")
-    .Does (() =>
-{
-    var file = "./src/CommonAssemblyInfo.cs";
-
-    CreateAssemblyInfo(file, new AssemblyInfoSettings {
-        Product = "Akavache",
-        Version = majorMinorPatch,
-        FileVersion = majorMinorPatch,
-        InformationalVersion = informationalVersion,
-        Copyright = "Copyright (c) Paul Betts"
-    });
-});
-
-Task("RestorePackages").Does (() =>
-{
-    RestorePackages("./src/Akavache.sln");
 });
 
 Task("RunUnitTests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    XUnit2("./src/Akavache.Tests/bin/x64/Release/Akavache.Tests.dll", new XUnit2Settings {
-        OutputDirectory = artifactDirectory,
-        XmlReportV1 = false,
-        NoAppDomain = false // Akavache.Tests requires AppDomain otherwise it does not resolve System.Reactive.*
-    });
+
+	 Action<ICakeContext> testAction = tool => {
+
+        tool.XUnit2("./src/Akavache.Tests/bin/x64/Release/Akavache.Tests.dll", new XUnit2Settings {
+            OutputDirectory = artifactDirectory,
+            XmlReportV1 = true,
+            NoAppDomain = true
+        });
+    };
 });
 
 Task("Package")
     .IsDependentOn("Build")
     .IsDependentOn("RunUnitTests")
+    .IsDependentOn("PinNuGetDependencies")
     .Does (() =>
 {
-    Package("./src/Akavache.nuspec", "./");
-    Package("./src/Akavache.Core.nuspec", "./src/Akavache");
-    Package("./src/Akavache.Deprecated.nuspec", "./src/Akavache.Deprecated");
-    Package("./src/Akavache.Mobile.nuspec", "./src/Akavache.Mobile");
-    Package("./src/Akavache.Sqlite3.nuspec", "./src/Akavache.Sqlite3");
+});
+
+Task("PinNuGetDependencies")
+    .Does (() =>
+{
+    // only pin whitelisted packages.
+    foreach(var package in packageWhitelist)
+    {
+        // only pin the package which was created during this build run.
+        var packagePath = artifactDirectory + File(string.Concat(package, ".", nugetVersion, ".nupkg"));
+
+        // see https://github.com/cake-contrib/Cake.PinNuGetDependency
+        PinNuGetDependency(packagePath, "akavache");
+    }
 });
 
 Task("PublishPackages")
@@ -204,6 +168,7 @@ Task("PublishPackages")
     .WithCriteria(() => !local)
     .WithCriteria(() => !isPullRequest)
     .WithCriteria(() => isRepository)
+    .WithCriteria(() => isDevelopBranch || isReleaseBranch)
     .Does (() =>
 {
     if (isReleaseBranch && !isTagged)
@@ -308,6 +273,7 @@ Task("PublishRelease")
 //////////////////////////////////////////////////////////////////////
 
 Task("Default")
+    .IsDependentOn("UpdateAppVeyorBuildNumber")
     .IsDependentOn("CreateRelease")
     .IsDependentOn("PublishPackages")
     .IsDependentOn("PublishRelease")
