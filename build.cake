@@ -56,7 +56,7 @@ var buildVersion = gitVersion.FullBuildMetaData;
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
-var packageWhitelist = new[] { "Akavache", "Akavache-Core", "Akavache-Mobile", "Akavache-Sqlite3" };
+var packageWhitelist = new[] { "Akavache-Core", "Akavache-Mobile", "Akavache-Sqlite3" };
 
 // Macros
 Action Abort = () => { throw new Exception("a non-recoverable fatal error occurred."); };

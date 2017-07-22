@@ -26,8 +26,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Mobile", "Akavache
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AkavachePkg", "AkavachePkg\AkavachePkg.csproj", "{56CF485D-087D-45C2-B706-1B62D10CF366}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,14 +66,6 @@ Global
 		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Release|Any CPU.Build.0 = Release|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{56CF485D-087D-45C2-B706-1B62D10CF366}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
