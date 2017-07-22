@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>MonoAndroid70</TargetFrameworks>
+    <TargetFrameworks>netstandard1.1</TargetFrameworks>
     <AssemblyName>Akavache.Mobile</AssemblyName>
     <RootNamespace>Akavache.Mobile</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
