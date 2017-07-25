@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <Copyright>Copyright (c) Akavache and contributors</Copyright>
+    <PackageLicenseUrl>http://opensource.org/licenses/ms-pl</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/akavache/Akavache</PackageProjectUrl>
+    <PackageIconUrl>https://i.imgur.com/7WDbqSy.png</PackageIconUrl>
+    <Authors>Akavache contributors</Authors>
+    <Owners>xpaulbettsx;flagbug;ghuntley;haacked;kent.boogaart;mteper;moswald;niik;onovotny;rdavisau;shiftkey</Owners>
+    <PackageTags>mvvm;Akavache;Rx;Reactive Extensions;Observable;LINQ;Events;xamarin;android;ios;forms;monodroid;monotouch;xamarin.android;xamarin.ios;xamarin.forms;wpf;winforms;uwp;winrt;net45;netcore;wp;wpdev;windowsphone;windowsstore</PackageTags>
+    <PackageReleaseNotes>https://github.com/akavache/Akavache/releases</PackageReleaseNotes>
+
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>
+
+    <Platform>AnyCPU</Platform>
+    <DebugType>full</DebugType>
+    <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.0.5" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.1.1" PrivateAssets="All" /> 
+  </ItemGroup>
+</Project>
