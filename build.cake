@@ -56,7 +56,7 @@ var buildVersion = gitVersion.FullBuildMetaData;
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
-var packageWhitelist = new[] { "Akavache", "Akavache-Core", "Akavache-Mobile", "Akavache-Sqlite3" };
+var packageWhitelist = new[] { "Akavache", "Akavache-Mobile", "Akavache-Sqlite3" };
 
 // Macros
 Action Abort = () => { throw new Exception("a non-recoverable fatal error occurred."); };
@@ -106,6 +106,8 @@ Task("Build")
         Information("Building {0}", solution);
 
 		FilePath msBuildPath = VSWhereLatest().CombineWithFilePath("./MSBuild/15.0/Bin/MSBuild.exe");
+		NuGetRestore(solution, new NuGetRestoreSettings() { ConfigFile = "./src/.nuget/NuGet.config" });
+
 
         MSBuild(solution, new MSBuildSettings() {
                 ToolPath= msBuildPath

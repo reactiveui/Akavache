@@ -1,6 +1,3 @@
-//TODO Shane 
-#if !WINDOWS_UWP
-
 using System;
 using System.IO;
 using System.Reactive;
@@ -64,5 +61,3 @@ namespace Akavache
         }
     }
 }
-
-#endif
