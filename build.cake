@@ -57,6 +57,7 @@ var buildVersion = gitVersion.FullBuildMetaData;
 // Artifacts
 var artifactDirectory = "./artifacts/";
 var packageWhitelist = new[] { "Akavache", "Akavache-Mobile", "Akavache-Sqlite3" };
+var testCoverageOutputFile = artifactDirectory + "OpenCover.xml";
 
 // Macros
 Action Abort = () => { throw new Exception("a non-recoverable fatal error occurred."); };
@@ -104,7 +105,6 @@ Task("Build")
     Action<string> build = (solution) =>
     {
         Information("Building {0}", solution);
-
 		FilePath msBuildPath = VSWhereLatest().CombineWithFilePath("./MSBuild/15.0/Bin/MSBuild.exe");
 		NuGetRestore(solution, new NuGetRestoreSettings() { ConfigFile = "./src/.nuget/NuGet.config" });
 
@@ -131,15 +131,28 @@ Task("RunUnitTests")
     .IsDependentOn("Build")
     .Does(() =>
 {
+	
 
 	 Action<ICakeContext> testAction = tool => {
 
-        tool.XUnit2("./src/Akavache.Tests/bin/x64/Release/Akavache.Tests.dll", new XUnit2Settings {
-            OutputDirectory = artifactDirectory,
-            XmlReportV1 = true,
-            NoAppDomain = true
-        });
+        tool.XUnit2("./src/Akavache.Tests/bin/**/*.Tests.dll", new XUnit2Settings {
+			OutputDirectory = artifactDirectory,
+			XmlReportV1 = true,
+			NoAppDomain = true
+		});
     };
+
+    OpenCover(testAction,
+        testCoverageOutputFile,
+        new OpenCoverSettings {
+            ReturnTargetCodeOffset = 0,
+            ArgumentCustomization = args => args.Append("-mergeoutput")
+        }
+        .WithFilter("+[*]* -[*.Tests*]* -[Splat*]*")
+        .ExcludeByAttribute("*.ExcludeFromCodeCoverage*")
+        .ExcludeByFile("*/*Designer.cs;*/*.g.cs;*/*.g.i.cs;*splat/splat*"));
+
+    ReportGenerator(testCoverageOutputFile, artifactDirectory);
 });
 
 Task("Package")
