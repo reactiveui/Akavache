@@ -22,8 +22,6 @@
   test: off
   
 # configuration for "develop" branch
-
-  image: Visual Studio 2017
   configuration: Development
   branches:
       except:
