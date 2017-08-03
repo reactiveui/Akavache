@@ -1,7 +1,7 @@
 # configuration for "master" branch
 -
-  image: Visual Studio 2017
   configuration: Release
+  image: Visual Studio 2017
   branches:
       only:
         - master
@@ -22,10 +22,13 @@
   test: off
   
 # configuration for "develop" branch
+-
   configuration: Development
+  image: Visual Studio 2017
   branches:
       except:
           - master
+          
   version: 1.0.{build}
   environment:
     NUGET_SOURCE: https://www.myget.org/F/akavache/api/v2/package
@@ -42,3 +45,4 @@
 # no "branches" section defined
 # do not deploy at all
 -
+  configuration: Development
