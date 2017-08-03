@@ -138,7 +138,7 @@ Task("RunUnitTests")
         tool.XUnit2("./src/Akavache.Tests/bin/**/*.Tests.dll", new XUnit2Settings {
 			OutputDirectory = artifactDirectory,
 			XmlReportV1 = true,
-			NoAppDomain = true
+			NoAppDomain = false
 		});
     };
 
