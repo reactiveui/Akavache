@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -9,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Splat;
-using Akavache.Internal;
 
 namespace Akavache
 {
