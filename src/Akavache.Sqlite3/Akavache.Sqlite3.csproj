@@ -18,11 +18,10 @@
     <RestorePackages>true</RestorePackages>
     <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile111</TargetFrameworkProfile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AsyncLock.cs" />
-    <Compile Include="BlockingCollection.cs" />
     <Compile Include="OperationQueue.cs" />
     <Compile Include="Operations.cs" />
     <Compile Include="..\CommonAssemblyInfo.cs">
