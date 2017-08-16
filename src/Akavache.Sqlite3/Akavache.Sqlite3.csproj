@@ -22,7 +22,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AsyncLock.cs" />
-    <Compile Include="BlockingCollection.cs" />
     <Compile Include="OperationQueue.cs" />
     <Compile Include="Operations.cs" />
     <Compile Include="..\CommonAssemblyInfo.cs">
