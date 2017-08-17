@@ -106,16 +106,15 @@ Task("Build")
     {
         Information("Building {0}", solution);
 		FilePath msBuildPath = VSWhereLatest().CombineWithFilePath("./MSBuild/15.0/Bin/MSBuild.exe");
-		NuGetRestore(solution, new NuGetRestoreSettings() { ConfigFile = "./src/.nuget/NuGet.config" });
 
 
         MSBuild(solution, new MSBuildSettings() {
                 ToolPath= msBuildPath
             }
-            .WithTarget("restore;pack")
+            .WithTarget("restore;build;pack")
             .WithProperty("PackageOutputPath",  MakeAbsolute(Directory(artifactDirectory)).ToString())
             .WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
-            .SetConfiguration("Release")
+            .SetConfiguration("Release")          
             // Due to https://github.com/NuGet/Home/issues/4790 and https://github.com/NuGet/Home/issues/4337 we
             // have to pass a version explicitly
             .WithProperty("Version", nugetVersion.ToString())
@@ -135,7 +134,7 @@ Task("RunUnitTests")
 
 	 Action<ICakeContext> testAction = tool => {
 
-        tool.XUnit2("./src/Akavache.Tests/bin/**/*.Tests.dll", new XUnit2Settings {
+        tool.XUnit2("./src/Akavache.Tests/bin/Release/**/*.Tests.dll", new XUnit2Settings {
 			OutputDirectory = artifactDirectory,
 			XmlReportV1 = true,
 			NoAppDomain = false
