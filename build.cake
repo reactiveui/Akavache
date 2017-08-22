@@ -46,6 +46,7 @@ var isTagged = AppVeyor.Environment.Repository.Tag.IsTag;
 var githubOwner = "akavache";
 var githubRepository = "akavache";
 var githubUrl = string.Format("https://github.com/{0}/{1}", githubOwner, githubRepository);
+var msBuildPath = VSWhereLatest().CombineWithFilePath("./MSBuild/15.0/Bin/MSBuild.exe");
 
 // Version
 var gitVersion = GitVersion();
@@ -67,7 +68,7 @@ Action Abort = () => { throw new Exception("a non-recoverable fatal error occurr
 ///////////////////////////////////////////////////////////////////////////////
 Setup((context) =>
 {
-    Information("Building version {0} of Akavache. (isTagged: {1})", informationalVersion, isTagged);
+    Information("Building version {0} of Akavache. (isTagged: {1}) Nuget Version {2}", informationalVersion, isTagged, nugetVersion);
     CreateDirectory(artifactDirectory);
 });
 
@@ -105,7 +106,6 @@ Task("Build")
     Action<string> build = (solution) =>
     {
         Information("Building {0}", solution);
-		FilePath msBuildPath = VSWhereLatest().CombineWithFilePath("./MSBuild/15.0/Bin/MSBuild.exe");
 
 
         MSBuild(solution, new MSBuildSettings() {
@@ -155,11 +155,56 @@ Task("RunUnitTests")
 });
 
 Task("Package")
-    .IsDependentOn("Build")
-    .IsDependentOn("RunUnitTests")
-    .IsDependentOn("PinNuGetDependencies")
+   .IsDependentOn("Build")
+   .IsDependentOn("RunUnitTests")
+   .IsDependentOn("PinNuGetDependencies")
     .Does (() =>
 {
+
+    var  integrationPathRoot = "tests/NuGetInstallationIntegrationTests/";
+    var allfiles = 
+        System.IO.Directory.GetFiles(integrationPathRoot, "*.csproj", System.IO.SearchOption.AllDirectories)
+            .Concat(System.IO.Directory.GetFiles(integrationPathRoot, "project.json", System.IO.SearchOption.AllDirectories));
+
+    var replacementString = "REPLACEME-AKAVACHE-VERSION";
+    List<string> replacedFiles = new List<string>();
+
+    try
+    {
+        foreach(var file in allfiles)
+        {
+            var fileContents = System.IO.File.ReadAllText(file);
+            if(fileContents.IndexOf(replacementString) >= 0)
+            {
+                fileContents = fileContents.Replace(replacementString, nugetVersion.ToString());         
+                System.IO.File.WriteAllText(file, fileContents);
+                replacedFiles.Add(file);
+            }
+        }
+        
+        
+        NuGetRestore(integrationPathRoot + "NuGetInstallationIntegrationTests.sln", 
+            new NuGetRestoreSettings() { 
+                ConfigFile = integrationPathRoot + @".nuget/Nuget.config",
+                PackagesDirectory = integrationPathRoot + "packages" });
+
+
+        MSBuild(integrationPathRoot + "NuGetInstallationIntegrationTests.sln", new MSBuildSettings() {
+                    ToolPath= msBuildPath
+                }
+        .SetConfiguration("Debug"));
+
+    }
+    finally
+    {
+         foreach(var file in replacedFiles)
+        {
+            var fileContents = System.IO.File.ReadAllText(file);            
+            fileContents = fileContents.Replace(nugetVersion.ToString(), replacementString);         
+            System.IO.File.WriteAllText(file, fileContents);
+        }
+    }
+
 });
 
 Task("PinNuGetDependencies")
