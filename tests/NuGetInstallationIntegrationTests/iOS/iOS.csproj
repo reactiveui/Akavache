@@ -99,7 +99,7 @@
     <Reference Include="Xamarin.iOS" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="akavache-sqlite3">
+    <PackageReference Include="akavache">
       <Version>REPLACEME-AKAVACHE-VERSION</Version>
     </PackageReference>
   </ItemGroup>

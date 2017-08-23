@@ -57,7 +57,7 @@ var buildVersion = gitVersion.FullBuildMetaData;
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
-var packageWhitelist = new[] { "Akavache", "Akavache-Mobile", "Akavache-Sqlite3" };
+var packageWhitelist = new[] { "Akavache", "Akavache.Mobile", "Akavache.Sqlite3", "Akavache.Core" };
 var testCoverageOutputFile = artifactDirectory + "OpenCover.xml";
 
 // Macros

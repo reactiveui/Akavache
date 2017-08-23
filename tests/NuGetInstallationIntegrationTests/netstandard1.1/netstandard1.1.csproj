@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="akavache-sqlite3" Version="REPLACEME-AKAVACHE-VERSION" />
+    <PackageReference Include="akavache" Version="REPLACEME-AKAVACHE-VERSION" />
   </ItemGroup>
 
 </Project>
