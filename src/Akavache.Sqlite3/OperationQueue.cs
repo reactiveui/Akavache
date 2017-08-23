@@ -14,6 +14,7 @@ using System.Threading;
 using Akavache.Sqlite3.Internal;
 using SQLitePCL;
 using Splat;
+using System.Collections.Concurrent;
 
 using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 
