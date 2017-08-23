@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.1;net452;uap10.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid70</TargetFrameworks>
-    <AssemblyName>Akavache</AssemblyName>
+    <AssemblyName>Akavache.Core</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
-    <PackageId>akavache</PackageId>
+    <PackageId>akavache.core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

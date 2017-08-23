@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9407D902-E9CF-4CB6-B601-77CDF74B9475}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,13 +12,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Rebracer.xml = Rebracer.xml
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache", "Akavache\Akavache.csproj", "{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Core", "Akavache.Core\Akavache.Core.csproj", "{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Sqlite3", "Akavache.Sqlite3\Akavache.Sqlite3.csproj", "{B5B161A0-5D64-4845-9234-FA24DA300236}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Mobile", "Akavache.Mobile\Akavache.Mobile.csproj", "{D002EE26-219B-4182-92D2-39B4A21FA615}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache", "Akavache\Akavache.csproj", "{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,8 +62,19 @@ Global
 		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {90907D23-7F59-41C3-8FCD-3402C9B66143}
 	EndGlobalSection
 EndGlobal

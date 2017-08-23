@@ -5,7 +5,7 @@
     <AssemblyName>Akavache.Mobile</AssemblyName>
     <RootNamespace>Akavache.Mobile</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
-    <PackageId>akavache-mobile</PackageId>
+    <PackageId>akavache.mobile</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akavache\Akavache.csproj" />
+    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
   
   
