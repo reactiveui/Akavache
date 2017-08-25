@@ -1,6 +1,7 @@
 # configuration for "master" branch
 -
   configuration: Release
+  image: Visual Studio 2017
   branches:
       only:
         - master
@@ -14,10 +15,7 @@
     NUGET_APIKEY:
       secure: 0g2AqQxgiAIFhqoJbbmEPrJa15Z8U5xYT6vQe43Gocuxbjw74hBAIKbU+Cj65UNd
   build_script:
-  - ps: >-
-      ./bootstrap.ps1
-
-      ./build.cmd
+  - ./build.cmd
   artifacts:
   - path: artifacts/*
   - path: '**/bin/*'
@@ -26,6 +24,7 @@
 # configuration for "develop" branch
 -
   configuration: Development
+  image: Visual Studio 2017
   branches:
       except:
           - master
@@ -36,10 +35,7 @@
     NUGET_APIKEY:
       secure: YP/3KxC2ffsuHNaolPXj66JVGzSjON9FcR2S2OEzn9c6SV14oPzUh1ySyeT+G+aA
   build_script:
-  - ps: >-
-      ./bootstrap.ps1
-
-      ./build.cmd
+  - ./build.cmd
   artifacts:
   - path: artifacts/*
   - path: '**/bin/*'

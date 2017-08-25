@@ -235,7 +235,11 @@ _Pvt_Extensions
 # Tools
 tools/
 
-# ReactiveUI
+# Akavache
 artifacts/
 src/CommonAssemblyInfo.cs
 src/ReactiveUI.Events/Events_*.cs
+
+# NugetIntegrationTests
+tests/NuGetInstallationIntegrationTests/Android/t/**/*
+tests/NuGetInstallationIntegrationTests/XamarinFormsApp/XamarinFormsApp.Android/t/**/*

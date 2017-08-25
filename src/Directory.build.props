@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <Copyright>Copyright (c) GitHub</Copyright>
+    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/akavache/Akavache</PackageProjectUrl>
+    <PackageIconUrl>https://avatars0.githubusercontent.com/u/5924219?v=3&amp;s=200</PackageIconUrl>
+    <Authors>Paul Betts</Authors>
+    <Owners>paulcbetts</Owners>
+    <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>
+    <PackageReleaseNotes>https://github.com/akavache/Akavache/releases</PackageReleaseNotes>
+
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>
+
+    <Platform>AnyCPU</Platform>
+    <DebugType>full</DebugType>
+    <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.0.6" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.1.2" PrivateAssets="All" /> 
+  </ItemGroup>
+</Project>

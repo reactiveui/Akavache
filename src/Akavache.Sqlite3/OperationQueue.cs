@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -15,6 +14,7 @@ using System.Threading;
 using Akavache.Sqlite3.Internal;
 using SQLitePCL;
 using Splat;
+using System.Collections.Concurrent;
 
 using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 

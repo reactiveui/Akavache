@@ -198,7 +198,7 @@ namespace Akavache.Sqlite3.Internal
 
             Sqlite3DatabaseHandle handle;
 
-#if SILVERLIGHT || USE_CSHARP_SQLITE || USE_SQLITEPCL_RAW
+#if USE_CSHARP_SQLITE || USE_SQLITEPCL_RAW
             var r = SQLite3.Open (databasePath, out handle, (int)openFlags, IntPtr.Zero);
 #else
 			// open using the byte[]
@@ -1012,8 +1012,6 @@ namespace Akavache.Sqlite3.Internal
 					if (0 <= depth && depth < _transactionDepth) {
 #if NETFX_CORE || USE_SQLITEPCL_RAW
                         Volatile.Write (ref _transactionDepth, depth);
-#elif SILVERLIGHT
-						_transactionDepth = depth;
 #else
                         Thread.VolatileWrite (ref _transactionDepth, depth);
 #endif
@@ -2736,12 +2734,8 @@ namespace Akavache.Sqlite3.Internal
 #else
 					} else if (mem.Member is FieldInfo) {
 #endif
-#if SILVERLIGHT
-						val = Expression.Lambda (expr).Compile ().DynamicInvoke ();
-#else
 						var m = (FieldInfo)mem.Member;
 						val = m.GetValue (obj);
-#endif
 					} else {
 #if !USE_NEW_REFLECTION_API
 						throw new NotSupportedException ("MemberExpr: " + mem.Member.MemberType);
