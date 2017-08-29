@@ -163,8 +163,7 @@ Task("Package")
 
     var  integrationPathRoot = "tests/NuGetInstallationIntegrationTests/";
     var allfiles = 
-        System.IO.Directory.GetFiles(integrationPathRoot, "*.csproj", System.IO.SearchOption.AllDirectories)
-            .Concat(System.IO.Directory.GetFiles(integrationPathRoot, "project.json", System.IO.SearchOption.AllDirectories));
+        System.IO.Directory.GetFiles(integrationPathRoot, "*.csproj", System.IO.SearchOption.AllDirectories);
 
     var replacementString = "REPLACEME-AKAVACHE-VERSION";
     List<string> replacedFiles = new List<string>();
