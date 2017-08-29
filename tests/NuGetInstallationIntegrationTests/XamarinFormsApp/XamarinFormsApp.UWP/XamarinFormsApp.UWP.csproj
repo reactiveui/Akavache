@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -20,6 +20,8 @@
     <PackageCertificateKeyFile>XamarinFormsApp.UWP_TemporaryKey.pfx</PackageCertificateKeyFile>
     <SignAssembly>true</SignAssembly>
     <PackageCertificateThumbprint>AA412E400765E59A505033420CF588DD19A39EA1</PackageCertificateThumbprint>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -92,7 +94,6 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="project.json" />
     <None Include="XamarinFormsApp.UWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +159,11 @@
       <Project>{07d5c21f-f7b5-44b6-92f8-47aa7c257ac8}</Project>
       <Name>XamarinFormsApp</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="5.0.0.1478269438" />
+    <PackageReference Include="Xamarin.Forms" Version="2.3.4.267" />
+    <PackageReference Include="akavache" Version="REPLACEME-AKAVACHE-VERSION" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
