@@ -2,9 +2,9 @@
 // ADDINS
 //////////////////////////////////////////////////////////////////////
 
-#addin "nuget:?package=Cake.FileHelpers&version=2.0.0"
-#addin "nuget:?package=Cake.Coveralls&version=0.7.0"
-#addin "nuget:?package=Cake.PinNuGetDependency&version=1.0.0"
+#addin "nuget:?package=Cake.FileHelpers&version=1.0.4"
+#addin "nuget:?package=Cake.Coveralls&version=0.4.0"
+#addin "nuget:?package=Cake.PinNuGetDependency&version=0.1.0.1495792899"
 
 //////////////////////////////////////////////////////////////////////
 // TOOLS
