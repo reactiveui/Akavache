@@ -40,12 +40,12 @@
 
 
   <ItemGroup>
-    <Content Include="contentFiles\cs\any\AkavacheSqliteLinkerOverride.cs.pp">
-      <PackagePath>contentFiles\cs\any\</PackagePath>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="content\AkavacheSqliteLinkerOverride.cs.pp">
       <PackagePath>content\</PackagePath>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="contentFiles\cs\any\AkavacheSqliteLinkerOverride.cs.pp">
+      <PackagePath>contentFiles\cs\any\</PackagePath>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
