@@ -94,7 +94,7 @@ namespace Akavache.Tests.Performance
             using (var cache = await GenerateAGiantDatabase(dirPath))
             {
                 var keys = await cache.GetAllKeys();
-                dbName = dbName ?? cache.GetType().Name;
+                dbName = cache.GetType().Name;
 
                 foreach (var size in PerfHelper.GetPerfRanges())
                 {
