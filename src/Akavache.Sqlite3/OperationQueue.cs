@@ -70,11 +70,11 @@ namespace Akavache.Sqlite3
             if (start != null) return start;
 
             shouldQuit = new CancellationTokenSource();
-            var task = new Task(async () => 
+            async Task StartTask()
             {
                 var toProcess = new List<OperationQueueItem>();
 
-                while (!shouldQuit.IsCancellationRequested) 
+                while (!shouldQuit.IsCancellationRequested)
                 {
                     toProcess.Clear();
 
@@ -96,11 +96,11 @@ namespace Akavache.Sqlite3
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
                         var item = default(OperationQueueItem);
-                        try 
+                        try
                         {
                             item = operationQueue.Take(shouldQuit.Token);
-                        } 
-                        catch (OperationCanceledException) 
+                        }
+                        catch (OperationCanceledException)
                         {
                             break;
                         }
@@ -111,15 +111,15 @@ namespace Akavache.Sqlite3
                         if (shouldQuit.IsCancellationRequested && item == null) break;
 
                         toProcess.Add(item);
-                        while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) 
+                        while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item))
                         {
                             toProcess.Add(item);
                         }
 
-                        try 
+                        try
                         {
                             ProcessItems(CoalesceOperations(toProcess));
-                        } 
+                        }
                         catch (SQLiteException)
                         {
                             // NB: If ProcessItems Failed, it explicitly means 
@@ -130,9 +130,8 @@ namespace Akavache.Sqlite3
                         }
                     }
                 }
-            }, TaskCreationOptions.LongRunning);
-
-            task.Start();
+            }
+            var task = StartTask();
 
             return (start = Disposable.Create(() => 
             {
