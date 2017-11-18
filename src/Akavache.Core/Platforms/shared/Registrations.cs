@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Splat;
+using Splat; 
 
 #if COCOA
 using Foundation;
@@ -15,6 +15,7 @@ using Android.App;
 
 namespace Akavache.Core
 {
+    [Preserve]
     public class Registrations : IWantsToRegisterStuff
     {
         public void Register(IMutableDependencyResolver resolver)

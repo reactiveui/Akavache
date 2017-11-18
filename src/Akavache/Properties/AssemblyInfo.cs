@@ -1,3 +1,3 @@
-﻿using Akavache.Sqlite3;
+﻿using Akavache.Core;
 
 [assembly: Preserve]

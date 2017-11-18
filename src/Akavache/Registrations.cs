@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using Splat;
+using Akavache.Sqlite3;
+using Akavache.Core;
 
 namespace Akavache
 {
+    [Preserve]
     public class Registrations : IWantsToRegisterStuff
     {
         public void Register(IMutableDependencyResolver resolverToUse)

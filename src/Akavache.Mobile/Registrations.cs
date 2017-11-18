@@ -8,9 +8,11 @@ using Splat;
 using System.Reactive;
 using ReactiveUI;
 using System.Reactive.Concurrency;
+using Akavache.Core;
 
 namespace Akavache.Mobile
 {
+    [Preserve]
     public class Registrations : IWantsToRegisterStuff
     {
         public void Register(IMutableDependencyResolver resolver)
