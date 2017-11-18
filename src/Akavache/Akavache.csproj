@@ -4,7 +4,6 @@
     <TargetFrameworks>netstandard1.1</TargetFrameworks>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
     <PackageId>akavache</PackageId>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +11,10 @@
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.8" />
+  </ItemGroup>
+  
    <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 
 </Project>

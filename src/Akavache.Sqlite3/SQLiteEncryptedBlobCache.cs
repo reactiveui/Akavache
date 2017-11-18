@@ -9,7 +9,7 @@ using Splat;
 
 namespace Akavache.Sqlite3
 {
-    public class SQLiteEncryptedBlobCache : SQLitePersistentBlobCache, ISecureBlobCache
+    public class SQLiteEncryptedBlobCache : SqlRawPersistentBlobCache, ISecureBlobCache
     {
         private readonly IEncryptionProvider encryption;
 

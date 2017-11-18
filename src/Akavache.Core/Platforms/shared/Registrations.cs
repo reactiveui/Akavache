@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Splat;
+using Splat; 
 
 #if COCOA
 using Foundation;
@@ -13,8 +13,9 @@ using Foundation;
 using Android.App;
 #endif
 
-namespace Akavache
+namespace Akavache.Core
 {
+    [Preserve]
     public class Registrations : IWantsToRegisterStuff
     {
         public void Register(IMutableDependencyResolver resolver)
@@ -44,7 +45,7 @@ namespace Akavache
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
 
             resolver.Register(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
-
+             
 #if COCOA
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
             resolver.Register(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);

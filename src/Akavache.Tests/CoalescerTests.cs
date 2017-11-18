@@ -165,7 +165,7 @@ namespace Akavache.Tests
 
             using (Utility.WithEmptyDirectory(out path))
             {
-                using (var cache = new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")))
+                using (var cache = new SqlRawPersistentBlobCache(Path.Combine(path, "sqlite.db")))
                 {
                     var queue = new SqliteOperationQueue(cache.Connection, BlobCache.TaskpoolScheduler);
                     var request = queue.Select(new[] { "Foo" });
