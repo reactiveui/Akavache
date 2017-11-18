@@ -219,10 +219,9 @@ namespace Akavache.Sqlite3.Internal
 			BusyTimeout = TimeSpan.FromSeconds (0.1);
 		}
 		
-		static SQLiteConnection ()
-		{
-            SQLitePCL.Batteries_V2.Init();
 
+		static SQLiteConnection ()
+		{ 
             if (_preserveDuringLinkMagic) {
 				var ti = new ColumnInfo ();
 				ti.Name = "magic";
@@ -3316,4 +3315,5 @@ namespace Akavache.Sqlite3.Internal
 			Null = 5
 		}
 	}
+
 }

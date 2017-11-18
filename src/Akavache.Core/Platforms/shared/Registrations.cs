@@ -13,7 +13,7 @@ using Foundation;
 using Android.App;
 #endif
 
-namespace Akavache
+namespace Akavache.Core
 {
     public class Registrations : IWantsToRegisterStuff
     {
@@ -44,7 +44,7 @@ namespace Akavache
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
 
             resolver.Register(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
-
+             
 #if COCOA
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
             resolver.Register(() => new MacFilesystemProvider(), typeof(IFilesystemProvider), null);
