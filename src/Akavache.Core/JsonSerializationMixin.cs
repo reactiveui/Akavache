@@ -198,6 +198,8 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <param name="shouldInvalidateOnError">If this is true, the cache will
         /// be cleared when an exception occurs in fetchFunc</param>
+        /// <param name="cacheValidationPredicate">An optional Func to determine
+        /// if the fetched value should be cached.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version)</returns>
         public static IObservable<T> GetAndFetchLatest<T>(this IBlobCache This,
@@ -205,7 +207,8 @@ namespace Akavache
             Func<IObservable<T>> fetchFunc,
             Func<DateTimeOffset, bool> fetchPredicate = null,
             DateTimeOffset? absoluteExpiration = null,
-            bool shouldInvalidateOnError = false)
+            bool shouldInvalidateOnError = false,
+            Func<T, bool> cacheValidationPredicate = null)
         {
             var fetch = Observable.Defer(() => This.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
@@ -221,8 +224,14 @@ namespace Akavache
                     });
 
                     return fetchObs
-                        .SelectMany(x => This.InvalidateObject<T>(key).Select(__ => x))
-                        .SelectMany(x => This.InsertObject<T>(key, x, absoluteExpiration).Select(__ => x));
+                        .SelectMany(x =>
+                            cacheValidationPredicate != null && !cacheValidationPredicate(x)
+                                ? Observable.Return(default(T))
+                                : This.InvalidateObject<T>(key).Select(__ => x))
+                        .SelectMany(x =>
+                            cacheValidationPredicate != null && !cacheValidationPredicate(x)
+                                ? Observable.Return(default(T))
+                                : This.InsertObject<T>(key, x, absoluteExpiration).Select(__ => x));
                 });
 
             var result = This.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
