@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.1;net452;uap10.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid70</TargetFrameworks>
+    <TargetFrameworks>netstandard1.1;net452;uap10.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid70;tizen40</TargetFrameworks>
     <AssemblyName>Akavache</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
@@ -63,6 +63,12 @@
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'tizen40' ">
+    <Compile Include="Platforms\tizen\**\*.cs" />
+    <Compile Include="Platforms\xamarin-common\**\*.cs" />
+    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
+  </ItemGroup>
+    
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 
 </Project>
