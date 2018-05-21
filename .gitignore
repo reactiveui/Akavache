@@ -70,6 +70,7 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+*.binlog
 
 # Chutzpah Test files
 _Chutzpah*
@@ -238,8 +239,13 @@ tools/
 # Akavache
 artifacts/
 src/CommonAssemblyInfo.cs
-src/ReactiveUI.Events/Events_*.cs
 
 # NugetIntegrationTests
 tests/NuGetInstallationIntegrationTests/Android/t/**/*
 tests/NuGetInstallationIntegrationTests/XamarinFormsApp/XamarinFormsApp.Android/t/**/*
+
+# macOS
+.DS_Store
+
+src/*.Tests/API/*.received.txt
+.idea/
