@@ -50,32 +50,3 @@ steps:
     artifactType: container
     artifactName: Packages
   condition: eq(variables['system.pullrequest.isfork'], false)
-
-- task: CopyFiles@2
-  inputs:
-    Contents: '**/*.binlog'
-    TargetFolder: '$(build.artifactstagingdirectory)\binlogs'
-    flattenFolders: true
-  condition: eq(variables['system.pullrequest.isfork'], false)
-
-- task: PublishBuildArtifacts@1
-  displayName: Publish Logs
-  inputs:
-    pathToPublish: '$(build.artifactstagingdirectory)\binlogs'
-    artifactType: container
-    artifactName: Logs
-  condition: eq(variables['system.pullrequest.isfork'], false)
-
-- task: CopyFiles@2
-  inputs:
-    Contents: '**/bin/*'
-    TargetFolder: '$(build.artifactstagingdirectory)\binaries'
-  condition: eq(variables['system.pullrequest.isfork'], false)
-
-- task: PublishBuildArtifacts@1
-  displayName: Publish Binaries
-  inputs:
-    pathToPublish: '$(build.artifactstagingdirectory)\binaries'
-    artifactType: container
-    artifactName: Binaries
-  condition: eq(variables['system.pullrequest.isfork'], false)
