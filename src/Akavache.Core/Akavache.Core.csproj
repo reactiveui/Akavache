@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.1;net452;uap10.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid70</TargetFrameworks>
-    <AssemblyName>Akavache</AssemblyName>
+		<TargetFrameworks>netstandard2.0;net461;uap10.0.16299;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0</TargetFrameworks>
+		<AssemblyName>Akavache</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
     <PackageId>akavache.core</PackageId>
@@ -11,12 +11,12 @@
     <Compile Remove="Platforms\**\*.cs" />
     <None Include="Platforms\**\*.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Splat" Version="2.0.0" />
-    <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
+		<PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
+		<PackageReference Include="Splat" Version="4.0.0" />
   </ItemGroup>
   
- <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.1' ">
-    <Compile Include="Platforms\netstandard1.1\**\*.cs" />
+ <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <Compile Include="Platforms\netstandard2.0\**\*.cs" />
     <PackageReference Include="System.ComponentModel" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
@@ -24,23 +24,23 @@
   </ItemGroup>
 
 
-  <ItemGroup Condition="'$(TargetFramework)'!='netstandard1.1' And '$(TargetFramework)' != 'uap10.0'">
+  <ItemGroup Condition="'$(TargetFramework)'!='netstandard2.0' And '$(TargetFramework)' != 'uap10.0.16299'">
     <Compile Include="Platforms\shared-not-uwp\**\*.cs" />
   </ItemGroup>
   
   
-  <ItemGroup Condition="'$(TargetFramework)'!='netstandard1.1'">
+  <ItemGroup Condition="'$(TargetFramework)'!='netstandard2.0'">
     <Compile Include="Platforms\shared\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <Compile Include="Platforms\windows-common\**\*.cs" />
-    <Compile Include="Platforms\wpf\**\*.cs" />
+    <Compile Include="Platforms\net461\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0.16299' ">
     <Compile Include="Platforms\windows-common\**\*.cs" />
-    <Compile Include="Platforms\uap10.0\**\*.cs" />
+    <Compile Include="Platforms\uap10.0.16299\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'Xamarin.iOS10' ">
@@ -48,7 +48,8 @@
     <Compile Include="Platforms\ios\**\*.cs" />
     <Compile Include="Platforms\xamarin-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-  </ItemGroup>
+		<Reference Include="System.Runtime.Serialization" />
+	</ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'Xamarin.Mac20' ">
     <Compile Include="Platforms\apple-common\**\*.cs" />
@@ -57,11 +58,17 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'MonoAndroid70' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'MonoAndroid80' ">
     <Compile Include="Platforms\android\**\*.cs" />
     <Compile Include="Platforms\xamarin-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-  </ItemGroup>
+		<Reference Include="System.Runtime.Serialization" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
+		<Compile Include="Platforms\netcoreapp2.0\**\*.cs" />
+		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+	</ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 
