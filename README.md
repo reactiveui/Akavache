@@ -102,6 +102,20 @@ Toaster toaster;
 BlobCache.UserAccount.GetObject<Toaster>("toaster")
     .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"));
 ```
+### Handling Xamarin Linker
+
+Add the following class anywhere in your project to make sure Akavache.Sqlite3 will not be linked out by Xamarin
+
+```cs
+public static class LinkerPreserve
+{
+  static LinkerPreserve()
+  {
+    var persistentName = typeof(SQLitePersistentBlobCache).FullName;
+    var encryptedName = typeof(SQLiteEncryptedBlobCache).FullName;
+  }
+}
+```
 
 ### Handling Errors
 
