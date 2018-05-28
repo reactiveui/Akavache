@@ -89,7 +89,7 @@ Task("Build")
 
         MSBuild(solution, new MSBuildSettings() {
                 ToolPath = msBuildPath,
-                ArgumentCustomization = args => args.Append("/bl:akavache-build-" + name + ".binlog /m /restore")
+                ArgumentCustomization = args => args.Append("/m /restore")
             }
 			
             .WithTarget("build;pack") 

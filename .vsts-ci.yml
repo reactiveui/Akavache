@@ -12,7 +12,7 @@ steps:
     arguments: -no_logo
     modifyEnvironment: true
   displayName: Setup Environment Variables
-    
+
 - task: NuGetToolInstaller@0
   displayName: Use NuGet 4.6.2
   inputs:
@@ -49,4 +49,18 @@ steps:
     pathToPublish: '$(build.artifactstagingdirectory)\packages'
     artifactType: container
     artifactName: Packages
+  condition: eq(variables['system.pullrequest.isfork'], false)
+
+- task: CopyFiles@2
+  inputs:
+    Contents: '**\bin\**'
+    TargetFolder: '$(build.artifactstagingdirectory)\binaries'
+  condition: eq(variables['system.pullrequest.isfork'], false)
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Binaries
+  inputs:
+    pathToPublish: '$(build.artifactstagingdirectory)\binaries'
+    artifactType: container
+    artifactName: Binaries
   condition: eq(variables['system.pullrequest.isfork'], false)
