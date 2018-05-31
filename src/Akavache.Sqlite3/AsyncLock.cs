@@ -7,7 +7,8 @@ namespace Akavache.Sqlite3.Internal
     // Straight-up thieved from http://www.hanselman.com/blog/ComparingTwoTechniquesInNETAsynchronousCoordinationPrimitives.aspx 
     public sealed class AsyncLock
     {
-        readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+        const int semaphoreMaxCount = 1;
+        readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, semaphoreMaxCount);
         readonly Task<IDisposable> m_releaser;
 
         public AsyncLock()
@@ -33,7 +34,11 @@ namespace Akavache.Sqlite3.Internal
         {
             readonly AsyncLock m_toRelease;
             internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }
-            public void Dispose() { m_toRelease.m_semaphore.Release(); }
+            public void Dispose() 
+            {
+                if(m_toRelease.m_semaphore.CurrentCount != semaphoreMaxCount)
+                    m_toRelease.m_semaphore.Release(); 
+            }
         }
     }
 }
