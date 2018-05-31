@@ -36,7 +36,7 @@ namespace Akavache.Sqlite3.Internal
             internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }
             public void Dispose() 
             {
-                if(m_toRelease.m_semaphore.CurrentCount != semaphoreMaxCount)
+                if (m_toRelease.m_semaphore.CurrentCount != semaphoreMaxCount)
                     m_toRelease.m_semaphore.Release(); 
             }
         }
