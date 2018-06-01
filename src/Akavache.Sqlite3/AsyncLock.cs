@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reactive.Disposables;
 
 namespace Akavache.Sqlite3.Internal
 {
     // Straight-up thieved from http://www.hanselman.com/blog/ComparingTwoTechniquesInNETAsynchronousCoordinationPrimitives.aspx 
     public sealed class AsyncLock
     {
-        const int semaphoreMaxCount = 1;
-        readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, semaphoreMaxCount);
+        readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         readonly Task<IDisposable> m_releaser;
 
         public AsyncLock()
         {
-            m_releaser = Task.FromResult((IDisposable)new Releaser(this));
+            m_releaser = Task.FromResult(Disposable.Create(() => m_semaphore.Release()));
         }
 
         public Task<IDisposable> LockAsync(CancellationToken ct = default(CancellationToken))
@@ -28,17 +28,6 @@ namespace Akavache.Sqlite3.Internal
                 .ContinueWith((_, state) => (IDisposable)state,
                     m_releaser.Result, ct,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-        }
-
-        sealed class Releaser : IDisposable
-        {
-            readonly AsyncLock m_toRelease;
-            internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }
-            public void Dispose() 
-            {
-                if (m_toRelease.m_semaphore.CurrentCount != semaphoreMaxCount)
-                    m_toRelease.m_semaphore.Release(); 
-            }
         }
     }
 }
