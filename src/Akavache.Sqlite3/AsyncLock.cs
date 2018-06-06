@@ -13,7 +13,7 @@ namespace Akavache.Sqlite3.Internal
 
         public AsyncLock()
         {
-            m_releaser = Task.FromResult(Disposable.Create(() => m_semaphore.Release()));
+            m_releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
         public Task<IDisposable> LockAsync(CancellationToken ct = default(CancellationToken))
@@ -21,13 +21,20 @@ namespace Akavache.Sqlite3.Internal
             var wait = m_semaphore.WaitAsync(ct);
 
             // Happy path. We synchronously acquired the lock.
-            if (wait.IsCompleted && !wait.IsFaulted)
+            if (wait.IsCompleted && !wait.IsFaulted && !wait.IsCanceled)
                 return m_releaser;
-
+            
             return wait
-                .ContinueWith((_, state) => (IDisposable)state,
+                .ContinueWith((_, state) => (_.IsCanceled) ? null : (IDisposable)state,
                     m_releaser.Result, ct,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        sealed class Releaser : IDisposable 
+        {  
+            readonly AsyncLock m_toRelease;    
+            internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }    
+            public void Dispose() { m_toRelease.m_semaphore.Release(); }   
         }
     }
 }
