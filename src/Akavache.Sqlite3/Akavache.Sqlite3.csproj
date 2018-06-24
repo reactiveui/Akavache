@@ -17,11 +17,10 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.11" />
     <PackageReference Include="SQLitePCLRaw.core" Version="1.1.11" />
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-		<PackageReference Include="System.Reactive" Version="4.0.0" />
-		<PackageReference Include="Splat" Version="5.1.4" />
+	<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+	<PackageReference Include="System.Reactive" Version="4.0.0" />
+	<PackageReference Include="Splat" Version="5.1.4" />
   </ItemGroup>
   
   <ItemGroup>
@@ -32,10 +31,6 @@
     <None Remove="PerformanceGraphs.xlsx" />
     <None Remove="sqlite-ng-notes.md" />
     <None Remove="sqlite3-hint.txt" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
 
 
@@ -48,6 +43,11 @@
       <PackagePath>contentFiles\cs\any\</PackagePath>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
