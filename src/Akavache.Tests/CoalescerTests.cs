@@ -15,7 +15,7 @@ namespace Akavache.Tests
     public class CoalescerTests
     {
         [Fact]
-        public void SingleItem()
+        public async Task SingleItem()
         {
             var fixture = new SqliteOperationQueue();
             fixture.Select(new[] { "Foo" });
@@ -36,6 +36,7 @@ namespace Akavache.Tests
             Assert.Equal(0, output.Count);
             outSub.OnNext(new[] { new CacheElement() { Key = "Foo" } });
             outSub.OnCompleted();
+            await Task.Delay(500);
             Assert.Equal(1, output.Count);
         }
 
