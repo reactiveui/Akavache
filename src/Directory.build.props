@@ -10,6 +10,8 @@
     <PackageReleaseNotes>https://github.com/akavache/Akavache/releases</PackageReleaseNotes>
 
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <RepositoryUrl>https://github.com/reactiveui/Akavache</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>
 
     <Platform>AnyCPU</Platform>
