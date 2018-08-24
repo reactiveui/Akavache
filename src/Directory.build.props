@@ -8,23 +8,22 @@
     <Owners>paulcbetts</Owners>
     <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>
     <PackageReleaseNotes>https://github.com/akavache/Akavache/releases</PackageReleaseNotes>
-
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <RepositoryUrl>https://github.com/reactiveui/Akavache</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile Condition=" '$(Configuration)' == 'Release' ">true</GenerateDocumentationFile>
 
     <Platform>AnyCPU</Platform>
-    <DebugType>full</DebugType>
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Nerdbank.GitVersioning" Version="2.1.23" PrivateAssets="all" />
+		<PackageReference Include="Nerdbank.GitVersioning" Version="2.2.3" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" /> 
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All"/>
 	</ItemGroup>
 
   <PropertyGroup>
