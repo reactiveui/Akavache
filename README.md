@@ -1,4 +1,4 @@
-## Akavache: An Asynchronous Key-Value Store for Native Applications [![Build status](https://ci.appveyor.com/api/projects/status/4kret7d2wqtd47dk/branch/master?svg=true)](https://ci.appveyor.com/project/ghuntley/akavache/branch/master)
+## Akavache: An Asynchronous Key-Value Store for Native Applications [![Build Status](https://dotnetfoundation.visualstudio.com/ReactiveUI/_apis/build/status/Akavache-CI)](https://dotnetfoundation.visualstudio.com/ReactiveUI/_build/latest?definitionId=25)
 
 
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
