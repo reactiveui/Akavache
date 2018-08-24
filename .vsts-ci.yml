@@ -46,7 +46,7 @@ steps:
     SignClientUser: $(SignClientUser)
     SignClientSecret: $(SignClientSecret)
     ArtifactDirectory: $(Build.ArtifactStagingDirectory)\Packages
-  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+  condition: and(and(succeeded(), eq(variables['system.pullrequest.isfork'], false)), not(eq(variables['SignClientSecret'], '')))
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
