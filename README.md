@@ -127,13 +127,13 @@ you would want to return a default value instead of failing:
 Toaster toaster;
 
 try {
-    toaster = await BlobCache.UserAccount.GetObjectAsync("toaster");
+    toaster = await BlobCache.UserAccount.GetObject("toaster");
 } catch (KeyNotFoundException ex) {
     toaster = new Toaster();
 }
 
 // Or without async/await:
-toaster = await BlobCache.UserAccount.GetObjectAsync<Toaster>("toaster")
+toaster = await BlobCache.UserAccount.GetObject<Toaster>("toaster")
     .Catch(Observable.Return(new Toaster()));
 ```
 
