@@ -25,16 +25,16 @@ namespace Akavache.Sqlite3.Internal
                 return m_releaser;
             
             return wait
-                .ContinueWith((_, state) => (_.IsCanceled) ? null : (IDisposable)state,
+                .ContinueWith((task, state) => (task.IsCanceled) ? null : (IDisposable)state,
                     m_releaser.Result, ct,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        sealed class Releaser : IDisposable 
-        {  
-            readonly AsyncLock m_toRelease;    
-            internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }    
-            public void Dispose() { m_toRelease.m_semaphore.Release(); }   
+        sealed class Releaser : IDisposable
+        {
+            readonly AsyncLock m_toRelease;
+            internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }
+            public void Dispose() { m_toRelease.m_semaphore.Release(); }
         }
     }
 }
