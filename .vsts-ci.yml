@@ -12,27 +12,22 @@ steps:
     arguments: -no_logo
     modifyEnvironment: true
   displayName: Setup Environment Variables
-    
-- task: NuGetToolInstaller@0
-  displayName: Use NuGet 4.6.2
-  inputs:
-    versionSpec: 4.6.2
 
-- task: DotNetCoreCLI@2
+- task: DotNetCoreCLI@2  
   inputs:
-    command: build
-    projects: script/setversion.csproj
-    arguments: -c Release 
+    command: custom
+    custom: tool
+    arguments: install --tool-path . nbgv
+  displayName: Install NBGV tool
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- script: nbgv cloud
   displayName: Set Version
-  condition: eq(variables['system.pullrequest.isfork'], false)
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
-- powershell: |
-    nuget install SignClient -Version 0.9.1 -SolutionDir $(Build.SourcesDirectory) -Verbosity quiet -ExcludeVersion
-    .\build.cmd
+- script: build.cmd
   displayName: Build 
   env:
-    SIGNCLIENT_SECRET: $(SignClientSecret)
-    SIGNCLIENT_USER: $(SignClientUser)
     VSTS_ACCESS_TOKEN: $(System.AccessToken)
     COVERALLS_TOKEN: $(COVERALLS_TOKEN)
 
@@ -41,7 +36,17 @@ steps:
     Contents: 'artifacts/*.nupkg'
     TargetFolder: '$(build.artifactstagingdirectory)\packages'
     flattenFolders: true
-  condition: eq(variables['system.pullrequest.isfork'], false)
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- task: PowerShell@2
+  displayName: Authenticode Sign artifacts
+  inputs:
+    filePath: script/Sign-Packages.ps1
+  env:
+    SignClientUser: $(SignClientUser)
+    SignClientSecret: $(SignClientSecret)
+    ArtifactDirectory: $(Build.ArtifactStagingDirectory)\Packages
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false), not(eq(variables['SignClientSecret'], '')))
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
@@ -49,4 +54,18 @@ steps:
     pathToPublish: '$(build.artifactstagingdirectory)\packages'
     artifactType: container
     artifactName: Packages
-  condition: eq(variables['system.pullrequest.isfork'], false)
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- task: CopyFiles@2
+  inputs:
+    Contents: '**\bin\**'
+    TargetFolder: '$(build.artifactstagingdirectory)\binaries'
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Binaries
+  inputs:
+    pathToPublish: '$(build.artifactstagingdirectory)\binaries'
+    artifactType: container
+    artifactName: Binaries
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
