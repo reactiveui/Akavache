@@ -1,6 +1,5 @@
 trigger:
 - master
-- develop
 - rel/*
 
 queue: Hosted VS2017
@@ -46,7 +45,7 @@ steps:
     SignClientUser: $(SignClientUser)
     SignClientSecret: $(SignClientSecret)
     ArtifactDirectory: $(Build.ArtifactStagingDirectory)\Packages
-  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false), not(eq(variables['SignClientSecret'], '')))
+  condition: and(succeeded(), not(eq(variables['build.reason'], 'PullRequest')), not(eq(variables['SignClientSecret'], '')), not(eq(variables['SignClientUser'], '')))
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
