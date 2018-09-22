@@ -1,19 +1,17 @@
-// Fetched from http://archive.msdn.microsoft.com/SilverlightMD5
+﻿// Fetched from http://archive.msdn.microsoft.com/SilverlightMD5
 //Copyright (c) Microsoft Corporation.  All rights reserved.
 using System;
 using System.Text;
 
 // **************************************************************
 // * Raw implementation of the MD5 hash algorithm
-// * from RFC 1321.
-// *
+// * from RFC 1321. *
 // * Written By: Reid Borsuk and Jenny Zheng
-// * Copyright (c) Microsoft Corporation.  All rights reserved.
-// **************************************************************
+// * Copyright (c) Microsoft Corporation. All rights reserved. **************************************************************
 
 namespace Akavache
 {
-    // Simple struct for the (a,b,c,d) which is used to compute the mesage digest.    
+    // Simple struct for the (a,b,c,d) which is used to compute the mesage digest.
     internal struct ABCDStruct
     {
         public uint A;
@@ -25,18 +23,21 @@ namespace Akavache
     internal sealed class MD5Core
     {
         //Prevent CSC from adding a default public constructor
-        MD5Core()
+        private MD5Core()
         {
         }
 
         public static byte[] GetHash(string input, Encoding encoding)
         {
-            if (null == input)
+            if (null == input) {
                 throw new System.ArgumentNullException("input", "Unable to calculate hash over null input data");
-            if (null == encoding)
-                throw new System.ArgumentNullException("encoding", "Unable to calculate hash over a string without a default encoding. Consider using the GetHash(string) overload to use UTF8 Encoding");
+            }
 
-            byte[] target = encoding.GetBytes(input);
+            if (null == encoding) {
+                throw new System.ArgumentNullException("encoding", "Unable to calculate hash over a string without a default encoding. Consider using the GetHash(string) overload to use UTF8 Encoding");
+            }
+
+            var target = encoding.GetBytes(input);
 
             return GetHash(target);
         }
@@ -48,10 +49,11 @@ namespace Akavache
 
         public static string GetHashString(byte[] input)
         {
-            if (null == input)
+            if (null == input) {
                 throw new System.ArgumentNullException("input", "Unable to calculate hash over null input data");
+            }
 
-            string retval = BitConverter.ToString(GetHash(input));
+            var retval = BitConverter.ToString(GetHash(input));
             retval = retval.Replace("-", "");
 
             return retval;
@@ -59,12 +61,15 @@ namespace Akavache
 
         public static string GetHashString(string input, Encoding encoding)
         {
-            if (null == input)
+            if (null == input) {
                 throw new System.ArgumentNullException("input", "Unable to calculate hash over null input data");
-            if (null == encoding)
-                throw new System.ArgumentNullException("encoding", "Unable to calculate hash over a string without a default encoding. Consider using the GetHashString(string) overload to use UTF8 Encoding");
+            }
 
-            byte[] target = encoding.GetBytes(input);
+            if (null == encoding) {
+                throw new System.ArgumentNullException("encoding", "Unable to calculate hash over a string without a default encoding. Consider using the GetHashString(string) overload to use UTF8 Encoding");
+            }
+
+            var target = encoding.GetBytes(input);
 
             return GetHashString(target);
         }
@@ -76,53 +81,53 @@ namespace Akavache
 
         public static byte[] GetHash(byte[] input)
         {
-            if (null == input)
+            if (null == input) {
                 throw new System.ArgumentNullException("input", "Unable to calculate hash over null input data");
+            }
 
             //Intitial values defined in RFC 1321
-            ABCDStruct abcd = new ABCDStruct();
-            abcd.A = 0x67452301;
-            abcd.B = 0xefcdab89;
-            abcd.C = 0x98badcfe;
-            abcd.D = 0x10325476;
+            var abcd = new ABCDStruct
+            {
+                A = 0x67452301,
+                B = 0xefcdab89,
+                C = 0x98badcfe,
+                D = 0x10325476
+            };
 
             //We pass in the input array by block, the final block of data must be handled specialy for padding & length embeding
-            int startIndex = 0;
-            while (startIndex <= input.Length - 64)
-            {
+            var startIndex = 0;
+            while (startIndex <= input.Length - 64) {
                 MD5Core.GetHashBlock(input, ref abcd, startIndex);
                 startIndex += 64;
             }
-            // The final data block. 
-            return MD5Core.GetHashFinalBlock(input, startIndex, input.Length - startIndex, abcd, (Int64) input.Length*8);
+            // The final data block.
+            return MD5Core.GetHashFinalBlock(input, startIndex, input.Length - startIndex, abcd, (long)input.Length * 8);
         }
 
-        internal static byte[] GetHashFinalBlock(byte[] input, int ibStart, int cbSize, ABCDStruct ABCD, Int64 len)
+        internal static byte[] GetHashFinalBlock(byte[] input, int ibStart, int cbSize, ABCDStruct ABCD, long len)
         {
-            byte[] working = new byte[64];
-            byte[] length = BitConverter.GetBytes(len);
+            var working = new byte[64];
+            var length = BitConverter.GetBytes(len);
 
-            //Padding is a single bit 1, followed by the number of 0s required to make size congruent to 448 modulo 512. Step 1 of RFC 1321  
+            //Padding is a single bit 1, followed by the number of 0s required to make size congruent to 448 modulo 512. Step 1 of RFC 1321
             //The CLR ensures that our buffer is 0-assigned, we don't need to explicitly set it. This is why it ends up being quicker to just
             //use a temporary array rather then doing in-place assignment (5% for small inputs)
             Array.Copy(input, ibStart, working, 0, cbSize);
             working[cbSize] = 0x80;
 
             //We have enough room to store the length in this chunk
-            if (cbSize < 56)
-            {
+            if (cbSize < 56) {
                 Array.Copy(length, 0, working, 56, 8);
                 GetHashBlock(working, ref ABCD, 0);
-            }
-            else //We need an aditional chunk to store the length
-            {
+            } else //We need an aditional chunk to store the length
+              {
                 GetHashBlock(working, ref ABCD, 0);
                 //Create an entirely new chunk due to the 0-assigned trick mentioned above, to avoid an extra function call clearing the array
                 working = new byte[64];
                 Array.Copy(length, 0, working, 56, 8);
                 GetHashBlock(working, ref ABCD, 0);
             }
-            byte[] output = new byte[16];
+            var output = new byte[16];
             Array.Copy(BitConverter.GetBytes(ABCD.A), 0, output, 0, 4);
             Array.Copy(BitConverter.GetBytes(ABCD.B), 0, output, 4, 4);
             Array.Copy(BitConverter.GetBytes(ABCD.C), 0, output, 8, 4);
@@ -132,19 +137,16 @@ namespace Akavache
 
         // Performs a single block transform of MD5 for a given set of ABCD inputs
         /* If implementing your own hashing framework, be sure to set the initial ABCD correctly according to RFC 1321:
-        //    A = 0x67452301;
-        //    B = 0xefcdab89;
-        //    C = 0x98badcfe;
-        //    D = 0x10325476;
+        // A = 0x67452301; B = 0xefcdab89; C = 0x98badcfe; D = 0x10325476;
         */
 
         internal static void GetHashBlock(byte[] input, ref ABCDStruct ABCDValue, int ibStart)
         {
-            uint[] temp = Converter(input, ibStart);
-            uint a = ABCDValue.A;
-            uint b = ABCDValue.B;
-            uint c = ABCDValue.C;
-            uint d = ABCDValue.D;
+            var temp = Converter(input, ibStart);
+            var a = ABCDValue.A;
+            var b = ABCDValue.B;
+            var c = ABCDValue.C;
+            var d = ABCDValue.D;
 
             a = r1(a, b, c, d, temp[0], 7, 0xd76aa478);
             d = r1(d, a, b, c, temp[1], 12, 0xe8c7b756);
@@ -222,56 +224,55 @@ namespace Akavache
         }
 
         //Manually unrolling these equations nets us a 20% performance improvement
-        static uint r1(uint a, uint b, uint c, uint d, uint x, int s, uint t)
+        private static uint r1(uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             //                  (b + LSR((a + F(b, c, d) + x + t), s))
             //F(x, y, z)        ((x & y) | ((x ^ 0xFFFFFFFF) & z))
             return unchecked(b + LSR((a + ((b & c) | ((b ^ 0xFFFFFFFF) & d)) + x + t), s));
         }
 
-        static uint r2(uint a, uint b, uint c, uint d, uint x, int s, uint t)
+        private static uint r2(uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             //                  (b + LSR((a + G(b, c, d) + x + t), s))
             //G(x, y, z)        ((x & z) | (y & (z ^ 0xFFFFFFFF)))
             return unchecked(b + LSR((a + ((b & d) | (c & (d ^ 0xFFFFFFFF))) + x + t), s));
         }
 
-        static uint r3(uint a, uint b, uint c, uint d, uint x, int s, uint t)
+        private static uint r3(uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             //                  (b + LSR((a + H(b, c, d) + k + i), s))
             //H(x, y, z)        (x ^ y ^ z)
             return unchecked(b + LSR((a + (b ^ c ^ d) + x + t), s));
         }
 
-        static uint r4(uint a, uint b, uint c, uint d, uint x, int s, uint t)
+        private static uint r4(uint a, uint b, uint c, uint d, uint x, int s, uint t)
         {
             //                  (b + LSR((a + I(b, c, d) + k + i), s))
             //I(x, y, z)        (y ^ (x | (z ^ 0xFFFFFFFF)))
             return unchecked(b + LSR((a + (c ^ (b | (d ^ 0xFFFFFFFF))) + x + t), s));
         }
 
-        // Implementation of left rotate
-        // s is an int instead of a uint becuase the CLR requires the argument passed to >>/<< is of 
-        // type int. Doing the demoting inside this function would add overhead.
-        static uint LSR(uint i, int s)
+        // Implementation of left rotate s is an int instead of a uint becuase the CLR requires the
+        // argument passed to >>/<< is of type int. Doing the demoting inside this function would add overhead.
+        private static uint LSR(uint i, int s)
         {
             return ((i << s) | (i >> (32 - s)));
         }
 
         //Convert input array into array of UInts
-        static uint[] Converter(byte[] input, int ibStart)
+        private static uint[] Converter(byte[] input, int ibStart)
         {
-            if (null == input)
+            if (null == input) {
                 throw new System.ArgumentNullException("input", "Unable convert null array to array of uInts");
+            }
 
-            uint[] result = new uint[16];
+            var result = new uint[16];
 
-            for (int i = 0; i < 16; i++)
-            {
-                result[i] = (uint) input[ibStart + i*4];
-                result[i] += (uint) input[ibStart + i*4 + 1] << 8;
-                result[i] += (uint) input[ibStart + i*4 + 2] << 16;
-                result[i] += (uint) input[ibStart + i*4 + 3] << 24;
+            for (var i = 0; i < 16; i++) {
+                result[i] = input[ibStart + i * 4];
+                result[i] += (uint)input[ibStart + i * 4 + 1] << 8;
+                result[i] += (uint)input[ibStart + i * 4 + 2] << 16;
+                result[i] += (uint)input[ibStart + i * 4 + 3] << 24;
             }
 
             return result;

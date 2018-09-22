@@ -13,14 +13,14 @@ namespace Akavache
         public static IObservable<T> ObservableThrowKeyNotFoundException<T>(string key, Exception innerException = null)
         {
             return Observable.Throw<T>(
-                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
+                new KeyNotFoundException(string.Format(CultureInfo.InvariantCulture,
                 "The given key '{0}' was not present in the cache.", key), innerException));
         }
 
         public static IObservable<T> ObservableThrowObjectDisposedException<T>(string obj, Exception innerException = null)
         {
             return Observable.Throw<T>(
-                new ObjectDisposedException(String.Format(CultureInfo.InvariantCulture,
+                new ObjectDisposedException(string.Format(CultureInfo.InvariantCulture,
                 "The cache '{0}' was disposed.", obj), innerException));
         }
     }

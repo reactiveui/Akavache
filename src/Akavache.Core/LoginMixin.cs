@@ -9,22 +9,24 @@ namespace Akavache
     public static class LoginMixin
     {
         /// <summary>
-        /// Save a user/password combination in a secure blob cache. Note that
-        /// this method only allows exactly *one* user/pass combo to be saved,
-        /// calling this more than once will overwrite the previous entry.
+        /// Save a user/password combination in a secure blob cache. Note that this method only
+        /// allows exactly *one* user/pass combo to be saved, calling this more than once will
+        /// overwrite the previous entry.
         /// </summary>
+        /// <param name="This">The this.</param>
         /// <param name="user">The user name to save.</param>
         /// <param name="password">The associated password</param>
+        /// <param name="host">The host.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns></returns>
         public static IObservable<Unit> SaveLogin(this ISecureBlobCache This, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null)
         {
             return This.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
         }
 
         /// <summary>
-        /// Returns the currently cached user/password. If the cache does not
-        /// contain a user/password, this returns an Observable which
-        /// OnError's with KeyNotFoundException.
+        /// Returns the currently cached user/password. If the cache does not contain a
+        /// user/password, this returns an Observable which OnError's with KeyNotFoundException.
         /// </summary>
         /// <returns>A Future result representing the user/password Tuple.</returns>
         public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache This, string host = "default")

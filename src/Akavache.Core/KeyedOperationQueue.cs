@@ -11,13 +11,16 @@ namespace Akavache
     internal abstract class KeyedOperation
     {
         public string Key { get; set; }
+
         public int Id { get; set; }
+
         public abstract IObservable<Unit> EvaluateFunc();
     }
 
     internal class KeyedOperation<T> : KeyedOperation
     {
         public Func<IObservable<T>> Func { get; set; }
+
         public readonly ReplaySubject<T> Result = new ReplaySubject<T>();
 
         public override IObservable<Unit> EvaluateFunc()
@@ -31,12 +34,16 @@ namespace Akavache
 
     public class KeyedOperationQueue : IKeyedOperationQueue, IEnableLogger
     {
-        readonly IScheduler scheduler;
-        static int sequenceNumber = 1;
-        readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
-        readonly IConnectableObservable<KeyedOperation> resultObs;
-        AsyncSubject<Unit> shutdownObs;
+        private readonly IScheduler scheduler;
+        private static int sequenceNumber = 1;
+        private readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
+        private readonly IConnectableObservable<KeyedOperation> resultObs;
+        private AsyncSubject<Unit> shutdownObs;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyedOperationQueue"/> class.
+        /// </summary>
+        /// <param name="scheduler">The scheduler.</param>
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
             scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
@@ -51,27 +58,28 @@ namespace Akavache
         }
 
         /// <summary>
-        ///   Queue an operation to run in the background. All operations with the same key will run in sequence,
-        ///   waiting for the previous operation to complete.
+        /// Queue an operation to run in the background. All operations with the same key will run in
+        /// sequence, waiting for the previous operation to complete.
         /// </summary>
-        /// <param name = "key">The key to use</param>
-        /// <param name = "action">A method to run in the background</param>
+        /// <param name="key">The key to use</param>
+        /// <param name="action">A method to run in the background</param>
         /// <returns>A future representing when the operation completes</returns>
         public IObservable<Unit> EnqueueOperation(string key, Action action)
         {
-            return EnqueueOperation(key, () =>
-            {
+            return EnqueueOperation(key, () => {
                 action();
                 return Unit.Default;
             });
         }
 
         /// <summary>
-        ///   Queue an operation to run in the background that returns a value. All operations with the same key will run in sequence,
-        ///   waiting for the previous operation to complete.
+        /// Queue an operation to run in the background that returns a value. All operations with the
+        /// same key will run in sequence, waiting for the previous operation to complete.
         /// </summary>
         /// <param name="key">The key to use</param>
-        /// <param name="calculationFunc">A method to run in the background that returns a single value</param>
+        /// <param name="calculationFunc">
+        /// A method to run in the background that returns a single value
+        /// </param>
         /// <returns>A future value</returns>
         public IObservable<T> EnqueueOperation<T>(string key, Func<T> calculationFunc)
         {
@@ -79,22 +87,26 @@ namespace Akavache
         }
 
         /// <summary>
-        ///   Queue an operation to run in the background that returns a stream of values. All operations with the same key will run in sequence,
-        ///   waiting for the previous operation to complete.
-        ///   If you want to queue an operation that already returns IObservable, this is your guy.
+        /// Queue an operation to run in the background that returns a stream of values. All
+        /// operations with the same key will run in sequence, waiting for the previous operation to
+        /// complete. If you want to queue an operation that already returns IObservable, this is
+        /// your guy.
         /// </summary>
         /// <param name="key">The key to use</param>
-        /// <param name="asyncCalculationFunc">A method to run in the background that returns a stream of values</param>
+        /// <param name="asyncCalculationFunc">
+        /// A method to run in the background that returns a stream of values
+        /// </param>
         /// <returns>A future stream of values</returns>
         public IObservable<T> EnqueueObservableOperation<T>(string key, Func<IObservable<T>> asyncCalculationFunc)
         {
-            int id = Interlocked.Increment(ref sequenceNumber);
+            var id = Interlocked.Increment(ref sequenceNumber);
             key = key ?? "__NONE__";
 
             this.Log().Debug("Queuing operation {0} with key {1}", id, key);
             var item = new KeyedOperation<T>
             {
-                Key = key, Id = id,
+                Key = key,
+                Id = id,
                 Func = asyncCalculationFunc,
             };
 
@@ -102,11 +114,16 @@ namespace Akavache
             return item.Result;
         }
 
+        /// <summary>
+        /// Flushes the remaining operations and returns a signal when they are all complete.
+        /// </summary>
+        /// <returns></returns>
         public IObservable<Unit> ShutdownQueue()
         {
-            lock (queuedOps)
-            {
-                if (shutdownObs != null) return shutdownObs;
+            lock (queuedOps) {
+                if (shutdownObs != null) {
+                    return shutdownObs;
+                }
 
                 queuedOps.OnCompleted();
 
@@ -125,26 +142,22 @@ namespace Akavache
             }
         }
 
-        static IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
+        private static IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
         {
             return Observable.Defer(operation.EvaluateFunc)
                 .Select(_ => operation)
                 .Catch(Observable.Return(operation));
         }
 
-        IObservable<T> SafeStart<T>(Func<T> calculationFunc)
+        private IObservable<T> SafeStart<T>(Func<T> calculationFunc)
         {
             var ret = new AsyncSubject<T>();
-            Observable.Start(() =>
-            {
-                try
-                {
+            Observable.Start(() => {
+                try {
                     var val = calculationFunc();
                     ret.OnNext(val);
                     ret.OnCompleted();
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     this.Log().WarnException("Failure running queued op", ex);
                     ret.OnError(ex);
                 }

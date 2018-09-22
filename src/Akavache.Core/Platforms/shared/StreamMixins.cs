@@ -1,5 +1,4 @@
-
-using System.IO;
+﻿using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
 
@@ -11,6 +10,14 @@ namespace System
 {
     public static class StreamMixins
     {
+        /// <summary>
+        /// Writes the asynchronous rx.
+        /// </summary>
+        /// <param name="This">The this.</param>
+        /// <param name="data">The data.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="length">The length.</param>
+        /// <returns></returns>
         public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
         {
 #if WINDOWS_UWP
@@ -18,24 +25,17 @@ namespace System
 #else
             var ret = new AsyncSubject<Unit>();
 
-            try
-            {
-                This.BeginWrite(data, start, length, result =>
-                {
-                    try
-                    {
+            try {
+                This.BeginWrite(data, start, length, result => {
+                    try {
                         This.EndWrite(result);
                         ret.OnNext(Unit.Default);
                         ret.OnCompleted();
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         ret.OnError(ex);
                     }
                 }, null);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 ret.OnError(ex);
             }
 
