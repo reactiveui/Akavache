@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461;</TargetFrameworks>
     <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
@@ -15,15 +15,17 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>$(DefineConstants);NETFX_CORE;USE_SQLITEPCL_RAW;USE_NEW_REFLECTION_API</DefineConstants>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.11" />
-    <PackageReference Include="SQLitePCLRaw.core" Version="1.1.11" />
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="System.Reactive" Version="4.0.0" />
-		<PackageReference Include="Splat" Version="4.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="System.Reactive" Version="4.1.0" />
+    <PackageReference Include="Splat" Version="4.0.2" />
   </ItemGroup>
-  
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.v110_xp" Version="1.1.11"/>
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Remove="EncryptedBlobCache.cs" />
   </ItemGroup>
@@ -31,9 +33,8 @@
   <ItemGroup>
     <None Remove="PerformanceGraphs.xlsx" />
     <None Remove="sqlite-ng-notes.md" />
-    <None Remove="sqlite3-hint.txt" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
@@ -48,6 +49,17 @@
       <PackagePath>contentFiles\cs\any\</PackagePath>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="readme.txt">
+      <PackagePath>\</PackagePath>
+    </Content>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Update="Nerdbank.GitVersioning" Version="2.2.13">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />

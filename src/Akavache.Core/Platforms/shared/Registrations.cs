@@ -17,6 +17,10 @@ namespace Akavache
 {
     public class Registrations : IWantsToRegisterStuff
     {
+        /// <summary>
+        /// Registers the specified resolver.
+        /// </summary>
+        /// <param name="resolver">The resolver.</param>
         public void Register(IMutableDependencyResolver resolver)
         {
 #if XAMARIN_MOBILE

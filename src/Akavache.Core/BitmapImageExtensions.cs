@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -19,9 +19,14 @@ namespace Akavache
         /// <summary>
         /// Load an image from the blob cache.
         /// </summary>
+        /// <param name="This">The this.</param>
         /// <param name="key">The key to look up in the cache.</param>
-        /// <returns>A Future result representing the bitmap image. This
-        /// Observable is guaranteed to be returned on the UI thread.</returns>
+        /// <param name="desiredWidth">Width of the desired.</param>
+        /// <param name="desiredHeight">Height of the desired.</param>
+        /// <returns>
+        /// A Future result representing the bitmap image. This Observable is guaranteed to be
+        /// returned on the UI thread.
+        /// </returns>
         public static IObservable<IBitmap> LoadImage(this IBlobCache This, string key, float? desiredWidth = null, float? desiredHeight = null)
         {
             return This.Get(key)
@@ -30,13 +35,19 @@ namespace Akavache
         }
 
         /// <summary>
-        /// A combination of DownloadUrl and LoadImage, this method fetches an
-        /// image from a remote URL (using the cached value if possible) and
-        /// returns the image. 
+        /// A combination of DownloadUrl and LoadImage, this method fetches an image from a remote
+        /// URL (using the cached value if possible) and returns the image.
         /// </summary>
+        /// <param name="This">The this.</param>
         /// <param name="url">The URL to download.</param>
-        /// <returns>A Future result representing the bitmap image. This
-        /// Observable is guaranteed to be returned on the UI thread.</returns>
+        /// <param name="fetchAlways">if set to <c>true</c> [fetch always].</param>
+        /// <param name="desiredWidth">Width of the desired.</param>
+        /// <param name="desiredHeight">Height of the desired.</param>
+        /// <param name="absoluteExpiration">The absolute expiration.</param>
+        /// <returns>
+        /// A Future result representing the bitmap image. This Observable is guaranteed to be
+        /// returned on the UI thread.
+        /// </returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache This, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
             return This.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
@@ -45,14 +56,20 @@ namespace Akavache
         }
 
         /// <summary>
-        /// A combination of DownloadUrl and LoadImage, this method fetches an
-        /// image from a remote URL (using the cached value if possible) and
-        /// returns the image. 
+        /// A combination of DownloadUrl and LoadImage, this method fetches an image from a remote
+        /// URL (using the cached value if possible) and returns the image.
         /// </summary>
+        /// <param name="This">The this.</param>
         /// <param name="key">The key to store with.</param>
         /// <param name="url">The URL to download.</param>
-        /// <returns>A Future result representing the bitmap image. This
-        /// Observable is guaranteed to be returned on the UI thread.</returns>
+        /// <param name="fetchAlways">if set to <c>true</c> [fetch always].</param>
+        /// <param name="desiredWidth">Width of the desired.</param>
+        /// <param name="desiredHeight">Height of the desired.</param>
+        /// <param name="absoluteExpiration">The absolute expiration.</param>
+        /// <returns>
+        /// A Future result representing the bitmap image. This Observable is guaranteed to be
+        /// returned on the UI thread.
+        /// </returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache This, string key, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
             return This.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
@@ -60,12 +77,11 @@ namespace Akavache
                 .SelectMany(x => bytesToImage(x, desiredWidth, desiredHeight));
         }
 
-
         /// <summary>
         /// Converts bad image buffers into an exception
         /// </summary>
-        /// <returns>The byte[], or OnError if the buffer is corrupt (empty or 
-        /// too small)</returns>
+        /// <param name="compressedImage">The compressed image.</param>
+        /// <returns>The byte[], or OnError if the buffer is corrupt (empty or too small)</returns>
         public static IObservable<byte[]> ThrowOnBadImageBuffer(byte[] compressedImage)
         {
             return (compressedImage == null || compressedImage.Length < 64) ?
@@ -73,7 +89,7 @@ namespace Akavache
                 Observable.Return(compressedImage);
         }
 
-        static IObservable<IBitmap> bytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
+        private static IObservable<IBitmap> bytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
         {
             return BitmapLoader.Current.Load(new MemoryStream(compressedImage), desiredWidth, desiredHeight).ToObservable();
         }
