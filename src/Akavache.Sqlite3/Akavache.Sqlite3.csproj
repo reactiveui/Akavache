@@ -17,12 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="%25UserProfile%25\**" />
-    <EmbeddedResource Remove="%25UserProfile%25\**" />
-    <None Remove="%25UserProfile%25\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.11" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="System.Reactive" Version="4.1.0" />
