@@ -12,10 +12,10 @@ namespace Akavache.Tests
     /// </summary>
     internal class Stresser
     {
-        static readonly Random random = new Random(DateTime.UtcNow.Millisecond);
-        readonly List<Task> tasks = new List<Task>();
-        readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception>();
-        bool isRunning;
+        private static readonly Random random = new Random(DateTime.UtcNow.Millisecond);
+        private readonly List<Task> tasks = new List<Task>();
+        private readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception>();
+        private bool isRunning;
 
         public Stresser(IEnumerable<Action<string>> actions) : this(actions, 1)
         {
@@ -37,8 +37,7 @@ namespace Akavache.Tests
             tasks.ForEach(t => t.Start());
             var timeoutDate = DateTime.UtcNow.Add(timeout);
 
-            while (isRunning && DateTime.UtcNow <= timeoutDate)
-            {
+            while (isRunning && DateTime.UtcNow <= timeoutDate) {
                 Thread.Sleep(0);
             }
             isRunning = false;
@@ -53,24 +52,17 @@ namespace Akavache.Tests
             return Enumerable.Range(0, 10).SelectMany(_ => BitConverter.GetBytes(random.Next())).ToArray();
         }
 
-        void RunAction(string key, Action<string> action)
+        private void RunAction(string key, Action<string> action)
         {
-            try
-            {
-                while (isRunning)
-                {
-                    try
-                    {
+            try {
+                while (isRunning) {
+                    try {
                         action(key);
-                    }
-                    catch (KeyNotFoundException)
-                    {
+                    } catch (KeyNotFoundException) {
                         // continue. This is to be expected.
                     }
                 }
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 isRunning = false;
                 exceptions.Add(e);
             }

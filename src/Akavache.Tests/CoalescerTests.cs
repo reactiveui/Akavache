@@ -165,9 +165,8 @@ namespace Akavache.Tests
         [Fact]
         public async Task GroupedRequestsWithDifferentKeysReturnEmptyResultIfItemsDontExist()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path)) {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 using (var cache = new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db"))) {
                     var queue = new SqliteOperationQueue(cache.Connection, BlobCache.TaskpoolScheduler);
                     var request = queue.Select(new[] { "Foo" });

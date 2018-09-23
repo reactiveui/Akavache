@@ -21,13 +21,11 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                foreach (var v in keys)
-                {
+                foreach (var v in keys) {
                     fixture.Insert(v, data).First();
                 }
 
@@ -45,13 +43,11 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                foreach (var v in keys)
-                {
+                foreach (var v in keys) {
                     fixture.Insert(v, data, DateTimeOffset.MinValue).First();
                 }
 
@@ -66,8 +62,7 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
@@ -87,13 +82,11 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = new byte[] { 0x10, 0x20, 0x30, };
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                foreach (var v in keys)
-                {
+                foreach (var v in keys) {
                     fixture.Insert(v, data).First();
                 }
 
@@ -115,13 +108,11 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = Tuple.Create("Foo", 4);
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                foreach (var v in keys)
-                {
+                foreach (var v in keys) {
                     fixture.InsertObject(v, data).First();
                 }
 
@@ -139,13 +130,11 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = Tuple.Create("Foo", 4);
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                foreach (var v in keys)
-                {
+                foreach (var v in keys) {
                     fixture.InsertObject(v, data, DateTimeOffset.MinValue).First();
                 }
 
@@ -160,8 +149,7 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = Tuple.Create("Foo", 4);
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
@@ -181,13 +169,11 @@ namespace Akavache.Tests
         {
             var path = default(string);
             using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (var fixture = CreateBlobCache(path)) {
                 var data = Tuple.Create("Foo", 4);
                 var keys = new[] { "Foo", "Bar", "Baz", };
 
-                foreach (var v in keys)
-                {
+                foreach (var v in keys) {
                     fixture.InsertObject(v, data).First();
                 }
 
@@ -200,7 +186,7 @@ namespace Akavache.Tests
         }
     }
 
-    class BlockingDisposeBulkCache : BlockingDisposeCache, IObjectBulkBlobCache
+    internal class BlockingDisposeBulkCache : BlockingDisposeCache, IObjectBulkBlobCache
     {
         public BlockingDisposeBulkCache(IBlobCache inner) : base(inner) { }
 

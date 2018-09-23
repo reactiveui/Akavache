@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -60,7 +60,7 @@ namespace Akavache
         /// </summary>
         /// <returns>The default roaming cache directory.</returns>
         string GetDefaultRoamingCacheDirectory();
-                
+
         /// <summary>
         /// Gets the default roaming cache directory (i.e. the one for user settings)
         /// </summary>

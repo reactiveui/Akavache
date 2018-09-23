@@ -1,43 +1,40 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
-using System.Reactive;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Akavache.Sqlite3.Internal;
-using SQLitePCL;
 using Splat;
-using System.Collections.Concurrent;
-
+using SQLitePCL;
 using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 
 namespace Akavache.Sqlite3
 {
-    partial class SqliteOperationQueue : IEnableLogger, IDisposable
+    internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
     {
-        readonly AsyncLock flushLock = new AsyncLock();
-        readonly IScheduler scheduler;
-
-        readonly Lazy<BulkSelectSqliteOperation> bulkSelectKey;
-        readonly Lazy<BulkSelectByTypeSqliteOperation> bulkSelectType;
-        readonly Lazy<BulkInsertSqliteOperation> bulkInsertKey;
-        readonly Lazy<BulkInvalidateSqliteOperation> bulkInvalidateKey;
-        readonly Lazy<BulkInvalidateByTypeSqliteOperation> bulkInvalidateType;
-        readonly Lazy<InvalidateAllSqliteOperation> invalidateAll;
-        readonly Lazy<VacuumSqliteOperation> vacuum;
-        readonly Lazy<DeleteExpiredSqliteOperation> deleteExpired;
-        readonly Lazy<GetKeysSqliteOperation> getAllKeys;
-        readonly Lazy<BeginTransactionSqliteOperation> begin;
-        readonly Lazy<CommitTransactionSqliteOperation> commit;
-
-        BlockingCollection<OperationQueueItem> operationQueue =
+        private readonly AsyncLock flushLock = new AsyncLock();
+        private readonly IScheduler scheduler;
+        private readonly Lazy<BulkSelectSqliteOperation> bulkSelectKey;
+        private readonly Lazy<BulkSelectByTypeSqliteOperation> bulkSelectType;
+        private readonly Lazy<BulkInsertSqliteOperation> bulkInsertKey;
+        private readonly Lazy<BulkInvalidateSqliteOperation> bulkInvalidateKey;
+        private readonly Lazy<BulkInvalidateByTypeSqliteOperation> bulkInvalidateType;
+        private readonly Lazy<InvalidateAllSqliteOperation> invalidateAll;
+        private readonly Lazy<VacuumSqliteOperation> vacuum;
+        private readonly Lazy<DeleteExpiredSqliteOperation> deleteExpired;
+        private readonly Lazy<GetKeysSqliteOperation> getAllKeys;
+        private readonly Lazy<BeginTransactionSqliteOperation> begin;
+        private readonly Lazy<CommitTransactionSqliteOperation> commit;
+        private BlockingCollection<OperationQueueItem> operationQueue =
             new BlockingCollection<OperationQueueItem>();
 
         public SqliteOperationQueue(SQLiteConnection conn, IScheduler scheduler)
@@ -62,87 +59,76 @@ namespace Akavache.Sqlite3
         internal SqliteOperationQueue()
         {
         }
-         
-        IDisposable start;
-        CancellationTokenSource shouldQuit;
+
+        private IDisposable start;
+        private CancellationTokenSource shouldQuit;
         public IDisposable Start()
         {
-            if (start != null) return start;
+            if (start != null) {
+                return start;
+            }
 
             shouldQuit = new CancellationTokenSource();
-            var task = Task.Run(async () => 
-            {
+            var task = Task.Run(async () => {
                 var toProcess = new List<OperationQueueItem>();
 
-                while (!shouldQuit.IsCancellationRequested) 
-                {
+                while (!shouldQuit.IsCancellationRequested) {
                     toProcess.Clear();
 
                     IDisposable @lock = null;
 
-                    try
-                    {
+                    try {
                         @lock = await flushLock.LockAsync(shouldQuit.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
+                    } catch (OperationCanceledException) {
                         break;
                     }
 
-                    using (@lock)
-                    {
+                    using (@lock) {
                         // NB: We special-case the first item because we want to 
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
                         var item = default(OperationQueueItem);
-                        try 
-                        {
+                        try {
                             item = operationQueue.Take(shouldQuit.Token);
-                        } 
-                        catch (OperationCanceledException) 
-                        {
+                        } catch (OperationCanceledException) {
                             break;
                         }
 
                         // NB: We explicitly want to bail out *here* because we 
                         // never want to bail out in the middle of processing 
                         // operations, to guarantee that we won't orphan them
-                        if (shouldQuit.IsCancellationRequested && item == null) break;
+                        if (shouldQuit.IsCancellationRequested && item == null) {
+                            break;
+                        }
 
                         toProcess.Add(item);
-                        while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) 
-                        {
+                        while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item)) {
                             toProcess.Add(item);
                         }
 
-                        try 
-                        {
+                        try {
                             ProcessItems(CoalesceOperations(toProcess));
-                        } 
-                        catch (SQLiteException)
-                        {
+                        } catch (SQLiteException) {
                             // NB: If ProcessItems Failed, it explicitly means 
                             // that the "BEGIN TRANSACTION" failed and that items
                             // have **not** been processed. We should add them back
                             // to the queue
-                            foreach (var v in toProcess) operationQueue.Add(v);
+                            foreach (var v in toProcess) {
+                                operationQueue.Add(v);
+                            }
                         }
                     }
                 }
             });
 
-            return (start = Disposable.Create(() => 
-            {
-                try 
-                {
+            return (start = Disposable.Create(() => {
+                try {
                     shouldQuit.Cancel();
                     task.Wait();
-                } 
-                catch (OperationCanceledException) { }
+                } catch (OperationCanceledException) { }
 
-                using (flushLock.LockAsync().Result)
-                {
+                using (flushLock.LockAsync().Result) {
                     FlushInternal();
                 }
 
@@ -159,7 +145,7 @@ namespace Akavache.Sqlite3
         }
 
         // NB: Callers must hold flushLock to call this
-        void FlushInternal()
+        private void FlushInternal()
         {
             var newQueue = new BlockingCollection<OperationQueueItem>();
             var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
@@ -223,11 +209,9 @@ namespace Akavache.Sqlite3
             // running our vacuum op without any transactions.
             var ret = new AsyncSubject<Unit>();
 
-            Task.Run(async () =>
-            {
+            Task.Run(async () => {
                 IDisposable @lock = null;
-                try
-                {
+                try {
                     // NB. While the documentation for SemaphoreSlim (which powers AsyncLock)
                     // doesn't guarantee ordering the actual (current) implementation[1]
                     // uses a linked list to queue incoming requests so by adding ourselves
@@ -254,10 +238,10 @@ namespace Akavache.Sqlite3
                     MarshalCompletion(vacuumOp.Completion, vacuum.Value.PrepareToExecute(), Observable.Return(Unit.Default));
 
                     await vacuumOp.CompletionAsUnit;
-                }
-                finally
-                {
-                    if (@lock != null) @lock.Dispose();
+                } finally {
+                    if (@lock != null) {
+                        @lock.Dispose();
+                    }
                 }
             })
             .ToObservable()
@@ -281,16 +265,14 @@ namespace Akavache.Sqlite3
             return operationQueue.ToList();
         }
 
-        void ProcessItems(List<OperationQueueItem> toProcess)
+        private void ProcessItems(List<OperationQueueItem> toProcess)
         {
             var commitResult = new AsyncSubject<Unit>();
 
             begin.Value.PrepareToExecute()();
 
-            foreach (var item in toProcess) 
-            {
-                switch (item.OperationType)
-                {
+            foreach (var item in toProcess) {
+                switch (item.OperationType) {
                     case OperationType.DoNothing:
                         MarshalCompletion(item.Completion, () => { }, commitResult);
                         break;
@@ -325,49 +307,41 @@ namespace Akavache.Sqlite3
                 }
             }
 
-            try 
-            {
+            try {
                 commit.Value.PrepareToExecute()();
 
                 // NB: We do this in a scheduled result to stop a deadlock in
                 // First and friends
-                scheduler.Schedule(() => 
-                {
+                scheduler.Schedule(() => {
                     commitResult.OnNext(Unit.Default);
                     commitResult.OnCompleted();
                 });
-            } 
-            catch (Exception ex) 
-            {
+            } catch (Exception ex) {
                 scheduler.Schedule(() => commitResult.OnError(ex));
             }
         }
 
-        void MarshalCompletion<T>(object completion, Func<T> block, IObservable<Unit> commitResult)
+        private void MarshalCompletion<T>(object completion, Func<T> block, IObservable<Unit> commitResult)
         {
             var subj = (AsyncSubject<T>)completion;
-            try 
-            {
+            try {
                 var result = block();
-                
+
                 subj.OnNext(result);
 
                 commitResult
                     .SelectMany(_ => Observable.Empty<T>())
                     .Multicast(subj)
                     .PermaRef();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 scheduler.Schedule(() => subj.OnError(ex));
             }
         }
 
-        void MarshalCompletion(object completion, Action block, IObservable<Unit> commitResult)
+        private void MarshalCompletion(object completion, Action block, IObservable<Unit> commitResult)
         {
             var subj = (AsyncSubject<Unit>)completion;
-            try 
-            {
+            try {
                 block();
 
                 subj.OnNext(Unit.Default);
@@ -376,73 +350,60 @@ namespace Akavache.Sqlite3
                     .SelectMany(_ => Observable.Empty<Unit>())
                     .Multicast(subj)
                     .PermaRef();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 subj.OnError(ex);
             }
         }
 
         public void Dispose()
         {
-            if(bulkSelectKey.IsValueCreated)
-            {
+            if (bulkSelectKey.IsValueCreated) {
                 bulkSelectKey.Value.Dispose();
             }
 
-            if (bulkSelectType.IsValueCreated)
-            {
+            if (bulkSelectType.IsValueCreated) {
                 bulkSelectType.Value.Dispose();
             }
 
-            if (bulkInsertKey.IsValueCreated)
-            {
+            if (bulkInsertKey.IsValueCreated) {
                 bulkInsertKey.Value.Dispose();
             }
 
-            if (bulkInvalidateKey.IsValueCreated)
-            {
+            if (bulkInvalidateKey.IsValueCreated) {
                 bulkInvalidateKey.Value.Dispose();
             }
 
-            if (bulkInvalidateType.IsValueCreated)
-            {
+            if (bulkInvalidateType.IsValueCreated) {
                 bulkInvalidateType.Value.Dispose();
             }
 
-            if (invalidateAll.IsValueCreated)
-            {
+            if (invalidateAll.IsValueCreated) {
                 invalidateAll.Value.Dispose();
             }
 
-            if (vacuum.IsValueCreated)
-            {
+            if (vacuum.IsValueCreated) {
                 vacuum.Value.Dispose();
             }
 
-            if (deleteExpired.IsValueCreated)
-            {
+            if (deleteExpired.IsValueCreated) {
                 deleteExpired.Value.Dispose();
             }
 
-            if (getAllKeys.IsValueCreated)
-            {
+            if (getAllKeys.IsValueCreated) {
                 getAllKeys.Value.Dispose();
             }
 
-            if (begin.IsValueCreated)
-            {
+            if (begin.IsValueCreated) {
                 begin.Value.Dispose();
             }
 
-            if (begin.IsValueCreated)
-            {
+            if (begin.IsValueCreated) {
                 commit.Value.Dispose();
             }
         }
     }
 
-    class OperationQueueItem
+    internal class OperationQueueItem
     {
         public OperationType OperationType { get; set; }
         public IEnumerable Parameters { get; set; }

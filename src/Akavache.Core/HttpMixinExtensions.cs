@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Splat;
 
 namespace Akavache
-{ 
+{
     public static class HttpMixinExtensions
     {
         /// <summary>
@@ -42,6 +42,6 @@ namespace Akavache
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
             return mixin.DownloadUrl(This, key, url, headers, fetchAlways, absoluteExpiration);
-        } 
+        }
     }
 }

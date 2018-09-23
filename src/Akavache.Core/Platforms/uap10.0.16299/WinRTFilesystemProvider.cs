@@ -7,12 +7,12 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Reactive.Windows.Foundation;
-using System.Text;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
+using Splat;
 using Windows.Foundation;
 using Windows.Storage;
-using Splat;
 
 namespace Akavache
 {
@@ -44,21 +44,25 @@ namespace Akavache
 
             var firstFolderThatExists = Observable.Range(0, paths.Length - 1)
                 .Select(x =>
-                    StorageFolder.GetFolderFromPathAsync(String.Join("\\", paths.Take(paths.Length - x)))
+                    StorageFolder.GetFolderFromPathAsync(string.Join("\\", paths.Take(paths.Length - x)))
                     .ToObservable()
                     .Catch(Observable.Empty<StorageFolder>()))
                 .Concat()
                 .Take(1);
 
             return firstFolderThatExists
-                .Select(x =>
-                {
-                    if (x.Path == path) return null;
-                    return new { Root = x, Paths = path.Replace(x.Path + "\\", "").Split('\\')};
+                .Select(x => {
+                    if (x.Path == path) {
+                        return null;
+                    }
+
+                    return new { Root = x, Paths = path.Replace(x.Path + "\\", "").Split('\\') };
                 })
-                .SelectMany(x =>
-                {
-                    if (x == null) return Observable.Return(default(StorageFolder));
+                .SelectMany(x => {
+                    if (x == null) {
+                        return Observable.Return(default(StorageFolder));
+                    }
+
                     return x.Paths.ToObservable().Aggregate(x.Root, (acc, y) => acc.CreateFolderAsync(y).ToObservable().First());
                 })
                 .Select(_ => Unit.Default);
@@ -80,7 +84,7 @@ namespace Akavache
             return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "BlobCache");
         }
 
-	    public string GetDefaultSecretCacheDirectory()
+        public string GetDefaultSecretCacheDirectory()
         {
             return Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "SecretCache");
         }

@@ -27,47 +27,45 @@ namespace System.IO
 
         public RandomStream(Stream stream)
         {
-            this.streamValue = stream;
+            streamValue = stream;
         }
 
         public RandomStream(byte[] bytes)
         {
-            this.streamValue = new MemoryStream(bytes);
+            streamValue = new MemoryStream(bytes);
         }
 
         public IInputStream GetInputStreamAt(ulong position)
         {
-            if ((long)position > this.streamValue.Length)
-            {
+            if ((long)position > streamValue.Length) {
                 throw new IndexOutOfRangeException();
             }
 
-            this.streamValue.Position = (long)position;
+            streamValue.Position = (long)position;
 
-            return this.streamValue.AsInputStream();
+            return streamValue.AsInputStream();
         }
 
         public IOutputStream GetOutputStreamAt(ulong position)
         {
-            if ((long)position > this.streamValue.Length)
-            {
+            if ((long)position > streamValue.Length) {
                 throw new IndexOutOfRangeException();
             }
 
-            this.streamValue.Position = (long)position;
+            streamValue.Position = (long)position;
 
-            return this.streamValue.AsOutputStream();
+            return streamValue.AsOutputStream();
         }
 
         public ulong Size
         {
             get
             {
-                return (ulong)this.streamValue.Length;
+                return (ulong)streamValue.Length;
             }
             set
             {
-                this.streamValue.SetLength((long)value);
+                streamValue.SetLength((long)value);
             }
         }
 
@@ -96,18 +94,18 @@ namespace System.IO
         {
             get
             {
-                return (ulong)this.streamValue.Position;
+                return (ulong)streamValue.Position;
             }
         }
 
         public void Seek(ulong position)
         {
-            this.streamValue.Seek((long)position, 0);
+            streamValue.Seek((long)position, 0);
         }
 
         public void Dispose()
         {
-            this.streamValue.Dispose();
+            streamValue.Dispose();
         }
 
         public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
@@ -129,5 +127,5 @@ namespace System.IO
 
 namespace System.IO.IsolatedStorage
 {
-    class IsolatedStorageException : Exception { }
+    internal class IsolatedStorageException : Exception { }
 }

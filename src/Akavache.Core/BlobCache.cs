@@ -1,32 +1,34 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using System.Reactive;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.IO;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Splat;
 
 namespace Akavache
 {
     public static class BlobCache
     {
-        static string applicationName;
+        private static string applicationName;
 
         static BlobCache()
         {
-            Locator.RegisterResolverCallbackChanged(() => 
-            {
-                if (Locator.CurrentMutable == null) return;
+            Locator.RegisterResolverCallbackChanged(() => {
+                if (Locator.CurrentMutable == null) {
+                    return;
+                }
+
                 Locator.CurrentMutable.InitializeAkavache();
             });
-               
+
             InMemory = new InMemoryBlobCache(Scheduler.Default);
         }
 
@@ -38,22 +40,23 @@ namespace Akavache
         {
             get
             {
-                if (applicationName == null)
+                if (applicationName == null) {
                     throw new Exception("Make sure to set BlobCache.ApplicationName on startup");
+                }
 
                 return applicationName;
             }
             set { applicationName = value; }
         }
 
-        static IBlobCache localMachine;
-        static IBlobCache userAccount;
-        static ISecureBlobCache secure;
-        static bool shutdownRequested;
+        private static IBlobCache localMachine;
+        private static IBlobCache userAccount;
+        private static ISecureBlobCache secure;
+        private static bool shutdownRequested;
 
-        [ThreadStatic] static IBlobCache unitTestLocalMachine;
-        [ThreadStatic] static IBlobCache unitTestUserAccount;
-        [ThreadStatic] static ISecureBlobCache unitTestSecure;
+        [ThreadStatic] private static IBlobCache unitTestLocalMachine;
+        [ThreadStatic] private static IBlobCache unitTestUserAccount;
+        [ThreadStatic] private static ISecureBlobCache unitTestSecure;
 
         /// <summary>
         /// The local machine cache. Store data here that is unrelated to the
@@ -63,15 +66,12 @@ namespace Akavache
         public static IBlobCache LocalMachine
         {
             get { return unitTestLocalMachine ?? localMachine ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("LocalMachine"); }
-            set 
+            set
             {
-                if (ModeDetector.InUnitTestRunner())
-                {
+                if (ModeDetector.InUnitTestRunner()) {
                     unitTestLocalMachine = value;
                     localMachine = localMachine ?? value;
-                }
-                else
-                {
+                } else {
                     localMachine = value;
                 }
             }
@@ -85,14 +85,12 @@ namespace Akavache
         public static IBlobCache UserAccount
         {
             get { return unitTestUserAccount ?? userAccount ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("UserAccount"); }
-            set {
-                if (ModeDetector.InUnitTestRunner())
-                {
+            set
+            {
+                if (ModeDetector.InUnitTestRunner()) {
                     unitTestUserAccount = value;
                     userAccount = userAccount ?? value;
-                }
-                else
-                {
+                } else {
                     userAccount = value;
                 }
             }
@@ -105,15 +103,12 @@ namespace Akavache
         public static ISecureBlobCache Secure
         {
             get { return unitTestSecure ?? secure ?? (shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<ISecureBlobCache>(); }
-            set 
+            set
             {
-                if (ModeDetector.InUnitTestRunner())
-                {
+                if (ModeDetector.InUnitTestRunner()) {
                     unitTestSecure = value;
                     secure = secure ?? value;
-                }
-                else
-                {
+                } else {
                     secure = value;
                 }
             }
@@ -158,8 +153,7 @@ namespace Akavache
             shutdownRequested = true;
             var toDispose = new[] { LocalMachine, UserAccount, Secure, InMemory, };
 
-            var ret = toDispose.Select(x =>
-            {
+            var ret = toDispose.Select(x => {
                 x.Dispose();
                 return x.Shutdown;
             }).Merge().ToList().Select(_ => Unit.Default);
@@ -168,14 +162,13 @@ namespace Akavache
         }
 
 #if PORTABLE
-        static IScheduler TaskpoolOverride;
-        public static IScheduler TaskpoolScheduler 
+        private static IScheduler TaskpoolOverride;
+        public static IScheduler TaskpoolScheduler
         {
-            get 
-            { 
-                var ret = TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool"); 
-                if (ret == null) 
-                {
+            get
+            {
+                var ret = TaskpoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool");
+                if (ret == null) {
                     throw new Exception("Can't find a TaskPoolScheduler. You probably accidentally linked to the PCL Akavache in your app.");
                 }
 
@@ -237,11 +230,13 @@ namespace Akavache
                 return null;
             }
 
-            IObservable<Unit> IBlobCache.Shutdown {
+            IObservable<Unit> IBlobCache.Shutdown
+            {
                 get { return Observable.Return(Unit.Default); }
             }
 
-            public IScheduler Scheduler {
+            public IScheduler Scheduler
+            {
                 get { return System.Reactive.Concurrency.Scheduler.Immediate; }
             }
         }

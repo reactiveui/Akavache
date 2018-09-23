@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0; net461;</TargetFrameworks>
     <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
@@ -23,7 +23,11 @@
 		<PackageReference Include="System.Reactive" Version="4.0.0" />
 		<PackageReference Include="Splat" Version="4.0.2" />
   </ItemGroup>
-  
+
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.v110_xp" Version="1.1.11"/>
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Remove="EncryptedBlobCache.cs" />
   </ItemGroup>
@@ -47,6 +51,9 @@
     <Content Include="contentFiles\cs\any\AkavacheSqliteLinkerOverride.cs.pp">
       <PackagePath>contentFiles\cs\any\</PackagePath>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="readme.txt">
+      <PackagePath>\</PackagePath>
     </Content>
   </ItemGroup>
 

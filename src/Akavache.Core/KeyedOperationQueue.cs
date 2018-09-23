@@ -31,11 +31,11 @@ namespace Akavache
 
     public class KeyedOperationQueue : IKeyedOperationQueue, IEnableLogger
     {
-        readonly IScheduler scheduler;
-        static int sequenceNumber = 1;
-        readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
-        readonly IConnectableObservable<KeyedOperation> resultObs;
-        AsyncSubject<Unit> shutdownObs;
+        private readonly IScheduler scheduler;
+        private static int sequenceNumber = 1;
+        private readonly Subject<KeyedOperation> queuedOps = new Subject<KeyedOperation>();
+        private readonly IConnectableObservable<KeyedOperation> resultObs;
+        private AsyncSubject<Unit> shutdownObs;
 
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
@@ -59,8 +59,7 @@ namespace Akavache
         /// <returns>A future representing when the operation completes</returns>
         public IObservable<Unit> EnqueueOperation(string key, Action action)
         {
-            return EnqueueOperation(key, () =>
-            {
+            return EnqueueOperation(key, () => {
                 action();
                 return Unit.Default;
             });
@@ -88,13 +87,14 @@ namespace Akavache
         /// <returns>A future stream of values</returns>
         public IObservable<T> EnqueueObservableOperation<T>(string key, Func<IObservable<T>> asyncCalculationFunc)
         {
-            int id = Interlocked.Increment(ref sequenceNumber);
+            var id = Interlocked.Increment(ref sequenceNumber);
             key = key ?? "__NONE__";
 
             this.Log().Debug("Queuing operation {0} with key {1}", id, key);
             var item = new KeyedOperation<T>
             {
-                Key = key, Id = id,
+                Key = key,
+                Id = id,
                 Func = asyncCalculationFunc,
             };
 
@@ -104,9 +104,10 @@ namespace Akavache
 
         public IObservable<Unit> ShutdownQueue()
         {
-            lock (queuedOps)
-            {
-                if (shutdownObs != null) return shutdownObs;
+            lock (queuedOps) {
+                if (shutdownObs != null) {
+                    return shutdownObs;
+                }
 
                 queuedOps.OnCompleted();
 
@@ -125,26 +126,22 @@ namespace Akavache
             }
         }
 
-        static IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
+        private static IObservable<KeyedOperation> ProcessOperation(KeyedOperation operation)
         {
             return Observable.Defer(operation.EvaluateFunc)
                 .Select(_ => operation)
                 .Catch(Observable.Return(operation));
         }
 
-        IObservable<T> SafeStart<T>(Func<T> calculationFunc)
+        private IObservable<T> SafeStart<T>(Func<T> calculationFunc)
         {
             var ret = new AsyncSubject<T>();
-            Observable.Start(() =>
-            {
-                try
-                {
+            Observable.Start(() => {
+                try {
                     var val = calculationFunc();
                     ret.OnNext(val);
                     ret.OnCompleted();
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     this.Log().WarnException("Failure running queued op", ex);
                     ret.OnError(ex);
                 }

@@ -21,18 +21,16 @@ namespace Akavache.Tests
         [Fact]
         public async Task CacheShouldBeAbleToGetAndInsertBlobs()
         {
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path)) 
-            {
+            using (Utility.WithEmptyDirectory(out var path))
+            using (var fixture = CreateBlobCache(path)) {
                 await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
                 await fixture.Insert("Bar", new byte[] { 4, 5, 6 });
 
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Insert(null, new byte[] { 7, 8, 9 }).First());
 
-                byte[] output1 = await fixture.Get("Foo");
-                byte[] output2 = await fixture.Get("Bar");
+                var output1 = await fixture.Get("Foo");
+                var output2 = await fixture.Get("Bar");
 
                 Assert.Throws<ArgumentNullException>(() =>
                     fixture.Get(null).First());
@@ -51,23 +49,21 @@ namespace Akavache.Tests
         [Fact]
         public void CacheShouldBeRoundtrippable()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = CreateBlobCache(path);
-                using (fixture)
-                {
+                using (fixture) {
                     // InMemoryBlobCache isn't round-trippable by design
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
 
-                    fixture.Insert("Foo", new byte[] {1, 2, 3});
+                    fixture.Insert("Foo", new byte[] { 1, 2, 3 });
                 }
 
                 fixture.Shutdown.Wait();
 
-                using (var fixture2 = CreateBlobCache(path))
-                {
+                using (var fixture2 = CreateBlobCache(path)) {
                     var output = fixture2.Get("Foo").First();
                     Assert.Equal(3, output.Length);
                     Assert.Equal(1, output[0]);
@@ -77,22 +73,18 @@ namespace Akavache.Tests
 
         public void CreatedAtShouldBeSetAutomaticallyAndBeRetrievable()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = CreateBlobCache(path);
                 DateTimeOffset roughCreationTime;
-                using (fixture)
-                {
+                using (fixture) {
                     fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
                     roughCreationTime = fixture.Scheduler.Now;
                 }
 
                 fixture.Shutdown.Wait();
 
-                using (var fixture2 = CreateBlobCache(path))
-                {
+                using (var fixture2 = CreateBlobCache(path)) {
                     var createdAt = fixture2.GetCreatedAt("Foo").Wait();
 
                     Assert.InRange(
@@ -106,11 +98,9 @@ namespace Akavache.Tests
         [Fact]
         public void InsertingAnItemTwiceShouldAlwaysGetTheNewOne()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (Utility.WithEmptyDirectory(out var path))
+            using (var fixture = CreateBlobCache(path)) {
                 fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
 
                 var output = fixture.Get("Foo").First();
@@ -128,16 +118,12 @@ namespace Akavache.Tests
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void CacheShouldRespectExpiration()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                (new TestScheduler()).With(sched =>
-                {
+            using (Utility.WithEmptyDirectory(out var path)) {
+                (new TestScheduler()).With(sched => {
                     bool wasTestCache;
 
-                    using (var fixture = CreateBlobCache(path))
-                    {
+                    using (var fixture = CreateBlobCache(path)) {
                         wasTestCache = fixture is InMemoryBlobCache;
                         fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
                         fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
@@ -151,7 +137,7 @@ namespace Akavache.Tests
                         Assert.Equal(1, result[0]);
 
                         // From 100 < t < 500, foo should be inactive but bar should still work
-                        bool shouldFail = true;
+                        var shouldFail = true;
                         sched.AdvanceToMs(120);
                         fixture.Get("foo").Subscribe(
                             x => result = x,
@@ -164,15 +150,16 @@ namespace Akavache.Tests
                     }
 
                     // NB: InMemoryBlobCache is not serializable by design
-                    if (wasTestCache) return;
+                    if (wasTestCache) {
+                        return;
+                    }
 
                     sched.AdvanceToMs(350);
                     sched.AdvanceToMs(351);
                     sched.AdvanceToMs(352);
 
                     // Serialize out the cache and reify it again
-                    using (var fixture = CreateBlobCache(path))
-                    {
+                    using (var fixture = CreateBlobCache(path)) {
                         byte[] result = null;
                         fixture.Get("bar").Subscribe(x => result = x);
                         sched.AdvanceToMs(400);
@@ -180,7 +167,7 @@ namespace Akavache.Tests
                         Assert.Equal(4, result[0]);
 
                         // At t=1000, everything is invalidated
-                        bool shouldFail = true;
+                        var shouldFail = true;
                         sched.AdvanceToMs(1000);
                         fixture.Get("bar").Subscribe(
                             x => result = x,
@@ -198,11 +185,8 @@ namespace Akavache.Tests
         [Fact]
         public void InvalidateAllReallyDoesInvalidateEverything()
         {
-            string path;
-            using (Utility.WithEmptyDirectory(out path)) 
-            {
-                using (var fixture = CreateBlobCache(path)) 
-                {
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
                     fixture.Insert("Foo", new byte[] { 1, 2, 3 }).First();
                     fixture.Insert("Bar", new byte[] { 4, 5, 6 }).First();
                     fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
@@ -214,8 +198,7 @@ namespace Akavache.Tests
                     Assert.Equal(0, fixture.GetAllKeys().First().Count());
                 }
 
-                using (var fixture = CreateBlobCache(path)) 
-                {
+                using (var fixture = CreateBlobCache(path)) {
                     Assert.Equal(0, fixture.GetAllKeys().First().Count());
                 }
             }
@@ -224,11 +207,8 @@ namespace Akavache.Tests
         [Fact]
         public void GetAllKeysShouldntReturnExpiredKeys()
         {
-            string path;
-            using (Utility.WithEmptyDirectory(out path)) 
-            {
-                using (var fixture = CreateBlobCache(path)) 
-                {
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
                     var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
 
                     fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).First();
@@ -238,9 +218,11 @@ namespace Akavache.Tests
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
 
-                using (var fixture = CreateBlobCache(path)) 
-                {
-                    if (fixture is InMemoryBlobCache) return;
+                using (var fixture = CreateBlobCache(path)) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
+
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
             }
@@ -249,23 +231,17 @@ namespace Akavache.Tests
         [Fact]
         public void VacuumDoesntPurgeKeysThatShouldBeThere()
         {
-            string path;
-            using (Utility.WithEmptyDirectory(out path)) 
-            {
-                using (var fixture = CreateBlobCache(path)) 
-                {
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
                     var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
 
                     fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).First();
                     fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).First();
                     fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).First();
 
-                    try 
-                    {
+                    try {
                         fixture.Vacuum().First();
-                    } 
-                    catch (NotImplementedException) 
-                    {
+                    } catch (NotImplementedException) {
                         // NB: The old and busted cache will never have this, 
                         // just make the test pass
                     }
@@ -273,9 +249,11 @@ namespace Akavache.Tests
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
 
-                using (var fixture = CreateBlobCache(path)) 
-                {
-                    if (fixture is InMemoryBlobCache) return;
+                using (var fixture = CreateBlobCache(path)) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
+
                     Assert.Equal(1, fixture.GetAllKeys().First().Count());
                 }
             }
@@ -287,21 +265,16 @@ namespace Akavache.Tests
             var before = BlobCache.ForcedDateTimeKind;
             BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
 
-            try
-            {
-                string path;
+            try {
 
-                using (Utility.WithEmptyDirectory(out path))
-                using (var fixture = CreateBlobCache(path))
-                {
+                using (Utility.WithEmptyDirectory(out var path))
+                using (var fixture = CreateBlobCache(path)) {
                     var value = DateTime.UtcNow;
                     fixture.InsertObject("key", value).First();
                     var result = fixture.GetObject<DateTime>("key").First();
                     Assert.Equal(DateTimeKind.Utc, result.Kind);
                 }
-            }
-            finally
-            {
+            } finally {
                 BlobCache.ForcedDateTimeKind = before;
             }
         }
