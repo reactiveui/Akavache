@@ -1,11 +1,11 @@
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using Splat;
 using System.Reflection;
-using System.Diagnostics;
+using Splat;
 
 namespace Akavache
 {
@@ -31,7 +31,7 @@ namespace Akavache
         {
             return Observable.Start(() => File.Delete(path), BlobCache.TaskpoolScheduler);
         }
-                
+
         public string GetDefaultRoamingCacheDirectory()
         {
             return ModeDetector.InUnitTestRunner() ?

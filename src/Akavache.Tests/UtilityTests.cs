@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Xunit;
-using Akavache;
 using System.Reactive;
-using System.Reactive.Subjects;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using Akavache;
+using Xunit;
 
 namespace Akavache.Tests
 {
@@ -16,9 +16,7 @@ namespace Akavache.Tests
             [Fact]
             public void CreatesDirectories()
             {
-                string path;
-                using (Utility.WithEmptyDirectory(out path))
-                {
+                using (Utility.WithEmptyDirectory(out var path)) {
                     var dir = new DirectoryInfo(Path.Combine(path, @"foo\bar\baz"));
                     dir.CreateRecursive();
                     Assert.True(dir.Exists);
@@ -38,7 +36,7 @@ namespace Akavache.Tests
             [Fact]
             public void SplitsAbsolutePaths()
             {
-                Assert.Equal(new[] {@"c:\", "foo", "bar"}, new DirectoryInfo(@"c:\foo\bar").SplitFullPath());
+                Assert.Equal(new[] { @"c:\", "foo", "bar" }, new DirectoryInfo(@"c:\foo\bar").SplitFullPath());
             }
 
             [Fact]
@@ -46,13 +44,13 @@ namespace Akavache.Tests
             {
                 var components = new DirectoryInfo(@"foo\bar").SplitFullPath().ToList();
                 Assert.True(components.Count > 2);
-                Assert.Equal(new[] {"foo", "bar"}, components.Skip(components.Count - 2));
+                Assert.Equal(new[] { "foo", "bar" }, components.Skip(components.Count - 2));
             }
 
             [Fact]
             public void SplitsUncPaths()
             {
-                Assert.Equal(new[] {@"\\foo\bar", "baz"}, new DirectoryInfo(@"\\foo\bar\baz").SplitFullPath());
+                Assert.Equal(new[] { @"\\foo\bar", "baz" }, new DirectoryInfo(@"\\foo\bar\baz").SplitFullPath());
             }
         }
 
@@ -65,7 +63,7 @@ namespace Akavache.Tests
                 var op1 = new Subject<int>();
                 var op2 = new Subject<int>();
                 var op3 = new Subject<int>();
-                bool isCompleted = false;
+                var isCompleted = false;
 
                 int op1Result = 0, op2Result = 0, op3Result = 0;
 
@@ -86,7 +84,7 @@ namespace Akavache.Tests
 
                 // We've already shut down, new ops should be ignored
                 fixture.EnqueueObservableOperation("foo", () => op3).Subscribe(x => op3Result = x);
-                op3.OnNext(3);  op3.OnCompleted();
+                op3.OnNext(3); op3.OnCompleted();
                 Assert.Equal(0, op3Result);
             }
         }

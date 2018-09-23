@@ -5,16 +5,12 @@ using System.Reactive.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 
-namespace Akavache.Sqlite3
-{
-    public class EncryptedBlobCache : SqlitePersistentBlobCache, IObjectBlobCache, IBulkBlobCache, IObjectBulkBlobCache, ISecureBlobCache
-    {
-        public EncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler)
-        {
+namespace Akavache.Sqlite3 {
+    public class EncryptedBlobCache : SqlitePersistentBlobCache, IObjectBlobCache, IBulkBlobCache, IObjectBulkBlobCache, ISecureBlobCache {
+        public EncryptedBlobCache(string databaseFile, IScheduler scheduler = null) : base(databaseFile, scheduler) {
         }
 
-        protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
-        {
+        protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler) {
             try
             {
 #if SILVERLIGHT
@@ -32,8 +28,7 @@ namespace Akavache.Sqlite3
 
         }
 
-        protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
-        {
+        protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler) {
             try
             {
 #if SILVERLIGHT

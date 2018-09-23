@@ -16,18 +16,14 @@ namespace Akavache
     {
         public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
-            return Observable.Create<Stream>(subj =>
-            {
+            return Observable.Create<Stream>(subj => {
                 var disp = new CompositeDisposable();
                 IsolatedStorageFile fs = null;
-                try
-                {
+                try {
                     fs = IsolatedStorageFile.GetUserStoreForApplication();
                     disp.Add(fs);
                     disp.Add(Observable.Start(() => fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read), BlobCache.TaskpoolScheduler).Subscribe(subj));
-                }
-                catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     subj.OnError(ex);
                 }
 
@@ -37,18 +33,14 @@ namespace Akavache
 
         public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler)
         {
-            return Observable.Create<Stream>(subj =>
-            {
+            return Observable.Create<Stream>(subj => {
                 var disp = new CompositeDisposable();
                 IsolatedStorageFile fs = null;
-                try
-                {
+                try {
                     fs = IsolatedStorageFile.GetUserStoreForApplication();
                     disp.Add(fs);
                     disp.Add(Observable.Start(() => fs.OpenFile(path, FileMode.Create, FileAccess.Write, FileShare.None), BlobCache.TaskpoolScheduler).Subscribe(subj));
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     subj.OnError(ex);
                 }
 
@@ -58,49 +50,38 @@ namespace Akavache
 
         public IObservable<Unit> CreateRecursive(string dirPath)
         {
-            return Observable.Start(() => 
-            {
-                using(var fs = IsolatedStorageFile.GetUserStoreForApplication())
-                {
-                    string acc = "";
-                    foreach(var x in dirPath.Split(Path.DirectorySeparatorChar))
-                    {
+            return Observable.Start(() => {
+                using (var fs = IsolatedStorageFile.GetUserStoreForApplication()) {
+                    var acc = "";
+                    foreach (var x in dirPath.Split(Path.DirectorySeparatorChar)) {
                         var path = Path.Combine(acc, x);
 
-                        if (path[path.Length - 1] == Path.VolumeSeparatorChar)
-                        {
+                        if (path[path.Length - 1] == Path.VolumeSeparatorChar) {
                             path += Path.DirectorySeparatorChar;
                         }
 
 
-                        if (!fs.DirectoryExists(path))
-                        {
+                        if (!fs.DirectoryExists(path)) {
                             fs.CreateDirectory(path);
                         }
 
                         acc = path;
                     }
                 }
-            }, BlobCache.TaskpoolScheduler) ;
+            }, BlobCache.TaskpoolScheduler);
         }
 
         public IObservable<Unit> Delete(string path)
         {
-            return Observable.Start(() =>
-            {
-                using (var fs = IsolatedStorageFile.GetUserStoreForApplication())
-                {
-                    if (!fs.FileExists(path))
-                    {
+            return Observable.Start(() => {
+                using (var fs = IsolatedStorageFile.GetUserStoreForApplication()) {
+                    if (!fs.FileExists(path)) {
                         return;
                     }
 
-                    try
-                    {
+                    try {
                         fs.DeleteFile(path);
-                    }
-                    catch (FileNotFoundException) { }
-                    catch (IsolatedStorageException) { }
+                    } catch (FileNotFoundException) { } catch (IsolatedStorageException) { }
                 }
             }, BlobCache.TaskpoolScheduler);
         }

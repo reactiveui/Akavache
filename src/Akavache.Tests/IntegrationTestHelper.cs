@@ -38,11 +38,9 @@ namespace Akavache.Tests
 
             // Find the body
             var bodyIndex = -1;
-            for (bodyIndex = 0; bodyIndex < bytes.Length - 3; bodyIndex++)
-            {
+            for (bodyIndex = 0; bodyIndex < bytes.Length - 3; bodyIndex++) {
                 if (bytes[bodyIndex] != 0x0D || bytes[bodyIndex + 1] != 0x0A ||
-                    bytes[bodyIndex + 2] != 0x0D || bytes[bodyIndex + 3] != 0x0A)
-                {
+                    bytes[bodyIndex + 2] != 0x0D || bytes[bodyIndex + 3] != 0x0A) {
                     continue;
                 }
 
@@ -51,22 +49,24 @@ namespace Akavache.Tests
 
             throw new Exception("Couldn't find response body");
 
-        foundIt:
+            foundIt:
 
             var headerText = Encoding.UTF8.GetString(bytes, 0, bodyIndex);
             var lines = headerText.Split('\n');
-            var statusCode = (HttpStatusCode)Int32.Parse(lines[0].Split(' ')[1]);
-            var ret = new HttpResponseMessage(statusCode);
-
-            ret.Content = new ByteArrayContent(bytes, bodyIndex + 2, bytes.Length - bodyIndex - 2);
-
-            foreach (var line in lines.Skip(1))
+            var statusCode = (HttpStatusCode)int.Parse(lines[0].Split(' ')[1]);
+            var ret = new HttpResponseMessage(statusCode)
             {
+                Content = new ByteArrayContent(bytes, bodyIndex + 2, bytes.Length - bodyIndex - 2)
+            };
+
+            foreach (var line in lines.Skip(1)) {
                 var separatorIndex = line.IndexOf(':');
                 var key = line.Substring(0, separatorIndex);
                 var val = line.Substring(separatorIndex + 2).TrimEnd();
 
-                if (String.IsNullOrWhiteSpace(line)) continue;
+                if (string.IsNullOrWhiteSpace(line)) {
+                    continue;
+                }
 
                 ret.Headers.TryAddWithoutValidation(key, val);
                 ret.Content.Headers.TryAddWithoutValidation(key, val);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -73,7 +73,7 @@ namespace Akavache
                 Observable.Return(compressedImage);
         }
 
-        static IObservable<IBitmap> bytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
+        private static IObservable<IBitmap> bytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
         {
             return BitmapLoader.Current.Load(new MemoryStream(compressedImage), desiredWidth, desiredHeight).ToObservable();
         }

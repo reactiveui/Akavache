@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Text;
 using System.Threading.Tasks;
-using Splat;
-using System.Reactive;
+using Newtonsoft.Json;
 using ReactiveUI;
-using System.Reactive.Concurrency;
+using Splat;
 
 namespace Akavache.Mobile
 {
@@ -15,7 +15,7 @@ namespace Akavache.Mobile
     {
         public void Register(IMutableDependencyResolver resolver)
         {
-            resolver.Register(() => new JsonSerializerSettings() 
+            resolver.Register(() => new JsonSerializerSettings()
             {
                 ObjectCreationHandling = ObjectCreationHandling.Replace,
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,

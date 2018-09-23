@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Akavache.Sqlite3;
 using Microsoft.Reactive.Testing;
 using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.Testing;
 using Xunit;
-using System.Threading;
-using System.Reactive.Concurrency;
-using System.Threading.Tasks;
 
 namespace Akavache.Tests
 {
@@ -38,8 +38,7 @@ namespace Akavache.Tests
     {
         public object GetService(Type t)
         {
-            if (t == typeof(UserModel))
-            {
+            if (t == typeof(UserModel)) {
                 return new UserModel(new UserObject());
             }
             return null;
@@ -52,8 +51,9 @@ namespace Akavache.Tests
         public string UrlPathSegment { get { return "foo"; } }
         [DataMember] public IScreen HostScreen { get; private set; }
 
-        Guid _ARandomGuid;
-        [DataMember] public Guid ARandomGuid 
+        private Guid _ARandomGuid;
+        [DataMember]
+        public Guid ARandomGuid
         {
             get { return _ARandomGuid; }
             set { this.RaiseAndSetIfChanged(ref _ARandomGuid, value); }
@@ -72,13 +72,10 @@ namespace Akavache.Tests
         [Fact]
         public async Task DownloadUrlTest()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = CreateBlobCache(path);
-                using(fixture)
-                {
+                using (fixture) {
                     var bytes = fixture.DownloadUrl(@"http://httpbin.org/html").First();
                     Assert.True(bytes.Length > 0);
                 }
@@ -88,18 +85,13 @@ namespace Akavache.Tests
         [Fact]
         public async Task GettingNonExistentKeyShouldThrow()
         {
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
-            using (var fixture = CreateBlobCache(path))
-            {
+            using (Utility.WithEmptyDirectory(out var path))
+            using (var fixture = CreateBlobCache(path)) {
                 Exception thrown = null;
-                try
-                {
+                try {
                     var result = await fixture.GetObject<UserObject>("WEIFJWPIEFJ")
                         .Timeout(TimeSpan.FromSeconds(3));
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     thrown = ex;
                 }
 
@@ -110,20 +102,19 @@ namespace Akavache.Tests
         [Fact]
         public void ObjectsShouldBeRoundtrippable()
         {
-            string path;
-            var input = new UserObject() {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"};
+            var input = new UserObject() { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" };
             UserObject result;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                using (var fixture = CreateBlobCache(path))
-                {
-                    if (fixture is InMemoryBlobCache) return;
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
+
                     fixture.InsertObject("key", input).First();
                 }
 
-                using (var fixture = CreateBlobCache(path))
-                {
+                using (var fixture = CreateBlobCache(path)) {
                     result = fixture.GetObject<UserObject>("key").First();
                 }
             }
@@ -136,21 +127,19 @@ namespace Akavache.Tests
         [Fact]
         public void ArraysShouldBeRoundtrippable()
         {
-            string path;
-            var input = new[] {new UserObject {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"}, new UserObject {Bio = "zzz", Name = "sleepy", Blog = "http://example.com"}};
+            var input = new[] { new UserObject { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" }, new UserObject { Bio = "zzz", Name = "sleepy", Blog = "http://example.com" } };
             UserObject[] result;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                using (var fixture = CreateBlobCache(path))
-                {
-                    if (fixture is InMemoryBlobCache) return;
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
 
                     fixture.InsertObject("key", input).First();
                 }
 
-                using (var fixture = CreateBlobCache(path))
-                {
+                using (var fixture = CreateBlobCache(path)) {
                     result = fixture.GetObject<UserObject[]>("key").First();
                 }
             }
@@ -166,21 +155,19 @@ namespace Akavache.Tests
         [Fact]
         public void ObjectsCanBeCreatedUsingObjectFactory()
         {
-            string path;
-            var input = new UserModel(new UserObject()) {Age = 123, Name = "Old"};
+            var input = new UserModel(new UserObject()) { Age = 123, Name = "Old" };
             UserModel result;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                using (var fixture = CreateBlobCache(path))
-                {
-                    if (fixture is InMemoryBlobCache) return;
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
 
                     fixture.InsertObject("key", input).First();
                 }
 
-                using (var fixture = CreateBlobCache(path))
-                {
+                using (var fixture = CreateBlobCache(path)) {
                     result = fixture.GetObject<UserModel>("key").First();
                 }
             }
@@ -192,20 +179,18 @@ namespace Akavache.Tests
         [Fact]
         public void ArraysShouldBeRoundtrippableUsingObjectFactory()
         {
-            string path;
-            var input = new[] {new UserModel(new UserObject()) {Age = 123, Name = "Old"}, new UserModel(new UserObject()) {Age = 123, Name = "Old"}};
+            var input = new[] { new UserModel(new UserObject()) { Age = 123, Name = "Old" }, new UserModel(new UserObject()) { Age = 123, Name = "Old" } };
             UserModel[] result;
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                using (var fixture = CreateBlobCache(path))
-                {
-                    if (fixture is InMemoryBlobCache) return;
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
 
                     fixture.InsertObject("key", input).First();
                 }
 
-                using (var fixture = CreateBlobCache(path))
-                {
+                using (var fixture = CreateBlobCache(path)) {
                     result = fixture.GetObject<UserModel[]>("key").First();
                 }
             }
@@ -219,18 +204,14 @@ namespace Akavache.Tests
         [Fact]
         public void FetchFunctionShouldBeCalledOnceForGetOrFetchObject()
         {
-            int fetchCount = 0;
-            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
-            {
+            var fetchCount = 0;
+            var fetcher = new Func<IObservable<Tuple<string, string>>>(() => {
                 fetchCount++;
                 return Observable.Return(new Tuple<string, string>("Foo", "Bar"));
             });
 
-            string path;
-            using(Utility.WithEmptyDirectory(out path))
-            {
-                using(var fixture = CreateBlobCache(path))
-                {
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
                     var result = fixture.GetOrFetchObject("Test", fetcher).First();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
@@ -243,11 +224,12 @@ namespace Akavache.Tests
                     Assert.Equal(1, fetchCount);
 
                     // Testing persistence makes zero sense for InMemoryBlobCache
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
                 }
 
-                using(var fixture = CreateBlobCache(path))
-                {
+                using (var fixture = CreateBlobCache(path)) {
                     var result = fixture.GetOrFetchObject("Test", fetcher).First();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
@@ -259,21 +241,16 @@ namespace Akavache.Tests
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void FetchFunctionShouldDebounceConcurrentRequests()
         {
-            (new TestScheduler()).With(sched =>
-            {
-                string path;
-                using (Utility.WithEmptyDirectory(out path))
-                {
-                    int callCount = 0;
-                    var fetcher = new Func<IObservable<int>>(() => 
-                    {
+            (new TestScheduler()).With(sched => {
+                using (Utility.WithEmptyDirectory(out var path)) {
+                    var callCount = 0;
+                    var fetcher = new Func<IObservable<int>>(() => {
                         callCount++;
                         return Observable.Return(42).Delay(TimeSpan.FromMilliseconds(1000), sched);
                     });
 
                     var fixture = CreateBlobCache(path);
-                    try
-                    {
+                    try {
                         var result1 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
 
                         Assert.Equal(0, result1.Count);
@@ -333,9 +310,7 @@ namespace Akavache.Tests
                         Assert.Equal(1, result4.Count);
                         Assert.Equal(1, result5.Count);
                         Assert.Equal(2, callCount);
-                    }
-                    finally
-                    {
+                    } finally {
                         // Since we're in TestScheduler, we can't use the normal 
                         // using statement, we need to kick off the async dispose,
                         // then start the scheduler to let it run
@@ -349,16 +324,12 @@ namespace Akavache.Tests
         [Fact]
         public void FetchFunctionShouldPropagateThrownExceptionAsObservableException()
         {
-            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
-            {
+            var fetcher = new Func<IObservable<Tuple<string, string>>>(() => {
                 throw new InvalidOperationException();
             });
 
-            string path;
-            using(Utility.WithEmptyDirectory(out path))
-            {
-                using(var fixture = CreateBlobCache(path))
-                {
+            using (Utility.WithEmptyDirectory(out var path)) {
+                using (var fixture = CreateBlobCache(path)) {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
                         .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
                     Assert.Equal("one", result.Item1);
@@ -373,12 +344,9 @@ namespace Akavache.Tests
             var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
                 Observable.Throw<Tuple<string, string>>(new InvalidOperationException()));
 
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = CreateBlobCache(path);
-                using (fixture)
-                {
+                using (fixture) {
                     var result = fixture.GetOrFetchObject("Test", fetcher)
                         .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
                     Assert.Equal("one", result.Item1);
@@ -390,14 +358,10 @@ namespace Akavache.Tests
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void GetOrFetchShouldRespectExpiration()
         {
-            (new TestScheduler()).With(sched => 
-            {
-                string path;
-                using (Utility.WithEmptyDirectory(out path))
-                {
+            (new TestScheduler()).With(sched => {
+                using (Utility.WithEmptyDirectory(out var path)) {
                     var fixture = CreateBlobCache(path);
-                    using (fixture)
-                    {
+                    using (fixture) {
                         var result = default(string);
                         fixture.GetOrFetchObject("foo",
                             () => Observable.Return("bar"),
@@ -431,19 +395,17 @@ namespace Akavache.Tests
         [Fact]
         public void GetAndFetchLatestShouldInvalidateObjectOnError()
         {
-            var fetcher = new Func<IObservable<string>>(() =>
-            {
+            var fetcher = new Func<IObservable<string>>(() => {
                 return Observable.Throw<string>(new InvalidOperationException());
             });
 
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = CreateBlobCache(path);
 
-                using (fixture)
-                {
-                    if (fixture is InMemoryBlobCache) return;
+                using (fixture) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
 
                     fixture.InsertObject("foo", "bar").First();
 
@@ -466,8 +428,7 @@ namespace Akavache.Tests
         {
             var fetchPredicateCalled = false;
 
-            Func<DateTimeOffset, bool> fetchPredicate = d =>
-            {
+            Func<DateTimeOffset, bool> fetchPredicate = d => {
                 fetchPredicateCalled = true;
 
                 return true;
@@ -475,14 +436,13 @@ namespace Akavache.Tests
 
             var fetcher = new Func<IObservable<string>>(() => Observable.Return("baz"));
 
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = CreateBlobCache(path);
 
-                using (fixture)
-                {
-                    if (fixture is InMemoryBlobCache) return;
+                using (fixture) {
+                    if (fixture is InMemoryBlobCache) {
+                        return;
+                    }
 
                     fixture.InsertObject("foo", "bar").First();
 
@@ -497,9 +457,8 @@ namespace Akavache.Tests
         [Fact]
         public void KeysByTypeTest()
         {
-            string path;
-            var input = new[] 
-            { 
+            var input = new[]
+            {
                 "Foo",
                 "Bar",
                 "Baz"
@@ -508,11 +467,9 @@ namespace Akavache.Tests
             var inputItems = input.Select(x => new UserObject() { Name = x, Bio = "A thing", }).ToArray();
             var fixture = default(IBlobCache);
 
-            using (Utility.WithEmptyDirectory(out path))
-            using (fixture = CreateBlobCache(path))
-            {
-                foreach(var item in input.Zip(inputItems, (Key, Value) => new { Key, Value }))
-                {
+            using (Utility.WithEmptyDirectory(out var path))
+            using (fixture = CreateBlobCache(path)) {
+                foreach (var item in input.Zip(inputItems, (Key, Value) => new { Key, Value })) {
                     fixture.InsertObject(item.Key, item.Value).Wait();
                 }
 
@@ -543,13 +500,10 @@ namespace Akavache.Tests
         [Fact]
         public async Task GetAllKeysSmokeTest()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
+            using (Utility.WithEmptyDirectory(out var path)) {
                 var fixture = default(IBlobCache);
-                using (fixture = CreateBlobCache(path))
-                {
+                using (fixture = CreateBlobCache(path)) {
                     Observable.Merge(
                         fixture.InsertObject("Foo", "bar"),
                         fixture.InsertObject("Bar", 10),
@@ -561,11 +515,12 @@ namespace Akavache.Tests
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
-                    
-                if (fixture is InMemoryBlobCache) return;
 
-                using (fixture = CreateBlobCache(path))
-                {
+                if (fixture is InMemoryBlobCache) {
+                    return;
+                }
+
+                using (fixture = CreateBlobCache(path)) {
                     var keys = fixture.GetAllKeys().First();
                     Assert.Equal(3, keys.Count());
                     Assert.True(keys.Any(x => x.Contains("Foo")));
@@ -586,17 +541,14 @@ namespace Akavache.Tests
         [Fact]
         public void VacuumCompactsDatabase()
         {
-            string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                string dbPath = Path.Combine(path, "sqlite.db");
+            using (Utility.WithEmptyDirectory(out var path)) {
+                var dbPath = Path.Combine(path, "sqlite.db");
 
-                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
-                {
+                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path))) {
                     Assert.True(File.Exists(dbPath));
 
-                    byte[] buf = new byte[256 * 1024];
+                    var buf = new byte[256 * 1024];
                     var rnd = new Random();
                     rnd.NextBytes(buf);
 
@@ -606,8 +558,7 @@ namespace Akavache.Tests
                 var size = new FileInfo(dbPath).Length;
                 Assert.True(size > 0);
 
-                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
-                {
+                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path))) {
                     fixture.InvalidateAll().Wait();
                     fixture.Vacuum().Wait();
                 }
@@ -635,7 +586,7 @@ namespace Akavache.Tests
         }
     }
 
-    class BlockingDisposeCache : IBlobCache
+    internal class BlockingDisposeCache : IBlobCache
     {
         protected readonly IBlobCache _inner;
         public BlockingDisposeCache(IBlobCache cache)
@@ -701,7 +652,7 @@ namespace Akavache.Tests
         }
     }
 
-    class BlockingDisposeObjectCache : BlockingDisposeCache, IObjectBlobCache
+    internal class BlockingDisposeObjectCache : BlockingDisposeCache, IObjectBlobCache
     {
         public BlockingDisposeObjectCache(IObjectBlobCache cache) : base(cache) { }
 

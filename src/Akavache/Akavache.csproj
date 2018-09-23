@@ -11,5 +11,11 @@
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+     <Content Include="readme.txt">
+    <PackagePath>\</PackagePath>
+  </Content>
+  </ItemGroup>
 
 </Project>

@@ -37,10 +37,12 @@ namespace Akavache
             foreach (var ns in namespaces) 
             {
                 var targetType = ns + ".Registrations";
-                string fullName = targetType + ", " + assmName.FullName.Replace(assmName.Name, ns);
+                var fullName = targetType + ", " + assmName.FullName.Replace(assmName.Name, ns);
 
                 var registerTypeClass = Type.GetType(fullName, false);
-                if (registerTypeClass == null) continue;
+                if (registerTypeClass == null) {
+                    continue;
+                }
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
                 registerer.Register(This);

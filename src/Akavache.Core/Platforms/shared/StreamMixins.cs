@@ -1,4 +1,4 @@
-
+﻿
 using System.IO;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -18,24 +18,17 @@ namespace System
 #else
             var ret = new AsyncSubject<Unit>();
 
-            try
-            {
-                This.BeginWrite(data, start, length, result =>
-                {
-                    try
-                    {
+            try {
+                This.BeginWrite(data, start, length, result => {
+                    try {
                         This.EndWrite(result);
                         ret.OnNext(Unit.Default);
                         ret.OnCompleted();
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         ret.OnError(ex);
                     }
                 }, null);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 ret.OnError(ex);
             }
 

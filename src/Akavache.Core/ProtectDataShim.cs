@@ -18,7 +18,8 @@ namespace Akavache
         }
     }
 
-    public enum DataProtectionScope {
+    public enum DataProtectionScope
+    {
         CurrentUser,
     }
 }

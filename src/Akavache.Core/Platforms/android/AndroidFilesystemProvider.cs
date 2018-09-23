@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -10,7 +10,7 @@ namespace Akavache
 {
     public class AndroidFilesystemProvider : IFilesystemProvider
     {
-        readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
+        private readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
 
         public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
@@ -46,7 +46,9 @@ namespace Akavache
         {
             var path = Application.Context.FilesDir.AbsolutePath;
             var di = new DirectoryInfo(Path.Combine(path, "Secret"));
-            if (!di.Exists) di.CreateRecursive();
+            if (!di.Exists) {
+                di.CreateRecursive();
+            }
 
             return di.FullName;
         }

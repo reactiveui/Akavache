@@ -19,7 +19,7 @@ using Windows.Storage;
 
 namespace Akavache
 {
-    static class Utility
+    internal static class Utility
     {
         public static string GetMd5Hash(string input)
         {
@@ -29,13 +29,11 @@ namespace Akavache
             // formatting-wise), which would break old caches.
             return MD5Core.GetHashString(input, Encoding.UTF8);
 #else
-            using (var md5Hasher = new MD5Managed())
-            {
+            using (var md5Hasher = new MD5Managed()) {
                 // Convert the input string to a byte array and compute the hash.
                 var data = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(input));
                 var sBuilder = new StringBuilder();
-                foreach (var item in data)
-                {
+                foreach (var item in data) {
                     sBuilder.Append(item.ToString("x2"));
                 }
                 return sBuilder.ToString();
@@ -49,10 +47,8 @@ namespace Akavache
             scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             var ret = new AsyncSubject<Stream>();
 
-            Observable.Start(() =>
-            {
-                try
-                {
+            Observable.Start(() => {
+                try {
                     var createModes = new[]
                     {
                         FileMode.Create,
@@ -65,16 +61,13 @@ namespace Akavache
                     // throwing lots of 1st chance exceptions makes debugging
                     // obnoxious, as well as a bug in VS where it detects
                     // exceptions caught by Observable.Start as Unhandled.
-                    if (!createModes.Contains(mode) && !File.Exists(path))
-                    {
+                    if (!createModes.Contains(mode) && !File.Exists(path)) {
                         ret.OnError(new FileNotFoundException());
                         return;
                     }
 
                     Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     ret.OnError(ex);
                 }
             }, scheduler);
@@ -84,12 +77,10 @@ namespace Akavache
 
         public static void CreateRecursive(this DirectoryInfo This)
         {
-            This.SplitFullPath().Aggregate((parent, dir) =>
-            {
+            This.SplitFullPath().Aggregate((parent, dir) => {
                 var path = Path.Combine(parent, dir);
 
-                if (!Directory.Exists(path))
-                {
+                if (!Directory.Exists(path)) {
                     Directory.CreateDirectory(path);
                 }
 
@@ -101,11 +92,12 @@ namespace Akavache
         {
             var root = Path.GetPathRoot(This.FullName);
             var components = new List<string>();
-            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
-            {
+            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path)) {
                 var filename = Path.GetFileName(path);
-                if (String.IsNullOrEmpty(filename))
+                if (string.IsNullOrEmpty(filename)) {
                     continue;
+                }
+
                 components.Add(filename);
             }
             components.Add(root);
@@ -116,11 +108,9 @@ namespace Akavache
 
         public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
         {
-            return Observable.Create<T>(subj =>
-            {
+            return Observable.Create<T>(subj => {
                 return This.Subscribe(subj.OnNext,
-                    ex =>
-                    {
+                    ex => {
                         var msg = message ?? "0x" + This.GetHashCode().ToString("x");
                         LogHost.Default.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
                         subj.OnError(ex);
@@ -146,18 +136,12 @@ namespace Akavache
                 });
 #endif
 
-            return Observable.Start(() =>
-            {
-                try
-                {
+            return Observable.Start(() => {
+                try {
                     This.CopyTo(destination);
-                }
-                catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     LogHost.Default.WarnException("CopyToAsync failed", ex);
-                }
-                finally
-                {
+                } finally {
                     This.Dispose();
                     destination.Dispose();
                 }

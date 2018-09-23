@@ -11,18 +11,13 @@ namespace Akavache
     {
         public static T Retry<T>(this Func<T> block, int retries = 3)
         {
-            while (true)
-            {
-                try
-                {
-                    T ret = block();
+            while (true) {
+                try {
+                    var ret = block();
                     return ret;
-                }
-                catch (Exception)
-                {
+                } catch (Exception) {
                     retries--;
-                    if (retries == 0)
-                    {
+                    if (retries == 0) {
                         throw;
                     }
                 }

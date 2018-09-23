@@ -15,13 +15,13 @@ namespace Akavache.Tests.Performance
     public abstract class ReadTests
     {
         protected abstract IBlobCache CreateBlobCache(string path);
-        readonly Random prng = new Random();
+
+        private readonly Random prng = new Random();
 
         [Fact]
         public async Task SequentialSimpleReads()
         {
-            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
-            {
+            await GeneratePerfRangesForBlock(async (cache, size, keys) => {
                 var st = new Stopwatch();
                 var toFetch = Enumerable.Range(0, size)
                     .Select(_ => keys[prng.Next(0, keys.Count - 1)])
@@ -41,11 +41,10 @@ namespace Akavache.Tests.Performance
         [Fact]
         public async Task SequentialBulkReads()
         {
-            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
-            {
+            await GeneratePerfRangesForBlock(async (cache, size, keys) => {
                 var st = new Stopwatch();
 
-                int count = 0;
+                var count = 0;
                 var toFetch = Enumerable.Range(0, size)
                     .Select(_ => keys[prng.Next(0, keys.Count - 1)])
                     .GroupBy(_ => ++count / 32)
@@ -56,7 +55,7 @@ namespace Akavache.Tests.Performance
                 foreach (var group in toFetch) {
                     await cache.Get(group);
                 }
-                                
+
                 st.Stop();
                 return st.ElapsedMilliseconds;
             });
@@ -65,8 +64,7 @@ namespace Akavache.Tests.Performance
         [Fact]
         public async Task ParallelSimpleReads()
         {
-            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
-            {
+            await GeneratePerfRangesForBlock(async (cache, size, keys) => {
                 var st = new Stopwatch();
                 var toFetch = Enumerable.Range(0, size)
                     .Select(_ => keys[prng.Next(0, keys.Count - 1)])
@@ -91,13 +89,11 @@ namespace Akavache.Tests.Performance
 
             var dirPath = default(string);
             using (Utility.WithEmptyDirectory(out dirPath))
-            using (var cache = await GenerateAGiantDatabase(dirPath))
-            {
+            using (var cache = await GenerateAGiantDatabase(dirPath)) {
                 var keys = await cache.GetAllKeys();
                 dbName = dbName ?? cache.GetType().Name;
 
-                foreach (var size in PerfHelper.GetPerfRanges())
-                {
+                foreach (var size in PerfHelper.GetPerfRanges()) {
                     results[size] = await block(cache, size, keys.ToList());
                 }
             }
@@ -108,7 +104,7 @@ namespace Akavache.Tests.Performance
             }
         }
 
-        async Task<IBlobCache> GenerateAGiantDatabase(string path)
+        private async Task<IBlobCache> GenerateAGiantDatabase(string path)
         {
             path = path ?? IntegrationTestHelper.GetIntegrationTestRootDirectory();
 
@@ -116,7 +112,9 @@ namespace Akavache.Tests.Performance
             var cache = CreateBlobCache(path);
 
             var keys = await cache.GetAllKeys();
-            if (keys.Count() == giantDbSize) return cache;;
+            if (keys.Count() == giantDbSize) {
+                return cache;
+            };
 
             await cache.InvalidateAll();
             await PerfHelper.GenerateDatabase(cache, giantDbSize);

@@ -12,14 +12,14 @@ namespace Akavache
     {
         public static IObservable<IDictionary<string, byte[]>> Get(this IBlobCache This, IEnumerable<string> keys)
         {
-            var bulkCache = This as IBulkBlobCache;
-            if (bulkCache != null) return bulkCache.Get(keys);
+            if (This is IBulkBlobCache bulkCache) {
+                return bulkCache.Get(keys);
+            }
 
             return keys.ToObservable()
-                .SelectMany(x => 
-                {
+                .SelectMany(x => {
                     return This.Get(x)
-                        .Select(y => new KeyValuePair<string, byte[]>(x,y))
+                        .Select(y => new KeyValuePair<string, byte[]>(x, y))
                         .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, byte[]>>());
                 })
                 .ToDictionary(k => k.Key, v => v.Value);
@@ -27,8 +27,9 @@ namespace Akavache
 
         public static IObservable<Unit> Insert(this IBlobCache This, IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
-            var bulkCache = This as IBulkBlobCache;
-            if (bulkCache != null) return bulkCache.Insert(keyValuePairs, absoluteExpiration);
+            if (This is IBulkBlobCache bulkCache) {
+                return bulkCache.Insert(keyValuePairs, absoluteExpiration);
+            }
 
             return keyValuePairs.ToObservable()
                 .SelectMany(x => This.Insert(x.Key, x.Value, absoluteExpiration))
@@ -37,8 +38,9 @@ namespace Akavache
 
         public static IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(this IBlobCache This, IEnumerable<string> keys)
         {
-            var bulkCache = This as IBulkBlobCache;
-            if (bulkCache != null) return bulkCache.GetCreatedAt(keys);
+            if (This is IBulkBlobCache bulkCache) {
+                return bulkCache.GetCreatedAt(keys);
+            }
 
             return keys.ToObservable()
                 .SelectMany(x => This.GetCreatedAt(x).Select(y => new { Key = x, Value = y }))
@@ -47,8 +49,9 @@ namespace Akavache
 
         public static IObservable<Unit> Invalidate(this IBlobCache This, IEnumerable<string> keys)
         {
-            var bulkCache = This as IBulkBlobCache;
-            if (bulkCache != null) return bulkCache.Invalidate(keys);
+            if (This is IBulkBlobCache bulkCache) {
+                return bulkCache.Invalidate(keys);
+            }
 
             return keys.ToObservable()
                .SelectMany(x => This.Invalidate(x))
@@ -57,23 +60,24 @@ namespace Akavache
 
         public static IObservable<IDictionary<string, T>> GetObjects<T>(this IBlobCache This, IEnumerable<string> keys, bool noTypePrefix = false)
         {
-            var bulkCache = This as IObjectBulkBlobCache;
-            if (bulkCache != null) return bulkCache.GetObjects<T>(keys);
+            if (This is IObjectBulkBlobCache bulkCache) {
+                return bulkCache.GetObjects<T>(keys);
+            }
 
             return keys.ToObservable()
-                .SelectMany(x => 
-                {
+                .SelectMany(x => {
                     return This.GetObject<T>(x)
-                        .Select(y => new KeyValuePair<string, T>(x,y))
+                        .Select(y => new KeyValuePair<string, T>(x, y))
                         .Catch<KeyValuePair<string, T>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, T>>());
                 })
-                .ToDictionary(k => k.Key, v => v.Value);           
+                .ToDictionary(k => k.Key, v => v.Value);
         }
 
         public static IObservable<Unit> InsertObjects<T>(this IBlobCache This, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
-            var bulkCache = This as IObjectBulkBlobCache;
-            if (bulkCache != null) return bulkCache.InsertObjects(keyValuePairs, absoluteExpiration);
+            if (This is IObjectBulkBlobCache bulkCache) {
+                return bulkCache.InsertObjects(keyValuePairs, absoluteExpiration);
+            }
 
             return keyValuePairs.ToObservable()
                 .SelectMany(x => This.InsertObject(x.Key, x.Value, absoluteExpiration))
@@ -82,8 +86,9 @@ namespace Akavache
 
         public static IObservable<Unit> InvalidateObjects<T>(this IBlobCache This, IEnumerable<string> keys)
         {
-            var bulkCache = This as IObjectBulkBlobCache;
-            if (bulkCache != null) return bulkCache.InvalidateObjects<T>(keys);
+            if (This is IObjectBulkBlobCache bulkCache) {
+                return bulkCache.InvalidateObjects<T>(keys);
+            }
 
             return keys.ToObservable()
                .SelectMany(x => This.InvalidateObject<T>(x))

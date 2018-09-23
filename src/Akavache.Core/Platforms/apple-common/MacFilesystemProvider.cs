@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.IO;
-using System.Reactive.Concurrency;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Foundation;
 
@@ -10,7 +10,7 @@ namespace Akavache
 {
     public class MacFilesystemProvider : IFilesystemProvider
     {
-        readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
+        private readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
 
         public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
@@ -47,14 +47,15 @@ namespace Akavache
             return CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, "SecretCache");
         }
 
-        string CreateAppDirectory(NSSearchPathDirectory targetDir, string subDir = "BlobCache")
+        private string CreateAppDirectory(NSSearchPathDirectory targetDir, string subDir = "BlobCache")
         {
-            NSError err;
 
             var fm = new NSFileManager();
-            var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out err);
+            var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out var err);
             var ret = Path.Combine(url.RelativePath, BlobCache.ApplicationName, subDir);
-            if (!Directory.Exists(ret)) _inner.CreateRecursive(ret).Wait();
+            if (!Directory.Exists(ret)) {
+                _inner.CreateRecursive(ret).Wait();
+            }
 
             return ret;
         }
