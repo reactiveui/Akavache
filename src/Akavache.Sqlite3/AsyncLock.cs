@@ -25,7 +25,7 @@ namespace Akavache.Sqlite3.Internal
                 return m_releaser;
             
             return wait
-                .ContinueWith((task, state) => (task.IsCanceled) ? null : (IDisposable)state,
+                .ContinueWith((task, state) => task.IsCanceled ? null : (IDisposable)state,
                     m_releaser.Result, ct,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
