@@ -147,7 +147,7 @@ namespace Akavache.Sqlite3
 
                 try 
                 {
-                    using(flushLock.LockAsync().Result)
+                    using(flushLock.LockAsync().ConfigureAwait(false).GetAwaiter().GetResult())
                     {
                         FlushInternal();
                     }
