@@ -1,0 +1,71 @@
+trigger:
+- master
+- rel/*
+
+pool:
+  vmImage: vs2017-win2016
+
+steps:
+- task: BatchScript@1
+  inputs:
+    filename: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
+    arguments: -no_logo
+    modifyEnvironment: true
+  displayName: Setup Environment Variables
+
+- task: DotNetCoreCLI@2  
+  inputs:
+    command: custom
+    custom: tool
+    arguments: install --tool-path . nbgv
+  displayName: Install NBGV tool
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- script: nbgv cloud
+  displayName: Set Version
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- script: build.cmd
+  displayName: Build 
+  env:
+    VSTS_ACCESS_TOKEN: $(System.AccessToken)
+    COVERALLS_TOKEN: $(COVERALLS_TOKEN)
+
+- task: CopyFiles@2
+  inputs:
+    Contents: 'artifacts/*.nupkg'
+    TargetFolder: '$(build.artifactstagingdirectory)\packages'
+    flattenFolders: true
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- task: PowerShell@2
+  displayName: Authenticode Sign artifacts
+  inputs:
+    filePath: script/Sign-Packages.ps1
+  env:
+    SignClientUser: $(SignClientUser)
+    SignClientSecret: $(SignClientSecret)
+    ArtifactDirectory: $(Build.ArtifactStagingDirectory)\Packages
+  condition: and(succeeded(), not(eq(variables['build.reason'], 'PullRequest')), not(eq(variables['SignClientSecret'], '')), not(eq(variables['SignClientUser'], '')))
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Package Artifacts
+  inputs:
+    pathToPublish: '$(build.artifactstagingdirectory)\packages'
+    artifactType: container
+    artifactName: Packages
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- task: CopyFiles@2
+  inputs:
+    Contents: '**\bin\**'
+    TargetFolder: '$(build.artifactstagingdirectory)\binaries'
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Binaries
+  inputs:
+    pathToPublish: '$(build.artifactstagingdirectory)\binaries'
+    artifactType: container
+    artifactName: Binaries
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
