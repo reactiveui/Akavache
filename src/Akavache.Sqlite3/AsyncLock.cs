@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Reactive.Disposables;
 
 namespace Akavache.Sqlite3.Internal
 {
@@ -20,11 +21,11 @@ namespace Akavache.Sqlite3.Internal
             var wait = m_semaphore.WaitAsync(ct);
 
             // Happy path. We synchronously acquired the lock.
-            if (wait.IsCompleted && !wait.IsFaulted)
+            if (wait.IsCompleted && !wait.IsFaulted && !wait.IsCanceled)
                 return m_releaser;
-
+            
             return wait
-                .ContinueWith((_, state) => (IDisposable)state,
+                .ContinueWith((task, state) => task.IsCanceled ? null : (IDisposable)state,
                     m_releaser.Result, ct,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
