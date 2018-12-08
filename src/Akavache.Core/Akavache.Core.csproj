@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net461;uap10.0.16299;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0</TargetFrameworks>
-		<AssemblyName>Akavache</AssemblyName>
+    <TargetFrameworks>netstandard2.0;net461;uap10.0.16299;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0</TargetFrameworks>
+    <AssemblyName>Akavache</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
     <PackageId>akavache.core</PackageId>
@@ -11,8 +11,8 @@
     <Compile Remove="Platforms\**\*.cs" />
     <None Include="Platforms\**\*.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="System.Reactive" Version="4.0.0" />
-		<PackageReference Include="Splat" Version="4.0.2" />
+    <PackageReference Include="System.Reactive" Version="4.0.0" />
+    <PackageReference Include="Splat" Version="4.0.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
@@ -21,13 +21,13 @@
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
 
 
   <ItemGroup Condition=" ! $(TargetFramework.StartsWith('netstandard'))  And ! $(TargetFramework.StartsWith('uap'))">
     <Compile Include="Platforms\shared-not-uwp\**\*.cs" />
   </ItemGroup>
-
 
   <ItemGroup Condition=" ! $(TargetFramework.StartsWith('netstandard')) ">
     <Compile Include="Platforms\shared\**\*.cs" />
@@ -36,6 +36,7 @@
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
     <Compile Include="Platforms\windows-common\**\*.cs" />
     <Compile Include="Platforms\net461\**\*.cs" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('uap')) ">
@@ -48,8 +49,8 @@
     <Compile Include="Platforms\ios\**\*.cs" />
     <Compile Include="Platforms\xamarin-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-		<Reference Include="System.Runtime.Serialization" />
-	</ItemGroup>
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
     <Compile Include="Platforms\apple-common\**\*.cs" />
@@ -62,11 +63,12 @@
     <Compile Include="Platforms\android\**\*.cs" />
     <Compile Include="Platforms\xamarin-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-		<Reference Include="System.Runtime.Serialization" />
-	</ItemGroup>
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('netcoreapp')) ">
-		<Compile Include="Platforms\netcoreapp2.0\**\*.cs" />
-		<PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-	</ItemGroup>
+    <Compile Include="Platforms\netcoreapp2.0\**\*.cs" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
+  </ItemGroup>
 </Project>
