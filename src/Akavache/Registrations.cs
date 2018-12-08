@@ -12,12 +12,18 @@ namespace Akavache
     {
         public void Register(IMutableDependencyResolver resolverToUse)
         {
-            Akavache.Sqlite3.SqlLite.Start(DefaultBundle);
+            SqlLite.Start(DefaultBundle);
         }
 
         public static void DefaultBundle()
         {
             SQLitePCL.Batteries_V2.Init();
+        }
+
+        public static void Start(string applicationName)
+        {
+            BlobCache.ApplicationName = applicationName;
+            SqlLite.Start(DefaultBundle);
         }
     }
 }
