@@ -43,5 +43,11 @@ namespace Akavache.Sqlite3
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
         }
+
+        public static void Start(string applicationName, Action initSql)
+        {
+            BlobCache.ApplicationName = applicationName;
+            initSql?.Invoke();
+        }
     }
 }
