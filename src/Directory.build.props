@@ -19,7 +19,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Nerdbank.GitVersioning" Version="2.2.3" PrivateAssets="all" />
+		<PackageReference Include="Nerdbank.GitVersioning" Version="2.2.33" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
