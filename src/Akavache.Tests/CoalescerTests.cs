@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
+using DynamicData;
 using ReactiveUI;
 using Xunit;
 
@@ -22,7 +24,7 @@ namespace Akavache.Tests
 
             var queue = fixture.DumpQueue();
             var subj = queue[0].CompletionAsElements;
-            var output = subj.CreateCollection();
+            subj.ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var output).Subscribe();
             Assert.Equal(0, output.Count);
 
             var result = SqliteOperationQueue.CoalesceOperations(queue);
@@ -50,7 +52,7 @@ namespace Akavache.Tests
 
             var queue = fixture.DumpQueue();
             var subj = queue[0].CompletionAsElements;
-            var output = subj.CreateCollection();
+            subj.ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var output).Subscribe();
             Assert.Equal(0, output.Count);
 
             var result = SqliteOperationQueue.CoalesceOperations(queue);
@@ -78,10 +80,12 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Baz" });
 
             var queue = fixture.DumpQueue();
-            var output = queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
+            queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
                 .Select(x => x.CompletionAsElements)
                 .Merge()
-                .CreateCollection();
+                .ToObservableChangeSet(ImmediateScheduler.Instance)
+                .Bind(out var output)
+                .Subscribe();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(2, result.Count);
@@ -116,10 +120,12 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Foo" });
 
             var queue = fixture.DumpQueue();
-            var output = queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
+            queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
                 .Select(x => x.CompletionAsElements)
                 .Merge()
-                .CreateCollection();
+                .ToObservableChangeSet(ImmediateScheduler.Instance)
+                .Bind(out var output)
+                .Subscribe();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(1, result.Count);
