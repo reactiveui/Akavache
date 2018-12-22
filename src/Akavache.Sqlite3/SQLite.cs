@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2009-2012 Krueger Systems, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -220,9 +220,7 @@ namespace Akavache.Sqlite3.Internal
 		}
 		
 		static SQLiteConnection ()
-		{
-            SQLitePCL.Batteries_V2.Init();
-
+		{ 
             if (_preserveDuringLinkMagic) {
 				var ti = new ColumnInfo ();
 				ti.Name = "magic";
@@ -3316,4 +3314,5 @@ namespace Akavache.Sqlite3.Internal
 			Null = 5
 		}
 	}
+
 }
