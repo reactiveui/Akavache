@@ -60,7 +60,7 @@ added to support:
 
 Interacting with Akavache is primarily done through an object called
 `BlobCache`. At App startup, you must first set your app's name via
-`BlobCache.ApplicationName`. After setting your app's name, you're ready to save some data.
+`BlobCache.ApplicationName` or `Akavache.Registrations.Start("ApplicationName")` . After setting your app's name, you're ready to save some data.
 
 #### Choose a location
 There are four build-in locations, that have some magic applied on some systems:
@@ -104,8 +104,9 @@ BlobCache.UserAccount.GetObject<Toaster>("toaster")
 ```
 ### Handling Xamarin Linker
 
-Add the following class anywhere in your project to make sure Akavache.Sqlite3 will not be linked out by Xamarin
+There are two options to ensure the Akavache.Sqlite3 dll will not be removed by Xamarin build tools
 
+#### 1) Add a file to reference the types
 ```cs
 public static class LinkerPreserve
 {
@@ -115,6 +116,11 @@ public static class LinkerPreserve
     var encryptedName = typeof(SQLiteEncryptedBlobCache).FullName;
   }
 }
+```
+
+#### 2) Use the following initializer in your cross platform library or in your head project
+```cs
+Akavache.Registrations.Start("ApplicationName")
 ```
 
 ### Handling Errors
