@@ -1,15 +1,20 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net461;uap10.0.16299;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0</TargetFrameworks>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
     <PackageId>akavache</PackageId>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.12" />
+  </ItemGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+    <Reference Include="netstandard" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
+    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
   </ItemGroup>
 
 </Project>
