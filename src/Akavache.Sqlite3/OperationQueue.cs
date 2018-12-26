@@ -70,7 +70,7 @@ namespace Akavache.Sqlite3
             if (start != null) return start;
 
             shouldQuit = new CancellationTokenSource();
-            var task = new Task(async () => 
+            var task = Task.Run(async () => 
             {
                 var toProcess = new List<OperationQueueItem>();
 
@@ -88,6 +88,10 @@ namespace Akavache.Sqlite3
                     {
                         break;
                     }
+
+                    //Verify lock was acquired
+                    if(@lock == null)
+                        break;
 
                     using (@lock)
                     {
@@ -130,9 +134,7 @@ namespace Akavache.Sqlite3
                         }
                     }
                 }
-            }, TaskCreationOptions.LongRunning);
-
-            task.Start();
+            });
 
             return (start = Disposable.Create(() => 
             {
@@ -143,10 +145,14 @@ namespace Akavache.Sqlite3
                 } 
                 catch (OperationCanceledException) { }
 
-                using (flushLock.LockAsync().Result)
+                try 
                 {
-                    FlushInternal();
+                    using(flushLock.LockAsync().Result)
+                    {
+                        FlushInternal();
+                    }
                 }
+                catch(OperationCanceledException) { }
 
                 start = null;
             }));
@@ -242,7 +248,11 @@ namespace Akavache.Sqlite3
                     var lockTask = flushLock.LockAsync(shouldQuit.Token);
                     operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
 
-                    @lock = await lockTask;
+                    try 
+                    {
+                        @lock = await lockTask;
+                    }
+                    catch(OperationCanceledException) { }
 
                     var deleteOp = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
                     operationQueue.Add(deleteOp);

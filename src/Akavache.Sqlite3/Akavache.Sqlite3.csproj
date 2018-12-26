@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.1</TargetFramework>
+    <TargetFrameworks>netstandard2.0;uap10.0.16299</TargetFrameworks>
     <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
@@ -17,11 +17,10 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Splat" Version="2.0.0" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.8" />
-    <PackageReference Include="SQLitePCLRaw.core" Version="1.1.8" />
-    <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="1.1.12" />
+	  <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+	  <PackageReference Include="System.Reactive" Version="4.0.0" />
+	  <PackageReference Include="Splat" Version="5.1.4" />
   </ItemGroup>
   
   <ItemGroup>
@@ -33,6 +32,7 @@
     <None Remove="sqlite-ng-notes.md" />
     <None Remove="sqlite3-hint.txt" />
   </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
