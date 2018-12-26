@@ -14,6 +14,7 @@ using Xunit;
 using System.Threading;
 using System.Reactive.Concurrency;
 using System.Threading.Tasks;
+using DynamicData;
 
 namespace Akavache.Tests
 {
@@ -274,7 +275,8 @@ namespace Akavache.Tests
                     var fixture = CreateBlobCache(path);
                     try
                     {
-                        var result1 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        
+                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result1).Subscribe();
 
                         Assert.Equal(0, result1.Count);
 
@@ -282,7 +284,7 @@ namespace Akavache.Tests
 
                         // Nobody's returned yet, cache is empty, we should have called the fetcher
                         // once to get a result
-                        var result2 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result2).Subscribe();
                         Assert.Equal(0, result1.Count);
                         Assert.Equal(0, result2.Count);
                         Assert.Equal(1, callCount);
@@ -290,7 +292,7 @@ namespace Akavache.Tests
                         sched.AdvanceToMs(750);
 
                         // Same as above, result1-3 are all listening to the same fetch
-                        var result3 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result3).Subscribe();
                         Assert.Equal(0, result1.Count);
                         Assert.Equal(0, result2.Count);
                         Assert.Equal(0, result3.Count);
@@ -305,7 +307,7 @@ namespace Akavache.Tests
 
                         // Making a new call, but the cache has an item, this shouldn't result
                         // in a fetcher call either
-                        var result4 = fixture.GetOrFetchObject("foo", fetcher).CreateCollection();
+                        fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result4).Subscribe();
                         sched.AdvanceToMs(2500);
                         Assert.Equal(1, result1.Count);
                         Assert.Equal(1, result2.Count);
@@ -316,7 +318,7 @@ namespace Akavache.Tests
                         // Making a new call, but with a new key - this *does* result in a fetcher
                         // call. Result1-4 shouldn't get any new items, and at t=3000, we haven't
                         // returned from the call made at t=2500 yet
-                        var result5 = fixture.GetOrFetchObject("bar", fetcher).CreateCollection();
+                        fixture.GetOrFetchObject("bar", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result5).Subscribe();
                         sched.AdvanceToMs(3000);
                         Assert.Equal(1, result1.Count);
                         Assert.Equal(1, result2.Count);
@@ -580,7 +582,7 @@ namespace Akavache.Tests
         protected override IBlobCache CreateBlobCache(string path)
         {
             BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeObjectCache(new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")));
+            return new BlockingDisposeObjectCache(new SqlRawPersistentBlobCache(Path.Combine(path, "sqlite.db")));
         }
 
         [Fact]

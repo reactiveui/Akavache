@@ -60,7 +60,7 @@ added to support:
 
 Interacting with Akavache is primarily done through an object called
 `BlobCache`. At App startup, you must first set your app's name via
-`BlobCache.ApplicationName`. After setting your app's name, you're ready to save some data.
+`BlobCache.ApplicationName` or `Akavache.Registrations.Start("ApplicationName")` . After setting your app's name, you're ready to save some data.
 
 #### Choose a location
 There are four build-in locations, that have some magic applied on some systems:
@@ -84,7 +84,7 @@ The most straightforward way to use Akavache is via the object extensions:
 using System.Reactive.Linq;   // IMPORTANT - this makes await work!
 
 // Make sure you set the application name before doing any inserts or gets
-BlobCache.ApplicationName = "AkavacheExperiment";
+Akavache.Registrations.Start("AkavacheExperiment")
 
 var myToaster = new Toaster();
 await BlobCache.UserAccount.InsertObject("toaster", myToaster);
@@ -104,8 +104,9 @@ BlobCache.UserAccount.GetObject<Toaster>("toaster")
 ```
 ### Handling Xamarin Linker
 
-Add the following class anywhere in your project to make sure Akavache.Sqlite3 will not be linked out by Xamarin
+There are two options to ensure the Akavache.Sqlite3 dll will not be removed by Xamarin build tools
 
+#### 1) Add a file to reference the types
 ```cs
 public static class LinkerPreserve
 {
@@ -115,6 +116,11 @@ public static class LinkerPreserve
     var encryptedName = typeof(SQLiteEncryptedBlobCache).FullName;
   }
 }
+```
+
+#### 2) Use the following initializer in your cross platform library or in your head project
+```cs
+Akavache.Registrations.Start("ApplicationName")
 ```
 
 ### Handling Errors
@@ -146,6 +152,22 @@ BlobCache.Shutdown().Wait();
 ```
 
 Failure to do this may mean that queued items are not flushed to the cache.
+
+### Using a different SQLitePCL.raw bundle, e.g., Microsoft.AppCenter
+- Install the `akavache.sqlite3` nuget instead of `akavache`
+- Install the SQLitePCLRaw bundle you want to use, e.g., `SQLitePCLRaw.bundle_green`
+- Use `Akavache.Sqlite3.Registrations.Start("ApplicationName", () => SQLitePCL.Batteries_V2.Init());` in your platform projects or in your cross platform project.
+
+```XAML
+<PackageReference Include="akavache.sqlite3" Version="6.0.40-g7e90c572c6" />
+<PackageReference Include="SQLitePCLRaw.bundle_green" Version="1.1.11" />
+```
+```cs
+Akavache.Sqlite3.Registrations.Start("ApplicationName", () => SQLitePCL.Batteries_V2.Init());
+```
+
+For more info about using your own versions of [SqlitePCL.raw](https://github.com/ericsink/SQLitePCL.raw/wiki/Using-multiple-libraries-that-use-SQLitePCL.raw)
+
 
 ### Examining Akavache caches
 

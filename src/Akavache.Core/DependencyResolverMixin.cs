@@ -23,6 +23,7 @@ namespace Akavache
         {
             var namespaces = new[] { 
                 "Akavache",
+                "Akavache.Core",
                 "Akavache.Mac",
                 "Akavache.Deprecated",
                 "Akavache.Mobile",

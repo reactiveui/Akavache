@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;uap10.0.16299</TargetFrameworks>
     <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
@@ -17,11 +17,10 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.11" />
-    <PackageReference Include="SQLitePCLRaw.core" Version="1.1.11" />
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="System.Reactive" Version="4.0.0" />
-		<PackageReference Include="Splat" Version="4.0.2" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="1.1.12" />
+	  <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+	  <PackageReference Include="System.Reactive" Version="4.0.0" />
+	  <PackageReference Include="Splat" Version="5.1.4" />
   </ItemGroup>
   
   <ItemGroup>
@@ -33,21 +32,10 @@
     <None Remove="sqlite-ng-notes.md" />
     <None Remove="sqlite3-hint.txt" />
   </ItemGroup>
-  
+
+
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Content Include="content\AkavacheSqliteLinkerOverride.cs.pp">
-      <PackagePath>content\</PackagePath>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="contentFiles\cs\any\AkavacheSqliteLinkerOverride.cs.pp">
-      <PackagePath>contentFiles\cs\any\</PackagePath>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
