@@ -68,7 +68,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'tizen40' ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('tizen40')) ">
     <Compile Include="Platforms\tizen\**\*.cs" />
     <Compile Include="Platforms\xamarin-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
