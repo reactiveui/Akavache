@@ -21,10 +21,14 @@ namespace Akavache
         protected override JsonContract CreateContract(Type objectType)
         {
             var contract = existingContractResolver?.ResolveContract(objectType) ?? base.CreateContract(objectType);
-            if (objectType == typeof(DateTime) || objectType == typeof(DateTime?) ||
-                objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?))
+            if (objectType == typeof(DateTime) || objectType == typeof(DateTime?))
             {
-                contract.Converter = new JsonDateTimeTickConverter();
+                contract.Converter = JsonDateTimeTickConverter.Default;
+            }
+
+            if (objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?))
+            {
+                contract.Converter = JsonDateTimeOffsetTickConverter.Default;
             }
 
             return contract;
