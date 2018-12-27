@@ -56,31 +56,15 @@ namespace Akavache.Tests
 
         public class TestObjectDateTimeOffset
         {
-            public DateTimeOffset Timestamp
-            {
-                get;
-                set;
-            }
-            public DateTimeOffset? TimestampNullable
-            {
-                get;
-                set;
-            }
+            public DateTimeOffset Timestamp { get; set; }
+            public DateTimeOffset? TimestampNullable { get; set; }
         }
 
         public class TestObjectDateTime
         {
-            public DateTime Timestamp
-            {
-                get;
-                set;
-            }
+            public DateTime Timestamp { get; set; }
 
-            public DateTime? TimestampNullable
-            {
-                get;
-                set;
-            }
+            public DateTime? TimestampNullable { get; set; }
         }
     }
 }
