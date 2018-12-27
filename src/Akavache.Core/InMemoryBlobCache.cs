@@ -8,9 +8,9 @@ using System.Reactive.Linq;
 using System.Threading;
 using Splat;
 using System.Reactive.Subjects;
+using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using System.IO;
 
 namespace Akavache
 {
@@ -256,19 +256,21 @@ namespace Akavache
         byte[] SerializeObject<T>(T value)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            settings.ContractResolver = new JsonDateTimeContractResolver(settings?.ContractResolver); // This will make us use ticks instead of json ticks for DateTime.
             var ms = new MemoryStream();
             var serializer = JsonSerializer.Create(settings);
-            var writer = new BsonWriter(ms);
+            var writer = new BsonDataWriter(ms);
 
-            serializer.Serialize(writer, new ObjectWrapper<T>() { Value = value });
+            serializer.Serialize(writer, new ObjectWrapper<T> { Value = value });
             return ms.ToArray();
         }
 
         T DeserializeObject<T>(byte[] data)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            settings.ContractResolver = new JsonDateTimeContractResolver(settings?.ContractResolver); // This will make us use ticks instead of json ticks for DateTime.
             var serializer = JsonSerializer.Create(settings);
-            var reader = new BsonReader(new MemoryStream(data));
+            var reader = new BsonDataReader(new MemoryStream(data));
             var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
 
             if (forcedDateTimeKind.HasValue)

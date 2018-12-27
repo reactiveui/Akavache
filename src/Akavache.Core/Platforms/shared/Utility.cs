@@ -144,8 +144,7 @@ namespace Akavache
                         LogHost.Default.WarnException("CopyToAsync failed", ex);
                     }
                 });
-#endif
-
+#else
             return Observable.Start(() =>
             {
                 try
@@ -162,6 +161,7 @@ namespace Akavache
                     destination.Dispose();
                 }
             }, scheduler ?? BlobCache.TaskpoolScheduler);
+#endif
         }
     }
 }
