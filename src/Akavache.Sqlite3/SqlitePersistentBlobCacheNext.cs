@@ -238,7 +238,7 @@ namespace Akavache.Sqlite3
 
         protected IObservable<Unit> Initialize()
         {
-            var ret = Observable.Create<Unit>(async subj =>
+            var ret = Observable.Create<Unit>(subj =>
             {
                 // NB: This is in its own try block because depending on the 
                 // platform, we may not have a modern SQLite3, where these
@@ -267,7 +267,7 @@ namespace Akavache.Sqlite3
                         Connection.CreateTable<CacheElement>();
 
                         var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
-                        Connection.Execute(String.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
+                        Connection.Execute(string.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
                         Connection.Execute("DROP TABLE VersionOneCacheElement;");
                     
                         Connection.Insert(new SchemaInfo() { Version = 2, });
@@ -285,6 +285,8 @@ namespace Akavache.Sqlite3
                 {
                     subj.OnError(ex);
                 }
+
+                return Disposable.Empty;
             });
 
             return ret.PublishLast().PermaRef();
@@ -351,9 +353,10 @@ namespace Akavache.Sqlite3
         byte[] SerializeObject<T>(T value)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            settings.ContractResolver = new JsonDateTimeContractResolver(settings?.ContractResolver); // This will make us use ticks instead of json ticks for DateTime.
             var ms = new MemoryStream();
             var serializer = JsonSerializer.Create(settings);
-            var writer = new BsonWriter(ms);
+            var writer = new BsonDataWriter(ms);
 
             serializer.Serialize(writer, new ObjectWrapper<T>() { Value = value });
             return ms.ToArray();
@@ -362,8 +365,9 @@ namespace Akavache.Sqlite3
         IObservable<T> DeserializeObject<T>(byte[] data)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            settings.ContractResolver = new JsonDateTimeContractResolver(settings?.ContractResolver); // This will make us use ticks instead of json ticks for DateTime.
             var serializer = JsonSerializer.Create(settings);
-            var reader = new BsonReader(new MemoryStream(data));
+            var reader = new BsonDataReader(new MemoryStream(data));
             var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
 
             if (forcedDateTimeKind.HasValue)

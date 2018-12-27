@@ -17,6 +17,7 @@ Akavache is currently compatible with:
 * .NET 4.5 Desktop (WPF)
 * Windows Phone 8.1 Universal Apps
 * Windows 10 (Universal Windows Platform)
+* Tizen 4.0
 
 ### What does that mean?
 
@@ -44,7 +45,7 @@ added to support:
 
 * **Xamarin.Android** - No issues.
 
-* **.NET 4.5 Desktop (WPF)** - No issues
+* **.NET 4.5 Desktop (WPF)** - No issues.
 
 * **Windows Phone 8.1 Universal Apps** - You must mark your application as `x86`
   or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
@@ -55,6 +56,8 @@ added to support:
   or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
   loading correctly. You must *also* ensure that the Microsoft Visual C++ runtime
   is added to your project.
+
+* **Tizen 4.0** - No issues.
 
 ### Getting Started
 
