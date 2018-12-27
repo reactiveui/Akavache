@@ -19,4 +19,8 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0.0'">
 	</PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'tizen40'">
+    <DefineConstants>$(DefineConstants);TIZEN;XAMARIN_MOBILE</DefineConstants>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+  </PropertyGroup>
 </Project>
