@@ -339,8 +339,11 @@ IObservable<T> GetOrCreateObject<T>(string key, Func<T> fetchFunc, DateTimeOffse
 
 // Immediately return a cached version of an object if available, but *always*
 // also execute fetchFunc to retrieve the latest version of an object.
-IObservable<T> GetAndFetchLatest<T>(string key,
-    Func<Task<T>> fetchFunc,
+IObservable<T> GetAndFetchLatest<T>(this IBlobCache This,
+    string key,
+    Func<IObservable<T>> fetchFunc,
     Func<DateTimeOffset, bool> fetchPredicate = null,
-    DateTimeOffset? absoluteExpiration = null);
+    DateTimeOffset? absoluteExpiration = null,
+    bool shouldInvalidateOnError = false,
+    Func<T, bool> cacheValidationPredicate = null)
 ```

@@ -497,6 +497,45 @@ namespace Akavache.Tests
         }
 
         [Fact]
+        public void GetAndFetchLatestValidatesItemsToBeCached()
+        {
+            const string key = "tv1";
+            var items = new List<int> { 4, 7, 10, 11, 3, 4 };
+            var fetcher = new Func<IObservable<List<int>>>(() => Observable.Return((List<int>)null));
+
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                var fixture = CreateBlobCache(path);
+
+                using (fixture)
+                {
+                    if (fixture is InMemoryBlobCache) return;
+
+                    //GetAndFetchLatest will overwrite cache with null result
+                    fixture.InsertObject(key, items);
+
+                    fixture.GetAndFetchLatest(key, fetcher).Last();
+                    
+                    var failedResult = fixture.GetObject<List<int>>(key).First();
+
+                    Assert.Null(failedResult);
+
+                    //GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
+                    fixture.InsertObject(key, items);
+
+                    fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i != null && i.Any()).Last();
+                    
+                    var result = fixture.GetObject<List<int>>(key).First();
+
+                    Assert.NotNull(result);
+                    Assert.True(result.Any(), "The returned list is empty.");
+                    Assert.Equal(items, result);
+                }
+            }
+        }
+
+        [Fact]
         public void KeysByTypeTest()
         {
             string path;
