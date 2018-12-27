@@ -80,7 +80,7 @@ namespace Akavache.Tests.Performance
             using (Utility.WithEmptyDirectory(out dirPath))
             using (var cache = CreateBlobCache(dirPath))
             {
-                dbName = dbName ?? cache.GetType().Name;
+                dbName = cache.GetType().Name;
 
                 foreach (var size in PerfHelper.GetPerfRanges())
                 {
