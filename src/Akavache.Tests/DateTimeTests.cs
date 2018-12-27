@@ -18,6 +18,8 @@ namespace Akavache.Tests
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.UtcTicks, secondResult.Timestamp.UtcTicks);
             Assert.Equal(firstResult.Timestamp.Offset, secondResult.Timestamp.Offset);
+            Assert.Equal(firstResult.Timestamp.Ticks, secondResult.Timestamp.Ticks);
+            Assert.Equal(firstResult.TimestampNullable, secondResult.TimestampNullable);
         }
 
         [Theory]
@@ -26,6 +28,7 @@ namespace Akavache.Tests
         {
             var (firstResult, secondResult) = await PerformTimeStampGrab(data);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
+            Assert.Equal(firstResult.TimestampNullable, secondResult.TimestampNullable);
         }
 
         private async Task<(TData first, TData second)> PerformTimeStampGrab<TData>(TData data)
