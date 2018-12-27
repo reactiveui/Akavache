@@ -62,11 +62,11 @@ namespace Akavache.Tests
 
             foreach (var line in lines.Skip(1))
             {
+                if (String.IsNullOrWhiteSpace(line)) continue;
+
                 var separatorIndex = line.IndexOf(':');
                 var key = line.Substring(0, separatorIndex);
                 var val = line.Substring(separatorIndex + 2).TrimEnd();
-
-                if (String.IsNullOrWhiteSpace(line)) continue;
 
                 ret.Headers.TryAddWithoutValidation(key, val);
                 ret.Content.Headers.TryAddWithoutValidation(key, val);
