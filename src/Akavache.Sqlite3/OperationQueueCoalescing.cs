@@ -186,16 +186,22 @@ namespace Akavache.Sqlite3
                 var resultMap = items.ToDictionary(k => k.Key, v => v);
                 foreach (var v in elementMap.Keys) 
                 {
-                    if (resultMap.ContainsKey(v)) 
-                    {
-                        elementMap[v].OnNext(EnumerableEx.Return(resultMap[v]));
-                    }
-                    else
-                    {
-                        elementMap[v].OnNext(Enumerable.Empty<CacheElement>());
-                    }
+                    try {
+                        if (resultMap.ContainsKey(v)) 
+                        {
+                            elementMap[v].OnNext(EnumerableEx.Return(resultMap[v]));
+                        }
+                        else
+                        {
+                            elementMap[v].OnNext(Enumerable.Empty<CacheElement>());
+                        }
 
-                    elementMap[v].OnCompleted();
+                        elementMap[v].OnCompleted();
+                    }
+                    catch(KeyNotFoundException e) {
+                        // I don't know what to do here but since an exception is swallowed anyway,
+                        // lets not stop the remaining elements to be stuck in an incompleted way
+                    }
                 }
             }, 
             ex =>
