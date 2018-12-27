@@ -123,7 +123,6 @@ namespace Akavache
                 {
                     var hwr = CreateWebRequest(uri, headers);
 
-                    ;
                     if (content == null)
                     {
                         return Observable.FromAsync(() => Task.Factory.FromAsync(hwr.BeginGetResponse, hwr.EndGetResponse, hwr));
