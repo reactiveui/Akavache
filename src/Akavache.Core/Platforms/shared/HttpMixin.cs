@@ -125,7 +125,7 @@ namespace Akavache
 
                     if (content == null)
                     {
-                        return Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)();
+                        return Observable.FromAsync(() => Task.Factory.FromAsync(hwr.BeginGetResponse, hwr.EndGetResponse, hwr));
                     }
 
                     var buf = Encoding.UTF8.GetBytes(content);
@@ -135,9 +135,9 @@ namespace Akavache
                     var ret = new AsyncSubject<WebResponse>();
                     Observable.Start(() =>
                     {
-                        Observable.FromAsyncPattern<Stream>(hwr.BeginGetRequestStream, hwr.EndGetRequestStream)()
+                        Observable.FromAsync(() => Task.Factory.FromAsync(hwr.BeginGetRequestStream, hwr.EndGetRequestStream, hwr))
                             .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
-                            .SelectMany(_ => Observable.FromAsyncPattern<WebResponse>(hwr.BeginGetResponse, hwr.EndGetResponse)())
+                            .SelectMany(_ => Observable.FromAsync(() => Task.Factory.FromAsync(hwr.BeginGetResponse, hwr.EndGetResponse, hwr)))
                             .Multicast(ret).Connect();
                     }, BlobCache.TaskpoolScheduler);
 

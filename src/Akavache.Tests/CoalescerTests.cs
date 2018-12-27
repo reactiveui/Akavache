@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using Akavache.Sqlite3;
+using DynamicData;
 using ReactiveUI;
 using Xunit;
 
@@ -15,14 +17,14 @@ namespace Akavache.Tests
     public class CoalescerTests
     {
         [Fact]
-        public void SingleItem()
+        public async Task SingleItem()
         {
             var fixture = new SqliteOperationQueue();
             fixture.Select(new[] { "Foo" });
 
             var queue = fixture.DumpQueue();
             var subj = queue[0].CompletionAsElements;
-            var output = subj.CreateCollection();
+            subj.ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var output).Subscribe();
             Assert.Equal(0, output.Count);
 
             var result = SqliteOperationQueue.CoalesceOperations(queue);
@@ -34,13 +36,14 @@ namespace Akavache.Tests
             var outSub = (result[0].CompletionAsElements);
 
             Assert.Equal(0, output.Count);
-            outSub.OnNext(new[] { new CacheElement() { Key = "Foo" }});
+            outSub.OnNext(new[] { new CacheElement() { Key = "Foo" } });
             outSub.OnCompleted();
+            await Task.Delay(500);
             Assert.Equal(1, output.Count);
         }
 
         [Fact]
-        public void UnrelatedItems()
+        public async Task UnrelatedItems()
         {
             var fixture = new SqliteOperationQueue();
             fixture.Select(new[] { "Foo" });
@@ -49,7 +52,7 @@ namespace Akavache.Tests
 
             var queue = fixture.DumpQueue();
             var subj = queue[0].CompletionAsElements;
-            var output = subj.CreateCollection();
+            subj.ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var output).Subscribe();
             Assert.Equal(0, output.Count);
 
             var result = SqliteOperationQueue.CoalesceOperations(queue);
@@ -61,13 +64,14 @@ namespace Akavache.Tests
             var outSub = (result[0].CompletionAsElements);
 
             Assert.Equal(0, output.Count);
-            outSub.OnNext(new[] { new CacheElement() { Key = "Foo" }});
+            outSub.OnNext(new[] { new CacheElement() { Key = "Foo" } });
             outSub.OnCompleted();
+            await Task.Delay(500);
             Assert.Equal(1, output.Count);
         }
 
         [Fact]
-        public void CoalesceUnrelatedSelects()
+        public async Task CoalesceUnrelatedSelects()
         {
             var fixture = new SqliteOperationQueue();
             fixture.Select(new[] { "Foo" });
@@ -76,10 +80,12 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Baz" });
 
             var queue = fixture.DumpQueue();
-            var output = queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
+            queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
                 .Select(x => x.CompletionAsElements)
                 .Merge()
-                .CreateCollection();
+                .ToObservableChangeSet(ImmediateScheduler.Instance)
+                .Bind(out var output)
+                .Subscribe();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(2, result.Count);
@@ -100,11 +106,12 @@ namespace Akavache.Tests
             Assert.Equal(0, output.Count);
             outSub.OnNext(fakeResult);
             outSub.OnCompleted();
+            await Task.Delay(1000);
             Assert.Equal(3, output.Count);
         }
 
         [Fact]
-        public void DedupRelatedSelects()
+        public async Task DedupRelatedSelects()
         {
             var fixture = new SqliteOperationQueue();
             fixture.Select(new[] { "Foo" });
@@ -113,10 +120,12 @@ namespace Akavache.Tests
             fixture.Select(new[] { "Foo" });
 
             var queue = fixture.DumpQueue();
-            var output = queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
+            queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
                 .Select(x => x.CompletionAsElements)
                 .Merge()
-                .CreateCollection();
+                .ToObservableChangeSet(ImmediateScheduler.Instance)
+                .Bind(out var output)
+                .Subscribe();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
 
             Assert.Equal(1, result.Count);
@@ -133,6 +142,7 @@ namespace Akavache.Tests
             Assert.Equal(0, output.Count);
             outSub.OnNext(fakeResult);
             outSub.OnCompleted();
+            await Task.Delay(1000);
             Assert.Equal(4, output.Count);
         }
 
@@ -141,9 +151,9 @@ namespace Akavache.Tests
         {
             var fixture = new SqliteOperationQueue();
             fixture.Select(new[] { "Foo" });
-            fixture.Insert(new[] { new CacheElement() { Key = "Foo", Value = new byte[] { 1,2,3 } } });
+            fixture.Insert(new[] { new CacheElement() { Key = "Foo", Value = new byte[] { 1, 2, 3 } } });
             fixture.Select(new[] { "Foo" });
-            fixture.Insert(new[] { new CacheElement() { Key = "Foo", Value = new byte[] { 4,5,6 } } });
+            fixture.Insert(new[] { new CacheElement() { Key = "Foo", Value = new byte[] { 4, 5, 6 } } });
 
             var queue = fixture.DumpQueue();
             var result = SqliteOperationQueue.CoalesceOperations(queue);
@@ -163,10 +173,8 @@ namespace Akavache.Tests
         {
             string path;
 
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                using (var cache = new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")))
-                {
+            using (Utility.WithEmptyDirectory(out path)) {
+                using (var cache = new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db"))) {
                     var queue = new SqliteOperationQueue(cache.Connection, BlobCache.TaskpoolScheduler);
                     var request = queue.Select(new[] { "Foo" });
                     var unrelatedRequest = queue.Select(new[] { "Bar" });

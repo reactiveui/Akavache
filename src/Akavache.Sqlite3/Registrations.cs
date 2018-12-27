@@ -8,9 +8,11 @@ using System.Reactive;
 using System.Reactive.Linq;
 using Splat;
 using Akavache;
+using Akavache.Core;
 
 namespace Akavache.Sqlite3
 {
+    [Preserve(AllMembers = true)]
     public class Registrations : IWantsToRegisterStuff
     {
         public void Register(IMutableDependencyResolver resolver)
@@ -25,13 +27,13 @@ namespace Akavache.Sqlite3
 
             var localCache = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultLocalMachineCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
-                return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
+                return new SqlRawPersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
 
             var userAccount = new Lazy<IBlobCache>(() =>{
                 fs.CreateRecursive(fs.GetDefaultRoamingCacheDirectory()).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
-                return new SQLitePersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
+                return new SqlRawPersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
                 
@@ -40,6 +42,12 @@ namespace Akavache.Sqlite3
                 return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
+        }
+
+        public static void Start(string applicationName, Action initSql)
+        {
+            BlobCache.ApplicationName = applicationName;
+            initSql?.Invoke();
         }
     }
 }

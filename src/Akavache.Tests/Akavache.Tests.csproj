@@ -1,38 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFramework>net461</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="Microsoft.Reactive.Testing" Version="[3.1.1,4)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="Microsoft.Reactive.Testing" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-		<PackageReference Include="xunit" Version="2.4.0-beta.2.build3984" />
-		<PackageReference Include="xunit.runner.console" Version="2.4.0-beta.2.build3984" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.0-beta.2.build3984" />
-		<PackageReference Include="Xunit.StaFact" Version="0.2.9" />
-    <PackageReference Include="reactiveui" Version="8.2.1" />
-    <PackageReference Include="ReactiveUI.Testing" Version="8.2.1" />
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.v110_xp" Version="1.1.11" />
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
-		<PackageReference Include="Splat" Version="4.0.0" />
+		<PackageReference Include="xunit" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.console" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+		<PackageReference Include="Xunit.StaFact" Version="0.3.13" />
+    <PackageReference Include="reactiveui" Version="9.4.1" />
+    <PackageReference Include="ReactiveUI.Testing" Version="9.4.1" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.v110_xp" Version="1.1.12" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+		<PackageReference Include="System.Reactive" Version="4.0.0" />
+		<PackageReference Include="Splat" Version="5.1.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
-    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <ProjectReference Include="..\Akavache\Akavache.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup> 
-
-  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 
 </Project>
