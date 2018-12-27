@@ -11,9 +11,11 @@ namespace Akavache
     /// </summary>
     internal class JsonDateTimeTickConverter : JsonConverter
     {
+        public static JsonDateTimeTickConverter Default { get; } = new JsonDateTimeTickConverter();
+
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(DateTime) || objectType == typeof(DateTime?) || objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?);
+            return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -23,29 +25,16 @@ namespace Akavache
                 return null;
             }
 
-            DateTime dateTime;
-
-            // If you need to deserialize already-serialized DateTimeOffsets, it would come in as JsonToken.Date
-            // Newly serialized values will come in as JsonToken.Integer
             if (reader.TokenType == JsonToken.Date)
             {
-                dateTime = (DateTime)reader.Value;
-            }
-            else
-            {
-                var ticks = (long)reader.Value;
-                dateTime = new DateTime(ticks, DateTimeKind.Utc);
-
+                return (DateTime)reader.Value;
             }
 
             if (objectType == typeof(DateTime) || objectType == typeof(DateTime?))
             {
+                var ticks = (long)reader.Value;
+                var dateTime = new DateTime(ticks, DateTimeKind.Utc);
                 return dateTime;
-            }
-
-            if (objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?))
-            {
-                return (DateTimeOffset)dateTime;
             }
 
             return null;
@@ -53,16 +42,9 @@ namespace Akavache
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            switch (value)
+            if (value is DateTime dateTime)
             {
-                case DateTime dateTime:
-                    serializer.Serialize(writer, dateTime.Ticks);
-                    break;
-                case DateTimeOffset dateTimeOffset:
-                    serializer.Serialize(writer, dateTimeOffset.UtcDateTime.Ticks);
-                    break;
-                case null:
-                    return;
+                serializer.Serialize(writer, dateTime.Ticks);
             }
         }
     }
