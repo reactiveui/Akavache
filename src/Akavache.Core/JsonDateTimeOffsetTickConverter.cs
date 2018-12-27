@@ -19,6 +19,11 @@ namespace Akavache
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            if (reader.TokenType == JsonToken.Date)
+            {
+                return (DateTimeOffset)reader.Value;
+            }
+            
             var data = serializer.Deserialize<DateTimeOffsetData>(reader);
 
             if (data == null)
