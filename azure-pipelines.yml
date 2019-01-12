@@ -17,21 +17,13 @@ steps:
     modifyEnvironment: true
   displayName: Setup Environment Variables
 
-- task: DotNetCoreCLI@2  
-  inputs:
-    command: custom
-    custom: tool
-    arguments: install --tool-path . nbgv
-  displayName: Install NBGV tool
-
-- script: nbgv cloud
-  displayName: Set Version
-
 - script: build.cmd
   displayName: Build 
   env:
-    VSTS_ACCESS_TOKEN: $(System.AccessToken)
     COVERALLS_TOKEN: $(COVERALLS_TOKEN)
+    SignClientUser: $(SignClientUser)
+    SignClientSecret: $(SignClientSecret)
+    ArtifactDirectory: $(Build.ArtifactStagingDirectory)\Packages
 
 - task: CopyFiles@2
   inputs:
@@ -39,15 +31,19 @@ steps:
     TargetFolder: '$(build.artifactstagingdirectory)\packages'
     flattenFolders: true
 
-- task: PowerShell@2
-  displayName: Authenticode Sign artifacts
+- task: PublishTestResults@2
+  displayName: Publish Test Results
   inputs:
-    filePath: script/Sign-Packages.ps1
-  env:
-    SignClientUser: $(SignClientUser)
-    SignClientSecret: $(SignClientSecret)
-    ArtifactDirectory: $(Build.ArtifactStagingDirectory)\Packages
-  condition: and(succeeded(), not(eq(variables['build.reason'], 'PullRequest')), not(eq(variables['SignClientSecret'], '')), not(eq(variables['SignClientUser'], '')))
+    testResultsFormat: 'VSTest'
+    testResultsFiles: '**/testresults-*.trx' 
+    searchFolder: '$(System.DefaultWorkingDirectory)\artifacts\tests'
+
+- task: CopyFiles@2
+  displayName: Copy Package Artifacts
+  inputs:
+    Contents: 'artifacts/packages/*.nupkg'
+    TargetFolder: '$(build.artifactstagingdirectory)\packages'
+    flattenFolders: true
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Package Artifacts
@@ -57,8 +53,9 @@ steps:
     artifactName: Packages
 
 - task: CopyFiles@2
+  displayName: Copy Binaries
   inputs:
-    Contents: '**\bin\**'
+    Contents: 'artifacts/binaries/**/*'
     TargetFolder: '$(build.artifactstagingdirectory)\binaries'
 
 - task: PublishBuildArtifacts@1

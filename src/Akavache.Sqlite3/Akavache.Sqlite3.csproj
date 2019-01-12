@@ -18,9 +18,8 @@
   
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.core" Version="1.1.12" />
-	  <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-	  <PackageReference Include="System.Reactive" Version="4.0.0" />
-	  <PackageReference Include="Splat" Version="5.1.4" />
+    <PackageReference Include="System.Reactive" Version="4.0.0" />
+    <PackageReference Include="Splat" Version="6.*" />
   </ItemGroup>
   
   <ItemGroup>
