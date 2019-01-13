@@ -3,21 +3,31 @@
 //////////////////////////////////////////////////////////////////////
 
 #addin "nuget:?package=Cake.FileHelpers&version=3.1.0"
-#addin "nuget:?package=Cake.Coveralls&version=0.9.0"
-#addin "nuget:?package=Cake.PinNuGetDependency&version=3.1.0"
-#addin "nuget:?package=Cake.Powershell&version=0.4.7"
+#addin "nuget:?package=Cake.PinNuGetDependency&loaddependencies=true&version=3.2.3"
+#addin "nuget:?package=Cake.Codecov&version=0.5.0"
 
 //////////////////////////////////////////////////////////////////////
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 
-#tool "nuget:?package=GitReleaseManager&version=0.7.1"
-#tool "nuget:?package=coveralls.io&version=1.4.2"
 #tool "nuget:?package=OpenCover&version=4.6.519"
-#tool "nuget:?package=ReportGenerator&version=4.0.4"
-#tool "nuget:?package=vswhere&version=2.5.2"
+#tool "nuget:?package=ReportGenerator&version=4.0.5"
+#tool "nuget:?package=vswhere&version=2.5.9"
 #tool "nuget:?package=xunit.runner.console&version=2.4.1"
+#tool "nuget:?package=Codecov&version=1.1.0"
 
+//////////////////////////////////////////////////////////////////////
+// MODULES
+//////////////////////////////////////////////////////////////////////
+
+#module nuget:?package=Cake.DotNetTool.Module&version=0.1.0
+
+//////////////////////////////////////////////////////////////////////
+// DOTNET TOOLS
+//////////////////////////////////////////////////////////////////////
+
+#tool "dotnet:?package=SignClient&version=1.0.82"
+#tool "dotnet:?package=nbgv&version=2.3.38"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -52,8 +62,16 @@ var informationalVersion = EnvironmentVariable("GitAssemblyInformationalVersion"
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
+var testsArtifactDirectory = artifactDirectory + "tests/";
+var binariesArtifactDirectory = artifactDirectory + "binaries/";
+var packagesArtifactDirectory = artifactDirectory + "packages/";
+
+// White listed files
 var packageWhitelist = new[] { "Akavache", "Akavache.Mobile", "Akavache.Sqlite3", "Akavache.Core", "Akavache.Tests" };
-var testCoverageOutputFile = artifactDirectory + "OpenCover.xml";
+var packageTestWhitelist = new[] { "Akavache.Tests" };
+
+// Test coverage files.
+var testCoverageOutputFile = testsArtifactDirectory + "OpenCover.xml";
 
 // Macros
 Action Abort = () => { throw new Exception("a non-recoverable fatal error occurred."); };
@@ -71,6 +89,12 @@ Setup((context) =>
     Information("Building version {0} of Akavache.", informationalVersion);
 
     CreateDirectory(artifactDirectory);
+    CleanDirectories(artifactDirectory);
+    CreateDirectory(testsArtifactDirectory);
+    CreateDirectory(binariesArtifactDirectory);
+    CreateDirectory(packagesArtifactDirectory);
+
+    StartProcess(Context.Tools.Resolve("nbgv.*").ToString(), "cloud");
 });
 
 Teardown((context) =>
@@ -78,72 +102,104 @@ Teardown((context) =>
     // Executed AFTER the last task.
 });
 
+//////////////////////////////////////////////////////////////////////
+// HELPER METHODS
+//////////////////////////////////////////////////////////////////////
 
+Action<string, string, bool> Build = (projectFile, packageOutputPath, forceUseFullDebugType) =>
+{
+    Information("Building {0} using {1}, forceUseFullDebugType = {2}", projectFile, msBuildPath, forceUseFullDebugType);
+
+    var msBuildSettings = new MSBuildSettings() {
+            ToolPath = msBuildPath,
+            ArgumentCustomization = args => args.Append("/m /NoWarn:VSX1000"),
+            NodeReuse = false,
+            Restore = true
+        }
+        .WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
+        .SetConfiguration("Release")                        
+        .SetVerbosity(Verbosity.Minimal)
+        .WithTarget("build;pack");
+
+    if (forceUseFullDebugType)
+    {
+        msBuildSettings = msBuildSettings.WithProperty("DebugType",  "full");
+    }
+
+    if (!string.IsNullOrWhiteSpace(packageOutputPath))
+    {
+        msBuildSettings = msBuildSettings.WithProperty("PackageOutputPath",  MakeAbsolute(Directory(packageOutputPath)).ToString().Quote());
+    }
+
+    MSBuild(projectFile, msBuildSettings);
+};
+
+//////////////////////////////////////////////////////////////////////
+// TASKS
+//////////////////////////////////////////////////////////////////////
 
 Task("Build")
     .Does (() =>
 {
-     Action<string,string> build = (solution, name) =>
+    foreach(var packageName in packageWhitelist)
     {
-        Information("Building {0} using {1}", solution, msBuildPath);
+        var projectName = $"./src/{packageName}/{packageName}.csproj";
+        Build(projectName, packagesArtifactDirectory, false);
+    }
 
-        MSBuild(solution, new MSBuildSettings() {
-                ToolPath = msBuildPath,
-                ArgumentCustomization = args => args.Append("/m /restore")
-            }
-			
-            .WithTarget("build;pack") 
-            .WithProperty("PackageOutputPath",  MakeAbsolute(Directory(artifactDirectory)).ToString().Quote())
-            .WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
-            .SetConfiguration("Release")                        
-            .SetVerbosity(Verbosity.Minimal)
-            .SetNodeReuse(false));
-			 
-    };
-
-	foreach(var package in packageWhitelist)
-    {
-        build("./src/" + package + "/" + package + ".csproj", package);
-    }        
-    build("./src/Akavache.Tests/Akavache.Tests.csproj", "Akavache.Tests");
+    CopyFiles(GetFiles("./src/**/bin/Release/**/*"), Directory(binariesArtifactDirectory), true);
 });
 
 Task("RunUnitTests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-	 Action<ICakeContext> testAction = tool => {
+    // Clean the directories since we'll need to re-generate the debug type.
+    CleanDirectories("./src/**/obj/Release");
+    CleanDirectories("./src/**/bin/Release");
 
-        tool.XUnit2("./src/Akavache.Tests/bin/Release/**/*.Tests.dll", new XUnit2Settings {
-			OutputDirectory = artifactDirectory,
-			XmlReportV1 = true,
-			NoAppDomain = false
-		});
-    };
-
-    OpenCover(testAction,
-        testCoverageOutputFile,
-        new OpenCoverSettings {
+    var openCoverSettings =  new OpenCoverSettings {
             ReturnTargetCodeOffset = 0,
-            ArgumentCustomization = args => args.Append("-mergeoutput")
+            MergeOutput = true,
         }
         .WithFilter("+[*]* -[*.Tests*]* -[Splat*]*")
-		.WithFilter("+[*]*")
+        .WithFilter("+[*]*")
         .WithFilter("-[*.Testing]*")
         .WithFilter("-[*.Tests*]*")
         .WithFilter("-[Playground*]*")
         .WithFilter("-[ReactiveUI.Events]*")
         .WithFilter("-[Splat*]*")
         .WithFilter("-[ApprovalTests*]*")
-		.ExcludeByAttribute("*.ExcludeFromCodeCoverage*")
+        .ExcludeByAttribute("*.ExcludeFromCodeCoverage*")
         .ExcludeByFile("*/*Designer.cs")
         .ExcludeByFile("*/*.g.cs")
         .ExcludeByFile("*/*.g.i.cs")
         .ExcludeByFile("*splat/splat*")
         .ExcludeByFile("*ApprovalTests*")
-        .ExcludeByFile("*/*Designer.cs;*/*.g.cs;*/*.g.i.cs;*splat/splat*"));
+        .ExcludeByFile("*/*Designer.cs;*/*.g.cs;*/*.g.i.cs;*splat/splat*");
 
-    ReportGenerator(testCoverageOutputFile, artifactDirectory);
+    var testSettings = new DotNetCoreTestSettings {
+        NoBuild = true,
+        Configuration = "Release",
+        ResultsDirectory = testsArtifactDirectory,
+        Logger = $"trx;LogFileName=testresults.trx",
+    };
+
+    foreach (var packageName in packageTestWhitelist)
+    {
+        var projectName = $"./src/{packageName}/{packageName}.csproj";
+
+        OpenCover(tool => 
+        {
+            Build(projectName, null, true);
+
+            tool.DotNetCoreTest(projectName, testSettings);
+        },
+        testCoverageOutputFile,
+        openCoverSettings);
+    }
+
+    ReportGenerator(testCoverageOutputFile, testsArtifactDirectory + "Report/");
 }).ReportError(exception =>
 {
     //var apiApprovals = GetFiles("./**/ApiApprovalTests.*");
@@ -158,68 +214,50 @@ Task("UploadTestCoverage")
     .Does(() =>
 {
     // Resolve the API key.
-    var token = EnvironmentVariable("COVERALLS_TOKEN");
+    var token = EnvironmentVariable("CODECOV_TOKEN");
     if (!string.IsNullOrEmpty(token))
     {
-        CoverallsIo(testCoverageOutputFile, new CoverallsIoSettings()
-        {
-            RepoToken = token
-        });
+        Information("Upload {0} to Codecov server", testCoverageOutputFile);
+
+        // Upload a coverage report.
+        Codecov(testCoverageOutputFile.ToString(), token);
     }
 });
 
-
-
-Task("Package")
-   .IsDependentOn("Build")
-   .IsDependentOn("RunUnitTests")
-   .IsDependentOn("PinNuGetDependencies")
-    .Does (() =>
+Task("SignPackages")
+    .WithCriteria(() => !local)
+    .WithCriteria(() => !isPullRequest)
+    .Does(() =>
 {
-
-   /* var  integrationPathRoot = "tests/NuGetInstallationIntegrationTests/";
-    var allfiles = 
-        System.IO.Directory.GetFiles(integrationPathRoot, "*.csproj", System.IO.SearchOption.AllDirectories);
-
-    var replacementString = "REPLACEME-AKAVACHE-VERSION";
-    List<string> replacedFiles = new List<string>();
-
-    try
+    if(EnvironmentVariable("SIGNCLIENT_SECRET") == null)
     {
-        foreach(var file in allfiles)
-        {
-            var fileContents = System.IO.File.ReadAllText(file);
-            if(fileContents.IndexOf(replacementString) >= 0)
-            {
-                fileContents = fileContents.Replace(replacementString, nugetVersion.ToString());         
-                System.IO.File.WriteAllText(file, fileContents);
-                replacedFiles.Add(file);
-            }
-        }
-        
-        
-        NuGetRestore(integrationPathRoot + "NuGetInstallationIntegrationTests.sln", 
-            new NuGetRestoreSettings() { 
-                ConfigFile = integrationPathRoot + @".nuget/Nuget.config",
-                PackagesDirectory = integrationPathRoot + "packages" });
-
-
-        MSBuild(integrationPathRoot + "NuGetInstallationIntegrationTests.sln", new MSBuildSettings() {
-                    ToolPath= msBuildPath
-                }
-        .SetConfiguration("Debug"));
-
+        throw new Exception("Client Secret not found, not signing packages.");
     }
-    finally
+
+    var nupkgs = GetFiles(packagesArtifactDirectory + "*.nupkg");
+    foreach(FilePath nupkg in nupkgs)
     {
-         foreach(var file in replacedFiles)
-        {
-            var fileContents = System.IO.File.ReadAllText(file);            
-            fileContents = fileContents.Replace(nugetVersion.ToString(), replacementString);         
-            System.IO.File.WriteAllText(file, fileContents);
-        }
+        var packageName = nupkg.GetFilenameWithoutExtension();
+        Information($"Submitting {packageName} for signing");
+
+        StartProcess(Context.Tools.Resolve("SignClient.*").ToString(), new ProcessSettings {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Arguments = new ProcessArgumentBuilder()
+                .Append("sign")
+                .AppendSwitch("-c", "./SignPackages.json")
+                .AppendSwitch("-i", nupkg.FullPath)
+                .AppendSwitch("-r", EnvironmentVariable("SIGNCLIENT_USER"))
+                .AppendSwitch("-s", EnvironmentVariable("SIGNCLIENT_SECRET"))
+                .AppendSwitch("-n", "ReactiveUI")
+                .AppendSwitch("-d", "ReactiveUI")
+                .AppendSwitch("-u", "https://reactiveui.net")
+            });
+
+        Information($"Finished signing {packageName}");
     }
-	*/
+    
+    Information("Sign-package complete");
 });
 
 Task("PinNuGetDependencies")
@@ -243,13 +281,12 @@ Task("PinNuGetDependencies")
 //////////////////////////////////////////////////////////////////////
 
 Task("Default")
-    .IsDependentOn("Package")
-    /*.IsDependentOn("CreateRelease")
-    .IsDependentOn("PublishPackages")
-    .IsDependentOn("PublishRelease")*/
+    .IsDependentOn("Build")
+    .IsDependentOn("RunUnitTests")
+    .IsDependentOn("PinNuGetDependencies")
+    .IsDependentOn("SignPackages")
     .Does (() =>
 {
-
 });
 
 
