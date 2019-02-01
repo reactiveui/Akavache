@@ -44,7 +44,7 @@ namespace Akavache
         {
             if (value is DateTime dateTime)
             {
-                serializer.Serialize(writer, dateTime.Ticks);
+                serializer.Serialize(writer, dateTime.ToUniversalTime().Ticks);
             }
         }
     }
