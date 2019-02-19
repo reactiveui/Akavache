@@ -41,7 +41,7 @@ namespace Akavache
             var assemblyName = new AssemblyName(
                 fdr.AssemblyQualifiedName.Replace(fdr.FullName + ", ", string.Empty));
 
-            foreach (var ns in namespaces) 
+            foreach (var ns in namespaces)
             {
                 var targetType = ns + ".Registrations";
                 string fullName = targetType + ", " + assemblyName.FullName.Replace(assemblyName.Name, ns);
@@ -54,7 +54,7 @@ namespace Akavache
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
                 registerer.Register(resolver);
-            };
+            }
         }
     }
 }

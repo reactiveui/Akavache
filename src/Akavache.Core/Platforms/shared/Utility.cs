@@ -82,9 +82,9 @@ namespace Akavache
             return ret;
         }
 
-        public static void CreateRecursive(this DirectoryInfo This)
+        public static void CreateRecursive(this DirectoryInfo directoryInfo)
         {
-            This.SplitFullPath().Aggregate((parent, dir) =>
+            directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
             {
                 var path = Path.Combine(parent, dir);
 
@@ -97,11 +97,11 @@ namespace Akavache
             });
         }
 
-        public static IEnumerable<string> SplitFullPath(this DirectoryInfo This)
+        public static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
         {
-            var root = Path.GetPathRoot(This.FullName);
+            var root = Path.GetPathRoot(directoryInfo.FullName);
             var components = new List<string>();
-            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
+            for (var path = directoryInfo.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
             {
                 var filename = Path.GetFileName(path);
                 if (String.IsNullOrEmpty(filename))
@@ -114,29 +114,29 @@ namespace Akavache
         }
 #endif
 
-        public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
+        public static IObservable<T> LogErrors<T>(this IObservable<T> observable, string message = null)
         {
             return Observable.Create<T>(subj =>
             {
-                return This.Subscribe(subj.OnNext,
+                return observable.Subscribe(subj.OnNext,
                     ex =>
                     {
-                        var msg = message ?? "0x" + This.GetHashCode().ToString("x");
+                        var msg = message ?? "0x" + observable.GetHashCode().ToString("x");
                         LogHost.Default.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
                         subj.OnError(ex);
                     }, subj.OnCompleted);
             });
         }
 
-        public static IObservable<Unit> CopyToAsync(this Stream This, Stream destination, IScheduler scheduler = null)
+        public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination, IScheduler scheduler = null)
         {
 #if WINDOWS_UWP
-            return This.CopyToAsync(destination).ToObservable()
+            return stream.CopyToAsync(destination).ToObservable()
                 .Do(x =>
                 {
                     try
                     {
-                        This.Dispose();
+                        stream.Dispose();
                         destination.Dispose();
                     }
                     catch (Exception ex)
@@ -149,7 +149,7 @@ namespace Akavache
             {
                 try
                 {
-                    This.CopyTo(destination);
+                    stream.CopyTo(destination);
                 }
                 catch(Exception ex)
                 {
@@ -157,7 +157,7 @@ namespace Akavache
                 }
                 finally
                 {
-                    This.Dispose();
+                    stream.Dispose();
                     destination.Dispose();
                 }
             }, scheduler ?? BlobCache.TaskpoolScheduler);

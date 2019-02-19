@@ -11,20 +11,20 @@ namespace System
 {
     public static class StreamMixins
     {
-        public static IObservable<Unit> WriteAsyncRx(this Stream This, byte[] data, int start, int length)
+        public static IObservable<Unit> WriteAsyncRx(this Stream blobCache, byte[] data, int start, int length)
         {
 #if WINDOWS_UWP
-            return This.WriteAsync(data, start, length).ToObservable();
+            return blobCache.WriteAsync(data, start, length).ToObservable();
 #else
             var ret = new AsyncSubject<Unit>();
 
             try
             {
-                This.BeginWrite(data, start, length, result =>
+                blobCache.BeginWrite(data, start, length, result =>
                 {
                     try
                     {
-                        This.EndWrite(result);
+                        blobCache.EndWrite(result);
                         ret.OnNext(Unit.Default);
                         ret.OnCompleted();
                     }
