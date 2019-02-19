@@ -26,6 +26,10 @@
     <None Remove="sqlite3-hint.txt" />
   </ItemGroup>
 
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+    <Reference Include="netstandard" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
