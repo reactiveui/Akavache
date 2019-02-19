@@ -1,26 +1,29 @@
 <Project>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<DefineConstants>$(DefineConstants);PORTABLE</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
-		<DefineConstants>$(DefineConstants);NET_461;XAML</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0.16299'">
-		<DefineConstants>$(DefineConstants);NETFX_CORE;XAML;WINDOWS_UWP</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'Xamarin.iOS10'">
-		<DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'Xamarin.Mac20'">
-		<DefineConstants>$(DefineConstants);MONO;COCOA</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'MonoAndroid80'">
-		<DefineConstants>$(DefineConstants);MONO;ANDROID;XAMARIN_MOBILE</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0.0'">
-	</PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'tizen40'">
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);NET_461;XAML</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
+    <DefineConstants>$(DefineConstants);NETFX_CORE;XAML;WINDOWS_UWP</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.iOS'))">
+    <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.Mac'))">
+    <DefineConstants>$(DefineConstants);MONO;COCOA</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.TVOS'))">
+    <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.WatchOS'))">
+    <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('MonoAndroid'))">
+    <DefineConstants>$(DefineConstants);MONO;ANDROID;XAMARIN_MOBILE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('tizen'))">
     <DefineConstants>$(DefineConstants);TIZEN;XAMARIN_MOBILE</DefineConstants>
-    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
+    <DefineConstants>$(DefineConstants);PORTABLE</DefineConstants>
   </PropertyGroup>
 </Project>

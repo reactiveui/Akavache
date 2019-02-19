@@ -1,27 +1,26 @@
-﻿using System;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Akavache
 {
-    internal class ExceptionHelper
+    internal static class ExceptionHelper
     {
         public static IObservable<T> ObservableThrowKeyNotFoundException<T>(string key, Exception innerException = null)
         {
             return Observable.Throw<T>(
-                new KeyNotFoundException(String.Format(CultureInfo.InvariantCulture,
-                "The given key '{0}' was not present in the cache.", key), innerException));
+                new KeyNotFoundException($"The given key '{key}' was not present in the cache.", innerException));
         }
 
         public static IObservable<T> ObservableThrowObjectDisposedException<T>(string obj, Exception innerException = null)
         {
             return Observable.Throw<T>(
-                new ObjectDisposedException(String.Format(CultureInfo.InvariantCulture,
-                "The cache '{0}' was disposed.", obj), innerException));
+                new ObjectDisposedException($"The cache '{obj}' was disposed.", innerException));
         }
     }
 }

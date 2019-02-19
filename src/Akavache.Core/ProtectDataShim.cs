@@ -1,9 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-
-namespace Akavache
+﻿namespace Akavache
 {
     public static class ProtectedData
     {

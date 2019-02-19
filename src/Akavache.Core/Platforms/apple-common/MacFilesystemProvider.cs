@@ -8,10 +8,14 @@ using Foundation;
 
 namespace Akavache
 {
+    /// <summary>
+    /// A file system provider that is related to the Mac operating system.
+    /// </summary>
     public class MacFilesystemProvider : IFilesystemProvider
     {
         readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
 
+        /// <inheritdoc />
         public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
         {
             return _inner.OpenFileForReadAsync(path, scheduler);

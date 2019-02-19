@@ -5,7 +5,6 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
 using Splat;
 using System.Reactive.Subjects;
 using System.IO;
