@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Serialization;
 
 namespace Akavache
@@ -18,15 +16,20 @@ namespace Akavache
             existingContractResolver = contractResolver;
         }
 
-        protected override JsonContract CreateContract(Type objectType)
+        public override JsonContract ResolveContract(Type type)
         {
-            var contract = existingContractResolver?.ResolveContract(objectType) ?? base.CreateContract(objectType);
-            if (objectType == typeof(DateTime) || objectType == typeof(DateTime?))
+            var contract = existingContractResolver?.ResolveContract(type);
+            if (contract?.Converter != null)
+                return contract;
+
+            if (contract == null)
+                contract = base.ResolveContract(type);
+
+            if (type == typeof(DateTime) || type == typeof(DateTime?))
             {
                 contract.Converter = JsonDateTimeTickConverter.Default;
             }
-
-            if (objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?))
+            else if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
             {
                 contract.Converter = JsonDateTimeOffsetTickConverter.Default;
             }
