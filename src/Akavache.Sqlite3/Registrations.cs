@@ -17,6 +17,17 @@ namespace Akavache.Sqlite3
     [Preserve(AllMembers = true)]
     public class Registrations : IWantsToRegisterStuff
     {
+        /// <summary>
+        /// Activates SQLite3 for the application and creates any required storage.
+        /// </summary>
+        /// <param name="applicationName">The name of the application.</param>
+        /// <param name="initSql">A action to initialize SQLite3.</param>
+        public static void Start(string applicationName, Action initSql)
+        {
+            BlobCache.ApplicationName = applicationName;
+            initSql?.Invoke();
+        }
+
         /// <inheritdoc />
         public void Register(IMutableDependencyResolver resolver)
         {
@@ -48,17 +59,6 @@ namespace Akavache.Sqlite3
                 return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache));
-        }
-
-        /// <summary>
-        /// Activates SQLite3 for the application and creates any required storage.
-        /// </summary>
-        /// <param name="applicationName">The name of the application.</param>
-        /// <param name="initSql">A action to initialize SQLite3.</param>
-        public static void Start(string applicationName, Action initSql)
-        {
-            BlobCache.ApplicationName = applicationName;
-            initSql?.Invoke();
         }
     }
 }

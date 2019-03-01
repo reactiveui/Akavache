@@ -1,15 +1,21 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+=======
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.0" />
+>>>>>>> master
     <PackageReference Include="Microsoft.Reactive.Testing" Version="4.0.0" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.13" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,8 +23,9 @@
     <PackageReference Include="xunit.runner.console" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     <PackageReference Include="Xunit.StaFact" Version="0.3.18" />
+>>>>>>> master
     <PackageReference Include="ReactiveUI.Testing" Version="9.*" />
-    <PackageReference Include="Splat" Version="6.*" />
+    <PackageReference Include="Microsoft.Reactive.Testing" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>

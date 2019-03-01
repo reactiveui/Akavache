@@ -8,7 +8,6 @@ using System.Reactive;
 using System.Reactive.Linq;
 using ReactiveUI;
 using Splat;
-using Newtonsoft.Json;
 
 namespace Akavache.Mobile
 {

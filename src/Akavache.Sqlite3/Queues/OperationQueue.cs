@@ -26,26 +26,26 @@ namespace Akavache.Sqlite3
     /// </summary>
     internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
     {
-        private readonly AsyncLock flushLock = new AsyncLock();
-        private readonly IScheduler scheduler;
+        private readonly AsyncLock _flushLock = new AsyncLock();
+        private readonly IScheduler _scheduler;
 
-        private readonly Lazy<BulkSelectSqliteOperation> bulkSelectKey;
-        private readonly Lazy<BulkSelectByTypeSqliteOperation> bulkSelectType;
-        private readonly Lazy<BulkInsertSqliteOperation> bulkInsertKey;
-        private readonly Lazy<BulkInvalidateSqliteOperation> bulkInvalidateKey;
-        private readonly Lazy<BulkInvalidateByTypeSqliteOperation> bulkInvalidateType;
-        private readonly Lazy<InvalidateAllSqliteOperation> invalidateAll;
-        private readonly Lazy<VacuumSqliteOperation> vacuum;
-        private readonly Lazy<DeleteExpiredSqliteOperation> deleteExpired;
-        private readonly Lazy<GetKeysSqliteOperation> getAllKeys;
-        private readonly Lazy<BeginTransactionSqliteOperation> begin;
-        private readonly Lazy<CommitTransactionSqliteOperation> commit;
+        private readonly Lazy<BulkSelectSqliteOperation> _bulkSelectKey;
+        private readonly Lazy<BulkSelectByTypeSqliteOperation> _bulkSelectType;
+        private readonly Lazy<BulkInsertSqliteOperation> _bulkInsertKey;
+        private readonly Lazy<BulkInvalidateSqliteOperation> _bulkInvalidateKey;
+        private readonly Lazy<BulkInvalidateByTypeSqliteOperation> _bulkInvalidateType;
+        private readonly Lazy<InvalidateAllSqliteOperation> _invalidateAll;
+        private readonly Lazy<VacuumSqliteOperation> _vacuum;
+        private readonly Lazy<DeleteExpiredSqliteOperation> _deleteExpired;
+        private readonly Lazy<GetKeysSqliteOperation> _getAllKeys;
+        private readonly Lazy<BeginTransactionSqliteOperation> _begin;
+        private readonly Lazy<CommitTransactionSqliteOperation> _commit;
 
-        private BlockingCollection<OperationQueueItem> operationQueue =
+        private BlockingCollection<OperationQueueItem> _operationQueue =
             new BlockingCollection<OperationQueueItem>();
 
-        private IDisposable start;
-        private CancellationTokenSource shouldQuit;
+        private IDisposable _start;
+        private CancellationTokenSource _shouldQuit;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SqliteOperationQueue"/> class.
@@ -54,19 +54,19 @@ namespace Akavache.Sqlite3
         /// <param name="scheduler">The scheduler to perform operations against.</param>
         public SqliteOperationQueue(SQLiteConnection connection, IScheduler scheduler)
         {
-            this.scheduler = scheduler;
+            _scheduler = scheduler;
 
-            bulkSelectKey = new Lazy<BulkSelectSqliteOperation>(() => new BulkSelectSqliteOperation(connection, false, scheduler));
-            bulkSelectType = new Lazy<BulkSelectByTypeSqliteOperation>(() => new BulkSelectByTypeSqliteOperation(connection, scheduler));
-            bulkInsertKey = new Lazy<BulkInsertSqliteOperation>(() => new BulkInsertSqliteOperation(connection));
-            bulkInvalidateKey = new Lazy<BulkInvalidateSqliteOperation>(() => new BulkInvalidateSqliteOperation(connection, false));
-            bulkInvalidateType = new Lazy<BulkInvalidateByTypeSqliteOperation>(() => new BulkInvalidateByTypeSqliteOperation(connection));
-            invalidateAll = new Lazy<InvalidateAllSqliteOperation>(() => new InvalidateAllSqliteOperation(connection));
-            vacuum = new Lazy<VacuumSqliteOperation>(() => new VacuumSqliteOperation(connection, scheduler));
-            deleteExpired = new Lazy<DeleteExpiredSqliteOperation>(() => new DeleteExpiredSqliteOperation(connection, scheduler));
-            getAllKeys = new Lazy<GetKeysSqliteOperation>(() => new GetKeysSqliteOperation(connection, scheduler));
-            begin = new Lazy<BeginTransactionSqliteOperation>(() => new BeginTransactionSqliteOperation(connection));
-            commit = new Lazy<CommitTransactionSqliteOperation>(() => new CommitTransactionSqliteOperation(connection));
+            _bulkSelectKey = new Lazy<BulkSelectSqliteOperation>(() => new BulkSelectSqliteOperation(connection, false, scheduler));
+            _bulkSelectType = new Lazy<BulkSelectByTypeSqliteOperation>(() => new BulkSelectByTypeSqliteOperation(connection, scheduler));
+            _bulkInsertKey = new Lazy<BulkInsertSqliteOperation>(() => new BulkInsertSqliteOperation(connection));
+            _bulkInvalidateKey = new Lazy<BulkInvalidateSqliteOperation>(() => new BulkInvalidateSqliteOperation(connection, false));
+            _bulkInvalidateType = new Lazy<BulkInvalidateByTypeSqliteOperation>(() => new BulkInvalidateByTypeSqliteOperation(connection));
+            _invalidateAll = new Lazy<InvalidateAllSqliteOperation>(() => new InvalidateAllSqliteOperation(connection));
+            _vacuum = new Lazy<VacuumSqliteOperation>(() => new VacuumSqliteOperation(connection, scheduler));
+            _deleteExpired = new Lazy<DeleteExpiredSqliteOperation>(() => new DeleteExpiredSqliteOperation(connection, scheduler));
+            _getAllKeys = new Lazy<GetKeysSqliteOperation>(() => new GetKeysSqliteOperation(connection, scheduler));
+            _begin = new Lazy<BeginTransactionSqliteOperation>(() => new BeginTransactionSqliteOperation(connection));
+            _commit = new Lazy<CommitTransactionSqliteOperation>(() => new CommitTransactionSqliteOperation(connection));
         }
 
         /// <summary>
@@ -86,17 +86,17 @@ namespace Akavache.Sqlite3
         /// <returns>A disposable which when Disposed will stop the queue.</returns>
         public IDisposable Start()
         {
-            if (start != null)
+            if (_start != null)
             {
-                return start;
+                return _start;
             }
 
-            shouldQuit = new CancellationTokenSource();
+            _shouldQuit = new CancellationTokenSource();
             var task = Task.Run(async () =>
             {
                 var toProcess = new List<OperationQueueItem>();
 
-                while (!shouldQuit.IsCancellationRequested)
+                while (!_shouldQuit.IsCancellationRequested)
                 {
                     toProcess.Clear();
 
@@ -104,7 +104,7 @@ namespace Akavache.Sqlite3
 
                     try
                     {
-                        @lock = await flushLock.LockAsync(shouldQuit.Token);
+                        @lock = await _flushLock.LockAsync(_shouldQuit.Token).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {
@@ -126,7 +126,7 @@ namespace Akavache.Sqlite3
                         OperationQueueItem item;
                         try
                         {
-                            item = operationQueue.Take(shouldQuit.Token);
+                            item = _operationQueue.Take(_shouldQuit.Token);
                         }
                         catch (OperationCanceledException)
                         {
@@ -136,13 +136,13 @@ namespace Akavache.Sqlite3
                         // NB: We explicitly want to bail out *here* because we
                         // never want to bail out in the middle of processing
                         // operations, to guarantee that we won't orphan them
-                        if (shouldQuit.IsCancellationRequested && item == null)
+                        if (_shouldQuit.IsCancellationRequested && item == null)
                         {
                             break;
                         }
 
                         toProcess.Add(item);
-                        while (toProcess.Count < Constants.OperationQueueChunkSize && operationQueue.TryTake(out item))
+                        while (toProcess.Count < Constants.OperationQueueChunkSize && _operationQueue.TryTake(out item))
                         {
                             toProcess.Add(item);
                         }
@@ -159,19 +159,19 @@ namespace Akavache.Sqlite3
                             // to the queue
                             foreach (var v in toProcess)
                             {
-                                operationQueue.Add(v);
+                                _operationQueue.Add(v);
                             }
                         }
                     }
                 }
             });
 
-            return start = Disposable.Create(
+            return _start = Disposable.Create(
         () =>
                 {
                     try
                     {
-                        shouldQuit.Cancel();
+                        _shouldQuit.Cancel();
                         task.Wait();
                     }
                     catch (OperationCanceledException)
@@ -180,7 +180,7 @@ namespace Akavache.Sqlite3
 
                     try
                     {
-                        using (flushLock.LockAsync().Result)
+                        using (_flushLock.LockAsync().Result)
                         {
                             FlushInternal();
                         }
@@ -189,14 +189,14 @@ namespace Akavache.Sqlite3
                     {
                     }
 
-                    start = null;
+                    _start = null;
                 });
         }
 
         public IObservable<Unit> Flush()
         {
             var noop = OperationQueueItem.CreateUnit(OperationType.DoNothing);
-            operationQueue.Add(noop);
+            _operationQueue.Add(noop);
 
             return noop.CompletionAsUnit;
         }
@@ -204,7 +204,7 @@ namespace Akavache.Sqlite3
         public AsyncSubject<IEnumerable<CacheElement>> Select(IEnumerable<string> keys)
         {
             var ret = OperationQueueItem.CreateSelect(OperationType.BulkSelectSqliteOperation, keys);
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsElements;
         }
@@ -212,7 +212,7 @@ namespace Akavache.Sqlite3
         public AsyncSubject<IEnumerable<CacheElement>> SelectTypes(IEnumerable<string> types)
         {
             var ret = OperationQueueItem.CreateSelect(OperationType.BulkSelectByTypeSqliteOperation, types);
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsElements;
         }
@@ -220,7 +220,7 @@ namespace Akavache.Sqlite3
         public AsyncSubject<Unit> Insert(IEnumerable<CacheElement> items)
         {
             var ret = OperationQueueItem.CreateInsert(OperationType.BulkInsertSqliteOperation, items);
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsUnit;
         }
@@ -228,7 +228,7 @@ namespace Akavache.Sqlite3
         public AsyncSubject<Unit> Invalidate(IEnumerable<string> keys)
         {
             var ret = OperationQueueItem.CreateInvalidate(OperationType.BulkInvalidateSqliteOperation, keys);
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsUnit;
         }
@@ -236,7 +236,7 @@ namespace Akavache.Sqlite3
         public AsyncSubject<Unit> InvalidateTypes(IEnumerable<string> types)
         {
             var ret = OperationQueueItem.CreateInvalidate(OperationType.BulkInvalidateByTypeSqliteOperation, types);
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsUnit;
         }
@@ -244,7 +244,7 @@ namespace Akavache.Sqlite3
         public AsyncSubject<Unit> InvalidateAll()
         {
             var ret = OperationQueueItem.CreateUnit(OperationType.InvalidateAllSqliteOperation);
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsUnit;
         }
@@ -271,8 +271,8 @@ namespace Akavache.Sqlite3
                     // have had a chance to acquire it.
                     //
                     // 1. http://referencesource.microsoft.com/#mscorlib/system/threading/SemaphoreSlim.cs,d57f52e0341a581f
-                    var lockTask = flushLock.LockAsync(shouldQuit.Token);
-                    operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
+                    var lockTask = _flushLock.LockAsync(_shouldQuit.Token);
+                    _operationQueue.Add(OperationQueueItem.CreateUnit(OperationType.DoNothing));
 
                     try
                     {
@@ -283,7 +283,7 @@ namespace Akavache.Sqlite3
                     }
 
                     var deleteOp = OperationQueueItem.CreateUnit(OperationType.DeleteExpiredSqliteOperation);
-                    operationQueue.Add(deleteOp);
+                    _operationQueue.Add(deleteOp);
 
                     FlushInternal();
 
@@ -291,7 +291,7 @@ namespace Akavache.Sqlite3
 
                     var vacuumOp = OperationQueueItem.CreateUnit(OperationType.VacuumSqliteOperation);
 
-                    MarshalCompletion(vacuumOp.Completion, vacuum.Value.PrepareToExecute(), Observable.Return(Unit.Default));
+                    MarshalCompletion(vacuumOp.Completion, _vacuum.Value.PrepareToExecute(), Observable.Return(Unit.Default));
 
                     await vacuumOp.CompletionAsUnit;
                 }
@@ -301,7 +301,7 @@ namespace Akavache.Sqlite3
                 }
             })
             .ToObservable()
-            .ObserveOn(scheduler)
+            .ObserveOn(_scheduler)
             .Multicast(ret)
             .PermaRef();
 
@@ -311,79 +311,99 @@ namespace Akavache.Sqlite3
         public AsyncSubject<IEnumerable<string>> GetAllKeys()
         {
             var ret = OperationQueueItem.CreateGetAllKeys();
-            operationQueue.Add(ret);
+            _operationQueue.Add(ret);
 
             return ret.CompletionAsKeys;
         }
 
         public void Dispose()
         {
-            if (bulkSelectKey.IsValueCreated)
+            if (_bulkSelectKey.IsValueCreated)
             {
-                bulkSelectKey.Value.Dispose();
+                _bulkSelectKey.Value.Dispose();
             }
 
-            if (bulkSelectType.IsValueCreated)
+            if (_bulkSelectType.IsValueCreated)
             {
-                bulkSelectType.Value.Dispose();
+                _bulkSelectType.Value.Dispose();
             }
 
-            if (bulkInsertKey.IsValueCreated)
+            if (_bulkInsertKey.IsValueCreated)
             {
-                bulkInsertKey.Value.Dispose();
+                _bulkInsertKey.Value.Dispose();
             }
 
-            if (bulkInvalidateKey.IsValueCreated)
+            if (_bulkInvalidateKey.IsValueCreated)
             {
-                bulkInvalidateKey.Value.Dispose();
+                _bulkInvalidateKey.Value.Dispose();
             }
 
-            if (bulkInvalidateType.IsValueCreated)
+            if (_bulkInvalidateType.IsValueCreated)
             {
-                bulkInvalidateType.Value.Dispose();
+                _bulkInvalidateType.Value.Dispose();
             }
 
-            if (invalidateAll.IsValueCreated)
+            if (_invalidateAll.IsValueCreated)
             {
-                invalidateAll.Value.Dispose();
+                _invalidateAll.Value.Dispose();
             }
 
-            if (vacuum.IsValueCreated)
+            if (_vacuum.IsValueCreated)
             {
-                vacuum.Value.Dispose();
+                _vacuum.Value.Dispose();
             }
 
-            if (deleteExpired.IsValueCreated)
+            if (_deleteExpired.IsValueCreated)
             {
-                deleteExpired.Value.Dispose();
+                _deleteExpired.Value.Dispose();
             }
 
-            if (getAllKeys.IsValueCreated)
+            if (_getAllKeys.IsValueCreated)
             {
-                getAllKeys.Value.Dispose();
+                _getAllKeys.Value.Dispose();
             }
 
-            if (begin.IsValueCreated)
+            if (_begin.IsValueCreated)
             {
-                begin.Value.Dispose();
+                _begin.Value.Dispose();
             }
 
-            if (begin.IsValueCreated)
+            if (_begin.IsValueCreated)
             {
-                commit.Value.Dispose();
+                _commit.Value.Dispose();
             }
         }
 
         internal List<OperationQueueItem> DumpQueue()
         {
-            return operationQueue.ToList();
+            return _operationQueue.ToList();
+        }
+
+        private static void MarshalCompletion(object completion, Action block, IObservable<Unit> commitResult)
+        {
+            var subj = (AsyncSubject<Unit>)completion;
+            try
+            {
+                block();
+
+                subj.OnNext(Unit.Default);
+
+                commitResult
+                    .SelectMany(_ => Observable.Empty<Unit>())
+                    .Multicast(subj)
+                    .PermaRef();
+            }
+            catch (Exception ex)
+            {
+                subj.OnError(ex);
+            }
         }
 
         // NB: Callers must hold flushLock to call this
         private void FlushInternal()
         {
             var newQueue = new BlockingCollection<OperationQueueItem>();
-            var existingItems = Interlocked.Exchange(ref operationQueue, newQueue).ToList();
+            var existingItems = Interlocked.Exchange(ref _operationQueue, newQueue).ToList();
 
             ProcessItems(CoalesceOperations(existingItems));
         }
@@ -392,7 +412,7 @@ namespace Akavache.Sqlite3
         {
             var commitResult = new AsyncSubject<Unit>();
 
-            begin.Value.PrepareToExecute()();
+            _begin.Value.PrepareToExecute()();
 
             foreach (var item in toProcess)
             {
@@ -402,28 +422,28 @@ namespace Akavache.Sqlite3
                         MarshalCompletion(item.Completion, () => { }, commitResult);
                         break;
                     case OperationType.BulkInsertSqliteOperation:
-                        MarshalCompletion(item.Completion, bulkInsertKey.Value.PrepareToExecute(item.ParametersAsElements), commitResult);
+                        MarshalCompletion(item.Completion, _bulkInsertKey.Value.PrepareToExecute(item.ParametersAsElements), commitResult);
                         break;
                     case OperationType.BulkInvalidateByTypeSqliteOperation:
-                        MarshalCompletion(item.Completion, bulkInvalidateType.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        MarshalCompletion(item.Completion, _bulkInvalidateType.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
                         break;
                     case OperationType.BulkInvalidateSqliteOperation:
-                        MarshalCompletion(item.Completion, bulkInvalidateKey.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        MarshalCompletion(item.Completion, _bulkInvalidateKey.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
                         break;
                     case OperationType.BulkSelectByTypeSqliteOperation:
-                        MarshalCompletion(item.Completion, bulkSelectType.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        MarshalCompletion(item.Completion, _bulkSelectType.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
                         break;
                     case OperationType.BulkSelectSqliteOperation:
-                        MarshalCompletion(item.Completion, bulkSelectKey.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
+                        MarshalCompletion(item.Completion, _bulkSelectKey.Value.PrepareToExecute(item.ParametersAsKeys), commitResult);
                         break;
                     case OperationType.GetKeysSqliteOperation:
-                        MarshalCompletion(item.Completion, getAllKeys.Value.PrepareToExecute(), commitResult);
+                        MarshalCompletion(item.Completion, _getAllKeys.Value.PrepareToExecute(), commitResult);
                         break;
                     case OperationType.InvalidateAllSqliteOperation:
-                        MarshalCompletion(item.Completion, invalidateAll.Value.PrepareToExecute(), commitResult);
+                        MarshalCompletion(item.Completion, _invalidateAll.Value.PrepareToExecute(), commitResult);
                         break;
                     case OperationType.DeleteExpiredSqliteOperation:
-                        MarshalCompletion(item.Completion, deleteExpired.Value.PrepareToExecute(), commitResult);
+                        MarshalCompletion(item.Completion, _deleteExpired.Value.PrepareToExecute(), commitResult);
                         break;
                     case OperationType.VacuumSqliteOperation:
                         throw new ArgumentException("Vacuum operation can't run inside transaction");
@@ -434,11 +454,11 @@ namespace Akavache.Sqlite3
 
             try
             {
-                commit.Value.PrepareToExecute()();
+                _commit.Value.PrepareToExecute()();
 
                 // NB: We do this in a scheduled result to stop a deadlock in
                 // First and friends
-                scheduler.Schedule(() =>
+                _scheduler.Schedule(() =>
                 {
                     commitResult.OnNext(Unit.Default);
                     commitResult.OnCompleted();
@@ -446,7 +466,7 @@ namespace Akavache.Sqlite3
             }
             catch (Exception ex)
             {
-                scheduler.Schedule(() => commitResult.OnError(ex));
+                _scheduler.Schedule(() => commitResult.OnError(ex));
             }
         }
 
@@ -466,27 +486,7 @@ namespace Akavache.Sqlite3
             }
             catch (Exception ex)
             {
-                scheduler.Schedule(() => subj.OnError(ex));
-            }
-        }
-
-        private void MarshalCompletion(object completion, Action block, IObservable<Unit> commitResult)
-        {
-            var subj = (AsyncSubject<Unit>)completion;
-            try
-            {
-                block();
-
-                subj.OnNext(Unit.Default);
-
-                commitResult
-                    .SelectMany(_ => Observable.Empty<Unit>())
-                    .Multicast(subj)
-                    .PermaRef();
-            }
-            catch (Exception ex)
-            {
-                subj.OnError(ex);
+                _scheduler.Schedule(() => subj.OnError(ex));
             }
         }
     }

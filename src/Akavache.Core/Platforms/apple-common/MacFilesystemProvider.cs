@@ -5,8 +5,8 @@
 
 using System;
 using System.IO;
-using System.Reactive.Concurrency;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Foundation;
 
@@ -17,7 +17,7 @@ namespace Akavache
     /// </summary>
     public class MacFilesystemProvider : IFilesystemProvider
     {
-        readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
+        private readonly SimpleFilesystemProvider _inner = new SimpleFilesystemProvider();
 
         /// <inheritdoc />
         public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler)
@@ -77,4 +77,3 @@ namespace Akavache
         }
     }
 }
-

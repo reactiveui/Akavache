@@ -1,25 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Reflection;
-using Windows.Security.Cryptography.DataProtection;
-using Windows.Storage;
 using System.Reactive.Windows.Foundation;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Security.Cryptography.DataProtection;
 
 namespace Akavache
 {
+    /// <summary>
+    /// A encryption provider for the WinRT system.
+    /// </summary>
     public class WinRTEncryptionProvider : IEncryptionProvider
     {
+        /// <inheritdoc />
         public IObservable<byte[]> EncryptBlock(byte[] block)
         {
             var dpapi = new DataProtectionProvider("LOCAL=user");
             return dpapi.ProtectAsync(block.AsBuffer()).ToObservable().Select(b => b.ToArray());
         }
 
+        /// <inheritdoc />
         public IObservable<byte[]> DecryptBlock(byte[] block)
         {
             // Do not include a protectionDescriptor

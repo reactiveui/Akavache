@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Splat;
 
@@ -12,6 +13,7 @@ namespace Akavache
     /// <summary>
     /// A set of mix-in associated with the <see cref="IMutableDependencyResolver"/> interface.
     /// </summary>
+    [SuppressMessage("FxCop.Analyzer", "CA1307: The behavior of 'string.Replace(string, string)' could vary based on the current user's locale settings", Justification = "Not all platforms allow locale.")]
     public static class DependencyResolverMixin
     {
         /// <summary>

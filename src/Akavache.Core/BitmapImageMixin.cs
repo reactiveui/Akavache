@@ -58,6 +58,26 @@ namespace Akavache
         /// returns the image.
         /// </summary>
         /// <param name="blobCache">The blob cache to load the image from if available.</param>
+        /// <param name="url">The URL to download.</param>
+        /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
+        /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
+        /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the bitmap image. blobCache
+        /// Observable is guaranteed to be returned on the UI thread.</returns>
+        public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
+        {
+            return blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
+                .SelectMany(ThrowOnBadImageBuffer)
+                .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+        }
+
+        /// <summary>
+        /// A combination of DownloadUrl and LoadImage, this method fetches an
+        /// image from a remote URL (using the cached value if possible) and
+        /// returns the image.
+        /// </summary>
+        /// <param name="blobCache">The blob cache to load the image from if available.</param>
         /// <param name="key">The key to store with.</param>
         /// <param name="url">The URL to download.</param>
         /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
@@ -67,6 +87,27 @@ namespace Akavache
         /// <returns>A Future result representing the bitmap image. blobCache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
+        {
+            return blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
+                .SelectMany(ThrowOnBadImageBuffer)
+                .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+        }
+
+        /// <summary>
+        /// A combination of DownloadUrl and LoadImage, this method fetches an
+        /// image from a remote URL (using the cached value if possible) and
+        /// returns the image.
+        /// </summary>
+        /// <param name="blobCache">The blob cache to load the image from if available.</param>
+        /// <param name="key">The key to store with.</param>
+        /// <param name="url">The URL to download.</param>
+        /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
+        /// <param name="desiredWidth">Optional desired width, if not specified will be the default size.</param>
+        /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
+        /// <param name="absoluteExpiration">An optional expiration date.</param>
+        /// <returns>A Future result representing the bitmap image. blobCache
+        /// Observable is guaranteed to be returned on the UI thread.</returns>
+        public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
             return blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)

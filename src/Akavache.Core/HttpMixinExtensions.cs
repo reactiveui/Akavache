@@ -29,7 +29,7 @@ namespace Akavache
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
-            return mixin.DownloadUrl(blobCache, url, headers, fetchAlways, absoluteExpiration);
+            return mixin.DownloadUrl(blobCache, new Uri(url), headers, fetchAlways, absoluteExpiration);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Akavache
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
-            return mixin.DownloadUrl(blobCache, key, url, headers, fetchAlways, absoluteExpiration);
+            return mixin.DownloadUrl(blobCache, key, new Uri(url), headers, fetchAlways, absoluteExpiration);
         }
 
         /// <summary>

@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using Akavache.Sqlite3;
+using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
 
 namespace Akavache.Sqlite3
@@ -22,6 +22,7 @@ namespace Akavache.Sqlite3
         /// and will use bait and switch.
         /// </summary>
         /// <exception cref="Exception">A exception due to this being in the non-derived assembly.</exception>
+        [SuppressMessage("FxCop.Design", "CA1065: Don't throw in constructors", Justification = "Shim class, should not happen.")]
         static LinkerPreserve()
         {
             throw new Exception(typeof(SQLitePersistentBlobCache).FullName);

@@ -3,15 +3,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Globalization;
-using System.Reflection;
-using System.Threading.Tasks;
-
 namespace Akavache.Sqlite3
 {
+    /// <summary>
+    /// A object that has been wrapped. Used often for allowing serialization.
+    /// </summary>
+    /// <typeparam name="T">The type of object wrapped.</typeparam>
     internal class ObjectWrapper<T> : IObjectWrapper
     {
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
         public T Value { get; set; }
     }
 }

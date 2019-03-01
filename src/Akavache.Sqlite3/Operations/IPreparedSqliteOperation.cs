@@ -9,8 +9,14 @@ using Splat;
 
 namespace Akavache.Sqlite3
 {
+    /// <summary>
+    /// A SQL operation connection.
+    /// </summary>
     internal interface IPreparedSqliteOperation : IEnableLogger, IDisposable
     {
+        /// <summary>
+        /// Gets the connection to the SQLite database.
+        /// </summary>
         SQLiteConnection Connection { get; }
     }
 }

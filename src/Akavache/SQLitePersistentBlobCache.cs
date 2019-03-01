@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Reactive.Concurrency;
-using System.Text;
 
 namespace Akavache.Sqlite3
 {
@@ -9,9 +11,9 @@ namespace Akavache.Sqlite3
     /// The main purpose of this class is to ensure older packages upgrade without breaking.
     /// Existing installs of Akavache use a linker class referencing typeof(Akavache.Sqlite3.SQLitePersistentBlobCache)
     /// This ensures that static analysis won't link these DLLs out
-    /// 
+    ///
     /// This library was added to provide a default bundle implementation using the bundle_e_sqlite3 bundle.
-    /// Thus this class was moved here so it provides the hook for the linker and then registers and inits the sqlraw bundle
+    /// Thus this class was moved here so it provides the hook for the linker and then registers and inits the sqlraw bundle.
     /// </summary>
     public class SQLitePersistentBlobCache : SqlRawPersistentBlobCache
     {

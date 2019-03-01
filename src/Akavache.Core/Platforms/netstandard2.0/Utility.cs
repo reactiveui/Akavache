@@ -27,11 +27,25 @@ namespace Akavache
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Logs a series of errors into a blob cache.
+        /// </summary>
+        /// <typeparam name="T">The type of item stored inside the blob cache.</typeparam>
+        /// <param name="blobCache">The blob cache where to store the errors.</param>
+        /// <param name="message">The message to store.</param>
+        /// <returns>An observable that signals when the operation is completed.</returns>
         public static IObservable<T> LogErrors<T>(this IObservable<T> blobCache, string message = null)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Copies a blob to the stream.
+        /// </summary>
+        /// <param name="blobCache">The blob to copy.</param>
+        /// <param name="destination">The destination stream.</param>
+        /// <param name="scheduler">The scheduler to use to perform the copy.</param>
+        /// <returns>An observable that signals when the operation is completed.</returns>
         public static IObservable<Unit> CopyToAsync(this Stream blobCache, Stream destination, IScheduler scheduler = null)
         {
             throw new NotImplementedException();

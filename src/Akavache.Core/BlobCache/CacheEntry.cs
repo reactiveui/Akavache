@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Akavache
 {
@@ -45,6 +46,7 @@ namespace Akavache
         /// <summary>
         /// Gets or sets the value of the entry.
         /// </summary>
+        [SuppressMessage("FxCop.Style", "CA1819: Properties should not return arrays", Justification = "Legacy reasons.")]
         public byte[] Value { get; protected set; }
     }
 }

@@ -5,6 +5,9 @@
 
 namespace Akavache.Sqlite3
 {
+    /// <summary>
+    /// A wrapper around a object.
+    /// </summary>
     internal interface IObjectWrapper
     {
     }

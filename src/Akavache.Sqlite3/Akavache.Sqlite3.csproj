@@ -7,6 +7,7 @@
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
     <PackageId>akavache.sqlite3</PackageId>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <DefineConstants>$(DefineConstants);USE_SQLITEPCL_RAW;USE_NEW_REFLECTION_API</DefineConstants>
   </PropertyGroup>
 

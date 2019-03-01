@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -412,9 +413,9 @@ namespace Akavache.Sqlite3
                 var cleanup = Observable.Start(
                     () =>
                     {
-                        // NB: While we intentionally dispose the operation queue 
+                        // NB: While we intentionally dispose the operation queue
                         // from a background thread so that we don't park the UI
-                        // while we're waiting for background operations to 
+                        // while we're waiting for background operations to
                         // complete, we must serialize calls to sqlite3_close or
                         // else SQLite3 will start throwing back "busy" at us.
                         //
@@ -443,18 +444,18 @@ namespace Akavache.Sqlite3
         {
             var ret = Observable.Create<Unit>(subj =>
             {
-                // NB: This is in its own try block because depending on the 
+                // NB: This is in its own try block because depending on the
                 // platform, we may not have a modern SQLite3, where these
                 // PRAGMAs are supported. These aren't critical, so let them
                 // fail silently
-                try 
+                try
                 {
                     // NB: Setting journal_mode returns a row, nfi
                     Connection.ExecuteScalar<int>("PRAGMA journal_mode=WAL");
                     Connection.Execute("PRAGMA temp_store=MEMORY");
                     Connection.Execute("PRAGMA synchronous=OFF");
                 }
-                catch (SQLiteException) 
+                catch (SQLiteException)
                 {
                 }
 
@@ -470,7 +471,7 @@ namespace Akavache.Sqlite3
                         Connection.CreateTable<CacheElement>();
 
                         var sql = "INSERT INTO CacheElement SELECT Key,TypeName,Value,Expiration,\"{0}\" AS CreatedAt FROM VersionOneCacheElement;";
-                        Connection.Execute(string.Format(sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
+                        Connection.Execute(string.Format(CultureInfo.InvariantCulture, sql, BlobCache.TaskpoolScheduler.Now.UtcDateTime.Ticks));
                         Connection.Execute("DROP TABLE VersionOneCacheElement;");
 
                         Connection.Insert(new SchemaInfo { Version = 2, });

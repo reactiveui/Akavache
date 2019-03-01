@@ -57,6 +57,20 @@ namespace Akavache
         }
 
         /// <summary>
+        /// Downloads the specified url if there is not already a entry in the cache.
+        /// </summary>
+        /// <param name="blobCache">The blob cache to insert the item into.</param>
+        /// <param name="url">The URL to download if not already in the cache.</param>
+        /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
+        /// <param name="headers">The headers to specify when getting the entry.</param>
+        /// <param name="fetchAlways">If we should fetch always and not return the cache entry if available.</param>
+        /// <returns>A observable which will signal when the data is available.</returns>
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
+        {
+            return blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
+        }
+
+        /// <summary>
         /// Saves a username and password.
         /// </summary>
         /// <param name="blobCache">The blob cache to insert the item into.</param>
