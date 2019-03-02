@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="1.1.13" />
   </ItemGroup>
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin')) ">
     <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
