@@ -1,40 +1,78 @@
-﻿using System;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reactive.Disposables;
 
 namespace Akavache.Sqlite3.Internal
 {
-    // Straight-up thieved from http://www.hanselman.com/blog/ComparingTwoTechniquesInNETAsynchronousCoordinationPrimitives.aspx 
-    public sealed class AsyncLock
+    /// <summary>
+    /// A lock that allows for async based operations and returns a IDisposable which allows for unlocking.
+    /// </summary>
+    /// <remarks>Straight-up thieved from
+    /// http://www.hanselman.com/blog/ComparingTwoTechniquesInNETAsynchronousCoordinationPrimitives.aspx
+    /// and all credit to that article.</remarks>
+    public sealed class AsyncLock : IDisposable
     {
-        readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
-        readonly Task<IDisposable> m_releaser;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private readonly Task<IDisposable> _releaser;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AsyncLock"/> class.
+        /// </summary>
         public AsyncLock()
         {
-            m_releaser = Task.FromResult((IDisposable)new Releaser(this));
+            _releaser = Task.FromResult((IDisposable)new Releaser(this));
         }
 
-        public Task<IDisposable> LockAsync(CancellationToken ct = default(CancellationToken))
+        /// <summary>
+        /// Performs a lock which will be either released when the cancellation token is cancelled,
+        /// or the returned disposable is disposed.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token which allows for release of the lock.</param>
+        /// <returns>A disposable which when Disposed will release the lock.</returns>
+        public Task<IDisposable> LockAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var wait = m_semaphore.WaitAsync(ct);
+            var wait = _semaphore.WaitAsync(cancellationToken);
 
             // Happy path. We synchronously acquired the lock.
             if (wait.IsCompleted && !wait.IsFaulted && !wait.IsCanceled)
-                return m_releaser;
-            
+            {
+                return _releaser;
+            }
+
             return wait
-                .ContinueWith((task, state) => task.IsCanceled ? null : (IDisposable)state,
-                    m_releaser.Result, ct,
-                    TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                .ContinueWith(
+                    (task, state) => task.IsCanceled ? null : (IDisposable)state,
+                    _releaser.Result,
+                    cancellationToken,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
         }
 
-        sealed class Releaser : IDisposable
+        /// <inheritdoc />
+        public void Dispose()
         {
-            readonly AsyncLock m_toRelease;
-            internal Releaser(AsyncLock toRelease) { m_toRelease = toRelease; }
-            public void Dispose() { m_toRelease.m_semaphore.Release(); }
+            _semaphore?.Dispose();
+            _releaser?.Dispose();
+        }
+
+        private sealed class Releaser : IDisposable
+        {
+            private readonly AsyncLock _toRelease;
+
+            internal Releaser(AsyncLock toRelease)
+            {
+                _toRelease = toRelease;
+            }
+
+            public void Dispose()
+            {
+                _toRelease._semaphore.Release();
+            }
         }
     }
 }

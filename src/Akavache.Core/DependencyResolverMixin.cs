@@ -1,27 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Splat;
 
 namespace Akavache
 {
-    internal interface IWantsToRegisterStuff
-    {
-        void Register(IMutableDependencyResolver resolverToUse);
-    }
-
+    /// <summary>
+    /// A set of mix-in associated with the <see cref="IMutableDependencyResolver"/> interface.
+    /// </summary>
+    [SuppressMessage("FxCop.Analyzer", "CA1307: The behavior of 'string.Replace(string, string)' could vary based on the current user's locale settings", Justification = "Not all platforms allow locale.")]
     public static class DependencyResolverMixin
     {
         /// <summary>
-        /// Initializes a ReactiveUI dependency resolver with classes that 
+        /// Initializes a ReactiveUI dependency resolver with classes that
         /// Akavache uses internally.
         /// </summary>
-        public static void InitializeAkavache(this IMutableDependencyResolver This)
+        /// <param name="resolver">The resolver to register Akavache based dependencies against.</param>
+        public static void InitializeAkavache(this IMutableDependencyResolver resolver)
         {
-            var namespaces = new[] { 
+            var namespaces = new[]
+            {
                 "Akavache",
                 "Akavache.Core",
                 "Akavache.Mac",
@@ -32,20 +35,28 @@ namespace Akavache
 
             var fdr = typeof(DependencyResolverMixin);
 
-            var assmName = new AssemblyName(
-                fdr.AssemblyQualifiedName.Replace(fdr.FullName + ", ", ""));
+            if (fdr == null || fdr.AssemblyQualifiedName == null)
+            {
+                throw new Exception($"Cannot find valid assembly name for the {nameof(DependencyResolverMixin)} class.");
+            }
 
-            foreach (var ns in namespaces) 
+            var assemblyName = new AssemblyName(
+                fdr.AssemblyQualifiedName.Replace(fdr.FullName + ", ", string.Empty));
+
+            foreach (var ns in namespaces)
             {
                 var targetType = ns + ".Registrations";
-                string fullName = targetType + ", " + assmName.FullName.Replace(assmName.Name, ns);
+                string fullName = targetType + ", " + assemblyName.FullName.Replace(assemblyName.Name, ns);
 
                 var registerTypeClass = Type.GetType(fullName, false);
-                if (registerTypeClass == null) continue;
+                if (registerTypeClass == null)
+                {
+                    continue;
+                }
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
-                registerer.Register(This);
-            };
+                registerer.Register(resolver);
+            }
         }
     }
 }

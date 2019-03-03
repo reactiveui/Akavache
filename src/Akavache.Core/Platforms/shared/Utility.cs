@@ -1,6 +1,12 @@
-﻿
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -9,7 +15,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Text;
-using System.Threading;
 using Splat;
 
 #if WINDOWS_UWP
@@ -19,13 +24,14 @@ using Windows.Storage;
 
 namespace Akavache
 {
-    static class Utility
+    [SuppressMessage("FxCop.Style", "CA5351: GetMd5Hash uses a broken cryptographic algorithm MD5", Justification = "Not used for encryption.")]
+    internal static partial class Utility
     {
         public static string GetMd5Hash(string input)
         {
 #if WINDOWS_UWP
             // NB: Technically, we could do this everywhere, but if we did this
-            // upgrade, we may return different strings than we used to (i.e. 
+            // upgrade, we may return different strings than we used to (i.e.
             // formatting-wise), which would break old caches.
             return MD5Core.GetHashString(input, Encoding.UTF8);
 #else
@@ -36,8 +42,9 @@ namespace Akavache
                 var sBuilder = new StringBuilder();
                 foreach (var item in data)
                 {
-                    sBuilder.Append(item.ToString("x2"));
+                    sBuilder.Append(item.ToString("x2", CultureInfo.InvariantCulture));
                 }
+
                 return sBuilder.ToString();
             }
 #endif
@@ -49,42 +56,42 @@ namespace Akavache
             scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
             var ret = new AsyncSubject<Stream>();
 
-            Observable.Start(() =>
-            {
-                try
+            Observable.Start(
+                () =>
                 {
-                    var createModes = new[]
+                    try
                     {
-                        FileMode.Create,
-                        FileMode.CreateNew,
-                        FileMode.OpenOrCreate,
-                    };
+                        var createModes = new[]
+                        {
+                            FileMode.Create,
+                            FileMode.CreateNew,
+                            FileMode.OpenOrCreate,
+                        };
 
+                        // NB: We do this (even though it's incorrect!) because
+                        // throwing lots of 1st chance exceptions makes debugging
+                        // obnoxious, as well as a bug in VS where it detects
+                        // exceptions caught by Observable.Start as Unhandled.
+                        if (!createModes.Contains(mode) && !File.Exists(path))
+                        {
+                            ret.OnError(new FileNotFoundException());
+                            return;
+                        }
 
-                    // NB: We do this (even though it's incorrect!) because
-                    // throwing lots of 1st chance exceptions makes debugging
-                    // obnoxious, as well as a bug in VS where it detects
-                    // exceptions caught by Observable.Start as Unhandled.
-                    if (!createModes.Contains(mode) && !File.Exists(path))
-                    {
-                        ret.OnError(new FileNotFoundException());
-                        return;
+                        Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
                     }
-
-                    Observable.Start(() => new FileStream(path, mode, access, share, 4096, false), scheduler).Cast<Stream>().Subscribe(ret);
-                }
-                catch (Exception ex)
-                {
-                    ret.OnError(ex);
-                }
-            }, scheduler);
+                    catch (Exception ex)
+                    {
+                        ret.OnError(ex);
+                    }
+                }, scheduler);
 
             return ret;
         }
 
-        public static void CreateRecursive(this DirectoryInfo This)
+        public static void CreateRecursive(this DirectoryInfo directoryInfo)
         {
-            This.SplitFullPath().Aggregate((parent, dir) =>
+            directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
             {
                 var path = Path.Combine(parent, dir);
 
@@ -97,46 +104,76 @@ namespace Akavache
             });
         }
 
-        public static IEnumerable<string> SplitFullPath(this DirectoryInfo This)
+        public static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
         {
-            var root = Path.GetPathRoot(This.FullName);
+            var root = Path.GetPathRoot(directoryInfo.FullName);
             var components = new List<string>();
-            for (var path = This.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
+            for (var path = directoryInfo.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
             {
                 var filename = Path.GetFileName(path);
-                if (String.IsNullOrEmpty(filename))
+                if (string.IsNullOrEmpty(filename))
+                {
                     continue;
+                }
+
                 components.Add(filename);
             }
+
             components.Add(root);
             components.Reverse();
             return components;
         }
 #endif
 
-        public static IObservable<T> LogErrors<T>(this IObservable<T> This, string message = null)
+        /// <summary>
+        /// Logs the errors of the observable.
+        /// </summary>
+        /// <typeparam name="T">The type of observable member.</typeparam>
+        /// <param name="observable">The observable.</param>
+        /// <param name="message">The message to log.</param>
+        /// <returns>An observable.</returns>
+        public static IObservable<T> LogErrors<T>(this IObservable<T> observable, string message = null)
         {
             return Observable.Create<T>(subj =>
             {
-                return This.Subscribe(subj.OnNext,
+                return observable.Subscribe(
+                    subj.OnNext,
                     ex =>
                     {
-                        var msg = message ?? "0x" + This.GetHashCode().ToString("x");
+                        var msg = message ?? "0x" + observable.GetHashCode().ToString("x", CultureInfo.InvariantCulture);
                         LogHost.Default.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
                         subj.OnError(ex);
                     }, subj.OnCompleted);
             });
         }
 
-        public static IObservable<Unit> CopyToAsync(this Stream This, Stream destination, IScheduler scheduler = null)
+#if WINDOWS_UWP
+        /// <summary>
+        /// Copies a stream using async.
+        /// </summary>
+        /// <param name="stream">The stream to copy from.</param>
+        /// <param name="destination">The stream to copy to.</param>
+        /// <returns>An observable that signals when the operation has finished.</returns>
+        public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination)
+#else
+        /// <summary>
+        /// Copies a stream using async.
+        /// </summary>
+        /// <param name="stream">The stream to copy from.</param>
+        /// <param name="destination">The stream to copy to.</param>
+        /// <param name="scheduler">The scheduler to schedule on.</param>
+        /// <returns>An observable that signals when the operation has finished.</returns>
+        public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination, IScheduler scheduler = null)
+#endif
         {
 #if WINDOWS_UWP
-            return This.CopyToAsync(destination).ToObservable()
-                .Do(x =>
+            return stream.CopyToAsync(destination).ToObservable()
+                .Do(
+                x =>
                 {
                     try
                     {
-                        This.Dispose();
+                        stream.Dispose();
                         destination.Dispose();
                     }
                     catch (Exception ex)
@@ -145,22 +182,23 @@ namespace Akavache
                     }
                 });
 #else
-            return Observable.Start(() =>
-            {
-                try
+            return Observable.Start(
+                () =>
                 {
-                    This.CopyTo(destination);
-                }
-                catch(Exception ex)
-                {
-                    LogHost.Default.WarnException("CopyToAsync failed", ex);
-                }
-                finally
-                {
-                    This.Dispose();
-                    destination.Dispose();
-                }
-            }, scheduler ?? BlobCache.TaskpoolScheduler);
+                    try
+                    {
+                        stream.CopyTo(destination);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogHost.Default.WarnException("CopyToAsync failed", ex);
+                    }
+                    finally
+                    {
+                        stream.Dispose();
+                        destination.Dispose();
+                    }
+                }, scheduler ?? BlobCache.TaskpoolScheduler);
 #endif
         }
     }
