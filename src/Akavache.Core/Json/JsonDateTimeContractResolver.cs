@@ -15,14 +15,17 @@ namespace Akavache
     internal class JsonDateTimeContractResolver : DefaultContractResolver
     {
         private readonly IContractResolver _existingContractResolver;
+        private readonly DateTimeKind? _forceDateTimeKindOverride;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
         /// </summary>
         /// <param name="contractResolver">A inherited contract resolver.</param>
-        public JsonDateTimeContractResolver(IContractResolver contractResolver)
+        /// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
+        public JsonDateTimeContractResolver(IContractResolver contractResolver, DateTimeKind? forceDateTimeKindOverride)
         {
             _existingContractResolver = contractResolver;
+            _forceDateTimeKindOverride = forceDateTimeKindOverride;
         }
 
         /// <inheritdoc />
@@ -41,7 +44,7 @@ namespace Akavache
 
             if (type == typeof(DateTime) || type == typeof(DateTime?))
             {
-                contract.Converter = JsonDateTimeTickConverter.Default;
+                contract.Converter = _forceDateTimeKindOverride == DateTimeKind.Local ? JsonDateTimeTickConverter.LocalDateTimeKindDefault : JsonDateTimeTickConverter.Default;
             }
             else if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
             {

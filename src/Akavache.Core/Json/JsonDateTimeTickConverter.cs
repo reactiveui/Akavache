@@ -14,7 +14,22 @@ namespace Akavache
     /// </summary>
     internal class JsonDateTimeTickConverter : JsonConverter
     {
+        private readonly DateTimeKind? _forceDateTimeKindOverride;
+
+        public JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null)
+        {
+            _forceDateTimeKindOverride = forceDateTimeKindOverride;
+        }
+
+        /// <summary>
+        /// Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.
+        /// </summary>
         public static JsonDateTimeTickConverter Default { get; } = new JsonDateTimeTickConverter();
+
+        /// <summary>
+        /// Gets a instance of the DateTimeConverter that handles the DateTime in Local mode.
+        /// </summary>
+        public static JsonDateTimeTickConverter LocalDateTimeKindDefault { get; } = new JsonDateTimeTickConverter(DateTimeKind.Local);
 
         public override bool CanConvert(Type objectType)
         {
@@ -36,8 +51,8 @@ namespace Akavache
             if (objectType == typeof(DateTime) || objectType == typeof(DateTime?))
             {
                 var ticks = (long)reader.Value;
-                var dateTime = new DateTime(ticks, DateTimeKind.Utc);
-                return dateTime;
+
+                return new DateTime(ticks, _forceDateTimeKindOverride ?? DateTimeKind.Utc);
             }
 
             return null;
@@ -47,7 +62,15 @@ namespace Akavache
         {
             if (value is DateTime dateTime)
             {
-                serializer.Serialize(writer, dateTime.ToUniversalTime().Ticks);
+                switch (_forceDateTimeKindOverride)
+                {
+                    case DateTimeKind.Local:
+                        serializer.Serialize(writer, dateTime.Ticks);
+                        break;
+                    default:
+                        serializer.Serialize(writer, dateTime.ToUniversalTime().Ticks);
+                        break;
+                }
             }
         }
     }

@@ -25,13 +25,14 @@ namespace Akavache.Sqlite3
     /// This class represents an IBlobCache backed by a SQLite3 database, and
     /// it is the default (and best!) implementation.
     /// </summary>
-    public class SqlRawPersistentBlobCache : IObjectBlobCache, IEnableLogger, IDisposable
+    public class SqlRawPersistentBlobCache : IObjectBlobCache, IEnableLogger
     {
         private static readonly object DisposeGate = 42;
         private readonly IObservable<Unit> _initializer;
         private readonly AsyncSubject<Unit> _shutdown = new AsyncSubject<Unit>();
         private SqliteOperationQueue _opQueue;
         private IDisposable _queueThread;
+        private DateTimeKind? _dateTimeKind;
         private bool _disposed;
 
         /// <summary>
@@ -49,9 +50,14 @@ namespace Akavache.Sqlite3
             _initializer = Initialize();
         }
 
-        /// <summary>
-        /// Gets the scheduler used for the operations.
-        /// </summary>
+        /// <inheritdoc />
+        public DateTimeKind? ForcedDateTimeKind
+        {
+            get => _dateTimeKind ?? BlobCache.ForcedDateTimeKind;
+            set => _dateTimeKind = value;
+        }
+
+        /// <inheritdoc />
         public IScheduler Scheduler { get; }
 
         /// <summary>
@@ -59,18 +65,10 @@ namespace Akavache.Sqlite3
         /// </summary>
         public SQLiteConnection Connection { get; }
 
-        /// <summary>
-        /// Gets a observable that signals when the blob cache shuts down.
-        /// </summary>
+        /// <inheritdoc />
         public IObservable<Unit> Shutdown => _shutdown;
 
-        /// <summary>
-        /// Inserts a item into the database.
-        /// </summary>
-        /// <param name="key">The key for the data.</param>
-        /// <param name="data">The data to insert.</param>
-        /// <param name="absoluteExpiration">A optional expiration date.</param>
-        /// <returns>An observable that signals when the insert is completed.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
         {
             if (_disposed)
@@ -106,11 +104,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Gets the value associated with the key.
-        /// </summary>
-        /// <param name="key">The key to retrieve the value for.</param>
-        /// <returns>An observable that triggers with the value.</returns>
+        /// <inheritdoc />
         public IObservable<byte[]> Get(string key)
         {
             if (_disposed)
@@ -135,10 +129,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Gets all the keys stored in the cache.
-        /// </summary>
-        /// <returns>An observable that signals with all the keys.</returns>
+        /// <inheritdoc />
         public IObservable<IEnumerable<string>> GetAllKeys()
         {
             if (_disposed)
@@ -150,11 +141,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Gets the created at date and time for a key.
-        /// </summary>
-        /// <param name="key">The key to get the date and time for.</param>
-        /// <returns>The created date and time.</returns>
+        /// <inheritdoc />
         public IObservable<DateTimeOffset?> GetCreatedAt(string key)
         {
             if (_disposed)
@@ -178,21 +165,13 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Gets the date time a object was created at.
-        /// </summary>
-        /// <param name="key">The key for the value.</param>
-        /// <typeparam name="T">The type of value.</typeparam>
-        /// <returns>An observable that signals with the created date time.</returns>
+        /// <inheritdoc />
         public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
         {
             return GetCreatedAt(key);
         }
 
-        /// <summary>
-        /// Flushes the cache.
-        /// </summary>
-        /// <returns>An observable that signals when the flush is completed.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> Flush()
         {
             if (_disposed)
@@ -204,11 +183,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Invalidates the entry at the specified key.
-        /// </summary>
-        /// <param name="key">The key to invalidate.</param>
-        /// <returns>An observable that signals when the invalidation is finished.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> Invalidate(string key)
         {
             if (_disposed)
@@ -220,10 +195,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Invalidates all keys contained within the cache.
-        /// </summary>
-        /// <returns>An observable that signals when the invalidation is finished.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> InvalidateAll()
         {
             if (_disposed)
@@ -235,14 +207,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Inserts a object into the cache.
-        /// </summary>
-        /// <param name="key">The key for the entry.</param>
-        /// <param name="value">The value for the entry.</param>
-        /// <param name="absoluteExpiration">A optional expiration date time.</param>
-        /// <typeparam name="T">The type of the value.</typeparam>
-        /// <returns>An observable which signals when the insert is complete.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
             if (_disposed)
@@ -275,12 +240,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Gets the value of the entry specified by the key.
-        /// </summary>
-        /// <param name="key">The key for the value we want the entry for.</param>
-        /// <typeparam name="T">The type of the value.</typeparam>
-        /// <returns>An observable which signals with the value.</returns>
+        /// <inheritdoc />
         public IObservable<T> GetObject<T>(string key)
         {
             if (_disposed)
@@ -306,11 +266,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Gets all the items values contained within the cache of the specified type.
-        /// </summary>
-        /// <typeparam name="T">The type of the values.</typeparam>
-        /// <returns>An observable that triggers with the values.</returns>
+        /// <inheritdoc />
         public IObservable<IEnumerable<T>> GetAllObjects<T>()
         {
             if (_disposed)
@@ -326,12 +282,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Invalidates the entry at the specified key.
-        /// </summary>
-        /// <param name="key">The key to invalidate.</param>
-        /// <typeparam name="T">The type of object value.</typeparam>
-        /// <returns>An observable that signals when the invalidation is complete.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> InvalidateObject<T>(string key)
         {
             if (_disposed)
@@ -342,11 +293,7 @@ namespace Akavache.Sqlite3
             return Invalidate(key);
         }
 
-        /// <summary>
-        /// Invalidates all objects of the specified type.
-        /// </summary>
-        /// <typeparam name="T">The type of object to invalidate.</typeparam>
-        /// <returns>An observable that signals when the invalidation is complete.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> InvalidateAllObjects<T>()
         {
             if (_disposed)
@@ -358,11 +305,7 @@ namespace Akavache.Sqlite3
                 .PublishLast().PermaRef();
         }
 
-        /// <summary>
-        /// Cleans up any items that have been invalidated due to date time expiration and
-        /// other cache expiration reasons.
-        /// </summary>
-        /// <returns>An observable that signals when the vacuum is complete.</returns>
+        /// <inheritdoc />
         public IObservable<Unit> Vacuum()
         {
             if (_disposed)
@@ -567,7 +510,7 @@ namespace Akavache.Sqlite3
         private byte[] SerializeObject<T>(T value)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver); // This will make us use ticks instead of json ticks for DateTime.
+            settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver, ForcedDateTimeKind); // This will make us use ticks instead of json ticks for DateTime.
             var ms = new MemoryStream();
             var serializer = JsonSerializer.Create(settings);
             var writer = new BsonDataWriter(ms);
@@ -579,7 +522,7 @@ namespace Akavache.Sqlite3
         private IObservable<T> DeserializeObject<T>(byte[] data)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver); // This will make us use ticks instead of json ticks for DateTime.
+            settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver, ForcedDateTimeKind); // This will make us use ticks instead of json ticks for DateTime.
             var serializer = JsonSerializer.Create(settings);
             var reader = new BsonDataReader(new MemoryStream(data));
             var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;

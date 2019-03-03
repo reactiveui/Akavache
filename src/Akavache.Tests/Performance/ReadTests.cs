@@ -1,35 +1,43 @@
-﻿using System;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Akavache.Sqlite3;
 using Xunit;
 
 namespace Akavache.Tests.Performance
 {
+    /// <summary>
+    /// Performance read tests.
+    /// </summary>
     public abstract class ReadTests
     {
-        protected abstract IBlobCache CreateBlobCache(string path);
-        readonly Random prng = new Random();
+        private readonly Random _randomNumberGenerator = new Random();
 
+        /// <summary>
+        /// Tests the performance of sequential simple reads.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public async Task SequentialSimpleReads()
+        public Task SequentialSimpleReads()
         {
-            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
+            return GeneratePerfRangesForBlock(async (cache, size, keys) =>
             {
                 var st = new Stopwatch();
                 var toFetch = Enumerable.Range(0, size)
-                    .Select(_ => keys[prng.Next(0, keys.Count - 1)])
+                    .Select(_ => keys[_randomNumberGenerator.Next(0, keys.Count - 1)])
                     .ToArray();
 
                 st.Start();
 
-                foreach (var v in toFetch) {
+                foreach (var v in toFetch)
+                {
                     await cache.Get(v);
                 }
 
@@ -38,38 +46,47 @@ namespace Akavache.Tests.Performance
             });
         }
 
+        /// <summary>
+        /// Tests the performance of sequential bulk reads.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public async Task SequentialBulkReads()
+        public Task SequentialBulkReads()
         {
-            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
+            return GeneratePerfRangesForBlock(async (cache, size, keys) =>
             {
                 var st = new Stopwatch();
 
                 int count = 0;
                 var toFetch = Enumerable.Range(0, size)
-                    .Select(_ => keys[prng.Next(0, keys.Count - 1)])
+                    .Select(_ => keys[_randomNumberGenerator.Next(0, keys.Count - 1)])
                     .GroupBy(_ => ++count / 32)
                     .ToArray();
 
                 st.Start();
 
-                foreach (var group in toFetch) {
+                foreach (var group in toFetch)
+                {
                     await cache.Get(group);
                 }
-                                
+
                 st.Stop();
                 return st.ElapsedMilliseconds;
             });
         }
 
+        /// <summary>
+        /// Tests the performance of parallel simple reads.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public async Task ParallelSimpleReads()
+        public Task ParallelSimpleReads()
         {
-            await GeneratePerfRangesForBlock(async (cache, size, keys) => 
+            return GeneratePerfRangesForBlock(async (cache, size, keys) =>
             {
                 var st = new Stopwatch();
                 var toFetch = Enumerable.Range(0, size)
-                    .Select(_ => keys[prng.Next(0, keys.Count - 1)])
+                    .Select(_ => keys[_randomNumberGenerator.Next(0, keys.Count - 1)])
                     .ToArray();
 
                 st.Start();
@@ -84,31 +101,49 @@ namespace Akavache.Tests.Performance
             });
         }
 
-        public async Task GeneratePerfRangesForBlock(Func<IBlobCache, int, List<string>, Task<long>> block)
+        /// <summary>
+        /// Abstract method for generating the blob cache we want to test for.
+        /// </summary>
+        /// <param name="path">The path to the DB.</param>
+        /// <returns>The created blob cache.</returns>
+        protected abstract IBlobCache CreateBlobCache(string path);
+
+        /// <summary>
+        /// Generate performance block ranges for a block.
+        /// </summary>
+        /// <param name="block">The block to generate for.</param>
+        /// <returns>A task to monitor the progress.</returns>
+        private async Task GeneratePerfRangesForBlock(Func<IBlobCache, int, List<string>, Task<long>> block)
         {
             var results = new Dictionary<int, long>();
             var dbName = default(string);
 
             var dirPath = default(string);
             using (Utility.WithEmptyDirectory(out dirPath))
-            using (var cache = await GenerateAGiantDatabase(dirPath))
+            using (var cache = await GenerateAGiantDatabase(dirPath).ConfigureAwait(false))
             {
                 var keys = await cache.GetAllKeys();
                 dbName = cache.GetType().Name;
 
                 foreach (var size in PerfHelper.GetPerfRanges())
                 {
-                    results[size] = await block(cache, size, keys.ToList());
+                    results[size] = await block(cache, size, keys.ToList()).ConfigureAwait(false);
                 }
             }
 
             Console.WriteLine(dbName);
-            foreach (var kvp in results) {
+            foreach (var kvp in results)
+            {
                 Console.WriteLine("{0}: {1}", kvp.Key, kvp.Value);
             }
         }
 
-        async Task<IBlobCache> GenerateAGiantDatabase(string path)
+        /// <summary>
+        /// Generates a giant database.
+        /// </summary>
+        /// <param name="path">A path to use for generating it.</param>
+        /// <returns>The blob cache.</returns>
+        private async Task<IBlobCache> GenerateAGiantDatabase(string path)
         {
             path = path ?? IntegrationTestHelper.GetIntegrationTestRootDirectory();
 
@@ -116,22 +151,15 @@ namespace Akavache.Tests.Performance
             var cache = CreateBlobCache(path);
 
             var keys = await cache.GetAllKeys();
-            if (keys.Count() == giantDbSize) return cache;;
+            if (keys.Count() == giantDbSize)
+            {
+                return cache;
+            }
 
             await cache.InvalidateAll();
-            await PerfHelper.GenerateDatabase(cache, giantDbSize);
+            await PerfHelper.GenerateDatabase(cache, giantDbSize).ConfigureAwait(false);
 
             return cache;
-        }
-
-
-    }
-
-    public abstract class Sqlite3ReadTests : ReadTests
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            return new SqlRawPersistentBlobCache(Path.Combine(path, "blob.db"));
         }
     }
 }

@@ -1,75 +1,30 @@
-﻿using System;
+﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Runtime.Serialization;
-using Akavache.Sqlite3;
-using Microsoft.Reactive.Testing;
-using Newtonsoft.Json;
-using ReactiveUI;
-using ReactiveUI.Testing;
-using Xunit;
-using System.Threading;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DynamicData;
+using Microsoft.Reactive.Testing;
+using ReactiveUI.Testing;
+using Xunit;
 
 namespace Akavache.Tests
 {
-    public class UserObject
+    /// <summary>
+    /// Fixture for testing the blob cache extension methods.
+    /// </summary>
+    public abstract class BlobCacheExtensionsTestBase
     {
-        public string Bio { get; set; }
-        public string Name { get; set; }
-        public string Blog { get; set; }
-    }
-
-    public class UserModel
-    {
-        public UserModel(UserObject user)
-        {
-        }
-
-        public string Name { get; set; }
-        public int Age { get; set; }
-    }
-
-    public class ServiceProvider : IServiceProvider
-    {
-        public object GetService(Type t)
-        {
-            if (t == typeof(UserModel))
-            {
-                return new UserModel(new UserObject());
-            }
-            return null;
-        }
-    }
-
-    [DataContract]
-    public class DummyRoutedViewModel : ReactiveObject, IRoutableViewModel
-    {
-        public string UrlPathSegment { get { return "foo"; } }
-        [DataMember] public IScreen HostScreen { get; private set; }
-
-        Guid _ARandomGuid;
-        [DataMember] public Guid ARandomGuid 
-        {
-            get { return _ARandomGuid; }
-            set { this.RaiseAndSetIfChanged(ref _ARandomGuid, value); }
-        }
-
-        public DummyRoutedViewModel(IScreen screen)
-        {
-            HostScreen = screen;
-        }
-    }
-
-    public abstract class BlobCacheExtensionsFixture
-    {
-        protected abstract IBlobCache CreateBlobCache(string path);
-
+        /// <summary>
+        /// Tests to make sure the download url extension methods download correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
         public async Task DownloadUrlTest()
         {
@@ -78,14 +33,18 @@ namespace Akavache.Tests
             using (Utility.WithEmptyDirectory(out path))
             {
                 var fixture = CreateBlobCache(path);
-                using(fixture)
+                using (fixture)
                 {
-                    var bytes = fixture.DownloadUrl(@"http://httpbin.org/html").First();
+                    var bytes = await fixture.DownloadUrl(@"http://httpbin.org/html").FirstAsync();
                     Assert.True(bytes.Length > 0);
                 }
             }
         }
 
+        /// <summary>
+        /// Tests to make sure that getting non-existant keys throws an exception.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
         public async Task GettingNonExistentKeyShouldThrow()
         {
@@ -108,24 +67,32 @@ namespace Akavache.Tests
             }
         }
 
+        /// <summary>
+        /// Makes sure that objects can be written and read.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void ObjectsShouldBeRoundtrippable()
+        public async Task ObjectsShouldBeRoundtrippable()
         {
             string path;
-            var input = new UserObject() {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"};
+            var input = new UserObject() { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" };
             UserObject result;
 
             using (Utility.WithEmptyDirectory(out path))
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is InMemoryBlobCache) return;
-                    fixture.InsertObject("key", input).First();
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
+
+                    await fixture.InsertObject("key", input).FirstAsync();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObject<UserObject>("key").First();
+                    result = await fixture.GetObject<UserObject>("key").FirstAsync();
                 }
             }
 
@@ -134,25 +101,32 @@ namespace Akavache.Tests
             Assert.Equal(input.Name, result.Name);
         }
 
+        /// <summary>
+        /// Makes sure that arrays can be written and read.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void ArraysShouldBeRoundtrippable()
+        public async Task ArraysShouldBeRoundtrippable()
         {
             string path;
-            var input = new[] {new UserObject {Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com"}, new UserObject {Bio = "zzz", Name = "sleepy", Blog = "http://example.com"}};
+            var input = new[] { new UserObject { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" }, new UserObject { Bio = "zzz", Name = "sleepy", Blog = "http://example.com" } };
             UserObject[] result;
 
             using (Utility.WithEmptyDirectory(out path))
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
 
-                    fixture.InsertObject("key", input).First();
+                    await fixture.InsertObject("key", input).FirstAsync();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObject<UserObject[]>("key").First();
+                    result = await fixture.GetObject<UserObject[]>("key").FirstAsync();
                 }
             }
 
@@ -164,25 +138,32 @@ namespace Akavache.Tests
             Assert.Equal(input.Last().Name, result.Last().Name);
         }
 
+        /// <summary>
+        /// Makes sure that the objects can be created using the object factory.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void ObjectsCanBeCreatedUsingObjectFactory()
+        public async Task ObjectsCanBeCreatedUsingObjectFactory()
         {
             string path;
-            var input = new UserModel(new UserObject()) {Age = 123, Name = "Old"};
+            var input = new UserModel(new UserObject()) { Age = 123, Name = "Old" };
             UserModel result;
 
             using (Utility.WithEmptyDirectory(out path))
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
 
-                    fixture.InsertObject("key", input).First();
+                    await fixture.InsertObject("key", input).FirstAsync();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObject<UserModel>("key").First();
+                    result = await fixture.GetObject<UserModel>("key").FirstAsync();
                 }
             }
 
@@ -190,24 +171,30 @@ namespace Akavache.Tests
             Assert.Equal(input.Name, result.Name);
         }
 
+        /// <summary>
+        /// Makes sure that arrays can be written and read and using the object factory.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void ArraysShouldBeRoundtrippableUsingObjectFactory()
+        public async Task ArraysShouldBeRoundtrippableUsingObjectFactory()
         {
-            string path;
-            var input = new[] {new UserModel(new UserObject()) {Age = 123, Name = "Old"}, new UserModel(new UserObject()) {Age = 123, Name = "Old"}};
+            var input = new[] { new UserModel(new UserObject()) { Age = 123, Name = "Old" }, new UserModel(new UserObject()) { Age = 123, Name = "Old" } };
             UserModel[] result;
-            using (Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out string path))
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
 
-                    fixture.InsertObject("key", input).First();
+                    await fixture.InsertObject("key", input).FirstAsync();
                 }
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    result = fixture.GetObject<UserModel[]>("key").First();
+                    result = await fixture.GetObject<UserModel[]>("key").FirstAsync();
                 }
             }
 
@@ -217,8 +204,12 @@ namespace Akavache.Tests
             Assert.Equal(input.Last().Name, result.Last().Name);
         }
 
+        /// <summary>
+        /// Make sure that the fetch functions are called only once for the get or fetch object methods.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void FetchFunctionShouldBeCalledOnceForGetOrFetchObject()
+        public async Task FetchFunctionShouldBeCalledOnceForGetOrFetchObject()
         {
             int fetchCount = 0;
             var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
@@ -228,28 +219,31 @@ namespace Akavache.Tests
             });
 
             string path;
-            using(Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
             {
-                using(var fixture = CreateBlobCache(path))
+                using (var fixture = CreateBlobCache(path))
                 {
-                    var result = fixture.GetOrFetchObject("Test", fetcher).First();
+                    var result = await fixture.GetOrFetchObject("Test", fetcher).FirstAsync();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
 
                     // 2nd time around, we should be grabbing from cache
-                    result = fixture.GetOrFetchObject("Test", fetcher).First();
+                    result = await fixture.GetOrFetchObject("Test", fetcher).FirstAsync();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
 
                     // Testing persistence makes zero sense for InMemoryBlobCache
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
                 }
 
-                using(var fixture = CreateBlobCache(path))
+                using (var fixture = CreateBlobCache(path))
                 {
-                    var result = fixture.GetOrFetchObject("Test", fetcher).First();
+                    var result = await fixture.GetOrFetchObject("Test", fetcher).FirstAsync();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
@@ -257,16 +251,19 @@ namespace Akavache.Tests
             }
         }
 
+        /// <summary>
+        /// Makes sure the fetch function debounces current requests.
+        /// </summary>
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void FetchFunctionShouldDebounceConcurrentRequests()
         {
-            (new TestScheduler()).With(sched =>
+            new TestScheduler().With(sched =>
             {
                 string path;
                 using (Utility.WithEmptyDirectory(out path))
                 {
                     int callCount = 0;
-                    var fetcher = new Func<IObservable<int>>(() => 
+                    var fetcher = new Func<IObservable<int>>(() =>
                     {
                         callCount++;
                         return Observable.Return(42).Delay(TimeSpan.FromMilliseconds(1000), sched);
@@ -275,7 +272,6 @@ namespace Akavache.Tests
                     var fixture = CreateBlobCache(path);
                     try
                     {
-                        
                         fixture.GetOrFetchObject("foo", fetcher).ToObservableChangeSet(ImmediateScheduler.Instance).Bind(out var result1).Subscribe();
 
                         Assert.Equal(0, result1.Count);
@@ -338,7 +334,7 @@ namespace Akavache.Tests
                     }
                     finally
                     {
-                        // Since we're in TestScheduler, we can't use the normal 
+                        // Since we're in TestScheduler, we can't use the normal
                         // using statement, we need to kick off the async dispose,
                         // then start the scheduler to let it run
                         fixture.Dispose();
@@ -348,8 +344,12 @@ namespace Akavache.Tests
             });
         }
 
+        /// <summary>
+        /// Makes sure that the fetch function propogates thrown exceptions.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void FetchFunctionShouldPropagateThrownExceptionAsObservableException()
+        public async Task FetchFunctionShouldPropagateThrownExceptionAsObservableException()
         {
             var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
             {
@@ -357,20 +357,24 @@ namespace Akavache.Tests
             });
 
             string path;
-            using(Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out path))
             {
-                using(var fixture = CreateBlobCache(path))
+                using (var fixture = CreateBlobCache(path))
                 {
-                    var result = fixture.GetOrFetchObject("Test", fetcher)
-                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
+                    var result = await fixture.GetOrFetchObject("Test", fetcher)
+                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).FirstAsync();
                     Assert.Equal("one", result.Item1);
                     Assert.Equal("two", result.Item2);
                 }
             }
         }
 
+        /// <summary>
+        /// Makes sure that the fetch function propogates thrown exceptions.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void FetchFunctionShouldPropagateObservedExceptionAsObservableException()
+        public async Task FetchFunctionShouldPropagateObservedExceptionAsObservableException()
         {
             var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
                 Observable.Throw<Tuple<string, string>>(new InvalidOperationException()));
@@ -381,18 +385,21 @@ namespace Akavache.Tests
                 var fixture = CreateBlobCache(path);
                 using (fixture)
                 {
-                    var result = fixture.GetOrFetchObject("Test", fetcher)
-                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).First();
+                    var result = await fixture.GetOrFetchObject("Test", fetcher)
+                        .Catch(Observable.Return(new Tuple<string, string>("one", "two"))).FirstAsync();
                     Assert.Equal("one", result.Item1);
                     Assert.Equal("two", result.Item2);
                 }
             }
         }
 
+        /// <summary>
+        /// Make sure that the GetOrFetch function respects expirations.
+        /// </summary>
         [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
         public void GetOrFetchShouldRespectExpiration()
         {
-            (new TestScheduler()).With(sched => 
+            new TestScheduler().With(sched =>
             {
                 string path;
                 using (Utility.WithEmptyDirectory(out path))
@@ -401,7 +408,8 @@ namespace Akavache.Tests
                     using (fixture)
                     {
                         var result = default(string);
-                        fixture.GetOrFetchObject("foo",
+                        fixture.GetOrFetchObject(
+                            "foo",
                             () => Observable.Return("bar"),
                             sched.Now + TimeSpan.FromMilliseconds(1000))
                             .Subscribe(x => result = x);
@@ -409,7 +417,8 @@ namespace Akavache.Tests
                         sched.AdvanceByMs(250);
                         Assert.Equal("bar", result);
 
-                        fixture.GetOrFetchObject("foo",
+                        fixture.GetOrFetchObject(
+                            "foo",
                             () => Observable.Return("baz"),
                             sched.Now + TimeSpan.FromMilliseconds(1000))
                             .Subscribe(x => result = x);
@@ -418,7 +427,8 @@ namespace Akavache.Tests
                         Assert.Equal("bar", result);
 
                         sched.AdvanceByMs(1000);
-                        fixture.GetOrFetchObject("foo",
+                        fixture.GetOrFetchObject(
+                            "foo",
                             () => Observable.Return("baz"),
                             sched.Now + TimeSpan.FromMilliseconds(1000))
                             .Subscribe(x => result = x);
@@ -430,13 +440,14 @@ namespace Akavache.Tests
             });
         }
 
+        /// <summary>
+        /// Makes sure that the GetAndFetchLatest invalidates objects on errors.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void GetAndFetchLatestShouldInvalidateObjectOnError()
+        public async Task GetAndFetchLatestShouldInvalidateObjectOnError()
         {
-            var fetcher = new Func<IObservable<string>>(() =>
-            {
-                return Observable.Throw<string>(new InvalidOperationException());
-            });
+            var fetcher = new Func<IObservable<string>>(() => Observable.Throw<string>(new InvalidOperationException()));
 
             string path;
             using (Utility.WithEmptyDirectory(out path))
@@ -445,26 +456,33 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
 
-                    fixture.InsertObject("foo", "bar").First();
+                    await fixture.InsertObject("foo", "bar").FirstAsync();
 
-                    fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
+                    await fixture.GetAndFetchLatest("foo", fetcher, shouldInvalidateOnError: true)
                         .Catch(Observable.Return("get and fetch latest error"))
                         .ToList()
-                        .First();
+                        .FirstAsync();
 
-                    var result = fixture.GetObject<string>("foo")
+                    var result = await fixture.GetObject<string>("foo")
                          .Catch(Observable.Return("get error"))
-                         .First();
+                         .FirstAsync();
 
                     Assert.Equal("get error", result);
                 }
             }
         }
 
+        /// <summary>
+        /// Makes sure that the GetAndFetchLatest calls the Fetch predicate.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void GetAndFetchLatestCallsFetchPredicate()
+        public async Task GetAndFetchLatestCallsFetchPredicate()
         {
             var fetchPredicateCalled = false;
 
@@ -484,20 +502,26 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
 
-                    fixture.InsertObject("foo", "bar").First();
+                    await fixture.InsertObject("foo", "bar").FirstAsync();
 
-                    fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate)
-                        .Last();
+                    await fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate).LastAsync();
 
                     Assert.True(fetchPredicateCalled);
                 }
             }
         }
 
+        /// <summary>
+        /// Make sure that the GetAndFetchLatest method validates items already in the cache.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void GetAndFetchLatestValidatesItemsToBeCached()
+        public async Task GetAndFetchLatestValidatesItemsToBeCached()
         {
             const string key = "tv1";
             var items = new List<int> { 4, 7, 10, 11, 3, 4 };
@@ -510,23 +534,26 @@ namespace Akavache.Tests
 
                 using (fixture)
                 {
-                    if (fixture is InMemoryBlobCache) return;
+                    if (fixture is InMemoryBlobCache)
+                    {
+                        return;
+                    }
 
-                    //GetAndFetchLatest will overwrite cache with null result
-                    fixture.InsertObject(key, items);
+                    // GetAndFetchLatest will overwrite cache with null result
+                    await fixture.InsertObject(key, items);
 
-                    fixture.GetAndFetchLatest(key, fetcher).Last();
-                    
-                    var failedResult = fixture.GetObject<List<int>>(key).First();
+                    await fixture.GetAndFetchLatest(key, fetcher).LastAsync();
+
+                    var failedResult = await fixture.GetObject<List<int>>(key).FirstAsync();
 
                     Assert.Null(failedResult);
 
-                    //GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
-                    fixture.InsertObject(key, items);
+                    // GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
+                    await fixture.InsertObject(key, items);
 
-                    fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i != null && i.Any()).Last();
-                    
-                    var result = fixture.GetObject<List<int>>(key).First();
+                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i != null && i.Any()).LastAsync();
+
+                    var result = await fixture.GetObject<List<int>>(key).FirstAsync();
 
                     Assert.NotNull(result);
                     Assert.True(result.Any(), "The returned list is empty.");
@@ -535,12 +562,16 @@ namespace Akavache.Tests
             }
         }
 
+        /// <summary>
+        /// Tests to make sure that different key types work correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
-        public void KeysByTypeTest()
+        public async Task KeysByTypeTest()
         {
             string path;
-            var input = new[] 
-            { 
+            var input = new[]
+            {
                 "Foo",
                 "Bar",
                 "Baz"
@@ -552,35 +583,39 @@ namespace Akavache.Tests
             using (Utility.WithEmptyDirectory(out path))
             using (fixture = CreateBlobCache(path))
             {
-                foreach(var item in input.Zip(inputItems, (Key, Value) => new { Key, Value }))
+                foreach (var item in input.Zip(inputItems, (key, value) => new { Key = key, Value = value }))
                 {
                     fixture.InsertObject(item.Key, item.Value).Wait();
                 }
 
-                var allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(input.Length, fixture.GetAllKeys().First().Count());
+                var allObjectsCount = await fixture.GetAllObjects<UserObject>().Select(x => x.Count()).FirstAsync();
+                Assert.Equal(input.Length, (await fixture.GetAllKeys().FirstAsync()).Count());
                 Assert.Equal(input.Length, allObjectsCount);
 
                 fixture.InsertObject("Quux", new UserModel(null)).Wait();
 
-                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(input.Length + 1, fixture.GetAllKeys().First().Count());
+                allObjectsCount = await fixture.GetAllObjects<UserObject>().Select(x => x.Count()).FirstAsync();
+                Assert.Equal(input.Length + 1, (await fixture.GetAllKeys().FirstAsync()).Count());
                 Assert.Equal(input.Length, allObjectsCount);
 
                 fixture.InvalidateObject<UserObject>("Foo").Wait();
 
-                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(input.Length + 1 - 1, fixture.GetAllKeys().First().Count());
+                allObjectsCount = await fixture.GetAllObjects<UserObject>().Select(x => x.Count()).FirstAsync();
+                Assert.Equal(input.Length + 1 - 1, (await fixture.GetAllKeys().FirstAsync()).Count());
                 Assert.Equal(input.Length - 1, allObjectsCount);
 
                 fixture.InvalidateAllObjects<UserObject>().Wait();
 
-                allObjectsCount = fixture.GetAllObjects<UserObject>().Select(x => x.Count()).First();
-                Assert.Equal(1, fixture.GetAllKeys().First().Count());
+                allObjectsCount = await fixture.GetAllObjects<UserObject>().Select(x => x.Count()).FirstAsync();
+                Assert.Equal(1, (await fixture.GetAllKeys().FirstAsync()).Count());
                 Assert.Equal(0, allObjectsCount);
             }
         }
 
+        /// <summary>
+        /// Tests to make sure getting all keys works correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
         [Fact]
         public async Task GetAllKeysSmokeTest()
         {
@@ -588,192 +623,41 @@ namespace Akavache.Tests
 
             using (Utility.WithEmptyDirectory(out path))
             {
-                var fixture = default(IBlobCache);
+                IBlobCache fixture;
                 using (fixture = CreateBlobCache(path))
                 {
-                    Observable.Merge(
+                    await Observable.Merge(
                         fixture.InsertObject("Foo", "bar"),
                         fixture.InsertObject("Bar", 10),
-                        fixture.InsertObject("Baz", new UserObject() { Bio = "Bio", Blog = "Blog", Name = "Name" })
-                    ).Last();
+                        fixture.InsertObject("Baz", new UserObject() { Bio = "Bio", Blog = "Blog", Name = "Name" }))
+                        .LastAsync();
 
-                    var keys = fixture.GetAllKeys().First();
+                    var keys = await fixture.GetAllKeys().FirstAsync();
                     Assert.Equal(3, keys.Count());
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
-                    
-                if (fixture is InMemoryBlobCache) return;
+
+                if (fixture is InMemoryBlobCache)
+                {
+                    return;
+                }
 
                 using (fixture = CreateBlobCache(path))
                 {
-                    var keys = fixture.GetAllKeys().First();
+                    var keys = await fixture.GetAllKeys().FirstAsync();
                     Assert.Equal(3, keys.Count());
                     Assert.True(keys.Any(x => x.Contains("Foo")));
                     Assert.True(keys.Any(x => x.Contains("Bar")));
                 }
             }
         }
-    }
 
-    public class SqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeObjectCache(new SqlRawPersistentBlobCache(Path.Combine(path, "sqlite.db")));
-        }
-
-        [Fact]
-        public void VacuumCompactsDatabase()
-        {
-            string path;
-
-            using (Utility.WithEmptyDirectory(out path))
-            {
-                string dbPath = Path.Combine(path, "sqlite.db");
-
-                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
-                {
-                    Assert.True(File.Exists(dbPath));
-
-                    byte[] buf = new byte[256 * 1024];
-                    var rnd = new Random();
-                    rnd.NextBytes(buf);
-
-                    fixture.Insert("dummy", buf).Wait();
-                }
-
-                var size = new FileInfo(dbPath).Length;
-                Assert.True(size > 0);
-
-                using (var fixture = new BlockingDisposeCache(CreateBlobCache(path)))
-                {
-                    fixture.InvalidateAll().Wait();
-                    fixture.Vacuum().Wait();
-                }
-
-                Assert.True(new FileInfo(dbPath).Length < size);
-            }
-        }
-    }
-
-    public class EncryptedSqliteBlobCacheExtensionsFixture : BlobCacheExtensionsFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            BlobCache.ApplicationName = "TestRunner";
-            return new BlockingDisposeObjectCache(new Sqlite3.SQLiteEncryptedBlobCache(Path.Combine(path, "sqlite.db")));
-        }
-    }
-
-    public class InMemoryBlobCacheFixture : BlobCacheExtensionsFixture
-    {
-        protected override IBlobCache CreateBlobCache(string path)
-        {
-            BlobCache.ApplicationName = "TestRunner";
-            return new InMemoryBlobCache(RxApp.MainThreadScheduler);
-        }
-    }
-
-    class BlockingDisposeCache : IBlobCache
-    {
-        protected readonly IBlobCache _inner;
-        public BlockingDisposeCache(IBlobCache cache)
-        {
-            BlobCache.EnsureInitialized();
-            _inner = cache;
-        }
-
-        public virtual void Dispose()
-        {
-            _inner.Dispose();
-            _inner.Shutdown.Wait();
-        }
-
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
-        {
-            return _inner.Insert(key, data, absoluteExpiration);
-        }
-
-        public IObservable<byte[]> Get(string key)
-        {
-            return _inner.Get(key);
-        }
-
-        public IObservable<IEnumerable<string>> GetAllKeys()
-        {
-            return _inner.GetAllKeys();
-        }
-
-        public IObservable<DateTimeOffset?> GetCreatedAt(string key)
-        {
-            return _inner.GetCreatedAt(key);
-        }
-
-        public IObservable<Unit> Flush()
-        {
-            return _inner.Flush();
-        }
-
-        public IObservable<Unit> Invalidate(string key)
-        {
-            return _inner.Invalidate(key);
-        }
-
-        public IObservable<Unit> InvalidateAll()
-        {
-            return _inner.InvalidateAll();
-        }
-
-        public IObservable<Unit> Vacuum()
-        {
-            return _inner.Vacuum();
-        }
-
-        public IObservable<Unit> Shutdown
-        {
-            get { return _inner.Shutdown; }
-        }
-
-        public IScheduler Scheduler
-        {
-            get { return _inner.Scheduler; }
-        }
-    }
-
-    class BlockingDisposeObjectCache : BlockingDisposeCache, IObjectBlobCache
-    {
-        public BlockingDisposeObjectCache(IObjectBlobCache cache) : base(cache) { }
-
-        public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
-        {
-            return ((IObjectBlobCache)_inner).InsertObject(key, value, absoluteExpiration);
-        }
-
-        public IObservable<T> GetObject<T>(string key)
-        {
-            return ((IObjectBlobCache)_inner).GetObject<T>(key);
-        }
-
-        public IObservable<IEnumerable<T>> GetAllObjects<T>()
-        {
-            return ((IObjectBlobCache)_inner).GetAllObjects<T>();
-        }
-
-        public IObservable<Unit> InvalidateObject<T>(string key)
-        {
-            return ((IObjectBlobCache)_inner).InvalidateObject<T>(key);
-        }
-
-        public IObservable<Unit> InvalidateAllObjects<T>()
-        {
-            return ((IObjectBlobCache)_inner).InvalidateAllObjects<T>();
-        }
-
-        public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
-        {
-            return ((IObjectBlobCache)_inner).GetObjectCreatedAt<T>(key);
-        }
+        /// <summary>
+        /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
+        /// </summary>
+        /// <param name="path">The path to the blob cache.</param>
+        /// <returns>The blob cache for testing.</returns>
+        protected abstract IBlobCache CreateBlobCache(string path);
     }
 }

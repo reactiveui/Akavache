@@ -26,15 +26,6 @@
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>    
   </PropertyGroup>
 
-  <ItemGroup Condition="$(IsTestProject)">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.0" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
-    <PackageReference Include="Xunit.StaFact" Version="0.3.13" />
-    <PackageReference Include="Shouldly" Version=" 3.0.2" />
-    <PackageReference Include="PublicApiGenerator" Version="8.1.0" />
-  </ItemGroup>
-
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
   </ItemGroup>

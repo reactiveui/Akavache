@@ -15,7 +15,7 @@ namespace Akavache.Sqlite3
     {
         private const string NullKey = "___THIS_IS_THE_NULL_KEY_HOPE_NOBODY_PICKS_IT_FFS_____";
 
-        private static List<OperationQueueItem> CoalesceOperations(List<OperationQueueItem> inputItems)
+        internal static List<OperationQueueItem> CoalesceOperations(List<OperationQueueItem> inputItems)
         {
             // Happy path, nothing to coalesce.
             if (inputItems.Count <= 1)

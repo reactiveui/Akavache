@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Concurrency;
+using Newtonsoft.Json.Bson;
 
 namespace Akavache
 {
@@ -27,6 +28,18 @@ namespace Akavache
         /// BlobCache.TaskpoolScheduler.
         /// </summary>
         IScheduler Scheduler { get; }
+
+        /// <summary>
+        /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// By default, <see cref="BsonReader"/> uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and <see cref="BsonWriter"/>
+        /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
+        /// use some other <c>DateTimeKind</c>, you can set this value.
+        /// </para>
+        /// </remarks>
+        DateTimeKind? ForcedDateTimeKind { get; set; }
 
         /// <summary>
         /// Insert a blob into the cache with the specified key and expiration

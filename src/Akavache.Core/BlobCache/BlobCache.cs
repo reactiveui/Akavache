@@ -224,6 +224,13 @@ namespace Akavache
 
             public IScheduler Scheduler => System.Reactive.Concurrency.Scheduler.Immediate;
 
+            /// <inheritdoc />
+            public DateTimeKind? ForcedDateTimeKind
+            {
+                get => null;
+                set { }
+            }
+
             public void Dispose()
             {
             }
