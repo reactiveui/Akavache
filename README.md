@@ -1,5 +1,21 @@
-## Akavache: An Asynchronous Key-Value Store for Native Applications [![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/Akavache-CI?branchName=master)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=25)
+## Akavache: An Asynchronous Key-Value Store for Native Applications 
 
+![](http://f.cl.ly/items/1307401C3x2g3F2p2Z36/Logo.png)
+
+[![NuGet Stats](https://img.shields.io/nuget/v/akavache.svg)](https://www.nuget.org/packages/akavache) [![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/Akavache-CI)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=25) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveui/splat)
+<br>
+<a href="https://www.nuget.org/packages/akavache">
+        <img src="https://img.shields.io/nuget/dt/akavache.svg">
+</a>
+<a href="#backers">
+        <img src="https://opencollective.com/reactiveui/backers/badge.svg">
+</a>
+<a href="#sponsors">
+        <img src="https://opencollective.com/reactiveui/sponsors/badge.svg">
+</a>
+<a href="https://reactiveui.net/slack">
+        <img src="https://img.shields.io/badge/chat-slack-blue.svg">
+</a>
 
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
 store created for writing desktop and mobile applications in C#, based on
