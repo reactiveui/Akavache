@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0;tizen40</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461;uap10.0.16299</TargetFrameworks>
     <AssemblyName>Akavache</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
@@ -20,4 +20,49 @@
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
   </ItemGroup>
+
+  <!-- This is a workaround for SQLite and Mac builds. It tries to copy a non-generated manifest due to sqlite -->
+  <Target
+      Name="BuiltProjectOutputGroup"
+      Returns="@(BuiltProjectOutputGroupOutput)"
+      DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
+
+    <ItemGroup>
+      <_BuiltProjectOutputGroupOutputIntermediate Include="@(BuiltProjectOutputGroupKeyOutput)"/>
+    </ItemGroup>
+
+    <!-- This item represents the app.config file -->
+    <ItemGroup>
+      <_BuiltProjectOutputGroupOutputIntermediate Include="$(AppConfig)"  Condition="'$(AddAppConfigToBuildOutputs)'=='true'">
+        <FinalOutputPath>$(TargetDir)$(TargetFileName).config</FinalOutputPath>
+        <TargetPath>$(TargetFileName).config</TargetPath>
+        <!-- For compatibility with 2.0 -->
+        <OriginalItemSpec>$(AppConfig)</OriginalItemSpec>
+      </_BuiltProjectOutputGroupOutputIntermediate>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_IsolatedComReference Include="@(COMReference)" Condition=" '%(COMReference.Isolated)' == 'true' "/>
+      <_IsolatedComReference Include="@(COMFileReference)" Condition=" '%(COMFileReference.Isolated)' == 'true' "/>
+    </ItemGroup>
+
+    <!-- Don't copy a manifest file -->
+    <!-- This item represents the native manifest, example: WindowsApplication1.exe.manifest or Native.ClassLibrary1.manifest -->
+    <!-- <ItemGroup> -->
+      <!-- <_BuiltProjectOutputGroupOutputIntermediate Include="$(OutDir)$(_DeploymentTargetApplicationManifestFileName)" Condition="'@(NativeReference)'!='' or '@(_IsolatedComReference)'!=''"> -->
+        <!-- <TargetPath>$(_DeploymentTargetApplicationManifestFileName)</TargetPath> -->
+        <!-- For compatibility with 2.0 -->
+        <!-- <OriginalItemSpec>$(OutDir)$(_DeploymentTargetApplicationManifestFileName)</OriginalItemSpec> -->
+      <!-- </_BuiltProjectOutputGroupOutputIntermediate> -->
+    <!-- </ItemGroup> -->
+
+    <!-- Convert intermediate items into final items; this way we can get the full path for each item -->
+    <ItemGroup>
+      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutputIntermediate->'%(FullPath)')">
+        <!-- For compatibility with 2.0 -->
+        <OriginalItemSpec Condition="'%(_BuiltProjectOutputGroupOutputIntermediate.OriginalItemSpec)' == ''">%(_BuiltProjectOutputGroupOutputIntermediate.FullPath)</OriginalItemSpec>
+      </BuiltProjectOutputGroupOutput>
+    </ItemGroup>
+
+  </Target>
 </Project>
