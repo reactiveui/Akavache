@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="reactiveui" Version="9.*" />
-    <PackageReference Include="Splat" Version="6.*" />
   </ItemGroup>
 
   <ItemGroup>
