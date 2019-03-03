@@ -9,7 +9,7 @@
     <Owners>xpaulbettsx;ghuntley</Owners>
     <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>
     <PackageReleaseNotes>https://github.com/reactiveui/akavache/releases</PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/reactiveui/splat</RepositoryUrl>
+    <RepositoryUrl>https://github.com/reactiveui/akavache</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)analyzers.ruleset</CodeAnalysisRuleSet>

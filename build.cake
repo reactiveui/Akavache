@@ -5,10 +5,10 @@ Environment.SetVariableNames();
 // Whitelisted Packages
 var packageWhitelist = new[] 
 { 
-    MakeAbsolute(File("./src/Akavache/Akavache.csproj")),
     MakeAbsolute(File("./src/Akavache.Core/Akavache.Core.csproj")),
     MakeAbsolute(File("./src/Akavache.Mobile/Akavache.Mobile.csproj")),
     MakeAbsolute(File("./src/Akavache.Sqlite3/Akavache.Sqlite3.csproj")),
+    MakeAbsolute(File("./src/Akavache/Akavache.csproj")),
 };
 
 var packageTestWhitelist = new[]
