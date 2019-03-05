@@ -1,6 +1,6 @@
 ## Akavache: An Asynchronous Key-Value Store for Native Applications 
 
-[![NuGet Stats](https://img.shields.io/nuget/v/akavache.svg)](https://www.nuget.org/packages/akavache) [![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/Akavache-CI)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=25) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveui/splat)
+[![NuGet Stats](https://img.shields.io/nuget/v/akavache.svg)](https://www.nuget.org/packages/akavache) [![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/Akavache-CI)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=25) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveui/akavache)
 <br>
 <a href="https://www.nuget.org/packages/akavache">
         <img src="https://img.shields.io/nuget/dt/akavache.svg">
