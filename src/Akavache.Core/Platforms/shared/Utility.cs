@@ -178,7 +178,7 @@ namespace Akavache
                     }
                     catch (Exception ex)
                     {
-                        LogHost.Default.WarnException("CopyToAsync failed", ex);
+                        LogHost.Default.Warn(ex, "CopyToAsync failed");
                     }
                 });
 #else
@@ -191,7 +191,7 @@ namespace Akavache
                     }
                     catch (Exception ex)
                     {
-                        LogHost.Default.WarnException("CopyToAsync failed", ex);
+                        LogHost.Default.Warn(ex, "CopyToAsync failed");
                     }
                     finally
                     {

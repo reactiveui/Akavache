@@ -468,7 +468,7 @@ namespace Akavache
             }
             catch (Exception ex)
             {
-                this.Log().WarnException("Failed to deserialize data as boxed, we may be migrating from an old Akavache", ex);
+                this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
             }
 
             return serializer.Deserialize<T>(reader);

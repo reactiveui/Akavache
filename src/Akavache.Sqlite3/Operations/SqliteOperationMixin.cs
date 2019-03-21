@@ -22,7 +22,7 @@ namespace Akavache.Sqlite3
             var err = raw.sqlite3_errmsg(connection.Connection.Handle);
             var ex = new SQLiteException(result, (message ?? string.Empty) + ": " + err);
 
-            connection.Log().WarnException(message, ex);
+            connection.Log().Warn(ex, message);
             throw ex;
         }
     }
