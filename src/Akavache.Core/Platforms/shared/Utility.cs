@@ -141,7 +141,7 @@ namespace Akavache
                     ex =>
                     {
                         var msg = message ?? "0x" + observable.GetHashCode().ToString("x", CultureInfo.InvariantCulture);
-                        LogHost.Default.Info("{0} failed with {1}:\n{2}", msg, ex.Message, ex.ToString());
+                        LogHost.Default.Info(ex, "{0} failed", msg);
                         subj.OnError(ex);
                     }, subj.OnCompleted);
             });

@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Globalization;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -84,7 +85,7 @@ namespace Akavache
             int id = Interlocked.Increment(ref _sequenceNumber);
             key = key ?? "__NONE__";
 
-            this.Log().Debug("Queuing operation {0} with key {1}", id, key);
+            this.Log().Debug(CultureInfo.InvariantCulture, "Queuing operation {0} with key {1}", id, key);
             var item = new KeyedOperation<T>
             {
                 Key = key, Id = id,
