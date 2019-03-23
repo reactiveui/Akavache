@@ -29,7 +29,7 @@ namespace Akavache.Sqlite3
         }
 
         /// <inheritdoc />
-        public void Register(IMutableDependencyResolver resolver)
+        public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
             // NB: We want the most recently registered fs, since there really
             // only should be one

@@ -11,7 +11,7 @@ using Splat;
 namespace Akavache
 {
     /// <summary>
-    /// A set of mix-in associated with the <see cref="IMutableDependencyResolver"/> interface.
+    /// A set of mix-in associated with the <see cref="IDependencyResolver"/> interface.
     /// </summary>
     [SuppressMessage("FxCop.Analyzer", "CA1307: The behavior of 'string.Replace(string, string)' could vary based on the current user's locale settings", Justification = "Not all platforms allow locale.")]
     public static class DependencyResolverMixin
@@ -21,7 +21,8 @@ namespace Akavache
         /// Akavache uses internally.
         /// </summary>
         /// <param name="resolver">The resolver to register Akavache based dependencies against.</param>
-        public static void InitializeAkavache(this IMutableDependencyResolver resolver)
+        /// <param name="readonlyDependencyResolver">The readonly dependency resolver.</param>
+        public static void InitializeAkavache(this IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
             var namespaces = new[]
             {
@@ -55,7 +56,7 @@ namespace Akavache
                 }
 
                 var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
-                registerer.Register(resolver);
+                registerer.Register(resolver, readonlyDependencyResolver);
             }
         }
     }

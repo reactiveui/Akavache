@@ -24,7 +24,7 @@ namespace Akavache
         }
 
         /// <inheritdoc />
-        public void Register(IMutableDependencyResolver resolverToUse)
+        public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
             SQLitePCL.Batteries_V2.Init();
         }

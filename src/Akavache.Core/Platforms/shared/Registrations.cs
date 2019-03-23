@@ -23,7 +23,7 @@ namespace Akavache.Core
     public class Registrations : IWantsToRegisterStuff
     {
         /// <inheritdoc />
-        public void Register(IMutableDependencyResolver resolver)
+        public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
 #if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();

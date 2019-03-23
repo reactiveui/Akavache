@@ -20,7 +20,7 @@ namespace Akavache.Mobile
     public class Registrations : IWantsToRegisterStuff
     {
         /// <inheritdoc />
-        public void Register(IMutableDependencyResolver resolver)
+        public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
             resolver.Register(
                 () => new JsonSerializerSettings
@@ -37,12 +37,12 @@ namespace Akavache.Mobile
 
             // NB: These correspond to the hacks in Akavache.Http's registrations
             resolver.Register(
-                () => resolver.GetService<ISuspensionHost>().ShouldPersistState,
+                () => readonlyDependencyResolver.GetService<ISuspensionHost>().ShouldPersistState,
                 typeof(IObservable<IDisposable>),
                 "ShouldPersistState");
 
             resolver.Register(
-                () => resolver.GetService<ISuspensionHost>().IsUnpausing,
+                () => readonlyDependencyResolver.GetService<ISuspensionHost>().IsUnpausing,
                 typeof(IObservable<Unit>),
                 "IsUnpausing");
 

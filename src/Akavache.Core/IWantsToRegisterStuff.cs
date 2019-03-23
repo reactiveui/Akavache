@@ -15,7 +15,8 @@ namespace Akavache
         /// <summary>
         /// Register required items in the provided dependency resolver.
         /// </summary>
-        /// <param name="resolverToUse">The dependency resolver to register items against.</param>
-        void Register(IMutableDependencyResolver resolverToUse);
+        /// <param name="resolver">The resolver.</param>
+        /// <param name="readonlyDependencyResolver">The readonly dependency resolver.</param>
+        void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver);
     }
 }

@@ -48,7 +48,7 @@ namespace Akavache
                     return;
                 }
 
-                Locator.CurrentMutable.InitializeAkavache();
+                Locator.CurrentMutable.InitializeAkavache(Locator.Current);
             });
 
             InMemory = new InMemoryBlobCache(Scheduler.Default);
