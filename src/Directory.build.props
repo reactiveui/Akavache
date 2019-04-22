@@ -1,7 +1,6 @@
 <Project>  
   <PropertyGroup>
     <Copyright>Copyright (c) .NET Foundation and Contributors</Copyright>
-    <Product>Akavache ($(TargetFramework))</Product>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/reactiveui/akavache/</PackageProjectUrl>
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/5924219?v=3&amp;s=200</PackageIconUrl>

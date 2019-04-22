@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461;uap10.0.16299</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461;uap10.0.17763</TargetFrameworks>
     <AssemblyName>Akavache.Mobile</AssemblyName>
     <RootNamespace>Akavache.Mobile</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
