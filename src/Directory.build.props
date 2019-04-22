@@ -6,7 +6,7 @@
     <PackageProjectUrl>https://github.com/reactiveui/akavache/</PackageProjectUrl>
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/5924219?v=3&amp;s=200</PackageIconUrl>
     <Authors>.NET Foundation and Contributors</Authors>
-    <Owners>xpaulbettsx;ghuntley</Owners>
+    <Owners>xanaisbettsx;ghuntley</Owners>
     <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>
     <PackageReleaseNotes>https://github.com/reactiveui/akavache/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/reactiveui/akavache</RepositoryUrl>
