@@ -1,4 +1,8 @@
 <Project>
+  <PropertyGroup>  
+    <Product>$(AssemblyName) ($(TargetFramework))</Product>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);NET_461;XAML</DefineConstants>
   </PropertyGroup>
