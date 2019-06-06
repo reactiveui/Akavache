@@ -188,7 +188,7 @@ For more info about using your own versions of [SqlitePCL.raw](https://github.co
 
 ### Examining Akavache caches
 
-Using [Akavache Explorer](https://github.com/paulcbetts/AkavacheExplorer), you
+Using [Akavache Explorer](https://github.com/anaisbetts/AkavacheExplorer), you
 can dig into Akavache repos for debugging purposes to see what has been stored.
 
 ![](http://f.cl.ly/items/2D3Y0L0k262X0U0y3B0e/Image%202012.05.07%206:57:48%20PM.png)
