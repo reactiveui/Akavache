@@ -16,4 +16,7 @@ resources:
       endpoint: reactiveui
 
 jobs:
-- template: Azure/azure-pipelines-windows-only.yml@templates  # Template reference
+- template: Azure/azure-pipelines.yml@templates  # Template reference
+  parameters:
+    runMacBuild: false
+    
