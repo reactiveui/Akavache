@@ -1,6 +1,6 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid80;netcoreapp2.0;tizen40</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;Xamarin.iOS10;Xamarin.Mac20;MonoAndroid81;netcoreapp2.0;tizen40</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461;uap10.0.16299</TargetFrameworks>
     <AssemblyName>Akavache.Core</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
-    <PackageReference Include="System.Reactive" Version="4.1.5" />
+    <PackageReference Include="System.Reactive" Version="4.1.6" />
     <PackageReference Include="Splat" Version="8.*" />
   </ItemGroup>
 
