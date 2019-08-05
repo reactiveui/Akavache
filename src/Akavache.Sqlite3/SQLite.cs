@@ -3528,7 +3528,7 @@ namespace Akavache.Sqlite3.Internal
 
         public static string GetErrmsg(Sqlite3DatabaseHandle db)
         {
-            return Sqlite3Raw.sqlite3_errmsg(db);
+            return Sqlite3Raw.sqlite3_errmsg(db).utf8_to_string();
         }
 
         public static int BindParameterIndex(Sqlite3Statement stmt, string name)
@@ -3585,12 +3585,12 @@ namespace Akavache.Sqlite3.Internal
 
         public static string ColumnName(Sqlite3Statement stmt, int index)
         {
-            return Sqlite3Raw.sqlite3_column_name(stmt, index);
+            return Sqlite3Raw.sqlite3_column_name(stmt, index).utf8_to_string();
         }
 
         public static string ColumnName16(Sqlite3Statement stmt, int index)
         {
-            return Sqlite3Raw.sqlite3_column_name(stmt, index);
+            return Sqlite3Raw.sqlite3_column_name(stmt, index).utf8_to_string();
         }
 
         public static ColType ColumnType(Sqlite3Statement stmt, int index)
@@ -3615,17 +3615,17 @@ namespace Akavache.Sqlite3.Internal
 
         public static string ColumnText(Sqlite3Statement stmt, int index)
         {
-            return Sqlite3Raw.sqlite3_column_text(stmt, index);
+            return Sqlite3Raw.sqlite3_column_text(stmt, index).utf8_to_string();
         }
 
         public static string ColumnText16(Sqlite3Statement stmt, int index)
         {
-            return Sqlite3Raw.sqlite3_column_text(stmt, index);
+            return Sqlite3Raw.sqlite3_column_text(stmt, index).utf8_to_string();
         }
 
         public static byte[] ColumnBlob(Sqlite3Statement stmt, int index)
         {
-            return Sqlite3Raw.sqlite3_column_blob(stmt, index);
+            return Sqlite3Raw.sqlite3_column_blob(stmt, index).ToArray();
         }
 
         public static int ColumnBytes(Sqlite3Statement stmt, int index)
@@ -3635,7 +3635,7 @@ namespace Akavache.Sqlite3.Internal
 
         public static string ColumnString(Sqlite3Statement stmt, int index)
         {
-            return Sqlite3Raw.sqlite3_column_text(stmt, index);
+            return Sqlite3Raw.sqlite3_column_text(stmt, index).utf8_to_string();
         }
 
         public static byte[] ColumnByteArray(Sqlite3Statement stmt, int index)

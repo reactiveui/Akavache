@@ -294,7 +294,7 @@ namespace Akavache.Sqlite3
                 case OperationType.DoNothing:
                     return default(string);
                 default:
-                    throw new ArgumentException("Unknown operation");
+                    throw new ArgumentException("Unknown operation", nameof(item));
             }
         }
 
@@ -312,7 +312,7 @@ namespace Akavache.Sqlite3
                         (AsyncSubject<Unit>)source,
                         subjs.Cast<AsyncSubject<Unit>>());
                 default:
-                    throw new ArgumentException("Invalid operation type");
+                    throw new ArgumentException("Invalid operation type", nameof(opType));
             }
         }
 

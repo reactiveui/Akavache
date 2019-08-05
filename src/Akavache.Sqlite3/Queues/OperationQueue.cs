@@ -446,9 +446,9 @@ namespace Akavache.Sqlite3
                         MarshalCompletion(item.Completion, _deleteExpired.Value.PrepareToExecute(), commitResult);
                         break;
                     case OperationType.VacuumSqliteOperation:
-                        throw new ArgumentException("Vacuum operation can't run inside transaction");
+                        throw new ArgumentException("Vacuum operation can't run inside transaction", nameof(toProcess));
                     default:
-                        throw new ArgumentException("Unknown operation");
+                        throw new ArgumentException("Unknown operation", nameof(toProcess));
                 }
             }
 
