@@ -46,7 +46,7 @@ namespace Akavache.Sqlite3
 
                     while (this.Checked(raw.sqlite3_step(_selectOp)) == SQLite3.Result.Row)
                     {
-                        result.Add(raw.sqlite3_column_text(_selectOp, 0));
+                        result.Add(raw.sqlite3_column_text(_selectOp, 0).utf8_to_string());
                     }
                 }
                 finally

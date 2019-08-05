@@ -19,7 +19,7 @@ namespace Akavache.Sqlite3
                 return result;
             }
 
-            var err = raw.sqlite3_errmsg(connection.Connection.Handle);
+            var err = raw.sqlite3_errmsg(connection.Connection.Handle).utf8_to_string();
             var ex = new SQLiteException(result, (message ?? string.Empty) + ": " + err);
 
             connection.Log().Warn(ex, message);
