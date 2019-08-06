@@ -43,7 +43,7 @@ namespace Akavache.Tests
         }
 
         /// <summary>
-        /// Tests to make sure that getting non-existant keys throws an exception.
+        /// Tests to make sure that getting non-existent keys throws an exception.
         /// </summary>
         /// <returns>A task to monitor the progress.</returns>
         [Fact]
@@ -674,7 +674,7 @@ namespace Akavache.Tests
                 "Baz"
             };
 
-            DateTimeOffset now = DateTimeOffset.Now;
+            DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
 
             var inputItems = input.Select(x => new UserObject() { Name = x, Bio = "A thing", }).ToArray();
             var fixture = default(IBlobCache);
