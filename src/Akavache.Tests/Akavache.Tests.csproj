@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Akavache\Akavache.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
