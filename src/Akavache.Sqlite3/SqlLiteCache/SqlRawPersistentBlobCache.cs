@@ -26,7 +26,7 @@ namespace Akavache.Sqlite3
     /// This class represents an IBlobCache backed by a SQLite3 database, and
     /// it is the default (and best!) implementation.
     /// </summary>
-    public class SqlRawPersistentBlobCache : IObjectBlobCache, IEnableLogger
+    public class SqlRawPersistentBlobCache : IObjectBlobCache, IEnableLogger, IObjectBulkBlobCache
     {
         private static readonly object DisposeGate = 42;
         private readonly IObservable<Unit> _initializer;
@@ -317,6 +317,166 @@ namespace Akavache.Sqlite3
 
             return _initializer.SelectMany(_ => _opQueue.Vacuum())
                 .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<Unit> Insert(IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
+            }
+
+            if (keyValuePairs == null)
+            {
+                return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+            }
+
+            var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
+            var createdAt = Scheduler.Now.UtcDateTime;
+
+            return _initializer
+                .SelectMany(_ => keyValuePairs.Select(x => BeforeWriteToDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
+                .Merge().ToList()
+                .SelectMany(list => _opQueue.Insert(list.Select(data =>
+                        new CacheElement
+                        {
+                            Key = data.key,
+                            Value = data.data,
+                            CreatedAt = createdAt,
+                            Expiration = exp,
+                        })))
+                .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<IDictionary<string, byte[]>> Get(IEnumerable<string> keys)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<IDictionary<string, byte[]>>("SqlitePersistentBlobCache");
+            }
+
+            if (keys == null)
+            {
+                return Observable.Throw<IDictionary<string, byte[]>>(new ArgumentNullException(nameof(keys)));
+            }
+
+            return _initializer
+                .SelectMany(_ => _opQueue.Select(keys))
+                .SelectMany(x =>
+                {
+                    var cacheElements = x.ToList();
+                    return Observable.Return(cacheElements.ToDictionary(element => element.Key, element => element.Value));
+                })
+                .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
+                .Merge()
+                .ToDictionary(x => x.key, x => x.data)
+                .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(IEnumerable<string> keys)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<IDictionary<string, DateTimeOffset?>>("SqlitePersistentBlobCache");
+            }
+
+            if (keys == null)
+            {
+                return Observable.Throw<IDictionary<string, DateTimeOffset?>>(new ArgumentNullException(nameof(keys)));
+            }
+
+            return _initializer.SelectMany(_ => _opQueue.Select(keys))
+                .Select(x =>
+                {
+                    var cacheElements = x.ToList();
+                    return cacheElements.ToDictionary(element => element.Key, element => (DateTimeOffset?)new DateTimeOffset(element.CreatedAt, TimeSpan.Zero));
+                })
+                .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
+            }
+
+            return _initializer.SelectMany(_ => _opQueue.Invalidate(keys))
+                .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<Unit> InsertObjects<T>(IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
+            }
+
+            if (keyValuePairs == null)
+            {
+                return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+            }
+
+            var dataToAdd = keyValuePairs.Select(x => (key: x.Key, value: SerializeObject(x.Value)));
+            var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
+            var createdAt = Scheduler.Now.UtcDateTime;
+
+            return _initializer
+                .SelectMany(_ => dataToAdd.Select(x => BeforeWriteToDiskFilter(x.value, Scheduler).Select(data => (key: x.key, data: data))))
+                .Merge().ToList()
+                .SelectMany(list => _opQueue.Insert(list.Select(data =>
+                    new CacheElement
+                    {
+                        Key = data.key,
+                        TypeName = typeof(T).FullName,
+                        Value = data.data,
+                        CreatedAt = createdAt,
+                        Expiration = exp,
+                    })))
+                .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<IDictionary<string, T>> GetObjects<T>(IEnumerable<string> keys)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<IDictionary<string, T>>("SqlitePersistentBlobCache");
+            }
+
+            if (keys == null)
+            {
+                return Observable.Throw<IDictionary<string, T>>(new ArgumentNullException(nameof(keys)));
+            }
+
+            return _initializer.SelectMany(_ => _opQueue.Select(keys))
+                .SelectMany(
+                    x =>
+                    {
+                        var cacheElements = x.ToList();
+                        return Observable.Return(cacheElements.ToDictionary(element => element.Key, element => element.Value));
+                    })
+                .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
+                .Merge()
+                .SelectMany(x => DeserializeObject<T>(x.data).Select(obj => (key: x.key, data: obj)))
+                .ToDictionary(x => x.key, x => x.data)
+                .PublishLast().PermaRef();
+        }
+
+        /// <inheritdoc />
+        public IObservable<Unit> InvalidateObjects<T>(IEnumerable<string> keys)
+        {
+            if (_disposed)
+            {
+                return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
+            }
+
+            return Invalidate(keys);
         }
 
         /// <inheritdoc />
