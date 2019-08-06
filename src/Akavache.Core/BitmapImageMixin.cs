@@ -27,6 +27,11 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImage(this IBlobCache blobCache, string key, float? desiredWidth = null, float? desiredHeight = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.Get(key)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
@@ -47,6 +52,11 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
@@ -67,6 +77,11 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
@@ -88,6 +103,11 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
@@ -109,6 +129,11 @@ namespace Akavache
         /// Observable is guaranteed to be returned on the UI thread.</returns>
         public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
                 .SelectMany(ThrowOnBadImageBuffer)
                 .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
@@ -129,7 +154,10 @@ namespace Akavache
 
         private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
         {
-            return BitmapLoader.Current.Load(new MemoryStream(compressedImage), desiredWidth, desiredHeight).ToObservable();
+            using (var ms = new MemoryStream(compressedImage))
+            {
+                return BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ToObservable();
+            }
         }
     }
 }

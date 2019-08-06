@@ -36,6 +36,11 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(url, url, headers, fetchAlways, absoluteExpiration);
         }
 
@@ -53,6 +58,16 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
+            if (url is null)
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
             return blobCache.DownloadUrl(url.ToString(), url, headers, fetchAlways, absoluteExpiration);
         }
 
@@ -71,6 +86,11 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             var doFetch = MakeWebRequest(new Uri(url), headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
             var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
 
@@ -104,6 +124,11 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             var doFetch = MakeWebRequest(url, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
             var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
 
@@ -208,15 +233,17 @@ namespace Akavache
                 return Observable.Throw<byte[]>(new WebException(hwr.StatusDescription));
             }
 
-            var ms = new MemoryStream();
-            using (var responseStream = hwr.GetResponseStream())
+            using (var ms = new MemoryStream())
             {
-                Debug.Assert(responseStream != null, "The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
-                responseStream.CopyTo(ms);
-            }
+                using (var responseStream = hwr.GetResponseStream())
+                {
+                    Debug.Assert(responseStream != null, "The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
+                    responseStream.CopyTo(ms);
+                }
 
-            var ret = ms.ToArray();
-            return Observable.Return(ret);
+                var ret = ms.ToArray();
+                return Observable.Return(ret);
+            }
         }
 
         private IObservable<byte[]> ProcessWebResponse(WebResponse wr, Uri url, DateTimeOffset? absoluteExpiration)
@@ -228,15 +255,17 @@ namespace Akavache
                 return Observable.Throw<byte[]>(new WebException(hwr.StatusDescription));
             }
 
-            var ms = new MemoryStream();
-            using (var responseStream = hwr.GetResponseStream())
+            using (var ms = new MemoryStream())
             {
-                Debug.Assert(responseStream != null, "The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
-                responseStream.CopyTo(ms);
-            }
+                using (var responseStream = hwr.GetResponseStream())
+                {
+                    Debug.Assert(responseStream != null, "The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
+                    responseStream.CopyTo(ms);
+                }
 
-            var ret = ms.ToArray();
-            return Observable.Return(ret);
+                var ret = ms.ToArray();
+                return Observable.Return(ret);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -29,6 +30,7 @@ namespace Akavache
         /// Initializes a new instance of the <see cref="KeyedOperationQueue"/> class.
         /// </summary>
         /// <param name="scheduler">The scheduler for Observable operations.</param>
+        [SuppressMessage("Design", "CA2000: call dispose", Justification = "Disposed by member")]
         public KeyedOperationQueue(IScheduler scheduler = null)
         {
             scheduler = scheduler ?? BlobCache.TaskpoolScheduler;

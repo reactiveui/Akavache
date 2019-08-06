@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -255,6 +256,7 @@ namespace Akavache.Sqlite3
                 OperationType.BulkInsertSqliteOperation, elements, subj);
         }
 
+        [SuppressMessage("Design", "CA2000: Dispose variable", Justification = "Ownership transferred.")]
         private static OperationQueueItem GroupUnrelatedDeletes(IEnumerable<OperationQueueItem> unrelatedDeletes)
         {
             var subj = new AsyncSubject<Unit>();

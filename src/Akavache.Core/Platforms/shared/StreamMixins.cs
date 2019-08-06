@@ -28,6 +28,11 @@ namespace System
         /// <returns>An observable that signals when the write operation has completed.</returns>
         public static IObservable<Unit> WriteAsyncRx(this Stream blobCache, byte[] data, int start, int length)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
 #if WINDOWS_UWP
             return blobCache.WriteAsync(data, start, length).ToObservable();
 #else

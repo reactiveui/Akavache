@@ -25,6 +25,11 @@ namespace Akavache
         /// <returns>A observable which will signal when the item is added.</returns>
         public static IObservable<Unit> Insert(this IBlobCache blobCache, string key, byte[] data, TimeSpan expiration)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.Insert(key, data, blobCache.Scheduler.Now + expiration);
         }
 
@@ -39,6 +44,11 @@ namespace Akavache
         /// <returns>A observable which will signal when the item is added.</returns>
         public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, TimeSpan expiration)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.InsertObject(key, value, blobCache.Scheduler.Now + expiration);
         }
 
@@ -53,6 +63,11 @@ namespace Akavache
         /// <returns>A observable which will signal when the data is available.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
         }
 
@@ -67,6 +82,11 @@ namespace Akavache
         /// <returns>A observable which will signal when the data is available.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
         }
 
@@ -81,6 +101,11 @@ namespace Akavache
         /// <returns>A observable which will signal when the item is added.</returns>
         public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host, TimeSpan expiration)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.SaveLogin(user, password, host, blobCache.Scheduler.Now + expiration);
         }
     }

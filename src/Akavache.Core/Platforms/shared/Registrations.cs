@@ -25,6 +25,11 @@ namespace Akavache.Core
         /// <inheritdoc />
         public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
+            if (resolver is null)
+            {
+                throw new ArgumentNullException(nameof(resolver));
+            }
+
 #if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
 #elif WINDOWS_UWP

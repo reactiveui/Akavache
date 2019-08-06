@@ -48,6 +48,11 @@ namespace Akavache
         /// <inheritdoc />
         public IObservable<Unit> CreateRecursive(string path)
         {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentNullException(nameof(path));
+            }
+
             var paths = path.Split('\\');
 
             var firstFolderThatExists = Observable.Range(0, paths.Length - 1)

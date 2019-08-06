@@ -5,6 +5,7 @@
 
 using System;
 using System.IO;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using Akavache.Sqlite3;
 using Xunit;

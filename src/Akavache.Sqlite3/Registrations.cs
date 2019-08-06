@@ -31,6 +31,11 @@ namespace Akavache.Sqlite3
         /// <inheritdoc />
         public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
+            if (resolver is null)
+            {
+                throw new ArgumentNullException(nameof(resolver));
+            }
+
             // NB: We want the most recently registered fs, since there really
             // only should be one
             var fs = Locator.Current.GetService<IFilesystemProvider>();

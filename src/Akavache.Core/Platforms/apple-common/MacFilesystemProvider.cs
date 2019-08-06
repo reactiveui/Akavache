@@ -63,17 +63,17 @@ namespace Akavache
 
         private string CreateAppDirectory(NSSearchPathDirectory targetDir, string subDir = "BlobCache")
         {
-            NSError err;
-
-            var fm = new NSFileManager();
-            var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out err);
-            var ret = Path.Combine(url.RelativePath, BlobCache.ApplicationName, subDir);
-            if (!Directory.Exists(ret))
+            using (var fm = new NSFileManager())
             {
-                _inner.CreateRecursive(ret).Wait();
-            }
+                var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _);
+                var ret = Path.Combine(url.RelativePath, BlobCache.ApplicationName, subDir);
+                if (!Directory.Exists(ret))
+                {
+                    _inner.CreateRecursive(ret).Wait();
+                }
 
-            return ret;
+                return ret;
+            }
         }
     }
 }

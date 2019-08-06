@@ -23,6 +23,11 @@ namespace Akavache
         /// <returns>A observable with the specified values.</returns>
         public static IObservable<IDictionary<string, byte[]>> Get(this IBlobCache blobCache, IEnumerable<string> keys)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IBulkBlobCache bulkCache)
             {
                 return bulkCache.Get(keys);
@@ -47,6 +52,11 @@ namespace Akavache
         /// <returns>A observable which signals when complete.</returns>
         public static IObservable<Unit> Insert(this IBlobCache blobCache, IDictionary<string, byte[]> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IBulkBlobCache bulkCache)
             {
                 return bulkCache.Insert(keyValuePairs, absoluteExpiration);
@@ -66,6 +76,11 @@ namespace Akavache
         /// <returns>A observable with the specified values.</returns>
         public static IObservable<IDictionary<string, DateTimeOffset?>> GetCreatedAt(this IBlobCache blobCache, IEnumerable<string> keys)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IBulkBlobCache bulkCache)
             {
                 return bulkCache.GetCreatedAt(keys);
@@ -84,6 +99,11 @@ namespace Akavache
         /// <returns>A observable which signals when complete.</returns>
         public static IObservable<Unit> Invalidate(this IBlobCache blobCache, IEnumerable<string> keys)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IBulkBlobCache bulkCache)
             {
                 return bulkCache.Invalidate(keys);
@@ -128,6 +148,11 @@ namespace Akavache
         /// <returns>A observable which signals when complete.</returns>
         public static IObservable<Unit> InsertObjects<T>(this IBlobCache blobCache, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBulkBlobCache bulkCache)
             {
                 return bulkCache.InsertObjects(keyValuePairs, absoluteExpiration);
@@ -147,6 +172,11 @@ namespace Akavache
         /// <returns>A observable which signals when complete.</returns>
         public static IObservable<Unit> InvalidateObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBulkBlobCache bulkCache)
             {
                 return bulkCache.InvalidateObjects<T>(keys);

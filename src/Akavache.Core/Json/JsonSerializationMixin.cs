@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reactive;
@@ -37,6 +38,11 @@ namespace Akavache
         /// <returns>An observable which signals when the insertion has completed.</returns>
         public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBlobCache objCache)
             {
                 return objCache.InsertObject(key, value, absoluteExpiration);
@@ -76,6 +82,11 @@ namespace Akavache
         /// <returns>A Future result representing the object in the cache.</returns>
         public static IObservable<T> GetObject<T>(this IBlobCache blobCache, string key)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBlobCache objCache)
             {
                 return objCache.GetObject<T>(key);
@@ -93,6 +104,11 @@ namespace Akavache
         /// with the specified Type.</returns>
         public static IObservable<IEnumerable<T>> GetAllObjects<T>(this IBlobCache blobCache)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBlobCache objCache)
             {
                 return objCache.GetAllObjects<T>();
@@ -133,7 +149,12 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
-            return blobCache.GetObject<T>(key).Catch<T, Exception>(_ =>
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
+            return blobCache.GetObject<T>(key).Catch<T, Exception>(ex =>
             {
                 var prefixedKey = blobCache.GetHashCode().ToString(CultureInfo.InvariantCulture) + key;
 
@@ -165,6 +186,11 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
         }
 
@@ -186,6 +212,11 @@ namespace Akavache
         /// the cache.</returns>
         public static IObservable<T> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.GetOrFetchObject(key, () => Observable.Return(fetchFunc()), absoluteExpiration);
         }
 
@@ -199,6 +230,11 @@ namespace Akavache
         /// <returns>The date the key was created on.</returns>
         public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache blobCache, string key)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBlobCache objCache)
             {
                 return objCache.GetObjectCreatedAt<T>(key);
@@ -238,6 +274,7 @@ namespace Akavache
         /// if the fetched value should be cached.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
+        [SuppressMessage("Design", "CA2000: call dispose", Justification = "Disposed by member")]
         public static IObservable<T> GetAndFetchLatest<T>(
             this IBlobCache blobCache,
             string key,
@@ -247,6 +284,11 @@ namespace Akavache
             bool shouldInvalidateOnError = false,
             Func<T, bool> cacheValidationPredicate = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x)
@@ -320,6 +362,11 @@ namespace Akavache
             bool shouldInvalidateOnError = false,
             Func<T, bool> cacheValidationPredicate = null)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             return blobCache.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration, shouldInvalidateOnError, cacheValidationPredicate);
         }
 
@@ -334,6 +381,11 @@ namespace Akavache
         /// <returns>An observable that signals when the operation has completed.</returns>
         public static IObservable<Unit> InvalidateObject<T>(this IBlobCache blobCache, string key)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBlobCache objCache)
             {
                 return objCache.InvalidateObject<T>(key);
@@ -353,6 +405,11 @@ namespace Akavache
         /// this.</remarks>
         public static IObservable<Unit> InvalidateAllObjects<T>(this IBlobCache blobCache)
         {
+            if (blobCache is null)
+            {
+                throw new ArgumentNullException(nameof(blobCache));
+            }
+
             if (blobCache is IObjectBlobCache objCache)
             {
                 return objCache.InvalidateAllObjects<T>();

@@ -4,6 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.IO;
+using System.Reactive.Concurrency;
+
 using Akavache.Sqlite3;
 
 namespace Akavache.Tests

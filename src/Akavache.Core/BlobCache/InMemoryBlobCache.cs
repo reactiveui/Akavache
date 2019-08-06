@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -24,6 +25,7 @@ namespace Akavache
     /// </summary>
     public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogger
     {
+        [SuppressMessage("Design", "CA2213: non-disposed field.", Justification = "Used for notification of dispose.")]
         private readonly AsyncSubject<Unit> _shutdown = new AsyncSubject<Unit>();
         private readonly IDisposable _inner;
         private Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
@@ -441,12 +443,15 @@ namespace Akavache
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
             settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver, ForcedDateTimeKind); // This will make us use ticks instead of json ticks for DateTime.
-            var ms = new MemoryStream();
             var serializer = JsonSerializer.Create(settings);
-            var writer = new BsonDataWriter(ms);
-
-            serializer.Serialize(writer, new ObjectWrapper<T> { Value = value });
-            return ms.ToArray();
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new BsonDataWriter(ms))
+                {
+                    serializer.Serialize(writer, new ObjectWrapper<T> { Value = value });
+                    return ms.ToArray();
+                }
+            }
         }
 
         private T DeserializeObject<T>(byte[] data)
@@ -454,24 +459,26 @@ namespace Akavache
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
             settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver, ForcedDateTimeKind); // This will make us use ticks instead of json ticks for DateTime.
             var serializer = JsonSerializer.Create(settings);
-            var reader = new BsonDataReader(new MemoryStream(data));
-            var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
-
-            if (forcedDateTimeKind.HasValue)
+            using (var reader = new BsonDataReader(new MemoryStream(data)))
             {
-                reader.DateTimeKindHandling = forcedDateTimeKind.Value;
-            }
+                var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
 
-            try
-            {
-                return serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
-            }
-            catch (Exception ex)
-            {
-                this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
-            }
+                if (forcedDateTimeKind.HasValue)
+                {
+                    reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+                }
 
-            return serializer.Deserialize<T>(reader);
+                try
+                {
+                    return serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+                }
+                catch (Exception ex)
+                {
+                    this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
+                }
+
+                return serializer.Deserialize<T>(reader);
+            }
         }
     }
 }

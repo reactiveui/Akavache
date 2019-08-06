@@ -30,11 +30,11 @@
   </ItemGroup>
 
 
-  <ItemGroup Condition=" ! $(TargetFramework.StartsWith('netstandard'))  And ! $(TargetFramework.StartsWith('uap'))">
+  <ItemGroup Condition=" !$(TargetFramework.StartsWith('netstandard'))  And !$(TargetFramework.StartsWith('uap'))">
     <Compile Include="Platforms\shared-not-uwp\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" ! $(TargetFramework.StartsWith('netstandard')) ">
+  <ItemGroup Condition=" !$(TargetFramework.StartsWith('netstandard')) ">
     <Compile Include="Platforms\shared\**\*.cs" />
   </ItemGroup>
 

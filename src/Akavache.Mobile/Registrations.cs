@@ -22,6 +22,11 @@ namespace Akavache.Mobile
         /// <inheritdoc />
         public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
+            if (resolver is null)
+            {
+                throw new ArgumentNullException(nameof(resolver));
+            }
+
             resolver.Register(
                 () => new JsonSerializerSettings
                 {

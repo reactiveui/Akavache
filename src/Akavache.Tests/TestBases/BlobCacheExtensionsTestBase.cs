@@ -218,18 +218,17 @@ namespace Akavache.Tests
                 return Observable.Return(new Tuple<string, string>("Foo", "Bar"));
             });
 
-            string path;
-            using (Utility.WithEmptyDirectory(out path))
+            using (Utility.WithEmptyDirectory(out string path))
             {
                 using (var fixture = CreateBlobCache(path))
                 {
-                    var result = await fixture.GetOrFetchObject("Test", fetcher).FirstAsync();
+                    var result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).FirstAsync();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
 
                     // 2nd time around, we should be grabbing from cache
-                    result = await fixture.GetOrFetchObject("Test", fetcher).FirstAsync();
+                    result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).FirstAsync();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);
@@ -243,7 +242,7 @@ namespace Akavache.Tests
 
                 using (var fixture = CreateBlobCache(path))
                 {
-                    var result = await fixture.GetOrFetchObject("Test", fetcher).FirstAsync();
+                    var result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).FirstAsync();
                     Assert.Equal("Foo", result.Item1);
                     Assert.Equal("Bar", result.Item2);
                     Assert.Equal(1, fetchCount);

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.2</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461</TargetFrameworks>
-    <NoWarn>$(NoWarn);CA1307</NoWarn>
+    <NoWarn>$(NoWarn);CA1307;CA2000;CA1062</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

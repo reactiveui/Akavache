@@ -38,6 +38,11 @@ namespace Akavache.Sqlite3
         /// <inheritdoc />
         protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (data is null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
             if (data.Length == 0)
             {
                 return Observable.Return(data);
@@ -49,6 +54,11 @@ namespace Akavache.Sqlite3
         /// <inheritdoc />
         protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
         {
+            if (data is null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
             if (data.Length == 0)
             {
                 return Observable.Return(data);
