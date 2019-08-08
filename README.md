@@ -201,13 +201,16 @@ easier to get started.
 
 ### DateTime/DateTimeOffset Considerations ###
 
-By default JSON.NET's BSON implementation writes `DateTime` as UTC and reads it back in local time.
+Our default implementation overrides BSON to read and write DateTime's as UTC.
 To override the reader's behavior you can set `BlobCache.ForcedDateTimeKind` as in the following example:
 
 ```cs
-// Sets the reader to return DateTime/DateTimeOffset in UTC.
-BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+// Sets the reader to return DateTime/DateTimeOffset in Local.
+BlobCache.ForcedDateTimeKind = DateTimeKind.Local;
 ```
+
+`DateTime` are stored as ticks for high precision.
+`DateTimeOffset` are stored as ticks for both the Date/Time aspect and the offset.
 
 ## Basic Method Documentation
 
