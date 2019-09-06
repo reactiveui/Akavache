@@ -9,6 +9,12 @@
     <PackageId>akavache.mobile</PackageId>
   </PropertyGroup>
 
+  <Target Name="_RemoveNonExistingResgenFile" BeforeTargets="CoreCompile" Condition="'$(_SdkSetAndroidResgenFile)' == 'true' And '$(AndroidResgenFile)' != '' And !Exists('$(AndroidResgenFile)')">
+    <ItemGroup>
+      <Compile Remove="$(AndroidResgenFile)"/>
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="reactiveui" Version="9.*" />
   </ItemGroup>
