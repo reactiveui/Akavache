@@ -31,6 +31,12 @@
     <PackageReference Include="System.Net.Primitives" Version="4.3.1" />
   </ItemGroup>
   
+  <Target Name="_RemoveNonExistingResgenFile" BeforeTargets="CoreCompile" Condition="'$(_SdkSetAndroidResgenFile)' == 'true' And '$(AndroidResgenFile)' != '' And !Exists('$(AndroidResgenFile)')">
+    <ItemGroup>
+      <Compile Remove="$(AndroidResgenFile)"/>
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <Compile Remove="EncryptedBlobCache.cs" />
   </ItemGroup>

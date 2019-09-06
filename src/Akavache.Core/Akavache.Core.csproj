@@ -65,6 +65,12 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
+  <Target Name="_RemoveNonExistingResgenFile" BeforeTargets="CoreCompile" Condition="'$(_SdkSetAndroidResgenFile)' == 'true' And '$(AndroidResgenFile)' != '' And !Exists('$(AndroidResgenFile)')">
+    <ItemGroup>
+      <Compile Remove="$(AndroidResgenFile)"/>
+    </ItemGroup>
+  </Target>
+
   <ItemGroup Condition=" $(TargetFramework.StartsWith('tizen40')) ">
     <Compile Include="Platforms\tizen\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
