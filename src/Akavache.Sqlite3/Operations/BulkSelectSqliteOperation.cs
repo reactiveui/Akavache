@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -15,6 +16,7 @@ using SQLitePCL;
 
 namespace Akavache.Sqlite3
 {
+    [SuppressMessage("Design", "CA2213: Non disposed field", Justification = "Disposed, just as part of interlock.")]
     internal class BulkSelectSqliteOperation : IPreparedSqliteOperation
     {
         private readonly sqlite3_stmt[] _selectOps;
