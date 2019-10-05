@@ -21,6 +21,7 @@ namespace Akavache
         public static void Start(string applicationName)
         {
             Akavache.Sqlite3.Registrations.Start(applicationName, SQLitePCL.Batteries_V2.Init);
+            Locator.CurrentMutable.RegisterPlatformBitmapLoader();
         }
 
         /// <inheritdoc />
