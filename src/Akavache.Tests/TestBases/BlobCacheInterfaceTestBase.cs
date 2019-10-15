@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Microsoft.Reactive.Testing;
 using ReactiveUI.Testing;
@@ -295,10 +296,12 @@ namespace Akavache.Tests
                 using (var fixture = CreateBlobCache(path))
                 {
                     var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
+                    var inTheFuture = BlobCache.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
 
                     await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
                     await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
                     await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                    await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
 
                     try
                     {
@@ -310,7 +313,7 @@ namespace Akavache.Tests
                         // just make the test pass
                     }
 
-                    Assert.Equal(1, (await fixture.GetAllKeys().FirstAsync()).Count());
+                    Assert.Equal(2, (await fixture.GetAllKeys().FirstAsync()).Count());
                 }
 
                 using (var fixture = CreateBlobCache(path))
@@ -320,7 +323,43 @@ namespace Akavache.Tests
                         return;
                     }
 
-                    Assert.Equal(1, (await fixture.GetAllKeys().FirstAsync()).Count());
+                    Assert.Equal(2, (await fixture.GetAllKeys().FirstAsync()).Count());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Make sure that the Vacuum method purges entries that are expired.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
+        [Fact]
+        public async Task VacuumPurgeEntriesThatAreExpired()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            {
+                using (var fixture = CreateBlobCache(path))
+                {
+                    var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
+                    var inTheFuture = BlobCache.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
+
+                    await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
+                    await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
+                    await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                    await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
+
+                    try
+                    {
+                        await fixture.Vacuum().FirstAsync();
+                    }
+                    catch (NotImplementedException)
+                    {
+                        // NB: The old and busted cache will never have this,
+                        // just make the test pass
+                    }
+
+                    await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask()).ConfigureAwait(false);
+                    await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask()).ConfigureAwait(false);
                 }
             }
         }
