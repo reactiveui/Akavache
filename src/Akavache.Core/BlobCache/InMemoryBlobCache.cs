@@ -394,7 +394,7 @@ namespace Akavache
 
             lock (_cache)
             {
-                var toDelete = _cache.Where(x => x.Value.ExpiresAt >= Scheduler.Now);
+                var toDelete = _cache.Where(x => x.Value.ExpiresAt != null && Scheduler.Now > x.Value.ExpiresAt).ToArray();
                 foreach (var kvp in toDelete)
                 {
                     _cache.Remove(kvp.Key);
