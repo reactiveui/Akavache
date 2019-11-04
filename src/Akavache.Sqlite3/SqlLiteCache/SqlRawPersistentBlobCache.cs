@@ -160,8 +160,8 @@ namespace Akavache.Sqlite3
                 .Select(x =>
                 {
                     var cacheElements = x.ToList();
-                    return cacheElements.Count() == 1
-                            ? (DateTimeOffset?)new DateTimeOffset(cacheElements.First().CreatedAt, TimeSpan.Zero)
+                    return cacheElements.Count == 1
+                            ? (DateTimeOffset?)new DateTimeOffset(cacheElements[0].CreatedAt, TimeSpan.Zero)
                             : default(DateTimeOffset?);
                 })
                 .PublishLast().PermaRef();

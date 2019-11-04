@@ -278,7 +278,7 @@ namespace Akavache.Sqlite3
 
                     try
                     {
-                        @lock = await lockTask;
+                        @lock = await lockTask.ConfigureAwait(false);
                     }
                     catch (OperationCanceledException)
                     {
