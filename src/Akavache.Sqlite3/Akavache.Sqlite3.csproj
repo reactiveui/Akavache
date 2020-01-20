@@ -14,8 +14,8 @@
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.core" Version="2.0.2" />
     <PackageReference Include="System.Reactive" Version="4.2.0" />
-    <PackageReference Include="Splat" Version="9.*" />
-    <PackageReference Include="Splat.Drawing" Version="9.*" />
+    <PackageReference Include="Splat" Version="9.3.11" />
+    <PackageReference Include="Splat.Drawing" Version="9.3.11" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
@@ -34,7 +34,7 @@
   
   <Target Name="_RemoveNonExistingResgenFile" BeforeTargets="CoreCompile" Condition="'$(_SdkSetAndroidResgenFile)' == 'true' And '$(AndroidResgenFile)' != '' And !Exists('$(AndroidResgenFile)')">
     <ItemGroup>
-      <Compile Remove="$(AndroidResgenFile)"/>
+      <Compile Remove="$(AndroidResgenFile)" />
     </ItemGroup>
   </Target>
 
