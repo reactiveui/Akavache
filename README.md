@@ -79,6 +79,8 @@ Interacting with Akavache is primarily done through an object called
 `BlobCache`. At App startup, you must first set your app's name via
 `BlobCache.ApplicationName` or `Akavache.Registrations.Start("ApplicationName")` . After setting your app's name, you're ready to save some data.
 
+For example with Xamarin Forms or WPF applications you'll place this in the constructor of your `App.xaml.cs` file.
+
 #### Choose a location
 There are four build-in locations, that have some magic applied on some systems:
 
