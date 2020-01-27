@@ -30,17 +30,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.28" PrivateAssets="all" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.50" PrivateAssets="all" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19554-01" PrivateAssets="All" /> 
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" /> 
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="stylecop.analyzers" Version="1.1.118" PrivateAssets="all" />
-    <PackageReference Include="Roslynator.Analyzers" Version="2.2.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.7" PrivateAssets="all" />
+    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.113" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Analyzers" Version="2.3.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />

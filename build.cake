@@ -6,6 +6,7 @@ Environment.SetVariableNames();
 var packageWhitelist = new[] 
 { 
     MakeAbsolute(File("./src/Akavache.Core/Akavache.Core.csproj")),
+    MakeAbsolute(File("./src/Akavache.Drawing/Akavache.Drawing.csproj")),
     MakeAbsolute(File("./src/Akavache.Mobile/Akavache.Mobile.csproj")),
     MakeAbsolute(File("./src/Akavache.Sqlite3/Akavache.Sqlite3.csproj")),
     MakeAbsolute(File("./src/Akavache/Akavache.csproj")),

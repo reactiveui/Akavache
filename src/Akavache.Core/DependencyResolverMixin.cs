@@ -32,6 +32,7 @@ namespace Akavache
                 "Akavache.Deprecated",
                 "Akavache.Mobile",
                 "Akavache.Sqlite3",
+                "Akavache.Drawing"
             };
 
             var fdr = typeof(DependencyResolverMixin);
