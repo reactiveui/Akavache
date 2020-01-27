@@ -16,7 +16,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="10.*" />
+    <PackageReference Include="reactiveui" Version="11.*" />
   </ItemGroup>
 
   <ItemGroup>

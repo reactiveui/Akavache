@@ -9,5 +9,6 @@ using Akavache.Core;
 [assembly: InternalsVisibleTo("Akavache.Tests")]
 [assembly: InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: InternalsVisibleTo("Akavache.Mobile")]
+[assembly: InternalsVisibleTo("Akavache.Drawing")]
 [assembly: InternalsVisibleTo("Akavache")]
 [assembly: Preserve]
