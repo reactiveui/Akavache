@@ -23,7 +23,9 @@ namespace Akavache
                 throw new ArgumentNullException(nameof(resolver));
             }
 
+#if !NETSTANDARD
             Locator.CurrentMutable.RegisterPlatformBitmapLoader();
+#endif
         }
     }
 }

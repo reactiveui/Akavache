@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Tests", "Akavache.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache", "Akavache\Akavache.csproj", "{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Drawing", "Akavache.Drawing\Akavache.Drawing.csproj", "{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,14 @@ Global
 		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
