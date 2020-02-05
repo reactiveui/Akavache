@@ -63,7 +63,7 @@
 
   <Target Name="_RemoveNonExistingResgenFile" BeforeTargets="CoreCompile" Condition="'$(_SdkSetAndroidResgenFile)' == 'true' And '$(AndroidResgenFile)' != '' And !Exists('$(AndroidResgenFile)')">
     <ItemGroup>
-      <Compile Remove="$(AndroidResgenFile)"/>
+      <Compile Remove="$(AndroidResgenFile)" />
     </ItemGroup>
   </Target>
 
