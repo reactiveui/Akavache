@@ -157,27 +157,6 @@ namespace Akavache
         /// </remarks>
         public static DateTimeKind? ForcedDateTimeKind { get; set; }
 
-#if PORTABLE
-        /// <summary>
-        /// Gets or sets the Scheduler used for task pools.
-        /// </summary>
-        /// <exception cref="Exception">If the task pool scheduler can't be found.</exception>
-        [SuppressMessage("Design", "CA1065: Properties should not fire exceptions.", Justification = "Extreme non standard case.")]
-        public static IScheduler TaskpoolScheduler
-        {
-            get
-            {
-                var ret = _taskPoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool");
-                if (ret == null)
-                {
-                    throw new Exception("Can't find a TaskPoolScheduler. You probably accidentally linked to the PCL Akavache in your app.");
-                }
-
-                return ret;
-            }
-            set => _taskPoolOverride = value;
-        }
-#else
         /// <summary>
         /// Gets or sets the Scheduler used for task pools.
         /// </summary>
@@ -186,7 +165,6 @@ namespace Akavache
             get => _taskPoolOverride ?? Locator.Current.GetService<IScheduler>("Taskpool") ?? System.Reactive.Concurrency.TaskPoolScheduler.Default;
             set => _taskPoolOverride = value;
         }
-#endif
 
         /// <summary>
         /// Makes sure that the system has been initialized.
