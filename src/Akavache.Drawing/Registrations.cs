@@ -7,7 +7,7 @@ using System;
 using Akavache.Core;
 using Splat;
 
-namespace Akavache
+namespace Akavache.Drawing
 {
     /// <summary>
     /// Setup registrations for the application.
