@@ -3,7 +3,7 @@
     <Copyright>Copyright (c) .NET Foundation and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/reactiveui/akavache/</PackageProjectUrl>
-    <PackageIconUrl>https://avatars0.githubusercontent.com/u/5924219?v=3&amp;s=200</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png</PackageIconUrl>
     <Authors>.NET Foundation and Contributors</Authors>
     <Owners>xanaisbettsx;ghuntley</Owners>
     <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>

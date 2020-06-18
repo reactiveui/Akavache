@@ -1,5 +1,3 @@
-## Akavache: An Asynchronous Key-Value Store for Native Applications 
-
 [![NuGet Stats](https://img.shields.io/nuget/v/akavache.svg)](https://www.nuget.org/packages/akavache) [![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/Akavache-CI)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=25) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveui/akavache)
 <br>
 <a href="https://www.nuget.org/packages/akavache">
@@ -15,12 +13,14 @@
         <img src="https://img.shields.io/badge/chat-slack-blue.svg">
 </a>
 
+<img alt="Akavache" src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png" width="150" />
+
+## Akavache: An Asynchronous Key-Value Store for Native Applications 
+
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
 store created for writing desktop and mobile applications in C#, based on
 SQLite3. Akavache is great for both storing important data (i.e. user
 settings) as well as cached local data that expires.
-
-![Dat Logo](http://f.cl.ly/items/2R3d1o122m090K0W081L/Akavache.png)
 
 ### Where can I use it?
 
