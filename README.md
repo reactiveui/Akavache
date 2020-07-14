@@ -91,9 +91,9 @@ There are four build-in locations, that have some magic applied on some systems:
 
 #### The magic
 
-* **Xamarin.iOS** may remove data, stored in `BlobCache.LocalMachine`, to free up disk space (only if your app is not running). The locations `BlobCache.UserAccount` and `BlobCache.Secure` will be backed up to iCloud and iTunes. (https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW1)
-* **Xamarin.Android** may also start deleting data, stored in `BlobCache.LocalMachine`, if the system runs out of disk space. It isn't clearly specified if your app could be running while the system is cleaning this up. (https://developer.android.com/reference/android/content/Context.html#getCacheDir%28%29)
-* **Windows 10 (UWP)** will replicate `BlobCache.UserAccount` and `BlobCache.Secure` to the cloud and synchronize it to all user devices on which the app is installed (https://msdn.microsoft.com/en-us/library/windows/apps/hh465094.aspx)
+* **Xamarin.iOS** may remove data, stored in `BlobCache.LocalMachine`, to free up disk space (only if your app is not running). The locations `BlobCache.UserAccount` and `BlobCache.Secure` will be backed up to iCloud and iTunes. [Apple Documentation](https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW1)
+* **Xamarin.Android** may also start deleting data, stored in `BlobCache.LocalMachine`, if the system runs out of disk space. It isn't clearly specified if your app could be running while the system is cleaning this up. [Android Documentation](https://developer.android.com/reference/android/content/Context.html#getCacheDir%28%29)
+* **Windows 10 (UWP)** will replicate `BlobCache.UserAccount` and `BlobCache.Secure` to the cloud and synchronize it to all user devices on which the app is installed [UWP Documentation](https://docs.microsoft.com/windows/uwp/design/app-settings/store-and-retrieve-app-data)
 
 #### Let's start off
 
