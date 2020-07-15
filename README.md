@@ -15,14 +15,14 @@
 
 <img alt="Akavache" src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png" width="150" />
 
-## Akavache: An Asynchronous Key-Value Store for Native Applications 
+## Akavache: An Asynchronous Key-Value Store for Native Applications <!-- omit in toc -->
 
 Akavache is an *asynchronous*, *persistent* (i.e. writes to disk) key-value
 store created for writing desktop and mobile applications in C#, based on
 SQLite3. Akavache is great for both storing important data (i.e. user
 settings) as well as cached local data that expires.
 
-### Where can I use it?
+### Where can I use it? <!-- omit in toc -->
 
 Akavache is currently compatible with:
 
@@ -33,7 +33,7 @@ Akavache is currently compatible with:
 * Windows 10 (Universal Windows Platform)
 * Tizen 4.0
 
-### What does that mean?
+### What does that mean? <!-- omit in toc -->
 
 Downloading and storing remote data from the internet while still keeping the
 UI responsive is a task that nearly every modern application needs to do.
@@ -49,11 +49,50 @@ It's built on a core key-value byte array store (conceptually similar to a
 `Dictionary<string, byte[]>`), and on top of that store, extensions are
 added to support:
 
-- Arbitrary objects via JSON.NET
-- Fetching and loading Images and URLs from the Internet
-- Storing and automatically encrypting User Credentials
+* Arbitrary objects via JSON.NET
+* Fetching and loading Images and URLs from the Internet
+* Storing and automatically encrypting User Credentials
 
-## Platform-specific notes
+## Contents <!-- omit in toc -->
+
+* [Getting Started](#getting-started)
+  * [Choose a location](#choose-a-location)
+  * [The magic](#the-magic)
+  * [Platform-specific notes](#platform-specific-notes)
+* [Using Akavache](#using-akavache)
+  * [Handling Errors](#handling-errors)
+  * [Shutting Down](#shutting-down)
+  * [Using a different SQLitePCL.raw bundle](#using-a-different-sqlitepclraw-bundle)
+  * [Examining Akavache caches](#examining-akavache-caches)
+  * [What's this Global Variable nonsense?](#whats-this-global-variable-nonsense)
+  * [DateTime/DateTimeOffset Considerations](#datetimedatetimeoffset-considerations)
+* [Basic Method Documentation](#basic-method-documentation)
+* [Extension Method Documentation](#extension-method-documentation)
+
+## Getting Started
+
+Interacting with Akavache is primarily done through an object called
+`BlobCache`. At App startup, you must first set your app's name via
+`BlobCache.ApplicationName` or `Akavache.Registrations.Start("ApplicationName")` . After setting your app's name, you're ready to save some data.
+
+For example with Xamarin Forms or WPF applications you'll place this in the constructor of your `App.xaml.cs` file.
+
+### Choose a location
+
+There are four built-in locations that have some magic applied on some systems:
+
+* `BlobCache.LocalMachine` - Cached data. This data may get deleted without notification.
+* `BlobCache.UserAccount` - User settings. Some systems backup this data to the cloud.
+* `BlobCache.Secure` - For saving sensitive data - like credentials.
+* `BlobCache.InMemory` - A database, kept in memory. The data is stored for the lifetime of the app.
+
+### The magic
+
+* **Xamarin.iOS** may remove data, stored in `BlobCache.LocalMachine`, to free up disk space (only if your app is not running). The locations `BlobCache.UserAccount` and `BlobCache.Secure` will be backed up to iCloud and iTunes. [Apple Documentation](https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW1)
+* **Xamarin.Android** may also start deleting data, stored in `BlobCache.LocalMachine`, if the system runs out of disk space. It isn't clearly specified if your app could be running while the system is cleaning this up. [Android Documentation](https://developer.android.com/reference/android/content/Context.html#getCacheDir%28%29)
+* **Windows 10 (UWP)** will replicate `BlobCache.UserAccount` and `BlobCache.Secure` to the cloud and synchronize it to all user devices on which the app is installed [UWP Documentation](https://docs.microsoft.com/windows/uwp/design/app-settings/store-and-retrieve-app-data)
+
+### Platform-specific notes
 
 * **Xamarin.iOS / Xamarin.Mac** - No issues.
 
@@ -73,29 +112,32 @@ added to support:
 
 * **Tizen 4.0** - No issues.
 
-### Getting Started
+#### Handling Xamarin Linker
 
-Interacting with Akavache is primarily done through an object called
-`BlobCache`. At App startup, you must first set your app's name via
-`BlobCache.ApplicationName` or `Akavache.Registrations.Start("ApplicationName")` . After setting your app's name, you're ready to save some data.
+There are two options to ensure the Akavache.Sqlite3 dll will not be removed by Xamarin build tools
 
-For example with Xamarin Forms or WPF applications you'll place this in the constructor of your `App.xaml.cs` file.
+#### 1) Add a file to reference the types
 
-#### Choose a location
-There are four build-in locations, that have some magic applied on some systems:
+```cs
 
-* `BlobCache.LocalMachine` - Cached data. This data may get deleted without notification.
-* `BlobCache.UserAccount` - User settings. Some systems backup this data to the cloud.
-* `BlobCache.Secure` - For saving sensitive data - like credentials.
-* `BlobCache.InMemory` - A database, kept in memory. The data is stored for the lifetime of the app. 
+public static class LinkerPreserve
+{
+  static LinkerPreserve()
+  {
+    var persistentName = typeof(SQLitePersistentBlobCache).FullName;
+    var encryptedName = typeof(SQLiteEncryptedBlobCache).FullName;
+  }
+}
+```
 
-#### The magic
+#### 2) Use the following initializer in your cross platform library or in your head project
 
-* **Xamarin.iOS** may remove data, stored in `BlobCache.LocalMachine`, to free up disk space (only if your app is not running). The locations `BlobCache.UserAccount` and `BlobCache.Secure` will be backed up to iCloud and iTunes. [Apple Documentation](https://developer.apple.com/library/content/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html#//apple_ref/doc/uid/TP40010672-CH2-SW1)
-* **Xamarin.Android** may also start deleting data, stored in `BlobCache.LocalMachine`, if the system runs out of disk space. It isn't clearly specified if your app could be running while the system is cleaning this up. [Android Documentation](https://developer.android.com/reference/android/content/Context.html#getCacheDir%28%29)
-* **Windows 10 (UWP)** will replicate `BlobCache.UserAccount` and `BlobCache.Secure` to the cloud and synchronize it to all user devices on which the app is installed [UWP Documentation](https://docs.microsoft.com/windows/uwp/design/app-settings/store-and-retrieve-app-data)
+```cs
 
-#### Let's start off
+Akavache.Registrations.Start("ApplicationName")
+```
+
+## Using Akavache
 
 The most straightforward way to use Akavache is via the object extensions:
 
@@ -120,26 +162,6 @@ Toaster toaster;
 
 BlobCache.UserAccount.GetObject<Toaster>("toaster")
     .Subscribe(x => toaster = x, ex => Console.WriteLine("No Key!"));
-```
-### Handling Xamarin Linker
-
-There are two options to ensure the Akavache.Sqlite3 dll will not be removed by Xamarin build tools
-
-#### 1) Add a file to reference the types
-```cs
-public static class LinkerPreserve
-{
-  static LinkerPreserve()
-  {
-    var persistentName = typeof(SQLitePersistentBlobCache).FullName;
-    var encryptedName = typeof(SQLiteEncryptedBlobCache).FullName;
-  }
-}
-```
-
-#### 2) Use the following initializer in your cross platform library or in your head project
-```cs
-Akavache.Registrations.Start("ApplicationName")
 ```
 
 ### Handling Errors
@@ -172,21 +194,24 @@ BlobCache.Shutdown().Wait();
 
 Failure to do this may mean that queued items are not flushed to the cache.
 
-### Using a different SQLitePCL.raw bundle, e.g., Microsoft.AppCenter
-- Install the `akavache.sqlite3` nuget instead of `akavache`
-- Install the SQLitePCLRaw bundle you want to use, e.g., `SQLitePCLRaw.bundle_green`
-- Use `Akavache.Sqlite3.Registrations.Start("ApplicationName", () => SQLitePCL.Batteries_V2.Init());` in your platform projects or in your cross platform project.
+### Using a different SQLitePCL.raw bundle
+
+To use a different SQLitePCL.raw bundle, e.g. Microsoft.AppCenter:
+
+* Install the `akavache.sqlite3` nuget instead of `akavache`
+* Install the SQLitePCLRaw bundle you want to use, e.g., `SQLitePCLRaw.bundle_green`
+* Use `Akavache.Sqlite3.Registrations.Start("ApplicationName", () => SQLitePCL.Batteries_V2.Init());` in your platform projects or in your cross platform project.
 
 ```XAML
 <PackageReference Include="akavache.sqlite3" Version="6.0.40-g7e90c572c6" />
 <PackageReference Include="SQLitePCLRaw.bundle_green" Version="1.1.11" />
 ```
+
 ```cs
 Akavache.Sqlite3.Registrations.Start("ApplicationName", () => SQLitePCL.Batteries_V2.Init());
 ```
 
 For more info about using your own versions of [SqlitePCL.raw](https://github.com/ericsink/SQLitePCL.raw/wiki/Using-multiple-libraries-that-use-SQLitePCL.raw)
-
 
 ### Examining Akavache caches
 
@@ -195,13 +220,15 @@ can dig into Akavache repos for debugging purposes to see what has been stored.
 
 ![](http://f.cl.ly/items/2D3Y0L0k262X0U0y3B0e/Image%202012.05.07%206:57:48%20PM.png)
 
-### What's this Global Variable nonsense? Why can't I use $FAVORITE_IOC_LIBRARY
+### What's this Global Variable nonsense?
+
+**Why can't I use $FAVORITE_IOC_LIBRARY?**
 
 You totally can. Just instantiate `SQLitePersistentBlobCache` or
 `SQLiteEncryptedBlobCache` instead - the static variables are there just to make it
 easier to get started.
 
-### DateTime/DateTimeOffset Considerations ###
+### DateTime/DateTimeOffset Considerations
 
 Our default implementation overrides BSON to read and write DateTime's as UTC.
 To override the reader's behavior you can set `BlobCache.ForcedDateTimeKind` as in the following example:
