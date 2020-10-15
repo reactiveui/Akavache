@@ -14,8 +14,13 @@ namespace Akavache
     /// </summary>
     internal class JsonDateTimeContractResolver : DefaultContractResolver
     {
-        private readonly IContractResolver _existingContractResolver;
-        private readonly DateTimeKind? _forceDateTimeKindOverride;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
+        /// </summary>
+        public JsonDateTimeContractResolver()
+            : this(null, null)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
@@ -24,14 +29,18 @@ namespace Akavache
         /// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
         public JsonDateTimeContractResolver(IContractResolver contractResolver, DateTimeKind? forceDateTimeKindOverride)
         {
-            _existingContractResolver = contractResolver;
-            _forceDateTimeKindOverride = forceDateTimeKindOverride;
+            ExistingContractResolver = contractResolver;
+            ForceDateTimeKindOverride = forceDateTimeKindOverride;
         }
+
+        public IContractResolver ExistingContractResolver { get; set; }
+
+        public DateTimeKind? ForceDateTimeKindOverride { get; set; }
 
         /// <inheritdoc />
         public override JsonContract ResolveContract(Type type)
         {
-            var contract = _existingContractResolver?.ResolveContract(type);
+            var contract = ExistingContractResolver?.ResolveContract(type);
             if (contract?.Converter != null)
             {
                 return contract;
@@ -44,7 +53,7 @@ namespace Akavache
 
             if (type == typeof(DateTime) || type == typeof(DateTime?))
             {
-                contract.Converter = _forceDateTimeKindOverride == DateTimeKind.Local ? JsonDateTimeTickConverter.LocalDateTimeKindDefault : JsonDateTimeTickConverter.Default;
+                contract.Converter = ForceDateTimeKindOverride == DateTimeKind.Local ? JsonDateTimeTickConverter.LocalDateTimeKindDefault : JsonDateTimeTickConverter.Default;
             }
             else if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
             {
