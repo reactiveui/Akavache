@@ -31,6 +31,7 @@ namespace Akavache
         private Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
         private bool _disposed;
         private DateTimeKind? _dateTimeKind;
+        private JsonDateTimeContractResolver _jsonDateTimeContractResolver = new JsonDateTimeContractResolver(); // This will make us use ticks instead of json ticks for DateTime.
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
@@ -91,7 +92,16 @@ namespace Akavache
         public DateTimeKind? ForcedDateTimeKind
         {
             get => _dateTimeKind ?? BlobCache.ForcedDateTimeKind;
-            set => _dateTimeKind = value;
+
+            set
+            {
+                _dateTimeKind = value;
+
+                if (_jsonDateTimeContractResolver != null)
+                {
+                    _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -442,7 +452,8 @@ namespace Akavache
         private byte[] SerializeObject<T>(T value)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver, ForcedDateTimeKind); // This will make us use ticks instead of json ticks for DateTime.
+            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
+            settings.ContractResolver = _jsonDateTimeContractResolver;
             var serializer = JsonSerializer.Create(settings);
             using (var ms = new MemoryStream())
             {
@@ -457,7 +468,8 @@ namespace Akavache
         private T DeserializeObject<T>(byte[] data)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            settings.ContractResolver = new JsonDateTimeContractResolver(settings.ContractResolver, ForcedDateTimeKind); // This will make us use ticks instead of json ticks for DateTime.
+            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
+            settings.ContractResolver = _jsonDateTimeContractResolver;
             var serializer = JsonSerializer.Create(settings);
             using (var reader = new BsonDataReader(new MemoryStream(data)))
             {

@@ -17,11 +17,6 @@ namespace Akavache.Tests
     public abstract class DateTimeTestBase
     {
         /// <summary>
-        /// Time zone for when testing UTC vs local time operations. Just has to be something that doesn't match UTC.
-        /// </summary>
-        private const string TestTimeZone = "Pacific Standard Time";
-
-        /// <summary>
         /// Gets the date time offsets used in theory tests.
         /// </summary>
         public static IEnumerable<object[]> DateTimeOffsetData => new[]
@@ -56,7 +51,7 @@ namespace Akavache.Tests
         /// <summary>
         /// Gets the date time when the tests are done to keep them consistent.
         /// </summary>
-        private static DateTime LocalTestNow { get; } = TimeZoneInfo.ConvertTimeFromUtc(TestNow.ToUniversalTime(), TimeZoneInfo.FindSystemTimeZoneById(TestTimeZone));
+        private static DateTime LocalTestNow { get; } = TimeZoneInfo.ConvertTimeFromUtc(TestNow.ToUniversalTime(), TimeZoneInfo.CreateCustomTimeZone("testTimeZone", TimeSpan.FromHours(6), "Test Time Zone", "Test Time Zone"));
 
         /// <summary>
         /// Gets the date time off set when the tests are done to keep them consistent.

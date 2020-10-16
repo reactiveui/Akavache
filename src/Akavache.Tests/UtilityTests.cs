@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Akavache.Tests
@@ -36,6 +37,11 @@ namespace Akavache.Tests
         [Fact]
         public void DirectoryCreateThrowsIOExceptionForNonexistentNetworkPaths()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             var exception = Assert.Throws<IOException>(() => new DirectoryInfo(@"\\does\not\exist").CreateRecursive());
             Assert.StartsWith("The network path was not found", exception.Message);
         }
@@ -46,7 +52,21 @@ namespace Akavache.Tests
         [Fact]
         public void UtilitySplitsAbsolutePaths()
         {
-            Assert.Equal(new[] { @"c:\", "foo", "bar" }, new DirectoryInfo(@"c:\foo\bar").SplitFullPath());
+            string path;
+            string expectedRoot;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                path = @"c:\foo\bar";
+                expectedRoot = @"c:\";
+            }
+            else
+            {
+                path = "/foo/bar";
+                expectedRoot = "/";
+            }
+
+            Assert.Equal(new[] { expectedRoot, "foo", "bar" }, new DirectoryInfo(path).SplitFullPath());
         }
 
         /// <summary>
@@ -55,7 +75,18 @@ namespace Akavache.Tests
         [Fact]
         public void UtilityResolvesAndSplitsRelativePaths()
         {
-            var components = new DirectoryInfo(@"foo\bar").SplitFullPath().ToList();
+            string path;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                path = @"foo\bar";
+            }
+            else
+            {
+                path = "foo/bar";
+            }
+
+            var components = new DirectoryInfo(path).SplitFullPath().ToList();
             Assert.True(components.Count > 2);
             Assert.Equal(new[] { "foo", "bar" }, components.Skip(components.Count - 2));
         }
@@ -66,6 +97,11 @@ namespace Akavache.Tests
         [Fact]
         public void UtilitySplitsUncPaths()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             Assert.Equal(new[] { @"\\foo\bar", "baz" }, new DirectoryInfo(@"\\foo\bar\baz").SplitFullPath());
         }
 
