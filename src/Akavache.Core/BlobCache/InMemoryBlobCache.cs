@@ -451,10 +451,7 @@ namespace Akavache
 
         private byte[] SerializeObject<T>(T value)
         {
-            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            var serializer = JsonSerializer.Create(settings);
+            var serializer = GetSerializer();
             using (var ms = new MemoryStream())
             {
                 using (var writer = new BsonDataWriter(ms))
@@ -467,10 +464,7 @@ namespace Akavache
 
         private T DeserializeObject<T>(byte[] data)
         {
-            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            var serializer = JsonSerializer.Create(settings);
+            var serializer = GetSerializer();
             using (var reader = new BsonDataReader(new MemoryStream(data)))
             {
                 var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
@@ -491,6 +485,22 @@ namespace Akavache
 
                 return serializer.Deserialize<T>(reader);
             }
+        }
+
+        private JsonSerializer GetSerializer()
+        {
+            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+            JsonSerializer serializer;
+
+            lock (settings)
+            {
+                _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
+                settings.ContractResolver = _jsonDateTimeContractResolver;
+                serializer = JsonSerializer.Create(settings);
+                settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
+            }
+
+            return serializer;
         }
     }
 }
