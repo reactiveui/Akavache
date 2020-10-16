@@ -52,12 +52,21 @@ namespace Akavache.Tests
         [Fact]
         public void UtilitySplitsAbsolutePaths()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            string path;
+            string expectedRoot;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return;
+                path = @"c:\foo\bar";
+                expectedRoot = @"c:\";
+            }
+            else
+            {
+                path = "/foo/bar";
+                expectedRoot = "/";
             }
 
-            Assert.Equal(new[] { @"c:\", "foo", "bar" }, new DirectoryInfo(@"c:\foo\bar").SplitFullPath());
+            Assert.Equal(new[] { expectedRoot, "foo", "bar" }, new DirectoryInfo(path).SplitFullPath());
         }
 
         /// <summary>
@@ -66,12 +75,18 @@ namespace Akavache.Tests
         [Fact]
         public void UtilityResolvesAndSplitsRelativePaths()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            string path;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return;
+                path = @"foo\bar";
+            }
+            else
+            {
+                path = "foo/bar";
             }
 
-            var components = new DirectoryInfo(@"foo\bar").SplitFullPath().ToList();
+            var components = new DirectoryInfo(path).SplitFullPath().ToList();
             Assert.True(components.Count > 2);
             Assert.Equal(new[] { "foo", "bar" }, components.Skip(components.Count - 2));
         }
