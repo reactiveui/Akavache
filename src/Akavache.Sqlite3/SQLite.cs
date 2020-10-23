@@ -307,7 +307,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public TableMapping GetMapping(Type type, CreateFlags createFlags = CreateFlags.None)
         {
-            if (_mappings == null)
+            if (_mappings is null)
             {
                 _mappings = new Dictionary<string, TableMapping>();
             }
@@ -385,7 +385,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public int CreateTable(Type ty, CreateFlags createFlags = CreateFlags.None)
         {
-            if (_tables == null)
+            if (_tables is null)
             {
                 _tables = new Dictionary<string, TableMapping>();
             }
@@ -517,7 +517,7 @@ namespace Akavache.Sqlite3.Internal
                 mx = (property.Body as MemberExpression);
             }
             var propertyInfo = mx.Member as PropertyInfo;
-            if (propertyInfo == null)
+            if (propertyInfo is null)
             {
                 throw new ArgumentException("The lambda expression 'property' should point to a valid Property");
             }
@@ -651,7 +651,7 @@ namespace Akavache.Sqlite3.Internal
 
             if (TimeExecution)
             {
-                if (_sw == null)
+                if (_sw is null)
                 {
                     _sw = new Stopwatch();
                 }
@@ -677,7 +677,7 @@ namespace Akavache.Sqlite3.Internal
 
             if (TimeExecution)
             {
-                if (_sw == null)
+                if (_sw is null)
                 {
                     _sw = new Stopwatch();
                 }
@@ -1212,7 +1212,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public int Insert(object obj)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 return 0;
             }
@@ -1234,7 +1234,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public int InsertOrReplace(object obj)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 return 0;
             }
@@ -1295,7 +1295,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public int Insert(object obj, string extra)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 return 0;
             }
@@ -1320,7 +1320,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public int Insert(object obj, string extra, Type objType)
         {
-            if (obj == null || objType == null)
+            if (obj == null || objType is null)
             {
                 return 0;
             }
@@ -1412,7 +1412,7 @@ namespace Akavache.Sqlite3.Internal
         /// </returns>
         public int Update(object obj)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 return 0;
             }
@@ -1436,7 +1436,7 @@ namespace Akavache.Sqlite3.Internal
         public int Update(object obj, Type objType)
         {
             int rowsAffected = 0;
-            if (obj == null || objType == null)
+            if (obj == null || objType is null)
             {
                 return 0;
             }
@@ -1445,7 +1445,7 @@ namespace Akavache.Sqlite3.Internal
 
             var pk = map.PK;
 
-            if (pk == null)
+            if (pk is null)
             {
                 throw new NotSupportedException("Cannot update " + map.TableName + ": it has no PK");
             }
@@ -1516,7 +1516,7 @@ namespace Akavache.Sqlite3.Internal
         {
             var map = GetMapping(objectToDelete.GetType());
             var pk = map.PK;
-            if (pk == null)
+            if (pk is null)
             {
                 throw new NotSupportedException("Cannot delete " + map.TableName + ": it has no PK");
             }
@@ -1543,7 +1543,7 @@ namespace Akavache.Sqlite3.Internal
         {
             var map = GetMapping(typeof(T));
             var pk = map.PK;
-            if (pk == null)
+            if (pk is null)
             {
                 throw new NotSupportedException("Cannot delete " + map.TableName + ": it has no PK");
             }
@@ -1841,7 +1841,7 @@ namespace Akavache.Sqlite3.Internal
         {
             get
             {
-                if (_insertColumns == null)
+                if (_insertColumns is null)
                 {
                     _insertColumns = Columns.Where(c => !c.IsAutoInc).ToArray();
                 }
@@ -1853,7 +1853,7 @@ namespace Akavache.Sqlite3.Internal
         {
             get
             {
-                if (_insertOrReplaceColumns == null)
+                if (_insertOrReplaceColumns is null)
                 {
                     _insertOrReplaceColumns = Columns.ToArray();
                 }
@@ -1878,7 +1878,7 @@ namespace Akavache.Sqlite3.Internal
 
         public PreparedSqlLiteInsertCommand GetInsertCommand(SQLiteConnection conn, string extra)
         {
-            if (_insertCommand == null)
+            if (_insertCommand is null)
             {
                 _insertCommand = CreateInsertCommand(conn, extra);
                 _insertCommandExtra = extra;
@@ -2255,7 +2255,7 @@ namespace Akavache.Sqlite3.Internal
                     var obj = Activator.CreateInstance(map.MappedType);
                     for (int i = 0; i < cols.Length; i++)
                     {
-                        if (cols[i] == null)
+                        if (cols[i] is null)
                             continue;
                         var colType = SQLite3.ColumnType(stmt, i);
                         var val = ReadCol(stmt, i, colType, cols[i].ColumnType);
@@ -2367,7 +2367,7 @@ namespace Akavache.Sqlite3.Internal
 
         internal static void BindParameter(Sqlite3Statement stmt, int index, object value, bool storeDateTimeAsTicks)
         {
-            if (value == null)
+            if (value is null)
             {
                 SQLite3.BindNull(stmt, index);
             }
@@ -2795,7 +2795,7 @@ namespace Akavache.Sqlite3.Internal
                 if (mem != null && (mem.Expression.NodeType == ExpressionType.Parameter))
                 {
                     var q = Clone<T>();
-                    if (q._orderBys == null)
+                    if (q._orderBys is null)
                     {
                         q._orderBys = new List<Ordering>();
                     }
@@ -2819,7 +2819,7 @@ namespace Akavache.Sqlite3.Internal
 
         private void AddWhere(Expression pred)
         {
-            if (_where == null)
+            if (_where is null)
             {
                 _where = pred;
             }
@@ -2898,7 +2898,7 @@ namespace Akavache.Sqlite3.Internal
 
         private CompileResult CompileExpr(Expression expr, List<object> queryArgs)
         {
-            if (expr == null)
+            if (expr is null)
             {
                 throw new NotSupportedException("Expression is NULL");
             }
@@ -2911,9 +2911,9 @@ namespace Akavache.Sqlite3.Internal
 
                 //If either side is a parameter and is null, then handle the other side specially (for "is null"/"is not null")
                 string text;
-                if (leftr.CommandText == "?" && leftr.Value == null)
+                if (leftr.CommandText == "?" && leftr.Value is null)
                     text = CompileNullBinaryExpression(bin, rightr);
-                else if (rightr.CommandText == "?" && rightr.Value == null)
+                else if (rightr.CommandText == "?" && rightr.Value is null)
                     text = CompileNullBinaryExpression(bin, leftr);
                 else
                     text = "(" + leftr.CommandText + " " + GetSqlName(bin) + " " + rightr.CommandText + ")";
@@ -3019,7 +3019,7 @@ namespace Akavache.Sqlite3.Internal
                     if (mem.Expression != null)
                     {
                         var r = CompileExpr(mem.Expression, queryArgs);
-                        if (r.Value == null)
+                        if (r.Value is null)
                         {
                             throw new NotSupportedException("Member access failed to compile expression");
                         }
@@ -3104,7 +3104,7 @@ namespace Akavache.Sqlite3.Internal
 
             if (nut != null)
             {
-                if (obj == null)
+                if (obj is null)
                     return null;
                 return Convert.ChangeType(obj, nut);
             }

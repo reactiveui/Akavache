@@ -1,0 +1,18 @@
+[assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.6.1", FrameworkDisplayName=".NET Framework 4.6.1")]
+namespace Akavache
+{
+    public class Registrations
+    {
+        public Registrations() { }
+        public void Register(Splat.IMutableDependencyResolver resolver, Splat.IReadonlyDependencyResolver readonlyDependencyResolver) { }
+        public static void Start(string applicationName) { }
+    }
+}
+namespace Akavache.Sqlite3
+{
+    public static class LinkerPreserve { }
+    public class SQLitePersistentBlobCache : Akavache.Sqlite3.SqlRawPersistentBlobCache
+    {
+        public SQLitePersistentBlobCache(string databaseFile, System.Reactive.Concurrency.IScheduler? scheduler = null) { }
+    }
+}

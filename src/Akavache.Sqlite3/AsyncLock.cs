@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -18,14 +18,14 @@ namespace Akavache.Sqlite3.Internal
     public sealed class AsyncLock : IDisposable
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-        private readonly Task<IDisposable> _releaser;
+        private readonly Task<IDisposable?> _releaser;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncLock"/> class.
         /// </summary>
         public AsyncLock()
         {
-            _releaser = Task.FromResult((IDisposable)new Releaser(this));
+            _releaser = Task.FromResult((IDisposable?)new Releaser(this));
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Akavache.Sqlite3.Internal
         /// </summary>
         /// <param name="cancellationToken">A cancellation token which allows for release of the lock.</param>
         /// <returns>A disposable which when Disposed will release the lock.</returns>
-        public Task<IDisposable> LockAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IDisposable?> LockAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var wait = _semaphore.WaitAsync(cancellationToken);
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -36,19 +36,24 @@ namespace Akavache
             return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
+            if (reader is null)
+            {
+                throw new ArgumentNullException(nameof(reader));
+            }
+
             if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Date)
             {
                 return null;
             }
 
-            if (reader.TokenType == JsonToken.Date)
+            if (reader.TokenType == JsonToken.Date && reader.Value != null)
             {
                 return (DateTime)reader.Value;
             }
 
-            if (objectType == typeof(DateTime) || objectType == typeof(DateTime?))
+            if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value != null)
             {
                 var ticks = (long)reader.Value;
 
@@ -58,7 +63,7 @@ namespace Akavache
             return null;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             if (value is DateTime dateTime)
             {

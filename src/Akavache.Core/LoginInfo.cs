@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -27,8 +27,8 @@ namespace Akavache
         /// Initializes a new instance of the <see cref="LoginInfo"/> class.
         /// </summary>
         /// <param name="usernameAndLogin">A username and password stored in a tuple.</param>
-        internal LoginInfo(Tuple<string, string> usernameAndLogin)
-            : this(usernameAndLogin.Item1, usernameAndLogin.Item2)
+        internal LoginInfo((string UserName, string Password) usernameAndLogin)
+            : this(usernameAndLogin.UserName, usernameAndLogin.Password)
         {
         }
 

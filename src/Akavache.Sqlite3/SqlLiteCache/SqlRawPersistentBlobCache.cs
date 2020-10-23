@@ -1,4 +1,4 @@
-// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -26,14 +26,14 @@ namespace Akavache.Sqlite3
     /// This class represents an IBlobCache backed by a SQLite3 database, and
     /// it is the default (and best!) implementation.
     /// </summary>
-    public class SqlRawPersistentBlobCache : IObjectBlobCache, IEnableLogger, IObjectBulkBlobCache
+    public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
     {
         private static readonly object DisposeGate = 42;
         private readonly IObservable<Unit> _initializer;
         [SuppressMessage("Design", "CA2213: Dispose field", Justification = "Used to indicate disposal.")]
         private readonly AsyncSubject<Unit> _shutdown = new AsyncSubject<Unit>();
-        private SqliteOperationQueue _opQueue;
-        private IDisposable _queueThread;
+        private SqliteOperationQueue? _opQueue;
+        private IDisposable? _queueThread;
         private DateTimeKind? _dateTimeKind;
         private bool _disposed;
         private JsonDateTimeContractResolver _jsonDateTimeContractResolver = new JsonDateTimeContractResolver(); // This will make us use ticks instead of json ticks for DateTime.
@@ -43,7 +43,7 @@ namespace Akavache.Sqlite3
         /// </summary>
         /// <param name="databaseFile">The location of the database file.</param>
         /// <param name="scheduler">The scheduler to perform operations on.</param>
-        public SqlRawPersistentBlobCache(string databaseFile, IScheduler scheduler = null)
+        public SqlRawPersistentBlobCache(string databaseFile, IScheduler? scheduler = null)
         {
             Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
 
@@ -88,14 +88,19 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
-            if (key == null)
+            if (key is null)
             {
                 return Observable.Throw<Unit>(new ArgumentNullException(nameof(key)));
             }
 
-            if (data == null)
+            if (data is null)
             {
                 return Observable.Throw<Unit>(new ArgumentNullException(nameof(data)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
@@ -124,9 +129,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache");
             }
 
-            if (key == null)
+            if (key is null)
             {
                 return Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<byte[]>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Select(new[] { key }))
@@ -137,7 +147,9 @@ namespace Akavache.Sqlite3
                             ? Observable.Return(cacheElements.First().Value)
                             : ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
                 })
+#pragma warning disable CS8604 // Possible null reference argument.
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
+#pragma warning restore CS8604 // Possible null reference argument.
                 .PublishLast().PermaRef();
         }
 
@@ -147,6 +159,11 @@ namespace Akavache.Sqlite3
             if (_disposed)
             {
                 return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>("SqlitePersistentBlobCache");
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<IEnumerable<string>>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.GetAllKeys())
@@ -161,9 +178,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>("SqlitePersistentBlobCache");
             }
 
-            if (key == null)
+            if (key is null)
             {
                 return Observable.Throw<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<DateTimeOffset?>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Select(new[] { key }))
@@ -191,6 +213,11 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
+            }
+
             return _initializer.SelectMany(_ => _opQueue.Flush())
                 .PublishLast().PermaRef();
         }
@@ -201,6 +228,11 @@ namespace Akavache.Sqlite3
             if (_disposed)
             {
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Invalidate(new[] { key }))
@@ -215,6 +247,11 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
+            }
+
             return _initializer.SelectMany(_ => _opQueue.InvalidateAll())
                 .PublishLast().PermaRef();
         }
@@ -227,9 +264,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
-            if (key == null)
+            if (key is null)
             {
                 return Observable.Throw<Unit>(new ArgumentNullException(nameof(key)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             var data = SerializeObject(value);
@@ -260,9 +302,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<T>("SqlitePersistentBlobCache");
             }
 
-            if (key == null)
+            if (key is null)
             {
                 return Observable.Throw<T>(new ArgumentNullException(nameof(key)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<T>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Select(new[] { key }))
@@ -273,7 +320,9 @@ namespace Akavache.Sqlite3
                             ? Observable.Return(cacheElements.First().Value)
                             : ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
                 })
+#pragma warning disable CS8604 // Possible null reference argument.
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
+#pragma warning restore CS8604 // Possible null reference argument.
                 .SelectMany(DeserializeObject<T>)
                 .PublishLast().PermaRef();
         }
@@ -286,9 +335,16 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>("SqlitePersistentBlobCache");
             }
 
+            if (_opQueue is null)
+            {
+                return Observable.Throw<IEnumerable<T>>(new InvalidOperationException("There is not a valid operation queue"));
+            }
+
             return _initializer.SelectMany(_ => _opQueue.SelectTypes(new[] { typeof(T).FullName })
                     .SelectMany(x => x.ToObservable()
+#pragma warning disable CS8604 // Possible null reference argument.
                         .SelectMany(y => AfterReadFromDiskFilter(y.Value, Scheduler))
+#pragma warning restore CS8604 // Possible null reference argument.
                         .SelectMany(DeserializeObject<T>)
                         .ToList()))
                 .PublishLast().PermaRef();
@@ -313,6 +369,11 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
+            }
+
             return _initializer.SelectMany(_ => _opQueue.InvalidateTypes(new[] { typeof(T).FullName }))
                 .PublishLast().PermaRef();
         }
@@ -323,6 +384,11 @@ namespace Akavache.Sqlite3
             if (_disposed)
             {
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Vacuum())
@@ -337,9 +403,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
-            if (keyValuePairs == null)
+            if (keyValuePairs is null)
             {
                 return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             var exp = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
@@ -367,22 +438,30 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<IDictionary<string, byte[]>>("SqlitePersistentBlobCache");
             }
 
-            if (keys == null)
+            if (keys is null)
             {
                 return Observable.Throw<IDictionary<string, byte[]>>(new ArgumentNullException(nameof(keys)));
             }
 
-            return _initializer
+            if (_opQueue is null)
+            {
+                return Observable.Throw<IDictionary<string, byte[]>>(new InvalidOperationException("There is not a valid operation queue"));
+            }
+
+            var returnValue = _initializer
                 .SelectMany(_ => _opQueue.Select(keys))
                 .SelectMany(x =>
                 {
                     var cacheElements = x.ToList();
+
                     return Observable.Return(cacheElements.ToDictionary(element => element.Key, element => element.Value));
                 })
                 .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
                 .Merge()
                 .ToDictionary(x => x.key, x => x.data)
                 .PublishLast().PermaRef();
+
+            return returnValue;
         }
 
         /// <inheritdoc />
@@ -393,9 +472,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<IDictionary<string, DateTimeOffset?>>("SqlitePersistentBlobCache");
             }
 
-            if (keys == null)
+            if (keys is null)
             {
                 return Observable.Throw<IDictionary<string, DateTimeOffset?>>(new ArgumentNullException(nameof(keys)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<IDictionary<string, DateTimeOffset?>>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Select(keys))
@@ -415,6 +499,11 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
+            }
+
             return _initializer.SelectMany(_ => _opQueue.Invalidate(keys))
                 .PublishLast().PermaRef();
         }
@@ -427,9 +516,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("SqlitePersistentBlobCache");
             }
 
-            if (keyValuePairs == null)
+            if (keyValuePairs is null)
             {
                 return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             var dataToAdd = keyValuePairs.Select(x => (key: x.Key, value: SerializeObject(x.Value)));
@@ -459,9 +553,14 @@ namespace Akavache.Sqlite3
                 return ExceptionHelper.ObservableThrowObjectDisposedException<IDictionary<string, T>>("SqlitePersistentBlobCache");
             }
 
-            if (keys == null)
+            if (keys is null)
             {
                 return Observable.Throw<IDictionary<string, T>>(new ArgumentNullException(nameof(keys)));
+            }
+
+            if (_opQueue is null)
+            {
+                return Observable.Throw<IDictionary<string, T>>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
             return _initializer.SelectMany(_ => _opQueue.Select(keys))
@@ -500,7 +599,7 @@ namespace Akavache.Sqlite3
         {
             _initializer.Wait();
 
-            _opQueue.Dispose();
+            _opQueue?.Dispose();
 
             _opQueue = queue;
             _opQueue.Start();
@@ -520,7 +619,7 @@ namespace Akavache.Sqlite3
             if (isDisposing)
             {
                 var disp = Interlocked.Exchange(ref _queueThread, null);
-                if (disp == null)
+                if (disp is null)
                 {
                     return;
                 }
@@ -540,7 +639,7 @@ namespace Akavache.Sqlite3
                         lock (DisposeGate)
                         {
                             disp.Dispose();
-                            _opQueue.Dispose();
+                            _opQueue?.Dispose();
                             Connection.Dispose();
                         }
                     }, Scheduler);
@@ -708,7 +807,9 @@ namespace Akavache.Sqlite3
                 {
                     try
                     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                         var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                         return Observable.Return(boxedVal);
                     }
                     catch (Exception ex)
@@ -717,7 +818,9 @@ namespace Akavache.Sqlite3
                     }
 
                     var rawVal = serializer.Deserialize<T>(reader);
+#pragma warning disable CS8604 // Possible null reference argument.
                     return Observable.Return(rawVal);
+#pragma warning restore CS8604 // Possible null reference argument.
                 }
                 catch (Exception ex)
                 {

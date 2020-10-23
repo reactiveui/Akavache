@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -27,13 +27,13 @@ namespace Akavache
         /// </summary>
         /// <param name="contractResolver">A inherited contract resolver.</param>
         /// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
-        public JsonDateTimeContractResolver(IContractResolver contractResolver, DateTimeKind? forceDateTimeKindOverride)
+        public JsonDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride)
         {
             ExistingContractResolver = contractResolver;
             ForceDateTimeKindOverride = forceDateTimeKindOverride;
         }
 
-        public IContractResolver ExistingContractResolver { get; set; }
+        public IContractResolver? ExistingContractResolver { get; set; }
 
         public DateTimeKind? ForceDateTimeKindOverride { get; set; }
 
@@ -46,7 +46,7 @@ namespace Akavache
                 return contract;
             }
 
-            if (contract == null)
+            if (contract is null)
             {
                 contract = base.ResolveContract(type);
             }

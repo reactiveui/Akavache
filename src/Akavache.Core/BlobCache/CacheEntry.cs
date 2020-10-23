@@ -1,4 +1,4 @@
-// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -20,7 +20,7 @@ namespace Akavache
         /// <param name="value">The value being stored.</param>
         /// <param name="createdAt">The date and time the entry was created.</param>
         /// <param name="expiresAt">The date and time when the entry expires.</param>
-        public CacheEntry(string typeName, byte[] value, DateTimeOffset createdAt, DateTimeOffset? expiresAt)
+        public CacheEntry(string? typeName, byte[] value, DateTimeOffset createdAt, DateTimeOffset? expiresAt)
         {
             TypeName = typeName;
             Value = value;
@@ -41,7 +41,7 @@ namespace Akavache
         /// <summary>
         /// Gets or sets the type name of the entry.
         /// </summary>
-        public string TypeName { get; protected set; }
+        public string? TypeName { get; protected set; }
 
         /// <summary>
         /// Gets or sets the value of the entry.

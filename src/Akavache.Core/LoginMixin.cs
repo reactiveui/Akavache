@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -40,7 +40,7 @@ namespace Akavache
         /// <returns>A Future result representing the user/password Tuple.</returns>
         public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache blobCache, string host = "default")
         {
-            return blobCache.GetObject<Tuple<string, string>>("login:" + host).Select(x => new LoginInfo(x));
+            return blobCache.GetObject<(string, string)>("login:" + host).Select(x => new LoginInfo(x));
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Akavache
         /// <returns>A observable which signals when the erase is completed.</returns>
         public static IObservable<Unit> EraseLogin(this ISecureBlobCache blobCache, string host = "default")
         {
-            return blobCache.InvalidateObject<Tuple<string, string>>("login:" + host);
+            return blobCache.InvalidateObject<(string, string)>("login:" + host);
         }
     }
 }

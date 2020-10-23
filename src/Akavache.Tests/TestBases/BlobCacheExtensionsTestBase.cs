@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -10,9 +10,13 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DynamicData;
+
+using FluentAssertions;
+
 using Microsoft.Reactive.Testing;
+
+using ReactiveUI;
 using ReactiveUI.Testing;
-using Shouldly;
 using Xunit;
 
 namespace Akavache.Tests
@@ -686,7 +690,7 @@ namespace Akavache.Tests
                 var keyDates = await fixture.GetCreatedAt(input);
 
                 Assert.Equal(keyDates.Keys.OrderBy(x => x), input.OrderBy(x => x));
-                keyDates.Values.ShouldAllBe(x => x > now);
+                keyDates.Values.All(x => x > now).Should().BeTrue();
             }
         }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -13,6 +13,17 @@ namespace Akavache
 {
     internal abstract class KeyedOperation
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyedOperation"/> class.
+        /// </summary>
+        /// <param name="key">The key of the operation.</param>
+        /// <param name="id">The ID of the operation.</param>
+        public KeyedOperation(string key, int id)
+        {
+            Key = key;
+            Id = id;
+        }
+
         /// <summary>
         /// Gets or sets the key for the entry.
         /// </summary>
@@ -34,9 +45,21 @@ namespace Akavache
     internal class KeyedOperation<T> : KeyedOperation
     {
         /// <summary>
-        /// Gets or sets the function which returns the observable.
+        /// Initializes a new instance of the <see cref="KeyedOperation{T}"/> class.
         /// </summary>
-        public Func<IObservable<T>> Func { get; set; }
+        /// <param name="func">The function to produce a value.</param>
+        /// <param name="key">The key of the operation.</param>
+        /// <param name="id">The ID of the operation.</param>
+        public KeyedOperation(Func<IObservable<T>> func, string key, int id)
+            : base(key, id)
+        {
+            Func = func;
+        }
+
+        /// <summary>
+        /// Gets the function which returns the observable.
+        /// </summary>
+        public Func<IObservable<T>> Func { get; }
 
         /// <summary>
         /// Gets the result subject.
