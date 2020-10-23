@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -26,7 +26,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
             return mixin.DownloadUrl(blobCache, new Uri(url), headers, fetchAlways, absoluteExpiration);
@@ -44,7 +44,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
             return mixin.DownloadUrl(blobCache, url, headers, fetchAlways, absoluteExpiration);
@@ -63,7 +63,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
             return mixin.DownloadUrl(blobCache, key, new Uri(url), headers, fetchAlways, absoluteExpiration);
@@ -82,7 +82,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, Uri url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
             return mixin.DownloadUrl(blobCache, key, url, headers, fetchAlways, absoluteExpiration);

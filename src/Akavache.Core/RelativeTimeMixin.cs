@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -61,7 +61,7 @@ namespace Akavache
         /// <param name="headers">The headers to specify when getting the entry.</param>
         /// <param name="fetchAlways">If we should fetch always and not return the cache entry if available.</param>
         /// <returns>A observable which will signal when the data is available.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, TimeSpan expiration, Dictionary<string, string>? headers = null, bool fetchAlways = false)
         {
             if (blobCache is null)
             {
@@ -80,7 +80,7 @@ namespace Akavache
         /// <param name="headers">The headers to specify when getting the entry.</param>
         /// <param name="fetchAlways">If we should fetch always and not return the cache entry if available.</param>
         /// <returns>A observable which will signal when the data is available.</returns>
-        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, TimeSpan expiration, Dictionary<string, string> headers = null, bool fetchAlways = false)
+        public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, TimeSpan expiration, Dictionary<string, string>? headers = null, bool fetchAlways = false)
         {
             if (blobCache is null)
             {

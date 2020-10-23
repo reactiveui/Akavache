@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -27,7 +27,7 @@ namespace Akavache
     {
         [SuppressMessage("Design", "CA2213: non-disposed field.", Justification = "Used for notification of dispose.")]
         private readonly AsyncSubject<Unit> _shutdown = new AsyncSubject<Unit>();
-        private readonly IDisposable _inner;
+        private readonly IDisposable? _inner;
         private Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
         private bool _disposed;
         private DateTimeKind? _dateTimeKind;
@@ -64,7 +64,7 @@ namespace Akavache
         /// </summary>
         /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
         /// <param name="initialContents">The initial contents of the cache.</param>
-        public InMemoryBlobCache(IScheduler scheduler, IEnumerable<KeyValuePair<string, byte[]>> initialContents)
+        public InMemoryBlobCache(IScheduler? scheduler, IEnumerable<KeyValuePair<string, byte[]>>? initialContents)
         {
             Scheduler = scheduler ?? CurrentThreadScheduler.Instance;
             foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
@@ -81,7 +81,7 @@ namespace Akavache
         /// <param name="initialContents">The initial contents of the cache.</param>
         internal InMemoryBlobCache(
             Action disposer,
-            IScheduler scheduler,
+            IScheduler? scheduler,
             IEnumerable<KeyValuePair<string, byte[]>> initialContents)
             : this(scheduler, initialContents)
         {
@@ -116,7 +116,7 @@ namespace Akavache
         /// <param name="scheduler">The default scheduler to use.</param>
         /// <param name="initialContents">The default inner contents to use.</param>
         /// <returns>A generated cache.</returns>
-        public static InMemoryBlobCache OverrideGlobals(IScheduler scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
+        public static InMemoryBlobCache OverrideGlobals(IScheduler? scheduler = null, params KeyValuePair<string, byte[]>[] initialContents)
         {
             var local = BlobCache.LocalMachine;
             var user = BlobCache.UserAccount;
@@ -143,7 +143,7 @@ namespace Akavache
         /// <param name="initialContents">The default inner contents to use.</param>
         /// <param name="scheduler">The default scheduler to use.</param>
         /// <returns>A generated cache.</returns>
-        public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler scheduler = null)
+        public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler? scheduler = null)
         {
             return OverrideGlobals(scheduler, initialContents.ToArray());
         }
@@ -154,7 +154,7 @@ namespace Akavache
         /// <param name="initialContents">The default inner contents to use.</param>
         /// <param name="scheduler">The default scheduler to use.</param>
         /// <returns>A generated cache.</returns>
-        public static InMemoryBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler scheduler = null)
+        public static InMemoryBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler? scheduler = null)
         {
             var initialSerializedContents = initialContents
                 .Select(item => new KeyValuePair<string, byte[]>(item.Key, JsonSerializationMixin.SerializeObject(item.Value)))
@@ -434,10 +434,10 @@ namespace Akavache
 
             if (isDisposing)
             {
-                Scheduler = null;
+                Scheduler = CurrentThreadScheduler.Instance;
                 lock (_cache)
                 {
-                    _cache = null;
+                    _cache.Clear();
                 }
 
                 _inner?.Dispose();
@@ -464,6 +464,7 @@ namespace Akavache
 
         private T DeserializeObject<T>(byte[] data)
         {
+#pragma warning disable CS8603 // Possible null reference return.
             var serializer = GetSerializer();
             using (var reader = new BsonDataReader(new MemoryStream(data)))
             {
@@ -476,7 +477,14 @@ namespace Akavache
 
                 try
                 {
-                    return serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+                    var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
+
+                    if (wrapper is null)
+                    {
+                        return default;
+                    }
+
+                    return wrapper.Value;
                 }
                 catch (Exception ex)
                 {
@@ -484,6 +492,7 @@ namespace Akavache
                 }
 
                 return serializer.Deserialize<T>(reader);
+#pragma warning restore CS8603 // Possible null reference return.
             }
         }
 

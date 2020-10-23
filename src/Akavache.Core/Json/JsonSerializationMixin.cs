@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -279,16 +279,17 @@ namespace Akavache
             this IBlobCache blobCache,
             string key,
             Func<IObservable<T>> fetchFunc,
-            Func<DateTimeOffset, bool> fetchPredicate = null,
+            Func<DateTimeOffset, bool>? fetchPredicate = null,
             DateTimeOffset? absoluteExpiration = null,
             bool shouldInvalidateOnError = false,
-            Func<T, bool> cacheValidationPredicate = null)
+            Func<T, bool>? cacheValidationPredicate = null)
         {
             if (blobCache is null)
             {
                 throw new ArgumentNullException(nameof(blobCache));
             }
 
+#pragma warning disable CS8604 // Possible null reference argument.
             var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
                 .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
                 .Where(x => x)
@@ -315,6 +316,8 @@ namespace Akavache
 
             var result = blobCache.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
                 .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
+
+#pragma warning restore CS8604 // Possible null reference argument.
 
             return result.SelectMany(x => x.Item2 ? Observable.Return(x.Item1) : Observable.Empty<T>())
                 .Concat(fetch)
@@ -357,10 +360,10 @@ namespace Akavache
             this IBlobCache blobCache,
             string key,
             Func<Task<T>> fetchFunc,
-            Func<DateTimeOffset, bool> fetchPredicate = null,
+            Func<DateTimeOffset, bool>? fetchPredicate = null,
             DateTimeOffset? absoluteExpiration = null,
             bool shouldInvalidateOnError = false,
-            Func<T, bool> cacheValidationPredicate = null)
+            Func<T, bool>? cacheValidationPredicate = null)
         {
             if (blobCache is null)
             {
@@ -453,7 +456,9 @@ namespace Akavache
                 var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
 
                 var ret = JsonConvert.DeserializeObject<T>(bytes, settings);
+#pragma warning disable CS8604 // Possible null reference argument.
                 return Observable.Return(ret);
+#pragma warning restore CS8604 // Possible null reference argument.
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -153,7 +153,7 @@ namespace Akavache.Tests
         /// <param name="blobCache">The blob cache to perform the operation against.</param>
         /// <param name="data">The data to grab.</param>
         /// <returns>A task with the data found.</returns>
-        private async Task<(TData first, TData second)> PerformTimeStampGrab<TData>(IBlobCache blobCache, TData data)
+        private async Task<(TData First, TData Second)> PerformTimeStampGrab<TData>(IBlobCache blobCache, TData data)
         {
             const string key = "key";
 

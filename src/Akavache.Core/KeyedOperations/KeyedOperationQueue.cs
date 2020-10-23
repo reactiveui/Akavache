@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -24,16 +24,16 @@ namespace Akavache
         private readonly IScheduler _scheduler;
         private readonly Subject<KeyedOperation> _queuedOps = new Subject<KeyedOperation>();
         private readonly IConnectableObservable<KeyedOperation> _resultObs;
-        private AsyncSubject<Unit> _shutdownObs;
+        private AsyncSubject<Unit>? _shutdownObs;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyedOperationQueue"/> class.
         /// </summary>
         /// <param name="scheduler">The scheduler for Observable operations.</param>
         [SuppressMessage("Design", "CA2000: call dispose", Justification = "Disposed by member")]
-        public KeyedOperationQueue(IScheduler scheduler = null)
+        public KeyedOperationQueue(IScheduler? scheduler = null)
         {
-            scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
+            scheduler ??= BlobCache.TaskpoolScheduler;
             _scheduler = scheduler;
             _resultObs = _queuedOps
                 .GroupBy(x => x.Key)
@@ -85,14 +85,10 @@ namespace Akavache
         public IObservable<T> EnqueueObservableOperation<T>(string key, Func<IObservable<T>> asyncCalculationFunc)
         {
             int id = Interlocked.Increment(ref _sequenceNumber);
-            key = key ?? "__NONE__";
+            key ??= "__NONE__";
 
             this.Log().Debug(CultureInfo.InvariantCulture, "Queuing operation {0} with key {1}", id, key);
-            var item = new KeyedOperation<T>
-            {
-                Key = key, Id = id,
-                Func = asyncCalculationFunc,
-            };
+            var item = new KeyedOperation<T>(asyncCalculationFunc, key, id);
 
             _queuedOps.OnNext(item);
             return item.Result;

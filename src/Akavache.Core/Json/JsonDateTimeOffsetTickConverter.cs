@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -12,7 +12,7 @@ namespace Akavache
     {
         public static JsonDateTimeOffsetTickConverter Default { get; } = new JsonDateTimeOffsetTickConverter();
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             if (value is DateTimeOffset dateTimeOffset)
             {
@@ -20,16 +20,16 @@ namespace Akavache
             }
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Date)
+            if (reader.TokenType == JsonToken.Date && reader.Value != null)
             {
                 return (DateTimeOffset)reader.Value;
             }
 
             var data = serializer.Deserialize<DateTimeOffsetData>(reader);
 
-            if (data == null)
+            if (data is null)
             {
                 return null;
             }

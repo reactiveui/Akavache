@@ -1,9 +1,10 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461</TargetFrameworks>
     <NoWarn>$(NoWarn);CA1307;CA2000;CA1062</NoWarn>
+    <LangVersion>latest</LangVersion>    
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,15 +15,18 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Xunit.StaFact" Version="1.0.37" />
-    <PackageReference Include="ReactiveUI.Testing" Version="11.*" />
+    <PackageReference Include="ReactiveUI.Testing" Version="12.*" />
     <PackageReference Include="Splat" Version="9.*" />
     <PackageReference Include="Splat.Drawing" Version="9.*" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.4" />
-    <PackageReference Include="Shouldly" Version="4.0.0-beta0003" />
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="DiffEngine" Version="6.1.4" />
+    <PackageReference Include="PublicApiGenerator" Version="10.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Akavache.Drawing\Akavache.Drawing.csproj" />
     <ProjectReference Include="..\Akavache\Akavache.csproj" />
   </ItemGroup>
 

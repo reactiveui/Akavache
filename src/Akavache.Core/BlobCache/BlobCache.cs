@@ -1,4 +1,4 @@
-// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -22,28 +22,28 @@ namespace Akavache
     /// </summary>
     public static class BlobCache
     {
-        private static string _applicationName;
-        private static IBlobCache _localMachine;
-        private static IBlobCache _userAccount;
-        private static ISecureBlobCache _secure;
+        private static string? _applicationName;
+        private static IBlobCache? _localMachine;
+        private static IBlobCache? _userAccount;
+        private static ISecureBlobCache? _secure;
         private static bool _shutdownRequested;
 
-        private static IScheduler _taskPoolOverride;
+        private static IScheduler? _taskPoolOverride;
 
         [ThreadStatic]
-        private static IBlobCache _unitTestLocalMachine;
+        private static IBlobCache? _unitTestLocalMachine;
 
         [ThreadStatic]
-        private static IBlobCache _unitTestUserAccount;
+        private static IBlobCache? _unitTestUserAccount;
 
         [ThreadStatic]
-        private static ISecureBlobCache _unitTestSecure;
+        private static ISecureBlobCache? _unitTestSecure;
 
         static BlobCache()
         {
             Locator.RegisterResolverCallbackChanged(() =>
             {
-                if (Locator.CurrentMutable == null)
+                if (Locator.CurrentMutable is null)
                 {
                     return;
                 }
@@ -63,7 +63,7 @@ namespace Akavache
         {
             get
             {
-                if (_applicationName == null)
+                if (_applicationName is null)
                 {
                     throw new Exception("Make sure to set BlobCache.ApplicationName on startup");
                 }
@@ -87,7 +87,7 @@ namespace Akavache
                 if (ModeDetector.InUnitTestRunner())
                 {
                     _unitTestLocalMachine = value;
-                    _localMachine = _localMachine ?? value;
+                    _localMachine ??= value;
                 }
                 else
                 {
@@ -109,7 +109,7 @@ namespace Akavache
                 if (ModeDetector.InUnitTestRunner())
                 {
                     _unitTestUserAccount = value;
-                    _userAccount = _userAccount ?? value;
+                    _userAccount ??= value;
                 }
                 else
                 {
@@ -130,7 +130,7 @@ namespace Akavache
                 if (ModeDetector.InUnitTestRunner())
                 {
                     _unitTestSecure = value;
-                    _secure = _secure ?? value;
+                    _secure ??= value;
                 }
                 else
                 {
@@ -215,42 +215,42 @@ namespace Akavache
 
             public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
             {
-                return null;
+                return Observable.Empty<Unit>();
             }
 
             public IObservable<byte[]> Get(string key)
             {
-                return null;
+                return Observable.Empty<byte[]>();
             }
 
             public IObservable<IEnumerable<string>> GetAllKeys()
             {
-                return null;
+                return Observable.Empty<IEnumerable<string>>();
             }
 
             public IObservable<DateTimeOffset?> GetCreatedAt(string key)
             {
-                return null;
+                return Observable.Empty<DateTimeOffset?>();
             }
 
             public IObservable<Unit> Flush()
             {
-                return null;
+                return Observable.Empty<Unit>();
             }
 
             public IObservable<Unit> Invalidate(string key)
             {
-                return null;
+                return Observable.Empty<Unit>();
             }
 
             public IObservable<Unit> InvalidateAll()
             {
-                return null;
+                return Observable.Empty<Unit>();
             }
 
             public IObservable<Unit> Vacuum()
             {
-                return null;
+                return Observable.Empty<Unit>();
             }
         }
     }

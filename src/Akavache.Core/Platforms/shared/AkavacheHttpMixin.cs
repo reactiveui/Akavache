@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -34,7 +34,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -56,7 +56,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -84,7 +84,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -122,7 +122,7 @@ namespace Akavache
         /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>The data downloaded from the URL.</returns>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, IDictionary<string, string> headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -149,8 +149,8 @@ namespace Akavache
 
         private static IObservable<WebResponse> MakeWebRequest(
             Uri uri,
-            IDictionary<string, string> headers = null,
-            string content = null,
+            IDictionary<string, string>? headers = null,
+            string? content = null,
             int retries = 3,
             TimeSpan? timeout = null)
         {
@@ -163,7 +163,7 @@ namespace Akavache
                 {
                     var hwr = CreateWebRequest(uri, headers);
 
-                    if (content == null)
+                    if (content is null)
                     {
                         return Observable.Start(() => hwr.GetResponse(), BlobCache.TaskpoolScheduler);
                     }
@@ -184,7 +184,7 @@ namespace Akavache
                 {
                     var hwr = CreateWebRequest(uri, headers);
 
-                    if (content == null)
+                    if (content is null)
                     {
                         return Observable.FromAsync(() => Task.Factory.FromAsync(hwr.BeginGetResponse, hwr.EndGetResponse, hwr));
                     }
@@ -210,7 +210,7 @@ namespace Akavache
             return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), BlobCache.TaskpoolScheduler).Retry(retries);
         }
 
-        private static WebRequest CreateWebRequest(Uri uri, IDictionary<string, string> headers)
+        private static WebRequest CreateWebRequest(Uri uri, IDictionary<string, string>? headers)
         {
             var hwr = WebRequest.Create(uri);
             if (headers != null)
@@ -224,10 +224,13 @@ namespace Akavache
             return hwr;
         }
 
-        private IObservable<byte[]> ProcessWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
+        private static IObservable<byte[]> ProcessWebResponse(WebResponse wr, string url, DateTimeOffset? absoluteExpiration)
         {
-            var hwr = (HttpWebResponse)wr;
-            Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be: " + url + " with expiry: " + absoluteExpiration);
+            if (!(wr is HttpWebResponse hwr))
+            {
+                throw new ArgumentException("The Web Response is somehow null but shouldn't be: " + url + " with expiry: " + absoluteExpiration, nameof(wr));
+            }
+
             if ((int)hwr.StatusCode >= 400)
             {
                 return Observable.Throw<byte[]>(new WebException(hwr.StatusDescription));
@@ -237,7 +240,11 @@ namespace Akavache
             {
                 using (var responseStream = hwr.GetResponseStream())
                 {
-                    Debug.Assert(responseStream != null, "The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
+                    if (responseStream is null)
+                    {
+                        throw new InvalidOperationException("The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
+                    }
+
                     responseStream.CopyTo(ms);
                 }
 
@@ -246,10 +253,13 @@ namespace Akavache
             }
         }
 
-        private IObservable<byte[]> ProcessWebResponse(WebResponse wr, Uri url, DateTimeOffset? absoluteExpiration)
+        private static IObservable<byte[]> ProcessWebResponse(WebResponse wr, Uri url, DateTimeOffset? absoluteExpiration)
         {
-            var hwr = (HttpWebResponse)wr;
-            Debug.Assert(hwr != null, "The Web Response is somehow null but shouldn't be: " + url + " with expiry: " + absoluteExpiration);
+            if (!(wr is HttpWebResponse hwr))
+            {
+                throw new ArgumentException("The Web Response is somehow null but shouldn't be: " + url + " with expiry: " + absoluteExpiration, nameof(wr));
+            }
+
             if ((int)hwr.StatusCode >= 400)
             {
                 return Observable.Throw<byte[]>(new WebException(hwr.StatusDescription));
@@ -259,7 +269,11 @@ namespace Akavache
             {
                 using (var responseStream = hwr.GetResponseStream())
                 {
-                    Debug.Assert(responseStream != null, "The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
+                    if (responseStream is null)
+                    {
+                        throw new InvalidOperationException("The response stream is somehow null: " + url + " with expiry: " + absoluteExpiration);
+                    }
+
                     responseStream.CopyTo(ms);
                 }
 

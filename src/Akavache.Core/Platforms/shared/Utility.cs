@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -51,9 +51,9 @@ namespace Akavache
         }
 
 #if !WINDOWS_UWP
-        public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler scheduler = null)
+        public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler? scheduler = null)
         {
-            scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
+            scheduler ??= BlobCache.TaskpoolScheduler;
             var ret = new AsyncSubject<Stream>();
 
             Observable.Start(
@@ -91,17 +91,17 @@ namespace Akavache
 
         public static void CreateRecursive(this DirectoryInfo directoryInfo)
         {
-            directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
-            {
-                var path = Path.Combine(parent, dir);
+            _ = directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
+              {
+                  var path = Path.Combine(parent, dir);
 
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
+                  if (!Directory.Exists(path))
+                  {
+                      Directory.CreateDirectory(path);
+                  }
 
-                return path;
-            });
+                  return path;
+              });
         }
 
         public static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
@@ -132,7 +132,7 @@ namespace Akavache
         /// <param name="observable">The observable.</param>
         /// <param name="message">The message to log.</param>
         /// <returns>An observable.</returns>
-        public static IObservable<T> LogErrors<T>(this IObservable<T> observable, string message = null)
+        public static IObservable<T> LogErrors<T>(this IObservable<T> observable, string? message = null)
         {
             return Observable.Create<T>(subj =>
             {
@@ -163,7 +163,7 @@ namespace Akavache
         /// <param name="destination">The stream to copy to.</param>
         /// <param name="scheduler">The scheduler to schedule on.</param>
         /// <returns>An observable that signals when the operation has finished.</returns>
-        public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination, IScheduler scheduler = null)
+        public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination, IScheduler? scheduler = null)
 #endif
         {
 #if WINDOWS_UWP

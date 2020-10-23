@@ -1,4 +1,4 @@
-// Copyright (c) 2019 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2020 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -75,7 +75,12 @@ namespace Akavache
         protected static string GetAssemblyDirectoryName()
         {
             var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Debug.Assert(assemblyDirectoryName != null, "The directory name of the assembly location is null");
+
+            if (assemblyDirectoryName is null)
+            {
+                throw new InvalidOperationException("The directory name of the assembly location is null");
+            }
+
             return assemblyDirectoryName;
         }
     }
