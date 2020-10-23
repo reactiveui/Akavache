@@ -1,4 +1,4 @@
-[![NuGet Stats](https://img.shields.io/nuget/v/akavache.svg)](https://www.nuget.org/packages/akavache) [![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/Akavache-CI)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=25) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveui/akavache)
+[![NuGet Stats](https://img.shields.io/nuget/v/akavache.svg)](https://www.nuget.org/packages/akavache) ![Build](https://github.com/reactiveui/Akavache/workflows/Build/badge.svg) [![Code Coverage](https://codecov.io/gh/reactiveui/akavache/branch/main/graph/badge.svg)](https://codecov.io/gh/reactiveui/akavache)
 <br>
 <a href="https://www.nuget.org/packages/akavache">
         <img src="https://img.shields.io/nuget/dt/akavache.svg">
