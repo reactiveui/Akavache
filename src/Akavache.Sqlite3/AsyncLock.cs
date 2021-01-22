@@ -46,7 +46,7 @@ namespace Akavache.Sqlite3.Internal
 
             return wait
                 .ContinueWith(
-                    (task, state) => task.IsCanceled ? null : (IDisposable)state,
+                    (task, state) => task.IsCanceled || state is null ? null : (IDisposable)state,
                     _releaser.Result,
                     cancellationToken,
                     TaskContinuationOptions.ExecuteSynchronously,

@@ -43,7 +43,7 @@ namespace Akavache.Tests
         /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value != null)
+            if (value is not null)
             {
                 var dateTime = value is DateTime dt ? dt : ((DateTime?)value).Value;
                 serializer.Serialize(writer, dateTime.ToUniversalTime().Ticks);

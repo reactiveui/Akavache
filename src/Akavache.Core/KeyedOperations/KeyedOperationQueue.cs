@@ -102,7 +102,7 @@ namespace Akavache
         {
             lock (_queuedOps)
             {
-                if (_shutdownObs != null)
+                if (_shutdownObs is not null)
                 {
                     return _shutdownObs;
                 }
@@ -113,7 +113,7 @@ namespace Akavache
                 var sub = _resultObs.Materialize()
                     .Where(x => x.Kind != NotificationKind.OnNext)
                     .SelectMany(x =>
-                        (x.Kind == NotificationKind.OnError) ?
+                        (x.Kind == NotificationKind.OnError && x.Exception is not null) ?
                             Observable.Throw<Unit>(x.Exception) :
                             Observable.Return(Unit.Default))
                     .Multicast(_shutdownObs);
@@ -156,19 +156,20 @@ namespace Akavache
             var ret = new AsyncSubject<T>();
             Observable.Start(
                 () =>
-            {
-                try
                 {
-                    var val = calculationFunc();
-                    ret.OnNext(val);
-                    ret.OnCompleted();
-                }
-                catch (Exception ex)
-                {
-                    this.Log().Warn(ex, "Failure running queued op");
-                    ret.OnError(ex);
-                }
-            }, _scheduler);
+                    try
+                    {
+                        var val = calculationFunc();
+                        ret.OnNext(val);
+                        ret.OnCompleted();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Log().Warn(ex, "Failure running queued op");
+                        ret.OnError(ex);
+                    }
+                },
+                _scheduler);
 
             return ret;
         }

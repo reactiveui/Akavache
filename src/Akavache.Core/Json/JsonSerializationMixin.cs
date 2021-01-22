@@ -80,7 +80,7 @@ namespace Akavache
         /// <param name="key">The key to look up in the cache
         /// modified key name. If this is true, GetAllObjects will not find this object.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        public static IObservable<T> GetObject<T>(this IBlobCache blobCache, string key)
+        public static IObservable<T?> GetObject<T>(this IBlobCache blobCache, string key)
         {
             if (blobCache is null)
             {
@@ -122,7 +122,7 @@ namespace Akavache
                     .Where(y =>
                         y.StartsWith(GetTypePrefixedKey(string.Empty, typeof(T)), StringComparison.InvariantCulture))
                     .ToObservable())
-                .SelectMany(x => blobCache.GetObject<T>(x)
+                .SelectMany(x => blobCache.GetObject<T>(x).Where(x => x is not null).Select(x => x!)
                     .Catch(Observable.Empty<T>()))
                 .ToList();
         }
@@ -147,14 +147,14 @@ namespace Akavache
         /// <typeparam name="T">The type of item to get.</typeparam>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
-        public static IObservable<T> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
                 throw new ArgumentNullException(nameof(blobCache));
             }
 
-            return blobCache.GetObject<T>(key).Catch<T, Exception>(ex =>
+            return blobCache.GetObject<T>(key).Catch<T?, Exception>(ex =>
             {
                 var prefixedKey = blobCache.GetHashCode().ToString(CultureInfo.InvariantCulture) + key;
 
@@ -184,7 +184,7 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
-        public static IObservable<T> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -210,7 +210,7 @@ namespace Akavache
         /// <param name="absoluteExpiration">An optional expiration date.</param>
         /// <returns>A Future result representing the deserialized object from
         /// the cache.</returns>
-        public static IObservable<T> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+        public static IObservable<T?> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null)
         {
             if (blobCache is null)
             {
@@ -275,7 +275,7 @@ namespace Akavache
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
         [SuppressMessage("Design", "CA2000: call dispose", Justification = "Disposed by member")]
-        public static IObservable<T> GetAndFetchLatest<T>(
+        public static IObservable<T?> GetAndFetchLatest<T>(
             this IBlobCache blobCache,
             string key,
             Func<IObservable<T>> fetchFunc,
@@ -291,7 +291,7 @@ namespace Akavache
 
 #pragma warning disable CS8604 // Possible null reference argument.
             var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
-                .Select(x => fetchPredicate == null || x == null || fetchPredicate(x.Value))
+                .Select(x => fetchPredicate is null || x is null || fetchPredicate(x.Value))
                 .Where(x => x)
                 .SelectMany(_ =>
                 {
@@ -305,23 +305,28 @@ namespace Akavache
 
                     return fetchObs
                         .SelectMany(x =>
-                            cacheValidationPredicate != null && !cacheValidationPredicate(x)
+                            cacheValidationPredicate is not null && !cacheValidationPredicate(x)
                                 ? Observable.Return(default(T))
                                 : blobCache.InvalidateObject<T>(key).Select(__ => x))
                         .SelectMany(x =>
-                            cacheValidationPredicate != null && !cacheValidationPredicate(x)
+                            cacheValidationPredicate is not null && !cacheValidationPredicate(x)
                                 ? Observable.Return(default(T))
                                 : blobCache.InsertObject(key, x, absoluteExpiration).Select(__ => x));
                 });
 
-            var result = blobCache.GetObject<T>(key).Select(x => new Tuple<T, bool>(x, true))
-                .Catch(Observable.Return(new Tuple<T, bool>(default(T), false)));
+            if (fetch is null)
+            {
+                return Observable.Throw<T>(new Exception("Could not find a valid way to fetch the value"));
+            }
+
+            var result = blobCache.GetObject<T>(key).Select(x => (x, true))
+                .Catch(Observable.Return((default(T), false)));
 
 #pragma warning restore CS8604 // Possible null reference argument.
 
             return result.SelectMany(x => x.Item2 ? Observable.Return(x.Item1) : Observable.Empty<T>())
                 .Concat(fetch)
-                .Multicast(new ReplaySubject<T>())
+                .Multicast(new ReplaySubject<T?>())
                 .RefCount();
         }
 
@@ -356,7 +361,7 @@ namespace Akavache
         /// if the fetched value should be cached.</param>
         /// <returns>An Observable stream containing either one or two
         /// results (possibly a cached version, then the latest version).</returns>
-        public static IObservable<T> GetAndFetchLatest<T>(
+        public static IObservable<T?> GetAndFetchLatest<T>(
             this IBlobCache blobCache,
             string key,
             Func<Task<T>> fetchFunc,
@@ -447,7 +452,7 @@ namespace Akavache
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
         }
 
-        internal static IObservable<T> DeserializeObject<T>(byte[] x)
+        internal static IObservable<T?> DeserializeObject<T>(byte[] x)
         {
             var settings = Locator.Current.GetService<JsonSerializerSettings>();
 

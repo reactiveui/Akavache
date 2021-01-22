@@ -62,7 +62,7 @@ namespace Akavache.Sqlite3
             {
                 _dateTimeKind = value;
 
-                if (_jsonDateTimeContractResolver != null)
+                if (_jsonDateTimeContractResolver is not null)
                 {
                     _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
                 }
@@ -295,7 +295,7 @@ namespace Akavache.Sqlite3
         }
 
         /// <inheritdoc />
-        public IObservable<T> GetObject<T>(string key)
+        public IObservable<T?> GetObject<T>(string key)
         {
             if (_disposed)
             {
@@ -340,12 +340,21 @@ namespace Akavache.Sqlite3
                 return Observable.Throw<IEnumerable<T>>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
-            return _initializer.SelectMany(_ => _opQueue.SelectTypes(new[] { typeof(T).FullName })
+            var typeFullName = typeof(T).FullName;
+
+            if (typeFullName is null)
+            {
+                return Observable.Throw<IEnumerable<T>>(new InvalidOperationException("The generic type does not have a valid full name and is required"));
+            }
+
+            return _initializer.SelectMany(_ => _opQueue.SelectTypes(new[] { typeFullName })
                     .SelectMany(x => x.ToObservable()
 #pragma warning disable CS8604 // Possible null reference argument.
                         .SelectMany(y => AfterReadFromDiskFilter(y.Value, Scheduler))
 #pragma warning restore CS8604 // Possible null reference argument.
                         .SelectMany(DeserializeObject<T>)
+                        .Where(y => y is not null)
+                        .Select(y => y!)
                         .ToList()))
                 .PublishLast().PermaRef();
         }
@@ -374,7 +383,14 @@ namespace Akavache.Sqlite3
                 return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
             }
 
-            return _initializer.SelectMany(_ => _opQueue.InvalidateTypes(new[] { typeof(T).FullName }))
+            var typeFullName = typeof(T).FullName;
+
+            if (typeFullName is null)
+            {
+                return Observable.Throw<Unit>(new InvalidOperationException("The generic type does not have a valid full name and is required"));
+            }
+
+            return _initializer.SelectMany(_ => _opQueue.InvalidateTypes(new[] { typeFullName }))
                 .PublishLast().PermaRef();
         }
 
@@ -572,7 +588,7 @@ namespace Akavache.Sqlite3
                     })
                 .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
                 .Merge()
-                .SelectMany(x => DeserializeObject<T>(x.data).Select(obj => (key: x.key, data: obj)))
+                .SelectMany(x => DeserializeObject<T>(x.data).Where(y => y is not null).Select(obj => (key: x.key, data: obj!)))
                 .ToDictionary(x => x.key, x => x.data)
                 .PublishLast().PermaRef();
         }
@@ -642,7 +658,8 @@ namespace Akavache.Sqlite3
                             _opQueue?.Dispose();
                             Connection.Dispose();
                         }
-                    }, Scheduler);
+                    },
+                    Scheduler);
 
                 cleanup.Multicast(_shutdown).PermaRef();
             }
@@ -791,7 +808,7 @@ namespace Akavache.Sqlite3
             }
         }
 
-        private IObservable<T> DeserializeObject<T>(byte[] data)
+        private IObservable<T?> DeserializeObject<T>(byte[] data)
         {
             var serializer = GetSerializer();
             using (var reader = new BsonDataReader(new MemoryStream(data)))

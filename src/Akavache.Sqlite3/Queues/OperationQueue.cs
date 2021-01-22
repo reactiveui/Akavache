@@ -90,7 +90,7 @@ namespace Akavache.Sqlite3
         /// <returns>A disposable which when Disposed will stop the queue.</returns>
         public IDisposable Start()
         {
-            if (_start != null)
+            if (_start is not null)
             {
                 return _start;
             }
@@ -127,7 +127,7 @@ namespace Akavache.Sqlite3
                         // in the empty list case, we want to wait until we have an item.
                         // Once we have a single item, we try to fetch as many as possible
                         // until we've got enough items.
-                        OperationQueueItem item;
+                        OperationQueueItem? item;
                         try
                         {
                             item = _operationQueue.Take(_shouldQuit.Token);
@@ -146,7 +146,7 @@ namespace Akavache.Sqlite3
                         }
 
                         toProcess.Add(item);
-                        while (toProcess.Count < Constants.OperationQueueChunkSize && _operationQueue.TryTake(out item))
+                        while (toProcess.Count < Constants.OperationQueueChunkSize && _operationQueue.TryTake(out item) && item is not null)
                         {
                             toProcess.Add(item);
                         }

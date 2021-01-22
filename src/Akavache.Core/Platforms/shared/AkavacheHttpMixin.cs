@@ -174,7 +174,8 @@ namespace Akavache
                         {
                             hwr.GetRequestStream().Write(buf, 0, buf.Length);
                             return hwr.GetResponse();
-                        }, BlobCache.TaskpoolScheduler);
+                        },
+                        BlobCache.TaskpoolScheduler);
                 });
             }
             else
@@ -201,7 +202,8 @@ namespace Akavache
                                 .SelectMany(x => x.WriteAsyncRx(buf, 0, buf.Length))
                                 .SelectMany(_ => Observable.FromAsync(() => Task.Factory.FromAsync(hwr.BeginGetResponse, hwr.EndGetResponse, hwr)))
                                 .Multicast(ret).Connect();
-                        }, BlobCache.TaskpoolScheduler);
+                        },
+                        BlobCache.TaskpoolScheduler);
 
                     return ret;
                 });
@@ -213,7 +215,7 @@ namespace Akavache
         private static WebRequest CreateWebRequest(Uri uri, IDictionary<string, string>? headers)
         {
             var hwr = WebRequest.Create(uri);
-            if (headers != null)
+            if (headers is not null)
             {
                 foreach (var x in headers)
                 {

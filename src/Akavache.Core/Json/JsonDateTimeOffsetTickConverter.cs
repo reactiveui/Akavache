@@ -22,7 +22,7 @@ namespace Akavache
 
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Date && reader.Value != null)
+            if (reader.TokenType == JsonToken.Date && reader.Value is not null)
             {
                 return (DateTimeOffset)reader.Value;
             }

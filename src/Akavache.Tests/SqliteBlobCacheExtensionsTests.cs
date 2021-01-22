@@ -49,7 +49,7 @@ namespace Akavache.Tests
                     fixture.Vacuum().Wait();
                 }
 
-                Assert.True(new FileInfo(dbPath).Length < size);
+                Assert.True(new FileInfo(dbPath).Length <= size);
             }
         }
 

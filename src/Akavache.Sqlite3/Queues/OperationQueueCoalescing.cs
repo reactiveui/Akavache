@@ -61,7 +61,7 @@ namespace Akavache.Sqlite3
             {
                 // NB: We generally don't want to optimize any op that doesn't
                 // have a key
-                if (key == NullKey)
+                if (key is NullKey)
                 {
                     continue;
                 }
@@ -138,7 +138,7 @@ namespace Akavache.Sqlite3
                     continue;
                 }
 
-                if (currentWrites != null)
+                if (currentWrites is not null)
                 {
                     if (currentWrites.Count == 1)
                     {
@@ -163,7 +163,7 @@ namespace Akavache.Sqlite3
                 yield return item;
             }
 
-            if (currentWrites != null)
+            if (currentWrites is not null)
             {
                 yield return new OperationQueueItem(
                     CombineSubjectsByOperation(
@@ -187,7 +187,13 @@ namespace Akavache.Sqlite3
 
             foreach (var v in operationQueueItems)
             {
-                var key = v.ParametersAsKeys.First();
+                var key = v.ParametersAsKeys?.First();
+
+                if (key is null)
+                {
+                    continue;
+                }
+
                 elementMap[key] = v.CompletionAsElements;
             }
 
@@ -249,7 +255,7 @@ namespace Akavache.Sqlite3
             var elements = operationQueueItems.SelectMany(x =>
             {
                 subj.Subscribe(x.CompletionAsUnit);
-                return x.ParametersAsElements;
+                return x.ParametersAsElements ?? Enumerable.Empty<CacheElement>();
             }).ToList();
 
             return OperationQueueItem.CreateInsert(
@@ -269,7 +275,7 @@ namespace Akavache.Sqlite3
             var elements = operationQueueItems.SelectMany(x =>
             {
                 subj.Subscribe(x.CompletionAsUnit);
-                return x.ParametersAsKeys;
+                return x.ParametersAsKeys ?? Enumerable.Empty<string>();
             }).ToList();
 
             return OperationQueueItem.CreateInvalidate(
@@ -282,19 +288,19 @@ namespace Akavache.Sqlite3
             // single item, which the OperationQueue input methods guarantee
             switch (item.OperationType)
             {
-                case OperationType.BulkInsertSqliteOperation:
+                case OperationType.BulkInsertSqliteOperation when item.ParametersAsElements is not null:
                     return item.ParametersAsElements.First().Key;
-                case OperationType.BulkInvalidateByTypeSqliteOperation:
-                case OperationType.BulkInvalidateSqliteOperation:
-                case OperationType.BulkSelectSqliteOperation:
-                case OperationType.BulkSelectByTypeSqliteOperation:
+                case OperationType.BulkInvalidateByTypeSqliteOperation when item.ParametersAsKeys is not null:
+                case OperationType.BulkInvalidateSqliteOperation when item.ParametersAsKeys is not null:
+                case OperationType.BulkSelectSqliteOperation when item.ParametersAsKeys is not null:
+                case OperationType.BulkSelectByTypeSqliteOperation when item.ParametersAsKeys is not null:
                     return item.ParametersAsKeys.First();
                 case OperationType.GetKeysSqliteOperation:
                 case OperationType.InvalidateAllSqliteOperation:
                 case OperationType.VacuumSqliteOperation:
                 case OperationType.DeleteExpiredSqliteOperation:
                 case OperationType.DoNothing:
-                    return default(string);
+                    return default;
                 default:
                     throw new ArgumentException("Unknown operation", nameof(item));
             }

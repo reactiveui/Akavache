@@ -555,7 +555,7 @@ namespace Akavache.Tests
                     // GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
                     await fixture.InsertObject(key, items);
 
-                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i != null && i.Any()).LastAsync();
+                    await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i is not null && i.Any()).LastAsync();
 
                     var result = await fixture.GetObject<List<int>>(key).FirstAsync();
 

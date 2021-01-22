@@ -84,7 +84,8 @@ namespace Akavache
                     {
                         ret.OnError(ex);
                     }
-                }, scheduler);
+                },
+                scheduler);
 
             return ret;
         }
@@ -108,7 +109,7 @@ namespace Akavache
         {
             var root = Path.GetPathRoot(directoryInfo.FullName);
             var components = new List<string>();
-            for (var path = directoryInfo.FullName; path != root && path != null; path = Path.GetDirectoryName(path))
+            for (var path = directoryInfo.FullName; path != root && path is not null; path = Path.GetDirectoryName(path))
             {
                 var filename = Path.GetFileName(path);
                 if (string.IsNullOrEmpty(filename))
@@ -119,7 +120,11 @@ namespace Akavache
                 components.Add(filename);
             }
 
-            components.Add(root);
+            if (root is not null)
+            {
+                components.Add(root);
+            }
+
             components.Reverse();
             return components;
         }
@@ -143,7 +148,8 @@ namespace Akavache
                         var msg = message ?? "0x" + observable.GetHashCode().ToString("x", CultureInfo.InvariantCulture);
                         LogHost.Default.Info(ex, "{0} failed", msg);
                         subj.OnError(ex);
-                    }, subj.OnCompleted);
+                    },
+                    subj.OnCompleted);
             });
         }
 
@@ -198,7 +204,8 @@ namespace Akavache
                         stream.Dispose();
                         destination.Dispose();
                     }
-                }, scheduler ?? BlobCache.TaskpoolScheduler);
+                },
+                scheduler ?? BlobCache.TaskpoolScheduler);
 #endif
         }
     }

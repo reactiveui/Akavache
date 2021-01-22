@@ -129,12 +129,10 @@ namespace Akavache
             }
 
             return keys.ToObservable()
-                .SelectMany(x =>
-                {
-                    return blobCache.GetObject<T>(x)
-                        .Select(y => new KeyValuePair<string, T>(x, y))
-                        .Catch<KeyValuePair<string, T>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, T>>());
-                })
+                .SelectMany(x => blobCache.GetObject<T>(x)
+                    .Where(y => y is not null)
+                    .Select(y => new KeyValuePair<string, T>(x, y!))
+                    .Catch<KeyValuePair<string, T>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, T>>()))
                 .ToDictionary(k => k.Key, v => v.Value);
         }
 
