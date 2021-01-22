@@ -1,3 +1,4 @@
+[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/reactiveui/akavache")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Drawing")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Mobile")]
@@ -163,13 +164,13 @@ namespace Akavache
     public static class JsonSerializationMixin
     {
         public static System.IObservable<System.Collections.Generic.IEnumerable<T>> GetAllObjects<T>(this Akavache.IBlobCache blobCache) { }
-        public static System.IObservable<T> GetAndFetchLatest<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate = null, System.DateTimeOffset? absoluteExpiration = default, bool shouldInvalidateOnError = false, System.Func<T, bool>? cacheValidationPredicate = null) { }
-        public static System.IObservable<T> GetAndFetchLatest<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate = null, System.DateTimeOffset? absoluteExpiration = default, bool shouldInvalidateOnError = false, System.Func<T, bool>? cacheValidationPredicate = null) { }
-        public static System.IObservable<T> GetObject<T>(this Akavache.IBlobCache blobCache, string key) { }
+        public static System.IObservable<T?> GetAndFetchLatest<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate = null, System.DateTimeOffset? absoluteExpiration = default, bool shouldInvalidateOnError = false, System.Func<T, bool>? cacheValidationPredicate = null) { }
+        public static System.IObservable<T?> GetAndFetchLatest<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate = null, System.DateTimeOffset? absoluteExpiration = default, bool shouldInvalidateOnError = false, System.Func<T, bool>? cacheValidationPredicate = null) { }
+        public static System.IObservable<T?> GetObject<T>(this Akavache.IBlobCache blobCache, string key) { }
         public static System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(this Akavache.IBlobCache blobCache, string key) { }
-        public static System.IObservable<T> GetOrCreateObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<T> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
-        public static System.IObservable<T> GetOrFetchObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.IObservable<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
-        public static System.IObservable<T> GetOrFetchObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<T?> GetOrCreateObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<T> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<T?> GetOrFetchObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.IObservable<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<T?> GetOrFetchObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
         public static System.IObservable<System.Reactive.Unit> InsertAllObjects<T>(this Akavache.IBlobCache blobCache, System.Collections.Generic.IDictionary<string, T> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default) { }
         public static System.IObservable<System.Reactive.Unit> InsertObject<T>(this Akavache.IBlobCache blobCache, string key, T value, System.DateTimeOffset? absoluteExpiration = default) { }
         public static System.IObservable<System.Reactive.Unit> InvalidateAllObjects<T>(this Akavache.IBlobCache blobCache) { }

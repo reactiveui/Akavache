@@ -97,7 +97,7 @@ namespace Akavache
             {
                 _dateTimeKind = value;
 
-                if (_jsonDateTimeContractResolver != null)
+                if (_jsonDateTimeContractResolver is not null)
                 {
                     _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
                 }
@@ -198,7 +198,7 @@ namespace Akavache
                 return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("InMemoryBlobCache");
             }
 
-            CacheEntry entry;
+            CacheEntry? entry;
             lock (_cache)
             {
                 if (!_cache.TryGetValue(key, out entry))
@@ -207,7 +207,12 @@ namespace Akavache
                 }
             }
 
-            if (entry.ExpiresAt != null && Scheduler.Now > entry.ExpiresAt.Value)
+            if (entry is null)
+            {
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
+            }
+
+            if (entry.ExpiresAt is not null && Scheduler.Now > entry.ExpiresAt.Value)
             {
                 lock (_cache)
                 {
@@ -228,13 +233,18 @@ namespace Akavache
                 return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>("InMemoryBlobCache");
             }
 
-            CacheEntry entry;
+            CacheEntry? entry;
             lock (_cache)
             {
                 if (!_cache.TryGetValue(key, out entry))
                 {
                     return Observable.Return<DateTimeOffset?>(null);
                 }
+            }
+
+            if (entry is null)
+            {
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<DateTimeOffset?>(key);
             }
 
             return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
@@ -251,7 +261,7 @@ namespace Akavache
             lock (_cache)
             {
                 return Observable.Return(_cache
-                    .Where(x => x.Value.ExpiresAt == null || x.Value.ExpiresAt >= Scheduler.Now)
+                    .Where(x => x.Value.ExpiresAt is null || x.Value.ExpiresAt >= Scheduler.Now)
                     .Select(x => x.Key)
                     .ToList());
             }
@@ -315,7 +325,7 @@ namespace Akavache
                 return ExceptionHelper.ObservableThrowObjectDisposedException<T>("InMemoryBlobCache");
             }
 
-            CacheEntry entry;
+            CacheEntry? entry;
             lock (_cache)
             {
                 if (!_cache.TryGetValue(key, out entry))
@@ -324,7 +334,12 @@ namespace Akavache
                 }
             }
 
-            if (entry.ExpiresAt != null && Scheduler.Now > entry.ExpiresAt.Value)
+            if (entry is null)
+            {
+                return ExceptionHelper.ObservableThrowKeyNotFoundException<T>(key);
+            }
+
+            if (entry.ExpiresAt is not null && Scheduler.Now > entry.ExpiresAt.Value)
             {
                 lock (_cache)
                 {
@@ -357,9 +372,10 @@ namespace Akavache
             {
                 return Observable.Return(
                     _cache
-                        .Where(x => x.Value.TypeName == typeof(T).FullName && (x.Value.ExpiresAt == null || x.Value.ExpiresAt >= Scheduler.Now))
+                        .Where(x => x.Value.TypeName == typeof(T).FullName && (x.Value.ExpiresAt is null || x.Value.ExpiresAt >= Scheduler.Now))
                         .Select(x => DeserializeObject<T>(x.Value.Value))
-                        .ToList(), Scheduler);
+                        .ToList(),
+                    Scheduler);
             }
         }
 
@@ -404,7 +420,7 @@ namespace Akavache
 
             lock (_cache)
             {
-                var toDelete = _cache.Where(x => x.Value.ExpiresAt != null && Scheduler.Now > x.Value.ExpiresAt).ToArray();
+                var toDelete = _cache.Where(x => x.Value.ExpiresAt is not null && Scheduler.Now > x.Value.ExpiresAt).ToArray();
                 foreach (var kvp in toDelete)
                 {
                     _cache.Remove(kvp.Key);

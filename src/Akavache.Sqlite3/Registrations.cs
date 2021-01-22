@@ -48,13 +48,13 @@ namespace Akavache.Sqlite3
             {
                 var directory = fs.GetDefaultLocalMachineCacheDirectory();
 
-                if (directory == null || string.IsNullOrWhiteSpace(directory))
+                if (directory is null || string.IsNullOrWhiteSpace(directory))
                 {
                     throw new InvalidOperationException("There is a invalid directory being returned by the file system provider.");
                 }
 
                 fs.CreateRecursive(directory).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
-                return new SqlRawPersistentBlobCache(Path.Combine(fs.GetDefaultLocalMachineCacheDirectory(), "blobs.db"), BlobCache.TaskpoolScheduler);
+                return new SqlRawPersistentBlobCache(Path.Combine(directory, "blobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => localCache.Value, typeof(IBlobCache), "LocalMachine");
 
@@ -62,13 +62,13 @@ namespace Akavache.Sqlite3
             {
                 var directory = fs.GetDefaultRoamingCacheDirectory();
 
-                if (directory == null || string.IsNullOrWhiteSpace(directory))
+                if (directory is null || string.IsNullOrWhiteSpace(directory))
                 {
                     throw new InvalidOperationException("There is a invalid directory being returned by the file system provider.");
                 }
 
                 fs.CreateRecursive(directory).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
-                return new SqlRawPersistentBlobCache(Path.Combine(fs.GetDefaultRoamingCacheDirectory(), "userblobs.db"), BlobCache.TaskpoolScheduler);
+                return new SqlRawPersistentBlobCache(Path.Combine(directory, "userblobs.db"), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => userAccount.Value, typeof(IBlobCache), "UserAccount");
 
@@ -76,13 +76,13 @@ namespace Akavache.Sqlite3
             {
                 var directory = fs.GetDefaultSecretCacheDirectory();
 
-                if (directory == null || string.IsNullOrWhiteSpace(directory))
+                if (directory is null || string.IsNullOrWhiteSpace(directory))
                 {
                     throw new InvalidOperationException("There is a invalid directory being returned by the file system provider.");
                 }
 
                 fs.CreateRecursive(directory).SubscribeOn(BlobCache.TaskpoolScheduler).Wait();
-                return new SQLiteEncryptedBlobCache(Path.Combine(fs.GetDefaultSecretCacheDirectory(), "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
+                return new SQLiteEncryptedBlobCache(Path.Combine(directory, "secret.db"), Locator.Current.GetService<IEncryptionProvider>(), BlobCache.TaskpoolScheduler);
             });
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache));
         }

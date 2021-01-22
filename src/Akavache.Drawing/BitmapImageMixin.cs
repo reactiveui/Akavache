@@ -147,7 +147,7 @@ namespace Akavache
         /// too small).</returns>
         public static IObservable<byte[]> ThrowOnBadImageBuffer(byte[] compressedImage)
         {
-            return (compressedImage == null || compressedImage.Length < 64) ?
+            return (compressedImage is null || compressedImage.Length < 64) ?
                 Observable.Throw<byte[]>(new Exception("Invalid Image")) :
                 Observable.Return(compressedImage);
         }

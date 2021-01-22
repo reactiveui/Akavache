@@ -37,13 +37,18 @@ namespace Akavache
 
             var fdr = typeof(DependencyResolverMixin);
 
-            if (fdr == null || fdr.AssemblyQualifiedName is null)
+            if (fdr is null || fdr.AssemblyQualifiedName is null)
             {
                 throw new Exception($"Cannot find valid assembly name for the {nameof(DependencyResolverMixin)} class.");
             }
 
             var assemblyName = new AssemblyName(
                 fdr.AssemblyQualifiedName.Replace(fdr.FullName + ", ", string.Empty));
+
+            if (assemblyName.Name is null)
+            {
+                throw new InvalidOperationException("Could not find a valid name for assembly");
+            }
 
             foreach (var ns in namespaces)
             {
@@ -56,7 +61,13 @@ namespace Akavache
                     continue;
                 }
 
-                var registerer = (IWantsToRegisterStuff)Activator.CreateInstance(registerTypeClass);
+                var registerer = (IWantsToRegisterStuff?)Activator.CreateInstance(registerTypeClass);
+
+                if (registerer is null)
+                {
+                    continue;
+                }
+
                 registerer.Register(resolver, readonlyDependencyResolver);
             }
         }

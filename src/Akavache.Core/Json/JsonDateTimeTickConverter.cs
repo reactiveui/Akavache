@@ -48,12 +48,12 @@ namespace Akavache
                 return null;
             }
 
-            if (reader.TokenType == JsonToken.Date && reader.Value != null)
+            if (reader.TokenType == JsonToken.Date && reader.Value is not null)
             {
                 return (DateTime)reader.Value;
             }
 
-            if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value != null)
+            if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value is not null)
             {
                 var ticks = (long)reader.Value;
 

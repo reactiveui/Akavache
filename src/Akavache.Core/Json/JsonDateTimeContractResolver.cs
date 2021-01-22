@@ -41,7 +41,7 @@ namespace Akavache
         public override JsonContract ResolveContract(Type type)
         {
             var contract = ExistingContractResolver?.ResolveContract(type);
-            if (contract?.Converter != null)
+            if (contract?.Converter is not null)
             {
                 return contract;
             }

@@ -19,7 +19,7 @@ namespace Akavache.Mobile
         /// <inheritdoc />
         public IObservable<object> LoadState()
         {
-            return BlobCache.UserAccount.GetObject<object>("__AppState");
+            return BlobCache.UserAccount.GetObject<object>("__AppState")!;
         }
 
         /// <inheritdoc />
