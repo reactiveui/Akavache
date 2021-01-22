@@ -64,7 +64,8 @@ namespace Akavache.Core
 #if ANDROID
 
             var packageManager = Application.Context.PackageManager;
-            var applicationLabel = packageManager?.GetApplicationInfo(Application.Context.PackageName, 0)?.LoadLabel(packageManager);
+            var packageName = Application.Context.PackageName ?? "Unknown Package";
+            var applicationLabel = packageManager?.GetApplicationInfo(packageName, 0)?.LoadLabel(packageManager);
 
             BlobCache.ApplicationName = applicationLabel ?? "Unknown";
 
