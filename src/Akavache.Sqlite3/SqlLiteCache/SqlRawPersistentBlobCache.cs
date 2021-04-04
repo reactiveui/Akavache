@@ -147,9 +147,7 @@ namespace Akavache.Sqlite3
                             ? Observable.Return(cacheElements.First().Value)
                             : ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
                 })
-#pragma warning disable CS8604 // Possible null reference argument.
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
-#pragma warning restore CS8604 // Possible null reference argument.
                 .PublishLast().PermaRef();
         }
 
@@ -295,7 +293,7 @@ namespace Akavache.Sqlite3
         }
 
         /// <inheritdoc />
-        public IObservable<T?> GetObject<T>(string key)
+        public IObservable<T> GetObject<T>(string key)
         {
             if (_disposed)
             {
@@ -320,9 +318,7 @@ namespace Akavache.Sqlite3
                             ? Observable.Return(cacheElements.First().Value)
                             : ExceptionHelper.ObservableThrowKeyNotFoundException<byte[]>(key);
                 })
-#pragma warning disable CS8604 // Possible null reference argument.
                 .SelectMany(x => AfterReadFromDiskFilter(x, Scheduler))
-#pragma warning restore CS8604 // Possible null reference argument.
                 .SelectMany(DeserializeObject<T>)
                 .PublishLast().PermaRef();
         }
@@ -808,7 +804,7 @@ namespace Akavache.Sqlite3
             }
         }
 
-        private IObservable<T?> DeserializeObject<T>(byte[] data)
+        private IObservable<T> DeserializeObject<T>(byte[] data)
         {
             var serializer = GetSerializer();
             using (var reader = new BsonDataReader(new MemoryStream(data)))
@@ -834,10 +830,8 @@ namespace Akavache.Sqlite3
                         this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
                     }
 
-                    var rawVal = serializer.Deserialize<T>(reader);
-#pragma warning disable CS8604 // Possible null reference argument.
+                    var rawVal = serializer.Deserialize<T>(reader)!;
                     return Observable.Return(rawVal);
-#pragma warning restore CS8604 // Possible null reference argument.
                 }
                 catch (Exception ex)
                 {
