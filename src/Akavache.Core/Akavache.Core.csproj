@@ -14,7 +14,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
-    <PackageReference Include="Splat" Version="10.*" />
+    <PackageReference Include="Splat" Version="11.*" />
   </ItemGroup>
 
   <ItemGroup>
