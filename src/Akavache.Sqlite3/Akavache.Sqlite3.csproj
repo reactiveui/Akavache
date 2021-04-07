@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.core" Version="2.0.4" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
-    <PackageReference Include="Splat" Version="10.*" />
+    <PackageReference Include="Splat" Version="11.*" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
