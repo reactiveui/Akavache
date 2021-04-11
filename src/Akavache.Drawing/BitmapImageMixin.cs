@@ -156,9 +156,7 @@ namespace Akavache
         {
             using (var ms = new MemoryStream(compressedImage))
             {
-                return BitmapLoader.Current
-                    .Load(ms, desiredWidth, desiredHeight)
-                    .ToObservable()
+                return BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ToObservable()
                     .SelectMany(bitmap => bitmap is not null ?
                         Observable.Return(bitmap) :
                         Observable.Throw<IBitmap>(new IOException("Failed to load the bitmap!")));

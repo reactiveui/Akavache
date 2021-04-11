@@ -59,6 +59,24 @@ namespace Akavache.Tests
         }
 
         /// <summary>
+        /// Tests to make sure the download with key extension method overload performs correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
+        [Fact]
+        public async Task DownloadUrlWithKeyTest()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var key = Guid.NewGuid().ToString();
+                await fixture.DownloadUrl(key, "http://httpbin.org/html").FirstAsync();
+                var bytes = await fixture.Get(key);
+                Assert.True(bytes.Length > 0);
+            }
+        }
+
+        /// <summary>
         /// Tests to make sure the download Uri with key extension method overload performs correctly.
         /// </summary>
         /// <returns>A task to monitor the progress.</returns>
