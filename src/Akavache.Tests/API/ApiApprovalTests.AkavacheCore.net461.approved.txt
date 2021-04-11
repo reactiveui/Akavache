@@ -119,7 +119,7 @@ namespace Akavache
     public interface IObjectBlobCache : Akavache.IBlobCache, System.IDisposable
     {
         System.IObservable<System.Collections.Generic.IEnumerable<T>> GetAllObjects<T>();
-        System.IObservable<T> GetObject<T>(string key);
+        System.IObservable<T?> GetObject<T>(string key);
         System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(string key);
         System.IObservable<System.Reactive.Unit> InsertObject<T>(string key, T value, System.DateTimeOffset? absoluteExpiration = default);
         System.IObservable<System.Reactive.Unit> InvalidateAllObjects<T>();
