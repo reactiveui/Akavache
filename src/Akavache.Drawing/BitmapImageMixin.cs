@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
 using Splat;
 
 namespace Akavache
@@ -152,12 +153,16 @@ namespace Akavache
                 Observable.Return(compressedImage);
         }
 
-        private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
+        private static async Task<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
         {
-            using (var ms = new MemoryStream(compressedImage))
+            using var ms = new MemoryStream(compressedImage);
+            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ConfigureAwait(false);
+            if (bitmap is null)
             {
-                return BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ToObservable();
+                throw new IOException("Failed to load the bitmap!");
             }
+
+            return bitmap;
         }
     }
 }
