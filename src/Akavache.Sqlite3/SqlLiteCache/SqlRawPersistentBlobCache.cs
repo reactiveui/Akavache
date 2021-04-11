@@ -345,9 +345,7 @@ namespace Akavache.Sqlite3
 
             return _initializer.SelectMany(_ => _opQueue.SelectTypes(new[] { typeFullName })
                     .SelectMany(x => x.ToObservable()
-#pragma warning disable CS8604 // Possible null reference argument.
                         .SelectMany(y => AfterReadFromDiskFilter(y.Value, Scheduler))
-#pragma warning restore CS8604 // Possible null reference argument.
                         .SelectMany(DeserializeObject<T>)
                         .Where(y => y is not null)
                         .Select(y => y!)
@@ -804,7 +802,7 @@ namespace Akavache.Sqlite3
             }
         }
 
-        private IObservable<T> DeserializeObject<T>(byte[] data)
+        private IObservable<T?> DeserializeObject<T>(byte[] data)
         {
             var serializer = GetSerializer();
             using (var reader = new BsonDataReader(new MemoryStream(data)))
@@ -830,7 +828,7 @@ namespace Akavache.Sqlite3
                         this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
                     }
 
-                    var rawVal = serializer.Deserialize<T>(reader)!;
+                    var rawVal = serializer.Deserialize<T>(reader);
                     return Observable.Return(rawVal);
                 }
                 catch (Exception ex)

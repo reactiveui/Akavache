@@ -42,12 +42,12 @@ namespace Akavache.Mobile
 
             // NB: These correspond to the hacks in Akavache.Http's registrations
             resolver.Register(
-                () => readonlyDependencyResolver.GetService<ISuspensionHost>().ShouldPersistState,
+                () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.ShouldPersistState ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
                 typeof(IObservable<IDisposable>),
                 "ShouldPersistState");
 
             resolver.Register(
-                () => readonlyDependencyResolver.GetService<ISuspensionHost>().IsUnpausing,
+                () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.IsUnpausing ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
                 typeof(IObservable<Unit>),
                 "IsUnpausing");
 
