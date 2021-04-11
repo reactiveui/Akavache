@@ -14,6 +14,8 @@ namespace Akavache
     /// </summary>
     public static class HttpMixinExtensions
     {
+        private static IAkavacheHttpMixin HttpMixin => Locator.Current.GetService<IAkavacheHttpMixin>() ?? throw new InvalidOperationException("Unable to resolve IAkavacheHttpMixin, probably Akavache is not initialized.");
+
         /// <summary>
         /// Download data from an HTTP URL and insert the result into the
         /// cache. If the data is already in the cache, this returns
@@ -28,8 +30,7 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
-            return mixin.DownloadUrl(blobCache, new Uri(url), headers, fetchAlways, absoluteExpiration);
+            return HttpMixin.DownloadUrl(blobCache, new Uri(url), headers, fetchAlways, absoluteExpiration);
         }
 
         /// <summary>
@@ -46,8 +47,7 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
-            return mixin.DownloadUrl(blobCache, url, headers, fetchAlways, absoluteExpiration);
+            return HttpMixin.DownloadUrl(blobCache, url, headers, fetchAlways, absoluteExpiration);
         }
 
         /// <summary>
@@ -65,8 +65,7 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
-            return mixin.DownloadUrl(blobCache, key, new Uri(url), headers, fetchAlways, absoluteExpiration);
+            return HttpMixin.DownloadUrl(blobCache, key, new Uri(url), headers, fetchAlways, absoluteExpiration);
         }
 
         /// <summary>
@@ -84,8 +83,7 @@ namespace Akavache
         /// <returns>The data downloaded from the URL.</returns>
         public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
         {
-            var mixin = Locator.Current.GetService<IAkavacheHttpMixin>();
-            return mixin.DownloadUrl(blobCache, key, url, headers, fetchAlways, absoluteExpiration);
+            return HttpMixin.DownloadUrl(blobCache, key, url, headers, fetchAlways, absoluteExpiration);
         }
     }
 }

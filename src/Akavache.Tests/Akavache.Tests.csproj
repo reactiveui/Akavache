@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="5.0.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.console" Version="2.4.1" />
@@ -16,12 +16,12 @@
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Xunit.StaFact" Version="1.0.37" />
     <PackageReference Include="ReactiveUI.Testing" Version="13.*" />
-    <PackageReference Include="Splat" Version="10.*" />
-    <PackageReference Include="Splat.Drawing" Version="10.*" />
+    <PackageReference Include="Splat" Version="11.*" />
+    <PackageReference Include="Splat.Drawing" Version="11.*" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.4" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="DiffEngine" Version="6.5.7" />
+    <PackageReference Include="DiffEngine" Version="6.6.1" />
     <PackageReference Include="PublicApiGenerator" Version="10.2.0" />
     <PackageReference Include="coverlet.msbuild" Version="3.0.3">
       <PrivateAssets>all</PrivateAssets>

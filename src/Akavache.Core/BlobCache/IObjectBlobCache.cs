@@ -31,7 +31,7 @@ namespace Akavache
         /// <typeparam name="T">The type of object associated with the blob.</typeparam>
         /// <param name="key">The key to look up in the cache.</param>
         /// <returns>A Future result representing the object in the cache.</returns>
-        IObservable<T> GetObject<T>(string key);
+        IObservable<T?> GetObject<T>(string key);
 
         /// <summary>
         /// Return all objects of a specific Type in the cache.

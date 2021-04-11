@@ -81,7 +81,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache LocalMachine
         {
-            get => _unitTestLocalMachine ?? _localMachine ?? (_shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("LocalMachine");
+            get => _unitTestLocalMachine ?? _localMachine ?? (_shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("LocalMachine") ?? throw new InvalidOperationException("Unable to resolve LocalMachine cache. Make sure Akavache is initialized properly.");
             set
             {
                 if (ModeDetector.InUnitTestRunner())
@@ -103,7 +103,7 @@ namespace Akavache
         /// </summary>
         public static IBlobCache UserAccount
         {
-            get => _unitTestUserAccount ?? _userAccount ?? (_shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("UserAccount");
+            get => _unitTestUserAccount ?? _userAccount ?? (_shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<IBlobCache>("UserAccount") ?? throw new InvalidOperationException("Unable to resolve UserAccount cache. Make sure Akavache is initialized properly.");
             set
             {
                 if (ModeDetector.InUnitTestRunner())
@@ -124,7 +124,7 @@ namespace Akavache
         /// </summary>
         public static ISecureBlobCache Secure
         {
-            get => _unitTestSecure ?? _secure ?? (_shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<ISecureBlobCache>();
+            get => _unitTestSecure ?? _secure ?? (_shutdownRequested ? new ShutdownBlobCache() : null) ?? Locator.Current.GetService<ISecureBlobCache>() ?? throw new InvalidOperationException("Unable to resolve Secure cache. Make sure Akavache is initialized properly.");
             set
             {
                 if (ModeDetector.InUnitTestRunner())

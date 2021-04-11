@@ -34,15 +34,63 @@ namespace Akavache.Tests
         public async Task DownloadUrlTest()
         {
             string path;
-
             using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
             {
-                var fixture = CreateBlobCache(path);
-                using (fixture)
-                {
-                    var bytes = await fixture.DownloadUrl(@"http://httpbin.org/html").FirstAsync();
-                    Assert.True(bytes.Length > 0);
-                }
+                var bytes = await fixture.DownloadUrl(@"http://httpbin.org/html").FirstAsync();
+                Assert.True(bytes.Length > 0);
+            }
+        }
+
+        /// <summary>
+        /// Tests to make sure the download Uri extension method overload performs correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
+        [Fact]
+        public async Task DownloadUriTest()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var bytes = await fixture.DownloadUrl(new Uri("http://httpbin.org/html")).FirstAsync();
+                Assert.True(bytes.Length > 0);
+            }
+        }
+
+        /// <summary>
+        /// Tests to make sure the download with key extension method overload performs correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
+        [Fact]
+        public async Task DownloadUrlWithKeyTest()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var key = Guid.NewGuid().ToString();
+                await fixture.DownloadUrl(key, "http://httpbin.org/html").FirstAsync();
+                var bytes = await fixture.Get(key);
+                Assert.True(bytes.Length > 0);
+            }
+        }
+
+        /// <summary>
+        /// Tests to make sure the download Uri with key extension method overload performs correctly.
+        /// </summary>
+        /// <returns>A task to monitor the progress.</returns>
+        [Fact]
+        public async Task DownloadUriWithKeyTest()
+        {
+            string path;
+            using (Utility.WithEmptyDirectory(out path))
+            using (var fixture = CreateBlobCache(path))
+            {
+                var key = Guid.NewGuid().ToString();
+                await fixture.DownloadUrl(key, new Uri("http://httpbin.org/html")).FirstAsync();
+                var bytes = await fixture.Get(key);
+                Assert.True(bytes.Length > 0);
             }
         }
 

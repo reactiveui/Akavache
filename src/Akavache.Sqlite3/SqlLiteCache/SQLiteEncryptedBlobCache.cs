@@ -27,12 +27,7 @@ namespace Akavache.Sqlite3
         public SQLiteEncryptedBlobCache(string databaseFile, IEncryptionProvider? encryptionProvider = null, IScheduler? scheduler = null)
             : base(databaseFile, scheduler)
         {
-            _encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>();
-
-            if (_encryption is null)
-            {
-                throw new Exception("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
-            }
+            _encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>() ?? throw new Exception("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
         }
 
         /// <inheritdoc />

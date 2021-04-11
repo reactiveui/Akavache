@@ -142,5 +142,17 @@ namespace Akavache.Tests
             op3.OnCompleted();
             Assert.Equal(0, op3Result);
         }
+
+        /// <summary>
+        /// Test to make sure the static caches are initialized.
+        /// </summary>
+        [Fact]
+        public void ShouldInitializeDefaultCaches()
+        {
+            Assert.NotNull(BlobCache.LocalMachine);
+            Assert.NotNull(BlobCache.UserAccount);
+            Assert.NotNull(BlobCache.InMemory);
+            Assert.NotNull(BlobCache.Secure);
+        }
     }
 }
