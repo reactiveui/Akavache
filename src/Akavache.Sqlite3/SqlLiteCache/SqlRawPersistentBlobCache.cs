@@ -293,7 +293,7 @@ namespace Akavache.Sqlite3
         }
 
         /// <inheritdoc />
-        public IObservable<T> GetObject<T>(string key)
+        public IObservable<T?> GetObject<T>(string key)
         {
             if (_disposed)
             {
