@@ -4,7 +4,7 @@
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Mobile")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Tests")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName="")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.1", FrameworkDisplayName="")]
 namespace Akavache
 {
     public class AkavacheHttpMixin : Akavache.IAkavacheHttpMixin
