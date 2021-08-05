@@ -25,7 +25,6 @@
     <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
   </ItemGroup>
 </Project>
