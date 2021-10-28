@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.core" Version="2.0.6" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="2.0.7" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="Splat" Version="13.*" />
   </ItemGroup>
