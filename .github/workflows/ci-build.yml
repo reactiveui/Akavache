@@ -17,5 +17,3 @@ jobs:
       productNamespacePrefix: "Akavache"
       useVisualStudioPreview: false
       useMauiCheckDotNetTool: false
-      runTests: true
-      nugetMode: 1
