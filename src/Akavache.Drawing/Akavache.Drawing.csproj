@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;MonoAndroid10.0;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;Xamarin.WatchOS10;tizen40;</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461;uap10.0.16299;netcoreapp3.1;net5.0-windows</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;MonoAndroid11.0;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;Xamarin.WatchOS10;tizen40;</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;uap10.0.16299;net6.0-windows</TargetFrameworks>
     <AssemblyName>Akavache.Drawing</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
@@ -12,6 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
-    <PackageReference Include="Splat.Drawing" Version="13.*" />
+    <PackageReference Include="Splat.Drawing" Version="14.*" />
   </ItemGroup>
 </Project>
