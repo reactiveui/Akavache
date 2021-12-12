@@ -1,5 +1,5 @@
 [assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/reactiveui/akavache")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.6.1", FrameworkDisplayName=".NET Framework 4.6.1")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.6.2", FrameworkDisplayName=".NET Framework 4.6.2")]
 namespace Akavache
 {
     public class Registrations

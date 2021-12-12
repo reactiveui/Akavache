@@ -1,8 +1,8 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid10.0;tizen40</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net461;uap10.0.16299;net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid11.0;tizen40;net6.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;uap10.0.16299</TargetFrameworks>
     <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.core" Version="2.0.7" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
-    <PackageReference Include="Splat" Version="13.*" />
+    <PackageReference Include="Splat" Version="14.*" />
   </ItemGroup>
   
   <ItemGroup>
