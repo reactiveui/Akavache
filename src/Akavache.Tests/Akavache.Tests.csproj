@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0<TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net6.0-windows</TargetFrameworks>
     <NoWarn>$(NoWarn);CA1307;CA2000;CA1062</NoWarn>
     <LangVersion>latest</LangVersion>    
