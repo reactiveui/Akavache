@@ -13,6 +13,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using Splat;
@@ -467,12 +468,11 @@ namespace Akavache
 
         private byte[] SerializeObject<T>(T value)
         {
-            var serializer = GetSerializer();
             using (var ms = new MemoryStream())
             {
-                using (var writer = new BsonDataWriter(ms))
+                using (var writer = new Utf8JsonWriter(ms))
                 {
-                    serializer.Serialize(writer, new ObjectWrapper<T> { Value = value });
+                    System.Text.Json.JsonSerializer.Serialize(writer, value, typeof(T));
                     return ms.ToArray();
                 }
             }
@@ -481,51 +481,24 @@ namespace Akavache
         private T DeserializeObject<T>(byte[] data)
         {
 #pragma warning disable CS8603 // Possible null reference return.
-            var serializer = GetSerializer();
-            using (var reader = new BsonDataReader(new MemoryStream(data)))
+            try
             {
-                var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
+                var value = System.Text.Json.JsonSerializer.Deserialize<T>(data);
 
-                if (forcedDateTimeKind.HasValue)
+                if (value is null)
                 {
-                    reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+                    return default;
                 }
 
-                try
-                {
-                    var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
+                return value;
+            }
+            catch (Exception ex)
+            {
+                this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
+            }
 
-                    if (wrapper is null)
-                    {
-                        return default;
-                    }
-
-                    return wrapper.Value;
-                }
-                catch (Exception ex)
-                {
-                    this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
-                }
-
-                return serializer.Deserialize<T>(reader);
+            return System.Text.Json.JsonSerializer.Deserialize<T>(data);
 #pragma warning restore CS8603 // Possible null reference return.
-            }
-        }
-
-        private JsonSerializer GetSerializer()
-        {
-            var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-            JsonSerializer serializer;
-
-            lock (settings)
-            {
-                _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-                settings.ContractResolver = _jsonDateTimeContractResolver;
-                serializer = JsonSerializer.Create(settings);
-                settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
-            }
-
-            return serializer;
         }
     }
 }
