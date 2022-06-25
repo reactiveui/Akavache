@@ -72,9 +72,7 @@ public class UtilityTests
     [Fact]
     public void UtilityResolvesAndSplitsRelativePaths()
     {
-        string path;
-
-        path = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"foo\bar" : "foo/bar";
+        var path = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"foo\bar" : "foo/bar";
 
         var components = new DirectoryInfo(path).SplitFullPath().ToList();
         Assert.True(components.Count > 2);

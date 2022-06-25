@@ -277,7 +277,7 @@ public static class JsonSerializationMixin
 
         if (fetch is null)
         {
-            return Observable.Throw<T>(new("Could not find a valid way to fetch the value"));
+            return Observable.Throw<T>(new InvalidOperationException("Could not find a valid way to fetch the value"));
         }
 
         var result = blobCache.GetObject<T>(key).Select(x => (x, true))

@@ -89,8 +89,7 @@ public abstract class WriteTests
         var results = new Dictionary<int, long>();
         var dbName = default(string);
 
-        var dirPath = default(string);
-        using (Utility.WithEmptyDirectory(out dirPath))
+        using (Utility.WithEmptyDirectory(out var dirPath))
         using (var cache = CreateBlobCache(dirPath))
         {
             dbName = cache.GetType().Name;

@@ -37,7 +37,7 @@ public static class DependencyResolverMixin
 
         if (fdr?.AssemblyQualifiedName is null)
         {
-            throw new($"Cannot find valid assembly name for the {nameof(DependencyResolverMixin)} class.");
+            throw new InvalidOperationException($"Cannot find valid assembly name for the {nameof(DependencyResolverMixin)} class.");
         }
 
         var assemblyName = new AssemblyName(

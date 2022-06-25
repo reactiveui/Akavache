@@ -115,7 +115,7 @@ public static class BitmapImageMixin
     /// too small).</returns>
     public static IObservable<byte[]> ThrowOnBadImageBuffer(byte[] compressedImage) =>
         (compressedImage is null || compressedImage.Length < 64) ?
-            Observable.Throw<byte[]>(new("Invalid Image")) :
+            Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image")) :
             Observable.Return(compressedImage);
 
     private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;MonoAndroid11.0;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;Xamarin.WatchOS10;tizen40;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;MonoAndroid11.0;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;Xamarin.WatchOS10;tizen40;net6.0-android;net6.0-ios;net6.0-tvos;net6.0-macos;net6.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;uap10.0.16299;net6.0-windows</TargetFrameworks>
     <AssemblyName>Akavache.Drawing</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
@@ -9,8 +9,16 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="Foundation" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="Splat.Drawing" Version="14.*" />
   </ItemGroup>
 </Project>

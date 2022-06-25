@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 using Akavache.Core;
@@ -23,5 +24,5 @@ public static class LinkerPreserve
     /// </summary>
     /// <exception cref="Exception">A exception due to this being in the non-derived assembly.</exception>
     [SuppressMessage("FxCop.Design", "CA1065: Don't throw in constructors", Justification = "Shim class, should not happen.")]
-    static LinkerPreserve() => throw new(typeof(SQLitePersistentBlobCache).FullName);
+    static LinkerPreserve() => throw new InvalidOperationException(typeof(SQLitePersistentBlobCache).FullName);
 }

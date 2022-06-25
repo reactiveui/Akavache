@@ -39,7 +39,7 @@ public class Registrations : IWantsToRegisterStuff
         var fs = Locator.Current.GetService<IFilesystemProvider>();
         if (fs is null)
         {
-            throw new("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
+            throw new InvalidOperationException("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
         }
 
         var localCache = new Lazy<IBlobCache>(() =>

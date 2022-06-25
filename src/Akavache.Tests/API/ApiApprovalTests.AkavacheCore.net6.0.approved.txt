@@ -12,8 +12,12 @@ namespace Akavache
         public AkavacheHttpMixin() { }
         public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
         public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
         public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
         public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
     }
     public static class BlobCache
     {
@@ -49,6 +53,11 @@ namespace Akavache
     {
         CurrentUser = 0,
     }
+    public class DefaultAkavacheHttpClientFactory : Akavache.IAkavacheHttpClientFactory
+    {
+        public DefaultAkavacheHttpClientFactory() { }
+        public System.Net.Http.HttpClient CreateClient(string name) { }
+    }
     public static class DependencyResolverMixin
     {
         public static void InitializeAkavache(this Splat.IMutableDependencyResolver resolver, Splat.IReadonlyDependencyResolver readonlyDependencyResolver) { }
@@ -63,15 +72,27 @@ namespace Akavache
     {
         public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
         public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
         public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
         public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+    }
+    public interface IAkavacheHttpClientFactory
+    {
+        System.Net.Http.HttpClient CreateClient(string name);
     }
     public interface IAkavacheHttpMixin
     {
         System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
         System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
         System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
         System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
     }
     public interface IBlobCache : System.IDisposable
     {
