@@ -159,7 +159,7 @@ namespace Akavache
         public System.IObservable<System.Reactive.Unit> Vacuum() { }
         public static Akavache.InMemoryBlobCache OverrideGlobals(System.Collections.Generic.IDictionary<string, byte[]> initialContents, System.Reactive.Concurrency.IScheduler? scheduler = null) { }
         public static Akavache.InMemoryBlobCache OverrideGlobals(System.Collections.Generic.IDictionary<string, object> initialContents, System.Reactive.Concurrency.IScheduler? scheduler = null) { }
-        public static Akavache.InMemoryBlobCache OverrideGlobals(System.Reactive.Concurrency.IScheduler? scheduler = null, params System.Collections.Generic.KeyValuePair<, >[] initialContents) { }
+        public static Akavache.InMemoryBlobCache OverrideGlobals(System.Reactive.Concurrency.IScheduler? scheduler = null, params System.Collections.Generic.KeyValuePair<string, byte[]>[] initialContents) { }
     }
     public static class JsonSerializationMixin
     {

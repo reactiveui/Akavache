@@ -9,7 +9,6 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
     <PackageReference Include="Splat.Drawing" Version="14.*" />
