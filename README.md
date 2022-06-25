@@ -26,10 +26,9 @@ settings) as well as cached local data that expires.
 
 Akavache is currently compatible with:
 
-* Xamarin.iOS / Xamarin.Mac
-* Xamarin.Android
-* .NET 4.5 Desktop (WPF)
-* Windows Phone 8.1 Universal Apps
+* Xamarin.iOS / Xamarin.Mac / Xamarin.Android / Xamarin.TVOS / Xamarin.WatchOS
+* Maui iOS / Mac / Mac Catalyst / Android / TVOS
+* .NET 4.6.2 Desktop (WPF) and above
 * Windows 10 (Universal Windows Platform)
 * Tizen 4.0
 
@@ -94,27 +93,14 @@ There are four built-in locations that have some magic applied on some systems:
 
 ### Platform-specific notes
 
-* **Xamarin.iOS / Xamarin.Mac** - No issues.
-
-* **Xamarin.Android** - No issues.
-
-* **.NET 4.5 Desktop (WPF)** - No issues.
-
-* **Windows Phone 8.1 Universal Apps** - You must mark your application as `x86`
-  or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
-  loading correctly. You must *also* ensure that the Microsoft Visual C++ runtime
-  is added to your project.
-
 * **Windows 10 (Universal Windows Platform)** - You must mark your application as `x86`
   or `ARM`, or else you will get a strange runtime error about SQLitePCL_Raw not
   loading correctly. You must *also* ensure that the Microsoft Visual C++ runtime
   is added to your project.
 
-* **Tizen 4.0** - No issues.
+#### Handling Xamarin/Maui Linker
 
-#### Handling Xamarin Linker
-
-There are two options to ensure the Akavache.Sqlite3 dll will not be removed by Xamarin build tools
+There are two options to ensure the Akavache.Sqlite3 dll will not be removed by Xamarin and Maui build tools
 
 #### 1) Add a file to reference the types
 
