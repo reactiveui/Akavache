@@ -28,7 +28,8 @@ Akavache is currently compatible with:
 
 * Xamarin.iOS / Xamarin.Mac / Xamarin.Android / Xamarin.TVOS / Xamarin.WatchOS
 * Maui iOS / Mac / Mac Catalyst / Android / TVOS
-* .NET 4.6.2 Desktop (WPF) and above
+* .NET 4.6.2 (and above) and .NET 6 Desktop (WPF and WinForms)
+* .NET 6.0
 * Windows 10 (Universal Windows Platform)
 * Tizen 4.0
 
