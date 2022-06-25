@@ -55,6 +55,7 @@ namespace Akavache.Core
             resolver.Register(() => secure.Value, typeof(ISecureBlobCache), null);
 
             resolver.Register(() => new AkavacheHttpMixin(), typeof(IAkavacheHttpMixin), null);
+            resolver.Register(() => new DefaultAkavacheHttpClientFactory(), typeof(IAkavacheHttpClientFactory), null);
 
 #if COCOA
             BlobCache.ApplicationName = NSBundle.MainBundle.BundleIdentifier;
