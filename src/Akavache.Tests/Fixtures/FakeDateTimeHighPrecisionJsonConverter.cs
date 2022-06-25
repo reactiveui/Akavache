@@ -1,53 +1,46 @@
-﻿// Copyright (c) 2021 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 
-namespace Akavache.Tests
+namespace Akavache.Tests;
+
+/// <summary>
+/// A fake converter for the DateTime and high precision.
+/// </summary>
+public class FakeDateTimeHighPrecisionJsonConverter : JsonConverter
 {
-    /// <summary>
-    /// A fake converter for the DateTime and high precision.
-    /// </summary>
-    public class FakeDateTimeHighPrecisionJsonConverter : JsonConverter
+    /// <inheritdoc />
+    public override bool CanConvert(Type objectType) => objectType == typeof(DateTime) || objectType == typeof(DateTime?);
+
+    /// <inheritdoc />
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
-        /// <inheritdoc />
-        public override bool CanConvert(Type objectType)
+        if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Date)
         {
-            return objectType == typeof(DateTime) || objectType == typeof(DateTime?);
+            return null;
         }
 
-        /// <inheritdoc />
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        // If you need to deserialize already-serialized DateTimeOffsets, it would come in as JsonToken.Date, uncomment to handle
+        // Newly serialized values will come in as JsonToken.Integer
+        if (reader.TokenType == JsonToken.Date)
         {
-            if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Date)
-            {
-                return null;
-            }
-
-            // If you need to deserialize already-serialized DateTimeOffsets, it would come in as JsonToken.Date, uncomment to handle
-            // Newly serialized values will come in as JsonToken.Integer
-            if (reader.TokenType == JsonToken.Date)
-            {
-                return (DateTime)reader.Value;
-            }
-
-            var ticks = (long)reader.Value;
-            return new DateTime(ticks, DateTimeKind.Utc);
+            return (DateTime)reader.Value;
         }
 
-        /// <inheritdoc />
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        var ticks = (long)reader.Value;
+        return new DateTime(ticks, DateTimeKind.Utc);
+    }
+
+    /// <inheritdoc />
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        if (value is not null)
         {
-            if (value is not null)
-            {
-                var dateTime = value is DateTime dt ? dt : ((DateTime?)value).Value;
-                serializer.Serialize(writer, dateTime.ToUniversalTime().Ticks);
-            }
+            var dateTime = value is DateTime dt ? dt : ((DateTime?)value).Value;
+            serializer.Serialize(writer, dateTime.ToUniversalTime().Ticks);
         }
     }
 }
