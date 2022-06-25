@@ -3,8 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Akavache.Sqlite3;
 
 internal partial class SqliteOperationQueue
@@ -125,13 +123,9 @@ internal partial class SqliteOperationQueue
 
             if (currentWrites is not null)
             {
-                if (currentWrites.Count == 1)
-                {
-                    yield return currentWrites[0];
-                }
-                else
-                {
-                    yield return new(
+                yield return currentWrites.Count == 1
+                    ? currentWrites[0]
+                    : new(
                         CombineSubjectsByOperation(
                             currentWrites[0].Completion,
                             currentWrites.Skip(1).Select(x => x.Completion),
@@ -140,7 +134,6 @@ internal partial class SqliteOperationQueue
                     {
                         OperationType = currentWrites[0].OperationType,
                     };
-                }
 
                 currentWrites = null;
             }
@@ -240,9 +233,20 @@ internal partial class SqliteOperationQueue
 
         return OperationQueueItem.CreateInsert(
             OperationType.BulkInsertSqliteOperation, elements, subj);
+
+        /* Unmerged change from project 'Akavache.Sqlite3 (uap10.0.16299)'
+        Before:
+            }
+
+            [SuppressMessage("Design", "CA2000: Dispose variable", Justification = "Ownership transferred.")]
+            private static OperationQueueItem GroupUnrelatedDeletes(IEnumerable<OperationQueueItem> unrelatedDeletes)
+        After:
+            }
+
+            private static OperationQueueItem GroupUnrelatedDeletes(IEnumerable<OperationQueueItem> unrelatedDeletes)
+        */
     }
 
-    [SuppressMessage("Design", "CA2000: Dispose variable", Justification = "Ownership transferred.")]
     private static OperationQueueItem GroupUnrelatedDeletes(IEnumerable<OperationQueueItem> unrelatedDeletes)
     {
         var subj = new AsyncSubject<Unit>();

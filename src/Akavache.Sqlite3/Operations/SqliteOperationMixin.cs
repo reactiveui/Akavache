@@ -4,7 +4,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Sqlite3.Internal;
+
 using Splat;
+
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;

@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Splat;
@@ -13,7 +12,6 @@ namespace Akavache;
 /// <summary>
 /// A set of mix-in associated with the <see cref="IDependencyResolver"/> interface.
 /// </summary>
-[SuppressMessage("FxCop.Analyzer", "CA1307: The behavior of 'string.Replace(string, string)' could vary based on the current user's locale settings", Justification = "Not all platforms allow locale.")]
 public static class DependencyResolverMixin
 {
     /// <summary>
@@ -63,12 +61,7 @@ public static class DependencyResolverMixin
 
             var registerer = (IWantsToRegisterStuff?)Activator.CreateInstance(registerTypeClass);
 
-            if (registerer is null)
-            {
-                continue;
-            }
-
-            registerer.Register(resolver, readonlyDependencyResolver);
+            registerer?.Register(resolver, readonlyDependencyResolver);
         }
     }
 }

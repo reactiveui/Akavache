@@ -15,7 +15,6 @@
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="Splat" Version="14.*" />
-    <PackageReference Include="IsExternalInit" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

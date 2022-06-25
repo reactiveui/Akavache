@@ -14,7 +14,7 @@ internal abstract class KeyedOperation
     /// </summary>
     /// <param name="key">The key of the operation.</param>
     /// <param name="id">The ID of the operation.</param>
-    public KeyedOperation(string key, int id)
+    protected KeyedOperation(string key, int id)
     {
         Key = key;
         Id = id;

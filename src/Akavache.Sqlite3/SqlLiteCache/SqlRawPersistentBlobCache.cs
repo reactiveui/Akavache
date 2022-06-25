@@ -761,7 +761,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         var serializer = GetSerializer();
         using var ms = new MemoryStream();
         using var writer = new BsonDataWriter(ms);
-        serializer.Serialize(writer, new ObjectWrapper<T> { Value = value });
+        serializer.Serialize(writer, new ObjectWrapper<T>(value));
         return ms.ToArray();
     }
 

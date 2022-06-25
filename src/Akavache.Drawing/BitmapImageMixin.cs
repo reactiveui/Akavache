@@ -23,17 +23,11 @@ public static class BitmapImageMixin
     /// <param name="desiredHeight">Optional desired height, if not specified will be the default size.</param>
     /// <returns>A Future result representing the bitmap image. blobCache
     /// Observable is guaranteed to be returned on the UI thread.</returns>
-    public static IObservable<IBitmap> LoadImage(this IBlobCache blobCache, string key, float? desiredWidth = null, float? desiredHeight = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.Get(key)
+    public static IObservable<IBitmap> LoadImage(this IBlobCache blobCache, string key, float? desiredWidth = null, float? desiredHeight = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.Get(key)
             .SelectMany(ThrowOnBadImageBuffer)
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
-    }
 
     /// <summary>
     /// A combination of DownloadUrl and LoadImage, this method fetches an
@@ -48,17 +42,11 @@ public static class BitmapImageMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the bitmap image. blobCache
     /// Observable is guaranteed to be returned on the UI thread.</returns>
-    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
+    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
             .SelectMany(ThrowOnBadImageBuffer)
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
-    }
 
     /// <summary>
     /// A combination of DownloadUrl and LoadImage, this method fetches an
@@ -73,17 +61,11 @@ public static class BitmapImageMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the bitmap image. blobCache
     /// Observable is guaranteed to be returned on the UI thread.</returns>
-    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
+    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.DownloadUrl(url, null, fetchAlways, absoluteExpiration)
             .SelectMany(ThrowOnBadImageBuffer)
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
-    }
 
     /// <summary>
     /// A combination of DownloadUrl and LoadImage, this method fetches an
@@ -99,17 +81,11 @@ public static class BitmapImageMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the bitmap image. blobCache
     /// Observable is guaranteed to be returned on the UI thread.</returns>
-    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
+    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
             .SelectMany(ThrowOnBadImageBuffer)
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
-    }
 
     /// <summary>
     /// A combination of DownloadUrl and LoadImage, this method fetches an
@@ -125,17 +101,11 @@ public static class BitmapImageMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the bitmap image. blobCache
     /// Observable is guaranteed to be returned on the UI thread.</returns>
-    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
+    public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.DownloadUrl(key, url, null, fetchAlways, absoluteExpiration)
             .SelectMany(ThrowOnBadImageBuffer)
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
-    }
 
     /// <summary>
     /// Converts bad image buffers into an exception.

@@ -28,12 +28,7 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
 
         var data = serializer.Deserialize<DateTimeOffsetData>(reader);
 
-        if (data is null)
-        {
-            return null;
-        }
-
-        return (DateTimeOffset)data;
+        return data is null ? null : (DateTimeOffset)data;
     }
 
     public override bool CanConvert(Type objectType) => objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?);

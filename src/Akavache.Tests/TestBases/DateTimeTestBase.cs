@@ -149,7 +149,7 @@ public abstract class DateTimeTestBase
     /// <param name="blobCache">The blob cache to perform the operation against.</param>
     /// <param name="data">The data to grab.</param>
     /// <returns>A task with the data found.</returns>
-    private async Task<(TData First, TData Second)> PerformTimeStampGrab<TData>(IBlobCache blobCache, TData data)
+    private static async Task<(TData First, TData Second)> PerformTimeStampGrab<TData>(IBlobCache blobCache, TData data)
     {
         const string key = "key";
 

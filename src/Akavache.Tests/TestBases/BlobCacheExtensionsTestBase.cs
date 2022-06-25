@@ -8,6 +8,7 @@ using DynamicData;
 using FluentAssertions;
 
 using Microsoft.Reactive.Testing;
+
 using ReactiveUI.Testing;
 
 using Xunit;
@@ -29,7 +30,7 @@ public abstract class BlobCacheExtensionsTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path))
         {
-            var bytes = await fixture.DownloadUrl(@"http://httpbin.org/html").FirstAsync();
+            var bytes = await fixture.DownloadUrl("http://httpbin.org/html").FirstAsync();
             Assert.True(bytes.Length > 0);
         }
     }
@@ -509,12 +510,12 @@ public abstract class BlobCacheExtensionsTestBase
     {
         var fetchPredicateCalled = false;
 
-        Func<DateTimeOffset, bool> fetchPredicate = d =>
+        bool FetchPredicate(DateTimeOffset d)
         {
             fetchPredicateCalled = true;
 
             return true;
-        };
+        }
 
         var fetcher = new Func<IObservable<string>>(() => Observable.Return("baz"));
 
@@ -531,7 +532,7 @@ public abstract class BlobCacheExtensionsTestBase
 
                 await fixture.InsertObject("foo", "bar").FirstAsync();
 
-                await fixture.GetAndFetchLatest("foo", fetcher, fetchPredicate).LastAsync();
+                await fixture.GetAndFetchLatest("foo", fetcher, FetchPredicate).LastAsync();
 
                 Assert.True(fetchPredicateCalled);
             }
