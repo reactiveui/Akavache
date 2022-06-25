@@ -22,13 +22,10 @@ public static class BulkOperationsMixin
             null => throw new ArgumentNullException(nameof(blobCache)),
             IBulkBlobCache bulkCache => bulkCache.Get(keys),
             _ => keys.ToObservable()
-                .SelectMany(x =>
-                {
-                    return blobCache.Get(x)
+                .SelectMany(x => blobCache.Get(x)
                         .Select(y => new KeyValuePair<string, byte[]>(x, y))
                         .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ =>
-                            Observable.Empty<KeyValuePair<string, byte[]>>());
-                })
+                            Observable.Empty<KeyValuePair<string, byte[]>>()))
                 .ToDictionary(k => k.Key, v => v.Value)
         };
 
@@ -87,20 +84,14 @@ public static class BulkOperationsMixin
     /// <param name="blobCache">The blob cache to extract the values from.</param>
     /// <param name="keys">The keys to get the values for.</param>
     /// <returns>A observable with the specified values.</returns>
-    public static IObservable<IDictionary<string, T>> GetObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys)
-    {
-        if (blobCache is IObjectBulkBlobCache bulkCache)
-        {
-            return bulkCache.GetObjects<T>(keys);
-        }
-
-        return keys.ToObservable()
+    public static IObservable<IDictionary<string, T>> GetObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys) => blobCache is IObjectBulkBlobCache bulkCache
+            ? bulkCache.GetObjects<T>(keys)
+            : keys.ToObservable()
             .SelectMany(x => blobCache.GetObject<T>(x)
                 .Where(y => y is not null)
                 .Select(y => new KeyValuePair<string, T>(x, y!))
                 .Catch<KeyValuePair<string, T>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, T>>()))
             .ToDictionary(k => k.Key, v => v.Value);
-    }
 
     /// <summary>
     /// Inserts the specified key/value pairs into the blob.

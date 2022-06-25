@@ -5,4 +5,16 @@
 
 namespace Akavache;
 
-internal record ObjectWrapper<T>(T Value) : IObjectWrapper;
+internal class ObjectWrapper<T> : IObjectWrapper
+{
+    public ObjectWrapper()
+    {
+    }
+
+    public ObjectWrapper(T value)
+    {
+        Value = value;
+    }
+
+    public T? Value { get; set; }
+}

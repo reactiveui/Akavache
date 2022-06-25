@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using System.Reactive.Threading.Tasks;
 
@@ -38,7 +37,7 @@ internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
 
     private BlockingCollection<OperationQueueItem> _operationQueue = new();
 
-    [SuppressMessage("Design", "CA2213: dispose field", Justification = "Will be invalid")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA2213: dispose field", Justification = "Will be invalid")]
     private IDisposable? _start;
     private CancellationTokenSource? _shouldQuit;
 
@@ -398,7 +397,6 @@ internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
     }
 
     // NB: Callers must hold flushLock to call this
-    [SuppressMessage("Design", "CA2000: dispose variable", Justification = "Swapped ownership.")]
     private void FlushInternal()
     {
         var newQueue = new BlockingCollection<OperationQueueItem>();
@@ -407,7 +405,6 @@ internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
         ProcessItems(CoalesceOperations(existingItems));
     }
 
-    [SuppressMessage("Design", "CA2000: Dispose variable", Justification = "Ownership transferred.")]
     private void ProcessItems(List<OperationQueueItem> toProcess)
     {
         var commitResult = new AsyncSubject<Unit>();

@@ -64,7 +64,7 @@ public static class IntegrationTestHelper
 
         throw new InvalidOperationException("Couldn't find response body");
 
-        foundIt:
+    foundIt:
 
         var headerText = Encoding.UTF8.GetString(bytes, 0, bodyIndex);
         var lines = headerText.Split('\n');

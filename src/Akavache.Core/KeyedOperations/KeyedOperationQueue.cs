@@ -3,8 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+
 using Splat;
 
 namespace Akavache;
@@ -24,7 +24,6 @@ public class KeyedOperationQueue : IKeyedOperationQueue, IEnableLogger, IDisposa
     /// Initializes a new instance of the <see cref="KeyedOperationQueue"/> class.
     /// </summary>
     /// <param name="scheduler">The scheduler for Observable operations.</param>
-    [SuppressMessage("Design", "CA2000: call dispose", Justification = "Disposed by member")]
     public KeyedOperationQueue(IScheduler? scheduler = null)
     {
         scheduler ??= BlobCache.TaskpoolScheduler;

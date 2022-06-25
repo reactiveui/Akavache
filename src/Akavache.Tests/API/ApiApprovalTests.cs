@@ -45,10 +45,7 @@ public class ApiApprovalTests
     /// </summary>
 #if !NETSTANDARD
     [Fact]
-    public void AkavacheDrawing()
-    {
-        CheckApproval(typeof(Akavache.Drawing.Registrations).Assembly);
-    }
+    public void AkavacheDrawing() => CheckApproval(typeof(Akavache.Drawing.Registrations).Assembly);
 #endif
 
     private static void CheckApproval(Assembly assembly, [CallerMemberName] string memberName = null, [CallerFilePath] string filePath = null)

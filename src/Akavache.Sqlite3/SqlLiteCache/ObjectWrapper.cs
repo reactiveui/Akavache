@@ -11,10 +11,14 @@ namespace Akavache.Sqlite3;
 /// <typeparam name="T">The type of object wrapped.</typeparam>
 internal class ObjectWrapper<T> : IObjectWrapper
 {
-    /// <summary>
-    /// Gets or sets the value.
-    /// </summary>
-#pragma warning disable CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
-    public T Value { get; set; }
-#pragma warning restore CS8618 // Non-nullable field is uninitialized. Consider declaring as nullable.
+    public ObjectWrapper()
+    {
+    }
+
+    public ObjectWrapper(T value)
+    {
+        Value = value;
+    }
+
+    public T? Value { get; set; }
 }

@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reactive.Threading.Tasks;
 
@@ -55,15 +54,9 @@ public static class JsonSerializationMixin
     /// <param name="keyValuePairs">The data to insert into the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
-    public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is IObjectBlobCache objCache)
-        {
-            return objCache.InsertObjects(keyValuePairs, absoluteExpiration);
-        }
-
-        throw new NotImplementedException();
-    }
+    public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IDictionary<string, T> keyValuePairs, DateTimeOffset? absoluteExpiration = null) => blobCache is IObjectBlobCache objCache
+            ? objCache.InsertObjects(keyValuePairs, absoluteExpiration)
+            : throw new NotImplementedException();
 
     /// <summary>
     /// Get an object from the cache and deserialize it via the JSON
@@ -130,25 +123,19 @@ public static class JsonSerializationMixin
     /// <typeparam name="T">The type of item to get.</typeparam>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
-    public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.GetObject<T>(key).Catch<T?, Exception>(ex =>
+    public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.GetObject<T>(key).Catch<T?, Exception>(ex =>
         {
             var prefixedKey = blobCache.GetHashCode().ToString(CultureInfo.InvariantCulture) + key;
 
             var result = Observable.Defer(fetchFunc)
                 .Do(x => blobCache.InsertObject(key, x, absoluteExpiration))
-                .Finally(() => _inflightFetchRequests.TryRemove(prefixedKey, out var _))
+                .Finally(() => _inflightFetchRequests.TryRemove(prefixedKey, out _))
                 .Multicast(new AsyncSubject<T>()).RefCount();
 
             return (IObservable<T>)_inflightFetchRequests.GetOrAdd(prefixedKey, result);
         });
-    }
 
     /// <summary>
     /// <para>
@@ -170,15 +157,9 @@ public static class JsonSerializationMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
-    public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
-    }
+    public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
 
     /// <summary>
     /// <para>
@@ -199,15 +180,9 @@ public static class JsonSerializationMixin
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
-    public static IObservable<T?> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.GetOrFetchObject(key, () => Observable.Return(fetchFunc()), absoluteExpiration);
-    }
+    public static IObservable<T?> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.GetOrFetchObject(key, () => Observable.Return(fetchFunc()), absoluteExpiration);
 
     /// <summary>
     /// Returns the time that the key was added to the cache, or returns
@@ -261,7 +236,6 @@ public static class JsonSerializationMixin
     /// if the fetched value should be cached.</param>
     /// <returns>An Observable stream containing either one or two
     /// results (possibly a cached version, then the latest version).</returns>
-    [SuppressMessage("Design", "CA2000: call dispose", Justification = "Disposed by member")]
     public static IObservable<T?> GetAndFetchLatest<T>(
         this IBlobCache blobCache,
         string key,
@@ -360,15 +334,9 @@ public static class JsonSerializationMixin
         Func<DateTimeOffset, bool>? fetchPredicate = null,
         DateTimeOffset? absoluteExpiration = null,
         bool shouldInvalidateOnError = false,
-        Func<T, bool>? cacheValidationPredicate = null)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration, shouldInvalidateOnError, cacheValidationPredicate);
-    }
+        Func<T, bool>? cacheValidationPredicate = null) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.GetAndFetchLatest(key, () => fetchFunc().ToObservable(), fetchPredicate, absoluteExpiration, shouldInvalidateOnError, cacheValidationPredicate);
 
     /// <summary>
     /// Invalidates a single object from the cache. It is important that the Type
@@ -441,9 +409,7 @@ public static class JsonSerializationMixin
             var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
 
             var ret = JsonConvert.DeserializeObject<T>(bytes, settings);
-#pragma warning disable CS8604 // Possible null reference argument.
             return Observable.Return(ret);
-#pragma warning restore CS8604 // Possible null reference argument.
         }
         catch (Exception ex)
         {
