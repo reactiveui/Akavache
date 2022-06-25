@@ -1374,7 +1374,7 @@ namespace Akavache.Sqlite3.Internal
                     throw NotNullConstraintViolationException.New(ex, map, obj);
                 }
 
-                throw ex;
+                throw;
             }
 
             if (rowsAffected > 0)
@@ -2198,7 +2198,7 @@ namespace Akavache.Sqlite3.Internal
             return stmt;
         }
 
-        void Finalize(Sqlite3Statement stmt) => SQLite3.Finalize(stmt);
+        static void Finalize(Sqlite3Statement stmt) => SQLite3.Finalize(stmt);
 
         void BindAll(Sqlite3Statement stmt)
         {
@@ -2907,7 +2907,7 @@ namespace Akavache.Sqlite3.Internal
         /// </summary>
         /// <param name="expression">The expression to compile.</param>
         /// <param name="parameter">The non-null parameter</param>
-        private string CompileNullBinaryExpression(Expression expression, CompileResult parameter) =>
+        private static string CompileNullBinaryExpression(Expression expression, CompileResult parameter) =>
             expression.NodeType switch
             {
                 ExpressionType.Equal => "(" + parameter.CommandText + " is ?)",
@@ -2916,7 +2916,7 @@ namespace Akavache.Sqlite3.Internal
                                                      expression.NodeType.ToString())
             };
 
-        string GetSqlName(Expression expr)
+        static string GetSqlName(Expression expr)
         {
             var n = expr.NodeType;
             return n switch

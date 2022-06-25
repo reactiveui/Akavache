@@ -56,15 +56,7 @@ public static class BlobCache
     [SuppressMessage("Design", "CA1065: Properties should not fire exceptions.", Justification = "Extreme non standard case.")]
     public static string ApplicationName
     {
-        get
-        {
-            if (_applicationName is null)
-            {
-                throw new("Make sure to set BlobCache.ApplicationName on startup");
-            }
-
-            return _applicationName;
-        }
+        get => _applicationName ?? throw new("Make sure to set BlobCache.ApplicationName on startup");
 
         set => _applicationName = value;
     }

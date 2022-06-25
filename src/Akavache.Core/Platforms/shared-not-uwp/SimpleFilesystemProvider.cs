@@ -56,11 +56,6 @@ public class SimpleFilesystemProvider : IFilesystemProvider
     {
         var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-        if (assemblyDirectoryName is null)
-        {
-            throw new InvalidOperationException("The directory name of the assembly location is null");
-        }
-
-        return assemblyDirectoryName;
+        return assemblyDirectoryName ?? throw new InvalidOperationException("The directory name of the assembly location is null");
     }
 }

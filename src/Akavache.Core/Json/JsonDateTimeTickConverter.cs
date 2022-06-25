@@ -36,7 +36,7 @@ internal class JsonDateTimeTickConverter : JsonConverter
             throw new ArgumentNullException(nameof(reader));
         }
 
-        if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Date)
+        if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
         {
             return null;
         }

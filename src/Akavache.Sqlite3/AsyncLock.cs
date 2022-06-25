@@ -32,12 +32,9 @@ public sealed class AsyncLock : IDisposable
         var wait = _semaphore.WaitAsync(cancellationToken);
 
         // Happy path. We synchronously acquired the lock.
-        if (wait.IsCompleted && !wait.IsFaulted && !wait.IsCanceled)
-        {
-            return _releaser;
-        }
-
-        return wait
+        return wait.IsCompleted && !wait.IsFaulted && !wait.IsCanceled
+            ? _releaser
+            : wait
             .ContinueWith(
                 (task, state) => task.IsCanceled || state is null ? null : (IDisposable)state,
                 _releaser.Result,

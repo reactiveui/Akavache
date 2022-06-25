@@ -19,15 +19,9 @@ public static class RelativeTimeMixin
     /// <param name="data">The data for the entry.</param>
     /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
     /// <returns>A observable which will signal when the item is added.</returns>
-    public static IObservable<Unit> Insert(this IBlobCache blobCache, string key, byte[] data, TimeSpan expiration)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.Insert(key, data, blobCache.Scheduler.Now + expiration);
-    }
+    public static IObservable<Unit> Insert(this IBlobCache blobCache, string key, byte[] data, TimeSpan expiration) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.Insert(key, data, blobCache.Scheduler.Now + expiration);
 
     /// <summary>
     /// Inserts a item into the cache.
@@ -38,15 +32,9 @@ public static class RelativeTimeMixin
     /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
     /// <typeparam name="T">The type of item to insert.</typeparam>
     /// <returns>A observable which will signal when the item is added.</returns>
-    public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, TimeSpan expiration)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.InsertObject(key, value, blobCache.Scheduler.Now + expiration);
-    }
+    public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, TimeSpan expiration) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.InsertObject(key, value, blobCache.Scheduler.Now + expiration);
 
     /// <summary>
     /// Downloads the specified url if there is not already a entry in the cache.
@@ -57,15 +45,9 @@ public static class RelativeTimeMixin
     /// <param name="headers">The headers to specify when getting the entry.</param>
     /// <param name="fetchAlways">If we should fetch always and not return the cache entry if available.</param>
     /// <returns>A observable which will signal when the data is available.</returns>
-    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, TimeSpan expiration, Dictionary<string, string>? headers = null, bool fetchAlways = false)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
-    }
+    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, TimeSpan expiration, Dictionary<string, string>? headers = null, bool fetchAlways = false) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
 
     /// <summary>
     /// Downloads the specified url if there is not already a entry in the cache.
@@ -76,15 +58,9 @@ public static class RelativeTimeMixin
     /// <param name="headers">The headers to specify when getting the entry.</param>
     /// <param name="fetchAlways">If we should fetch always and not return the cache entry if available.</param>
     /// <returns>A observable which will signal when the data is available.</returns>
-    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, TimeSpan expiration, Dictionary<string, string>? headers = null, bool fetchAlways = false)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
-    }
+    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, TimeSpan expiration, Dictionary<string, string>? headers = null, bool fetchAlways = false) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.DownloadUrl(url, headers, fetchAlways, blobCache.Scheduler.Now + expiration);
 
     /// <summary>
     /// Saves a username and password.
@@ -95,13 +71,7 @@ public static class RelativeTimeMixin
     /// <param name="host">The host to store against.</param>
     /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
     /// <returns>A observable which will signal when the item is added.</returns>
-    public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host, TimeSpan expiration)
-    {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        return blobCache.SaveLogin(user, password, host, blobCache.Scheduler.Now + expiration);
-    }
+    public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host, TimeSpan expiration) => blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.SaveLogin(user, password, host, blobCache.Scheduler.Now + expiration);
 }

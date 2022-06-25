@@ -225,12 +225,9 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
             }
         }
 
-        if (entry is null)
-        {
-            return ExceptionHelper.ObservableThrowKeyNotFoundException<DateTimeOffset?>(key);
-        }
-
-        return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
+        return entry is null
+            ? ExceptionHelper.ObservableThrowKeyNotFoundException<DateTimeOffset?>(key)
+            : Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
     }
 
     /// <inheritdoc />

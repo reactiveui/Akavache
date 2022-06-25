@@ -18,7 +18,7 @@ public class FakeDateTimeHighPrecisionJsonConverter : JsonConverter
     /// <inheritdoc />
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
-        if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Date)
+        if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
         {
             return null;
         }
