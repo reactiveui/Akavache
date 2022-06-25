@@ -23,7 +23,7 @@ public class SQLiteEncryptedBlobCache : SqlRawPersistentBlobCache, ISecureBlobCa
     /// <exception cref="Exception">If there is no encryption provider available.</exception>
     public SQLiteEncryptedBlobCache(string databaseFile, IEncryptionProvider? encryptionProvider = null, IScheduler? scheduler = null)
         : base(databaseFile, scheduler) =>
-        _encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>() ?? throw new("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
+        _encryption = encryptionProvider ?? Locator.Current.GetService<IEncryptionProvider>() ?? throw new InvalidOperationException("No IEncryptionProvider available. This should never happen, your DependencyResolver is broken");
 
     /// <inheritdoc />
     protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)

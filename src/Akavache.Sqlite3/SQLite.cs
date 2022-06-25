@@ -3232,7 +3232,7 @@ namespace Akavache.Sqlite3.Internal
 
         public static Sqlite3Statement Prepare2(Sqlite3DatabaseHandle db, string query)
         {
-            Sqlite3Statement stmt = default(Sqlite3Statement);
+            var stmt = default(Sqlite3Statement);
 #if USE_WP8_NATIVE_SQLITE || USE_SQLITEPCL_RAW
             var r = Sqlite3Raw.sqlite3_prepare_v2(db, query, out stmt);
 #else

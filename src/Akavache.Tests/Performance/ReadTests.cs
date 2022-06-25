@@ -108,8 +108,7 @@ public abstract class ReadTests
         var results = new Dictionary<int, long>();
         var dbName = default(string);
 
-        var dirPath = default(string);
-        using (Utility.WithEmptyDirectory(out dirPath))
+        using (Utility.WithEmptyDirectory(out var dirPath))
         using (var cache = await GenerateAGiantDatabase(dirPath).ConfigureAwait(false))
         {
             var keys = await cache.GetAllKeys();

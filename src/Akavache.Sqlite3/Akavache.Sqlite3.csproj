@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Remove="Foundation" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.core" Version="2.1.0" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="Splat" Version="14.*" />

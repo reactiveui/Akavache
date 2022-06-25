@@ -60,7 +60,7 @@ public static class BlobCache
         {
             if (_applicationName is null)
             {
-                throw new("Make sure to set BlobCache.ApplicationName on startup");
+                throw new InvalidOperationException("Make sure to set BlobCache.ApplicationName on startup");
             }
 
             return _applicationName;

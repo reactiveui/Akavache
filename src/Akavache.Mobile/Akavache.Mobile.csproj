@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Remove="Foundation" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="reactiveui" Version="18.*" />
   </ItemGroup>
 
