@@ -39,7 +39,18 @@ public class MacFilesystemProvider : IFilesystemProvider
     {
         using var fm = new NSFileManager();
         var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _);
-        var ret = Path.Combine(url.RelativePath, BlobCache.ApplicationName, subDir);
+        if (url == null)
+        {
+            throw new DirectoryNotFoundException();
+        }
+
+        var rp = url.RelativePath;
+        if (rp == null)
+        {
+            throw new DirectoryNotFoundException();
+        }
+
+        var ret = Path.Combine(rp, BlobCache.ApplicationName, subDir);
         if (!Directory.Exists(ret))
         {
             _inner.CreateRecursive(ret).Wait();
