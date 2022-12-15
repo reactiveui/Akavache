@@ -13,7 +13,7 @@ jobs:
     with:
       configuration: Release
       productNamespacePrefix: "Akavache"
-      useVisualStudioPreview: false
+      useVisualStudioPreview: true
       useMauiCheckDotNetTool: false
     secrets:
       SIGN_CLIENT_USER_ID: ${{ secrets.SIGN_CLIENT_USER_ID }}

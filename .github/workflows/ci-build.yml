@@ -15,5 +15,5 @@ jobs:
     with:
       configuration: Release
       productNamespacePrefix: "Akavache"
-      useVisualStudioPreview: false
+      useVisualStudioPreview: true
       useMauiCheckDotNetTool: false
