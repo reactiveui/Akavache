@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.build.targets = Directory.build.targets
 		global.json = global.json
 		stylecop.json = stylecop.json
+		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Core", "Akavache.Core\Akavache.Core.csproj", "{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}"

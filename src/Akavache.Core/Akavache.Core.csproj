@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid11.0;tizen40;net6.0;net6.0-android;net6.0-ios;net6.0-tvos;net6.0-macos;net6.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;uap10.0.16299;net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid12.0;MonoAndroid12.1;MonoAndroid13.0;tizen40;net6.0;net6.0-android;net6.0-ios;net6.0-tvos;net6.0-macos;net6.0-maccatalyst;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net6.0-windows10.0.17763.0;net7.0-windows10.0.17763.0</TargetFrameworks>
     <AssemblyName>Akavache.Core</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
@@ -44,7 +44,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-ios')) ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-ios')) or $(TargetFramework.StartsWith('net7.0-ios')) ">
     <Compile Include="Platforms\apple-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
   </ItemGroup>
@@ -55,12 +55,12 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-tvos')) ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-tvos')) or $(TargetFramework.StartsWith('net7.0-tvos')) ">
     <Compile Include="Platforms\apple-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-maccatalyst')) ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-maccatalyst')) or $(TargetFramework.StartsWith('net7.0-maccatalyst')) ">
     <Compile Include="Platforms\apple-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
   </ItemGroup>
@@ -77,7 +77,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-macos')) ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-macos')) or $(TargetFramework.StartsWith('net7.0-macos')) ">
     <Compile Include="Platforms\apple-common\**\*.cs" />
   </ItemGroup>
 
@@ -87,7 +87,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-android')) ">
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-android')) or $(TargetFramework.StartsWith('net7.0-android')) ">
     <Compile Include="Platforms\android\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
   </ItemGroup>
