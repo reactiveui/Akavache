@@ -282,7 +282,3 @@ namespace Akavache.Internal
         Inheritable = 16,
     }
 }
-namespace System
-{
-    public static class StreamMixins { }
-}
