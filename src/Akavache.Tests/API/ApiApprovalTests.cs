@@ -69,7 +69,7 @@ public class ApiApprovalTests
 
         var approvedPublicApi = File.ReadAllText(approvedFileName);
 
-        var generatorOptions = new ApiGeneratorOptions { WhitelistedNamespacePrefixes = new[] { "Akavache" } };
+        var generatorOptions = new ApiGeneratorOptions { AllowNamespacePrefixes = new[] { "Akavache" } };
         var receivedPublicApi = Filter(assembly.GeneratePublicApi(generatorOptions));
 
         if (!string.Equals(receivedPublicApi, approvedPublicApi, StringComparison.InvariantCulture))
