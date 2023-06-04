@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid12.0;MonoAndroid12.1;MonoAndroid13.0;tizen40;net6.0;net6.0-android;net6.0-ios;net6.0-tvos;net6.0-macos;net6.0-maccatalyst;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst</TargetFrameworks>
@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.core" Version="2.1.4" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="2.1.5" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="Splat" Version="14.*" />
   </ItemGroup>
