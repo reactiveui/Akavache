@@ -21,6 +21,7 @@ public class BasicEncryptionTests
     [SkippableFact]
     public async Task ShouldEncrypt()
     {
+        // TODO: This test is failing on .NET 6.0. Investigate.
         Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
 
         var provider = new EncryptionProvider();

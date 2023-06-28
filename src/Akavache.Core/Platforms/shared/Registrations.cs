@@ -11,6 +11,9 @@ using Foundation;
 
 #if ANDROID
 using Android.App;
+#if ANDROID33_0_OR_GREATER
+using System.Runtime.Versioning;
+#endif
 #endif
 
 namespace Akavache.Core
@@ -22,6 +25,9 @@ namespace Akavache.Core
     public class Registrations : IWantsToRegisterStuff
     {
         /// <inheritdoc />
+#if ANDROID && ANDROID33_0_OR_GREATER
+        [ObsoletedOSPlatform("android33.0")]
+#endif
         public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
             if (resolver is null)

@@ -12,7 +12,7 @@ namespace Akavache;
 /// </summary>
 public class DefaultAkavacheHttpClientFactory : IAkavacheHttpClientFactory
 {
-    private static ConcurrentDictionary<string, HttpClient> _instances = new();
+    private static readonly ConcurrentDictionary<string, HttpClient> _instances = new();
 
     /// <inheritdoc/>
     public HttpClient CreateClient(string name) => _instances.GetOrAdd(name, _ => new HttpClient());
