@@ -8,7 +8,7 @@ using System.Reactive.Threading.Tasks;
 using Microsoft.Reactive.Testing;
 
 using ReactiveUI.Testing;
-
+using Splat;
 using Xunit;
 
 namespace Akavache.Tests;
@@ -138,9 +138,11 @@ public abstract class BlobCacheInterfaceTestBase
     /// <summary>
     /// Checks to make sure that the cache respects expiration dates.
     /// </summary>
-    [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
+    [SkippableFact]
     public void CacheShouldRespectExpiration()
     {
+        // TODO: TestScheduler tests aren't gonna work with new SQLite.
+        Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
         using (Utility.WithEmptyDirectory(out var path))
         {
             new TestScheduler().With(sched =>

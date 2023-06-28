@@ -10,7 +10,7 @@ using FluentAssertions;
 using Microsoft.Reactive.Testing;
 
 using ReactiveUI.Testing;
-
+using Splat;
 using Xunit;
 
 namespace Akavache.Tests;
@@ -31,7 +31,7 @@ public abstract class BlobCacheExtensionsTestBase
         using (var fixture = CreateBlobCache(path))
         {
             var bytes = await fixture.DownloadUrl("http://httpbin.org/html").FirstAsync();
-            Assert.True(bytes.Length > 0);
+            bytes.Length.Should().BeGreaterThan(0);
         }
     }
 
@@ -46,7 +46,7 @@ public abstract class BlobCacheExtensionsTestBase
         using (var fixture = CreateBlobCache(path))
         {
             var bytes = await fixture.DownloadUrl(new Uri("http://httpbin.org/html")).FirstAsync();
-            Assert.True(bytes.Length > 0);
+            bytes.Length.Should().BeGreaterThan(0);
         }
     }
 
@@ -63,7 +63,7 @@ public abstract class BlobCacheExtensionsTestBase
             var key = Guid.NewGuid().ToString();
             await fixture.DownloadUrl(key, "http://httpbin.org/html").FirstAsync();
             var bytes = await fixture.Get(key);
-            Assert.True(bytes.Length > 0);
+            bytes.Length.Should().BeGreaterThan(0);
         }
     }
 
@@ -78,9 +78,9 @@ public abstract class BlobCacheExtensionsTestBase
         using (var fixture = CreateBlobCache(path))
         {
             var key = Guid.NewGuid().ToString();
-            await fixture.DownloadUrl(key, new Uri("http://httpbin.org/html")).FirstAsync();
+            await fixture.DownloadUrl(key, new Uri("https://httpbin.org/html")).FirstAsync();
             var bytes = await fixture.Get(key);
-            Assert.True(bytes.Length > 0);
+            bytes.Length.Should().BeGreaterThan(0);
         }
     }
 
@@ -170,9 +170,9 @@ public abstract class BlobCacheExtensionsTestBase
             }
         }
 
-        Assert.Equal(input.First().Blog, result.First().Blog);
-        Assert.Equal(input.First().Bio, result.First().Bio);
-        Assert.Equal(input.First().Name, result.First().Name);
+        Assert.Equal(input[0].Blog, result[0].Blog);
+        Assert.Equal(input[0].Bio, result[0].Bio);
+        Assert.Equal(input[0].Name, result[0].Name);
         Assert.Equal(input.Last().Blog, result.Last().Blog);
         Assert.Equal(input.Last().Bio, result.Last().Bio);
         Assert.Equal(input.Last().Name, result.Last().Name);
@@ -237,8 +237,8 @@ public abstract class BlobCacheExtensionsTestBase
             }
         }
 
-        Assert.Equal(input.First().Age, result.First().Age);
-        Assert.Equal(input.First().Name, result.First().Name);
+        Assert.Equal(input[0].Age, result[0].Age);
+        Assert.Equal(input[0].Name, result[0].Name);
         Assert.Equal(input.Last().Age, result.Last().Age);
         Assert.Equal(input.Last().Name, result.Last().Name);
     }
@@ -247,9 +247,12 @@ public abstract class BlobCacheExtensionsTestBase
     /// Make sure that the fetch functions are called only once for the get or fetch object methods.
     /// </summary>
     /// <returns>A task to monitor the progress.</returns>
-    [Fact(Skip = "Failing at the moment. Fix later.")]
+    [SkippableFact]
     public async Task FetchFunctionShouldBeCalledOnceForGetOrFetchObject()
     {
+        // TODO: This test is failing on .NET 6.0. Investigate.
+        Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
+
         var fetchCount = 0;
         var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
         {
@@ -292,10 +295,12 @@ public abstract class BlobCacheExtensionsTestBase
     /// <summary>
     /// Makes sure the fetch function debounces current requests.
     /// </summary>
-    [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
+    [SkippableFact]
     public void FetchFunctionShouldDebounceConcurrentRequests() =>
         new TestScheduler().With(sched =>
         {
+            // TODO: TestScheduler tests aren't gonna work with new SQLite.
+            Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
             using (Utility.WithEmptyDirectory(out var path))
             {
                 var callCount = 0;
@@ -424,10 +429,12 @@ public abstract class BlobCacheExtensionsTestBase
     /// <summary>
     /// Make sure that the GetOrFetch function respects expirations.
     /// </summary>
-    [Fact(Skip = "TestScheduler tests aren't gonna work with new SQLite")]
+    [SkippableFact]
     public void GetOrFetchShouldRespectExpiration() =>
         new TestScheduler().With(sched =>
         {
+            // TODO: TestScheduler tests aren't gonna work with new SQLite.
+            Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
             using (Utility.WithEmptyDirectory(out var path))
             {
                 var fixture = CreateBlobCache(path);
@@ -510,7 +517,7 @@ public abstract class BlobCacheExtensionsTestBase
     {
         var fetchPredicateCalled = false;
 
-        bool FetchPredicate(DateTimeOffset d)
+        bool FetchPredicate(DateTimeOffset _)
         {
             fetchPredicateCalled = true;
 
@@ -573,7 +580,7 @@ public abstract class BlobCacheExtensionsTestBase
                 // GetAndFetchLatest skips cache invalidation/storage due to cache validation predicate.
                 await fixture.InsertObject(key, items);
 
-                await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i is not null && i.Count > 0).LastAsync();
+                await fixture.GetAndFetchLatest(key, fetcher, cacheValidationPredicate: i => i?.Count > 0).LastAsync();
 
                 var result = await fixture.GetObject<List<int>>(key).FirstAsync();
 

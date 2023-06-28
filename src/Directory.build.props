@@ -25,6 +25,7 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>IDE1006;SA1313;</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
