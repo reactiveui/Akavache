@@ -27,7 +27,11 @@ public sealed class AsyncLock : IDisposable
     /// </summary>
     /// <param name="cancellationToken">A cancellation token which allows for release of the lock.</param>
     /// <returns>A disposable which when Disposed will release the lock.</returns>
+#if NETSTANDARD2_0 || XAMARINIOS || XAMARINMAC || XAMARINTVOS || MONOANDROID13_0
     public Task<IDisposable?> LockAsync(CancellationToken cancellationToken = default)
+#else
+    public Task<IDisposable?> LockAsync(in CancellationToken cancellationToken = default)
+#endif
     {
         var wait = _semaphore.WaitAsync(cancellationToken);
 

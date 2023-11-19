@@ -40,18 +40,8 @@ public class MacFilesystemProvider : IFilesystemProvider
     private string CreateAppDirectory(NSSearchPathDirectory targetDir, string subDir = "BlobCache")
     {
         using var fm = new NSFileManager();
-        var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _);
-        if (url == null)
-        {
-            throw new DirectoryNotFoundException();
-        }
-
-        var rp = url.RelativePath;
-        if (rp == null)
-        {
-            throw new DirectoryNotFoundException();
-        }
-
+        var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();
+        var rp = url.RelativePath ?? throw new DirectoryNotFoundException();
         var ret = Path.Combine(rp, BlobCache.ApplicationName, subDir);
         if (!Directory.Exists(ret))
         {
