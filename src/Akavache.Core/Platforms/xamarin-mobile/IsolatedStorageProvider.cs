@@ -14,6 +14,7 @@ namespace Akavache;
 public class IsolatedStorageProvider : IFilesystemProvider
 {
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler) =>
         Observable.Create<Stream>(subj =>
         {
@@ -34,6 +35,7 @@ public class IsolatedStorageProvider : IFilesystemProvider
         });
 
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler) =>
         Observable.Create<Stream>(subj =>
         {

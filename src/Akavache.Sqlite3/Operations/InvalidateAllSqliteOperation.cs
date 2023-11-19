@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Sqlite3.Internal;
-
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;
@@ -12,6 +11,7 @@ namespace Akavache.Sqlite3;
 internal class InvalidateAllSqliteOperation(SQLiteConnection connection) : IPreparedSqliteOperation
 {
     private readonly SQLiteConnection _connection = connection;
+    private bool _disposedValue;
 
     public SQLiteConnection Connection { get; protected set; } = connection;
 
@@ -19,5 +19,21 @@ internal class InvalidateAllSqliteOperation(SQLiteConnection connection) : IPrep
 
     public void Dispose()
     {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _connection.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 }

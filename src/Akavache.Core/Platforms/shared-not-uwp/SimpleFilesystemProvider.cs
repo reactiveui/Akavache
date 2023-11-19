@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-
 using Splat;
 
 namespace Akavache;
@@ -15,9 +14,11 @@ namespace Akavache;
 public class SimpleFilesystemProvider : IFilesystemProvider
 {
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler) => Utility.SafeOpenFileAsync(path, FileMode.Open, FileAccess.Read, FileShare.Read, scheduler);
 
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler) => Utility.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler);
 
     /// <inheritdoc />

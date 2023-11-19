@@ -31,6 +31,7 @@ public static class LoginMixin
     /// <param name="blobCache">The blob cache where to get the data.</param>
     /// <param name="host">The host associated with the data.</param>
     /// <returns>A Future result representing the user/password Tuple.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache blobCache, string host = "default") => blobCache.GetObject<(string, string)>("login:" + host).Select(x => new LoginInfo(x));
 
     /// <summary>

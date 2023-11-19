@@ -30,25 +30,23 @@ namespace Akavache.Core
 #endif
         public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
+#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
             if (resolver is null)
             {
                 throw new ArgumentNullException(nameof(resolver));
             }
+#else
+            ArgumentNullException.ThrowIfNull(resolver);
+#endif
 
 #if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();
-#elif WINDOWS_UWP
-            var fs = new WinRTFilesystemProvider();
 #else
             var fs = new SimpleFilesystemProvider();
 #endif
             resolver.Register(() => fs, typeof(IFilesystemProvider), null);
 
-#if WINDOWS_UWP
-            var enc = new WinRTEncryptionProvider();
-#else
             var enc = new EncryptionProvider();
-#endif
             resolver.Register(() => enc, typeof(IEncryptionProvider), null);
 
             var localCache = new Lazy<IBlobCache>(() => new InMemoryBlobCache());

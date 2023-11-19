@@ -26,10 +26,6 @@ internal class MD5Managed : MD5
 
     public MD5Managed()
     {
-        // TODO SHANE is this ok for UWP?
-#if !WINDOWS_UWP
-        HashSizeValue = 0x80;
-#endif
         _data = new byte[64];
         _abcd = default;
     }
@@ -80,14 +76,9 @@ internal class MD5Managed : MD5
         _totalLength += cbSize;
     }
 
-    // TODO SHANE is this ok for UWP?
-#if !WINDOWS_UWP
     protected override byte[] HashFinal()
     {
         HashValue = MD5Core.GetHashFinalBlock(_data, 0, _dataSize, _abcd, _totalLength * 8);
         return HashValue;
     }
-#else
-    protected override byte[] HashFinal() => MD5Core.GetHashFinalBlock(_data, 0, _dataSize, _abcd, _totalLength * 8);
-#endif
 }

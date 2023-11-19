@@ -6,9 +6,7 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reactive.Threading.Tasks;
-
 using Newtonsoft.Json;
-
 using Splat;
 
 namespace Akavache;
@@ -125,7 +123,7 @@ public static class JsonSerializationMixin
     /// the cache.</returns>
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) => blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.GetObject<T>(key).Catch<T?, Exception>(ex =>
+            : blobCache.GetObject<T>(key).Catch<T?, Exception>(__ =>
         {
             var prefixedKey = blobCache.GetHashCode().ToString(CultureInfo.InvariantCulture) + key;
 
@@ -245,10 +243,14 @@ public static class JsonSerializationMixin
         bool shouldInvalidateOnError = false,
         Func<T, bool>? cacheValidationPredicate = null)
     {
+#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
         if (blobCache is null)
         {
             throw new ArgumentNullException(nameof(blobCache));
         }
+#else
+        ArgumentNullException.ThrowIfNull(blobCache);
+#endif
 
 #pragma warning disable CS8604 // Possible null reference argument.
         var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))

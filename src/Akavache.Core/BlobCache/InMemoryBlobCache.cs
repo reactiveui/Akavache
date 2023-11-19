@@ -5,10 +5,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-
 using Splat;
 
 namespace Akavache;

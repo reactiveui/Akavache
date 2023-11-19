@@ -12,10 +12,10 @@ namespace Akavache
     {
         /// <inheritdoc />
         public IObservable<byte[]> EncryptBlock(byte[] block) =>
-            Observable.Return(
-                ProtectedData.Protect(block, null, DataProtectionScope.CurrentUser));
+            Observable.Return(ProtectedData.Protect(block, null, DataProtectionScope.CurrentUser));
 
         /// <inheritdoc />
-        public IObservable<byte[]> DecryptBlock(byte[] block) => Observable.Return(ProtectedData.Unprotect(block, null, DataProtectionScope.CurrentUser));
+        public IObservable<byte[]> DecryptBlock(byte[] block) =>
+            Observable.Return(ProtectedData.Unprotect(block, null, DataProtectionScope.CurrentUser));
     }
 }

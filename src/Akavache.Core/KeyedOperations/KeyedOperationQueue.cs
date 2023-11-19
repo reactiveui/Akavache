@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Globalization;
-
 using Splat;
 
 namespace Akavache;
@@ -137,7 +136,7 @@ public class KeyedOperationQueue : IKeyedOperationQueue, IEnableLogger, IDisposa
             .Select(_ => operation)
             .Catch(Observable.Return(operation));
 
-    private IObservable<T> SafeStart<T>(Func<T> calculationFunc)
+    private AsyncSubject<T> SafeStart<T>(Func<T> calculationFunc)
     {
         var ret = new AsyncSubject<T>();
         Observable.Start(

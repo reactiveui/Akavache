@@ -5,7 +5,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-
 using Akavache.Core;
 
 namespace Akavache.Sqlite3;
