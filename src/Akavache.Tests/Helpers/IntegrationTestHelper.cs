@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -45,7 +45,11 @@ public static class IntegrationTestHelper
     /// </summary>
     /// <param name="paths">The paths for the web service.</param>
     /// <returns>The response from the server.</returns>
+#if NETFRAMEWORK
+    public static System.Net.Http.HttpResponseMessage GetResponse(params string[] paths)
+#else
     public static HttpResponseMessage GetResponse(params string[] paths)
+#endif
     {
         var bytes = File.ReadAllBytes(GetPath(paths));
 
@@ -69,10 +73,17 @@ public static class IntegrationTestHelper
         var headerText = Encoding.UTF8.GetString(bytes, 0, bodyIndex);
         var lines = headerText.Split('\n');
         var statusCode = (HttpStatusCode)int.Parse(lines[0].Split(' ')[1], CultureInfo.InvariantCulture);
+#if NETFRAMEWORK
+        var ret = new System.Net.Http.HttpResponseMessage(statusCode)
+        {
+            Content = new System.Net.Http.ByteArrayContent(bytes, bodyIndex + 2, bytes.Length - bodyIndex - 2)
+        };
+#else
         var ret = new HttpResponseMessage(statusCode)
         {
             Content = new ByteArrayContent(bytes, bodyIndex + 2, bytes.Length - bodyIndex - 2)
         };
+#endif
 
         foreach (var line in lines.Skip(1))
         {

@@ -1,74 +1,69 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid12.0;MonoAndroid12.1;MonoAndroid13.0;tizen40;net6.0;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net6.0-windows10.0.17763.0;net7.0-windows10.0.17763.0</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
     <AssemblyName>Akavache.Core</AssemblyName>
     <RootNamespace>Akavache</RootNamespace>
     <Description>An asynchronous, persistent key-value store for desktop and mobile applications on .NET</Description>
     <PackageId>akavache.core</PackageId>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="Foundation" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     <PackageReference Include="Splat" Version="14.*" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="7.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Remove="Foundation" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Platforms\**\*.cs" />
     <None Include="Platforms\**\*.cs" />
     <Compile Include="Platforms\shared\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" !$(TargetFramework.StartsWith('uap'))">
     <Compile Include="Platforms\shared-not-uwp\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('uap')) ">
-    <Compile Include="Platforms\uap\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.iOS'))">
     <Compile Include="Platforms\apple-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-ios')) or $(TargetFramework.StartsWith('net7.0-ios')) ">
-    <Compile Include="Platforms\apple-common\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.TVOS'))">
     <Compile Include="Platforms\apple-common\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-tvos')) or $(TargetFramework.StartsWith('net7.0-tvos')) ">
-    <Compile Include="Platforms\apple-common\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-maccatalyst')) or $(TargetFramework.StartsWith('net7.0-maccatalyst')) ">
-    <Compile Include="Platforms\apple-common\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.Mac'))">
     <Compile Include="Platforms\apple-common\**\*.cs" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="netstandard" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-macos')) or $(TargetFramework.StartsWith('net7.0-macos')) ">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('tizen40'))">
+    <Compile Include="Platforms\tizen\**\*.cs" />
+    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.EndsWith('0-ios'))">
+    <Compile Include="Platforms\apple-common\**\*.cs" />
+    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.EndsWith('0-tvos'))">
+    <Compile Include="Platforms\apple-common\**\*.cs" />
+    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.EndsWith('0-maccatalyst'))">
+    <Compile Include="Platforms\apple-common\**\*.cs" />
+    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.EndsWith('0-macos'))">
     <Compile Include="Platforms\apple-common\**\*.cs" />
   </ItemGroup>
 
@@ -78,13 +73,8 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net6.0-android')) or $(TargetFramework.StartsWith('net7.0-android')) ">
+  <ItemGroup Condition="$(TargetFramework.EndsWith('0-android'))">
     <Compile Include="Platforms\android\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('tizen40')) ">
-    <Compile Include="Platforms\tizen\**\*.cs" />
     <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
   </ItemGroup>
 

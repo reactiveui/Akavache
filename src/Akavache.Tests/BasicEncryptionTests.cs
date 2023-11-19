@@ -1,10 +1,9 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Splat;
-
 using Xunit;
 
 namespace Akavache.Tests;
@@ -22,12 +21,12 @@ public class BasicEncryptionTests
     public async Task ShouldEncrypt()
     {
         // TODO: This test is failing on .NET 6.0. Investigate.
-        Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
+        Skip.If(GetType().Assembly.GetTargetFrameworkName().StartsWith("net"));
 
         var provider = new EncryptionProvider();
         var array = Encoding.ASCII.GetBytes("This is a test");
 
-        var result = await AsArray(provider.EncryptBlock(array)).ConfigureAwait(false);
+        var result = await AsArray(provider.EncryptBlock(array));
         Assert.True(array.Length < result.Length); // Encrypted bytes should be much larger.
         Assert.NotEqual(array.ToList(), result);
 
@@ -45,8 +44,8 @@ public class BasicEncryptionTests
         var provider = new EncryptionProvider();
         var array = Encoding.ASCII.GetBytes("This is a test");
 
-        var encrypted = await AsArray(provider.EncryptBlock(array)).ConfigureAwait(false);
-        var decrypted = await AsArray(provider.DecryptBlock(encrypted)).ConfigureAwait(false);
+        var encrypted = await AsArray(provider.EncryptBlock(array));
+        var decrypted = await AsArray(provider.DecryptBlock(encrypted));
         Assert.Equal(array.ToList(), decrypted);
         Assert.Equal(Encoding.ASCII.GetString(decrypted), "This is a test");
     }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -25,7 +25,7 @@ public abstract class ObjectBulkOperationsTestBase
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data).FirstAsync())).ConfigureAwait(false);
+            await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data).FirstAsync()));
 
             Assert.Equal(keys.Length, (await fixture.GetAllKeys().FirstAsync()).Count());
 
@@ -49,7 +49,7 @@ public abstract class ObjectBulkOperationsTestBase
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data, DateTimeOffset.MinValue).FirstAsync())).ConfigureAwait(false);
+            await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
             var allData = await fixture.GetObjects<Tuple<string, int>>(keys).FirstAsync();
             Assert.Equal(0, allData.Count);
@@ -94,7 +94,7 @@ public abstract class ObjectBulkOperationsTestBase
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data).FirstAsync())).ConfigureAwait(false);
+            await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data).FirstAsync()));
 
             Assert.Equal(keys.Length, (await fixture.GetAllKeys().FirstAsync()).Count());
 

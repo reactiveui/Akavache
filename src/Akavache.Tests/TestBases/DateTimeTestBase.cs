@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -66,7 +66,7 @@ public abstract class DateTimeTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var blobCache = CreateBlobCache(path))
         {
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data).ConfigureAwait(false);
+            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.UtcTicks, secondResult.Timestamp.UtcTicks);
             Assert.Equal(firstResult.Timestamp.Offset, secondResult.Timestamp.Offset);
@@ -87,7 +87,7 @@ public abstract class DateTimeTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var blobCache = CreateBlobCache(path))
         {
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data).ConfigureAwait(false);
+            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Utc);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
             Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());
@@ -107,7 +107,7 @@ public abstract class DateTimeTestBase
         using (var blobCache = CreateBlobCache(path))
         {
             blobCache.ForcedDateTimeKind = DateTimeKind.Local;
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data).ConfigureAwait(false);
+            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Local);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
