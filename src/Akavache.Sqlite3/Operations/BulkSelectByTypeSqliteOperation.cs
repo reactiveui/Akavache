@@ -7,10 +7,6 @@ using Akavache.Sqlite3.Internal;
 
 namespace Akavache.Sqlite3;
 
-internal class BulkSelectByTypeSqliteOperation : BulkSelectSqliteOperation
+internal class BulkSelectByTypeSqliteOperation(SQLiteConnection conn, IScheduler scheduler) : BulkSelectSqliteOperation(conn, true, scheduler)
 {
-    public BulkSelectByTypeSqliteOperation(SQLiteConnection conn, IScheduler scheduler)
-        : base(conn, true, scheduler)
-    {
-    }
 }

@@ -8,18 +8,13 @@ namespace Akavache;
 /// <summary>
 /// Stored login information for a user.
 /// </summary>
-public class LoginInfo
+/// <remarks>
+/// Initializes a new instance of the <see cref="LoginInfo"/> class.
+/// </remarks>
+/// <param name="username">The username for the entry.</param>
+/// <param name="password">The password for the user.</param>
+public class LoginInfo(string username, string password)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LoginInfo"/> class.
-    /// </summary>
-    /// <param name="username">The username for the entry.</param>
-    /// <param name="password">The password for the user.</param>
-    public LoginInfo(string username, string password)
-    {
-        UserName = username;
-        Password = password;
-    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LoginInfo"/> class.
@@ -33,10 +28,10 @@ public class LoginInfo
     /// <summary>
     /// Gets the username.
     /// </summary>
-    public string UserName { get; }
+    public string UserName { get; } = username;
 
     /// <summary>
     /// Gets the password.
     /// </summary>
-    public string Password { get; }
+    public string Password { get; } = password;
 }

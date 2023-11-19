@@ -9,17 +9,11 @@ using SQLitePCL;
 
 namespace Akavache.Sqlite3;
 
-internal class InvalidateAllSqliteOperation : IPreparedSqliteOperation
+internal class InvalidateAllSqliteOperation(SQLiteConnection connection) : IPreparedSqliteOperation
 {
-    private readonly SQLiteConnection _connection;
+    private readonly SQLiteConnection _connection = connection;
 
-    public InvalidateAllSqliteOperation(SQLiteConnection connection)
-    {
-        _connection = connection;
-        Connection = connection;
-    }
-
-    public SQLiteConnection Connection { get; protected set; }
+    public SQLiteConnection Connection { get; protected set; } = connection;
 
     public Action PrepareToExecute() => () => this.Checked(raw.sqlite3_exec(_connection.Handle, "DELETE FROM CacheElement"));
 

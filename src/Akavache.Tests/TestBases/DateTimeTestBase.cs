@@ -18,7 +18,7 @@ public abstract class DateTimeTestBase
     public static IEnumerable<object[]> DateTimeOffsetData => new[]
     {
         new object[] { new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = null } },
-        new object[] { new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = TestNowOffset } },
+        [new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = TestNowOffset }],
     };
 
     /// <summary>
@@ -27,7 +27,7 @@ public abstract class DateTimeTestBase
     public static IEnumerable<object[]> DateTimeData => new[]
     {
         new object[] { new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = null } },
-        new object[] { new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = TestNow } },
+        [new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = TestNow }],
     };
 
     /// <summary>
@@ -36,7 +36,7 @@ public abstract class DateTimeTestBase
     public static IEnumerable<object[]> DateLocalTimeData => new[]
     {
         new object[] { new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = null } },
-        new object[] { new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = LocalTestNow } },
+        [new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = LocalTestNow }],
     };
 
     /// <summary>

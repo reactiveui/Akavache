@@ -175,9 +175,9 @@ public class CoalescerTests
     {
         var fixture = new SqliteOperationQueue();
         fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = new byte[] { 1, 2, 3 } } });
+        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = [1, 2, 3] } });
         fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = new byte[] { 4, 5, 6 } } });
+        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = [4, 5, 6] } });
 
         var queue = fixture.DumpQueue();
         var result = SqliteOperationQueue.CoalesceOperations(queue);

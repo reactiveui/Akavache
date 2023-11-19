@@ -7,19 +7,13 @@ using System.Collections;
 
 namespace Akavache.Sqlite3;
 
-internal class OperationQueueItem
+internal class OperationQueueItem(object completion, IEnumerable? parameters)
 {
-    public OperationQueueItem(object completion, IEnumerable? parameters)
-    {
-        Completion = completion;
-        Parameters = parameters;
-    }
-
     public OperationType OperationType { get; set; }
 
-    public IEnumerable? Parameters { get; set; }
+    public IEnumerable? Parameters { get; set; } = parameters;
 
-    public object Completion { get; set; }
+    public object Completion { get; set; } = completion;
 
     public IEnumerable<CacheElement>? ParametersAsElements => (IEnumerable<CacheElement>?)Parameters;
 

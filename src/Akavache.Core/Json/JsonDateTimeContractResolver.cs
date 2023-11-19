@@ -11,7 +11,12 @@ namespace Akavache;
 /// Resolver which will handle DateTime and DateTimeOffset with our own internal resolver.
 /// It will also be able to use, if set, a external provider that a user has set.
 /// </summary>
-internal class JsonDateTimeContractResolver : DefaultContractResolver
+/// <remarks>
+/// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
+/// </remarks>
+/// <param name="contractResolver">A inherited contract resolver.</param>
+/// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
+internal class JsonDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride) : DefaultContractResolver
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
@@ -21,20 +26,9 @@ internal class JsonDateTimeContractResolver : DefaultContractResolver
     {
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
-    /// </summary>
-    /// <param name="contractResolver">A inherited contract resolver.</param>
-    /// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
-    public JsonDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride)
-    {
-        ExistingContractResolver = contractResolver;
-        ForceDateTimeKindOverride = forceDateTimeKindOverride;
-    }
+    public IContractResolver? ExistingContractResolver { get; set; } = contractResolver;
 
-    public IContractResolver? ExistingContractResolver { get; set; }
-
-    public DateTimeKind? ForceDateTimeKindOverride { get; set; }
+    public DateTimeKind? ForceDateTimeKindOverride { get; set; } = forceDateTimeKindOverride;
 
     /// <inheritdoc />
     public override JsonContract ResolveContract(Type type)

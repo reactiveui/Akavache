@@ -33,17 +33,11 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
 
     public override bool CanConvert(Type objectType) => objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?);
 
-    internal class DateTimeOffsetData
+    internal class DateTimeOffsetData(DateTimeOffset offset)
     {
-        public DateTimeOffsetData(DateTimeOffset offset)
-        {
-            Ticks = offset.Ticks;
-            OffsetTicks = offset.Offset.Ticks;
-        }
+        public long Ticks { get; set; } = offset.Ticks;
 
-        public long Ticks { get; set; }
-
-        public long OffsetTicks { get; set; }
+        public long OffsetTicks { get; set; } = offset.Offset.Ticks;
 
         public static explicit operator DateTimeOffset(DateTimeOffsetData value) // explicit byte to digit conversion operator
             =>

@@ -9,10 +9,6 @@ namespace Akavache.Sqlite3;
 
 // NB: This just makes OperationQueue's life easier by giving it a type
 // name.
-internal class BulkInvalidateByTypeSqliteOperation : BulkInvalidateSqliteOperation
+internal class BulkInvalidateByTypeSqliteOperation(SQLiteConnection conn) : BulkInvalidateSqliteOperation(conn, true)
 {
-    public BulkInvalidateByTypeSqliteOperation(SQLiteConnection conn)
-        : base(conn, true)
-    {
-    }
 }

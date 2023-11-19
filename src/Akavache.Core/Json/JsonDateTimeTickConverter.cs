@@ -11,11 +11,9 @@ namespace Akavache;
 /// Since we use BSON at places, we want to just store ticks to avoid loosing precision.
 /// By default BSON will use JSON ticks.
 /// </summary>
-internal class JsonDateTimeTickConverter : JsonConverter
+internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
-    private readonly DateTimeKind? _forceDateTimeKindOverride;
-
-    public JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) => _forceDateTimeKindOverride = forceDateTimeKindOverride;
+    private readonly DateTimeKind? _forceDateTimeKindOverride = forceDateTimeKindOverride;
 
     /// <summary>
     /// Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.

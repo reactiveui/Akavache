@@ -16,15 +16,11 @@ namespace Akavache.Sqlite3;
 /// Thus this class was moved here so it provides the hook for the linker and then registers and inits the sqlraw bundle.
 /// </para>
 /// </summary>
-public class SQLitePersistentBlobCache : SqlRawPersistentBlobCache
+/// <remarks>
+/// Initializes a new instance of the <see cref="SQLitePersistentBlobCache"/> class.
+/// </remarks>
+/// <param name="databaseFile">The location of the database file which to store the blobs in.</param>
+/// <param name="scheduler">Scheduler to use for contained observables.</param>
+public class SQLitePersistentBlobCache(string databaseFile, IScheduler? scheduler = null) : SqlRawPersistentBlobCache(databaseFile, scheduler)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SQLitePersistentBlobCache"/> class.
-    /// </summary>
-    /// <param name="databaseFile">The location of the database file which to store the blobs in.</param>
-    /// <param name="scheduler">Scheduler to use for contained observables.</param>
-    public SQLitePersistentBlobCache(string databaseFile, IScheduler? scheduler = null)
-        : base(databaseFile, scheduler)
-    {
-    }
 }
