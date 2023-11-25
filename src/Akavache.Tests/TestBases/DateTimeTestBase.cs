@@ -1,9 +1,7 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using Xunit;
 
 namespace Akavache.Tests;
 
@@ -18,7 +16,7 @@ public abstract class DateTimeTestBase
     public static IEnumerable<object[]> DateTimeOffsetData => new[]
     {
         new object[] { new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = null } },
-        new object[] { new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = TestNowOffset } },
+        [new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = TestNowOffset }],
     };
 
     /// <summary>
@@ -27,7 +25,7 @@ public abstract class DateTimeTestBase
     public static IEnumerable<object[]> DateTimeData => new[]
     {
         new object[] { new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = null } },
-        new object[] { new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = TestNow } },
+        [new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = TestNow }],
     };
 
     /// <summary>
@@ -36,7 +34,7 @@ public abstract class DateTimeTestBase
     public static IEnumerable<object[]> DateLocalTimeData => new[]
     {
         new object[] { new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = null } },
-        new object[] { new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = LocalTestNow } },
+        [new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = LocalTestNow }],
     };
 
     /// <summary>
@@ -66,7 +64,7 @@ public abstract class DateTimeTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var blobCache = CreateBlobCache(path))
         {
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data).ConfigureAwait(false);
+            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.UtcTicks, secondResult.Timestamp.UtcTicks);
             Assert.Equal(firstResult.Timestamp.Offset, secondResult.Timestamp.Offset);
@@ -87,7 +85,7 @@ public abstract class DateTimeTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var blobCache = CreateBlobCache(path))
         {
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data).ConfigureAwait(false);
+            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Utc);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
             Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());
@@ -107,7 +105,7 @@ public abstract class DateTimeTestBase
         using (var blobCache = CreateBlobCache(path))
         {
             blobCache.ForcedDateTimeKind = DateTimeKind.Local;
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data).ConfigureAwait(false);
+            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Local);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());

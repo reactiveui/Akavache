@@ -6,25 +6,22 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);NET_461;XAML</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
-    <DefineConstants>$(DefineConstants);NETFX_CORE;XAML;WINDOWS_UWP</DefineConstants>
-  </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.iOS'))">
     <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.Mac'))">
     <DefineConstants>$(DefineConstants);MONO;COCOA</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net6.0-macos')) or $(TargetFramework.StartsWith('net7.0-macos'))">
+  <PropertyGroup Condition="$(TargetFramework.EndsWith('0-macos'))">
     <DefineConstants>$(DefineConstants);MONO;COCOA</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.TVOS'))">
     <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net6.0-maccatalyst')) or $(TargetFramework.StartsWith('net7.0-maccatalyst'))">
+  <PropertyGroup Condition="$(TargetFramework.EndsWith('0-maccatalyst'))">
     <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net6.0-tvos')) or $(TargetFramework.StartsWith('net7.0-tvos'))">
+  <PropertyGroup Condition="$(TargetFramework.EndsWith('0-tvos'))">
     <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('Xamarin.WatchOS'))">
@@ -33,7 +30,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('MonoAndroid'))">
     <DefineConstants>$(DefineConstants);MONO;ANDROID;XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net6.0-android')) or $(TargetFramework.StartsWith('net7.0-android'))">
+  <PropertyGroup Condition="$(TargetFramework.EndsWith('0-android'))">
     <DefineConstants>$(DefineConstants);MONO;ANDROID;XAMARIN_MOBILE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('tizen'))">

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -7,19 +7,13 @@ using System.Collections;
 
 namespace Akavache.Sqlite3;
 
-internal class OperationQueueItem
+internal class OperationQueueItem(object completion, IEnumerable? parameters)
 {
-    public OperationQueueItem(object completion, IEnumerable? parameters)
-    {
-        Completion = completion;
-        Parameters = parameters;
-    }
-
     public OperationType OperationType { get; set; }
 
-    public IEnumerable? Parameters { get; set; }
+    public IEnumerable? Parameters { get; set; } = parameters;
 
-    public object Completion { get; set; }
+    public object Completion { get; set; } = completion;
 
     public IEnumerable<CacheElement>? ParametersAsElements => (IEnumerable<CacheElement>?)Parameters;
 

@@ -1,14 +1,12 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-
 using Splat;
 
 namespace Akavache;
@@ -22,7 +20,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     [SuppressMessage("Design", "CA2213: non-disposed field.", Justification = "Used for notification of dispose.")]
     private readonly AsyncSubject<Unit> _shutdown = new();
     private readonly IDisposable? _inner;
-    private readonly Dictionary<string, CacheEntry> _cache = new();
+    private readonly Dictionary<string, CacheEntry> _cache = [];
     private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private bool _disposed;
     private DateTimeKind? _dateTimeKind;
@@ -135,7 +133,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     /// <param name="initialContents">The default inner contents to use.</param>
     /// <param name="scheduler">The default scheduler to use.</param>
     /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler? scheduler = null) => OverrideGlobals(scheduler, initialContents.ToArray());
+    public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler? scheduler = null) => OverrideGlobals(scheduler, [.. initialContents]);
 
     /// <summary>
     /// Overrides the global registrations with specified values.

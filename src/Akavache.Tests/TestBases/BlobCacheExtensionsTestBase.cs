@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -11,7 +11,6 @@ using Microsoft.Reactive.Testing;
 
 using ReactiveUI.Testing;
 using Splat;
-using Xunit;
 
 namespace Akavache.Tests;
 
@@ -251,7 +250,7 @@ public abstract class BlobCacheExtensionsTestBase
     public async Task FetchFunctionShouldBeCalledOnceForGetOrFetchObject()
     {
         // TODO: This test is failing on .NET 6.0. Investigate.
-        Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
+        Skip.If(GetType().Assembly.GetTargetFrameworkName().StartsWith("net"));
 
         var fetchCount = 0;
         var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
@@ -300,7 +299,7 @@ public abstract class BlobCacheExtensionsTestBase
         new TestScheduler().With(sched =>
         {
             // TODO: TestScheduler tests aren't gonna work with new SQLite.
-            Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
+            Skip.If(GetType().Assembly.GetTargetFrameworkName().StartsWith("net"));
             using (Utility.WithEmptyDirectory(out var path))
             {
                 var callCount = 0;
@@ -434,7 +433,7 @@ public abstract class BlobCacheExtensionsTestBase
         new TestScheduler().With(sched =>
         {
             // TODO: TestScheduler tests aren't gonna work with new SQLite.
-            Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
+            Skip.If(GetType().Assembly.GetTargetFrameworkName().StartsWith("net"));
             using (Utility.WithEmptyDirectory(out var path))
             {
                 var fixture = CreateBlobCache(path);

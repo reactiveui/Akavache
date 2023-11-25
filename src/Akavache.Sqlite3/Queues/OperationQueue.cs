@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -7,10 +7,8 @@ using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using System.Reactive.Threading.Tasks;
 
-using Akavache.Sqlite3.Internal;
-
 using Splat;
-
+using SQLite;
 using AsyncLock = Akavache.Sqlite3.Internal.AsyncLock;
 
 namespace Akavache.Sqlite3;
@@ -35,7 +33,7 @@ internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
     private readonly Lazy<BeginTransactionSqliteOperation> _begin;
     private readonly Lazy<CommitTransactionSqliteOperation> _commit;
 
-    private BlockingCollection<OperationQueueItem> _operationQueue = new();
+    private BlockingCollection<OperationQueueItem> _operationQueue = [];
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA2213: dispose field", Justification = "Will be invalid")]
     private IDisposable? _start;

@@ -1,11 +1,7 @@
-// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-#if WINDOWS_UWP
-using System.Reactive.Threading.Tasks;
-#endif
 
 namespace System
 {
@@ -24,14 +20,15 @@ namespace System
         /// <returns>An observable that signals when the write operation has completed.</returns>
         public static IObservable<Unit> WriteAsyncRx(this Stream blobCache, byte[] data, int start, int length)
         {
+#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
             if (blobCache is null)
             {
                 throw new ArgumentNullException(nameof(blobCache));
             }
-
-#if WINDOWS_UWP
-            return blobCache.WriteAsync(data, start, length).ToObservable();
 #else
+            ArgumentNullException.ThrowIfNull(blobCache);
+#endif
+
             var ret = new AsyncSubject<Unit>();
 
             try
@@ -61,7 +58,6 @@ namespace System
             }
 
             return ret;
-#endif
         }
     }
 }

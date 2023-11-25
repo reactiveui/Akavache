@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -31,6 +31,7 @@ public static class LoginMixin
     /// <param name="blobCache">The blob cache where to get the data.</param>
     /// <param name="host">The host associated with the data.</param>
     /// <returns>A Future result representing the user/password Tuple.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public static IObservable<LoginInfo> GetLoginAsync(this ISecureBlobCache blobCache, string host = "default") => blobCache.GetObject<(string, string)>("login:" + host).Select(x => new LoginInfo(x));
 
     /// <summary>

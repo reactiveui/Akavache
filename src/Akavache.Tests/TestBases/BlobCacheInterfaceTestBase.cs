@@ -1,15 +1,12 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
-
 using Microsoft.Reactive.Testing;
-
 using ReactiveUI.Testing;
 using Splat;
-using Xunit;
 
 namespace Akavache.Tests;
 
@@ -28,19 +25,19 @@ public abstract class BlobCacheInterfaceTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path))
         {
-            await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
-            await fixture.Insert("Bar", new byte[] { 4, 5, 6 });
+            await fixture.Insert("Foo", [1, 2, 3]);
+            await fixture.Insert("Bar", [4, 5, 6]);
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await fixture.Insert(null, new byte[] { 7, 8, 9 }).FirstAsync()).ConfigureAwait(false);
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await fixture.Insert(null, [7, 8, 9]).FirstAsync());
 
             var output1 = await fixture.Get("Foo");
             var output2 = await fixture.Get("Bar");
 
             await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await fixture.Get(null).FirstAsync()).ConfigureAwait(false);
+                await fixture.Get(null).FirstAsync());
 
             await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-                await fixture.Get("Baz").FirstAsync()).ConfigureAwait(false);
+                await fixture.Get("Baz").FirstAsync());
 
             Assert.Equal(3, output1.Length);
             Assert.Equal(3, output2.Length);
@@ -68,7 +65,7 @@ public abstract class BlobCacheInterfaceTestBase
                     return;
                 }
 
-                await fixture.Insert("Foo", new byte[] { 1, 2, 3 });
+                await fixture.Insert("Foo", [1, 2, 3]);
             }
 
             fixture.Shutdown.Wait();
@@ -93,7 +90,7 @@ public abstract class BlobCacheInterfaceTestBase
             DateTimeOffset roughCreationTime;
             using (fixture)
             {
-                fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
+                fixture.Insert("Foo", [1, 2, 3]).Wait();
                 roughCreationTime = fixture.Scheduler.Now;
             }
 
@@ -121,13 +118,13 @@ public abstract class BlobCacheInterfaceTestBase
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path))
         {
-            fixture.Insert("Foo", new byte[] { 1, 2, 3 }).Wait();
+            fixture.Insert("Foo", [1, 2, 3]).Wait();
 
             var output = await fixture.Get("Foo").FirstAsync();
             Assert.Equal(3, output.Length);
             Assert.Equal(1, output[0]);
 
-            fixture.Insert("Foo", new byte[] { 4, 5 }).Wait();
+            fixture.Insert("Foo", [4, 5]).Wait();
 
             output = await fixture.Get("Foo").FirstAsync();
             Assert.Equal(2, output.Length);
@@ -142,7 +139,7 @@ public abstract class BlobCacheInterfaceTestBase
     public void CacheShouldRespectExpiration()
     {
         // TODO: TestScheduler tests aren't gonna work with new SQLite.
-        Skip.IfNot(GetType().Assembly.GetTargetFrameworkName().StartsWith("net4"));
+        Skip.If(GetType().Assembly.GetTargetFrameworkName().StartsWith("net"));
         using (Utility.WithEmptyDirectory(out var path))
         {
             new TestScheduler().With(sched =>
@@ -152,8 +149,8 @@ public abstract class BlobCacheInterfaceTestBase
                 using (var fixture = CreateBlobCache(path))
                 {
                     wasTestCache = fixture is InMemoryBlobCache;
-                    fixture.Insert("foo", new byte[] { 1, 2, 3 }, TimeSpan.FromMilliseconds(100));
-                    fixture.Insert("bar", new byte[] { 4, 5, 6 }, TimeSpan.FromMilliseconds(500));
+                    fixture.Insert("foo", [1, 2, 3], TimeSpan.FromMilliseconds(100));
+                    fixture.Insert("bar", [4, 5, 6], TimeSpan.FromMilliseconds(500));
 
                     byte[] result = null;
                     sched.AdvanceToMs(20);
@@ -168,7 +165,7 @@ public abstract class BlobCacheInterfaceTestBase
                     sched.AdvanceToMs(120);
                     fixture.Get("foo").Subscribe(
                         x => result = x,
-                        ex => shouldFail = false);
+                        _ => shouldFail = false);
                     fixture.Get("bar").Subscribe(x => result = x);
 
                     sched.AdvanceToMs(300);
@@ -200,7 +197,7 @@ public abstract class BlobCacheInterfaceTestBase
                     sched.AdvanceToMs(1000);
                     fixture.Get("bar").Subscribe(
                         x => result = x,
-                        ex => shouldFail = false);
+                        _ => shouldFail = false);
 
                     sched.AdvanceToMs(1010);
                     Assert.False(shouldFail);
@@ -222,9 +219,9 @@ public abstract class BlobCacheInterfaceTestBase
         {
             using (var fixture = CreateBlobCache(path))
             {
-                await fixture.Insert("Foo", new byte[] { 1, 2, 3 }).FirstAsync();
-                await fixture.Insert("Bar", new byte[] { 4, 5, 6 }).FirstAsync();
-                await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                await fixture.Insert("Foo", [1, 2, 3]).FirstAsync();
+                await fixture.Insert("Bar", [4, 5, 6]).FirstAsync();
+                await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
 
                 Assert.NotEqual(0, (await fixture.GetAllKeys().FirstAsync()).Count());
 
@@ -253,9 +250,9 @@ public abstract class BlobCacheInterfaceTestBase
             {
                 var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
 
-                await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-                await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-                await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
+                await fixture.Insert("Foo", [1, 2, 3], inThePast).FirstAsync();
+                await fixture.Insert("Bar", [4, 5, 6], inThePast).FirstAsync();
+                await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
 
                 Assert.Equal(1, (await fixture.GetAllKeys().FirstAsync()).Count());
             }
@@ -286,10 +283,10 @@ public abstract class BlobCacheInterfaceTestBase
                 var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
                 var inTheFuture = BlobCache.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
 
-                await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-                await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-                await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
-                await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
+                await fixture.Insert("Foo", [1, 2, 3], inThePast).FirstAsync();
+                await fixture.Insert("Bar", [4, 5, 6], inThePast).FirstAsync();
+                await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
+                await fixture.Insert("Baz", [7, 8, 9], inTheFuture).FirstAsync();
 
                 try
                 {
@@ -329,10 +326,10 @@ public abstract class BlobCacheInterfaceTestBase
             var inThePast = BlobCache.TaskpoolScheduler.Now - TimeSpan.FromDays(1.0);
             var inTheFuture = BlobCache.TaskpoolScheduler.Now + TimeSpan.FromDays(1.0);
 
-            await fixture.Insert("Foo", new byte[] { 1, 2, 3 }, inThePast).FirstAsync();
-            await fixture.Insert("Bar", new byte[] { 4, 5, 6 }, inThePast).FirstAsync();
-            await fixture.Insert("Bamf", new byte[] { 7, 8, 9 }).FirstAsync();
-            await fixture.Insert("Baz", new byte[] { 7, 8, 9 }, inTheFuture).FirstAsync();
+            await fixture.Insert("Foo", [1, 2, 3], inThePast).FirstAsync();
+            await fixture.Insert("Bar", [4, 5, 6], inThePast).FirstAsync();
+            await fixture.Insert("Bamf", [7, 8, 9]).FirstAsync();
+            await fixture.Insert("Baz", [7, 8, 9], inTheFuture).FirstAsync();
 
             try
             {
@@ -344,8 +341,8 @@ public abstract class BlobCacheInterfaceTestBase
                 // just make the test pass
             }
 
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask()).ConfigureAwait(false);
-            await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask()).ConfigureAwait(false);
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Foo").FirstAsync().ToTask());
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => fixture.Get("Bar").FirstAsync().ToTask());
         }
     }
 

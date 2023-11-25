@@ -1,4 +1,4 @@
-// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -37,23 +37,20 @@ internal abstract class KeyedOperation
     public abstract IObservable<Unit> EvaluateFunc();
 }
 
+/// <summary>
+/// Initializes a new instance of the <see cref="KeyedOperation{T}"/> class.
+/// </summary>
+/// <param name="func">The function to produce a value.</param>
+/// <param name="key">The key of the operation.</param>
+/// <param name="id">The ID of the operation.</param>
 [SuppressMessage("StyleCop.Maintainability.CSharp", "SA1402: One type per file", Justification = "Same class name.")]
-internal class KeyedOperation<T> : KeyedOperation
+internal class KeyedOperation<T>(Func<IObservable<T>> func, string key, int id) : KeyedOperation(key, id)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="KeyedOperation{T}"/> class.
-    /// </summary>
-    /// <param name="func">The function to produce a value.</param>
-    /// <param name="key">The key of the operation.</param>
-    /// <param name="id">The ID of the operation.</param>
-    public KeyedOperation(Func<IObservable<T>> func, string key, int id)
-        : base(key, id) =>
-        Func = func;
 
     /// <summary>
     /// Gets the function which returns the observable.
     /// </summary>
-    public Func<IObservable<T>> Func { get; }
+    public Func<IObservable<T>> Func { get; } = func;
 
     /// <summary>
     /// Gets the result subject.

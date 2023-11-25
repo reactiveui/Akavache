@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -6,8 +6,6 @@
 using Akavache.Sqlite3;
 
 using DynamicData;
-
-using Xunit;
 
 #pragma warning disable CS4014 // Await on awaitable items. -- We don't wait on the observables.
 
@@ -175,9 +173,9 @@ public class CoalescerTests
     {
         var fixture = new SqliteOperationQueue();
         fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = new byte[] { 1, 2, 3 } } });
+        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = [1, 2, 3] } });
         fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = new byte[] { 4, 5, 6 } } });
+        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = [4, 5, 6] } });
 
         var queue = fixture.DumpQueue();
         var result = SqliteOperationQueue.CoalesceOperations(queue);

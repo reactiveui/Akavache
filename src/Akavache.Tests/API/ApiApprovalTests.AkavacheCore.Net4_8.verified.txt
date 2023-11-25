@@ -1,10 +1,9 @@
-[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/reactiveui/akavache")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache")]
+﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Drawing")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Mobile")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Tests")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v6.0", FrameworkDisplayName=".NET 6.0")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName=".NET Standard 2.0")]
 namespace Akavache
 {
     public class AkavacheHttpMixin : Akavache.IAkavacheHttpMixin

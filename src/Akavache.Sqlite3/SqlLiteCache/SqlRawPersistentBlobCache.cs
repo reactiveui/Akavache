@@ -1,4 +1,4 @@
-// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -7,12 +7,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reactive.Disposables;
 
-using Akavache.Sqlite3.Internal;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
 using Splat;
+using SQLite;
 
 namespace Akavache.Sqlite3;
 
@@ -411,7 +410,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         var createdAt = Scheduler.Now.UtcDateTime;
 
         return _initializer
-            .SelectMany(_ => keyValuePairs.Select(x => BeforeWriteToDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
+            .SelectMany(_ => keyValuePairs.Select(x => BeforeWriteToDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data))))
             .Merge().ToList()
             .SelectMany(list => _opQueue.Insert(list.Select(data =>
                 new CacheElement
@@ -450,7 +449,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
 
                 return Observable.Return(cacheElements.ToDictionary(element => element.Key, element => element.Value));
             })
-            .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
+            .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data))))
             .Merge()
             .ToDictionary(x => x.key, x => x.data)
             .PublishLast().PermaRef();
@@ -525,7 +524,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         var createdAt = Scheduler.Now.UtcDateTime;
 
         return _initializer
-            .SelectMany(_ => dataToAdd.Select(x => BeforeWriteToDiskFilter(x.value, Scheduler).Select(data => (key: x.key, data: data))))
+            .SelectMany(_ => dataToAdd.Select(x => BeforeWriteToDiskFilter(x.value, Scheduler).Select(data => (x.key, data))))
             .Merge().ToList()
             .SelectMany(list => _opQueue.Insert(list.Select(data =>
                 new CacheElement
@@ -564,9 +563,9 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
                     var cacheElements = x.ToList();
                     return Observable.Return(cacheElements.ToDictionary(element => element.Key, element => element.Value));
                 })
-            .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data: data))))
+            .SelectMany(dict => dict.Select(x => AfterReadFromDiskFilter(x.Value, Scheduler).Select(data => (key: x.Key, data))))
             .Merge()
-            .SelectMany(x => DeserializeObject<T>(x.data).Where(y => y is not null).Select(obj => (key: x.key, data: obj!)))
+            .SelectMany(x => DeserializeObject<T>(x.data).Where(y => y is not null).Select(obj => (x.key, data: obj!)))
             .ToDictionary(x => x.key, x => x.data)
             .PublishLast().PermaRef();
     }

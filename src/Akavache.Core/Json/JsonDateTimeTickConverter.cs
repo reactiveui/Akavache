@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -11,11 +11,9 @@ namespace Akavache;
 /// Since we use BSON at places, we want to just store ticks to avoid loosing precision.
 /// By default BSON will use JSON ticks.
 /// </summary>
-internal class JsonDateTimeTickConverter : JsonConverter
+internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
-    private readonly DateTimeKind? _forceDateTimeKindOverride;
-
-    public JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) => _forceDateTimeKindOverride = forceDateTimeKindOverride;
+    private readonly DateTimeKind? _forceDateTimeKindOverride = forceDateTimeKindOverride;
 
     /// <summary>
     /// Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.

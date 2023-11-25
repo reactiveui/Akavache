@@ -1,18 +1,11 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-
 using Splat;
-
-#if WINDOWS_UWP
-using System.Reactive.Threading.Tasks;
-using System.Reactive.Windows.Foundation;
-using Windows.Storage;
-#endif
 
 namespace Akavache;
 
@@ -21,12 +14,6 @@ internal static partial class Utility
 {
     public static string GetMd5Hash(string input)
     {
-#if WINDOWS_UWP
-        // NB: Technically, we could do this everywhere, but if we did this
-        // upgrade, we may return different strings than we used to (i.e.
-        // formatting-wise), which would break old caches.
-        return MD5Core.GetHashString(input, Encoding.UTF8);
-#else
         using var md5Hasher = new MD5Managed();
 
         // Convert the input string to a byte array and compute the hash.
@@ -38,10 +25,9 @@ internal static partial class Utility
         }
 
         return sBuilder.ToString();
-#endif
     }
 
-#if !WINDOWS_UWP
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public static IObservable<Stream> SafeOpenFileAsync(string path, FileMode mode, FileAccess access, FileShare share, IScheduler? scheduler = null)
     {
         scheduler ??= BlobCache.TaskpoolScheduler;
@@ -117,7 +103,6 @@ internal static partial class Utility
         components.Reverse();
         return components;
     }
-#endif
 
     /// <summary>
     /// Logs the errors of the observable.
@@ -127,9 +112,7 @@ internal static partial class Utility
     /// <param name="message">The message to log.</param>
     /// <returns>An observable.</returns>
     public static IObservable<T> LogErrors<T>(this IObservable<T> observable, string? message = null) =>
-        Observable.Create<T>(subj =>
-        {
-            return observable.Subscribe(
+        Observable.Create<T>(subj => observable.Subscribe(
                 subj.OnNext,
                 ex =>
                 {
@@ -137,18 +120,8 @@ internal static partial class Utility
                     LogHost.Default.Info(ex, "{0} failed", msg);
                     subj.OnError(ex);
                 },
-                subj.OnCompleted);
-        });
+                subj.OnCompleted));
 
-#if WINDOWS_UWP
-    /// <summary>
-    /// Copies a stream using async.
-    /// </summary>
-    /// <param name="stream">The stream to copy from.</param>
-    /// <param name="destination">The stream to copy to.</param>
-    /// <returns>An observable that signals when the operation has finished.</returns>
-    public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination)
-#else
     /// <summary>
     /// Copies a stream using async.
     /// </summary>
@@ -156,26 +129,8 @@ internal static partial class Utility
     /// <param name="destination">The stream to copy to.</param>
     /// <param name="scheduler">The scheduler to schedule on.</param>
     /// <returns>An observable that signals when the operation has finished.</returns>
-    public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination, IScheduler? scheduler = null)
-#endif
-    {
-#if WINDOWS_UWP
-        return stream.CopyToAsync(destination).ToObservable()
-            .Do(
-            x =>
-            {
-                try
-                {
-                    stream.Dispose();
-                    destination.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    LogHost.Default.Warn(ex, "CopyToAsync failed");
-                }
-            });
-#else
-        return Observable.Start(
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
+    public static IObservable<Unit> CopyToAsync(this Stream stream, Stream destination, IScheduler? scheduler = null) => Observable.Start(
             () =>
             {
                 try
@@ -193,6 +148,4 @@ internal static partial class Utility
                 }
             },
             scheduler ?? BlobCache.TaskpoolScheduler);
-#endif
-    }
 }

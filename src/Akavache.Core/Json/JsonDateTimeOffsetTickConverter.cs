@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2023 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -33,17 +33,11 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
 
     public override bool CanConvert(Type objectType) => objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?);
 
-    internal class DateTimeOffsetData
+    internal class DateTimeOffsetData(DateTimeOffset offset)
     {
-        public DateTimeOffsetData(DateTimeOffset offset)
-        {
-            Ticks = offset.Ticks;
-            OffsetTicks = offset.Offset.Ticks;
-        }
+        public long Ticks { get; set; } = offset.Ticks;
 
-        public long Ticks { get; set; }
-
-        public long OffsetTicks { get; set; }
+        public long OffsetTicks { get; set; } = offset.Offset.Ticks;
 
         public static explicit operator DateTimeOffset(DateTimeOffsetData value) // explicit byte to digit conversion operator
             =>

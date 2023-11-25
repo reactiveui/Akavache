@@ -1,26 +1,19 @@
-<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid12.0;MonoAndroid12.1;MonoAndroid13.0;tizen40;net6.0;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
     <AssemblyName>Akavache.Sqlite3</AssemblyName>
     <RootNamespace>Akavache.Sqlite3</RootNamespace>
     <Description>Akavache Sqlite3</Description>
     <PackageId>akavache.sqlite3</PackageId>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <DefineConstants>$(DefineConstants);USE_SQLITEPCL_RAW;USE_NEW_REFLECTION_API</DefineConstants>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants)</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <Using Remove="Foundation" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.core" Version="2.1.6" />
-    <PackageReference Include="System.Reactive" Version="6.0.0" />
-    <PackageReference Include="Splat" Version="14.*" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />
   </ItemGroup>
   
   <ItemGroup>
@@ -30,7 +23,6 @@
   <ItemGroup>
     <None Remove="PerformanceGraphs.xlsx" />
     <None Remove="sqlite-ng-notes.md" />
-    <None Remove="sqlite3-hint.txt" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
