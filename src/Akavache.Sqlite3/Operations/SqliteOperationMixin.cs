@@ -3,10 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Sqlite3.Internal;
-
 using Splat;
-
+using SQLite;
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;
@@ -22,7 +20,7 @@ internal static class SqliteOperationMixin
         }
 
         var err = raw.sqlite3_errmsg(connection.Connection.Handle).utf8_to_string();
-        var ex = new SQLiteException(result, (message ?? string.Empty) + ": " + err);
+        var ex = SQLiteException.New(result, (message ?? string.Empty) + ": " + err);
 
         connection.Log().Warn(ex, message);
         throw ex;

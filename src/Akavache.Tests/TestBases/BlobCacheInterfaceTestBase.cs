@@ -7,7 +7,6 @@ using System.Reactive.Threading.Tasks;
 using Microsoft.Reactive.Testing;
 using ReactiveUI.Testing;
 using Splat;
-using Xunit;
 
 namespace Akavache.Tests;
 

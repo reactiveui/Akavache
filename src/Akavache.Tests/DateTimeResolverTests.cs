@@ -5,8 +5,6 @@
 
 using Newtonsoft.Json.Serialization;
 
-using Xunit;
-
 namespace Akavache.Tests;
 
 /// <summary>

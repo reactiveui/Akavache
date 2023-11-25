@@ -5,8 +5,6 @@
 
 using System.Runtime.InteropServices;
 
-using Xunit;
-
 namespace Akavache.Tests;
 
 /// <summary>

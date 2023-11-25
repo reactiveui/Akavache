@@ -5,9 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-
-using Akavache.Sqlite3.Internal;
-
+using SQLite;
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;
@@ -34,7 +32,7 @@ internal class BulkInvalidateSqliteOperation : IPreparedSqliteOperation
 
                 if (result != SQLite3.Result.OK)
                 {
-                    throw new SQLiteException(result, "Couldn't prepare statement");
+                    throw SQLiteException.New(result, "Couldn't prepare statement");
                 }
 
                 qs.Append(",?");

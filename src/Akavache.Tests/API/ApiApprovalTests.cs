@@ -4,19 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 
 using Akavache.Sqlite3;
-
-using DiffEngine;
-
-using PublicApiGenerator;
-
-using Splat;
-
-using Xunit;
 
 namespace Akavache.APITests;
 

@@ -4,9 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
-
-using Akavache.Sqlite3.Internal;
-
+using SQLite;
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;
@@ -24,7 +22,7 @@ internal class VacuumSqliteOperation : IPreparedSqliteOperation
 
         if (vacuumResult != SQLite3.Result.OK)
         {
-            throw new SQLiteException(vacuumResult, "Couldn't prepare vacuum statement");
+            throw SQLiteException.New(vacuumResult, "Couldn't prepare vacuum statement");
         }
 
         _scheduler = scheduler;

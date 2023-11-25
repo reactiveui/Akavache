@@ -4,9 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
-
-using Akavache.Sqlite3.Internal;
-
+using SQLite;
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;
@@ -24,7 +22,7 @@ internal class DeleteExpiredSqliteOperation : IPreparedSqliteOperation
 
         if (deleteResult != SQLite3.Result.OK)
         {
-            throw new SQLiteException(deleteResult, "Couldn't prepare delete statement");
+            throw SQLiteException.New(deleteResult, "Couldn't prepare delete statement");
         }
 
         _scheduler = scheduler;

@@ -36,12 +36,7 @@ public class Registrations : IWantsToRegisterStuff
 
         // NB: We want the most recently registered fs, since there really
         // only should be one
-        var fs = Locator.Current.GetService<IFilesystemProvider>();
-        if (fs is null)
-        {
-            throw new InvalidOperationException("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
-        }
-
+        var fs = Locator.Current.GetService<IFilesystemProvider>() ?? throw new InvalidOperationException("Failed to initialize Akavache properly. Do you have a reference to Akavache.dll?");
         var localCache = new Lazy<IBlobCache>(() =>
         {
             var directory = fs.GetDefaultLocalMachineCacheDirectory();

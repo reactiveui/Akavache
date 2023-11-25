@@ -5,8 +5,6 @@
 
 using Akavache.Sqlite3;
 
-using Xunit;
-
 namespace Akavache.Tests;
 
 /// <summary>

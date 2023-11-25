@@ -7,8 +7,6 @@ using Akavache.Sqlite3;
 
 using DynamicData;
 
-using Xunit;
-
 #pragma warning disable CS4014 // Await on awaitable items. -- We don't wait on the observables.
 
 namespace Akavache.Tests;

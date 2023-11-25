@@ -7,13 +7,13 @@
     <Description>Akavache Sqlite3</Description>
     <PackageId>akavache.sqlite3</PackageId>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <DefineConstants>$(DefineConstants);USE_SQLITEPCL_RAW;USE_NEW_REFLECTION_API</DefineConstants>
+    <DefineConstants>$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="Foundation" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.core" Version="2.1.6" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />
   </ItemGroup>
   
   <ItemGroup>
@@ -23,7 +23,6 @@
   <ItemGroup>
     <None Remove="PerformanceGraphs.xlsx" />
     <None Remove="sqlite-ng-notes.md" />
-    <None Remove="sqlite3-hint.txt" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">

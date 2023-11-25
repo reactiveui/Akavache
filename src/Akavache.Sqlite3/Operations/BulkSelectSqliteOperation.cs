@@ -5,9 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-
-using Akavache.Sqlite3.Internal;
-
+using SQLite;
 using SQLitePCL;
 
 namespace Akavache.Sqlite3;
@@ -37,7 +35,7 @@ internal class BulkSelectSqliteOperation : IPreparedSqliteOperation
                 var error = raw.sqlite3_errmsg(conn.Handle).utf8_to_string();
                 if (result != SQLite3.Result.OK)
                 {
-                    throw new SQLiteException(result, "Couldn't prepare statement: " + error);
+                    throw SQLiteException.New(result, "Couldn't prepare statement: " + error);
                 }
 
                 qs.Append(",?");
