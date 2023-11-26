@@ -1,6 +1,8 @@
 ﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Drawing")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Json")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Mobile")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.NewtonsoftJson")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Tests")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName=".NET Standard 2.0")]
@@ -114,6 +116,10 @@ namespace Akavache
         System.IObservable<System.Reactive.Unit> Insert(System.Collections.Generic.IDictionary<string, byte[]> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default);
         System.IObservable<System.Reactive.Unit> Invalidate(System.Collections.Generic.IEnumerable<string> keys);
     }
+    public interface IDateTimeContractResolver
+    {
+        System.DateTimeKind? ForceDateTimeKindOverride { get; set; }
+    }
     public interface IEncryptionProvider
     {
         System.IObservable<byte[]> DecryptBlock(byte[] block);
@@ -152,6 +158,16 @@ namespace Akavache
         System.IObservable<System.Reactive.Unit> InvalidateObjects<T>(System.Collections.Generic.IEnumerable<string> keys);
     }
     public interface ISecureBlobCache : Akavache.IBlobCache, System.IDisposable { }
+    public interface ISerializer
+    {
+        void CreateSerializer(System.Func<Akavache.IDateTimeContractResolver> getJsonDateTimeContractResolver);
+        T? Deserialize<T>(byte[] bytes);
+        System.IObservable<T?> DeserializeObject<T>(byte[] x);
+        T DeserializeObjectWrapper<T>(byte[] data);
+        byte[] Serialize<T>(T item);
+        byte[] SerializeObject<T>(T value);
+        byte[] SerializeObjectWrapper<T>(T value);
+    }
     public class InMemoryBlobCache : Akavache.IBlobCache, Akavache.IObjectBlobCache, Akavache.ISecureBlobCache, Splat.IEnableLogger, System.IDisposable
     {
         public InMemoryBlobCache() { }

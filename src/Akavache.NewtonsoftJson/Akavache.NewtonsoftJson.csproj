@@ -1,0 +1,36 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="Foundation" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.iOS'))">
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.TVOS'))">
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.Mac'))">
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="netstandard" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -8,8 +8,7 @@ using Akavache.Core;
 
 [assembly: InternalsVisibleTo("Akavache.Tests")]
 [assembly: InternalsVisibleTo("Akavache.Sqlite3")]
-[assembly: InternalsVisibleTo("Akavache.NewtonsoftJson")]
-[assembly: InternalsVisibleTo("Akavache.Json")]
+[assembly: InternalsVisibleTo("Akavache.Core")]
 [assembly: InternalsVisibleTo("Akavache.Mobile")]
 [assembly: InternalsVisibleTo("Akavache.Drawing")]
 [assembly: InternalsVisibleTo("Akavache")]

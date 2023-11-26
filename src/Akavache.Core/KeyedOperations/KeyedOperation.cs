@@ -46,7 +46,6 @@ internal abstract class KeyedOperation
 [SuppressMessage("StyleCop.Maintainability.CSharp", "SA1402: One type per file", Justification = "Same class name.")]
 internal class KeyedOperation<T>(Func<IObservable<T>> func, string key, int id) : KeyedOperation(key, id)
 {
-
     /// <summary>
     /// Gets the function which returns the observable.
     /// </summary>

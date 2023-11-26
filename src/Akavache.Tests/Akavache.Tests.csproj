@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Drawing\Akavache.Drawing.csproj" />
+    <ProjectReference Include="..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\Akavache\Akavache.csproj" />
   </ItemGroup>
 

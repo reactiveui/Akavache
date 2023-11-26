@@ -6,7 +6,6 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reactive.Threading.Tasks;
-using Newtonsoft.Json;
 using Splat;
 
 namespace Akavache;
@@ -398,20 +397,16 @@ public static class JsonSerializationMixin
 
     internal static byte[] SerializeObject<T>(T value)
     {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>();
-        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, settings));
+        var serializer = Locator.Current.GetService<ISerializer>();
+        return serializer?.SerializeObject(value) ?? [];
     }
 
     internal static IObservable<T?> DeserializeObject<T>(byte[] x)
     {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>();
-
         try
         {
-            var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
-
-            var ret = JsonConvert.DeserializeObject<T>(bytes, settings);
-            return Observable.Return(ret);
+            var serializer = Locator.Current.GetService<ISerializer>();
+            return serializer!.DeserializeObject<T>(x) ?? default!;
         }
         catch (Exception ex)
         {

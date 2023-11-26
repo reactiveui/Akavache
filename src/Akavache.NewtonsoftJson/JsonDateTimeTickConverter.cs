@@ -11,7 +11,7 @@ namespace Akavache;
 /// Since we use BSON at places, we want to just store ticks to avoid loosing precision.
 /// By default BSON will use JSON ticks.
 /// </summary>
-internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
+public class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
     private readonly DateTimeKind? _forceDateTimeKindOverride = forceDateTimeKindOverride;
 
@@ -25,8 +25,24 @@ internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride
     /// </summary>
     public static JsonDateTimeTickConverter LocalDateTimeKindDefault { get; } = new(DateTimeKind.Local);
 
+    /// <summary>
+    /// Determines whether this instance can convert the specified object type.
+    /// </summary>
+    /// <param name="objectType">Type of the object.</param>
+    /// <returns>
+    /// <c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.
+    /// </returns>
     public override bool CanConvert(Type objectType) => objectType == typeof(DateTime) || objectType == typeof(DateTime?);
 
+    /// <summary>
+    /// Reads the json.
+    /// </summary>
+    /// <param name="reader">The reader.</param>
+    /// <param name="objectType">Type of the object.</param>
+    /// <param name="existingValue">The existing value.</param>
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>An object.</returns>
+    /// <exception cref="ArgumentNullException">nameof(reader).</exception>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
         if (reader is null)
@@ -54,8 +70,19 @@ internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride
         return null;
     }
 
+    /// <summary>
+    /// Writes the json.
+    /// </summary>
+    /// <param name="writer">The writer.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="serializer">The serializer.</param>
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
+        if (serializer == null)
+        {
+            throw new ArgumentNullException(nameof(serializer));
+        }
+
         if (value is DateTime dateTime)
         {
             switch (_forceDateTimeKindOverride)

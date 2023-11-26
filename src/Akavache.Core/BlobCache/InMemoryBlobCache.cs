@@ -5,8 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using Splat;
 
 namespace Akavache;
@@ -21,7 +19,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     private readonly AsyncSubject<Unit> _shutdown = new();
     private readonly IDisposable? _inner;
     private readonly Dictionary<string, CacheEntry> _cache = [];
-    private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
+    private readonly IDateTimeContractResolver _jsonDateTimeContractResolver; // This will make us use ticks instead of json ticks for DateTime.
     private bool _disposed;
     private DateTimeKind? _dateTimeKind;
 
@@ -58,6 +56,8 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     /// <param name="initialContents">The initial contents of the cache.</param>
     public InMemoryBlobCache(IScheduler? scheduler, IEnumerable<KeyValuePair<string, byte[]>>? initialContents)
     {
+        BlobCache.EnsureInitialized();
+        _jsonDateTimeContractResolver = Locator.Current.GetService<IDateTimeContractResolver>() ?? throw new Exception("Could not resolve IDateTimeContractResolver");
         Scheduler = scheduler ?? CurrentThreadScheduler.Instance;
         foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
         {
@@ -155,7 +155,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -168,7 +168,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
 
     /// <inheritdoc />
     public IObservable<Unit> Flush() => _disposed ?
-        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache") :
+        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache)) :
         Observable.Return(Unit.Default);
 
     /// <inheritdoc />
@@ -176,7 +176,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>(nameof(InMemoryBlobCache));
         }
 
         CacheEntry? entry;
@@ -211,7 +211,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>(nameof(InMemoryBlobCache));
         }
 
         CacheEntry? entry;
@@ -233,7 +233,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -250,7 +250,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -266,7 +266,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -282,7 +282,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         var data = SerializeObject(value);
@@ -300,7 +300,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<T>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<T>(nameof(InMemoryBlobCache));
         }
 
         CacheEntry? entry;
@@ -340,7 +340,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -356,7 +356,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
 
     /// <inheritdoc />
     public IObservable<Unit> InvalidateObject<T>(string key) => _disposed ?
-        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache") :
+        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache)) :
         Invalidate(key);
 
     /// <inheritdoc />
@@ -364,7 +364,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -384,7 +384,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -434,55 +434,14 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
         _disposed = true;
     }
 
-    private byte[] SerializeObject<T>(T value)
+    private byte[] SerializeObject<T>(T value) => GetSerializer().SerializeObjectWrapper(value);
+
+    private T DeserializeObject<T>(byte[] data) => GetSerializer().DeserializeObjectWrapper<T>(data);
+
+    private ISerializer GetSerializer()
     {
-        var serializer = GetSerializer();
-        using var ms = new MemoryStream();
-        using var writer = new BsonDataWriter(ms);
-        serializer.Serialize(writer, new ObjectWrapper<T>(value));
-        return ms.ToArray();
-    }
-
-    private T DeserializeObject<T>(byte[] data)
-    {
-#pragma warning disable CS8603 // Possible null reference return.
-        var serializer = GetSerializer();
-        using var reader = new BsonDataReader(new MemoryStream(data));
-        var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
-
-        if (forcedDateTimeKind.HasValue)
-        {
-            reader.DateTimeKindHandling = forcedDateTimeKind.Value;
-        }
-
-        try
-        {
-            var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
-
-            return wrapper is null ? default : wrapper.Value;
-        }
-        catch (Exception ex)
-        {
-            this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
-        }
-
-        return serializer.Deserialize<T>(reader);
-#pragma warning restore CS8603 // Possible null reference return.
-    }
-
-    private JsonSerializer GetSerializer()
-    {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-        JsonSerializer serializer;
-
-        lock (settings)
-        {
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            serializer = JsonSerializer.Create(settings);
-            settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
-        }
-
-        return serializer;
+        var s = Locator.Current.GetService<ISerializer>() ?? throw new Exception("ISerializer is not registered");
+        s.CreateSerializer(() => _jsonDateTimeContractResolver);
+        return s;
     }
 }

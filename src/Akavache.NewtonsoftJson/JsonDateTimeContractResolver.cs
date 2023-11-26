@@ -16,7 +16,7 @@ namespace Akavache;
 /// </remarks>
 /// <param name="contractResolver">A inherited contract resolver.</param>
 /// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
-internal class JsonDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride) : DefaultContractResolver
+public class JsonDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride) : DefaultContractResolver, IDateTimeContractResolver
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
@@ -26,8 +26,20 @@ internal class JsonDateTimeContractResolver(IContractResolver? contractResolver,
     {
     }
 
+    /// <summary>
+    /// Gets or sets the existing contract resolver.
+    /// </summary>
+    /// <value>
+    /// The existing contract resolver.
+    /// </value>
     public IContractResolver? ExistingContractResolver { get; set; } = contractResolver;
 
+    /// <summary>
+    /// Gets or sets the force date time kind override.
+    /// </summary>
+    /// <value>
+    /// The force date time kind override.
+    /// </value>
     public DateTimeKind? ForceDateTimeKindOverride { get; set; } = forceDateTimeKindOverride;
 
     /// <inheritdoc />

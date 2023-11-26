@@ -6,10 +6,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reactive.Disposables;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
-
 using Splat;
 using SQLite;
 
@@ -25,7 +21,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
     private readonly IObservable<Unit> _initializer;
     [SuppressMessage("Design", "CA2213: Dispose field", Justification = "Used to indicate disposal.")]
     private readonly AsyncSubject<Unit> _shutdown = new();
-    private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
+    private readonly IDateTimeContractResolver _jsonDateTimeContractResolver; // This will make us use ticks instead of json ticks for DateTime.
     private SqliteOperationQueue? _opQueue;
     private IDisposable? _queueThread;
     private DateTimeKind? _dateTimeKind;
@@ -39,8 +35,8 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
     public SqlRawPersistentBlobCache(string databaseFile, IScheduler? scheduler = null)
     {
         Scheduler = scheduler ?? BlobCache.TaskpoolScheduler;
-
         BlobCache.EnsureInitialized();
+        _jsonDateTimeContractResolver = Locator.Current.GetService<IDateTimeContractResolver>() ?? throw new Exception("Could not resolve IDateTimeContractResolver");
 
         Connection = new(databaseFile, storeDateTimeAsTicks: true);
         _initializer = Initialize();
@@ -755,62 +751,31 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache") :
             Observable.Return(data, scheduler);
 
+    private ISerializer GetSerializer()
+    {
+        var s = Locator.Current.GetService<ISerializer>() ?? throw new Exception("ISerializer is not registered");
+        s.CreateSerializer(() => _jsonDateTimeContractResolver);
+        return s;
+    }
+
     private byte[] SerializeObject<T>(T value)
     {
         var serializer = GetSerializer();
-        using var ms = new MemoryStream();
-        using var writer = new BsonDataWriter(ms);
-        serializer.Serialize(writer, new ObjectWrapper<T>(value));
-        return ms.ToArray();
+        return serializer.Serialize(value);
     }
 
     private IObservable<T?> DeserializeObject<T>(byte[] data)
     {
         var serializer = GetSerializer();
-        using var reader = new BsonDataReader(new MemoryStream(data));
-        var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
-
-        if (forcedDateTimeKind.HasValue)
-        {
-            reader.DateTimeKindHandling = forcedDateTimeKind.Value;
-        }
 
         try
         {
-            try
-            {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-                return Observable.Return(boxedVal);
-            }
-            catch (Exception ex)
-            {
-                this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
-            }
-
-            var rawVal = serializer.Deserialize<T>(reader);
+            var rawVal = serializer.Deserialize<T>(data);
             return Observable.Return(rawVal);
         }
         catch (Exception ex)
         {
             return Observable.Throw<T>(ex);
         }
-    }
-
-    private JsonSerializer GetSerializer()
-    {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-        JsonSerializer serializer;
-
-        lock (settings)
-        {
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            serializer = JsonSerializer.Create(settings);
-            settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
-        }
-
-        return serializer;
     }
 }

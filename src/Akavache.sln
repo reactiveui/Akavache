@@ -26,6 +26,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache", "Akavache\Akavac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Drawing", "Akavache.Drawing\Akavache.Drawing.csproj", "{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Json", "Akavache.Json\Akavache.Json.csproj", "{203F1A15-F6AE-4234-B208-BAB572734072}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.NewtonsoftJson", "Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj", "{44E8D94A-E680-46C6-97CE-4854BC049BD1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +60,14 @@ Global
 		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{203F1A15-F6AE-4234-B208-BAB572734072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{203F1A15-F6AE-4234-B208-BAB572734072}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{203F1A15-F6AE-4234-B208-BAB572734072}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{203F1A15-F6AE-4234-B208-BAB572734072}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44E8D94A-E680-46C6-97CE-4854BC049BD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44E8D94A-E680-46C6-97CE-4854BC049BD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44E8D94A-E680-46C6-97CE-4854BC049BD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44E8D94A-E680-46C6-97CE-4854BC049BD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

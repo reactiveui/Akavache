@@ -4,10 +4,10 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
-using ReactiveUI;
+using Newtonsoft.Json;
 using Splat;
 
-namespace Akavache.Mobile;
+namespace Akavache.NewtonsoftJson;
 
 /// <summary>
 /// Registrations for the mobile platform. Will register all our instances with splat.
@@ -27,20 +27,18 @@ public class Registrations : IWantsToRegisterStuff
         ArgumentNullException.ThrowIfNull(resolver);
 #endif
 
-        var akavacheDriver = new AkavacheDriver();
-        resolver.Register(() => akavacheDriver, typeof(ISuspensionDriver), null);
-
-        // NB: These correspond to the hacks in Akavache.Http's registrations
         resolver.Register(
-            () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.ShouldPersistState ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
-            typeof(IObservable<IDisposable>),
-            "ShouldPersistState");
+            () => new JsonSerializerSettings
+            {
+                ObjectCreationHandling = ObjectCreationHandling.Replace,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                TypeNameHandling = TypeNameHandling.All,
+            },
+            typeof(JsonSerializerSettings),
+            null);
 
-        resolver.Register(
-            () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.IsUnpausing ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
-            typeof(IObservable<Unit>),
-            "IsUnpausing");
+        resolver.Register(() => new NewtonsoftSerializer(readonlyDependencyResolver.GetService<JsonSerializerSettings>()!), typeof(ISerializer), null);
 
-        resolver.Register(() => RxApp.TaskpoolScheduler, typeof(IScheduler), "Taskpool");
+        resolver.Register(() => new JsonDateTimeContractResolver(), typeof(IDateTimeContractResolver), null);
     }
 }

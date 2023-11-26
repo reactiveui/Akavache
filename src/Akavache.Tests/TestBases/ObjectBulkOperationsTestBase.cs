@@ -68,7 +68,7 @@ public abstract class ObjectBulkOperationsTestBase
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await fixture.InsertObjects(keys.ToDictionary(k => k, v => data)).FirstAsync();
+            await fixture.InsertObjects(keys.ToDictionary(k => k, _ => data)).FirstAsync();
 
             Assert.Equal(keys.Length, (await fixture.GetAllKeys().FirstAsync()).Count());
 

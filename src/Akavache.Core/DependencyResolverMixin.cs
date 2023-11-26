@@ -30,6 +30,8 @@ public static class DependencyResolverMixin
             "Akavache.Deprecated",
             "Akavache.Mobile",
             "Akavache.Sqlite3",
+            "Akavache.NewtonsoftJson",
+            "Akavache.Json",
             "Akavache.Drawing"
         };
 
