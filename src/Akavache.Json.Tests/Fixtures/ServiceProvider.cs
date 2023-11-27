@@ -3,7 +3,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Runtime.CompilerServices;
+namespace Akavache.Tests;
 
-[assembly: InternalsVisibleTo("Akavache.Tests")]
-[assembly: InternalsVisibleTo("Akavache.Json.Tests")]
+/// <summary>
+/// A fixture for the service provider.
+/// </summary>
+public class ServiceProvider : IServiceProvider
+{
+    /// <inheritdoc/>
+    public object GetService(Type serviceType) => serviceType == typeof(UserModel) ? new UserModel(new()) : null;
+}

@@ -4,6 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Splat;
 
 namespace Akavache.Json;
 
@@ -11,7 +13,7 @@ namespace Akavache.Json;
 /// SystemJsonSerializer.
 /// </summary>
 /// <seealso cref="Akavache.ISerializer" />
-public class SystemJsonSerializer : ISerializer
+public class SystemJsonSerializer : ISerializer, IEnableLogger
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="SystemJsonSerializer"/> class.
@@ -45,33 +47,6 @@ public class SystemJsonSerializer : ISerializer
     }
 
     /// <summary>
-    /// Deserializes from bytes.
-    /// </summary>
-    /// <typeparam name="T">The type to deserialize to.</typeparam>
-    /// <param name="bytes">The bytes.</param>
-    /// <returns>
-    /// The type.
-    /// </returns>
-    public T? Deserialize<T>(byte[] bytes) => (T?)JsonSerializer.Deserialize(bytes, typeof(T), Options);
-    /// <summary>
-    /// Deserializes the object.
-    /// </summary>
-    /// <typeparam name="T">The type.</typeparam>
-    /// <param name="x">The x.</param>
-    /// <returns>
-    /// An Observable of T.
-    /// </returns>
-    public IObservable<T?> DeserializeObject<T>(byte[] x) => throw new NotImplementedException();
-    /// <summary>
-    /// Deserializes the object wrapper.
-    /// </summary>
-    /// <typeparam name="T">The type.</typeparam>
-    /// <param name="data">The data.</param>
-    /// <returns>
-    /// A value of T.
-    /// </returns>
-    public T DeserializeObjectWrapper<T>(byte[] data) => throw new NotImplementedException();
-    /// <summary>
     /// Serializes to an bytes.
     /// </summary>
     /// <typeparam name="T">The type of serialize.</typeparam>
@@ -79,7 +54,14 @@ public class SystemJsonSerializer : ISerializer
     /// <returns>
     /// The bytes.
     /// </returns>
-    public byte[] Serialize<T>(T item) => JsonSerializer.SerializeToUtf8Bytes(item, Options);
+    public byte[] Serialize<T>(T item)
+    {
+        using var ms = new MemoryStream();
+        using var writer = new Utf8JsonWriter(ms);
+        JsonSerializer.Serialize(writer, new ObjectWrapper<T>(item));
+        return ms.ToArray();
+    }
+
     /// <summary>
     /// Serializes the object.
     /// </summary>
@@ -88,14 +70,74 @@ public class SystemJsonSerializer : ISerializer
     /// <returns>
     /// The bytes.
     /// </returns>
-    public byte[] SerializeObject<T>(T value) => throw new NotImplementedException();
+    public byte[] SerializeObject<T>(T value) => JsonSerializer.SerializeToUtf8Bytes(value, Options);
+
     /// <summary>
-    /// Serializes the object wrapper.
+    /// Deserializes from bytes.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="bytes">The bytes.</param>
+    /// <returns>
+    /// The type.
+    /// </returns>
+    public T? Deserialize<T>(byte[] bytes)
+    {
+#pragma warning disable CS8603 // Possible null reference return.
+
+        ////var options = new JsonReaderOptions
+        ////{
+        ////    AllowTrailingCommas = true,
+        ////    CommentHandling = JsonCommentHandling.Skip
+        ////};
+        ////ReadOnlySpan<byte> jsonReadOnlySpan = bytes;
+        ////var reader = new Utf8JsonReader(jsonReadOnlySpan, options);
+
+        var forcedDateTimeKind = BlobCache.ForcedDateTimeKind;
+
+        ////if (forcedDateTimeKind.HasValue)
+        ////{
+        ////    reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+        ////}
+
+        try
+        {
+            var wrapper = JsonSerializer.Deserialize<ObjectWrapper<T>>(bytes);
+
+            return wrapper is null ? default : wrapper.Value;
+        }
+        catch (Exception ex)
+        {
+            this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
+        }
+
+        return JsonSerializer.Deserialize<T>(bytes);
+#pragma warning restore CS8603 // Possible null reference return.
+    }
+
+    /// <summary>
+    /// Deserializes the object.
     /// </summary>
     /// <typeparam name="T">The type.</typeparam>
-    /// <param name="value">The value.</param>
+    /// <param name="x">The x.</param>
     /// <returns>
-    /// A byte array.
+    /// An Observable of T.
     /// </returns>
-    public byte[] SerializeObjectWrapper<T>(T value) => throw new NotImplementedException();
+    public IObservable<T?> DeserializeObject<T>(byte[] x)
+    {
+        if (x is null)
+        {
+            throw new ArgumentNullException(nameof(x));
+        }
+
+        try
+        {
+            var bytes = Encoding.UTF8.GetString(x, 0, x.Length);
+            var ret = JsonSerializer.Deserialize<T>(bytes, Options);
+            return Observable.Return(ret);
+        }
+        catch (Exception ex)
+        {
+            return Observable.Throw<T>(ex);
+        }
+    }
 }

@@ -327,7 +327,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
             return ExceptionHelper.ObservableThrowKeyNotFoundException<T>(key);
         }
 
-        var obj = DeserializeObject<T>(entry.Value);
+        var obj = DeserializeObject<T>(entry.Value)!;
 
         return Observable.Return(obj, Scheduler);
     }
@@ -348,7 +348,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
             return Observable.Return(
                 _cache
                     .Where(x => x.Value.TypeName == typeof(T).FullName && (x.Value.ExpiresAt is null || x.Value.ExpiresAt >= Scheduler.Now))
-                    .Select(x => DeserializeObject<T>(x.Value.Value))
+                    .Select(x => DeserializeObject<T>(x.Value.Value)!)
                     .ToList(),
                 Scheduler);
         }
@@ -434,9 +434,9 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
         _disposed = true;
     }
 
-    private byte[] SerializeObject<T>(T value) => GetSerializer().SerializeObjectWrapper(value);
+    private byte[] SerializeObject<T>(T value) => GetSerializer().Serialize(value);
 
-    private T DeserializeObject<T>(byte[] data) => GetSerializer().DeserializeObjectWrapper<T>(data);
+    private T? DeserializeObject<T>(byte[] data) => GetSerializer().Deserialize<T>(data);
 
     private ISerializer GetSerializer()
     {

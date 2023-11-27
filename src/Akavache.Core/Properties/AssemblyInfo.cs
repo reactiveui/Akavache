@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Akavache.Core;
 
 [assembly: InternalsVisibleTo("Akavache.Tests")]
+[assembly: InternalsVisibleTo("Akavache.Json.Tests")]
 [assembly: InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: InternalsVisibleTo("Akavache.NewtonsoftJson")]
 [assembly: InternalsVisibleTo("Akavache.Json")]

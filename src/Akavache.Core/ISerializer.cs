@@ -33,15 +33,6 @@ public interface ISerializer
     IObservable<T?> DeserializeObject<T>(byte[] x);
 
     /// <summary>
-    /// Deserializes the object wrapper.
-    /// </summary>
-    /// <typeparam name="T">The type.</typeparam>
-    /// <param name="data">The data.</param>
-    /// <returns>A value of T.</returns>
-    /// <exception cref="System.InvalidOperationException">You must call CreateSerializer before deserializing.</exception>
-    T DeserializeObjectWrapper<T>(byte[] data);
-
-    /// <summary>
     /// Serializes to an bytes.
     /// </summary>
     /// <typeparam name="T">The type of serialize.</typeparam>
@@ -56,13 +47,4 @@ public interface ISerializer
     /// <param name="value">The value.</param>
     /// <returns>The bytes.</returns>
     byte[] SerializeObject<T>(T value);
-
-    /// <summary>
-    /// Serializes the object wrapper.
-    /// </summary>
-    /// <typeparam name="T">The type.</typeparam>
-    /// <param name="value">The value.</param>
-    /// <returns>A byte array.</returns>
-    /// <exception cref="System.InvalidOperationException">You must call CreateSerializer before serializing.</exception>
-    byte[] SerializeObjectWrapper<T>(T value);
 }
