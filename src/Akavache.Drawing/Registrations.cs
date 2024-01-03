@@ -17,10 +17,7 @@ public class Registrations : IWantsToRegisterStuff
     /// <inheritdoc />
     public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
     {
-        if (resolver is null)
-        {
-            throw new ArgumentNullException(nameof(resolver));
-        }
+        resolver.ThrowArgumentNullExceptionIfNull(nameof(resolver));
 
 #if !NETSTANDARD
         Locator.CurrentMutable.RegisterPlatformBitmapLoader();

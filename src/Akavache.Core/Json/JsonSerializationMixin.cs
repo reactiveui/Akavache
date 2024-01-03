@@ -242,14 +242,7 @@ public static class JsonSerializationMixin
         bool shouldInvalidateOnError = false,
         Func<T, bool>? cacheValidationPredicate = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
 #pragma warning disable CS8604 // Possible null reference argument.
         var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))

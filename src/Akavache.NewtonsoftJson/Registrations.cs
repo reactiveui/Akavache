@@ -18,16 +18,9 @@ public class Registrations : IWantsToRegisterStuff
     /// <inheritdoc />
     public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (resolver is null)
-        {
-            throw new ArgumentNullException(nameof(resolver));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(resolver);
-#endif
+        resolver.ThrowArgumentNullExceptionIfNull(nameof(resolver));
 
-        resolver.Register(
+        resolver?.Register(
             () => new JsonSerializerSettings
             {
                 ObjectCreationHandling = ObjectCreationHandling.Replace,
@@ -37,8 +30,8 @@ public class Registrations : IWantsToRegisterStuff
             typeof(JsonSerializerSettings),
             null);
 
-        resolver.Register(() => new NewtonsoftSerializer(readonlyDependencyResolver.GetService<JsonSerializerSettings>()!), typeof(ISerializer), null);
+        resolver?.Register(() => new NewtonsoftSerializer(readonlyDependencyResolver.GetService<JsonSerializerSettings>()!), typeof(ISerializer), null);
 
-        resolver.Register(() => new JsonDateTimeContractResolver(), typeof(IDateTimeContractResolver), null);
+        resolver?.Register(() => new JsonDateTimeContractResolver(), typeof(IDateTimeContractResolver), null);
     }
 }

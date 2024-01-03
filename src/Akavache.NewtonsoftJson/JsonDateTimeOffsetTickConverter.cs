@@ -29,14 +29,11 @@ public class JsonDateTimeOffsetTickConverter : JsonConverter
     /// <param name="serializer">The calling serializer.</param>
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
-        if (serializer == null)
-        {
-            throw new ArgumentNullException(nameof(serializer));
-        }
+        serializer.ThrowArgumentNullExceptionIfNull(nameof(serializer));
 
         if (value is DateTimeOffset dateTimeOffset)
         {
-            serializer.Serialize(writer, new DateTimeOffsetData(dateTimeOffset));
+            serializer?.Serialize(writer, new DateTimeOffsetData(dateTimeOffset));
         }
     }
 
@@ -52,22 +49,15 @@ public class JsonDateTimeOffsetTickConverter : JsonConverter
     /// </returns>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        reader.ThrowArgumentNullExceptionIfNull(nameof(reader));
+        serializer.ThrowArgumentNullExceptionIfNull(nameof(serializer));
 
-        if (serializer == null)
-        {
-            throw new ArgumentNullException(nameof(serializer));
-        }
-
-        if (reader.TokenType == JsonToken.Date && reader.Value is not null)
+        if (reader?.TokenType == JsonToken.Date && reader.Value is not null)
         {
             return (DateTimeOffset)reader.Value;
         }
 
-        var data = serializer.Deserialize<DateTimeOffsetData>(reader);
+        var data = serializer?.Deserialize<DateTimeOffsetData>(reader);
 
         return data is null ? null : (DateTimeOffset)data;
     }

@@ -22,11 +22,7 @@ public class NewtonsoftSerializer : ISerializer, IEnableLogger
     /// <param name="options">The options.</param>
     public NewtonsoftSerializer(JsonSerializerSettings options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
+        options.ThrowArgumentNullExceptionIfNull(nameof(options));
         Options = options;
     }
 
@@ -41,12 +37,8 @@ public class NewtonsoftSerializer : ISerializer, IEnableLogger
     /// <param name="getJsonDateTimeContractResolver">The get json date time contract resolver.</param>
     public void CreateSerializer(Func<IDateTimeContractResolver> getJsonDateTimeContractResolver)
     {
-        if (getJsonDateTimeContractResolver is null)
-        {
-            throw new ArgumentNullException(nameof(getJsonDateTimeContractResolver));
-        }
-
-        var jsonDateTimeContractResolver = getJsonDateTimeContractResolver() as JsonDateTimeContractResolver;
+        getJsonDateTimeContractResolver.ThrowArgumentNullExceptionIfNull(nameof(getJsonDateTimeContractResolver));
+        var jsonDateTimeContractResolver = getJsonDateTimeContractResolver?.Invoke() as JsonDateTimeContractResolver;
 
         lock (Options)
         {
@@ -120,10 +112,7 @@ public class NewtonsoftSerializer : ISerializer, IEnableLogger
     /// </returns>
     public IObservable<T?> DeserializeObject<T>(byte[] x)
     {
-        if (x is null)
-        {
-            throw new ArgumentNullException(nameof(x));
-        }
+        x.ThrowArgumentNullExceptionIfNull(nameof(x));
 
         try
         {

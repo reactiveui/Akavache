@@ -28,32 +28,26 @@ public class SQLiteEncryptedBlobCache : SqlRawPersistentBlobCache, ISecureBlobCa
     /// <inheritdoc />
     protected override IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
     {
-        if (data is null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
+        data.ThrowArgumentNullExceptionIfNull(nameof(data));
 
-        if (data.Length == 0)
+        if (data?.Length == 0)
         {
             return Observable.Return(data);
         }
 
-        return _encryption.EncryptBlock(data);
+        return _encryption.EncryptBlock(data!);
     }
 
     /// <inheritdoc />
     protected override IObservable<byte[]> AfterReadFromDiskFilter(byte[] data, IScheduler scheduler)
     {
-        if (data is null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
+        data.ThrowArgumentNullExceptionIfNull(nameof(data));
 
-        if (data.Length == 0)
+        if (data?.Length == 0)
         {
             return Observable.Return(data);
         }
 
-        return _encryption.DecryptBlock(data);
+        return _encryption.DecryptBlock(data!);
     }
 }

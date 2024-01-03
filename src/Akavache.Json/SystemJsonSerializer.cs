@@ -21,10 +21,7 @@ public class SystemJsonSerializer : ISerializer, IEnableLogger
     /// <param name="options">The options.</param>
     public SystemJsonSerializer(JsonSerializerOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        options.ThrowArgumentNullExceptionIfNull(nameof(options));
 
         Options = options;
     }

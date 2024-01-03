@@ -18,21 +18,13 @@ public class Registrations : IWantsToRegisterStuff
     /// <inheritdoc />
     public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (resolver is null)
-        {
-            throw new ArgumentNullException(nameof(resolver));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(resolver);
-#endif
-
-        resolver.Register(
+        resolver.ThrowArgumentNullExceptionIfNull(nameof(resolver));
+        resolver?.Register(
             () => new JsonSerializerOptions(),
             typeof(JsonSerializerOptions),
             null);
 
-        resolver.Register(() => new SystemJsonSerializer(readonlyDependencyResolver.GetService<JsonSerializerOptions>()!), typeof(ISerializer), null);
+        resolver?.Register(() => new SystemJsonSerializer(readonlyDependencyResolver.GetService<JsonSerializerOptions>()!), typeof(ISerializer), null);
 
         ////resolver.Register(() => new JsonDateTimeContractResolver(), typeof(IDateTimeContractResolver), null);
     }

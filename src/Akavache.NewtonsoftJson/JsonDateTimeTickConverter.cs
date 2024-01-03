@@ -45,12 +45,9 @@ public class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride =
     /// <exception cref="ArgumentNullException">nameof(reader).</exception>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
-        if (reader is null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        reader.ThrowArgumentNullExceptionIfNull(nameof(reader));
 
-        if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
+        if (reader?.TokenType is not JsonToken.Integer and not JsonToken.Date)
         {
             return null;
         }

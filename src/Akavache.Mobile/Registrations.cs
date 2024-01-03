@@ -18,29 +18,22 @@ public class Registrations : IWantsToRegisterStuff
     /// <inheritdoc />
     public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (resolver is null)
-        {
-            throw new ArgumentNullException(nameof(resolver));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(resolver);
-#endif
+        resolver.ThrowArgumentNullExceptionIfNull(nameof(resolver));
 
         var akavacheDriver = new AkavacheDriver();
-        resolver.Register(() => akavacheDriver, typeof(ISuspensionDriver), null);
+        resolver?.Register(() => akavacheDriver, typeof(ISuspensionDriver), null);
 
         // NB: These correspond to the hacks in Akavache.Http's registrations
-        resolver.Register(
+        resolver?.Register(
             () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.ShouldPersistState ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
             typeof(IObservable<IDisposable>),
             "ShouldPersistState");
 
-        resolver.Register(
+        resolver?.Register(
             () => readonlyDependencyResolver.GetService<ISuspensionHost>()?.IsUnpausing ?? throw new InvalidOperationException("Unable to resolve ISuspensionHost, probably ReactiveUI is not initialized."),
             typeof(IObservable<Unit>),
             "IsUnpausing");
 
-        resolver.Register(() => RxApp.TaskpoolScheduler, typeof(IScheduler), "Taskpool");
+        resolver?.Register(() => RxApp.TaskpoolScheduler, typeof(IScheduler), "Taskpool");
     }
 }
