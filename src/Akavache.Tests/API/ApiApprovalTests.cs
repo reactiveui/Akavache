@@ -13,7 +13,6 @@ namespace Akavache.APITests;
 /// Tests for handling API approval.
 /// </summary>
 [ExcludeFromCodeCoverage]
-[UsesVerify]
 public class ApiApprovalTests
 {
     /// <summary>
