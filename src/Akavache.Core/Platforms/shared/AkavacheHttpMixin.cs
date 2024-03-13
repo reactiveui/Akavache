@@ -17,14 +17,7 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
         return blobCache.DownloadUrl(url, url, headers, fetchAlways, absoluteExpiration);
     }
@@ -32,20 +25,8 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        if (url is null)
-        {
-            throw new ArgumentNullException(nameof(url));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-        ArgumentNullException.ThrowIfNull(url);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
+        url.ThrowArgumentNullExceptionIfNull(nameof(url));
 
         return blobCache.DownloadUrl(url.ToString(), url, headers, fetchAlways, absoluteExpiration);
     }
@@ -53,14 +34,7 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
         var doFetch = MakeWebRequest(HttpMethod.Get, new Uri(url), headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
         var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
@@ -83,14 +57,7 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
         var doFetch = MakeWebRequest(HttpMethod.Get, url, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
         var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
@@ -113,14 +80,7 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, HttpMethod method, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
         return blobCache.DownloadUrl(method, url, url, headers, fetchAlways, absoluteExpiration);
     }
@@ -128,20 +88,8 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, HttpMethod method, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        if (url is null)
-        {
-            throw new ArgumentNullException(nameof(url));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-        ArgumentNullException.ThrowIfNull(url);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
+        url.ThrowArgumentNullExceptionIfNull(nameof(url));
 
         return blobCache.DownloadUrl(method, url.ToString(), url, headers, fetchAlways, absoluteExpiration);
     }
@@ -149,14 +97,7 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, HttpMethod method, string key, string url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
         var doFetch = MakeWebRequest(method, new Uri(url), headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
         var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
@@ -179,14 +120,7 @@ public class AkavacheHttpMixin : IAkavacheHttpMixin
     /// <inheritdoc/>
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, HttpMethod method, string key, Uri url, IDictionary<string, string>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-#else
-        ArgumentNullException.ThrowIfNull(blobCache);
-#endif
+        blobCache.ThrowArgumentNullExceptionIfNull(nameof(blobCache));
 
         var doFetch = MakeWebRequest(method, url, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
         var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));

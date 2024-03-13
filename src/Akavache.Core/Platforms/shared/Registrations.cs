@@ -30,14 +30,7 @@ namespace Akavache.Core
 #endif
         public void Register(IMutableDependencyResolver resolver, IReadonlyDependencyResolver readonlyDependencyResolver)
         {
-#if NETSTANDARD || XAMARINIOS || XAMARINMAC || XAMARINTVOS || TIZEN || MONOANDROID13_0
-            if (resolver is null)
-            {
-                throw new ArgumentNullException(nameof(resolver));
-            }
-#else
-            ArgumentNullException.ThrowIfNull(resolver);
-#endif
+            resolver.ThrowArgumentNullExceptionIfNull(nameof(resolver));
 
 #if XAMARIN_MOBILE
             var fs = new IsolatedStorageProvider();

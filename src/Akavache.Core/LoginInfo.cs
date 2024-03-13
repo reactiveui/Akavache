@@ -15,7 +15,6 @@ namespace Akavache;
 /// <param name="password">The password for the user.</param>
 public class LoginInfo(string username, string password)
 {
-
     /// <summary>
     /// Initializes a new instance of the <see cref="LoginInfo"/> class.
     /// </summary>
