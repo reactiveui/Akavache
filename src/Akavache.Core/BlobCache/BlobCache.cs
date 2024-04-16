@@ -5,7 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
-using Newtonsoft.Json.Bson;
 using Splat;
 
 namespace Akavache;
@@ -135,7 +134,7 @@ public static class BlobCache
     /// </summary>
     /// <remarks>
     /// <para>
-    /// By default, <see cref="BsonReader"/> uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and <see cref="BsonWriter"/>
+    /// By default, uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and
     /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
     /// use some other <c>DateTimeKind</c>, you can set this value.
     /// </para>

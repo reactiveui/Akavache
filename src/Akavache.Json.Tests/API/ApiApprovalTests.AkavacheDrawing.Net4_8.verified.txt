@@ -1,0 +1,21 @@
+﻿[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName=".NET Standard 2.0")]
+namespace Akavache
+{
+    public static class BitmapImageMixin
+    {
+        public static System.IObservable<Splat.IBitmap> LoadImage(this Akavache.IBlobCache blobCache, string key, float? desiredWidth = default, float? desiredHeight = default) { }
+        public static System.IObservable<Splat.IBitmap> LoadImageFromUrl(this Akavache.IBlobCache blobCache, string url, bool fetchAlways = false, float? desiredWidth = default, float? desiredHeight = default, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<Splat.IBitmap> LoadImageFromUrl(this Akavache.IBlobCache blobCache, System.Uri url, bool fetchAlways = false, float? desiredWidth = default, float? desiredHeight = default, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<Splat.IBitmap> LoadImageFromUrl(this Akavache.IBlobCache blobCache, string key, string url, bool fetchAlways = false, float? desiredWidth = default, float? desiredHeight = default, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<Splat.IBitmap> LoadImageFromUrl(this Akavache.IBlobCache blobCache, string key, System.Uri url, bool fetchAlways = false, float? desiredWidth = default, float? desiredHeight = default, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> ThrowOnBadImageBuffer(byte[] compressedImage) { }
+    }
+}
+namespace Akavache.Drawing
+{
+    public class Registrations
+    {
+        public Registrations() { }
+        public void Register(Splat.IMutableDependencyResolver resolver, Splat.IReadonlyDependencyResolver readonlyDependencyResolver) { }
+    }
+}

@@ -15,10 +15,7 @@ internal class ObjectWrapper<T> : IObjectWrapper
     {
     }
 
-    public ObjectWrapper(T value)
-    {
-        Value = value;
-    }
+    public ObjectWrapper(T value) => Value = value;
 
     public T? Value { get; set; }
 }

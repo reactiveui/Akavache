@@ -6,3 +6,4 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Akavache.Tests")]
+[assembly: InternalsVisibleTo("Akavache.Json.Tests")]

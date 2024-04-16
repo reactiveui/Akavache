@@ -17,7 +17,6 @@ namespace Akavache;
 /// <param name="expiresAt">The date and time when the entry expires.</param>
 public class CacheEntry(string? typeName, byte[] value, DateTimeOffset createdAt, DateTimeOffset? expiresAt)
 {
-
     /// <summary>
     /// Gets or sets the date and time when the entry was created.
     /// </summary>
