@@ -27,7 +27,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>IDE1006;SA1313;SA1010</NoWarn>
-    <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;Xamarin.iOS10;Xamarin.Mac20;Xamarin.TVOS10;MonoAndroid13.0;tizen40;net6.0;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst</AkavacheTargetFrameworks>
+    <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst</AkavacheTargetFrameworks>
     <!--<AkavacheTargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(AkavacheTargetFrameworks);net462</AkavacheTargetFrameworks>-->
   </PropertyGroup>
 
