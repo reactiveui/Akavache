@@ -11,7 +11,7 @@
     <Using Remove="Foundation" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.8" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.9" />
   </ItemGroup>
   
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin')) ">
