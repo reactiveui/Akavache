@@ -3,7 +3,8 @@
     <Copyright>Copyright (c) .NET Foundation and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/reactiveui/akavache/</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png</PackageIconUrl>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>.NET Foundation and Contributors</Authors>
     <Owners>xanaisbettsx;ghuntley</Owners>
     <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>
@@ -27,12 +28,14 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>IDE1006;SA1313;SA1010</NoWarn>
-    <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net7.0-android;net7.0-ios;net7.0-tvos;net7.0-macos;net7.0-maccatalyst;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst</AkavacheTargetFrameworks>
+    <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst</AkavacheTargetFrameworks>
     <!--<AkavacheTargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(AkavacheTargetFrameworks);net462</AkavacheTargetFrameworks>-->
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
+    <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,15 +47,12 @@
     <Using Include="System.Text"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.141" PrivateAssets="all" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" /> 
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.141" PrivateAssets="all" />
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" Version="4.12.4" PrivateAssets="All" />
   </ItemGroup>

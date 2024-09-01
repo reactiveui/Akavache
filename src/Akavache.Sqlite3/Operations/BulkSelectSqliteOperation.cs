@@ -50,10 +50,10 @@ internal class BulkSelectSqliteOperation : IPreparedSqliteOperation
 
     public Func<IEnumerable<CacheElement>> PrepareToExecute(IEnumerable<string>? toSelect)
     {
-        var selectList = (toSelect ?? Array.Empty<string>()).ToList();
+        var selectList = (toSelect ?? []).ToList();
         if (selectList.Count == 0)
         {
-            return () => new List<CacheElement>();
+            return () => [];
         }
 
         var selectOp = _selectOps[selectList.Count - 1];

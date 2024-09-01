@@ -101,8 +101,8 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
 
         return _initializer
             .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
-            .SelectMany(encData => _opQueue.Insert(new[]
-            {
+            .SelectMany(encData => _opQueue.Insert(
+            [
                 new CacheElement
                 {
                     Key = key,
@@ -110,7 +110,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
                     CreatedAt = createdAt,
                     Expiration = exp,
                 },
-            }))
+            ]))
             .PublishLast().PermaRef();
     }
 
@@ -132,7 +132,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             return Observable.Throw<byte[]>(new InvalidOperationException("There is not a valid operation queue"));
         }
 
-        return _initializer.SelectMany(_ => _opQueue.Select(new[] { key }))
+        return _initializer.SelectMany(_ => _opQueue.Select([key]))
             .SelectMany(x =>
             {
                 var cacheElements = x.ToList();
@@ -179,7 +179,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             return Observable.Throw<DateTimeOffset?>(new InvalidOperationException("There is not a valid operation queue"));
         }
 
-        return _initializer.SelectMany(_ => _opQueue.Select(new[] { key }))
+        return _initializer.SelectMany(_ => _opQueue.Select([key]))
             .Select(x =>
             {
                 var cacheElements = x.ToList();
@@ -223,7 +223,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             return Observable.Throw<Unit>(new InvalidOperationException("There is not a valid operation queue"));
         }
 
-        return _initializer.SelectMany(_ => _opQueue.Invalidate(new[] { key }))
+        return _initializer.SelectMany(_ => _opQueue.Invalidate([key]))
             .PublishLast().PermaRef();
     }
 
@@ -268,8 +268,8 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
 
         return _initializer
             .SelectMany(_ => BeforeWriteToDiskFilter(data, Scheduler))
-            .SelectMany(encData => _opQueue.Insert(new[]
-            {
+            .SelectMany(encData => _opQueue.Insert(
+            [
                 new CacheElement
                 {
                     Key = key,
@@ -278,7 +278,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
                     CreatedAt = createdAt,
                     Expiration = exp,
                 },
-            }))
+            ]))
             .PublishLast().PermaRef();
     }
 
@@ -300,7 +300,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             return Observable.Throw<T>(new InvalidOperationException("There is not a valid operation queue"));
         }
 
-        return _initializer.SelectMany(_ => _opQueue.Select(new[] { key }))
+        return _initializer.SelectMany(_ => _opQueue.Select([key]))
             .SelectMany(x =>
             {
                 var cacheElements = x.ToList();
@@ -333,7 +333,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             return Observable.Throw<IEnumerable<T>>(new InvalidOperationException("The generic type does not have a valid full name and is required"));
         }
 
-        return _initializer.SelectMany(_ => _opQueue.SelectTypes(new[] { typeFullName })
+        return _initializer.SelectMany(_ => _opQueue.SelectTypes([typeFullName])
                 .SelectMany(x => x.ToObservable()
                     .SelectMany(y => AfterReadFromDiskFilter(y.Value, Scheduler))
                     .SelectMany(DeserializeObject<T>)
@@ -367,7 +367,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
             return Observable.Throw<Unit>(new InvalidOperationException("The generic type does not have a valid full name and is required"));
         }
 
-        return _initializer.SelectMany(_ => _opQueue.InvalidateTypes(new[] { typeFullName }))
+        return _initializer.SelectMany(_ => _opQueue.InvalidateTypes([typeFullName]))
             .PublishLast().PermaRef();
     }
 
@@ -779,9 +779,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         {
             try
             {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
                 return Observable.Return(boxedVal);
             }
             catch (Exception ex)

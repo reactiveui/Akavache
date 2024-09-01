@@ -32,12 +32,13 @@ internal partial class SqliteOperationQueue
         foreach (var v in inputItems)
         {
             var key = GetKeyFromTuple(v) ?? NullKey;
-            if (!groupedOps.ContainsKey(key))
+            if (!groupedOps.TryGetValue(key, out var value))
             {
-                groupedOps.Add(key, new());
+                value = [];
+                groupedOps.Add(key, value);
             }
 
-            var list = groupedOps[key];
+            var list = value;
             list.Add(v);
         }
 
@@ -102,9 +103,9 @@ internal partial class SqliteOperationQueue
         items.GroupBy(x => x.OperationType)
             .SelectMany(group => group.Key switch
             {
-                OperationType.BulkSelectSqliteOperation => new[] { GroupUnrelatedSelects(group) },
-                OperationType.BulkInsertSqliteOperation => new[] { GroupUnrelatedInserts(group) },
-                OperationType.BulkInvalidateSqliteOperation => new[] { GroupUnrelatedDeletes(group) },
+                OperationType.BulkSelectSqliteOperation => [GroupUnrelatedSelects(group)],
+                OperationType.BulkInsertSqliteOperation => [GroupUnrelatedInserts(group)],
+                OperationType.BulkInvalidateSqliteOperation => [GroupUnrelatedDeletes(group)],
                 _ => (IEnumerable<OperationQueueItem>)group
             });
 
@@ -116,7 +117,7 @@ internal partial class SqliteOperationQueue
         {
             if (item.OperationType == opTypeToDedup)
             {
-                currentWrites ??= new();
+                currentWrites ??= [];
                 currentWrites.Add(item);
                 continue;
             }
@@ -185,9 +186,7 @@ internal partial class SqliteOperationQueue
                 {
                     try
                     {
-                        elementMap[v].OnNext(resultMap.ContainsKey(v)
-                            ? EnumerableEx.Return(resultMap[v])
-                            : Enumerable.Empty<CacheElement>());
+                        elementMap[v].OnNext(resultMap.TryGetValue(v, out var value) ? EnumerableEx.Return(value) : []);
 
                         elementMap[v].OnCompleted();
                     }
@@ -228,7 +227,7 @@ internal partial class SqliteOperationQueue
         var elements = operationQueueItems.SelectMany(x =>
         {
             subj.Subscribe(x.CompletionAsUnit);
-            return x.ParametersAsElements ?? Enumerable.Empty<CacheElement>();
+            return x.ParametersAsElements ?? [];
         }).ToList();
 
         return OperationQueueItem.CreateInsert(
@@ -259,7 +258,7 @@ internal partial class SqliteOperationQueue
         var elements = operationQueueItems.SelectMany(x =>
         {
             subj.Subscribe(x.CompletionAsUnit);
-            return x.ParametersAsKeys ?? Enumerable.Empty<string>();
+            return x.ParametersAsKeys ?? [];
         }).ToList();
 
         return OperationQueueItem.CreateInvalidate(
@@ -292,21 +291,17 @@ internal partial class SqliteOperationQueue
 
     private static object CombineSubjectsByOperation(object source, IEnumerable<object>? subjects, OperationType opType)
     {
-        var subjectsList = (subjects ?? Enumerable.Empty<object>()).ToList();
-        switch (opType)
+        var subjectsList = (subjects ?? []).ToList();
+        return opType switch
         {
-            case OperationType.BulkSelectSqliteOperation:
-                return CombineSubjects(
-                    (AsyncSubject<IEnumerable<CacheElement>>)source,
-                    subjectsList.Cast<AsyncSubject<IEnumerable<CacheElement>>>());
-            case OperationType.BulkInsertSqliteOperation:
-            case OperationType.BulkInvalidateSqliteOperation:
-                return CombineSubjects(
-                    (AsyncSubject<Unit>)source,
-                    subjectsList.Cast<AsyncSubject<Unit>>());
-            default:
-                throw new ArgumentException("Invalid operation type", nameof(opType));
-        }
+            OperationType.BulkSelectSqliteOperation => CombineSubjects(
+                                (AsyncSubject<IEnumerable<CacheElement>>)source,
+                                subjectsList.Cast<AsyncSubject<IEnumerable<CacheElement>>>()),
+            OperationType.BulkInsertSqliteOperation or OperationType.BulkInvalidateSqliteOperation => CombineSubjects(
+                                (AsyncSubject<Unit>)source,
+                                subjectsList.Cast<AsyncSubject<Unit>>()),
+            _ => throw new ArgumentException("Invalid operation type", nameof(opType)),
+        };
     }
 
     private static AsyncSubject<T> CombineSubjects<T>(AsyncSubject<T> source, IEnumerable<AsyncSubject<T>> subjs)
