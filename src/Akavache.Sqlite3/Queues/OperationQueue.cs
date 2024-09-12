@@ -372,7 +372,7 @@ internal partial class SqliteOperationQueue : IEnableLogger, IDisposable
         _shouldQuit?.Dispose();
     }
 
-    internal List<OperationQueueItem> DumpQueue() => _operationQueue.ToList();
+    internal List<OperationQueueItem> DumpQueue() => [.. _operationQueue];
 
     private static void MarshalCompletion(object completion, Action block, IObservable<Unit> commitResult)
     {

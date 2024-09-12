@@ -8,6 +8,4 @@ namespace Akavache;
 /// <summary>
 /// A wrapper around a object.
 /// </summary>
-internal interface IObjectWrapper
-{
-}
+internal interface IObjectWrapper;

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48;net6.0</TargetFrameworks>
+    <TargetFrameworks>net48;net6.0;net8.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CA1307;CA2000;CA1062</NoWarn>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>

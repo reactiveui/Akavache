@@ -47,7 +47,7 @@ internal class BulkInvalidateSqliteOperation : IPreparedSqliteOperation
 
     public Action PrepareToExecute(IEnumerable<string>? toDelete)
     {
-        var deleteList = (toDelete ?? Array.Empty<string>()).ToList();
+        var deleteList = (toDelete ?? []).ToList();
         if (deleteList.Count == 0)
         {
             return () => { };

@@ -1,0 +1,283 @@
+﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Drawing")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Mobile")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Sqlite3")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Akavache.Tests")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v8.0", FrameworkDisplayName=".NET 8.0")]
+namespace Akavache
+{
+    public class AkavacheHttpMixin : Akavache.IAkavacheHttpMixin
+    {
+        public AkavacheHttpMixin() { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+    }
+    public static class BlobCache
+    {
+        public static string ApplicationName { get; set; }
+        public static System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        public static Akavache.ISecureBlobCache InMemory { get; set; }
+        public static Akavache.IBlobCache LocalMachine { get; set; }
+        public static Akavache.ISecureBlobCache Secure { get; set; }
+        public static System.Reactive.Concurrency.IScheduler TaskpoolScheduler { get; set; }
+        public static Akavache.IBlobCache UserAccount { get; set; }
+        public static void EnsureInitialized() { }
+        public static System.Threading.Tasks.Task Shutdown() { }
+    }
+    public static class BulkOperationsMixin
+    {
+        public static System.IObservable<System.Collections.Generic.IDictionary<string, byte[]>> Get(this Akavache.IBlobCache blobCache, System.Collections.Generic.IEnumerable<string> keys) { }
+        public static System.IObservable<System.Collections.Generic.IDictionary<string, System.DateTimeOffset?>> GetCreatedAt(this Akavache.IBlobCache blobCache, System.Collections.Generic.IEnumerable<string> keys) { }
+        public static System.IObservable<System.Collections.Generic.IDictionary<string, T>> GetObjects<T>(this Akavache.IBlobCache blobCache, System.Collections.Generic.IEnumerable<string> keys) { }
+        public static System.IObservable<System.Reactive.Unit> Insert(this Akavache.IBlobCache blobCache, System.Collections.Generic.IDictionary<string, byte[]> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<System.Reactive.Unit> InsertObjects<T>(this Akavache.IBlobCache blobCache, System.Collections.Generic.IDictionary<string, T> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<System.Reactive.Unit> Invalidate(this Akavache.IBlobCache blobCache, System.Collections.Generic.IEnumerable<string> keys) { }
+        public static System.IObservable<System.Reactive.Unit> InvalidateObjects<T>(this Akavache.IBlobCache blobCache, System.Collections.Generic.IEnumerable<string> keys) { }
+    }
+    public class CacheEntry
+    {
+        public CacheEntry(string? typeName, byte[] value, System.DateTimeOffset createdAt, System.DateTimeOffset? expiresAt) { }
+        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset? ExpiresAt { get; set; }
+        public string? TypeName { get; set; }
+        public byte[] Value { get; set; }
+    }
+    public enum DataProtectionScope
+    {
+        CurrentUser = 0,
+    }
+    public class DefaultAkavacheHttpClientFactory : Akavache.IAkavacheHttpClientFactory
+    {
+        public DefaultAkavacheHttpClientFactory() { }
+        public System.Net.Http.HttpClient CreateClient(string name) { }
+    }
+    public static class DependencyResolverMixin
+    {
+        public static void InitializeAkavache(this Splat.IMutableDependencyResolver resolver, Splat.IReadonlyDependencyResolver readonlyDependencyResolver) { }
+    }
+    public class EncryptionProvider : Akavache.IEncryptionProvider
+    {
+        public EncryptionProvider() { }
+        public System.IObservable<byte[]> DecryptBlock(byte[] block) { }
+        public System.IObservable<byte[]> EncryptBlock(byte[] block) { }
+    }
+    public static class HttpMixinExtensions
+    {
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default) { }
+    }
+    public interface IAkavacheHttpClientFactory
+    {
+        System.Net.Http.HttpClient CreateClient(string name);
+    }
+    public interface IAkavacheHttpMixin
+    {
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, string url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<byte[]> DownloadUrl(Akavache.IBlobCache blobCache, System.Net.Http.HttpMethod method, string key, System.Uri url, System.Collections.Generic.IDictionary<string, string>? headers = null, bool fetchAlways = false, System.DateTimeOffset? absoluteExpiration = default);
+    }
+    public interface IBlobCache : System.IDisposable
+    {
+        System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        System.Reactive.Concurrency.IScheduler Scheduler { get; }
+        System.IObservable<System.Reactive.Unit> Shutdown { get; }
+        System.IObservable<System.Reactive.Unit> Flush();
+        System.IObservable<byte[]> Get(string key);
+        System.IObservable<System.Collections.Generic.IEnumerable<string>> GetAllKeys();
+        System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key);
+        System.IObservable<System.Reactive.Unit> Insert(string key, byte[] data, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<System.Reactive.Unit> Invalidate(string key);
+        System.IObservable<System.Reactive.Unit> InvalidateAll();
+        System.IObservable<System.Reactive.Unit> Vacuum();
+    }
+    public interface IBulkBlobCache : Akavache.IBlobCache, System.IDisposable
+    {
+        System.IObservable<System.Collections.Generic.IDictionary<string, byte[]>> Get(System.Collections.Generic.IEnumerable<string> keys);
+        System.IObservable<System.Collections.Generic.IDictionary<string, System.DateTimeOffset?>> GetCreatedAt(System.Collections.Generic.IEnumerable<string> keys);
+        System.IObservable<System.Reactive.Unit> Insert(System.Collections.Generic.IDictionary<string, byte[]> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<System.Reactive.Unit> Invalidate(System.Collections.Generic.IEnumerable<string> keys);
+    }
+    public interface IEncryptionProvider
+    {
+        System.IObservable<byte[]> DecryptBlock(byte[] block);
+        System.IObservable<byte[]> EncryptBlock(byte[] block);
+    }
+    public interface IFilesystemProvider
+    {
+        System.IObservable<System.Reactive.Unit> CreateRecursive(string path);
+        System.IObservable<System.Reactive.Unit> Delete(string path);
+        string? GetDefaultLocalMachineCacheDirectory();
+        string? GetDefaultRoamingCacheDirectory();
+        string? GetDefaultSecretCacheDirectory();
+        System.IObservable<System.IO.Stream> OpenFileForReadAsync(string path, System.Reactive.Concurrency.IScheduler scheduler);
+        System.IObservable<System.IO.Stream> OpenFileForWriteAsync(string path, System.Reactive.Concurrency.IScheduler scheduler);
+    }
+    public interface IKeyedOperationQueue
+    {
+        System.IObservable<T> EnqueueObservableOperation<T>(string key, System.Func<System.IObservable<T>> asyncCalculationFunc);
+        System.IObservable<System.Reactive.Unit> EnqueueOperation(string key, System.Action action);
+        System.IObservable<T> EnqueueOperation<T>(string key, System.Func<T> calculationFunc);
+        System.IObservable<System.Reactive.Unit> ShutdownQueue();
+    }
+    public interface IObjectBlobCache : Akavache.IBlobCache, System.IDisposable
+    {
+        System.IObservable<System.Collections.Generic.IEnumerable<T>> GetAllObjects<T>();
+        System.IObservable<T?> GetObject<T>(string key);
+        System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(string key);
+        System.IObservable<System.Reactive.Unit> InsertObject<T>(string key, T value, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<System.Reactive.Unit> InvalidateAllObjects<T>();
+        System.IObservable<System.Reactive.Unit> InvalidateObject<T>(string key);
+    }
+    public interface IObjectBulkBlobCache : Akavache.IBlobCache, Akavache.IBulkBlobCache, Akavache.IObjectBlobCache, System.IDisposable
+    {
+        System.IObservable<System.Collections.Generic.IDictionary<string, T>> GetObjects<T>(System.Collections.Generic.IEnumerable<string> keys);
+        System.IObservable<System.Reactive.Unit> InsertObjects<T>(System.Collections.Generic.IDictionary<string, T> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default);
+        System.IObservable<System.Reactive.Unit> InvalidateObjects<T>(System.Collections.Generic.IEnumerable<string> keys);
+    }
+    public interface ISecureBlobCache : Akavache.IBlobCache, System.IDisposable { }
+    public class InMemoryBlobCache : Akavache.IBlobCache, Akavache.IObjectBlobCache, Akavache.ISecureBlobCache, Splat.IEnableLogger, System.IDisposable
+    {
+        public InMemoryBlobCache() { }
+        public InMemoryBlobCache(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>> initialContents) { }
+        public InMemoryBlobCache(System.Reactive.Concurrency.IScheduler scheduler) { }
+        public InMemoryBlobCache(System.Reactive.Concurrency.IScheduler? scheduler, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, byte[]>>? initialContents) { }
+        public System.DateTimeKind? ForcedDateTimeKind { get; set; }
+        public System.Reactive.Concurrency.IScheduler Scheduler { get; set; }
+        public System.IObservable<System.Reactive.Unit> Shutdown { get; }
+        public void Dispose() { }
+        protected virtual void Dispose(bool isDisposing) { }
+        public System.IObservable<System.Reactive.Unit> Flush() { }
+        public System.IObservable<byte[]> Get(string key) { }
+        public System.IObservable<System.Collections.Generic.IEnumerable<string>> GetAllKeys() { }
+        public System.IObservable<System.Collections.Generic.IEnumerable<T>> GetAllObjects<T>() { }
+        public System.IObservable<System.DateTimeOffset?> GetCreatedAt(string key) { }
+        public System.IObservable<T> GetObject<T>(string key) { }
+        public System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(string key) { }
+        public System.IObservable<System.Reactive.Unit> Insert(string key, byte[] data, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<System.Reactive.Unit> InsertObject<T>(string key, T value, System.DateTimeOffset? absoluteExpiration = default) { }
+        public System.IObservable<System.Reactive.Unit> Invalidate(string key) { }
+        public System.IObservable<System.Reactive.Unit> InvalidateAll() { }
+        public System.IObservable<System.Reactive.Unit> InvalidateAllObjects<T>() { }
+        public System.IObservable<System.Reactive.Unit> InvalidateObject<T>(string key) { }
+        public System.IObservable<System.Reactive.Unit> Vacuum() { }
+        public static Akavache.InMemoryBlobCache OverrideGlobals(System.Collections.Generic.IDictionary<string, byte[]> initialContents, System.Reactive.Concurrency.IScheduler? scheduler = null) { }
+        public static Akavache.InMemoryBlobCache OverrideGlobals(System.Collections.Generic.IDictionary<string, object> initialContents, System.Reactive.Concurrency.IScheduler? scheduler = null) { }
+        public static Akavache.InMemoryBlobCache OverrideGlobals(System.Reactive.Concurrency.IScheduler? scheduler = null, params System.Collections.Generic.KeyValuePair<string, byte[]>[] initialContents) { }
+    }
+    public static class JsonSerializationMixin
+    {
+        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> GetAllObjects<T>(this Akavache.IBlobCache blobCache) { }
+        public static System.IObservable<T?> GetAndFetchLatest<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.IObservable<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate = null, System.DateTimeOffset? absoluteExpiration = default, bool shouldInvalidateOnError = false, System.Func<T, bool>? cacheValidationPredicate = null) { }
+        public static System.IObservable<T?> GetAndFetchLatest<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.Func<System.DateTimeOffset, bool>? fetchPredicate = null, System.DateTimeOffset? absoluteExpiration = default, bool shouldInvalidateOnError = false, System.Func<T, bool>? cacheValidationPredicate = null) { }
+        public static System.IObservable<T?> GetObject<T>(this Akavache.IBlobCache blobCache, string key) { }
+        public static System.IObservable<System.DateTimeOffset?> GetObjectCreatedAt<T>(this Akavache.IBlobCache blobCache, string key) { }
+        public static System.IObservable<T?> GetOrCreateObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<T> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<T?> GetOrFetchObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.IObservable<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<T?> GetOrFetchObject<T>(this Akavache.IBlobCache blobCache, string key, System.Func<System.Threading.Tasks.Task<T>> fetchFunc, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<System.Reactive.Unit> InsertAllObjects<T>(this Akavache.IBlobCache blobCache, System.Collections.Generic.IDictionary<string, T> keyValuePairs, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<System.Reactive.Unit> InsertObject<T>(this Akavache.IBlobCache blobCache, string key, T value, System.DateTimeOffset? absoluteExpiration = default) { }
+        public static System.IObservable<System.Reactive.Unit> InvalidateAllObjects<T>(this Akavache.IBlobCache blobCache) { }
+        public static System.IObservable<System.Reactive.Unit> InvalidateObject<T>(this Akavache.IBlobCache blobCache, string key) { }
+    }
+    public class KeyedOperationQueue : Akavache.IKeyedOperationQueue, Splat.IEnableLogger, System.IDisposable
+    {
+        public KeyedOperationQueue(System.Reactive.Concurrency.IScheduler? scheduler = null) { }
+        public void Dispose() { }
+        protected virtual void Dispose(bool disposing) { }
+        public System.IObservable<T> EnqueueObservableOperation<T>(string key, System.Func<System.IObservable<T>> asyncCalculationFunc) { }
+        public System.IObservable<System.Reactive.Unit> EnqueueOperation(string key, System.Action action) { }
+        public System.IObservable<T> EnqueueOperation<T>(string key, System.Func<T> calculationFunc) { }
+        public System.IObservable<System.Reactive.Unit> ShutdownQueue() { }
+    }
+    public class LoginInfo
+    {
+        public LoginInfo(string username, string password) { }
+        public string Password { get; }
+        public string UserName { get; }
+    }
+    public static class LoginMixin
+    {
+        public static System.IObservable<System.Reactive.Unit> EraseLogin(this Akavache.ISecureBlobCache blobCache, string host = "default") { }
+        public static System.IObservable<Akavache.LoginInfo> GetLoginAsync(this Akavache.ISecureBlobCache blobCache, string host = "default") { }
+        public static System.IObservable<System.Reactive.Unit> SaveLogin(this Akavache.ISecureBlobCache blobCache, string user, string password, string host = "default", System.DateTimeOffset? absoluteExpiration = default) { }
+    }
+    public static class ProtectedData
+    {
+        public static byte[] Protect(byte[] originalData, byte[]? entropy, Akavache.DataProtectionScope scope = 0) { }
+        public static byte[] Unprotect(byte[] originalData, byte[]? entropy, Akavache.DataProtectionScope scope = 0) { }
+    }
+    public static class RelativeTimeMixin
+    {
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, string url, System.TimeSpan expiration, System.Collections.Generic.Dictionary<string, string>? headers = null, bool fetchAlways = false) { }
+        public static System.IObservable<byte[]> DownloadUrl(this Akavache.IBlobCache blobCache, System.Uri url, System.TimeSpan expiration, System.Collections.Generic.Dictionary<string, string>? headers = null, bool fetchAlways = false) { }
+        public static System.IObservable<System.Reactive.Unit> Insert(this Akavache.IBlobCache blobCache, string key, byte[] data, System.TimeSpan expiration) { }
+        public static System.IObservable<System.Reactive.Unit> InsertObject<T>(this Akavache.IBlobCache blobCache, string key, T value, System.TimeSpan expiration) { }
+        public static System.IObservable<System.Reactive.Unit> SaveLogin(this Akavache.ISecureBlobCache blobCache, string user, string password, string host, System.TimeSpan expiration) { }
+    }
+    public class SimpleFilesystemProvider : Akavache.IFilesystemProvider
+    {
+        public SimpleFilesystemProvider() { }
+        public System.IObservable<System.Reactive.Unit> CreateRecursive(string path) { }
+        public System.IObservable<System.Reactive.Unit> Delete(string path) { }
+        public string GetDefaultLocalMachineCacheDirectory() { }
+        public string GetDefaultRoamingCacheDirectory() { }
+        public string GetDefaultSecretCacheDirectory() { }
+        public System.IObservable<System.IO.Stream> OpenFileForReadAsync(string path, System.Reactive.Concurrency.IScheduler scheduler) { }
+        public System.IObservable<System.IO.Stream> OpenFileForWriteAsync(string path, System.Reactive.Concurrency.IScheduler scheduler) { }
+        protected static string GetAssemblyDirectoryName() { }
+    }
+}
+namespace Akavache.Core
+{
+    public class Registrations
+    {
+        public Registrations() { }
+        public void Register(Splat.IMutableDependencyResolver resolver, Splat.IReadonlyDependencyResolver readonlyDependencyResolver) { }
+    }
+}
+namespace Akavache.Internal
+{
+    [System.Flags]
+    public enum FileAccess
+    {
+        Read = 1,
+        Write = 2,
+        ReadWrite = 3,
+    }
+    public enum FileMode
+    {
+        CreateNew = 1,
+        Create = 2,
+        Open = 3,
+        OpenOrCreate = 4,
+        Truncate = 5,
+        Append = 6,
+    }
+    [System.Flags]
+    public enum FileShare
+    {
+        None = 0,
+        Read = 1,
+        Write = 2,
+        ReadWrite = 3,
+        Delete = 4,
+        Inheritable = 16,
+    }
+}

@@ -21,6 +21,4 @@ namespace Akavache.Sqlite3;
 /// </remarks>
 /// <param name="databaseFile">The location of the database file which to store the blobs in.</param>
 /// <param name="scheduler">Scheduler to use for contained observables.</param>
-public class SQLitePersistentBlobCache(string databaseFile, IScheduler? scheduler = null) : SqlRawPersistentBlobCache(databaseFile, scheduler)
-{
-}
+public class SQLitePersistentBlobCache(string databaseFile, IScheduler? scheduler = null) : SqlRawPersistentBlobCache(databaseFile, scheduler);

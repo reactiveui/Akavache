@@ -15,6 +15,4 @@ namespace Akavache;
 /// saved to disk cannot be easily read by a third party.
 /// </para>
 /// </summary>
-public interface ISecureBlobCache : IBlobCache
-{
-}
+public interface ISecureBlobCache : IBlobCache;

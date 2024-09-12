@@ -59,7 +59,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     public InMemoryBlobCache(IScheduler? scheduler, IEnumerable<KeyValuePair<string, byte[]>>? initialContents)
     {
         Scheduler = scheduler ?? CurrentThreadScheduler.Instance;
-        foreach (var item in initialContents ?? Enumerable.Empty<KeyValuePair<string, byte[]>>())
+        foreach (var item in initialContents ?? [])
         {
             _cache[item.Key] = new(null, item.Value, Scheduler.Now, null);
         }
@@ -155,7 +155,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -168,7 +168,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
 
     /// <inheritdoc />
     public IObservable<Unit> Flush() => _disposed ?
-        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache") :
+        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache)) :
         Observable.Return(Unit.Default);
 
     /// <inheritdoc />
@@ -176,7 +176,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<byte[]>(nameof(InMemoryBlobCache));
         }
 
         CacheEntry? entry;
@@ -211,7 +211,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<DateTimeOffset?>(nameof(InMemoryBlobCache));
         }
 
         CacheEntry? entry;
@@ -233,7 +233,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<List<string>>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -250,7 +250,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -266,7 +266,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -282,7 +282,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         var data = SerializeObject(value);
@@ -300,7 +300,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<T>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<T>(nameof(InMemoryBlobCache));
         }
 
         CacheEntry? entry;
@@ -340,7 +340,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<IEnumerable<T>>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -356,7 +356,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
 
     /// <inheritdoc />
     public IObservable<Unit> InvalidateObject<T>(string key) => _disposed ?
-        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache") :
+        ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache)) :
         Invalidate(key);
 
     /// <inheritdoc />
@@ -364,7 +364,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
@@ -384,7 +384,7 @@ public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogg
     {
         if (_disposed)
         {
-            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>("InMemoryBlobCache");
+            return ExceptionHelper.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
         lock (_cache)
