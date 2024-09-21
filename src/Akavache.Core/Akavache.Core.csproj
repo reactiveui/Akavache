@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
-    <PackageReference Include="Splat" Version="14.*" />
+    <PackageReference Include="Splat" Version="15.2.22" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
@@ -22,24 +22,6 @@
     <None Include="Platforms\**\*.cs" />
     <Compile Include="Platforms\shared\**\*.cs" />
     <Compile Include="Platforms\shared-not-uwp\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.iOS'))">
-    <Compile Include="Platforms\apple-common\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-    <Reference Include="System.Runtime.Serialization" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.TVOS'))">
-    <Compile Include="Platforms\apple-common\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-    <Reference Include="System.Runtime.Serialization" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(TargetFramework.StartsWith('Xamarin.Mac'))">
-    <Compile Include="Platforms\apple-common\**\*.cs" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="netstandard" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.StartsWith('tizen40'))">
@@ -64,12 +46,6 @@
 
   <ItemGroup Condition="$(TargetFramework.EndsWith('0-macos'))">
     <Compile Include="Platforms\apple-common\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
-    <Compile Include="Platforms\android\**\*.cs" />
-    <Compile Include="Platforms\xamarin-mobile\**\*.cs" />
-    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.EndsWith('0-android'))">
