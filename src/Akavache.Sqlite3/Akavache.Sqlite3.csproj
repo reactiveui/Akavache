@@ -25,10 +25,6 @@
     <None Remove="sqlite-ng-notes.md" />
   </ItemGroup>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
-    <Reference Include="netstandard" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
   </ItemGroup>
