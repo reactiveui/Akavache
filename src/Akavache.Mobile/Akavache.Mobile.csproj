@@ -11,7 +11,7 @@
     <Using Remove="Foundation" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="19.*" />
+    <PackageReference Include="reactiveui" Version="20.1.63" />
   </ItemGroup>
 
   <ItemGroup>
