@@ -14,8 +14,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="6.0.1" />
-    <PackageReference Include="xunit" Version="2.9.0" />
-    <PackageReference Include="xunit.runner.console" Version="2.9.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.console" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Xunit.StaFact" Version="1.1.11" />
