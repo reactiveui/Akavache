@@ -22,7 +22,7 @@
     <PackageReference Include="ReactiveUI.Testing" Version="20.1.63" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
-    <PackageReference Include="FluentAssertions" Version="8.0.1" />
+    <PackageReference Include="FluentAssertions" Version="8.1.1" />
     <PackageReference Include="DiffEngine" Version="15.6.0" />
     <PackageReference Include="PublicApiGenerator" Version="11.3.0" />
     <PackageReference Include="Verify.Xunit" Version="28.8.1" />
