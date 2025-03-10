@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="6.0.1" />
     <PackageReference Include="Splat" Version="9.*" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.45.2" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.47.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
