@@ -15,6 +15,10 @@ namespace Akavache;
 /// This class is an IBlobCache backed by a simple in-memory Dictionary.
 /// Use it for testing / mocking purposes.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public class InMemoryBlobCache : ISecureBlobCache, IObjectBlobCache, IEnableLogger
 {
     [SuppressMessage("Design", "CA2213: non-disposed field.", Justification = "Used for notification of dispose.")]

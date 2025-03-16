@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Splat;
 
 namespace Akavache;
@@ -10,6 +11,10 @@ namespace Akavache;
 /// <summary>
 /// A set of methods associated with accessing HTTP resources for a blob cache.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public class AkavacheHttpMixin : IAkavacheHttpMixin
 {
     private static IAkavacheHttpClientFactory HttpFactoryClient => Locator.Current.GetService<IAkavacheHttpClientFactory>() ?? throw new InvalidOperationException("Unable to resolve IAkavacheHttpClientFactory, probably Akavache is not initialized.");

@@ -24,7 +24,7 @@ public class CoalescerTests
     public async Task SingleItem()
     {
         var fixture = new SqliteOperationQueue();
-        fixture.Select(new[] { "Foo" });
+        fixture.Select(["Foo"]);
 
         var queue = fixture.DumpQueue();
         var subj = queue[0].CompletionAsElements;
@@ -40,9 +40,9 @@ public class CoalescerTests
         var outSub = result[0].CompletionAsElements;
 
         Assert.Equal(0, output.Count);
-        outSub.OnNext(new[] { new CacheElement { Key = "Foo" } });
+        outSub.OnNext([new CacheElement { Key = "Foo" }]);
         outSub.OnCompleted();
-        await Task.Delay(500).ConfigureAwait(false);
+        await Task.Delay(500);
         Assert.Equal(1, output.Count);
     }
 
@@ -54,9 +54,9 @@ public class CoalescerTests
     public async Task UnrelatedItems()
     {
         var fixture = new SqliteOperationQueue();
-        fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Bar" } });
-        fixture.Invalidate(new[] { "Baz" });
+        fixture.Select(["Foo"]);
+        fixture.Insert([new CacheElement { Key = "Bar" }]);
+        fixture.Invalidate(["Baz"]);
 
         var queue = fixture.DumpQueue();
         var subj = queue[0].CompletionAsElements;
@@ -72,9 +72,9 @@ public class CoalescerTests
         var outSub = result[0].CompletionAsElements;
 
         Assert.Equal(0, output.Count);
-        outSub.OnNext(new[] { new CacheElement { Key = "Foo" } });
+        outSub.OnNext([new CacheElement { Key = "Foo" }]);
         outSub.OnCompleted();
-        await Task.Delay(500).ConfigureAwait(false);
+        await Task.Delay(500);
         Assert.Equal(1, output.Count);
     }
 
@@ -87,10 +87,10 @@ public class CoalescerTests
     {
         var fixture = new SqliteOperationQueue();
 
-        fixture.Select(new[] { "Foo" });
-        fixture.Select(new[] { "Bar" });
-        fixture.Invalidate(new[] { "Bamf" });
-        fixture.Select(new[] { "Baz" });
+        fixture.Select(["Foo"]);
+        fixture.Select(["Bar"]);
+        fixture.Invalidate(["Bamf"]);
+        fixture.Select(["Baz"]);
 
         var queue = fixture.DumpQueue();
         queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
@@ -120,7 +120,7 @@ public class CoalescerTests
         Assert.Equal(0, output.Count);
         outSub.OnNext(fakeResult);
         outSub.OnCompleted();
-        await Task.Delay(1000).ConfigureAwait(false);
+        await Task.Delay(1000);
         Assert.Equal(3, output.Count);
     }
 
@@ -132,10 +132,10 @@ public class CoalescerTests
     public async Task DedupRelatedSelects()
     {
         var fixture = new SqliteOperationQueue();
-        fixture.Select(new[] { "Foo" });
-        fixture.Select(new[] { "Foo" });
-        fixture.Select(new[] { "Bar" });
-        fixture.Select(new[] { "Foo" });
+        fixture.Select(["Foo"]);
+        fixture.Select(["Foo"]);
+        fixture.Select(["Bar"]);
+        fixture.Select(["Foo"]);
 
         var queue = fixture.DumpQueue();
         queue.Where(x => x.OperationType == OperationType.BulkSelectSqliteOperation)
@@ -161,7 +161,7 @@ public class CoalescerTests
         Assert.Equal(0, output.Count);
         outSub.OnNext(fakeResult);
         outSub.OnCompleted();
-        await Task.Delay(1000).ConfigureAwait(false);
+        await Task.Delay(1000);
         Assert.Equal(4, output.Count);
     }
 
@@ -172,10 +172,10 @@ public class CoalescerTests
     public void InterpolatedOpsDontGetDeduped()
     {
         var fixture = new SqliteOperationQueue();
-        fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = [1, 2, 3] } });
-        fixture.Select(new[] { "Foo" });
-        fixture.Insert(new[] { new CacheElement { Key = "Foo", Value = [4, 5, 6] } });
+        fixture.Select(["Foo"]);
+        fixture.Insert([new CacheElement { Key = "Foo", Value = [1, 2, 3] }]);
+        fixture.Select(["Foo"]);
+        fixture.Insert([new CacheElement { Key = "Foo", Value = [4, 5, 6] }]);
 
         var queue = fixture.DumpQueue();
         var result = SqliteOperationQueue.CoalesceOperations(queue);
@@ -201,8 +201,8 @@ public class CoalescerTests
         using (var cache = new SQLitePersistentBlobCache(Path.Combine(path, "sqlite.db")))
         {
             var queue = new SqliteOperationQueue(cache.Connection, BlobCache.TaskpoolScheduler);
-            var request = queue.Select(new[] { "Foo" });
-            var unrelatedRequest = queue.Select(new[] { "Bar" });
+            var request = queue.Select(["Foo"]);
+            var unrelatedRequest = queue.Select(["Bar"]);
 
             cache.ReplaceOperationQueue(queue);
 

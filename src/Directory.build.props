@@ -31,6 +31,9 @@
     <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst</AkavacheTargetFrameworks>
     <!--<AkavacheTargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(AkavacheTargetFrameworks);net462</AkavacheTargetFrameworks>-->
   </PropertyGroup>
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />

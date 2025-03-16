@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Akavache.Sqlite3;
 
 /// <summary>
@@ -21,4 +23,8 @@ namespace Akavache.Sqlite3;
 /// </remarks>
 /// <param name="databaseFile">The location of the database file which to store the blobs in.</param>
 /// <param name="scheduler">Scheduler to use for contained observables.</param>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache")]
+[RequiresDynamicCode("Registrations for Akavache")]
+#endif
 public class SQLitePersistentBlobCache(string databaseFile, IScheduler? scheduler = null) : SqlRawPersistentBlobCache(databaseFile, scheduler);

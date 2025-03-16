@@ -10,6 +10,10 @@ using Splat;
 namespace Akavache;
 
 [SuppressMessage("FxCop.Style", "CA5351: GetMd5Hash uses a broken cryptographic algorithm MD5", Justification = "Not used for encryption.")]
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 internal static partial class Utility
 {
     public static string GetMd5Hash(string input)

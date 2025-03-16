@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Splat;
@@ -12,6 +13,10 @@ namespace Akavache;
 /// <summary>
 /// A set of mix-in associated with the <see cref="IDependencyResolver"/> interface.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public static class DependencyResolverMixin
 {
     /// <summary>
