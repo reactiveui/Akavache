@@ -13,6 +13,8 @@ namespace Akavache
 }
 namespace Akavache.Drawing
 {
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Registrations for Akavache.Drawing")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Registrations for Akavache.Drawing")]
     public class Registrations
     {
         public Registrations() { }
