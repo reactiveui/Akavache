@@ -709,8 +709,9 @@ public abstract class BlobCacheExtensionsTestBase
         {
             fixture.InsertObjects(input.Zip(inputItems, (key, value) => new { Key = key, Value = value }).ToDictionary(x => x.Key, x => x.Value)).Wait();
             var keyDates = await fixture.GetCreatedAt(input);
-
+#pragma warning disable RCS1077 // Optimize LINQ method call.
             Assert.Equal(keyDates.Keys.OrderBy(x => x), input.OrderBy(x => x));
+#pragma warning restore RCS1077 // Optimize LINQ method call.
             keyDates.Values.All(x => x > now).Should().BeTrue();
         }
     }

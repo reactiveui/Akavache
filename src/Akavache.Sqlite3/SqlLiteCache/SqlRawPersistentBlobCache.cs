@@ -783,7 +783,7 @@ public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
         {
             try
             {
-                var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader).Value;
+                var boxedVal = serializer.Deserialize<ObjectWrapper<T>>(reader)!.Value;
                 return Observable.Return(boxedVal);
             }
             catch (Exception ex)
