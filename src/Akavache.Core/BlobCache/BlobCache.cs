@@ -13,6 +13,10 @@ namespace Akavache;
 /// <summary>
 /// A class which represents a blobbed cache.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public static class BlobCache
 {
     private static string? _applicationName;
@@ -34,7 +38,7 @@ public static class BlobCache
 
     static BlobCache()
     {
-        Locator.RegisterResolverCallbackChanged(() =>
+        Locator.RegisterResolverCallbackChanged(static () =>
         {
             if (Locator.CurrentMutable is null)
             {

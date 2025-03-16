@@ -26,6 +26,7 @@ public class AsyncLockTests
 
         Assert.True(lockOne.IsCompleted);
         Assert.Equal(TaskStatus.RanToCompletion, lockOne.Status);
+#pragma warning disable xUnit1031 // Do not use blocking task operations in test method
         Assert.NotNull(lockOne.Result);
 
         Assert.False(lockTwo.IsCompleted);
@@ -36,5 +37,6 @@ public class AsyncLockTests
         Assert.True(lockTwo.IsCanceled);
 
         lockOne.Result.Dispose();
+#pragma warning restore xUnit1031 // Do not use blocking task operations in test method
     }
 }

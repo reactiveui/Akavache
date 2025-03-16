@@ -19,6 +19,10 @@ namespace Akavache.Sqlite3;
 /// This class represents an IBlobCache backed by a SQLite3 database, and
 /// it is the default (and best!) implementation.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public class SqlRawPersistentBlobCache : IEnableLogger, IObjectBulkBlobCache
 {
     private static readonly object DisposeGate = 42;

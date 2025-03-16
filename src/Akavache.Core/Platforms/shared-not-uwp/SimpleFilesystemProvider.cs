@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Splat;
 
@@ -11,14 +12,18 @@ namespace Akavache;
 /// <summary>
 /// A wrapper around the file system.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public class SimpleFilesystemProvider : IFilesystemProvider
 {
     /// <inheritdoc />
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForReadAsync(string path, IScheduler scheduler) => Utility.SafeOpenFileAsync(path, FileMode.Open, FileAccess.Read, FileShare.Read, scheduler);
 
     /// <inheritdoc />
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler) => Utility.SafeOpenFileAsync(path, FileMode.Create, FileAccess.Write, FileShare.None, scheduler);
 
     /// <inheritdoc />
@@ -55,7 +60,7 @@ public class SimpleFilesystemProvider : IFilesystemProvider
     /// <returns>The assembly directory name.</returns>
     protected static string GetAssemblyDirectoryName()
     {
-        var assemblyDirectoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var assemblyDirectoryName = Path.GetDirectoryName(AppContext.BaseDirectory);
 
         return assemblyDirectoryName ?? throw new InvalidOperationException("The directory name of the assembly location is null");
     }

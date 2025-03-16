@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO.IsolatedStorage;
 using System.Reactive.Disposables;
 
@@ -11,6 +12,10 @@ namespace Akavache;
 /// <summary>
 /// A storage provided that uses isolated storage.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public class IsolatedStorageProvider : IFilesystemProvider
 {
     /// <inheritdoc />
@@ -35,7 +40,7 @@ public class IsolatedStorageProvider : IFilesystemProvider
         });
 
     /// <inheritdoc />
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design")]
     public IObservable<Stream> OpenFileForWriteAsync(string path, IScheduler scheduler) =>
         Observable.Create<Stream>(subj =>
         {

@@ -23,7 +23,7 @@ public abstract class BulkOperationsTestBase
             var data = new byte[] { 0x10, 0x20, 0x30, };
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync())).ConfigureAwait(false);
+            await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
             Assert.Equal(keys.Length, (await fixture.GetAllKeys().FirstAsync()).Count());
 
@@ -47,7 +47,7 @@ public abstract class BulkOperationsTestBase
             var data = new byte[] { 0x10, 0x20, 0x30, };
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync())).ConfigureAwait(false);
+            await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
             var allData = await fixture.Get(keys).FirstAsync();
             Assert.Equal(0, allData.Count);
@@ -92,7 +92,7 @@ public abstract class BulkOperationsTestBase
             var data = new byte[] { 0x10, 0x20, 0x30, };
             var keys = new[] { "Foo", "Bar", "Baz", };
 
-            await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync())).ConfigureAwait(false);
+            await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
             Assert.Equal(keys.Length, (await fixture.GetAllKeys().FirstAsync()).Count());
 

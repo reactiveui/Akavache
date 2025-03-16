@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
 using Newtonsoft.Json;
 using ReactiveUI;
@@ -14,6 +15,10 @@ namespace Akavache.Mobile;
 /// Registrations for the mobile platform. Will register all our instances with splat.
 /// </summary>
 [Preserve(AllMembers = true)]
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Mobile")]
+[RequiresDynamicCode("Registrations for Akavache.Mobile")]
+#endif
 public class Registrations : IWantsToRegisterStuff
 {
     /// <inheritdoc />

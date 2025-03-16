@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Splat;
 
 namespace Akavache.Sqlite3;
@@ -10,6 +11,10 @@ namespace Akavache.Sqlite3;
 /// <summary>
 /// A SQLite blob cache where all the entries are encrypted.
 /// </summary>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for Akavache.Core")]
+[RequiresDynamicCode("Registrations for Akavache.Core")]
+#endif
 public class SQLiteEncryptedBlobCache : SqlRawPersistentBlobCache, ISecureBlobCache
 {
     private readonly IEncryptionProvider _encryption;
