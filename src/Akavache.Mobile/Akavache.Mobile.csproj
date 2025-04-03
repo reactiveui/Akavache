@@ -11,7 +11,7 @@
     <Using Remove="Foundation" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="20.1.63" />
+    <PackageReference Include="reactiveui" Version="20.2.45" />
     <PackageReference Include="System.Text.Json" Version="9.0.3" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.3" />
   </ItemGroup>
