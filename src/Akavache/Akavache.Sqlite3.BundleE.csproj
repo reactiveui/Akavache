@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin')) ">
