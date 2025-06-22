@@ -1,6 +1,8 @@
 ﻿[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v9.0", FrameworkDisplayName=".NET 9.0")]
 namespace Akavache
 {
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Registrations for Akavache")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Registrations for Akavache")]
     public class Registrations
     {
         public Registrations() { }
@@ -11,6 +13,8 @@ namespace Akavache
 namespace Akavache.Sqlite3
 {
     public static class LinkerPreserve { }
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("Registrations for Akavache")]
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Registrations for Akavache")]
     public class SQLitePersistentBlobCache : Akavache.Sqlite3.SqlRawPersistentBlobCache
     {
         public SQLitePersistentBlobCache(string databaseFile, System.Reactive.Concurrency.IScheduler? scheduler = null) { }
