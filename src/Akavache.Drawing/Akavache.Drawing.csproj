@@ -14,7 +14,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Splat.Drawing" Version="15.3.1" />
+    <PackageReference Include="Splat.Drawing" Version="15.4.1" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.6" />
   </ItemGroup>
 </Project>
