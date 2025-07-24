@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ReactiveMarbles.CacheDatabase.EncryptedSettings</RootNamespace>
+    <LangVersion>preview</LangVersion>
+    <DefineConstants>ENCRYPTED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\ReactiveMarbles.CacheDatabase.Settings\Core\*.cs" LinkBase="Core" />
+    <Compile Include="..\ReactiveMarbles.CacheDatabase.Settings\SettingsBase.cs" Link="SettingsBase.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.EncryptedSqlite3\ReactiveMarbles.CacheDatabase.EncryptedSqlite3.csproj" />
+    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj" />
+  </ItemGroup>
+
+</Project>

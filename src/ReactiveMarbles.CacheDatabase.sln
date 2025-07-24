@@ -1,0 +1,107 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31521.260
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.Sqlite3", "ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj", "{1F898FC5-61E2-4112-894A-3271683E3836}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.Core", "ReactiveMarbles.CacheDatabase.Core\ReactiveMarbles.CacheDatabase.Core.csproj", "{A437C41D-0A41-4498-97C1-73118EB608FE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.EncryptedSqlite3", "ReactiveMarbles.CacheDatabase.EncryptedSqlite3\ReactiveMarbles.CacheDatabase.EncryptedSqlite3.csproj", "{8FF15D4A-C6DF-40BE-B4A9-A5073A05D157}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.SystemTextJson", "ReactiveMarbles.CacheData.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj", "{65D848EC-3FC1-4C84-A142-8064619428B4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.Tests", "ReactiveMarbles.CacheDatabase.Tests\ReactiveMarbles.CacheDatabase.Tests.csproj", "{0641583F-578C-418F-A1A3-611412EDF4FE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{33A39A0D-0FD6-4A0E-89F0-9BA1CC72B515}"
+	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
+		..\.gitignore = ..\.gitignore
+		..\.github\workflows\ci-build.yml = ..\.github\workflows\ci-build.yml
+		Directory.Build.props = Directory.Build.props
+		Directory.build.targets = Directory.build.targets
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
+		..\.github\workflows\release.yml = ..\.github\workflows\release.yml
+		stylecop.json = stylecop.json
+		..\version.json = ..\version.json
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.NewtonsoftJson", "ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj", "{4EB9A549-827C-4187-B5C4-D98EC60165A3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.Benchmarks", "ReactiveMarbles.CacheDatabase.Benchmarks\ReactiveMarbles.CacheDatabase.Benchmarks.csproj", "{289FC9C2-59EF-4FA8-87B1-AD7E7881F4C8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{EAF0C067-A0C0-4497-9B4E-E401E3CB8973}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.Settings", "ReactiveMarbles.CacheDatabase.Settings\ReactiveMarbles.CacheDatabase.Settings.csproj", "{0EAF9FE4-C091-4964-A31F-FD5031C7B4CE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.EncryptedSettings", "ReactiveMarbles.CacheDatabase.EncryptedSettings\ReactiveMarbles.CacheDatabase.EncryptedSettings.csproj", "{A8EA3CC0-6AFA-4A89-9490-03E7191FEBB4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.Settings.Tests", "ReactiveMarbles.CacheDatabase.Settings.Tests\ReactiveMarbles.CacheDatabase.Settings.Tests.csproj", "{AA651D8F-DF19-4E55-95F7-2F7E9128C872}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests", "ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests\ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests.csproj", "{37AC7746-7496-452F-BBB7-45E7142FC5A3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1F898FC5-61E2-4112-894A-3271683E3836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F898FC5-61E2-4112-894A-3271683E3836}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F898FC5-61E2-4112-894A-3271683E3836}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F898FC5-61E2-4112-894A-3271683E3836}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A437C41D-0A41-4498-97C1-73118EB608FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A437C41D-0A41-4498-97C1-73118EB608FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A437C41D-0A41-4498-97C1-73118EB608FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A437C41D-0A41-4498-97C1-73118EB608FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FF15D4A-C6DF-40BE-B4A9-A5073A05D157}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FF15D4A-C6DF-40BE-B4A9-A5073A05D157}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FF15D4A-C6DF-40BE-B4A9-A5073A05D157}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FF15D4A-C6DF-40BE-B4A9-A5073A05D157}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65D848EC-3FC1-4C84-A142-8064619428B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65D848EC-3FC1-4C84-A142-8064619428B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65D848EC-3FC1-4C84-A142-8064619428B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65D848EC-3FC1-4C84-A142-8064619428B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0641583F-578C-418F-A1A3-611412EDF4FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0641583F-578C-418F-A1A3-611412EDF4FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0641583F-578C-418F-A1A3-611412EDF4FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0641583F-578C-418F-A1A3-611412EDF4FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EB9A549-827C-4187-B5C4-D98EC60165A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EB9A549-827C-4187-B5C4-D98EC60165A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EB9A549-827C-4187-B5C4-D98EC60165A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EB9A549-827C-4187-B5C4-D98EC60165A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{289FC9C2-59EF-4FA8-87B1-AD7E7881F4C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{289FC9C2-59EF-4FA8-87B1-AD7E7881F4C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{289FC9C2-59EF-4FA8-87B1-AD7E7881F4C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{289FC9C2-59EF-4FA8-87B1-AD7E7881F4C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EAF9FE4-C091-4964-A31F-FD5031C7B4CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EAF9FE4-C091-4964-A31F-FD5031C7B4CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EAF9FE4-C091-4964-A31F-FD5031C7B4CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EAF9FE4-C091-4964-A31F-FD5031C7B4CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8EA3CC0-6AFA-4A89-9490-03E7191FEBB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8EA3CC0-6AFA-4A89-9490-03E7191FEBB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8EA3CC0-6AFA-4A89-9490-03E7191FEBB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8EA3CC0-6AFA-4A89-9490-03E7191FEBB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA651D8F-DF19-4E55-95F7-2F7E9128C872}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA651D8F-DF19-4E55-95F7-2F7E9128C872}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA651D8F-DF19-4E55-95F7-2F7E9128C872}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA651D8F-DF19-4E55-95F7-2F7E9128C872}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37AC7746-7496-452F-BBB7-45E7142FC5A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37AC7746-7496-452F-BBB7-45E7142FC5A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37AC7746-7496-452F-BBB7-45E7142FC5A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37AC7746-7496-452F-BBB7-45E7142FC5A3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0EAF9FE4-C091-4964-A31F-FD5031C7B4CE} = {EAF0C067-A0C0-4497-9B4E-E401E3CB8973}
+		{A8EA3CC0-6AFA-4A89-9490-03E7191FEBB4} = {EAF0C067-A0C0-4497-9B4E-E401E3CB8973}
+		{AA651D8F-DF19-4E55-95F7-2F7E9128C872} = {EAF0C067-A0C0-4497-9B4E-E401E3CB8973}
+		{37AC7746-7496-452F-BBB7-45E7142FC5A3} = {EAF0C067-A0C0-4497-9B4E-E401E3CB8973}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8C5D16CE-6BD0-4843-9C37-5D8DBE239BD7}
+	EndGlobalSection
+EndGlobal

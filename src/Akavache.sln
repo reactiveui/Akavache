@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 17
+# Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9407D902-E9CF-4CB6-B601-77CDF74B9475}"
@@ -26,6 +26,22 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache", "Akavache\Akavache.csproj", "{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Drawing", "Akavache.Drawing\Akavache.Drawing.csproj", "{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Sqlite3", "ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj", "{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Core", "ReactiveMarbles.CacheDatabase.Core\ReactiveMarbles.CacheDatabase.Core.csproj", "{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.SystemTextJson", "ReactiveMarbles.CacheData.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj", "{ADFC7975-D670-11D3-A7F2-35B85D528F7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.NewtonsoftJson", "ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj", "{D430DD89-35AA-6061-7CDC-D46BE32FC669}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.EncryptedSqlite3", "ReactiveMarbles.CacheDatabase.EncryptedSqlite3\ReactiveMarbles.CacheDatabase.EncryptedSqlite3.csproj", "{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson", "ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.csproj", "{42B32F90-49C7-C963-8985-0B0082E56F6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Drawing", "ReactiveMarbles.CacheDatabase.Drawing\ReactiveMarbles.CacheDatabase.Drawing.csproj", "{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Tests", "ReactiveMarbles.CacheDatabase.Tests\ReactiveMarbles.CacheDatabase.Tests.csproj", "{5139E4F4-4F2A-0299-5284-3D166D7D5841}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +73,38 @@ Global
 		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADFC7975-D670-11D3-A7F2-35B85D528F7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADFC7975-D670-11D3-A7F2-35B85D528F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADFC7975-D670-11D3-A7F2-35B85D528F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADFC7975-D670-11D3-A7F2-35B85D528F7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D430DD89-35AA-6061-7CDC-D46BE32FC669}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D430DD89-35AA-6061-7CDC-D46BE32FC669}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D430DD89-35AA-6061-7CDC-D46BE32FC669}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D430DD89-35AA-6061-7CDC-D46BE32FC669}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42B32F90-49C7-C963-8985-0B0082E56F6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42B32F90-49C7-C963-8985-0B0082E56F6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42B32F90-49C7-C963-8985-0B0082E56F6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42B32F90-49C7-C963-8985-0B0082E56F6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5139E4F4-4F2A-0299-5284-3D166D7D5841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5139E4F4-4F2A-0299-5284-3D166D7D5841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5139E4F4-4F2A-0299-5284-3D166D7D5841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5139E4F4-4F2A-0299-5284-3D166D7D5841}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

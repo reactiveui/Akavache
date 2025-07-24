@@ -1,9 +1,7 @@
-// Copyright (c) 2024 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using Newtonsoft.Json.Bson;
 
 namespace Akavache;
 
@@ -30,7 +28,7 @@ public interface IBlobCache : IDisposable
     /// </summary>
     /// <remarks>
     /// <para>
-    /// By default, <see cref="BsonReader"/> uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and <see cref="BsonWriter"/>
+    /// By default, BsonReader uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and see BsonWriter
     /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
     /// use some other <c>DateTimeKind</c>, you can set this value.
     /// </para>
