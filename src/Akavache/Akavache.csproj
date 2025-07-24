@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
-    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.6" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
