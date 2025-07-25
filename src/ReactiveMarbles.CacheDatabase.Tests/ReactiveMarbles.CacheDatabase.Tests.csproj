@@ -16,6 +16,7 @@
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.Core\ReactiveMarbles.CacheDatabase.Core.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.EncryptedSqlite3\ReactiveMarbles.CacheDatabase.EncryptedSqlite3.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj" />
   </ItemGroup>
 
