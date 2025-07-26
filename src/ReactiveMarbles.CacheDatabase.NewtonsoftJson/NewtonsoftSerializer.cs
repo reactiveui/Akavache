@@ -20,6 +20,9 @@ public class NewtonsoftSerializer : ISerializer
     public JsonSerializerSettings? Options { get; set; }
 
     /// <inheritdoc/>
+    public DateTimeKind? ForcedDateTimeKind { get; set; }
+
+    /// <inheritdoc/>
     public T? Deserialize<T>(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes);

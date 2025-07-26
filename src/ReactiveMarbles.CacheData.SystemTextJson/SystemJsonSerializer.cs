@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Text.Json;
 using ReactiveMarbles.CacheDatabase.Core;
 
@@ -17,6 +18,9 @@ public class SystemJsonSerializer : ISerializer
     /// Gets or sets the optional options.
     /// </summary>
     public JsonSerializerOptions? Options { get; set; }
+
+    /// <inheritdoc/>
+    public DateTimeKind? ForcedDateTimeKind { get; set; }
 
     /// <inheritdoc/>
     public T? Deserialize<T>(byte[] bytes) => (T?)JsonSerializer.Deserialize(bytes, typeof(T), Options);

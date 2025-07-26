@@ -4,8 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using ReactiveMarbles.CacheDatabase.Core;
 using Splat;
 
@@ -28,9 +26,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     private readonly Dictionary<string, CacheEntry> _cache = [];
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
     private readonly object _lock = new();
-    private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private bool _disposed;
-    private DateTimeKind? _dateTimeKind;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
@@ -43,15 +39,19 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     /// <inheritdoc />
     public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
 
+    /// <summary>
+    /// Gets the serializer.
+    /// </summary>
+    /// <value>
+    /// The serializer.
+    /// </value>
+    public ISerializer Serializer { get; } = new NewtonsoftBsonSerializer();
+
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind
     {
-        get => _dateTimeKind ?? CacheDatabase.ForcedDateTimeKind;
-        set
-        {
-            _dateTimeKind = value;
-            _jsonDateTimeContractResolver?.ForceDateTimeKindOverride = value;
-        }
+        get => Serializer.ForcedDateTimeKind;
+        set => Serializer.ForcedDateTimeKind = value;
     }
 
     /// <inheritdoc />
@@ -609,7 +609,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        var data = SerializeObjectToBson(value);
+        var data = Serializer.Serialize(value);
         return Insert(key, data, typeof(T), absoluteExpiration);
     }
 
@@ -627,7 +627,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
         }
 
         return Get(key, typeof(T))
-            .Select(data => data == null ? default : DeserializeObjectFromBson<T>(data));
+            .Select(data => data == null ? default : Serializer.Deserialize<T>(data));
     }
 
     /// <summary>
@@ -643,7 +643,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
         }
 
         return GetAll(typeof(T))
-            .Select(kvp => DeserializeObjectFromBson<T>(kvp.Value))
+            .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
             .Where(obj => obj is not null)
             .Select(obj => obj!)
             .ToList()
@@ -700,11 +700,8 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
             throw new ArgumentNullException(nameof(fetchFunc));
         }
 
-        return GetObject<T>(key).Catch<T?, Exception>(_ =>
-        {
-            return Observable.FromAsync(fetchFunc)
-                .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value));
-        });
+        return GetObject<T>(key).Catch<T?, Exception>(_ => Observable.FromAsync(fetchFunc)
+                .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value)));
     }
 
     /// <summary>
@@ -733,61 +730,8 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
             throw new ArgumentNullException(nameof(fetchFunc));
         }
 
-        return GetObject<T>(key).Catch<T?, Exception>(_ =>
-        {
-            return fetchFunc()
-                .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value));
-        });
-    }
-
-    private byte[] SerializeObjectToBson<T>(T value)
-    {
-        var serializer = GetSerializer();
-        using var ms = new MemoryStream();
-        using var writer = new BsonDataWriter(ms);
-        serializer.Serialize(writer, new ObjectWrapper<T>(value));
-        return ms.ToArray();
-    }
-
-    private T? DeserializeObjectFromBson<T>(byte[] data)
-    {
-        var serializer = GetSerializer();
-        using var reader = new BsonDataReader(new MemoryStream(data));
-        var forcedDateTimeKind = ForcedDateTimeKind;
-
-        if (forcedDateTimeKind.HasValue)
-        {
-            reader.DateTimeKindHandling = forcedDateTimeKind.Value;
-        }
-
-        try
-        {
-            var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
-            return wrapper is null ? default : wrapper.Value;
-        }
-        catch (Exception ex)
-        {
-            this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
-        }
-
-        return serializer.Deserialize<T>(reader);
-    }
-
-    private JsonSerializer GetSerializer()
-    {
-        var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
-        JsonSerializer serializer;
-
-        lock (settings)
-        {
-            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            _jsonDateTimeContractResolver.ForceDateTimeKindOverride = ForcedDateTimeKind;
-            settings.ContractResolver = _jsonDateTimeContractResolver;
-            serializer = JsonSerializer.Create(settings);
-            settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
-        }
-
-        return serializer;
+        return GetObject<T>(key).Catch<T?, Exception>(_ => fetchFunc()
+                .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value)));
     }
 
     private class CacheEntry
@@ -797,16 +741,5 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset? ExpiresAt { get; set; }
-    }
-
-    private class ObjectWrapper<T>
-    {
-        public ObjectWrapper()
-        {
-        }
-
-        public ObjectWrapper(T value) => Value = value;
-
-        public T? Value { get; set; }
     }
 }

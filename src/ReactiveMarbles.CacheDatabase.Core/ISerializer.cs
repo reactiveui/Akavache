@@ -11,6 +11,18 @@ namespace ReactiveMarbles.CacheDatabase.Core;
 public interface ISerializer
 {
     /// <summary>
+    /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// By default, BsonReader uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and see BsonWriter
+    /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
+    /// use some other <c>DateTimeKind</c>, you can set this value.
+    /// </para>
+    /// </remarks>
+    DateTimeKind? ForcedDateTimeKind { get; set; }
+
+    /// <summary>
     /// Deserializes from bytes.
     /// </summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
