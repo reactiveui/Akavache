@@ -3,7 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace ReactiveMarbles.CacheDatabase.Core;
+using ReactiveMarbles.CacheDatabase.Core;
+
+namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 
 /// <summary>
 /// A class which represents the global cache database instances.
@@ -16,7 +18,19 @@ public static class CacheDatabase
     private static ISecureBlobCache? _secure;
     private static bool _shutdownRequested;
 
-    static CacheDatabase() => InMemory = new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
+    static CacheDatabase() => InMemory = new InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
+
+    /// <summary>
+    /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// By default, BsonReader uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and see BsonWriter
+    /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
+    /// use some other <c>DateTimeKind</c>, you can set this value.
+    /// </para>
+    /// </remarks>
+    public static DateTimeKind? ForcedDateTimeKind { get; set; }
 
     /// <summary>
     /// Gets or sets your application's name. Set this at startup, this defines where

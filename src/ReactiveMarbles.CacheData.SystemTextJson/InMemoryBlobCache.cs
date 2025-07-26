@@ -33,6 +33,9 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     /// <inheritdoc />
     public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
 
+    /// <inheritdoc/>
+    public DateTimeKind? ForcedDateTimeKind { get; set; }
+
     /// <inheritdoc />
     public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
     {

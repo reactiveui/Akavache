@@ -9,11 +9,11 @@ using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 namespace ReactiveMarbles.CacheDatabase.Tests
 {
     /// <summary>
-    /// Tests for bulk operations associated with the <see cref="ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
+    /// Tests for bulk operations associated with the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
     /// </summary>
     public class InMemoryBlobCacheBulkOperationsTests : BulkOperationsTestBase
     {
         /// <inheritdoc />
-        protected override IBlobCache CreateBlobCache(string path) => new ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache(ReactiveMarbles.CacheDatabase.Core.CoreRegistrations.TaskpoolScheduler);
+        protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
     }
 }

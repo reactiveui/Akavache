@@ -8,10 +8,10 @@ using ReactiveMarbles.CacheDatabase.Core;
 namespace ReactiveMarbles.CacheDatabase.Tests;
 
 /// <summary>
-/// Tests for the <see cref="ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache"/> class interface implementation.
+/// Tests for the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class interface implementation.
 /// </summary>
 public class InMemoryBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCache(string path) => new ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache(ReactiveMarbles.CacheDatabase.Core.CoreRegistrations.TaskpoolScheduler);
+    protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
 }

@@ -8,12 +8,12 @@ using Newtonsoft.Json;
 namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 
 /// <summary>
-/// JSON converter for DateTimeOffset that preserves ticks.
+/// JSON converter for DateTimeOffset that preserves ticks appropriately.
 /// </summary>
 internal class JsonDateTimeOffsetTickConverter : JsonConverter
 {
     /// <summary>
-    /// Gets the default instance.
+    /// Gets the default instance of the DateTimeOffsetConverter.
     /// </summary>
     public static JsonDateTimeOffsetTickConverter Default { get; } = new();
 
@@ -23,8 +23,24 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
     /// <inheritdoc/>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
-        if (reader?.Value is long ticks)
+        if (reader is null)
         {
+            throw new ArgumentNullException(nameof(reader));
+        }
+
+        if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
+        {
+            return null;
+        }
+
+        if (reader.TokenType == JsonToken.Date && reader.Value is not null)
+        {
+            return (DateTimeOffset)(DateTime)reader.Value;
+        }
+
+        if ((objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?)) && reader.Value is not null)
+        {
+            var ticks = (long)reader.Value;
             return new DateTimeOffset(ticks, TimeSpan.Zero);
         }
 
@@ -36,7 +52,8 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
     {
         if (value is DateTimeOffset dateTimeOffset)
         {
-            serializer.Serialize(writer, dateTimeOffset.Ticks);
+            // Serialize as UTC ticks
+            writer.WriteValue(dateTimeOffset.UtcTicks);
         }
     }
 }

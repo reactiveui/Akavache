@@ -3,11 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveMarbles.CacheDatabase.Core;
@@ -287,7 +282,7 @@ public static class BsonObjectExtensions
     {
         return new JsonSerializerSettings
         {
-            ContractResolver = new DateTimeContractResolver(),
+            ContractResolver = new JsonDateTimeContractResolver(),
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             NullValueHandling = NullValueHandling.Ignore,
             DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate

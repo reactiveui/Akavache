@@ -3,19 +3,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveMarbles.CacheDatabase.Core;
+using Splat;
 
 namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 
@@ -23,15 +15,22 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 /// This class is an IBlobCache backed by a simple in-memory Dictionary.
 /// Use it for testing / mocking purposes with BSON serialization.
 /// </summary>
-public sealed class InMemoryBlobCache : IBlobCache
+/// <remarks>
+/// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
+/// </remarks>
+/// <param name="scheduler">The scheduler to use for Observable based operations.</param>
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson")]
+[RequiresDynamicCode("Registrations for ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson")]
+#endif
+public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecureBlobCache, IEnableLogger
 {
     private readonly Dictionary<string, CacheEntry> _cache = [];
+    private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
     private readonly object _lock = new();
-    private readonly CompositeDisposable _disposables = [];
-    private readonly AsyncSubject<Unit> _shutdown = new();
-    private ISerializer? _originalSerializer;
-    private BsonAwareSerializer? _bsonSerializer;
+    private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private bool _disposed;
+    private DateTimeKind? _dateTimeKind;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
@@ -41,109 +40,18 @@ public sealed class InMemoryBlobCache : IBlobCache
     {
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
-    /// </summary>
-    /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-    public InMemoryBlobCache(IScheduler scheduler)
-    {
-        Scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
-        SetupBsonSerialization();
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
-    /// </summary>
-    /// <param name="initialContents">The initial contents of the cache.</param>
-    public InMemoryBlobCache(IEnumerable<KeyValuePair<string, byte[]>> initialContents)
-        : this(CoreRegistrations.TaskpoolScheduler, initialContents)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
-    /// </summary>
-    /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-    /// <param name="initialContents">The initial contents of the cache.</param>
-    public InMemoryBlobCache(IScheduler scheduler, IEnumerable<KeyValuePair<string, byte[]>>? initialContents)
-        : this(scheduler)
-    {
-        if (initialContents != null)
-        {
-            lock (_lock)
-            {
-                foreach (var item in initialContents)
-                {
-                    _cache[item.Key] = new CacheEntry
-                    {
-                        Value = item.Value,
-                        CreatedAt = Scheduler.Now,
-                        ExpiresAt = null,
-                        TypeName = null
-                    };
-                }
-            }
-        }
-    }
-
     /// <inheritdoc />
-    public IScheduler Scheduler { get; }
+    public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
 
-    /// <summary>
-    /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// By default, BsonReader uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and see BsonWriter
-    /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
-    /// use some other <c>DateTimeKind</c>, you can set this value.
-    /// </para>
-    /// </remarks>
-    public DateTimeKind? ForcedDateTimeKind { get; set; }
-
-    /// <summary>
-    /// Gets an observable that signals when the cache is shut down.
-    /// </summary>
-    public IObservable<Unit> Shutdown => _shutdown;
-
-    /// <summary>
-    /// Overrides the global registrations with specified values.
-    /// </summary>
-    /// <param name="scheduler">The default scheduler to use.</param>
-    /// <param name="initialContents">The default inner contents to use.</param>
-    /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IScheduler? scheduler = null, params KeyValuePair<string, byte[]>[] initialContents) =>
-        new InMemoryBlobCache(scheduler ?? CoreRegistrations.TaskpoolScheduler, initialContents);
-
-    /// <summary>
-    /// Overrides the global registrations with specified values.
-    /// </summary>
-    /// <param name="initialContents">The default inner contents to use.</param>
-    /// <param name="scheduler">The default scheduler to use.</param>
-    /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IDictionary<string, byte[]> initialContents, IScheduler? scheduler = null) => new InMemoryBlobCache(scheduler ?? CoreRegistrations.TaskpoolScheduler, initialContents);
-
-    /// <summary>
-    /// Overrides the global registrations with specified values.
-    /// </summary>
-    /// <param name="initialContents">The default inner contents to use.</param>
-    /// <param name="scheduler">The default scheduler to use.</param>
-    /// <returns>A generated cache.</returns>
-    public static InMemoryBlobCache OverrideGlobals(IDictionary<string, object> initialContents, IScheduler? scheduler = null)
+    /// <inheritdoc/>
+    public DateTimeKind? ForcedDateTimeKind
     {
-        var bsonCache = new InMemoryBlobCache(scheduler ?? CoreRegistrations.TaskpoolScheduler);
-        if (initialContents is null)
+        get => _dateTimeKind ?? CacheDatabase.ForcedDateTimeKind;
+        set
         {
-            throw new ArgumentNullException(nameof(initialContents));
+            _dateTimeKind = value;
+            _jsonDateTimeContractResolver?.ForceDateTimeKindOverride = value;
         }
-
-        foreach (var kvp in initialContents)
-        {
-            var data = bsonCache.SerializeObjectToBson(kvp.Value);
-            bsonCache.Insert(kvp.Key, data).Wait();
-        }
-
-        return bsonCache;
     }
 
     /// <inheritdoc />
@@ -154,26 +62,25 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        if (keyValuePairs is null)
+        return Observable.Start(
+            () =>
         {
-            throw new ArgumentNullException(nameof(keyValuePairs));
-        }
-
-        lock (_lock)
-        {
-            foreach (var kvp in keyValuePairs)
+            lock (_lock)
             {
-                _cache[kvp.Key] = new CacheEntry
+                foreach (var pair in keyValuePairs)
                 {
-                    Value = kvp.Value,
-                    CreatedAt = Scheduler.Now,
-                    ExpiresAt = absoluteExpiration,
-                    TypeName = null
-                };
+                    _cache[pair.Key] = new CacheEntry
+                    {
+                        Value = pair.Value,
+                        CreatedAt = Scheduler.Now,
+                        ExpiresAt = absoluteExpiration
+                    };
+                }
             }
-        }
 
-        return Observable.Return(Unit.Default);
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -184,28 +91,22 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        if (key is null)
+        return Observable.Start(
+            () =>
         {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        if (data is null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        lock (_lock)
-        {
-            _cache[key] = new CacheEntry
+            lock (_lock)
             {
-                Value = data,
-                CreatedAt = Scheduler.Now,
-                ExpiresAt = absoluteExpiration,
-                TypeName = null
-            };
-        }
+                _cache[key] = new CacheEntry
+                {
+                    Value = data,
+                    CreatedAt = Scheduler.Now,
+                    ExpiresAt = absoluteExpiration
+                };
+            }
 
-        return Observable.Return(Unit.Default);
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -216,26 +117,32 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        if (keyValuePairs is null)
+        return Observable.Start(
+            () =>
         {
-            throw new ArgumentNullException(nameof(keyValuePairs));
-        }
-
-        lock (_lock)
-        {
-            foreach (var kvp in keyValuePairs)
+            lock (_lock)
             {
-                _cache[kvp.Key] = new CacheEntry
+                if (!_typeIndex.TryGetValue(type, out var value))
                 {
-                    Value = kvp.Value,
-                    CreatedAt = Scheduler.Now,
-                    ExpiresAt = absoluteExpiration,
-                    TypeName = type?.FullName
-                };
-            }
-        }
+                    value = [];
+                    _typeIndex[type] = value;
+                }
 
-        return Observable.Return(Unit.Default);
+                foreach (var pair in keyValuePairs)
+                {
+                    _cache[pair.Key] = new CacheEntry
+                    {
+                        Value = pair.Value,
+                        CreatedAt = Scheduler.Now,
+                        ExpiresAt = absoluteExpiration
+                    };
+                    value.Add(pair.Key);
+                }
+            }
+
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -246,28 +153,29 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        if (key is null)
+        return Observable.Start(
+            () =>
         {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        if (data is null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        lock (_lock)
-        {
-            _cache[key] = new CacheEntry
+            lock (_lock)
             {
-                Value = data,
-                CreatedAt = Scheduler.Now,
-                ExpiresAt = absoluteExpiration,
-                TypeName = type?.FullName
-            };
-        }
+                if (!_typeIndex.TryGetValue(type, out var value))
+                {
+                    value = [];
+                    _typeIndex[type] = value;
+                }
 
-        return Observable.Return(Unit.Default);
+                _cache[key] = new CacheEntry
+                {
+                    Value = data,
+                    CreatedAt = Scheduler.Now,
+                    ExpiresAt = absoluteExpiration
+                };
+                value.Add(key);
+            }
+
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -278,31 +186,26 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]?>(nameof(InMemoryBlobCache));
         }
 
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        CacheEntry? entry;
-        lock (_lock)
-        {
-            if (!_cache.TryGetValue(key, out entry))
-            {
-                return IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<byte[]?>(key);
-            }
-        }
-
-        if (entry.ExpiresAt.HasValue && Scheduler.Now > entry.ExpiresAt.Value)
+        return Observable.Start(
+            () =>
         {
             lock (_lock)
             {
-                _cache.Remove(key);
+                if (!_cache.TryGetValue(key, out var entry))
+                {
+                    throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+                }
+
+                if (entry.ExpiresAt < Scheduler.Now)
+                {
+                    _cache.Remove(key);
+                    throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+                }
+
+                return entry.Value;
             }
-
-            return IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<byte[]?>(key);
-        }
-
-        return Observable.Return(entry.Value, Scheduler);
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -313,16 +216,9 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(nameof(InMemoryBlobCache));
         }
 
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
-
         return keys.ToObservable()
-            .SelectMany(key => Get(key)
-                .Where(data => data != null)
-                .Select(data => new KeyValuePair<string, byte[]>(key, data!))
-                .Catch<KeyValuePair<string, byte[]>, Exception>(_ => Observable.Empty<KeyValuePair<string, byte[]>>()));
+            .SelectMany(key => Get(key).Select(value => new KeyValuePair<string, byte[]>(key, value!))
+                .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, byte[]>>()));
     }
 
     /// <inheritdoc />
@@ -339,17 +235,46 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(nameof(InMemoryBlobCache));
         }
 
-        lock (_lock)
+        return Observable.Start(
+            () =>
         {
-            var validEntries = _cache
-                .Where(kvp => (!kvp.Value.ExpiresAt.HasValue || kvp.Value.ExpiresAt.Value >= Scheduler.Now) &&
-                              kvp.Value.Value != null &&
-                              (type == null || kvp.Value.TypeName == type.FullName))
-                .Select(kvp => new KeyValuePair<string, byte[]>(kvp.Key, kvp.Value.Value!))
-                .ToList();
+            lock (_lock)
+            {
+                if (!_typeIndex.TryGetValue(type, out var keys))
+                {
+                    return Enumerable.Empty<KeyValuePair<string, byte[]>>();
+                }
 
-            return validEntries.ToObservable();
-        }
+                var now = Scheduler.Now;
+                var result = new List<KeyValuePair<string, byte[]>>();
+                var expiredKeys = new List<string>();
+
+                foreach (var key in keys)
+                {
+                    if (_cache.TryGetValue(key, out var entry))
+                    {
+                        if (entry.ExpiresAt < now)
+                        {
+                            expiredKeys.Add(key);
+                        }
+                        else
+                        {
+                            result.Add(new KeyValuePair<string, byte[]>(key, entry.Value!));
+                        }
+                    }
+                }
+
+                // Clean up expired keys
+                foreach (var expiredKey in expiredKeys)
+                {
+                    _cache.Remove(expiredKey);
+                    keys.Remove(expiredKey);
+                }
+
+                return result;
+            }
+        },
+            Scheduler).SelectMany(x => x);
     }
 
     /// <inheritdoc />
@@ -360,14 +285,37 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(nameof(InMemoryBlobCache));
         }
 
-        lock (_lock)
+        return Observable.Start(
+            () =>
         {
-            return _cache
-                .Where(kvp => !kvp.Value.ExpiresAt.HasValue || kvp.Value.ExpiresAt.Value >= Scheduler.Now)
-                .Select(kvp => kvp.Key)
-                .ToList()
-                .ToObservable();
-        }
+            lock (_lock)
+            {
+                var now = Scheduler.Now;
+                var expiredKeys = new List<string>();
+                var validKeys = new List<string>();
+
+                foreach (var kvp in _cache)
+                {
+                    if (kvp.Value.ExpiresAt < now)
+                    {
+                        expiredKeys.Add(kvp.Key);
+                    }
+                    else
+                    {
+                        validKeys.Add(kvp.Key);
+                    }
+                }
+
+                // Clean up expired keys
+                foreach (var expiredKey in expiredKeys)
+                {
+                    _cache.Remove(expiredKey);
+                }
+
+                return validKeys;
+            }
+        },
+            Scheduler).SelectMany(x => x);
     }
 
     /// <inheritdoc />
@@ -378,15 +326,46 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(nameof(InMemoryBlobCache));
         }
 
-        lock (_lock)
+        return Observable.Start(
+            () =>
         {
-            return _cache
-                .Where(kvp => (!kvp.Value.ExpiresAt.HasValue || kvp.Value.ExpiresAt.Value >= Scheduler.Now) &&
-                              (type == null || kvp.Value.TypeName == type.FullName))
-                .Select(kvp => kvp.Key)
-                .ToList()
-                .ToObservable();
-        }
+            lock (_lock)
+            {
+                if (!_typeIndex.TryGetValue(type, out var keys))
+                {
+                    return Enumerable.Empty<string>();
+                }
+
+                var now = Scheduler.Now;
+                var expiredKeys = new List<string>();
+                var validKeys = new List<string>();
+
+                foreach (var key in keys)
+                {
+                    if (_cache.TryGetValue(key, out var entry))
+                    {
+                        if (entry.ExpiresAt < now)
+                        {
+                            expiredKeys.Add(key);
+                        }
+                        else
+                        {
+                            validKeys.Add(key);
+                        }
+                    }
+                }
+
+                // Clean up expired keys
+                foreach (var expiredKey in expiredKeys)
+                {
+                    _cache.Remove(expiredKey);
+                    keys.Remove(expiredKey);
+                }
+
+                return validKeys;
+            }
+        },
+            Scheduler).SelectMany(x => x);
     }
 
     /// <inheritdoc />
@@ -394,18 +373,17 @@ public sealed class InMemoryBlobCache : IBlobCache
     {
         if (_disposed)
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<(string, DateTimeOffset?)>(nameof(InMemoryBlobCache));
-        }
-
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<(string Key, DateTimeOffset? Time)>(nameof(InMemoryBlobCache));
         }
 
         return keys.ToObservable()
-            .SelectMany(key => GetCreatedAt(key)
-                .Select(time => (key, time))
-                .Catch<(string, DateTimeOffset?), Exception>(_ => Observable.Return((key, (DateTimeOffset?)null))));
+            .Select(key =>
+            {
+                lock (_lock)
+                {
+                    return _cache.TryGetValue(key, out var entry) ? (key, (DateTimeOffset?)entry.CreatedAt) : (key, (DateTimeOffset?)null);
+                }
+            });
     }
 
     /// <inheritdoc />
@@ -416,52 +394,29 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(nameof(InMemoryBlobCache));
         }
 
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        CacheEntry? entry;
-        lock (_lock)
-        {
-            if (!_cache.TryGetValue(key, out entry))
-            {
-                return Observable.Return<DateTimeOffset?>(null);
-            }
-        }
-
-        if (entry.ExpiresAt.HasValue && Scheduler.Now > entry.ExpiresAt.Value)
+        return Observable.Start(
+            () =>
         {
             lock (_lock)
             {
-                _cache.Remove(key);
+                return _cache.TryGetValue(key, out var entry) ? (DateTimeOffset?)entry.CreatedAt : null;
             }
-
-            return Observable.Return<DateTimeOffset?>(null);
-        }
-
-        return Observable.Return<DateTimeOffset?>(entry.CreatedAt, Scheduler);
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
-    public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => GetCreatedAt(keys);
+    public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) =>
+        GetCreatedAt(keys);
 
     /// <inheritdoc />
     public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => GetCreatedAt(key);
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush()
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
-        }
-
-        return Observable.Return(Unit.Default);
-    }
+    public IObservable<Unit> Flush() => Observable.Return(Unit.Default);
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush(Type type) => Flush();
+    public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
 
     /// <inheritdoc />
     public IObservable<Unit> Invalidate(string key)
@@ -471,17 +426,23 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        if (key is null)
+        return Observable.Start(
+            () =>
         {
-            throw new ArgumentNullException(nameof(key));
-        }
+            lock (_lock)
+            {
+                _cache.Remove(key);
 
-        lock (_lock)
-        {
-            _cache.Remove(key);
-        }
+                // Remove from type indexes
+                foreach (var typeKeys in _typeIndex.Values)
+                {
+                    typeKeys.Remove(key);
+                }
+            }
 
-        return Observable.Return(Unit.Default);
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -495,20 +456,26 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        if (keys is null)
+        return Observable.Start(
+            () =>
         {
-            throw new ArgumentNullException(nameof(keys));
-        }
-
-        lock (_lock)
-        {
-            foreach (var key in keys)
+            lock (_lock)
             {
-                _cache.Remove(key);
-            }
-        }
+                foreach (var key in keys)
+                {
+                    _cache.Remove(key);
 
-        return Observable.Return(Unit.Default);
+                    // Remove from type indexes
+                    foreach (var typeKeys in _typeIndex.Values)
+                    {
+                        typeKeys.Remove(key);
+                    }
+                }
+            }
+
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -519,20 +486,25 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        lock (_lock)
+        return Observable.Start(
+            () =>
         {
-            var keysToRemove = _cache
-                .Where(kvp => type == null || kvp.Value.TypeName == type.FullName)
-                .Select(kvp => kvp.Key)
-                .ToList();
-
-            foreach (var key in keysToRemove)
+            lock (_lock)
             {
-                _cache.Remove(key);
-            }
-        }
+                if (_typeIndex.TryGetValue(type, out var keys))
+                {
+                    foreach (var key in keys)
+                    {
+                        _cache.Remove(key);
+                    }
 
-        return Observable.Return(Unit.Default);
+                    keys.Clear();
+                }
+            }
+
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -546,12 +518,18 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        lock (_lock)
+        return Observable.Start(
+            () =>
         {
-            _cache.Clear();
-        }
+            lock (_lock)
+            {
+                _cache.Clear();
+                _typeIndex.Clear();
+            }
 
-        return Observable.Return(Unit.Default);
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -562,20 +540,37 @@ public sealed class InMemoryBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
         }
 
-        lock (_lock)
+        return Observable.Start(
+            () =>
         {
-            var expiredKeys = _cache
-                .Where(kvp => kvp.Value.ExpiresAt.HasValue && Scheduler.Now > kvp.Value.ExpiresAt.Value)
-                .Select(kvp => kvp.Key)
-                .ToList();
-
-            foreach (var key in expiredKeys)
+            lock (_lock)
             {
-                _cache.Remove(key);
-            }
-        }
+                var now = Scheduler.Now;
+                var expiredKeys = new List<string>();
 
-        return Observable.Return(Unit.Default);
+                foreach (var kvp in _cache)
+                {
+                    if (kvp.Value.ExpiresAt < now)
+                    {
+                        expiredKeys.Add(kvp.Key);
+                    }
+                }
+
+                foreach (var expiredKey in expiredKeys)
+                {
+                    _cache.Remove(expiredKey);
+
+                    // Remove from type indexes
+                    foreach (var typeKeys in _typeIndex.Values)
+                    {
+                        typeKeys.Remove(expiredKey);
+                    }
+                }
+            }
+
+            return Unit.Default;
+        },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -589,49 +584,15 @@ public sealed class InMemoryBlobCache : IBlobCache
         lock (_lock)
         {
             _cache.Clear();
+            _typeIndex.Clear();
+            _disposed = true;
         }
 
-        // Restore original serializer
-        if (_originalSerializer != null)
-        {
-            CoreRegistrations.Serializer = _originalSerializer;
-        }
-
-        _disposables.Dispose();
-        _shutdown.OnNext(Unit.Default);
-        _shutdown.OnCompleted();
-        _shutdown.Dispose();
-        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        await Task.Run(() =>
-        {
-            lock (_lock)
-            {
-                _cache.Clear();
-            }
-        }).ConfigureAwait(false);
-
-        // Restore original serializer
-        if (_originalSerializer != null)
-        {
-            CoreRegistrations.Serializer = _originalSerializer;
-        }
-
-        _disposables.Dispose();
-        _shutdown.OnNext(Unit.Default);
-        _shutdown.OnCompleted();
-        _shutdown.Dispose();
-        _disposed = true;
-    }
+    public async ValueTask DisposeAsync() => await Task.Run(() => Dispose());
 
     /// <summary>
     /// Insert an object into the cache using BSON serialization.
@@ -646,11 +607,6 @@ public sealed class InMemoryBlobCache : IBlobCache
         if (_disposed)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
-        }
-
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
         }
 
         var data = SerializeObjectToBson(value);
@@ -668,11 +624,6 @@ public sealed class InMemoryBlobCache : IBlobCache
         if (_disposed)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T?>(nameof(InMemoryBlobCache));
-        }
-
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
         }
 
         return Get(key, typeof(T))
@@ -706,15 +657,7 @@ public sealed class InMemoryBlobCache : IBlobCache
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <param name="key">The key to return the date for.</param>
     /// <returns>The date the key was created on.</returns>
-    public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(nameof(InMemoryBlobCache));
-        }
-
-        return GetCreatedAt(key, typeof(T));
-    }
+    public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key) => GetCreatedAt(key, typeof(T));
 
     /// <summary>
     /// Invalidates a single object from the cache.
@@ -722,30 +665,14 @@ public sealed class InMemoryBlobCache : IBlobCache
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <param name="key">The key to invalidate.</param>
     /// <returns>A Future result representing the completion of the invalidation.</returns>
-    public IObservable<Unit> InvalidateObject<T>(string key)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
-        }
-
-        return Invalidate(key, typeof(T));
-    }
+    public IObservable<Unit> InvalidateObject<T>(string key) => Invalidate(key, typeof(T));
 
     /// <summary>
     /// Invalidates all objects of the specified type.
     /// </summary>
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <returns>A Future result representing the completion of the invalidation.</returns>
-    public IObservable<Unit> InvalidateAllObjects<T>()
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
-        }
-
-        return InvalidateAll(typeof(T));
-    }
+    public IObservable<Unit> InvalidateAllObjects<T>() => InvalidateAll(typeof(T));
 
     /// <summary>
     /// Get an object from the cache and deserialize it using BSON serialization.
@@ -813,64 +740,54 @@ public sealed class InMemoryBlobCache : IBlobCache
         });
     }
 
-    private void SetupBsonSerialization(DateTimeKind? forcedDateTimeKind = null)
-    {
-        // Store the original serializer if this is the first time
-        if (_originalSerializer == null)
-        {
-            _originalSerializer = CoreRegistrations.Serializer;
-        }
-
-        // Update the ForcedDateTimeKind property
-        ForcedDateTimeKind = forcedDateTimeKind;
-
-        // Set up BSON-aware serializer globally so extension methods use it
-        if (_originalSerializer != null)
-        {
-            _bsonSerializer = new BsonAwareSerializer(_originalSerializer, forcedDateTimeKind);
-            CoreRegistrations.Serializer = _bsonSerializer;
-        }
-    }
-
-    private JsonSerializerSettings GetBsonSettings() => new JsonSerializerSettings
-    {
-        ContractResolver = new DateTimeContractResolver
-        {
-            ForceDateTimeKindOverride = ForcedDateTimeKind
-        },
-        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-        NullValueHandling = NullValueHandling.Ignore,
-        DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate
-    };
-
     private byte[] SerializeObjectToBson<T>(T value)
     {
-        var settings = GetBsonSettings();
+        var serializer = GetSerializer();
         using var ms = new MemoryStream();
         using var writer = new BsonDataWriter(ms);
-        var serializer = JsonSerializer.Create(settings);
         serializer.Serialize(writer, new ObjectWrapper<T>(value));
         return ms.ToArray();
     }
 
     private T? DeserializeObjectFromBson<T>(byte[] data)
     {
-        var settings = GetBsonSettings();
-        using var ms = new MemoryStream(data);
-        using var reader = new BsonDataReader(ms);
-        var serializer = JsonSerializer.Create(settings);
+        var serializer = GetSerializer();
+        using var reader = new BsonDataReader(new MemoryStream(data));
+        var forcedDateTimeKind = ForcedDateTimeKind;
+
+        if (forcedDateTimeKind.HasValue)
+        {
+            reader.DateTimeKindHandling = forcedDateTimeKind.Value;
+        }
 
         try
         {
             var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
-            return wrapper != null ? wrapper.Value : default;
+            return wrapper is null ? default : wrapper.Value;
         }
-        catch
+        catch (Exception ex)
         {
-            // Fallback to direct deserialization for backward compatibility
-            ms.Position = 0;
-            return serializer.Deserialize<T>(reader);
+            this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
         }
+
+        return serializer.Deserialize<T>(reader);
+    }
+
+    private JsonSerializer GetSerializer()
+    {
+        var settings = Locator.Current.GetService<JsonSerializerSettings>() ?? new JsonSerializerSettings();
+        JsonSerializer serializer;
+
+        lock (settings)
+        {
+            _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
+            _jsonDateTimeContractResolver.ForceDateTimeKindOverride = ForcedDateTimeKind;
+            settings.ContractResolver = _jsonDateTimeContractResolver;
+            serializer = JsonSerializer.Create(settings);
+            settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
+        }
+
+        return serializer;
     }
 
     private class CacheEntry
@@ -880,8 +797,6 @@ public sealed class InMemoryBlobCache : IBlobCache
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset? ExpiresAt { get; set; }
-
-        public string? TypeName { get; set; }
     }
 
     private class ObjectWrapper<T>

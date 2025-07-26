@@ -18,6 +18,18 @@ public interface IBlobCache : IDisposable, IAsyncDisposable
     IScheduler Scheduler { get; }
 
     /// <summary>
+    /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// By default, BsonReader uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and see BsonWriter
+    /// uses <see cref="DateTimeKind.Utc"/>. Thus, DateTimes are serialized as UTC but deserialized as local time. To force BSON readers to
+    /// use some other <c>DateTimeKind</c>, you can set this value.
+    /// </para>
+    /// </remarks>
+    DateTimeKind? ForcedDateTimeKind { get; set; }
+
+    /// <summary>
     /// Inserts the specified key/value pairs into the blob.
     /// </summary>
     /// <param name="keyValuePairs">The key/value to insert.</param>

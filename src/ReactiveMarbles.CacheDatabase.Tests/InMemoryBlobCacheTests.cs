@@ -8,13 +8,13 @@ using ReactiveMarbles.CacheDatabase.Core;
 namespace ReactiveMarbles.CacheDatabase.Tests;
 
 /// <summary>
-/// Tests for the <see cref="ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
+/// Tests for the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
 /// </summary>
 public class InMemoryBlobCacheTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
     protected override IBlobCache CreateBlobCache(string path)
     {
-        return new ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache(ReactiveMarbles.CacheDatabase.Core.CoreRegistrations.TaskpoolScheduler);
+        return new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
     }
 }

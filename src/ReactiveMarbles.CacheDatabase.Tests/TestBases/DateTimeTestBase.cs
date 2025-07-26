@@ -18,29 +18,29 @@ public abstract class DateTimeTestBase
     /// <summary>
     /// Gets the date time offsets used in theory tests.
     /// </summary>
-    public static IEnumerable<object[]> DateTimeOffsetData => new[]
-    {
-        new object[] { new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = null } },
+    public static IEnumerable<object[]> DateTimeOffsetData =>
+    [
+        [new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = null }],
         [new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = TestNowOffset }],
-    };
+    ];
 
     /// <summary>
     /// Gets the DateTime used in theory tests.
     /// </summary>
-    public static IEnumerable<object[]> DateTimeData => new[]
-    {
-        new object[] { new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = null } },
+    public static IEnumerable<object[]> DateTimeData =>
+    [
+        [new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = null }],
         [new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = TestNow }],
-    };
+    ];
 
     /// <summary>
     /// Gets the DateTime used in theory tests.
     /// </summary>
-    public static IEnumerable<object[]> DateLocalTimeData => new[]
-    {
-        new object[] { new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = null } },
+    public static IEnumerable<object[]> DateLocalTimeData =>
+    [
+        [new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = null }],
         [new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = LocalTestNow }],
-    };
+    ];
 
     /// <summary>
     /// Gets the date time when the tests are done to keep them consistent.
@@ -91,12 +91,7 @@ public abstract class DateTimeTestBase
         await using (var blobCache = CreateBlobCache(path))
         {
             var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-
-            // Debug info
-            var actualKind = secondResult.Timestamp.Kind;
-            var expectedKind = DateTimeKind.Utc;
-
-            Assert.Equal(expectedKind, actualKind); // This should match the standard Assert.Equal pattern
+            Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Utc);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
             Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());
         }
@@ -114,15 +109,32 @@ public abstract class DateTimeTestBase
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
-            // Set ForcedDateTimeKind to Local for this test
-            if (blobCache is ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache bsonCache)
-            {
-                bsonCache.ForcedDateTimeKind = DateTimeKind.Local;
-            }
-
+            blobCache.ForcedDateTimeKind = DateTimeKind.Local;
             var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
+            Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Local);
+            Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
             Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());
+            NewtonsoftJson.Bson.CacheDatabase.ForcedDateTimeKind = null;
+        }
+    }
+
+    /// <summary>
+    /// Tests to make sure that we can force the DateTime kind.
+    /// </summary>
+    /// <returns>A task to monitor the progress.</returns>
+    [Fact]
+    public async Task DateTimeKindCanBeForced()
+    {
+        using (Utility.WithEmptyDirectory(out var path))
+        using (var fixture = CreateBlobCache(path))
+        {
+            fixture.ForcedDateTimeKind = DateTimeKind.Utc;
+
+            var value = DateTime.UtcNow;
+            await fixture.InsertObject("key", value).FirstAsync();
+            var result = await fixture.GetObject<DateTime>("key").FirstAsync();
+            Assert.Equal(DateTimeKind.Utc, result.Kind);
         }
     }
 

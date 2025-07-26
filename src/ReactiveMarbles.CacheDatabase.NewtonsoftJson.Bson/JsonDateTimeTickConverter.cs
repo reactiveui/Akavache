@@ -10,19 +10,12 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 /// <summary>
 /// JSON converter for DateTime that preserves ticks and handles DateTimeKind appropriately.
 /// </summary>
-internal class JsonDateTimeTickConverter : JsonConverter
+/// <remarks>
+/// Initializes a new instance of the <see cref="JsonDateTimeTickConverter"/> class.
+/// </remarks>
+/// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
+internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
-    private readonly DateTimeKind? _forceDateTimeKindOverride;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JsonDateTimeTickConverter"/> class.
-    /// </summary>
-    /// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
-    public JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null)
-    {
-        _forceDateTimeKindOverride = forceDateTimeKindOverride;
-    }
-
     /// <summary>
     /// Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.
     /// </summary>
@@ -54,7 +47,7 @@ internal class JsonDateTimeTickConverter : JsonConverter
             var dateTime = (DateTime)reader.Value;
 
             // Apply the DateTimeKind override even for direct DateTime values
-            var targetKind = _forceDateTimeKindOverride ?? DateTimeKind.Utc;
+            var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
 
             // Convert to the target kind if necessary
             var result = targetKind switch
@@ -70,7 +63,10 @@ internal class JsonDateTimeTickConverter : JsonConverter
         if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value is not null)
         {
             var ticks = (long)reader.Value;
-            var result = new DateTime(ticks, _forceDateTimeKindOverride ?? DateTimeKind.Utc);
+            var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
+
+            // Create DateTime from ticks with the specified kind
+            var result = new DateTime(ticks, targetKind);
 
             return result;
         }
@@ -83,15 +79,17 @@ internal class JsonDateTimeTickConverter : JsonConverter
     {
         if (value is DateTime dateTime)
         {
-            // Always serialize as ticks to avoid BSON's native DateTime handling
-            var ticks = _forceDateTimeKindOverride switch
+            // Always serialize as UTC ticks to avoid BSON's native DateTime handling
+            // This ensures consistency regardless of the input DateTime's kind
+            var utcTicks = dateTime.Kind switch
             {
-                DateTimeKind.Local => dateTime.Ticks,
-                _ => dateTime.ToUniversalTime().Ticks
+                DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Local).ToUniversalTime().Ticks,
+                _ => dateTime.Ticks // Already UTC
             };
 
             // Write as raw number to force tick-based serialization
-            writer.WriteValue(ticks);
+            writer.WriteValue(utcTicks);
         }
     }
 }

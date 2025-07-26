@@ -117,6 +117,9 @@ public class SqliteBlobCache : IBlobCache
     public IScheduler Scheduler { get; }
 
     /// <inheritdoc/>
+    public DateTimeKind? ForcedDateTimeKind { get; set; }
+
+    /// <inheritdoc/>
     public IObservable<Unit> Flush()
     {
         if (_disposed)

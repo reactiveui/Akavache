@@ -9,11 +9,11 @@ using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 namespace ReactiveMarbles.CacheDatabase.Tests
 {
     /// <summary>
-    /// Tests for DateTime operations associated with the <see cref="ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
+    /// Tests for DateTime operations associated with the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
     /// </summary>
     public class InMemoryBlobCacheDateTimeTests : DateTimeTestBase
     {
         /// <inheritdoc />
-        protected override IBlobCache CreateBlobCache(string path) => new ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.InMemoryBlobCache(ReactiveMarbles.CacheDatabase.Core.CoreRegistrations.TaskpoolScheduler);
+        protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
     }
 }
