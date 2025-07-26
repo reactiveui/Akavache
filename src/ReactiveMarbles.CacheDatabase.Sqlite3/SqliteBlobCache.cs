@@ -20,7 +20,7 @@ namespace ReactiveMarbles.CacheDatabase.Sqlite3;
 /// </summary>
 #if ENCRYPTED
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "Reused file.")]
-public class EncryptedSqliteBlobCache : IBlobCache
+public class EncryptedSqliteBlobCache : ISecureBlobCache
 #else
 public class SqliteBlobCache : IBlobCache
 #endif
