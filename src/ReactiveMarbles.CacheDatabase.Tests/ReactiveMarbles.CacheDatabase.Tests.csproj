@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="sqlite-net-sqlcipher" Version="1.9.172" />
     <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
   </ItemGroup>
 
   <ItemGroup>

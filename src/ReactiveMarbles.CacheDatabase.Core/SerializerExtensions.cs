@@ -246,7 +246,6 @@ public static class SerializerExtensions
     /// the cache.</returns>
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
         blobCache.GetObject<T>(key).Catch<T?, Exception>(_ => fetchFunc());
-
     /// <summary>
     /// <para>
     /// Attempt to return an object from the cache. If the item doesn't
@@ -446,11 +445,18 @@ public static class SerializerExtensions
         }
 
         // For mixed object types, we need to serialize each one individually and use its specific type
-        return keyValuePairs
+        var insertOperations = keyValuePairs
             .Select(kvp => blobCache.Insert(kvp.Key, Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
-            .Merge()
-            .TakeLast(1)
-            .Select(_ => Unit.Default);
+            .ToList();
+
+        // Wait for all insert operations to complete, not just the last one
+        return insertOperations.Count == 0
+            ? Observable.Return(Unit.Default)
+            : insertOperations
+                .Merge()
+                .TakeLast(insertOperations.Count)
+                .LastOrDefaultAsync()
+                .Select(_ => Unit.Default);
     }
 
     internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
