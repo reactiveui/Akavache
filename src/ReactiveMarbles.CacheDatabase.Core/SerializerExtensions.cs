@@ -370,13 +370,11 @@ public static class SerializerExtensions
         // Try to get from cache first
         return blobCache.GetObject<T>(key).Catch<T?, Exception>(ex =>
         {
-            // On cache miss (including expiration), only remove RequestCache entry if no request is in flight
-            // This ensures that concurrent requests still share the same fetch operation
-            if (!RequestCache.HasInFlightRequest(key, typeof(T)))
-            {
-                // Clear any stale request cache entry when there's no active request
-                RequestCache.RemoveRequest(key, typeof(T));
-            }
+            // When a cache miss occurs (either key not found or expired),
+            // we need to fetch the data. We use RequestCache to deduplicate
+            // concurrent requests for the same key, but we should only clear
+            // the RequestCache when we're sure the cache entry has expired,
+            // not just on any cache miss.
 
             // Use request cache for concurrent request deduplication
             return RequestCache.GetOrCreateRequest(key, () =>

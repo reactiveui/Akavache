@@ -9,7 +9,6 @@ using System.Text.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveMarbles.CacheDatabase.Core;
-using Splat;
 
 namespace ReactiveMarbles.CacheDatabase.SystemTextJson.Bson;
 
@@ -17,7 +16,7 @@ namespace ReactiveMarbles.CacheDatabase.SystemTextJson.Bson;
 /// A hybrid serializer that uses System.Text.Json for object serialization but writes to/reads from BSON format.
 /// This provides compatibility with BSON-based caches while using System.Text.Json's performance.
 /// </summary>
-public class SystemJsonBsonSerializer : ISerializer, IEnableLogger
+public class SystemJsonBsonSerializer : ISerializer
 {
     /// <summary>
     /// Gets or sets the optional System.Text.Json options.
@@ -61,28 +60,25 @@ public class SystemJsonBsonSerializer : ISerializer, IEnableLogger
                     return wrapper.Value;
                 }
             }
-            catch (Exception wrapperEx)
+            catch (Exception)
             {
-                this.Log().Debug(wrapperEx, "Failed to deserialize as ObjectWrapper, trying direct deserialization");
+                throw;
             }
 
             // Fallback to direct deserialization
             var directOptions = GetEffectiveOptions();
             return System.Text.Json.JsonSerializer.Deserialize<T>(jsonString, directOptions);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            this.Log().Debug(ex, "Failed to deserialize as BSON, attempting direct System.Text.Json deserialization");
-
             // Fallback: try to deserialize as regular JSON with System.Text.Json
             try
             {
                 var options = GetEffectiveOptions();
                 return System.Text.Json.JsonSerializer.Deserialize<T>(bytes, options);
             }
-            catch (Exception fallbackEx)
+            catch (Exception)
             {
-                this.Log().Error(fallbackEx, "Failed to deserialize data with both BSON and JSON methods");
                 throw;
             }
         }
@@ -115,9 +111,8 @@ public class SystemJsonBsonSerializer : ISerializer, IEnableLogger
 
             return ms.ToArray();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            this.Log().Error(ex, "Failed to serialize to BSON format");
             throw;
         }
     }

@@ -8,14 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveMarbles.CacheDatabase.Core;
-using Splat;
 
 namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 
 /// <summary>
 /// Serializer for the Newtonsoft Serializer.
 /// </summary>
-public class NewtonsoftBsonSerializer : ISerializer, IEnableLogger
+public class NewtonsoftBsonSerializer : ISerializer
 {
     private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private DateTimeKind? _dateTimeKind;
@@ -59,9 +58,8 @@ public class NewtonsoftBsonSerializer : ISerializer, IEnableLogger
             var wrapper = serializer.Deserialize<ObjectWrapper<T>>(reader);
             return wrapper is null ? default : wrapper.Value;
         }
-        catch (Exception ex)
+        catch
         {
-            this.Log().Warn(ex, "Failed to deserialize data as boxed, we may be migrating from an old Akavache");
         }
 
         return serializer.Deserialize<T>(reader);
