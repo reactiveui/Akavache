@@ -3,19 +3,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using ReactiveMarbles.CacheDatabase.Core;
+using Splat;
 
-namespace ReactiveMarbles.CacheDatabase.SystemTextJson;
+namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 
 /// <summary>
 /// This class is an IBlobCache backed by a simple in-memory Dictionary.
-/// Use it for testing / mocking purposes.
+/// Use it for testing / mocking purposes with Newtonsoft.Json serialization.
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecureBlobCache
+#if NET8_0_OR_GREATER
+[RequiresUnreferencedCode("Registrations for ReactiveMarbles.CacheDatabase.NewtonsoftJson")]
+[RequiresDynamicCode("Registrations for ReactiveMarbles.CacheDatabase.NewtonsoftJson")]
+#endif
+public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecureBlobCache, IEnableLogger
 {
     private readonly Dictionary<string, CacheEntry> _cache = [];
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
@@ -28,13 +34,36 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     public InMemoryBlobCache()
         : this(CoreRegistrations.TaskpoolScheduler)
     {
+        // Global serializer setup is handled in the main constructor
     }
 
     /// <inheritdoc />
     public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
 
+    /// <summary>
+    /// Gets the serializer.
+    /// </summary>
+    /// <value>
+    /// The serializer.
+    /// </value>
+    public ISerializer Serializer { get; } = CreateAndRegisterJsonSerializer();
+
     /// <inheritdoc/>
-    public DateTimeKind? ForcedDateTimeKind { get; set; }
+    public DateTimeKind? ForcedDateTimeKind
+    {
+        get => Serializer.ForcedDateTimeKind;
+        set
+        {
+            Serializer.ForcedDateTimeKind = value;
+
+            // Also update the global serializer to ensure extension methods use the same setting
+            // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
+            if (CoreRegistrations.Serializer != null)
+            {
+                CoreRegistrations.Serializer.ForcedDateTimeKind = value;
+            }
+        }
+    }
 
     /// <inheritdoc />
     public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
@@ -575,6 +604,159 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync() => await Task.Run(() => Dispose());
+
+    /// <summary>
+    /// Insert an object into the cache using Newtonsoft.Json serialization.
+    /// </summary>
+    /// <typeparam name="T">The type of object to insert.</typeparam>
+    /// <param name="key">The key to associate with the object.</param>
+    /// <param name="value">The object to serialize.</param>
+    /// <param name="absoluteExpiration">An optional expiration date.</param>
+    /// <returns>A Future result representing the completion of the insert.</returns>
+    public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(nameof(InMemoryBlobCache));
+        }
+
+        var data = Serializer.Serialize(value);
+        return Insert(key, data, typeof(T), absoluteExpiration);
+    }
+
+    /// <summary>
+    /// Get an object from the cache and deserialize it using Newtonsoft.Json serialization.
+    /// </summary>
+    /// <typeparam name="T">The type of object to retrieve.</typeparam>
+    /// <param name="key">The key to look up in the cache.</param>
+    /// <returns>A Future result representing the object in the cache.</returns>
+    public IObservable<T?> GetObject<T>(string key)
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T?>(nameof(InMemoryBlobCache));
+        }
+
+        return Get(key, typeof(T))
+            .Select(data => data == null ? default : Serializer.Deserialize<T>(data));
+    }
+
+    /// <summary>
+    /// Return all objects of a specific Type in the cache.
+    /// </summary>
+    /// <typeparam name="T">The type of object to retrieve.</typeparam>
+    /// <returns>A Future result representing all objects in the cache with the specified Type.</returns>
+    public IObservable<IEnumerable<T>> GetAllObjects<T>()
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<IEnumerable<T>>(nameof(InMemoryBlobCache));
+        }
+
+        return GetAll(typeof(T))
+            .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
+            .Where(obj => obj is not null)
+            .Select(obj => obj!)
+            .ToList()
+            .Select(list => (IEnumerable<T>)list);
+    }
+
+    /// <summary>
+    /// Returns the time that the object with the key was added to the cache, or returns
+    /// null if the key isn't in the cache.
+    /// </summary>
+    /// <typeparam name="T">The type of object associated with the blob.</typeparam>
+    /// <param name="key">The key to return the date for.</param>
+    /// <returns>The date the key was created on.</returns>
+    public IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(string key) => GetCreatedAt(key, typeof(T));
+
+    /// <summary>
+    /// Invalidates a single object from the cache.
+    /// </summary>
+    /// <typeparam name="T">The type of object associated with the blob.</typeparam>
+    /// <param name="key">The key to invalidate.</param>
+    /// <returns>A Future result representing the completion of the invalidation.</returns>
+    public IObservable<Unit> InvalidateObject<T>(string key) => Invalidate(key, typeof(T));
+
+    /// <summary>
+    /// Invalidates all objects of the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type of object associated with the blob.</typeparam>
+    /// <returns>A Future result representing the completion of the invalidation.</returns>
+    public IObservable<Unit> InvalidateAllObjects<T>() => InvalidateAll(typeof(T));
+
+    /// <summary>
+    /// Get an object from the cache and deserialize it using Newtonsoft.Json serialization.
+    /// If not found, fetch it using the provided function and cache the result.
+    /// </summary>
+    /// <typeparam name="T">The type of object to retrieve.</typeparam>
+    /// <param name="key">The key to look up in the cache.</param>
+    /// <param name="fetchFunc">Function to fetch the data if not in cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date.</param>
+    /// <returns>A Future result representing the object in the cache or fetched.</returns>
+    public IObservable<T?> GetOrFetchObject<T>(string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T?>(nameof(InMemoryBlobCache));
+        }
+
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+
+        if (fetchFunc is null)
+        {
+            throw new ArgumentNullException(nameof(fetchFunc));
+        }
+
+        return GetObject<T>(key).Catch<T?, Exception>(_ => Observable.FromAsync(fetchFunc)
+                .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value)));
+    }
+
+    /// <summary>
+    /// Get an object from the cache and deserialize it using Newtonsoft.Json serialization.
+    /// If not found, fetch it using the provided function and cache the result.
+    /// </summary>
+    /// <typeparam name="T">The type of object to retrieve.</typeparam>
+    /// <param name="key">The key to look up in the cache.</param>
+    /// <param name="fetchFunc">Function to fetch the data if not in cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date.</param>
+    /// <returns>A Future result representing the object in the cache or fetched.</returns>
+    public IObservable<T?> GetOrFetchObject<T>(string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T?>(nameof(InMemoryBlobCache));
+        }
+
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+
+        if (fetchFunc is null)
+        {
+            throw new ArgumentNullException(nameof(fetchFunc));
+        }
+
+        return GetObject<T>(key).Catch<T?, Exception>(_ => fetchFunc()
+                .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value)));
+    }
+
+    /// <summary>
+    /// Creates a Newtonsoft.Json serializer for this cache instance.
+    /// </summary>
+    /// <returns>A new Newtonsoft.Json serializer instance.</returns>
+    private static ISerializer CreateAndRegisterJsonSerializer()
+    {
+        var serializer = new NewtonsoftSerializer();
+
+        // Don't override the global serializer to avoid cross-contamination between different cache types
+        // This cache uses its own JSON serializer directly through the Serializer property
+        return serializer;
+    }
 
     private class CacheEntry
     {

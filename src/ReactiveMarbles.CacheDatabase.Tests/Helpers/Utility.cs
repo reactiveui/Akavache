@@ -3,10 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
 using System.Reactive.Disposables;
-using System.Threading;
 
 namespace ReactiveMarbles.CacheDatabase.Tests.Helpers;
 
@@ -60,10 +57,7 @@ internal static class Utility
         di.Create();
 
         directoryPath = di.FullName;
-        return Disposable.Create(() =>
-        {
-            DeleteDirectory(di.FullName);
-        });
+        return Disposable.Create(() => DeleteDirectory(di.FullName));
     }
 
     public static void Retry(this Action block, int retries = 2)
@@ -75,13 +69,8 @@ internal static class Utility
                 block();
                 return;
             }
-            catch (Exception)
+            catch (Exception) when (retries != 0)
             {
-                if (retries == 0)
-                {
-                    throw;
-                }
-
                 retries--;
                 Thread.Sleep(10);
             }

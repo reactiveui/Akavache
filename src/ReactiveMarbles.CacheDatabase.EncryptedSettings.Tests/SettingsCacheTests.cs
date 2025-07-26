@@ -15,8 +15,9 @@ public class SettingsCacheTests
     /// <summary>
     /// Test1s this instance.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async void TestCreateAndInsert()
+    public async Task TestCreateAndInsert()
     {
         await AppInfo.DeleteSettingsStore<ViewSettings>();
         var viewSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test1234");
@@ -36,8 +37,9 @@ public class SettingsCacheTests
     /// <summary>
     /// Tests the update and read.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async void TestUpdateAndRead()
+    public async Task TestUpdateAndRead()
     {
         var viewSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test1234");
         viewSettings!.EnumTest = EnumTestValue.Option2;
