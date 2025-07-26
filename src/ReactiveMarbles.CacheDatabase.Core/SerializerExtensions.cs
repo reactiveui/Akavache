@@ -3,14 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
-using System.Threading.Tasks;
 
 namespace ReactiveMarbles.CacheDatabase.Core;
 
@@ -29,6 +23,10 @@ public static class SerializerExtensions
     /// <param name="keyValuePairs">The key/value to insert.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A observable which signals when complete.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
+#endif
     public static IObservable<Unit> InsertObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -48,6 +46,10 @@ public static class SerializerExtensions
     /// <param name="blobCache">The blob cache.</param>
     /// <param name="keys">The keys to get the values for.</param>
     /// <returns>A observable with the specified values.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetObjects requires types to be preserved for Deserialization.")]
+    [RequiresDynamicCode("Using GetObjects requires types to be preserved for Deserialization.")]
+#endif
     public static IObservable<KeyValuePair<string, T>> GetObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys)
     {
         if (blobCache is null)
@@ -70,6 +72,10 @@ public static class SerializerExtensions
     /// <param name="value">The object to serialize.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]
+#endif
     public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -93,6 +99,10 @@ public static class SerializerExtensions
     /// <param name="blobCache">The blob cache.</param>
     /// <param name="key">The key to look up in the cache.</param>
     /// <returns>A Future result representing the object in the cache.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetObject requires types to be preserved for Deserialization.")]
+    [RequiresDynamicCode("Using GetObject requires types to be preserved for Deserialization.")]
+#endif
     public static IObservable<T?> GetObject<T>(this IBlobCache blobCache, string key)
     {
         if (blobCache is null)
@@ -115,6 +125,10 @@ public static class SerializerExtensions
     /// <param name="blobCache">The blob cache.</param>
     /// <returns>A Future result representing all objects in the cache
     /// with the specified Type.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetAllObjects requires types to be preserved for Deserialization.")]
+    [RequiresDynamicCode("Using GetAllObjects requires types to be preserved for Deserialization.")]
+#endif
     public static IObservable<T> GetAllObjects<T>(this IBlobCache blobCache) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
@@ -216,6 +230,10 @@ public static class SerializerExtensions
     /// <param name="keyValuePairs">The data to insert into the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using InsertAllObjects requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using InsertAllObjects requires types to be preserved for serialization.")]
+#endif
     public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
@@ -244,6 +262,10 @@ public static class SerializerExtensions
     /// <typeparam name="T">The type of item to get.</typeparam>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+#endif
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -276,6 +298,10 @@ public static class SerializerExtensions
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using GetOrFetchObject requires types to be preserved for serialization.")]
+#endif
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<Task<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
         blobCache.GetOrFetchObject(key, () => fetchFunc().ToObservable(), absoluteExpiration);
 
@@ -297,6 +323,10 @@ public static class SerializerExtensions
     /// key. </param>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetOrCreateObject requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using GetOrCreateObject requires types to be preserved for serialization.")]
+#endif
     public static IObservable<T?> GetOrCreateObject<T>(this IBlobCache blobCache, string key, Func<T> fetchFunc) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
@@ -342,6 +372,10 @@ public static class SerializerExtensions
     /// if the fetched value should be cached.</param>
     /// <returns>An Observable stream containing either one or two
     /// results (possibly a cached version, then the latest version).</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+#endif
     public static IObservable<T?> GetAndFetchLatest<T>(
         this IBlobCache blobCache,
         string key,
@@ -425,6 +459,10 @@ public static class SerializerExtensions
     /// if the fetched value should be cached.</param>
     /// <returns>An Observable stream containing either one or two
     /// results (possibly a cached version, then the latest version).</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using GetAndFetchLatest requires types to be preserved for serialization.")]
+#endif
     public static IObservable<T?> GetAndFetchLatest<T>(
         this IBlobCache blobCache,
         string key,
@@ -442,6 +480,10 @@ public static class SerializerExtensions
     /// <param name="keyValuePairs">The data to insert into the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
+#endif
     public static IObservable<Unit> InsertObjects(this IBlobCache blobCache, IDictionary<string, object> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -478,6 +520,10 @@ public static class SerializerExtensions
     /// <param name="value">The value to serialize.</param>
     /// <param name="forcedDateTimeKind">The DateTimeKind to use for serialization.</param>
     /// <returns>The serialized bytes.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using SerializeWithContext requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using SerializeWithContext requires types to be preserved for serialization.")]
+#endif
     private static byte[] SerializeWithContext<T>(T value, DateTimeKind? forcedDateTimeKind)
     {
         var serializer = Serializer;
@@ -501,6 +547,10 @@ public static class SerializerExtensions
     /// <param name="bytes">The bytes to deserialize.</param>
     /// <param name="forcedDateTimeKind">The DateTimeKind to use for deserialization.</param>
     /// <returns>The deserialized object.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using DeserializeWithContext requires types to be preserved for Deserialization.")]
+    [RequiresDynamicCode("Using DeserializeWithContext requires types to be preserved for Deserialization.")]
+#endif
     private static T? DeserializeWithContext<T>(byte[] bytes, DateTimeKind? forcedDateTimeKind)
     {
         var serializer = Serializer;
@@ -523,6 +573,10 @@ public static class SerializerExtensions
     /// <param name="baseSerializer">The base serializer to clone.</param>
     /// <param name="forcedDateTimeKind">The DateTimeKind to set.</param>
     /// <returns>A serializer with the specified DateTimeKind setting.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using CreateSerializerWithDateTimeKind requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using CreateSerializerWithDateTimeKind requires types to be preserved for serialization.")]
+#endif
     private static ISerializer CreateSerializerWithDateTimeKind(ISerializer baseSerializer, DateTimeKind? forcedDateTimeKind)
     {
         // For thread safety, create a new instance rather than modifying the global one

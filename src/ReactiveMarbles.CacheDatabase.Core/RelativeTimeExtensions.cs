@@ -3,11 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Reactive;
-
 namespace ReactiveMarbles.CacheDatabase.Core;
 
 /// <summary>

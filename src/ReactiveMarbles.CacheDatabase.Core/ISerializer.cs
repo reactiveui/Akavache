@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace ReactiveMarbles.CacheDatabase.Core;
 
 /// <summary>
@@ -28,6 +30,10 @@ public interface ISerializer
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="bytes">The bytes.</param>
     /// <returns>The type.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using System.Text.Json requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using System.Text.Json requires types to be preserved for serialization.")]
+#endif
     T? Deserialize<T>(byte[] bytes);
 
     /// <summary>
@@ -36,5 +42,9 @@ public interface ISerializer
     /// <typeparam name="T">The type of serialize.</typeparam>
     /// <param name="item">The item to serialize.</param>
     /// <returns>The bytes.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using System.Text.Json requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using System.Text.Json requires types to be preserved for serialization.")]
+#endif
     byte[] Serialize<T>(T item);
 }

@@ -3,26 +3,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using System.Text;
-using System.Threading.Tasks;
 using DynamicData;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
+using ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 using ReactiveMarbles.CacheDatabase.SystemTextJson;
 using ReactiveMarbles.CacheDatabase.Tests.Helpers;
 using ReactiveMarbles.CacheDatabase.Tests.Mocks;
-using ReactiveUI;
 using ReactiveUI.Testing;
 using Splat;
-using SQLite;
 using Xunit;
 
 namespace ReactiveMarbles.CacheDatabase.Tests;
@@ -41,19 +33,26 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Gets the serializers to use.
     /// </summary>
-    public static IEnumerable<object[]> Serializers { get; } = new[]
-    {
-        new object[] { typeof(SystemJsonSerializer) },
+    public static IEnumerable<object[]> Serializers { get; } =
+    [
+        [typeof(SystemJsonSerializer)],
         [typeof(NewtonsoftSerializer)],
-    };
+        [typeof(NewtonsoftBsonSerializer)],
+    ];
 
     /// <summary>
     /// Tests to make sure the download url extension methods download correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DownloadUrlTest()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task DownloadUrlTest(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -65,10 +64,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure the download Uri extension method overload performs correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DownloadUriTest()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task DownloadUriTest(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -80,10 +85,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure the download with key extension method overload performs correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DownloadUrlWithKeyTest()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task DownloadUrlWithKeyTest(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -97,10 +108,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure the download Uri with key extension method overload performs correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DownloadUriWithKeyTest()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task DownloadUriWithKeyTest(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -114,10 +131,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that getting non-existent keys throws an exception.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GettingNonExistentKeyShouldThrow()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GettingNonExistentKeyShouldThrow(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -177,10 +200,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Makes sure that arrays can be written and read.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task ArraysShouldBeRoundtrippable()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task ArraysShouldBeRoundtrippable(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         var input = new[] { new UserObject { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" }, new UserObject { Bio = "zzz", Name = "sleepy", Blog = "http://example.com" } };
         UserObject[] result;
 
@@ -329,10 +358,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Makes sure the fetch function debounces current requests.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A <see cref="Task" /> representing the asynchronous unit test.
+    /// </returns>
     [SkippableFact]
-    public async Task FetchFunctionShouldDebounceConcurrentRequestsAsync()
+    [MemberData(nameof(Serializers))]
+    public async Task FetchFunctionShouldDebounceConcurrentRequestsAsync(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         // TODO: This test is failing on .NET 6.0 + Investigate.
         Skip.If(!GetType().Assembly.GetTargetFrameworkName()!.StartsWith("netstandard"));
 
@@ -473,10 +508,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Makes sure that the fetch function propogates thrown exceptions.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task FetchFunctionShouldPropagateThrownExceptionAsObservableException()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task FetchFunctionShouldPropagateThrownExceptionAsObservableException(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         var fetcher = new Func<IObservable<Tuple<string, string>>>(() => throw new InvalidOperationException());
 
         using (Utility.WithEmptyDirectory(out var path))
@@ -492,10 +533,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Makes sure that the fetch function propogates thrown exceptions.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task FetchFunctionShouldPropagateObservedExceptionAsObservableException()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task FetchFunctionShouldPropagateObservedExceptionAsObservableException(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
             Observable.Throw<Tuple<string, string>>(new InvalidOperationException()));
 
@@ -560,10 +607,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Makes sure that the GetAndFetchLatest invalidates objects on errors.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetAndFetchLatestShouldInvalidateObjectOnError()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetAndFetchLatestShouldInvalidateObjectOnError(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         var fetcher = new Func<IObservable<string>>(() => Observable.Throw<string>(new InvalidOperationException()));
 
         using (Utility.WithEmptyDirectory(out var path))
@@ -591,10 +644,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Makes sure that the GetAndFetchLatest calls the Fetch predicate.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetAndFetchLatestCallsFetchPredicate()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetAndFetchLatestCallsFetchPredicate(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         var fetchPredicateCalled = false;
 
 #pragma warning disable RCS1163 // Unused parameter.
@@ -626,10 +685,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Make sure that the GetAndFetchLatest method validates items already in the cache.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetAndFetchLatestValidatesItemsToBeCached()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetAndFetchLatestValidatesItemsToBeCached(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         const string key = "tv1";
         var items = new List<int> { 4, 7, 10, 11, 3, 4 };
         var fetcher = new Func<IObservable<List<int>>>(() => Observable.Return((List<int>)null!));
@@ -768,10 +833,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that different key types work correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task CreatedAtTimeAccurate()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task CreatedAtTimeAccurate(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         var input = new[]
         {
             "Foo",
@@ -798,10 +869,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure getting all keys works correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetAllKeysSmokeTest()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetAllKeysSmokeTest(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         // Initialize a serializer for the tests
         CoreRegistrations.Serializer ??= new SystemJsonSerializer();
 
@@ -902,10 +979,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests if Get with multiple keys work correctly.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetShouldWorkWithMultipleKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetShouldWorkWithMultipleKeys(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -926,10 +1009,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that Get invalidates all the old keys.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetShouldInvalidateOldKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetShouldInvalidateOldKeys(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -947,10 +1036,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that insert works with multiple keys.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InsertShouldWorkWithMultipleKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task InsertShouldWorkWithMultipleKeys(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -971,10 +1066,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Invalidate should be able to trash multiple keys.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InvalidateShouldTrashMultipleKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task InvalidateShouldTrashMultipleKeys(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -994,10 +1095,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests that the cache can get or insert blobs.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task CacheShouldBeAbleToGetAndInsertBlobs()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task CacheShouldBeAbleToGetAndInsertBlobs(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -1028,10 +1135,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that cache's can be written then read.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task CacheShouldBeRoundtrippable()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task CacheShouldBeRoundtrippable(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var fixture = CreateBlobCache(path);
@@ -1060,9 +1173,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Checks to make sure that the property CreatedAt is populated and can be retrieved.
     /// </summary>
-    /// <returns>A task for monitoring the progress.</returns>
-    public async Task CreatedAtShouldBeSetAutomaticallyAndBeRetrievable()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task for monitoring the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task CreatedAtShouldBeSetAutomaticallyAndBeRetrievable(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var fixture = CreateBlobCache(path);
@@ -1090,10 +1210,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that inserting an item twice only allows getting of the first item.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InsertingAnItemTwiceShouldAlwaysGetTheNewOne()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task InsertingAnItemTwiceShouldAlwaysGetTheNewOne(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -1180,10 +1306,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that InvalidateAll invalidates everything.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InvalidateAllReallyDoesInvalidateEverything()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task InvalidateAllReallyDoesInvalidateEverything(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             await using (var fixture = CreateBlobCache(path))
@@ -1209,10 +1341,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests to make sure that GetsAllKeys does not return expired keys.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetAllKeysShouldntReturnExpiredKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task GetAllKeysShouldntReturnExpiredKeys(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             await using (var fixture = CreateBlobCache(path))
@@ -1243,10 +1381,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Make sure that the Vacuum method does not purge keys that should be there.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task VacuumDoesntPurgeKeysThatShouldBeThere()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task VacuumDoesntPurgeKeysThatShouldBeThere(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             await using (var fixture = CreateBlobCache(path))
@@ -1288,10 +1432,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Make sure that the Vacuum method purges entries that are expired.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task VacuumPurgeEntriesThatAreExpired()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task VacuumPurgeEntriesThatAreExpired(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -1321,10 +1471,16 @@ public abstract class BlobCacheTestsBase
     /// <summary>
     /// Tests the issue.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task TestIssueAsync()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A <see cref="Task" /> representing the asynchronous unit test.
+    /// </returns>
+    [Theory]
+    [MemberData(nameof(Serializers))]
+    public async Task TestIssueAsync(Type serializerType)
     {
+        CoreRegistrations.Serializer = (ISerializer?)Activator.CreateInstance(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {

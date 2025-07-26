@@ -746,17 +746,15 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     }
 
     /// <summary>
-    /// Creates a BSON serializer and registers it globally for extension method compatibility.
+    /// Creates a BSON serializer for this cache instance.
     /// </summary>
     /// <returns>A new BSON serializer instance.</returns>
     private static ISerializer CreateAndRegisterBsonSerializer()
     {
         var serializer = new NewtonsoftBsonSerializer();
 
-        // Ensure the global serializer is set to our BSON serializer for extension method compatibility
-        // This allows GetOrFetchObject and other extension methods to work correctly with BSON DateTime handling
-        CoreRegistrations.Serializer = serializer;
-
+        // Don't override the global serializer to avoid cross-contamination between different cache types
+        // This cache uses its own BSON serializer directly through the Serializer property
         return serializer;
     }
 

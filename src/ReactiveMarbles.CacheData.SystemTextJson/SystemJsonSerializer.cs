@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using ReactiveMarbles.CacheDatabase.Core;
 
@@ -23,25 +24,33 @@ public class SystemJsonSerializer : ISerializer
     public DateTimeKind? ForcedDateTimeKind { get; set; }
 
     /// <inheritdoc/>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using System.Text.Json requires types to be preserved for deserialization.")]
+    [RequiresDynamicCode("Using System.Text.Json requires types to be preserved for deserialization.")]
+#endif
     public T? Deserialize<T>(byte[] bytes) => (T?)JsonSerializer.Deserialize(bytes, typeof(T), GetEffectiveOptions());
 
     /// <inheritdoc/>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using System.Text.Json requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using System.Text.Json requires types to be preserved for serialization.")]
+#endif
     public byte[] Serialize<T>(T item) => JsonSerializer.SerializeToUtf8Bytes(item, GetEffectiveOptions());
 
     private JsonSerializerOptions GetEffectiveOptions()
     {
         var options = Options ?? new JsonSerializerOptions();
 
-        // If ForcedDateTimeKind is set, we need to add custom converters
-        if (ForcedDateTimeKind.HasValue)
-        {
-            // Create a copy to avoid modifying the original options
-            options = new JsonSerializerOptions(options);
+        // Add custom DateTime converters - default to UTC if no ForcedDateTimeKind is specified
+        // This ensures consistency with BSON cache behavior
+        var targetKind = ForcedDateTimeKind ?? DateTimeKind.Utc;
 
-            // Add custom DateTime converters that respect ForcedDateTimeKind
-            options.Converters.Add(new SystemJsonDateTimeConverter(ForcedDateTimeKind.Value));
-            options.Converters.Add(new SystemJsonNullableDateTimeConverter(ForcedDateTimeKind.Value));
-        }
+        // Create a copy to avoid modifying the original options
+        options = new JsonSerializerOptions(options);
+
+        // Add custom DateTime converters that respect the target DateTimeKind
+        options.Converters.Add(new SystemJsonDateTimeConverter(targetKind));
+        options.Converters.Add(new SystemJsonNullableDateTimeConverter(targetKind));
 
         return options;
     }

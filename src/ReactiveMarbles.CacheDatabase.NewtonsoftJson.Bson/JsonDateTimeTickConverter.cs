@@ -50,14 +50,12 @@ internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride
             var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
 
             // Convert to the target kind if necessary, ensuring we always return DateTime
-            var result = targetKind switch
+            return targetKind switch
             {
                 DateTimeKind.Utc => DateTime.SpecifyKind(dateTime.ToUniversalTime(), DateTimeKind.Utc),
                 DateTimeKind.Local => DateTime.SpecifyKind(dateTime.ToLocalTime(), DateTimeKind.Local),
                 _ => DateTime.SpecifyKind(dateTime, targetKind)
             };
-
-            return result;
         }
 
         if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value is not null)
@@ -66,9 +64,7 @@ internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride
             var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
 
             // Create DateTime from ticks with the specified kind
-            var result = new DateTime(ticks, targetKind);
-
-            return result;
+            return new DateTime(ticks, targetKind);
         }
 
         return null;
