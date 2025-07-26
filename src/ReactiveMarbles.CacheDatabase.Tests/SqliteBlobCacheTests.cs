@@ -7,15 +7,14 @@ using System.IO;
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.Sqlite3;
 
-namespace ReactiveMarbles.CacheDatabase.Tests
+namespace ReactiveMarbles.CacheDatabase.Tests;
+
+/// <summary>
+/// Tests for the <see cref="SqliteBlobCache"/> class.
+/// </summary>
+public class SqliteBlobCacheTests : BlobCacheTestsBase
 {
-    /// <summary>
-    /// Tests for the <see cref="SqliteBlobCache"/> class.
-    /// </summary>
-    public class SqliteBlobCacheTests : BlobCacheTestsBase
-    {
-        /// <inheritdoc/>
-        protected override IBlobCache CreateBlobCache(string path) =>
-            new SqliteBlobCache(Path.Combine(path, "test.db"));
-    }
+    /// <inheritdoc/>
+    protected override IBlobCache CreateBlobCache(string path) =>
+        new SqliteBlobCache(Path.Combine(path, "test.db"));
 }

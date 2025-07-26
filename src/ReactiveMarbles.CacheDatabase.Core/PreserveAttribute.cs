@@ -5,27 +5,26 @@
 
 using System;
 
-namespace ReactiveMarbles.CacheDatabase.Core
+namespace ReactiveMarbles.CacheDatabase.Core;
+
+[AttributeUsage(AttributeTargets.All)]
+internal sealed class PreserveAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.All)]
-    internal sealed class PreserveAttribute : Attribute
+    public PreserveAttribute(bool allMembers, bool conditional)
     {
-        public PreserveAttribute(bool allMembers, bool conditional)
-        {
-            AllMembers = allMembers;
-            Conditional = conditional;
-        }
-
-        public PreserveAttribute()
-        {
-        }
-
-        public bool AllMembers
-        {
-            get;
-            set;
-        }
-
-        public bool Conditional { get; }
+        AllMembers = allMembers;
+        Conditional = conditional;
     }
+
+    public PreserveAttribute()
+    {
+    }
+
+    public bool AllMembers
+    {
+        get;
+        set;
+    }
+
+    public bool Conditional { get; }
 }

@@ -8,83 +8,82 @@ using System.IO;
 using System.Reactive.Disposables;
 using System.Threading;
 
-namespace ReactiveMarbles.CacheDatabase.Tests.Helpers
+namespace ReactiveMarbles.CacheDatabase.Tests.Helpers;
+
+/// <summary>
+/// A set of utility helper methods for use throughout tests.
+/// </summary>
+internal static class Utility
 {
     /// <summary>
-    /// A set of utility helper methods for use throughout tests.
+    /// Deletes a directory.
     /// </summary>
-    internal static class Utility
+    /// <param name="directoryPath">The path to delete.</param>
+    public static void DeleteDirectory(string directoryPath)
     {
-        /// <summary>
-        /// Deletes a directory.
-        /// </summary>
-        /// <param name="directoryPath">The path to delete.</param>
-        public static void DeleteDirectory(string directoryPath)
+        // From https://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
+        try
         {
-            // From https://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
+            var di = new DirectoryInfo(directoryPath);
+            var files = di.EnumerateFiles();
+            var dirs = di.EnumerateDirectories();
+
+            foreach (var file in files)
+            {
+                File.SetAttributes(file.FullName, FileAttributes.Normal);
+                new Action(() => file.Delete()).Retry();
+            }
+
+            foreach (var dir in dirs)
+            {
+                DeleteDirectory(dir.FullName);
+            }
+
+            File.SetAttributes(directoryPath, FileAttributes.Normal);
+            Directory.Delete(directoryPath, false);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("***** Failed to clean up!! *****");
+            Console.Error.WriteLine(ex);
+        }
+    }
+
+    public static IDisposable WithEmptyDirectory(out string directoryPath)
+    {
+        var di = new DirectoryInfo(Path.Combine(".", Guid.NewGuid().ToString()));
+        if (di.Exists)
+        {
+            DeleteDirectory(di.FullName);
+        }
+
+        di.Create();
+
+        directoryPath = di.FullName;
+        return Disposable.Create(() =>
+        {
+            DeleteDirectory(di.FullName);
+        });
+    }
+
+    public static void Retry(this Action block, int retries = 2)
+    {
+        while (true)
+        {
             try
             {
-                var di = new DirectoryInfo(directoryPath);
-                var files = di.EnumerateFiles();
-                var dirs = di.EnumerateDirectories();
-
-                foreach (var file in files)
-                {
-                    File.SetAttributes(file.FullName, FileAttributes.Normal);
-                    new Action(() => file.Delete()).Retry();
-                }
-
-                foreach (var dir in dirs)
-                {
-                    DeleteDirectory(dir.FullName);
-                }
-
-                File.SetAttributes(directoryPath, FileAttributes.Normal);
-                Directory.Delete(directoryPath, false);
+                block();
+                return;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.Error.WriteLine("***** Failed to clean up!! *****");
-                Console.Error.WriteLine(ex);
-            }
-        }
-
-        public static IDisposable WithEmptyDirectory(out string directoryPath)
-        {
-            var di = new DirectoryInfo(Path.Combine(".", Guid.NewGuid().ToString()));
-            if (di.Exists)
-            {
-                DeleteDirectory(di.FullName);
-            }
-
-            di.Create();
-
-            directoryPath = di.FullName;
-            return Disposable.Create(() =>
-            {
-                DeleteDirectory(di.FullName);
-            });
-        }
-
-        public static void Retry(this Action block, int retries = 2)
-        {
-            while (true)
-            {
-                try
+                if (retries == 0)
                 {
-                    block();
-                    return;
+                    throw;
                 }
-                catch (Exception)
-                {
-                    if (retries == 0)
-                    {
-                        throw;
-                    }
 
-                    retries--;
-                    Thread.Sleep(10);
-                }
+                retries--;
+                Thread.Sleep(10);
             }
         }
     }

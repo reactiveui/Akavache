@@ -16,7 +16,7 @@ public static class CacheDatabase
     private static ISecureBlobCache? _secure;
     private static bool _shutdownRequested;
 
-    static CacheDatabase() => InMemory = new InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
+    static CacheDatabase() => InMemory = new SystemTextJson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
 
     /// <summary>
     /// Gets or sets your application's name. Set this at startup, this defines where

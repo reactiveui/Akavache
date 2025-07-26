@@ -8,15 +8,14 @@ using System.IO;
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.EncryptedSqlite3;
 
-namespace ReactiveMarbles.CacheDatabase.Tests
+namespace ReactiveMarbles.CacheDatabase.Tests;
+
+/// <summary>
+/// Tests for the <see cref="EncryptedSqliteBlobCache"/> class.
+/// </summary>
+public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 {
-    /// <summary>
-    /// Tests for the <see cref="EncryptedSqliteBlobCache"/> class.
-    /// </summary>
-    public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
-    {
-        /// <inheritdoc/>
-        protected override IBlobCache CreateBlobCache(string path) =>
-            new EncryptedSqliteBlobCache(Path.Combine(path, "test.db"), "test1234");
-    }
+    /// <inheritdoc/>
+    protected override IBlobCache CreateBlobCache(string path) =>
+        new EncryptedSqliteBlobCache(Path.Combine(path, "test.db"), "test1234");
 }

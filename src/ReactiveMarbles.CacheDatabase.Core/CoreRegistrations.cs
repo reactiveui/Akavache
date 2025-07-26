@@ -5,32 +5,31 @@
 
 using System.Reactive.Concurrency;
 
-namespace ReactiveMarbles.CacheDatabase.Core
+namespace ReactiveMarbles.CacheDatabase.Core;
+
+/// <summary>
+/// Registrations needed for running the application.
+/// </summary>
+public static class CoreRegistrations
 {
+    private static IScheduler? _taskPoolOverride;
+
     /// <summary>
-    /// Registrations needed for running the application.
+    /// Gets or sets the serializer.
     /// </summary>
-    public static class CoreRegistrations
+    public static ISerializer? Serializer { get; set; }
+
+    /// <summary>
+    /// Gets or sets the http service.
+    /// </summary>
+    public static IHttpService? HttpService { get; set; } = new HttpService();
+
+    /// <summary>
+    /// Gets or sets the Scheduler used for task pools.
+    /// </summary>
+    public static IScheduler TaskpoolScheduler
     {
-        private static IScheduler? _taskPoolOverride;
-
-        /// <summary>
-        /// Gets or sets the serializer.
-        /// </summary>
-        public static ISerializer? Serializer { get; set; }
-
-        /// <summary>
-        /// Gets or sets the http service.
-        /// </summary>
-        public static IHttpService? HttpService { get; set; } = new HttpService();
-
-        /// <summary>
-        /// Gets or sets the Scheduler used for task pools.
-        /// </summary>
-        public static IScheduler TaskpoolScheduler
-        {
-            get => _taskPoolOverride ?? TaskPoolScheduler.Default;
-            set => _taskPoolOverride = value;
-        }
+        get => _taskPoolOverride ?? TaskPoolScheduler.Default;
+        set => _taskPoolOverride = value;
     }
 }

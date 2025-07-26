@@ -9,20 +9,19 @@ using ReactiveMarbles.CacheDatabase.Settings.Core;
 using ReactiveMarbles.CacheDatabase.EncryptedSettings;
 #endif
 
-namespace ReactiveMarbles.CacheDatabase.Settings
+namespace ReactiveMarbles.CacheDatabase.Settings;
+
+/// <summary>
+/// Empty Base.
+/// </summary>
+public abstract class SettingsBase : SettingsStorage
 {
     /// <summary>
-    /// Empty Base.
+    /// Initializes a new instance of the <see cref="SettingsBase"/> class.
     /// </summary>
-    public abstract class SettingsBase : SettingsStorage
+    /// <param name="className">Name of the class.</param>
+    protected SettingsBase(string className)
+        : base($"__{className}__", AppInfo.BlobCaches[className]!)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SettingsBase"/> class.
-        /// </summary>
-        /// <param name="className">Name of the class.</param>
-        protected SettingsBase(string className)
-            : base($"__{className}__", AppInfo.BlobCaches[className]!)
-        {
-        }
     }
 }

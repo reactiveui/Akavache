@@ -3,30 +3,29 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace ReactiveMarbles.CacheDatabase.Tests.Mocks
+namespace ReactiveMarbles.CacheDatabase.Tests.Mocks;
+
+/// <summary>
+/// A mock for the user models.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="UserModel"/> class.
+/// </remarks>
+/// <param name="user">The user to abstract.</param>
+public class UserModel(UserObject user)
 {
     /// <summary>
-    /// A mock for the user models.
+    /// Gets or sets the name.
     /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="UserModel"/> class.
-    /// </remarks>
-    /// <param name="user">The user to abstract.</param>
-    public class UserModel(UserObject user)
-    {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        public string? Name { get; set; }
+    public string? Name { get; set; }
 
-        /// <summary>
-        /// Gets or sets the age.
-        /// </summary>
-        public int Age { get; set; }
+    /// <summary>
+    /// Gets or sets the age.
+    /// </summary>
+    public int Age { get; set; }
 
-        /// <summary>
-        /// Gets or sets the user.
-        /// </summary>
-        public UserObject User { get; set; } = user;
-    }
+    /// <summary>
+    /// Gets or sets the user.
+    /// </summary>
+    public UserObject User { get; set; } = user;
 }
