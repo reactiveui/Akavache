@@ -28,7 +28,7 @@ public class SystemJsonSerializer : ISerializer
     [RequiresUnreferencedCode("Using System.Text.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using System.Text.Json requires types to be preserved for deserialization.")]
 #endif
-    public T? Deserialize<T>(byte[] bytes) => (T?)JsonSerializer.Deserialize(bytes, typeof(T), GetEffectiveOptions());
+    public T? Deserialize<T>(byte[] bytes) => JsonSerializer.Deserialize<T>(bytes, GetEffectiveOptions());
 
     /// <inheritdoc/>
 #if NET8_0_OR_GREATER

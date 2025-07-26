@@ -13,7 +13,7 @@ namespace ReactiveMarbles.CacheDatabase.Core;
 /// </summary>
 public static class SerializerExtensions
 {
-    private static ISerializer Serializer => CoreRegistrations.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer, make sure you are including a relevant CacheDatabase Serializer NuGet package, then initialise CoreRegistrations.Serializer with an instance.");
+    private static ISerializer Serializer => CoreRegistrations.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer. Please ensure a CacheDatabase serializer package is referenced (ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson for maximum Akavache compatibility, ReactiveMarbles.CacheDatabase.SystemTextJson for best performance, or ReactiveMarbles.CacheDatabase.NewtonsoftJson for balance), then initialize CoreRegistrations.Serializer with an instance, or call the appropriate registration method.");
 
     /// <summary>
     /// Inserts the specified key/value pairs into the blob.
@@ -88,7 +88,26 @@ public static class SerializerExtensions
             throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
         }
 
-        return blobCache.Insert(key, SerializeWithContext(value, blobCache.ForcedDateTimeKind), typeof(T), absoluteExpiration);
+        // Handle null values by storing an empty byte array as a marker
+        byte[] serializedData;
+        if (value is null)
+        {
+            // Store empty byte array for null values
+            serializedData = [];
+        }
+        else
+        {
+            try
+            {
+                serializedData = SerializeWithContext(value, blobCache.ForcedDateTimeKind);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to serialize object of type {typeof(T).Name} for key '{key}'.", ex);
+            }
+        }
+
+        return blobCache.Insert(key, serializedData, typeof(T), absoluteExpiration);
     }
 
     /// <summary>
@@ -115,7 +134,77 @@ public static class SerializerExtensions
             throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
         }
 
-        return blobCache.Get(key, typeof(T)).Select(x => x is null ? default : DeserializeWithContext<T>(x, blobCache.ForcedDateTimeKind));
+        return blobCache.Get(key, typeof(T)).Select(x =>
+        {
+            if (x is null)
+            {
+                // The underlying cache should have thrown KeyNotFoundException,
+                // but if we get null here, we should throw it ourselves
+                throw new KeyNotFoundException($"The key '{key}' was not found in the cache.");
+            }
+
+            if (x.Length == 0)
+            {
+                // Empty byte array could indicate a null value was stored
+                // In this case, return default(T) as the stored null value
+                return default(T);
+            }
+
+            try
+            {
+                return DeserializeWithContext<T>(x, blobCache.ForcedDateTimeKind);
+            }
+            catch (Exception ex)
+            {
+                // If deserialization fails, this could indicate corrupt data
+                // We should throw a meaningful exception rather than silently returning default
+                throw new InvalidOperationException($"Failed to deserialize object of type {typeof(T).Name} for key '{key}'.", ex);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Retrieve a value from the key-value cache and deserialize it. If the key is not in
+    /// the cache, this method should return an IObservable which
+    /// OnError's with KeyNotFoundException.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="key">The key to return asynchronously.</param>
+    /// <param name="type">The type of object to deserialize to.</param>
+    /// <returns>A Future result representing the deserialized object.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using Get with Type requires types to be preserved for Deserialization.")]
+    [RequiresDynamicCode("Using Get with Type requires types to be preserved for Deserialization.")]
+#endif
+    public static IObservable<object?> Get(this IBlobCache blobCache, string key, Type type)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
+        }
+
+        if (type is null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
+
+        return blobCache.Get(key, type).Select(bytes =>
+        {
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            // Use reflection to call Deserialize<T> with the correct type
+            var method = typeof(ISerializer).GetMethod(nameof(ISerializer.Deserialize))!;
+            var genericMethod = method.MakeGenericMethod(type);
+            return genericMethod.Invoke(Serializer, [bytes]);
+        });
     }
 
     /// <summary>
@@ -273,9 +362,21 @@ public static class SerializerExtensions
             throw new ArgumentNullException(nameof(blobCache));
         }
 
+        if (fetchFunc is null)
+        {
+            throw new ArgumentNullException(nameof(fetchFunc));
+        }
+
+        // Try to get from cache first
         return blobCache.GetObject<T>(key).Catch<T?, Exception>(_ =>
-            fetchFunc().SelectMany(value =>
-                blobCache.InsertObject(key, value, absoluteExpiration).Select(__ => value)));
+        {
+            // If not in cache, use request cache for concurrent request deduplication only
+            return RequestCache.GetOrCreateRequest($"{key}:{typeof(T).FullName}", () =>
+                fetchFunc().SelectMany(value =>
+                    blobCache.InsertObject(key, value, absoluteExpiration)
+                        .Select(__ => value)
+                        .Take(1))); // Ensure we only take one result
+        });
     }
 
     /// <summary>
@@ -496,19 +597,21 @@ public static class SerializerExtensions
             throw new ArgumentNullException(nameof(keyValuePairs));
         }
 
+        if (keyValuePairs.Count == 0)
+        {
+            return Observable.Return(Unit.Default);
+        }
+
         // For mixed object types, we need to serialize each one individually and use its specific type
         var insertOperations = keyValuePairs
             .Select(kvp => blobCache.Insert(kvp.Key, Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
             .ToList();
 
-        // Wait for all insert operations to complete, not just the last one
-        return insertOperations.Count == 0
-            ? Observable.Return(Unit.Default)
-            : insertOperations
-                .Merge()
-                .TakeLast(insertOperations.Count)
-                .LastOrDefaultAsync()
-                .Select(_ => Unit.Default);
+        // Wait for all insert operations to complete by merging and taking the count
+        return insertOperations.Merge()
+            .TakeLast(insertOperations.Count)
+            .LastOrDefaultAsync()
+            .Select(_ => Unit.Default);
     }
 
     internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;

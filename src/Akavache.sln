@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.build.props = Directory.build.props
 		Directory.build.targets = Directory.build.targets
 		global.json = global.json
+		Migration.md = Migration.md
 		..\README.md = ..\README.md
 		..\.github\workflows\release.yml = ..\.github\workflows\release.yml
 		stylecop.json = stylecop.json
@@ -17,21 +18,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Core", "Akavache.Core\Akavache.Core.csproj", "{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Sqlite3", "Akavache.Sqlite3\Akavache.Sqlite3.csproj", "{B5B161A0-5D64-4845-9234-FA24DA300236}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Mobile", "Akavache.Mobile\Akavache.Mobile.csproj", "{D002EE26-219B-4182-92D2-39B4A21FA615}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache", "Akavache\Akavache.csproj", "{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akavache.Drawing", "Akavache.Drawing\Akavache.Drawing.csproj", "{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Sqlite3", "ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj", "{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Core", "ReactiveMarbles.CacheDatabase.Core\ReactiveMarbles.CacheDatabase.Core.csproj", "{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.SystemTextJson", "ReactiveMarbles.CacheData.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj", "{ADFC7975-D670-11D3-A7F2-35B85D528F7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.SystemTextJson", "ReactiveMarbles.CacheDatabase.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj", "{ADFC7975-D670-11D3-A7F2-35B85D528F7A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.NewtonsoftJson", "ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj", "{D430DD89-35AA-6061-7CDC-D46BE32FC669}"
 EndProject
@@ -51,6 +44,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDataba
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests", "ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests\ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests.csproj", "{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.SystemTextJson.Bson", "ReactiveMarbles.CacheDatabase.SystemTextJson.Bson\ReactiveMarbles.CacheDatabase.SystemTextJson.Bson.csproj", "{F36ED1AB-45C4-4829-A823-944BE4AE094B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,26 +56,10 @@ Global
 		{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5D0B6E1-38B4-45C1-B9CA-2C75E0401E53}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B5B161A0-5D64-4845-9234-FA24DA300236}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B5B161A0-5D64-4845-9234-FA24DA300236}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B5B161A0-5D64-4845-9234-FA24DA300236}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B5B161A0-5D64-4845-9234-FA24DA300236}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D002EE26-219B-4182-92D2-39B4A21FA615}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D002EE26-219B-4182-92D2-39B4A21FA615}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D002EE26-219B-4182-92D2-39B4A21FA615}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D002EE26-219B-4182-92D2-39B4A21FA615}.Release|Any CPU.Build.0 = Release|Any CPU
-		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{73CB420C-91E8-4B0A-9155-EFE5BE7CFCA2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{506AB6E3-87E2-4D88-9C5C-07D24E590AAC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B24FE0E4-D602-45DC-8F3F-FE1C8F9AC63D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -129,6 +108,10 @@ Global
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F36ED1AB-45C4-4829-A823-944BE4AE094B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36ED1AB-45C4-4829-A823-944BE4AE094B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36ED1AB-45C4-4829-A823-944BE4AE094B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36ED1AB-45C4-4829-A823-944BE4AE094B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

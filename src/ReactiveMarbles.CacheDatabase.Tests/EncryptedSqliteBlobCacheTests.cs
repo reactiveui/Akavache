@@ -14,6 +14,10 @@ namespace ReactiveMarbles.CacheDatabase.Tests;
 public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCache(string path) =>
-        new EncryptedSqliteBlobCache(Path.Combine(path, "test.db"), "test1234");
+    protected override IBlobCache CreateBlobCache(string path)
+    {
+        // Use a unique database name for each serializer to avoid cross-contamination
+        var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
+        return new EncryptedSqliteBlobCache(Path.Combine(path, $"encrypted-test-{serializerName}.db"), "password");
+    }
 }

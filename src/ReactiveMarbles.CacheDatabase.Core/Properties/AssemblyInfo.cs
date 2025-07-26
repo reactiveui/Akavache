@@ -12,4 +12,5 @@ using ReactiveMarbles.CacheDatabase.Core;
 [assembly: InternalsVisibleTo("ReactiveMarbles.CacheDatabase.NewtonsoftJson")]
 [assembly: InternalsVisibleTo("ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson")]
 [assembly: InternalsVisibleTo("ReactiveMarbles.CacheDatabase.SystemTextJson")]
+[assembly: InternalsVisibleTo("ReactiveMarbles.CacheDatabase.SystemTextJson.Bson")]
 [assembly: InternalsVisibleTo("ReactiveMarbles.CacheDatabase.Drawing")]

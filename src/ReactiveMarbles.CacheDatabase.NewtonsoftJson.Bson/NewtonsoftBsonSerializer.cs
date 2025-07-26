@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using ReactiveMarbles.CacheDatabase.Core;
@@ -19,6 +20,12 @@ public class NewtonsoftBsonSerializer : ISerializer, IEnableLogger
     private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
     private DateTimeKind? _dateTimeKind;
 
+    static NewtonsoftBsonSerializer()
+    {
+        // Ensure BSON is registered when this type is first used
+        BsonRegistrations.EnsureRegistered();
+    }
+
     /// <summary>
     /// Gets or sets the optional options.
     /// </summary>
@@ -32,6 +39,10 @@ public class NewtonsoftBsonSerializer : ISerializer, IEnableLogger
     }
 
     /// <inheritdoc/>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using BSON requires types to be preserved for deserialization.")]
+    [RequiresDynamicCode("Using BSON requires types to be preserved for deserialization.")]
+#endif
     public T? Deserialize<T>(byte[] bytes)
     {
         var serializer = GetSerializer();
@@ -57,6 +68,10 @@ public class NewtonsoftBsonSerializer : ISerializer, IEnableLogger
     }
 
     /// <inheritdoc/>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using BSON requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using BSON requires types to be preserved for serialization.")]
+#endif
     public byte[] Serialize<T>(T item)
     {
         var serializer = GetSerializer();
@@ -79,9 +94,9 @@ public class NewtonsoftBsonSerializer : ISerializer, IEnableLogger
             serializer = JsonSerializer.Create(settings);
             settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;
             Options = settings; // Update the options to the new settings with the resolver.
-        }
 
-        return serializer;
+            return serializer;
+        }
     }
 
     private class ObjectWrapper<T>

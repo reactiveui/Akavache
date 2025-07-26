@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.IO;
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.Sqlite3;
 
@@ -15,6 +14,10 @@ namespace ReactiveMarbles.CacheDatabase.Tests;
 public class SqliteBlobCacheTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCache(string path) =>
-        new SqliteBlobCache(Path.Combine(path, "test.db"));
+    protected override IBlobCache CreateBlobCache(string path)
+    {
+        // Use a unique database name for each serializer to avoid cross-contamination
+        var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
+        return new SqliteBlobCache(Path.Combine(path, $"test-{serializerName}.db"));
+    }
 }

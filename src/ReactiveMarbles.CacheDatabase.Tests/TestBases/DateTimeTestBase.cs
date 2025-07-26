@@ -109,23 +109,30 @@ public abstract class DateTimeTestBase
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
-            blobCache.ForcedDateTimeKind = DateTimeKind.Local;
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-            Assert.Equal(DateTimeKind.Local, secondResult.Timestamp.Kind);
-            Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
+            var originalKind = blobCache.ForcedDateTimeKind;
+            try
+            {
+                blobCache.ForcedDateTimeKind = DateTimeKind.Local;
+                var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
+                Assert.Equal(DateTimeKind.Local, secondResult.Timestamp.Kind);
+                Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
 
-            // Compare UTC ticks directly to avoid type mismatch between DateTime and DateTimeOffset
-            // Both should represent the same moment in time regardless of their exact return type
-            var firstUtcTicks = firstResult.Timestamp.ToUniversalTime().Ticks;
-            var secondUtcTicks = secondResult.Timestamp.ToUniversalTime().Ticks;
-            Assert.Equal(firstUtcTicks, secondUtcTicks);
+                // Compare UTC ticks directly to avoid type mismatch between DateTime and DateTimeOffset
+                // Both should represent the same moment in time regardless of their exact return type
+                var firstUtcTicks = firstResult.Timestamp.ToUniversalTime().Ticks;
+                var secondUtcTicks = secondResult.Timestamp.ToUniversalTime().Ticks;
+                Assert.Equal(firstUtcTicks, secondUtcTicks);
 
-            // Handle nullable timestamp comparison similarly
-            var firstNullableUtcTicks = firstResult.TimestampNullable?.ToUniversalTime().Ticks;
-            var secondNullableUtcTicks = secondResult.TimestampNullable?.ToUniversalTime().Ticks;
-            Assert.Equal(firstNullableUtcTicks, secondNullableUtcTicks);
-
-            NewtonsoftJson.Bson.CacheDatabase.ForcedDateTimeKind = null;
+                // Handle nullable timestamp comparison similarly
+                var firstNullableUtcTicks = firstResult.TimestampNullable?.ToUniversalTime().Ticks;
+                var secondNullableUtcTicks = secondResult.TimestampNullable?.ToUniversalTime().Ticks;
+                Assert.Equal(firstNullableUtcTicks, secondNullableUtcTicks);
+            }
+            finally
+            {
+                // Restore original DateTimeKind setting
+                blobCache.ForcedDateTimeKind = originalKind;
+            }
         }
     }
 

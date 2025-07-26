@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 using ReactiveMarbles.CacheDatabase.Core;
@@ -23,6 +24,10 @@ public class NewtonsoftSerializer : ISerializer
     public DateTimeKind? ForcedDateTimeKind { get; set; }
 
     /// <inheritdoc/>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
+    [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
+#endif
     public T? Deserialize<T>(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes);
@@ -32,6 +37,10 @@ public class NewtonsoftSerializer : ISerializer
     }
 
     /// <inheritdoc/>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
+#endif
     public byte[] Serialize<T>(T item)
     {
         var serializer = JsonSerializer.Create(Options);
