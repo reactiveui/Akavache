@@ -43,7 +43,9 @@ internal class JsonDateTimeContractResolver(IContractResolver? contractResolver,
 
         if (type == typeof(DateTime) || type == typeof(DateTime?))
         {
-            contract.Converter = JsonDateTimeTickConverter.Default;
+            contract.Converter = ForceDateTimeKindOverride == DateTimeKind.Local
+                ? JsonDateTimeTickConverter.LocalDateTimeKindDefault
+                : JsonDateTimeTickConverter.Default;
         }
         else if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
         {

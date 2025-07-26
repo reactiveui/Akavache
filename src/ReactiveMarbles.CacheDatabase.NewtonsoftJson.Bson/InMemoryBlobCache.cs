@@ -34,6 +34,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     public InMemoryBlobCache()
         : this(CoreRegistrations.TaskpoolScheduler)
     {
+        // Global serializer setup is handled in the main constructor
     }
 
     /// <inheritdoc />
@@ -45,13 +46,23 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
     /// <value>
     /// The serializer.
     /// </value>
-    public ISerializer Serializer { get; } = new NewtonsoftBsonSerializer();
+    public ISerializer Serializer { get; } = CreateAndRegisterBsonSerializer();
 
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind
     {
         get => Serializer.ForcedDateTimeKind;
-        set => Serializer.ForcedDateTimeKind = value;
+        set
+        {
+            Serializer.ForcedDateTimeKind = value;
+
+            // Also update the global serializer to ensure extension methods use the same setting
+            // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
+            if (CoreRegistrations.Serializer != null)
+            {
+                CoreRegistrations.Serializer.ForcedDateTimeKind = value;
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -732,6 +743,21 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : IBlobCache, ISecur
 
         return GetObject<T>(key).Catch<T?, Exception>(_ => fetchFunc()
                 .SelectMany(value => InsertObject(key, value, absoluteExpiration).Select(_ => value)));
+    }
+
+    /// <summary>
+    /// Creates a BSON serializer and registers it globally for extension method compatibility.
+    /// </summary>
+    /// <returns>A new BSON serializer instance.</returns>
+    private static ISerializer CreateAndRegisterBsonSerializer()
+    {
+        var serializer = new NewtonsoftBsonSerializer();
+
+        // Ensure the global serializer is set to our BSON serializer for extension method compatibility
+        // This allows GetOrFetchObject and other extension methods to work correctly with BSON DateTime handling
+        CoreRegistrations.Serializer = serializer;
+
+        return serializer;
     }
 
     private class CacheEntry

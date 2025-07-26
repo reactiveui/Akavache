@@ -91,7 +91,7 @@ public abstract class DateTimeTestBase
         await using (var blobCache = CreateBlobCache(path))
         {
             var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-            Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Utc);
+            Assert.Equal(DateTimeKind.Utc, secondResult.Timestamp.Kind);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
             Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());
         }
@@ -111,7 +111,7 @@ public abstract class DateTimeTestBase
         {
             blobCache.ForcedDateTimeKind = DateTimeKind.Local;
             var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-            Assert.Equal(secondResult.Timestamp.Kind, DateTimeKind.Local);
+            Assert.Equal(DateTimeKind.Local, secondResult.Timestamp.Kind);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
             Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
             Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());

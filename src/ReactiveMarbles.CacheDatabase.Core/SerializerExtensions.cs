@@ -82,7 +82,7 @@ public static class SerializerExtensions
             throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
         }
 
-        return blobCache.Insert(key, Serializer.Serialize(value), typeof(T), absoluteExpiration);
+        return blobCache.Insert(key, SerializeWithContext(value, blobCache.ForcedDateTimeKind), typeof(T), absoluteExpiration);
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public static class SerializerExtensions
             throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
         }
 
-        return blobCache.Get(key, typeof(T)).Select(x => x is null ? default : Serializer.Deserialize<T>(x));
+        return blobCache.Get(key, typeof(T)).Select(x => x is null ? default : DeserializeWithContext<T>(x, blobCache.ForcedDateTimeKind));
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ public static class SerializerExtensions
 
         if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
+            throw new ArgumentException($"'-{nameof(key)}' cannot be null or whitespace.", nameof(key));
         }
 
         return blobCache.GetCreatedAt(key, typeof(T));
@@ -244,8 +244,18 @@ public static class SerializerExtensions
     /// <typeparam name="T">The type of item to get.</typeparam>
     /// <returns>A Future result representing the deserialized object from
     /// the cache.</returns>
-    public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null) =>
-        blobCache.GetObject<T>(key).Catch<T?, Exception>(_ => fetchFunc());
+    public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        return blobCache.GetObject<T>(key).Catch<T?, Exception>(_ =>
+            fetchFunc().SelectMany(value =>
+                blobCache.InsertObject(key, value, absoluteExpiration).Select(__ => value)));
+    }
+
     /// <summary>
     /// <para>
     /// Attempt to return an object from the cache. If the item doesn't
@@ -460,4 +470,97 @@ public static class SerializerExtensions
     }
 
     internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
+
+    /// <summary>
+    /// Serializes an object with the specified DateTimeKind context.
+    /// </summary>
+    /// <typeparam name="T">The type of object to serialize.</typeparam>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="forcedDateTimeKind">The DateTimeKind to use for serialization.</param>
+    /// <returns>The serialized bytes.</returns>
+    private static byte[] SerializeWithContext<T>(T value, DateTimeKind? forcedDateTimeKind)
+    {
+        var serializer = Serializer;
+
+        // If the cache has a specific DateTimeKind setting that differs from the global serializer,
+        // we need to create a context-specific serializer
+        if (forcedDateTimeKind.HasValue && serializer.ForcedDateTimeKind != forcedDateTimeKind)
+        {
+            // Create a clone of the serializer with the specific DateTimeKind setting
+            var contextSerializer = CreateSerializerWithDateTimeKind(serializer, forcedDateTimeKind);
+            return contextSerializer.Serialize(value);
+        }
+
+        return serializer.Serialize(value);
+    }
+
+    /// <summary>
+    /// Deserializes an object with the specified DateTimeKind context.
+    /// </summary>
+    /// <typeparam name="T">The type of object to deserialize.</typeparam>
+    /// <param name="bytes">The bytes to deserialize.</param>
+    /// <param name="forcedDateTimeKind">The DateTimeKind to use for deserialization.</param>
+    /// <returns>The deserialized object.</returns>
+    private static T? DeserializeWithContext<T>(byte[] bytes, DateTimeKind? forcedDateTimeKind)
+    {
+        var serializer = Serializer;
+
+        // If the cache has a specific DateTimeKind setting that differs from the global serializer,
+        // we need to create a context-specific serializer
+        if (forcedDateTimeKind.HasValue && serializer.ForcedDateTimeKind != forcedDateTimeKind)
+        {
+            // Create a clone of the serializer with the specific DateTimeKind setting
+            var contextSerializer = CreateSerializerWithDateTimeKind(serializer, forcedDateTimeKind);
+            return contextSerializer.Deserialize<T>(bytes);
+        }
+
+        return serializer.Deserialize<T>(bytes);
+    }
+
+    /// <summary>
+    /// Creates a serializer instance with the specified DateTimeKind setting.
+    /// </summary>
+    /// <param name="baseSerializer">The base serializer to clone.</param>
+    /// <param name="forcedDateTimeKind">The DateTimeKind to set.</param>
+    /// <returns>A serializer with the specified DateTimeKind setting.</returns>
+    private static ISerializer CreateSerializerWithDateTimeKind(ISerializer baseSerializer, DateTimeKind? forcedDateTimeKind)
+    {
+        // For thread safety, create a new instance rather than modifying the global one
+        var serializerType = baseSerializer.GetType();
+
+        try
+        {
+            var newSerializer = (ISerializer)Activator.CreateInstance(serializerType)!;
+
+            // Copy any Options property if it exists (using reflection for flexibility)
+            var optionsProperty = serializerType.GetProperty("Options");
+            if (optionsProperty?.CanRead == true && optionsProperty.CanWrite)
+            {
+                var options = optionsProperty.GetValue(baseSerializer);
+                optionsProperty.SetValue(newSerializer, options);
+            }
+
+            // Set the specific DateTimeKind
+            newSerializer.ForcedDateTimeKind = forcedDateTimeKind;
+
+            return newSerializer;
+        }
+        catch
+        {
+            // If we can't create a new instance, fall back to temporarily modifying the global one
+            // This is not ideal but ensures compatibility
+            var originalKind = baseSerializer.ForcedDateTimeKind;
+            try
+            {
+                baseSerializer.ForcedDateTimeKind = forcedDateTimeKind;
+                return baseSerializer;
+            }
+            catch
+            {
+                // Restore original state if anything goes wrong
+                baseSerializer.ForcedDateTimeKind = originalKind;
+                throw;
+            }
+        }
+    }
 }
