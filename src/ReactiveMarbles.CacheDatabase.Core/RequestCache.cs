@@ -15,6 +15,11 @@ public static class RequestCache
     private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new();
 
     /// <summary>
+    /// Gets the number of currently in-flight requests (primarily for testing/debugging).
+    /// </summary>
+    public static int Count => _inflightRequests.Count;
+
+    /// <summary>
     /// Gets or creates a request observable for the specified key and fetch function.
     /// This ensures that multiple concurrent requests for the same key will share the same fetch operation.
     /// </summary>
@@ -36,8 +41,16 @@ public static class RequestCache
             var observable = fetchFunc().Select(x => (object)x!)
                 .Do(
                     onNext: _ => { },
-                    onError: _ => RemoveRequestInternal(requestKey),
-                    onCompleted: () => RemoveRequestInternal(requestKey))
+                    onError: _ =>
+                    {
+                        // Remove from cache on error to allow retry
+                        RemoveRequestInternal(requestKey);
+                    },
+                    onCompleted: () =>
+                    {
+                        // Remove from cache on completion to ensure future requests are fresh
+                        RemoveRequestInternal(requestKey);
+                    })
                 .Replay(1)
                 .RefCount();
 
@@ -64,6 +77,23 @@ public static class RequestCache
 
         var requestKey = $"{type.FullName}:{key}";
         RemoveRequestInternal(requestKey);
+    }
+
+    /// <summary>
+    /// Checks if a request is currently in flight for the specified key and type.
+    /// </summary>
+    /// <param name="key">The cache key.</param>
+    /// <param name="type">The type of object.</param>
+    /// <returns>True if a request is in flight, false otherwise.</returns>
+    public static bool HasInFlightRequest(string key, Type type)
+    {
+        if (type is null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
+
+        var requestKey = $"{type.FullName}:{key}";
+        return _inflightRequests.ContainsKey(requestKey);
     }
 
     private static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out var _);

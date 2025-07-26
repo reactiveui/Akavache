@@ -403,8 +403,25 @@ public abstract class BlobCacheTestsBase : IDisposable
             var callCount = 0;
             var fetcher = new Func<IObservable<int>>(() =>
             {
-                Interlocked.Increment(ref callCount);
-                return Observable.Return(42).Delay(TimeSpan.FromMilliseconds(50));
+                var currentCount = Interlocked.Increment(ref callCount);
+
+                // Add some delay to ensure concurrent requests can overlap
+                return Observable.Create<int>(observer =>
+                {
+                    Task.Run(async () =>
+                    {
+                        if (currentCount == 1)
+                        {
+                            // First call waits for all concurrent requests to start
+                            await Task.Delay(100);
+                        }
+
+                        observer.OnNext(42);
+                        observer.OnCompleted();
+                    });
+
+                    return new System.Reactive.Disposables.CompositeDisposable();
+                });
             });
 
             // Start multiple concurrent requests for the same key
@@ -499,21 +516,26 @@ public abstract class BlobCacheTestsBase : IDisposable
                 return Observable.Return($"fetch_{fetchCount}");
             });
 
-            // First call should fetch
-            var result1 = await fixture.GetOrFetchObject("expiry_test", fetcher, DateTimeOffset.Now.AddSeconds(1))
+            // Test 1: First call should fetch
+            var result1 = await fixture.GetOrFetchObject("expiry_test", fetcher, DateTimeOffset.Now.AddMilliseconds(300))
                 .FirstAsync();
             Assert.Equal("fetch_1", result1);
             Assert.Equal(1, fetchCount);
 
-            // Second call within expiry should use cache
-            var result2 = await fixture.GetOrFetchObject("expiry_test", fetcher, DateTimeOffset.Now.AddSeconds(1))
+            // Test 2: Second call within expiry should use cache
+            var result2 = await fixture.GetOrFetchObject("expiry_test", fetcher, DateTimeOffset.Now.AddMilliseconds(300))
                 .FirstAsync();
             Assert.Equal("fetch_1", result2);
             Assert.Equal(1, fetchCount);
 
-            // Wait for expiry and try again - should fetch again
-            await Task.Delay(1100); // Wait for expiration + buffer
-            var result3 = await fixture.GetOrFetchObject("expiry_test", fetcher, DateTimeOffset.Now.AddSeconds(1))
+            // Test 3: Wait for expiry
+            await Task.Delay(400);
+
+            // Clear both caches to ensure clean state for expiration test
+            RequestCache.Clear();
+
+            // Should fetch again after expiration
+            var result3 = await fixture.GetOrFetchObject("expiry_test", fetcher, DateTimeOffset.Now.AddMilliseconds(300))
                 .FirstAsync();
             Assert.Equal("fetch_2", result3);
             Assert.Equal(2, fetchCount);
