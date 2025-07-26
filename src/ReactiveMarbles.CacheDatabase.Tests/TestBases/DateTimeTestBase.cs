@@ -113,8 +113,18 @@ public abstract class DateTimeTestBase
             var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
             Assert.Equal(DateTimeKind.Local, secondResult.Timestamp.Kind);
             Assert.Equal(firstResult.Timestamp, secondResult.Timestamp);
-            Assert.Equal(firstResult.Timestamp.ToUniversalTime(), secondResult.Timestamp.ToUniversalTime());
-            Assert.Equal(firstResult.TimestampNullable?.ToUniversalTime(), secondResult.TimestampNullable?.ToUniversalTime());
+
+            // Compare UTC ticks directly to avoid type mismatch between DateTime and DateTimeOffset
+            // Both should represent the same moment in time regardless of their exact return type
+            var firstUtcTicks = firstResult.Timestamp.ToUniversalTime().Ticks;
+            var secondUtcTicks = secondResult.Timestamp.ToUniversalTime().Ticks;
+            Assert.Equal(firstUtcTicks, secondUtcTicks);
+
+            // Handle nullable timestamp comparison similarly
+            var firstNullableUtcTicks = firstResult.TimestampNullable?.ToUniversalTime().Ticks;
+            var secondNullableUtcTicks = secondResult.TimestampNullable?.ToUniversalTime().Ticks;
+            Assert.Equal(firstNullableUtcTicks, secondNullableUtcTicks);
+
             NewtonsoftJson.Bson.CacheDatabase.ForcedDateTimeKind = null;
         }
     }

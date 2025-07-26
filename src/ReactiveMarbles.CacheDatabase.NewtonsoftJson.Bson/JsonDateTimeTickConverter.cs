@@ -49,7 +49,7 @@ internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride
             // Apply the DateTimeKind override even for direct DateTime values
             var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
 
-            // Convert to the target kind if necessary
+            // Convert to the target kind if necessary, ensuring we always return DateTime
             var result = targetKind switch
             {
                 DateTimeKind.Utc => DateTime.SpecifyKind(dateTime.ToUniversalTime(), DateTimeKind.Utc),
@@ -79,17 +79,17 @@ internal class JsonDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride
     {
         if (value is DateTime dateTime)
         {
-            // Always serialize as UTC ticks to avoid BSON's native DateTime handling
-            // This ensures consistency regardless of the input DateTime's kind
-            var utcTicks = dateTime.Kind switch
+            // Store ticks in a way that preserves the intent while allowing proper deserialization
+            // Convert to UTC for consistent storage, but handle each kind appropriately
+            var ticksToStore = dateTime.Kind switch
             {
+                DateTimeKind.Utc => dateTime.Ticks,
                 DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
-                DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Local).ToUniversalTime().Ticks,
-                _ => dateTime.Ticks // Already UTC
+                DateTimeKind.Unspecified => dateTime.Ticks, // Preserve original ticks for unspecified
+                _ => dateTime.Ticks
             };
 
-            // Write as raw number to force tick-based serialization
-            writer.WriteValue(utcTicks);
+            writer.WriteValue(ticksToStore);
         }
     }
 }

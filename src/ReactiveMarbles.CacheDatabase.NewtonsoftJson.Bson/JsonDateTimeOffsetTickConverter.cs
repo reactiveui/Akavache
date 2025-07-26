@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 
 /// <summary>
-/// JSON converter for DateTimeOffset that preserves ticks appropriately.
+/// JSON converter for DateTimeOffset that preserves ticks and offset appropriately.
 /// </summary>
 internal class JsonDateTimeOffsetTickConverter : JsonConverter
 {
@@ -28,7 +28,7 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
             throw new ArgumentNullException(nameof(reader));
         }
 
-        if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
+        if (reader.TokenType is not JsonToken.StartObject and not JsonToken.Date and not JsonToken.Integer)
         {
             return null;
         }
@@ -38,6 +38,36 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
             return (DateTimeOffset)(DateTime)reader.Value;
         }
 
+        // Handle the case where we stored it as an object with ticks and offset
+        if (reader.TokenType == JsonToken.StartObject)
+        {
+            long ticks = 0;
+            long offsetTicks = 0;
+
+            while (reader.Read() && reader.TokenType != JsonToken.EndObject)
+            {
+                if (reader.TokenType == JsonToken.PropertyName)
+                {
+                    var propertyName = reader.Value?.ToString();
+                    reader.Read();
+
+                    switch (propertyName)
+                    {
+                        case "Ticks":
+                            ticks = (long)reader.Value!;
+                            break;
+                        case "OffsetTicks":
+                            offsetTicks = (long)reader.Value!;
+                            break;
+                    }
+                }
+            }
+
+            var offset = new TimeSpan(offsetTicks);
+            return new DateTimeOffset(ticks, offset);
+        }
+
+        // Fallback for legacy integer-only format (assume UTC)
         if ((objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?)) && reader.Value is not null)
         {
             var ticks = (long)reader.Value;
@@ -52,8 +82,13 @@ internal class JsonDateTimeOffsetTickConverter : JsonConverter
     {
         if (value is DateTimeOffset dateTimeOffset)
         {
-            // Serialize as UTC ticks
-            writer.WriteValue(dateTimeOffset.UtcTicks);
+            // Store both ticks and offset to preserve full DateTimeOffset information
+            writer.WriteStartObject();
+            writer.WritePropertyName("Ticks");
+            writer.WriteValue(dateTimeOffset.Ticks);
+            writer.WritePropertyName("OffsetTicks");
+            writer.WriteValue(dateTimeOffset.Offset.Ticks);
+            writer.WriteEndObject();
         }
     }
 }

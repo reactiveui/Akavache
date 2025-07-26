@@ -23,8 +23,26 @@ public class SystemJsonSerializer : ISerializer
     public DateTimeKind? ForcedDateTimeKind { get; set; }
 
     /// <inheritdoc/>
-    public T? Deserialize<T>(byte[] bytes) => (T?)JsonSerializer.Deserialize(bytes, typeof(T), Options);
+    public T? Deserialize<T>(byte[] bytes) => (T?)JsonSerializer.Deserialize(bytes, typeof(T), GetEffectiveOptions());
 
     /// <inheritdoc/>
-    public byte[] Serialize<T>(T item) => JsonSerializer.SerializeToUtf8Bytes(item, Options);
+    public byte[] Serialize<T>(T item) => JsonSerializer.SerializeToUtf8Bytes(item, GetEffectiveOptions());
+
+    private JsonSerializerOptions GetEffectiveOptions()
+    {
+        var options = Options ?? new JsonSerializerOptions();
+
+        // If ForcedDateTimeKind is set, we need to add custom converters
+        if (ForcedDateTimeKind.HasValue)
+        {
+            // Create a copy to avoid modifying the original options
+            options = new JsonSerializerOptions(options);
+
+            // Add custom DateTime converters that respect ForcedDateTimeKind
+            options.Converters.Add(new SystemJsonDateTimeConverter(ForcedDateTimeKind.Value));
+            options.Converters.Add(new SystemJsonNullableDateTimeConverter(ForcedDateTimeKind.Value));
+        }
+
+        return options;
+    }
 }
