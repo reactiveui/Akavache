@@ -10,7 +10,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests;
 /// <summary>
 /// Tests for the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
 /// </summary>
-public class InMemoryBlobCacheTests : BlobCacheTestsBase
+public class NewtonsoftBsonInMemoryBlobCacheTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
     protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);

@@ -11,7 +11,7 @@ namespace ReactiveMarbles.CacheDatabase.Tests
     /// <summary>
     /// Tests for object bulk operations associated with the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
     /// </summary>
-    public class InMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
+    public class NewtonsoftBsonInMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
     {
         /// <inheritdoc />
         protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);

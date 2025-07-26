@@ -9,9 +9,9 @@ using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 namespace ReactiveMarbles.CacheDatabase.Tests
 {
     /// <summary>
-    /// Tests for bulk operations associated with the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
+    /// Tests for DateTime operations associated with the <see cref="NewtonsoftJson.Bson.InMemoryBlobCache"/> class.
     /// </summary>
-    public class InMemoryBlobCacheBulkOperationsTests : BulkOperationsTestBase
+    public class NewtonsoftBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     {
         /// <inheritdoc />
         protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.Bson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
