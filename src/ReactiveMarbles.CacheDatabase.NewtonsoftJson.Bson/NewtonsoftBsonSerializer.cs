@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
@@ -17,13 +16,12 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
 public class NewtonsoftBsonSerializer : ISerializer
 {
     private readonly JsonDateTimeContractResolver _jsonDateTimeContractResolver = new(); // This will make us use ticks instead of json ticks for DateTime.
-    private DateTimeKind? _dateTimeKind;
 
-    static NewtonsoftBsonSerializer()
-    {
-        // Ensure BSON is registered when this type is first used
-        BsonRegistrations.EnsureRegistered();
-    }
+    /// <summary>
+    /// Initializes static members of the <see cref="NewtonsoftBsonSerializer"/> class.
+    /// Ensure BSON is registered when this type is first used.
+    /// </summary>
+    static NewtonsoftBsonSerializer() => BsonRegistrations.EnsureRegistered();
 
     /// <summary>
     /// Gets or sets the optional options.
@@ -33,8 +31,8 @@ public class NewtonsoftBsonSerializer : ISerializer
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind
     {
-        get => _dateTimeKind ?? CacheDatabase.ForcedDateTimeKind;
-        set => _dateTimeKind = _jsonDateTimeContractResolver.ForceDateTimeKindOverride = value;
+        get => _jsonDateTimeContractResolver.ForceDateTimeKind;
+        set => _jsonDateTimeContractResolver.ForceDateTimeKind = value;
     }
 
     /// <inheritdoc/>
@@ -87,7 +85,7 @@ public class NewtonsoftBsonSerializer : ISerializer
         lock (settings)
         {
             _jsonDateTimeContractResolver.ExistingContractResolver = settings.ContractResolver;
-            _jsonDateTimeContractResolver.ForceDateTimeKindOverride = ForcedDateTimeKind;
+            _jsonDateTimeContractResolver.ForceDateTimeKind = ForcedDateTimeKind;
             settings.ContractResolver = _jsonDateTimeContractResolver;
             serializer = JsonSerializer.Create(settings);
             settings.ContractResolver = _jsonDateTimeContractResolver.ExistingContractResolver;

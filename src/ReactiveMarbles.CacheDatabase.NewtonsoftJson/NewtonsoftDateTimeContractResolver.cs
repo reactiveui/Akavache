@@ -16,8 +16,8 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 /// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
 /// </remarks>
 /// <param name="contractResolver">A inherited contract resolver.</param>
-/// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
-internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride) : DefaultContractResolver
+/// <param name="forceDateTimeKind">If we should override the <see cref="DateTimeKind"/>.</param>
+internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKind) : DefaultContractResolver
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
@@ -29,7 +29,7 @@ internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractRes
 
     public IContractResolver? ExistingContractResolver { get; set; } = contractResolver;
 
-    public DateTimeKind? ForceDateTimeKindOverride { get; set; } = forceDateTimeKindOverride;
+    public DateTimeKind? ForceDateTimeKind { get; set; } = forceDateTimeKind;
 
     /// <inheritdoc />
     public override JsonContract ResolveContract(Type type)
@@ -45,7 +45,7 @@ internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractRes
         if (type == typeof(DateTime) || type == typeof(DateTime?))
         {
             // Pass the ForceDateTimeKindOverride to the converter so it knows what Kind to use
-            contract.Converter = new NewtonsoftDateTimeTickConverter(ForceDateTimeKindOverride);
+            contract.Converter = new NewtonsoftDateTimeTickConverter(ForceDateTimeKind);
         }
         else if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
         {

@@ -15,13 +15,19 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 /// </summary>
 public class NewtonsoftSerializer : ISerializer
 {
+    private readonly NewtonsoftDateTimeContractResolver _contractResolver = new();
+
     /// <summary>
     /// Gets or sets the optional options.
     /// </summary>
     public JsonSerializerSettings? Options { get; set; }
 
     /// <inheritdoc/>
-    public DateTimeKind? ForcedDateTimeKind { get; set; }
+    public DateTimeKind? ForcedDateTimeKind
+    {
+        get => _contractResolver.ForceDateTimeKind;
+        set => _contractResolver.ForceDateTimeKind = value;
+    }
 
     /// <inheritdoc/>
 #if NET8_0_OR_GREATER
@@ -32,7 +38,7 @@ public class NewtonsoftSerializer : ISerializer
     {
         using var stream = new MemoryStream(bytes);
         using var textReader = new StreamReader(stream);
-        var serializer = JsonSerializer.Create(Options);
+        var serializer = JsonSerializer.Create(GetEffectiveSettings());
         return (T?)serializer.Deserialize(textReader, typeof(T));
     }
 
@@ -43,7 +49,7 @@ public class NewtonsoftSerializer : ISerializer
 #endif
     public byte[] Serialize<T>(T item)
     {
-        var serializer = JsonSerializer.Create(Options);
+        var serializer = JsonSerializer.Create(GetEffectiveSettings());
 
         using var stream = new MemoryStream();
         using var streamWriter = new StreamWriter(stream);
@@ -53,5 +59,44 @@ public class NewtonsoftSerializer : ISerializer
         stream.Position = 0;
 
         return stream.ToArray();
+    }
+
+    private JsonSerializerSettings GetEffectiveSettings()
+    {
+        var settings = Options ?? new JsonSerializerSettings();
+
+        // Create a copy to avoid modifying the original settings
+        settings = new JsonSerializerSettings
+        {
+            ContractResolver = _contractResolver,
+            DateTimeZoneHandling = settings.DateTimeZoneHandling,
+            DateParseHandling = settings.DateParseHandling,
+            FloatParseHandling = settings.FloatParseHandling,
+            NullValueHandling = settings.NullValueHandling,
+            DefaultValueHandling = settings.DefaultValueHandling,
+            ObjectCreationHandling = settings.ObjectCreationHandling,
+            MissingMemberHandling = settings.MissingMemberHandling,
+            ReferenceLoopHandling = settings.ReferenceLoopHandling,
+            CheckAdditionalContent = settings.CheckAdditionalContent,
+            StringEscapeHandling = settings.StringEscapeHandling,
+            Culture = settings.Culture,
+            MaxDepth = settings.MaxDepth,
+            Formatting = settings.Formatting,
+            DateFormatHandling = settings.DateFormatHandling,
+            DateFormatString = settings.DateFormatString,
+            FloatFormatHandling = settings.FloatFormatHandling,
+            Converters = settings.Converters,
+            TypeNameHandling = settings.TypeNameHandling,
+            MetadataPropertyHandling = settings.MetadataPropertyHandling,
+            TypeNameAssemblyFormatHandling = settings.TypeNameAssemblyFormatHandling,
+            ConstructorHandling = settings.ConstructorHandling,
+            Error = settings.Error
+        };
+
+        // Set our contract resolver, preserving any existing one
+        _contractResolver.ExistingContractResolver = settings.ContractResolver;
+        settings.ContractResolver = _contractResolver;
+
+        return settings;
     }
 }

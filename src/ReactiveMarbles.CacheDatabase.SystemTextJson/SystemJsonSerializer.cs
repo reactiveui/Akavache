@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using ReactiveMarbles.CacheDatabase.Core;
@@ -48,9 +47,11 @@ public class SystemJsonSerializer : ISerializer
         // Create a copy to avoid modifying the original options
         options = new JsonSerializerOptions(options);
 
-        // Add custom DateTime converters that respect the target DateTimeKind
+        // Add custom DateTime converters that respect the target DateTimeKind and use ticks-based serialization
         options.Converters.Add(new SystemJsonDateTimeConverter(targetKind));
         options.Converters.Add(new SystemJsonNullableDateTimeConverter(targetKind));
+        options.Converters.Add(new SystemJsonDateTimeOffsetConverter());
+        options.Converters.Add(new SystemJsonNullableDateTimeOffsetConverter());
 
         return options;
     }
