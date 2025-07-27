@@ -16,7 +16,7 @@ namespace ReactiveMarbles.CacheDatabase.Core;
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
-public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer serializer) : IBlobCache, ISecureBlobCache, IDisposable
+public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : IBlobCache, ISecureBlobCache, IDisposable
 {
     private readonly Dictionary<string, CacheEntry> _cache = [];
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
@@ -27,7 +27,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer se
     /// Initializes a new instance of the <see cref="InMemoryBlobCacheBase"/> class with default scheduler.
     /// </summary>
     /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
-    protected InMemoryBlobCacheBase(ISerializer serializer)
+    protected InMemoryBlobCacheBase(ISerializer? serializer)
         : this(CoreRegistrations.TaskpoolScheduler, serializer)
     {
     }
@@ -53,10 +53,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer se
 
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
-            if (CoreRegistrations.Serializer != null)
-            {
-                CoreRegistrations.Serializer.ForcedDateTimeKind = value;
-            }
+            CoreRegistrations.Serializer?.ForcedDateTimeKind = value;
         }
     }
 

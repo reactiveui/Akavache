@@ -4,10 +4,10 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ReactiveMarbles.CacheDatabase.Core;
-using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 
 namespace ReactiveMarbles.CacheDatabase.Settings.Core;
 
@@ -23,27 +23,34 @@ public abstract class SettingsStorage : ISettingsStorage
     private bool _disposedValue;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsStorage"/> class.
+    /// Initializes a new instance of the <see cref="SettingsStorage" /> class.
     /// </summary>
-    /// <param name="keyPrefix">
-    /// This value will be used as prefix for all settings keys. It should be reasonably unique,
-    /// so that it doesn't collide with other keys in the same <see cref="IBlobCache"/>.
-    /// </param>
-    /// <param name="cache">
-    /// An <see cref="IBlobCache"/> implementation where you want your settings to be stored.
-    /// </param>
-    protected SettingsStorage(string keyPrefix, IBlobCache cache)
+    /// <param name="keyPrefix">This value will be used as prefix for all settings keys. It should be reasonably unique,
+    /// so that it doesn't collide with other keys in the same <see cref="IBlobCache" />.</param>
+    /// <param name="cache">An <see cref="IBlobCache" /> implementation where you want your settings to be stored.</param>
+    /// <param name="serializer">The serializer.</param>
+    /// <exception cref="System.ArgumentException">Invalid key prefix - keyPrefix.</exception>
+    protected SettingsStorage(string keyPrefix, IBlobCache cache, ISerializer? serializer = null)
     {
         if (string.IsNullOrWhiteSpace(keyPrefix))
         {
             throw new ArgumentException("Invalid key prefix", nameof(keyPrefix));
         }
 
-        CoreRegistrations.Serializer = new NewtonsoftSerializer();
+        if (CoreRegistrations.Serializer == null && serializer != null)
+        {
+            CoreRegistrations.Serializer = serializer;
+        }
+
+        if (CoreRegistrations.Serializer == null)
+        {
+            throw new ArgumentException("Serializer is not set. Please set the serializer before using the settings storage.", nameof(serializer));
+        }
+
         _keyPrefix = keyPrefix;
         _blobCache = cache;
 
-        _cache = new();
+        _cache = [];
         _cacheLock = new();
     }
 
@@ -59,6 +66,10 @@ public abstract class SettingsStorage : ISettingsStorage
     /// load all settings on startup at once into the internal cache and not one-by-one at each request.
     /// </summary>
     /// <returns>A Task.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
+    [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
+#endif
     public Task InitializeAsync() =>
         Task.Run(() =>
             {
@@ -98,6 +109,10 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <param name="key">The key of the setting. Automatically set through the <see cref="CallerMemberNameAttribute" />.</param>
     /// <returns>The Type.</returns>
     /// <exception cref="ArgumentNullException">A ArgumentNullException.</exception>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("GetOrCreate requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("GetOrCreate requires types to be preserved for serialization.")]
+#endif
     protected T? GetOrCreate<T>(T defaultValue, [CallerMemberName] string? key = null)
     {
         if (key == null)
@@ -136,6 +151,10 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <typeparam name="T">The type of the value to set or create.</typeparam>
     /// <param name="value">The value to be set or created.</param>
     /// <param name="key">The key of the setting. Automatically set through the <see cref="CallerMemberNameAttribute"/>.</param>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("SetOrCreate requires types to be preserved for serialization.")]
+    [RequiresDynamicCode("SetOrCreate requires types to be preserved for serialization.")]
+#endif
     protected void SetOrCreate<T>(T value, [CallerMemberName] string? key = null)
     {
         if (key == null)

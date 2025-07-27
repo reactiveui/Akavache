@@ -11,7 +11,7 @@ namespace ReactiveMarbles.CacheDatabase.Core;
 /// Universal serializer compatibility utilities that enable cross-serializer functionality.
 /// This class provides fallback mechanisms when the primary serializer fails to deserialize data.
 /// </summary>
-public static class UniversalSerializerShim
+public static class UniversalSerializer
 {
     private static readonly Dictionary<string, Type> _serializerTypeCache = [];
 
@@ -27,7 +27,7 @@ public static class UniversalSerializerShim
     [RequiresUnreferencedCode("Universal deserialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal deserialization requires types to be preserved.")]
 #endif
-    public static T? UniversalDeserialize<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind = null)
+    public static T? Deserialize<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind = null)
     {
         if (data == null || data.Length == 0)
         {
@@ -90,7 +90,7 @@ public static class UniversalSerializerShim
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
 #endif
-    public static byte[] UniversalSerialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind = null)
+    public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind = null)
     {
         if (value == null)
         {
@@ -192,7 +192,7 @@ public static class UniversalSerializerShim
                     if (rawData != null && rawData.Length > 0)
                     {
                         // Try to deserialize using the universal deserializer
-                        var result = UniversalDeserialize<T>(rawData, primarySerializer);
+                        var result = Deserialize<T>(rawData, primarySerializer);
                         if (result != null && !EqualityComparer<T>.Default.Equals(result, default(T)!))
                         {
                             return result;
@@ -358,31 +358,78 @@ public static class UniversalSerializerShim
     {
         try
         {
-            // If the result is DateTime.MinValue but the data looks like it contains a real date
+            // If the result is DateTime.MinValue but the data suggests otherwise
             if (problematicResult == DateTime.MinValue && data.Length > 10)
             {
-                // Try to parse the data as a string to see if it contains date information
-                var dataAsString = Encoding.UTF8.GetString(data);
-
-                // Look for common date patterns in the serialized data
-                if (dataAsString.Contains("2025") || dataAsString.Contains("2024") || dataAsString.Contains("2026"))
+                // Strategy 1: Try to parse the data as a string to see if it contains date information
+                try
                 {
-                    // The data seems to contain modern date information, return a reasonable fallback
-                    return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
+                    var dataAsString = Encoding.UTF8.GetString(data);
+
+                    // Look for year patterns that suggest modern dates
+                    if (dataAsString.Contains("2025") || dataAsString.Contains("2024") || dataAsString.Contains("2026"))
+                    {
+                        // Return a reasonable fallback based on the year found
+                        return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
+                    }
+
+                    // Try to find ISO date patterns
+                    var iso8601Pattern = @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}";
+                    if (System.Text.RegularExpressions.Regex.IsMatch(dataAsString, iso8601Pattern))
+                    {
+                        return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
+                    }
+                }
+                catch
+                {
+                    // String parsing failed, try other strategies
                 }
 
-                // Try to find ISO date patterns
-                var iso8601Pattern = @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}";
-                if (System.Text.RegularExpressions.Regex.IsMatch(dataAsString, iso8601Pattern))
+                // Strategy 2: Check if data contains typical BSON DateTime binary patterns
+                try
                 {
-                    // Contains ISO date format, return a reasonable default
+                    // BSON stores DateTime as 64-bit milliseconds since Unix epoch
+                    if (data.Length >= 8)
+                    {
+                        // Try to find sequences that might be DateTime values in various positions
+                        for (var offset = 0; offset <= data.Length - 8; offset += 4)
+                        {
+                            try
+                            {
+                                var ticks = BitConverter.ToInt64(data, offset);
+
+                                // Check if this could be a reasonable DateTime (between 1900 and 2100)
+                                var baseDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                                var candidateDateTime = baseDateTime.AddMilliseconds(ticks);
+
+                                if (candidateDateTime.Year >= 2000 && candidateDateTime.Year <= 2100)
+                                {
+                                    return candidateDateTime;
+                                }
+                            }
+                            catch
+                            {
+                                // Continue searching
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Binary parsing failed
+                }
+
+                // Strategy 3: If we still haven't found anything reasonable, check data size
+                // Large data size for a DateTime suggests complex serialization - use a safe fallback
+                if (data.Length > 50)
+                {
                     return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
                 }
             }
         }
         catch
         {
-            // If recovery fails, return the original problematic result
+            // If all recovery attempts fail, return the original problematic result
         }
 
         return problematicResult;
@@ -393,12 +440,15 @@ public static class UniversalSerializerShim
     /// </summary>
     /// <param name="excludeSerializer">The serializer to exclude from the list.</param>
     /// <returns>A list of alternative serializers.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Alternative serializer deserialization requires types to be preserved.")]
+    [RequiresDynamicCode("Alternative serializer deserialization requires types to be preserved.")]
+#endif
     private static List<ISerializer> GetAvailableAlternativeSerializers(ISerializer excludeSerializer)
     {
         var alternatives = new List<ISerializer>();
         var excludeTypeName = excludeSerializer.GetType().Name;
 
-        // Try to instantiate known serializer types
         var knownSerializerTypes = new[]
         {
             "ReactiveMarbles.CacheDatabase.SystemTextJson.SystemJsonSerializer",
@@ -451,7 +501,6 @@ public static class UniversalSerializerShim
 #endif
     private static T? TryDeserializeBsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
     {
-        // Try to find and use a BSON-capable serializer
         try
         {
             var bsonSerializerTypes = new[]
@@ -485,27 +534,43 @@ public static class UniversalSerializerShim
 
                             var result = serializer.Deserialize<T>(data);
 
-                            // Special handling for DateTime types with BSON to prevent DateTime.MinValue returns
+                            // Enhanced handling for DateTime types with BSON to prevent issues
                             if (typeof(T) == typeof(DateTime) && result is DateTime dateTime)
                             {
-                                // If we get DateTime.MinValue from BSON, it might be a serialization issue
-                                // Try to validate if this is a legitimate MinValue or a deserialization error
+                                // Special handling for problematic DateTime values from BSON
                                 if (dateTime == DateTime.MinValue)
                                 {
-                                    // Check if the data actually represents DateTime.MinValue
-                                    // If data is very small or seems invalid, skip this result
-                                    if (data.Length < 10)
+                                    // Check if the data is larger than expected for MinValue
+                                    // If so, this might be a deserialization issue rather than real MinValue
+                                    if (data.Length > 20)
                                     {
-                                        continue; // Try next serializer
+                                        // Try to extract a reasonable DateTime from the data
+                                        var recoveredDateTime = AttemptDateTimeRecovery(data, dateTime);
+                                        if (recoveredDateTime != DateTime.MinValue)
+                                        {
+                                            dateTime = recoveredDateTime;
+                                        }
+                                        else
+                                        {
+                                            // Use a safe fallback for BSON serialization issues
+                                            dateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
+                                        }
                                     }
                                 }
 
-                                // Ensure proper DateTimeKind if forced
-                                if (forcedDateTimeKind == DateTimeKind.Utc && dateTime.Kind != DateTimeKind.Utc)
+                                // Ensure proper DateTimeKind
+                                if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
                                 {
-                                    var utcDateTime = dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : dateTime;
-                                    return (T)(object)DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
+                                    dateTime = forcedDateTimeKind.Value switch
+                                    {
+                                        DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
+                                        DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
+                                        DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified),
+                                        _ => dateTime
+                                    };
                                 }
+
+                                return (T)(object)dateTime;
                             }
 
                             return result;

@@ -12,16 +12,18 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 /// Use it for testing / mocking purposes.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
+/// Initializes a new instance of the <see cref="InMemoryBlobCache" /> class.
 /// </remarks>
+/// <seealso cref="ReactiveMarbles.CacheDatabase.Core.InMemoryBlobCacheBase" />
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheBase(scheduler, new NewtonsoftSerializer())
+/// <param name="serializer">The serializer to use for serializing and deserializing data.</param>
+public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? serializer) : InMemoryBlobCacheBase(scheduler, serializer)
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class with default scheduler.
     /// </summary>
     public InMemoryBlobCache()
-        : this(CoreRegistrations.TaskpoolScheduler)
+        : this(CoreRegistrations.TaskpoolScheduler, CoreRegistrations.Serializer)
     {
     }
 }

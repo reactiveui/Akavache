@@ -10,20 +10,16 @@ using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 namespace ReactiveMarbles.CacheDatabase.Tests;
 
 /// <summary>
-/// Tests for DateTime operations associated with the <see cref="NewtonsoftJson.InMemoryBlobCache"/> class with BSON serialization.
+/// Tests for DateTime operations associated with the <see cref="InMemoryBlobCache"/> class with BSON serialization.
 /// </summary>
 public class NewtonsoftBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="NewtonsoftBsonInMemoryBlobCacheDateTimeTests"/> class.
+    /// Ensure proper serializer setup for these tests.
     /// </summary>
-    public NewtonsoftBsonInMemoryBlobCacheDateTimeTests()
-    {
-        // Ensure proper serializer setup for these tests
-        NewtonsoftBsonRegistrations.EnsureRegistered();
-        CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
-    }
+    public NewtonsoftBsonInMemoryBlobCacheDateTimeTests() => CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
 
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
+    protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
 }

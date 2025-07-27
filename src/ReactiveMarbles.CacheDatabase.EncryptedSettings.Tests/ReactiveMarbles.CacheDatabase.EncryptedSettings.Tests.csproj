@@ -17,6 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.EncryptedSettings\ReactiveMarbles.CacheDatabase.EncryptedSettings.csproj" />
   </ItemGroup>
 

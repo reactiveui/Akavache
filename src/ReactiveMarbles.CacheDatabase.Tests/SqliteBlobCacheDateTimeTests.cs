@@ -22,7 +22,6 @@ public class SqliteBlobCacheDateTimeTests : DateTimeTestBase
     {
         // Use NewtonsoftBsonSerializer for maximum compatibility with existing Akavache data
         // This is the most appropriate serializer for SQLite tests to ensure Akavache compatibility
-        NewtonsoftBsonRegistrations.EnsureRegistered();
         CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
     }
 

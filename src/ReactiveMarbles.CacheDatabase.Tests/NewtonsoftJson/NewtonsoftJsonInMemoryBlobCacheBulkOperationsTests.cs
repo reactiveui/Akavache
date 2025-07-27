@@ -4,15 +4,21 @@
 // See the LICENSE file in the project root for full license information.
 
 using ReactiveMarbles.CacheDatabase.Core;
+using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 
 namespace ReactiveMarbles.CacheDatabase.Tests;
 
 /// <summary>
-/// Tests for bulk operations associated with the <see cref="NewtonsoftJson.InMemoryBlobCache"/> class.
+/// Tests for bulk operations associated with the <see cref="InMemoryBlobCache"/> class.
 /// </summary>
 public class NewtonsoftJsonInMemoryBlobCacheBulkOperationsTests : BulkOperationsTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NewtonsoftJsonInMemoryBlobCacheBulkOperationsTests"/> class.
+    /// </summary>
+    public NewtonsoftJsonInMemoryBlobCacheBulkOperationsTests() =>
+        CoreRegistrations.Serializer = new NewtonsoftSerializer();
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
+    protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
 }

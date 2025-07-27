@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj" />
   </ItemGroup>
 

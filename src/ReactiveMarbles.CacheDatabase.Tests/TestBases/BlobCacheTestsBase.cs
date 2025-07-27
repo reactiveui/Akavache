@@ -907,93 +907,32 @@ public abstract class BlobCacheTestsBase : IDisposable
         // Clear any existing in-flight requests to ensure clean test state
         RequestCache.Clear();
 
-        var serializer = (ISerializer?)Activator.CreateInstance(serializerType) ?? throw new InvalidOperationException($"Failed to create serializer of type {serializerType.Name}");
-
-        // Special handling for BSON serializers - ensure they're properly registered first
         if (serializerType == typeof(NewtonsoftBsonSerializer))
         {
-            try
-            {
-                NewtonsoftBsonRegistrations.EnsureRegistered();
-
-                // Create a fresh instance after registration
-                serializer = new NewtonsoftBsonSerializer();
-            }
-            catch
-            {
-                // If BSON registration fails, fall back to regular Newtonsoft
-                serializer = new NewtonsoftSerializer();
-            }
+            // Register the Newtonsoft BSON serializer specifically
+            CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
         }
         else if (serializerType == typeof(SystemJsonBsonSerializer))
         {
-            try
-            {
-                SystemJsonBsonRegistrations.EnsureRegistered();
-
-                // Create a fresh instance after registration
-                serializer = new SystemJsonBsonSerializer();
-            }
-            catch
-            {
-                // If BSON registration fails, fall back to regular SystemJson
-                serializer = new SystemJsonSerializer();
-            }
+            // Register the System.Text.Json BSON serializer specifically
+            CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
         }
-
-        // Always set the serializer directly for consistent behavior
-        CoreRegistrations.Serializer = serializer;
-
-        // Additional verification - retry once if the type doesn't match
-        var currentSerializer = CoreRegistrations.Serializer;
-        if (currentSerializer == null || currentSerializer.GetType() != serializerType)
+        else if (serializerType == typeof(NewtonsoftSerializer))
         {
-            // Try one more time with a direct assignment
-            try
-            {
-                var retrySerializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-                CoreRegistrations.Serializer = retrySerializer;
-                currentSerializer = CoreRegistrations.Serializer;
-            }
-            catch
-            {
-                // If retry fails, we'll check again below
-            }
+            // Register the Newtonsoft JSON serializer
+            CoreRegistrations.Serializer = new NewtonsoftSerializer();
         }
-
-        // Final verification with more flexible checking for BSON serializers
-        currentSerializer = CoreRegistrations.Serializer;
-        if (currentSerializer == null)
+        else if (serializerType == typeof(SystemJsonSerializer))
         {
-            throw new InvalidOperationException(
-                "Failed to set up serializer. No serializer was configured.");
+            // Register the System.Text.Json serializer
+            CoreRegistrations.Serializer = new SystemJsonSerializer();
         }
-
-        // For BSON serializers, be more flexible about type matching since registration can affect the type
-        var currentTypeName = currentSerializer.GetType().Name;
-        var expectedTypeName = serializerType.Name;
-
-        var isCorrectType = currentTypeName == expectedTypeName;
-
-        // Allow some flexibility for BSON serializers due to registration complexities
-        if (!isCorrectType && (expectedTypeName.Contains("Bson") || currentTypeName.Contains("Bson")))
+        else
         {
-            // If both are BSON serializers from the same family, consider it acceptable
-            if ((expectedTypeName.Contains("Newtonsoft") && currentTypeName.Contains("Newtonsoft")) ||
-                (expectedTypeName.Contains("SystemJson") && currentTypeName.Contains("SystemJson")))
-            {
-                isCorrectType = true;
-            }
+            throw new InvalidOperationException($"Unsupported serializer type: {serializerType.Name}");
         }
 
-        if (!isCorrectType)
-        {
-            throw new InvalidOperationException(
-                $"Failed to properly set up serializer. Expected: {expectedTypeName}, " +
-                $"Actual: {currentTypeName}");
-        }
-
-        return currentSerializer;
+        return CoreRegistrations.Serializer;
     }
 
     /// <summary>

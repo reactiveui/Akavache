@@ -639,7 +639,7 @@ public static class SerializerExtensions
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
             if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
             {
-                return UniversalSerializerShim.UniversalSerialize(value, serializer, forcedDateTimeKind);
+                return UniversalSerializer.Serialize(value, serializer, forcedDateTimeKind);
             }
 
             // For regular serialization, apply forced DateTime kind if specified
@@ -685,7 +685,7 @@ public static class SerializerExtensions
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
             if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
             {
-                return UniversalSerializerShim.UniversalDeserialize<T>(data, serializer, forcedDateTimeKind);
+                return UniversalSerializer.Deserialize<T>(data, serializer, forcedDateTimeKind);
             }
 
             // For regular deserialization, apply forced DateTime kind if specified
@@ -704,7 +704,7 @@ public static class SerializerExtensions
             {
                 try
                 {
-                    return UniversalSerializerShim.UniversalDeserialize<T>(data, serializer, forcedDateTimeKind);
+                    return UniversalSerializer.Deserialize<T>(data, serializer, forcedDateTimeKind);
                 }
                 catch
                 {

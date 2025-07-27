@@ -16,14 +16,11 @@ public class SystemTextJsonBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="SystemTextJsonBsonInMemoryBlobCacheDateTimeTests"/> class.
+    /// Ensure proper serializer setup for these tests.
     /// </summary>
-    public SystemTextJsonBsonInMemoryBlobCacheDateTimeTests()
-    {
-        // Ensure proper serializer setup for these tests
-        SystemJsonBsonRegistrations.EnsureRegistered();
+    public SystemTextJsonBsonInMemoryBlobCacheDateTimeTests() =>
         CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
-    }
 
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path) => new SystemTextJson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
+    protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
 }

@@ -3,22 +3,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using ReactiveMarbles.CacheDatabase.Core;
 using ReactiveMarbles.CacheDatabase.Settings.Core;
 
 #if ENCRYPTED
-
 using ReactiveMarbles.CacheDatabase.EncryptedSqlite3;
-
 #else
 using ReactiveMarbles.CacheDatabase.Sqlite3;
 #endif
 
-using System.Diagnostics;
-using System.Reflection;
-
 #if ENCRYPTED
-
 namespace ReactiveMarbles.CacheDatabase.EncryptedSettings;
 #else
 namespace ReactiveMarbles.CacheDatabase.Settings;
@@ -31,8 +28,8 @@ public static class AppInfo
 {
     static AppInfo()
     {
-        SettingsStores = new();
-        BlobCaches = new();
+        SettingsStores = [];
+        BlobCaches = [];
         ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
         ApplicationRootPath = Path.Combine(Path.GetDirectoryName(ExecutingAssembly.Location)!, "..");
         SettingsCachePath = Path.Combine(ApplicationRootPath, "SettingsCache");
@@ -80,6 +77,27 @@ public static class AppInfo
     /// </value>
     public static Version? Version { get; }
 
+    /// <summary>
+    /// Gets or sets the serializer.
+    /// </summary>
+    /// <value>
+    /// The serializer.
+    /// </value>
+    public static ISerializer? Serializer
+    {
+        get => CoreRegistrations.Serializer;
+        set
+        {
+            // Check if the new type is the same as the existing one, if so, do nothing.
+            if (CoreRegistrations.Serializer?.GetType() == value?.GetType())
+            {
+                return;
+            }
+
+            CoreRegistrations.Serializer = value;
+        }
+    }
+
     internal static Dictionary<string, IBlobCache?> BlobCaches { get; }
 
     internal static Dictionary<string, ISettingsStorage?> SettingsStores { get; }
@@ -98,6 +116,10 @@ public static class AppInfo
     /// <returns>
     /// A Task.
     /// </returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("DeleteSettingsStore requires types to be preserved for settings store management.")]
+    [RequiresDynamicCode("DeleteSettingsStore requires types to be preserved for settings store management.")]
+#endif
     public static async Task DeleteSettingsStore<T>(string? overrideDatabaseName = null)
     {
         await DisposeSettingsStore<T>().ConfigureAwait(false);
@@ -112,8 +134,19 @@ public static class AppInfo
     /// <returns>
     /// A Settings Store.
     /// </returns>
-    public static ISettingsStorage? GetSettingsStore<T>(string? overrideDatabaseName = null) =>
-        SettingsStores[overrideDatabaseName ?? typeof(T).Name];
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("GetSettingsStore requires types to be preserved for settings store retrieval.")]
+    [RequiresDynamicCode("GetSettingsStore requires types to be preserved for settings store retrieval.")]
+#endif
+    public static ISettingsStorage? GetSettingsStore<T>(string? overrideDatabaseName = null)
+    {
+        if (SettingsStores.TryGetValue(overrideDatabaseName ?? typeof(T).Name, out var settings))
+        {
+            return settings;
+        }
+
+        return null;
+    }
 
     /// <summary>
     /// Disposes the settings store.
@@ -123,10 +156,27 @@ public static class AppInfo
     /// <returns>
     /// A Task.
     /// </returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("DisposeSettingsStore requires types to be preserved for settings store disposal.")]
+    [RequiresDynamicCode("DisposeSettingsStore requires types to be preserved for settings store disposal.")]
+#endif
     public static async Task DisposeSettingsStore<T>(string? overrideDatabaseName = null)
     {
-        await GetSettingsStore<T>(overrideDatabaseName)!.DisposeAsync().ConfigureAwait(false);
-        await BlobCaches[overrideDatabaseName ?? typeof(T).Name]!.DisposeAsync().ConfigureAwait(false);
+        var settings = GetSettingsStore<T>(overrideDatabaseName);
+        if (settings != null)
+        {
+            await settings.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (BlobCaches.TryGetValue(overrideDatabaseName ?? typeof(T).Name, out var cache))
+        {
+            if (cache == null)
+            {
+                return;
+            }
+
+            await cache.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
 #if ENCRYPTED
@@ -141,6 +191,10 @@ public static class AppInfo
     /// <returns>
     /// The Settings store.
     /// </returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("SetupSettingsStore requires types to be preserved for settings store creation and initialization.")]
+    [RequiresDynamicCode("SetupSettingsStore requires types to be preserved for settings store creation and initialization.")]
+#endif
     public static async Task<T?> SetupSettingsStore<T>(string password, bool initialise = true, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
@@ -168,6 +222,10 @@ public static class AppInfo
     /// <returns>
     /// The Settings store.
     /// </returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("SetupSettingsStore requires types to be preserved for settings store creation and initialization.")]
+    [RequiresDynamicCode("SetupSettingsStore requires types to be preserved for settings store creation and initialization.")]
+#endif
     public static async Task<T?> SetupSettingsStore<T>(bool initialise = true, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {

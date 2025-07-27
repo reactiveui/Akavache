@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ReactiveMarbles.CacheDatabase.Settings.Core;
 
@@ -22,5 +23,9 @@ public interface ISettingsStorage : INotifyPropertyChanged, IDisposable, IAsyncD
     /// load all settings on startup at once into the internal cache and not one-by-one at each request.
     /// </summary>
     /// <returns>A Task.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
+    [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
+#endif
     Task InitializeAsync();
 }
