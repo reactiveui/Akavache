@@ -9,29 +9,25 @@ using System.Text.Json.Serialization;
 namespace ReactiveMarbles.CacheDatabase.SystemTextJson;
 
 /// <summary>
-/// Custom nullable DateTime converter for System.Text.Json that respects ForcedDateTimeKind.
+/// Custom nullable DateTimeOffset converter for System.Text.Json.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="SystemJsonNullableDateTimeConverter"/> class.
-/// </remarks>
-/// <param name="forcedKind">The forced DateTime kind.</param>
-internal class SystemJsonNullableDateTimeConverter(DateTimeKind? forcedKind = null) : JsonConverter<DateTime?>
+internal class SystemJsonNullableDateTimeOffsetConverter : JsonConverter<DateTimeOffset?>
 {
-    private readonly SystemJsonDateTimeConverter _innerConverter = new(forcedKind);
+    private readonly SystemJsonDateTimeOffsetConverter _innerConverter = new();
 
     /// <inheritdoc/>
-    public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override DateTimeOffset? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
             return null;
         }
 
-        return _innerConverter.Read(ref reader, typeof(DateTime), options);
+        return _innerConverter.Read(ref reader, typeof(DateTimeOffset), options);
     }
 
     /// <inheritdoc/>
-    public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, DateTimeOffset? value, JsonSerializerOptions options)
     {
         if (value.HasValue)
         {

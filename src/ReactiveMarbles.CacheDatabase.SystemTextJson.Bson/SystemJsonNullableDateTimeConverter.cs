@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -20,7 +19,7 @@ internal class SystemJsonNullableDateTimeConverter : JsonConverter<DateTime?>
     /// Initializes a new instance of the <see cref="SystemJsonNullableDateTimeConverter"/> class.
     /// </summary>
     /// <param name="forcedKind">The forced DateTime kind.</param>
-    public SystemJsonNullableDateTimeConverter(DateTimeKind forcedKind)
+    public SystemJsonNullableDateTimeConverter(DateTimeKind? forcedKind = null)
     {
         _innerConverter = new SystemJsonDateTimeConverter(forcedKind);
     }

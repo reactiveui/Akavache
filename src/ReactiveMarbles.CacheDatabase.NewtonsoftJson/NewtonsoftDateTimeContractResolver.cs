@@ -5,23 +5,24 @@
 
 using Newtonsoft.Json.Serialization;
 
-namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
+namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 
 /// <summary>
 /// Resolver which will handle DateTime and DateTimeOffset with our own internal resolver.
 /// It will also be able to use, if set, a external provider that a user has set.
+/// This provides consistent DateTime handling across all serializers.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
+/// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
 /// </remarks>
 /// <param name="contractResolver">A inherited contract resolver.</param>
 /// <param name="forceDateTimeKindOverride">If we should override the <see cref="DateTimeKind"/>.</param>
-internal class JsonDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride) : DefaultContractResolver
+internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKindOverride) : DefaultContractResolver
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="JsonDateTimeContractResolver"/> class.
+    /// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
     /// </summary>
-    public JsonDateTimeContractResolver()
+    public NewtonsoftDateTimeContractResolver()
         : this(null, null)
     {
     }
@@ -44,11 +45,11 @@ internal class JsonDateTimeContractResolver(IContractResolver? contractResolver,
         if (type == typeof(DateTime) || type == typeof(DateTime?))
         {
             // Pass the ForceDateTimeKindOverride to the converter so it knows what Kind to use
-            contract.Converter = new JsonDateTimeTickConverter(ForceDateTimeKindOverride);
+            contract.Converter = new NewtonsoftDateTimeTickConverter(ForceDateTimeKindOverride);
         }
         else if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
         {
-            contract.Converter = JsonDateTimeOffsetTickConverter.Default;
+            contract.Converter = NewtonsoftDateTimeOffsetTickConverter.Default;
         }
 
         return contract;
