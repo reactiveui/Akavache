@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using ReactiveMarbles.CacheDatabase.Core;
 
 namespace ReactiveMarbles.CacheDatabase.SystemTextJson;
@@ -16,11 +15,7 @@ namespace ReactiveMarbles.CacheDatabase.SystemTextJson;
 /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-#if NET8_0_OR_GREATER
-[RequiresUnreferencedCode("Registrations for ReactiveMarbles.CacheDatabase.SystemTextJson")]
-[RequiresDynamicCode("Registrations for ReactiveMarbles.CacheDatabase.SystemTextJson")]
-#endif
-public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheBase(scheduler, CreateAndRegisterSystemTextJsonSerializer())
+public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheBase(scheduler, new SystemJsonSerializer())
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class with default scheduler.
@@ -28,18 +23,5 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheB
     public InMemoryBlobCache()
         : this(CoreRegistrations.TaskpoolScheduler)
     {
-    }
-
-    /// <summary>
-    /// Creates a System.Text.Json serializer for this cache instance.
-    /// </summary>
-    /// <returns>A new System.Text.Json serializer instance.</returns>
-    private static ISerializer CreateAndRegisterSystemTextJsonSerializer()
-    {
-        var serializer = new SystemJsonSerializer();
-
-        // Don't override the global serializer to avoid cross-contamination between different cache types
-        // This cache uses its own System.Text.Json serializer directly through the Serializer property
-        return serializer;
     }
 }

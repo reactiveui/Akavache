@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using ReactiveMarbles.CacheDatabase.Core;
 
 namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
@@ -16,11 +15,7 @@ namespace ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
-#if NET8_0_OR_GREATER
-[RequiresUnreferencedCode("Registrations for ReactiveMarbles.CacheDatabase.NewtonsoftJson")]
-[RequiresDynamicCode("Registrations for ReactiveMarbles.CacheDatabase.NewtonsoftJson")]
-#endif
-public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheBase(scheduler, CreateAndRegisterJsonSerializer())
+public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheBase(scheduler, new NewtonsoftSerializer())
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class with default scheduler.
@@ -28,18 +23,5 @@ public sealed class InMemoryBlobCache(IScheduler scheduler) : InMemoryBlobCacheB
     public InMemoryBlobCache()
         : this(CoreRegistrations.TaskpoolScheduler)
     {
-    }
-
-    /// <summary>
-    /// Creates a Newtonsoft.Json serializer for this cache instance.
-    /// </summary>
-    /// <returns>A new Newtonsoft.Json serializer instance.</returns>
-    private static ISerializer CreateAndRegisterJsonSerializer()
-    {
-        var serializer = new NewtonsoftSerializer();
-
-        // Don't override the global serializer to avoid cross-contamination between different cache types
-        // This cache uses its own JSON serializer directly through the Serializer property
-        return serializer;
     }
 }
