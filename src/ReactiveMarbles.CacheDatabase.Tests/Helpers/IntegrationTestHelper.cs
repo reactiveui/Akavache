@@ -81,7 +81,7 @@ public static class IntegrationTestHelper
                 continue;
             }
 
-            var separatorIndex = line.IndexOf(":", StringComparison.InvariantCulture);
+            var separatorIndex = line.IndexOf(':');
             var key = line.Substring(0, separatorIndex);
             var val = line.Substring(separatorIndex + 2).TrimEnd();
 

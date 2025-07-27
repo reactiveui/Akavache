@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using ReactiveMarbles.CacheDatabase.Core;
+using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 using ReactiveMarbles.CacheDatabase.Sqlite3;
 using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 
@@ -14,6 +15,17 @@ namespace ReactiveMarbles.CacheDatabase.Tests;
 /// </summary>
 public class SqliteBlobCacheDateTimeTests : DateTimeTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqliteBlobCacheDateTimeTests"/> class.
+    /// </summary>
+    public SqliteBlobCacheDateTimeTests()
+    {
+        // Use NewtonsoftBsonSerializer for maximum compatibility with existing Akavache data
+        // This is the most appropriate serializer for SQLite tests to ensure Akavache compatibility
+        NewtonsoftBsonRegistrations.EnsureRegistered();
+        CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
+    }
+
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path) => new SqliteBlobCache(Path.Combine(path, "test.db"));
 }

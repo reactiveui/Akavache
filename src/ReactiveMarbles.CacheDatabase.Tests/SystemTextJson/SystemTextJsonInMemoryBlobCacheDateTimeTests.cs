@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using ReactiveMarbles.CacheDatabase.Core;
+using ReactiveMarbles.CacheDatabase.SystemTextJson;
 using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 
 namespace ReactiveMarbles.CacheDatabase.Tests;
@@ -13,6 +14,15 @@ namespace ReactiveMarbles.CacheDatabase.Tests;
 /// </summary>
 public class SystemTextJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SystemTextJsonInMemoryBlobCacheDateTimeTests"/> class.
+    /// </summary>
+    public SystemTextJsonInMemoryBlobCacheDateTimeTests()
+    {
+        // Ensure proper serializer setup for these tests
+        CoreRegistrations.Serializer = new SystemJsonSerializer();
+    }
+
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path) => new SystemTextJson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
 }

@@ -1,9 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <PackageId>ReactiveMarbles.CacheDatabase.NewtonsoftJson</PackageId>
+    <Description>Newtonsoft.Json serialization support for ReactiveMarbles.CacheDatabase with optional BSON compatibility</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.3" />
   </ItemGroup>
 </Project>

@@ -16,8 +16,26 @@ public class SqliteBlobCacheTests : BlobCacheTestsBase
     /// <inheritdoc/>
     protected override IBlobCache CreateBlobCache(string path)
     {
-        // Use a unique database name for each serializer to avoid cross-contamination
+        // Create separate database files for each serializer AND format type to ensure compatibility
         var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
-        return new SqliteBlobCache(Path.Combine(path, $"test-{serializerName}.db"));
+
+        // Further separate JSON and BSON formats to prevent cross-contamination
+        var formatType = serializerName.Contains("Bson") ? "bson" : "json";
+        var fileName = $"test-{serializerName}-{formatType}.db";
+
+        return new SqliteBlobCache(Path.Combine(path, fileName));
+    }
+
+    /// <summary>
+    /// Creates a blob cache for a specific path, ensuring the path is used directly.
+    /// </summary>
+    /// <param name="path">The path for the cache.</param>
+    /// <returns>The cache instance.</returns>
+    protected override IBlobCache CreateBlobCacheForPath(string path)
+    {
+        // For round-trip tests, use a consistent database file name to ensure
+        // both cache instances (write and read) use the same database file
+        var fileName = "roundtrip-test.db";
+        return new SqliteBlobCache(Path.Combine(path, fileName));
     }
 }

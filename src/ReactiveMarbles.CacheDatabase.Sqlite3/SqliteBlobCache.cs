@@ -132,8 +132,21 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new InvalidOperationException("The Connection is null and therefore no database operations can happen."));
         }
 
-        // no-op on sql.
-        return Observable.Return(Unit.Default);
+        // For SQLite, perform a WAL checkpoint to ensure data is persisted to the main database file
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            try
+            {
+                await Connection.ExecuteAsync("PRAGMA wal_checkpoint(PASSIVE)").ConfigureAwait(false);
+            }
+            catch
+            {
+                // If WAL checkpoint fails, the data is still safe in the transaction log
+                // Continue without error as this is not critical for data integrity
+            }
+
+            return Unit.Default;
+        });
     }
 
     /// <inheritdoc/>
@@ -328,7 +341,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && x.TypeName == type.Name).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x.Id!);
@@ -464,7 +477,8 @@ public class SqliteBlobCache : IBlobCache
 
         var expiry = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
 
-        return _initialized.SelectMany(async (_, _, _) =>
+        return _initialized.SelectMany(
+            async (_, _, _) =>
             {
                 var entries = keyValuePairs.Select(x => new CacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry });
 
@@ -520,6 +534,16 @@ public class SqliteBlobCache : IBlobCache
                         sql.InsertOrReplace(entry);
                     }
                 }).ConfigureAwait(false);
+
+                // Ensure data is immediately persisted to disk for multi-instance scenarios
+                try
+                {
+                    await Connection.ExecuteAsync("PRAGMA wal_checkpoint(PASSIVE)").ConfigureAwait(false);
+                }
+                catch
+                {
+                    // If WAL checkpoint fails, continue - the data is still in the transaction log
+                }
 
                 return Unit.Default;
             })
@@ -744,8 +768,30 @@ public class SqliteBlobCache : IBlobCache
     /// Disposes of the async resources.
     /// </summary>
     /// <returns>The value task to monitor.</returns>
-    protected virtual async ValueTask DisposeAsyncCore() =>
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        // Ensure all pending operations are completed and data is persisted
+        try
+        {
+            // Force a WAL checkpoint to ensure all data is written to the main database file
+            // This is crucial for multi-instance scenarios where one instance writes and another reads
+            await Connection.ExecuteAsync("PRAGMA wal_checkpoint(FULL)").ConfigureAwait(false);
+        }
+        catch
+        {
+            // If WAL checkpoint fails, try a simple VACUUM to ensure data persistence
+            try
+            {
+                await Connection.ExecuteAsync("VACUUM").ConfigureAwait(false);
+            }
+            catch
+            {
+                // If both fail, we'll rely on the normal connection close
+            }
+        }
+
         await Connection.CloseAsync().ConfigureAwait(false);
+    }
 
     /// <summary>
     /// Disposes the object.

@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using ReactiveMarbles.CacheDatabase.Core;
+using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
 using ReactiveMarbles.CacheDatabase.Tests.TestBases;
 
 namespace ReactiveMarbles.CacheDatabase.Tests;
@@ -13,6 +14,15 @@ namespace ReactiveMarbles.CacheDatabase.Tests;
 /// </summary>
 public class NewtonsoftJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NewtonsoftJsonInMemoryBlobCacheDateTimeTests"/> class.
+    /// </summary>
+    public NewtonsoftJsonInMemoryBlobCacheDateTimeTests()
+    {
+        // Ensure proper serializer setup for these tests
+        CoreRegistrations.Serializer = new NewtonsoftSerializer();
+    }
+
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path) => new NewtonsoftJson.InMemoryBlobCache(CoreRegistrations.TaskpoolScheduler);
 }

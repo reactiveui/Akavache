@@ -12,12 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.SystemTextJson.Bson\ReactiveMarbles.CacheDatabase.SystemTextJson.Bson.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.Core\ReactiveMarbles.CacheDatabase.Core.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.EncryptedSqlite3\ReactiveMarbles.CacheDatabase.EncryptedSqlite3.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj" />
-    <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj" />
   </ItemGroup>
 

@@ -156,8 +156,6 @@ public static class SerializerExtensions
             }
             catch (Exception ex)
             {
-                // If deserialization fails, this could indicate corrupt data
-                // We should throw a meaningful exception rather than silently returning default
                 throw new InvalidOperationException($"Failed to deserialize object of type {typeof(T).Name} for key '{key}'.", ex);
             }
         });
@@ -620,110 +618,108 @@ public static class SerializerExtensions
             .Select(_ => Unit.Default);
     }
 
-    internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
-
     /// <summary>
-    /// Serializes an object with the specified DateTimeKind context.
+    /// Attempts to serialize an object with context and enhanced compatibility.
     /// </summary>
     /// <typeparam name="T">The type of object to serialize.</typeparam>
     /// <param name="value">The value to serialize.</param>
-    /// <param name="forcedDateTimeKind">The DateTimeKind to use for serialization.</param>
-    /// <returns>The serialized bytes.</returns>
+    /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
+    /// <returns>The serialized data as byte array.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when serialization fails.</exception>
 #if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Using SerializeWithContext requires types to be preserved for serialization.")]
-    [RequiresDynamicCode("Using SerializeWithContext requires types to be preserved for serialization.")]
+    [RequiresUnreferencedCode("Serialization requires types to be preserved.")]
+    [RequiresDynamicCode("Serialization requires types to be preserved.")]
 #endif
-    private static byte[] SerializeWithContext<T>(T value, DateTimeKind? forcedDateTimeKind)
+    public static byte[] SerializeWithContext<T>(T value, DateTimeKind? forcedDateTimeKind = null)
     {
         var serializer = Serializer;
-
-        // If the cache has a specific DateTimeKind setting that differs from the global serializer,
-        // we need to create a context-specific serializer
-        if (forcedDateTimeKind.HasValue && serializer.ForcedDateTimeKind != forcedDateTimeKind)
-        {
-            // Create a clone of the serializer with the specific DateTimeKind setting
-            var contextSerializer = CreateSerializerWithDateTimeKind(serializer, forcedDateTimeKind);
-            return contextSerializer.Serialize(value);
-        }
-
-        return serializer.Serialize(value);
-    }
-
-    /// <summary>
-    /// Deserializes an object with the specified DateTimeKind context.
-    /// </summary>
-    /// <typeparam name="T">The type of object to deserialize.</typeparam>
-    /// <param name="bytes">The bytes to deserialize.</param>
-    /// <param name="forcedDateTimeKind">The DateTimeKind to use for deserialization.</param>
-    /// <returns>The deserialized object.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Using DeserializeWithContext requires types to be preserved for Deserialization.")]
-    [RequiresDynamicCode("Using DeserializeWithContext requires types to be preserved for Deserialization.")]
-#endif
-    private static T? DeserializeWithContext<T>(byte[] bytes, DateTimeKind? forcedDateTimeKind)
-    {
-        var serializer = Serializer;
-
-        // If the cache has a specific DateTimeKind setting that differs from the global serializer,
-        // we need to create a context-specific serializer
-        if (forcedDateTimeKind.HasValue && serializer.ForcedDateTimeKind != forcedDateTimeKind)
-        {
-            // Create a clone of the serializer with the specific DateTimeKind setting
-            var contextSerializer = CreateSerializerWithDateTimeKind(serializer, forcedDateTimeKind);
-            return contextSerializer.Deserialize<T>(bytes);
-        }
-
-        return serializer.Deserialize<T>(bytes);
-    }
-
-    /// <summary>
-    /// Creates a serializer instance with the specified DateTimeKind setting.
-    /// </summary>
-    /// <param name="baseSerializer">The base serializer to clone.</param>
-    /// <param name="forcedDateTimeKind">The DateTimeKind to set.</param>
-    /// <returns>A serializer with the specified DateTimeKind setting.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Using CreateSerializerWithDateTimeKind requires types to be preserved for serialization.")]
-    [RequiresDynamicCode("Using CreateSerializerWithDateTimeKind requires types to be preserved for serialization.")]
-#endif
-    private static ISerializer CreateSerializerWithDateTimeKind(ISerializer baseSerializer, DateTimeKind? forcedDateTimeKind)
-    {
-        // For thread safety, create a new instance rather than modifying the global one
-        var serializerType = baseSerializer.GetType();
 
         try
         {
-            var newSerializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-
-            // Copy any Options property if it exists (using reflection for flexibility)
-            var optionsProperty = serializerType.GetProperty("Options");
-            if (optionsProperty?.CanRead == true && optionsProperty.CanWrite)
+            // For DateTime objects, use the Universal Serializer Shim for better compatibility
+            if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
             {
-                var options = optionsProperty.GetValue(baseSerializer);
-                optionsProperty.SetValue(newSerializer, options);
+                return UniversalSerializerShim.UniversalSerialize(value, serializer, forcedDateTimeKind);
             }
 
-            // Set the specific DateTimeKind
-            newSerializer.ForcedDateTimeKind = forcedDateTimeKind;
+            // For regular serialization, apply forced DateTime kind if specified
+            if (forcedDateTimeKind.HasValue)
+            {
+                serializer.ForcedDateTimeKind = forcedDateTimeKind;
+            }
 
-            return newSerializer;
+            return serializer.Serialize(value);
         }
-        catch
+        catch (Exception ex)
         {
-            // If we can't create a new instance, fall back to temporarily modifying the global one
-            // This is not ideal but ensures compatibility
-            var originalKind = baseSerializer.ForcedDateTimeKind;
-            try
-            {
-                baseSerializer.ForcedDateTimeKind = forcedDateTimeKind;
-                return baseSerializer;
-            }
-            catch
-            {
-                // Restore original state if anything goes wrong
-                baseSerializer.ForcedDateTimeKind = originalKind;
-                throw;
-            }
+            throw new InvalidOperationException(
+                $"Failed to serialize object of type {typeof(T).Name}. " +
+                "Please ensure a CacheDatabase serializer package is referenced and properly initialized. " +
+                $"Error: {ex.Message}",
+                ex);
         }
     }
+
+    /// <summary>
+    /// Attempts to deserialize data with context and enhanced compatibility.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="data">The data to deserialize.</param>
+    /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
+    /// <returns>The deserialized object.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Deserialization requires types to be preserved.")]
+    [RequiresDynamicCode("Deserialization requires types to be preserved.")]
+#endif
+    public static T? DeserializeWithContext<T>(byte[] data, DateTimeKind? forcedDateTimeKind = null)
+    {
+        if (data == null || data.Length == 0)
+        {
+            return default;
+        }
+
+        var serializer = Serializer;
+
+        try
+        {
+            // For DateTime objects, use the Universal Serializer Shim for better compatibility
+            if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
+            {
+                return UniversalSerializerShim.UniversalDeserialize<T>(data, serializer, forcedDateTimeKind);
+            }
+
+            // For regular deserialization, apply forced DateTime kind if specified
+            if (forcedDateTimeKind.HasValue)
+            {
+                serializer.ForcedDateTimeKind = forcedDateTimeKind;
+            }
+
+            return serializer.Deserialize<T>(data);
+        }
+        catch (Exception ex)
+        {
+            // For critical DateTime failures, try the Universal Serializer Shim as a fallback
+            if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?) ||
+                typeof(T) == typeof(DateTimeOffset) || typeof(T) == typeof(DateTimeOffset?))
+            {
+                try
+                {
+                    return UniversalSerializerShim.UniversalDeserialize<T>(data, serializer, forcedDateTimeKind);
+                }
+                catch
+                {
+                    // If even the universal shim fails, throw the original exception
+                }
+            }
+
+            throw new InvalidOperationException(
+                $"Failed to deserialize data to type {typeof(T).Name}. " +
+                $"Data length: {data.Length} bytes. " +
+                "Please ensure the data was serialized with a compatible serializer. " +
+                $"Error: {ex.Message}",
+                ex);
+        }
+    }
+
+    internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
 }
