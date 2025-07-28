@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -33,6 +35,10 @@ public static class RelativeTimeExtensions
     /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
     /// <typeparam name="T">The type of item to insert.</typeparam>
     /// <returns>A observable which will signal when the item is added.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
+    [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
+#endif
     public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, TimeSpan expiration) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
@@ -77,6 +83,10 @@ public static class RelativeTimeExtensions
     /// <param name="host">The host to store against.</param>
     /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
     /// <returns>A observable which will signal when the item is added.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
+    [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
+#endif
     public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host, TimeSpan expiration) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))

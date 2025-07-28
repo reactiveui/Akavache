@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -21,6 +23,10 @@ public static class LoginExtensions
     /// <param name="host">The host to associate with the data.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A observable which signals when the insert is completed.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
+    [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
+#endif
     public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null) =>
         blobCache.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
 
@@ -32,6 +38,10 @@ public static class LoginExtensions
     /// <param name="blobCache">The blob cache where to get the data.</param>
     /// <param name="host">The host associated with the data.</param>
     /// <returns>A Future result representing the user/password Tuple.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
+    [RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
+#endif
     public static IObservable<LoginInfo> GetLogin(this ISecureBlobCache blobCache, string host = "default") =>
         blobCache.GetObject<(string, string)>("login:" + host).Select(x => new LoginInfo(x));
 

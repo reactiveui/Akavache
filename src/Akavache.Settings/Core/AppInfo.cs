@@ -26,14 +26,31 @@ namespace Akavache.Settings;
 /// </summary>
 public static class AppInfo
 {
+    [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
     static AppInfo()
     {
         SettingsStores = [];
         BlobCaches = [];
+
+        var fileLocation = string.Empty;
+        try
+        {
+            fileLocation = ExecutingAssembly.Location;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+
+        if (string.IsNullOrWhiteSpace(fileLocation))
+        {
+            fileLocation = AppContext.BaseDirectory;
+        }
+
         ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
-        ApplicationRootPath = Path.Combine(Path.GetDirectoryName(ExecutingAssembly.Location)!, "..");
+        ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
         SettingsCachePath = Path.Combine(ApplicationRootPath, "SettingsCache");
-        var fileVersionInfo = FileVersionInfo.GetVersionInfo(ExecutingAssembly.Location);
+        var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
         Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
     }
 
