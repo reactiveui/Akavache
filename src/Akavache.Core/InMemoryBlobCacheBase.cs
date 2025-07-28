@@ -200,7 +200,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 }
 
                 // Check if the entry has expired
-                if (entry.ExpiresAt.HasValue && entry.ExpiresAt.Value <= Scheduler.Now)
+                if (entry.ExpiresAt <= Scheduler.Now)
                 {
                     _cache.Remove(key);
 
@@ -264,7 +264,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     if (_cache.TryGetValue(key, out var entry))
                     {
-                        if (entry.ExpiresAt.HasValue && entry.ExpiresAt.Value <= now)
+                        if (entry.ExpiresAt <= now)
                         {
                             expiredKeys.Add(key);
                         }
@@ -307,7 +307,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
                 foreach (var kvp in _cache)
                 {
-                    if (kvp.Value.ExpiresAt.HasValue && kvp.Value.ExpiresAt.Value <= now)
+                    if (kvp.Value.ExpiresAt <= now)
                     {
                         expiredKeys.Add(kvp.Key);
                     }
@@ -355,7 +355,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     if (_cache.TryGetValue(key, out var entry))
                     {
-                        if (entry.ExpiresAt.HasValue && entry.ExpiresAt.Value <= now)
+                        if (entry.ExpiresAt <= now)
                         {
                             expiredKeys.Add(key);
                         }
@@ -561,7 +561,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
                 foreach (var kvp in _cache)
                 {
-                    if (kvp.Value.ExpiresAt.HasValue && kvp.Value.ExpiresAt.Value <= now)
+                    if (kvp.Value.ExpiresAt <= now)
                     {
                         expiredKeys.Add(kvp.Key);
                     }

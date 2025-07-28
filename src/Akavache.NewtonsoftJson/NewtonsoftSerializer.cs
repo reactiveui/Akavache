@@ -87,7 +87,7 @@ public class NewtonsoftSerializer : ISerializer
     {
         if (bytes == null || bytes.Length == 0)
         {
-            return default(T);
+            return default;
         }
 
         // Automatic format detection - try the expected format first
@@ -214,7 +214,7 @@ public class NewtonsoftSerializer : ISerializer
         catch
         {
             // Fall back if BSON handling fails
-            return default(T);
+            return default;
         }
     }
 
@@ -256,7 +256,7 @@ public class NewtonsoftSerializer : ISerializer
             if (string.IsNullOrWhiteSpace(jsonString) ||
                 (!jsonString.TrimStart().StartsWith("{") && !jsonString.TrimStart().StartsWith("[")))
             {
-                return default(T);
+                return default;
             }
 
             var settings = GetEffectiveSettings();
@@ -289,7 +289,7 @@ public class NewtonsoftSerializer : ISerializer
         }
         catch
         {
-            return default(T);
+            return default;
         }
     }
 

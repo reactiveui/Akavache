@@ -496,7 +496,7 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) => Insert(new[] { new KeyValuePair<string, byte[]>(key, data) }, absoluteExpiration);
+    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) => Insert([new KeyValuePair<string, byte[]>(key, data)], absoluteExpiration);
 
     /// <inheritdoc/>
     public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null)
@@ -568,7 +568,7 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
         }
 
-        return Insert(new[] { new KeyValuePair<string, byte[]>(key, data) }, type, absoluteExpiration);
+        return Insert([new KeyValuePair<string, byte[]>(key, data)], type, absoluteExpiration);
     }
 
     /// <inheritdoc/>
@@ -579,7 +579,7 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
-        return Invalidate(new[] { key });
+        return Invalidate([key]);
     }
 
     /// <inheritdoc/>
@@ -595,7 +595,7 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
         }
 
-        return Invalidate(new[] { key }, type);
+        return Invalidate([key], type);
     }
 
     /// <inheritdoc/>

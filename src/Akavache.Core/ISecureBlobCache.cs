@@ -12,6 +12,4 @@ namespace Akavache.Core;
 /// By implementing this interface, you must guarantee that the data
 /// saved to disk cannot be easily read by a third party.
 /// </summary>
-public interface ISecureBlobCache : IBlobCache
-{
-}
+public interface ISecureBlobCache : IBlobCache;

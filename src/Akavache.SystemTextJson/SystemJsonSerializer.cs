@@ -83,7 +83,7 @@ public class SystemJsonSerializer : ISerializer
     {
         if (bytes == null || bytes.Length == 0)
         {
-            return default(T);
+            return default;
         }
 
         // Automatic format detection - try the expected format first
@@ -321,7 +321,7 @@ public class SystemJsonSerializer : ISerializer
             // Fall back if BSON handling fails
         }
 
-        return default(T);
+        return default;
     }
 
     /// <summary>
@@ -362,7 +362,7 @@ public class SystemJsonSerializer : ISerializer
             if (string.IsNullOrWhiteSpace(jsonString) ||
                 (!jsonString.TrimStart().StartsWith("{") && !jsonString.TrimStart().StartsWith("[")))
             {
-                return default(T);
+                return default;
             }
 
             var options = GetEffectiveOptions();
@@ -433,7 +433,7 @@ public class SystemJsonSerializer : ISerializer
         }
         catch
         {
-            return default(T);
+            return default;
         }
     }
 

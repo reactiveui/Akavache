@@ -36,9 +36,9 @@ public static class RequestCache
 
         var requestKey = $"{typeof(T).FullName}:{key}";
 
-        return (IObservable<T>)_inflightRequests.GetOrAdd(requestKey, _ =>
+        return _inflightRequests.GetOrAdd(requestKey, _ =>
         {
-            var observable = fetchFunc().Select(x => (object)x!)
+            return fetchFunc().Select(x => (object)x!)
                 .Do(
                     onNext: _ => { },
                     onError: _ =>
@@ -53,8 +53,6 @@ public static class RequestCache
                     })
                 .Replay(1)
                 .RefCount();
-
-            return observable;
         }).Select(x => (T)x);
     }
 

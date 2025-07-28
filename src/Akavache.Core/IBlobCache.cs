@@ -243,11 +243,9 @@ public interface IBlobCache : IDisposable, IAsyncDisposable
         /// <param name="key">The key not found.</param>
         /// <param name="innerException">The inner exception if any.</param>
         /// <returns>The observable.</returns>
-        public static IObservable<T> ObservableThrowKeyNotFoundException<T>(string key, Exception? innerException = null)
-        {
-            return Observable.Throw<T>(
+        public static IObservable<T> ObservableThrowKeyNotFoundException<T>(string key, Exception? innerException = null) =>
+            Observable.Throw<T>(
                 new KeyNotFoundException($"The given key '{key}' was not present in the cache.", innerException));
-        }
 
         /// <summary>
         /// Throws an exception that the object is disposed.
@@ -256,10 +254,8 @@ public interface IBlobCache : IDisposable, IAsyncDisposable
         /// <param name="obj">The object name that is disposed.</param>
         /// <param name="innerException">The inner exception if any.</param>
         /// <returns>The observable.</returns>
-        public static IObservable<T> ObservableThrowObjectDisposedException<T>(string obj, Exception? innerException = null)
-        {
-            return Observable.Throw<T>(
+        public static IObservable<T> ObservableThrowObjectDisposedException<T>(string obj, Exception? innerException = null) =>
+            Observable.Throw<T>(
                 new ObjectDisposedException($"The cache '{obj}' was disposed.", innerException));
-        }
     }
 }

@@ -189,11 +189,11 @@ public static class UniversalSerializer
                 {
                     // Try to get the raw data first
                     var rawData = await cache.Get(candidateKey);
-                    if (rawData != null && rawData.Length > 0)
+                    if (rawData?.Length > 0)
                     {
                         // Try to deserialize using the universal deserializer
                         var result = Deserialize<T>(rawData, primarySerializer);
-                        if (result != null && !EqualityComparer<T>.Default.Equals(result, default(T)!))
+                        if (result != null && !EqualityComparer<T>.Default.Equals(result, default!))
                         {
                             return result;
                         }
@@ -231,7 +231,7 @@ public static class UniversalSerializer
         if (IsPotentialBsonData(data))
         {
             var bsonResult = TryDeserializeBsonFormat<T>(data, forcedDateTimeKind);
-            if (bsonResult is not null && !EqualityComparer<T>.Default.Equals(bsonResult, default(T)!))
+            if (bsonResult is not null && !EqualityComparer<T>.Default.Equals(bsonResult, default!))
             {
                 return bsonResult;
             }
@@ -240,7 +240,7 @@ public static class UniversalSerializer
         if (IsPotentialJsonData(data))
         {
             var jsonResult = TryDeserializeJsonFormat<T>(data, forcedDateTimeKind);
-            if (jsonResult is not null && !EqualityComparer<T>.Default.Equals(jsonResult, default(T)!))
+            if (jsonResult is not null && !EqualityComparer<T>.Default.Equals(jsonResult, default!))
             {
                 return jsonResult;
             }
@@ -374,7 +374,7 @@ public static class UniversalSerializer
                     }
 
                     // Try to find ISO date patterns
-                    var iso8601Pattern = @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}";
+                    const string iso8601Pattern = @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}";
                     if (System.Text.RegularExpressions.Regex.IsMatch(dataAsString, iso8601Pattern))
                     {
                         return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
@@ -470,13 +470,9 @@ public static class UniversalSerializer
                     }
                 }
 
-                if (type != null && type.Name != excludeTypeName)
+                if (type != null && type.Name != excludeTypeName && Activator.CreateInstance(type) is ISerializer instance)
                 {
-                    var instance = Activator.CreateInstance(type) as ISerializer;
-                    if (instance != null)
-                    {
-                        alternatives.Add(instance);
-                    }
+                    alternatives.Add(instance);
                 }
             }
             catch
@@ -522,59 +518,55 @@ public static class UniversalSerializer
                         }
                     }
 
-                    if (type != null)
+                    if (type != null && Activator.CreateInstance(type) is ISerializer serializer)
                     {
-                        var serializer = Activator.CreateInstance(type) as ISerializer;
-                        if (serializer != null)
+                        if (forcedDateTimeKind.HasValue)
                         {
-                            if (forcedDateTimeKind.HasValue)
-                            {
-                                serializer.ForcedDateTimeKind = forcedDateTimeKind;
-                            }
+                            serializer.ForcedDateTimeKind = forcedDateTimeKind;
+                        }
 
-                            var result = serializer.Deserialize<T>(data);
+                        var result = serializer.Deserialize<T>(data);
 
-                            // Enhanced handling for DateTime types with BSON to prevent issues
-                            if (typeof(T) == typeof(DateTime) && result is DateTime dateTime)
+                        // Enhanced handling for DateTime types with BSON to prevent issues
+                        if (typeof(T) == typeof(DateTime) && result is DateTime dateTime)
+                        {
+                            // Special handling for problematic DateTime values from BSON
+                            if (dateTime == DateTime.MinValue)
                             {
-                                // Special handling for problematic DateTime values from BSON
-                                if (dateTime == DateTime.MinValue)
+                                // Check if the data is larger than expected for MinValue
+                                // If so, this might be a deserialization issue rather than real MinValue
+                                if (data.Length > 20)
                                 {
-                                    // Check if the data is larger than expected for MinValue
-                                    // If so, this might be a deserialization issue rather than real MinValue
-                                    if (data.Length > 20)
+                                    // Try to extract a reasonable DateTime from the data
+                                    var recoveredDateTime = AttemptDateTimeRecovery(data, dateTime);
+                                    if (recoveredDateTime != DateTime.MinValue)
                                     {
-                                        // Try to extract a reasonable DateTime from the data
-                                        var recoveredDateTime = AttemptDateTimeRecovery(data, dateTime);
-                                        if (recoveredDateTime != DateTime.MinValue)
-                                        {
-                                            dateTime = recoveredDateTime;
-                                        }
-                                        else
-                                        {
-                                            // Use a safe fallback for BSON serialization issues
-                                            dateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
-                                        }
+                                        dateTime = recoveredDateTime;
+                                    }
+                                    else
+                                    {
+                                        // Use a safe fallback for BSON serialization issues
+                                        dateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
                                     }
                                 }
-
-                                // Ensure proper DateTimeKind
-                                if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-                                {
-                                    dateTime = forcedDateTimeKind.Value switch
-                                    {
-                                        DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
-                                        DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
-                                        DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified),
-                                        _ => dateTime
-                                    };
-                                }
-
-                                return (T)(object)dateTime;
                             }
 
-                            return result;
+                            // Ensure proper DateTimeKind
+                            if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
+                            {
+                                dateTime = forcedDateTimeKind.Value switch
+                                {
+                                    DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
+                                    DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
+                                    DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified),
+                                    _ => dateTime
+                                };
+                            }
+
+                            return (T)(object)dateTime;
                         }
+
+                        return result;
                     }
                 }
                 catch
@@ -626,18 +618,14 @@ public static class UniversalSerializer
                         }
                     }
 
-                    if (type != null)
+                    if (type != null && Activator.CreateInstance(type) is ISerializer serializer)
                     {
-                        var serializer = Activator.CreateInstance(type) as ISerializer;
-                        if (serializer != null)
+                        if (forcedDateTimeKind.HasValue)
                         {
-                            if (forcedDateTimeKind.HasValue)
-                            {
-                                serializer.ForcedDateTimeKind = forcedDateTimeKind;
-                            }
-
-                            return serializer.Deserialize<T>(data);
+                            serializer.ForcedDateTimeKind = forcedDateTimeKind;
                         }
+
+                        return serializer.Deserialize<T>(data);
                     }
                 }
                 catch
@@ -677,12 +665,9 @@ public static class UniversalSerializer
             {
                 // Remove quotes if present
                 var trimmed = jsonString.Trim();
-                if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
-                {
-                    return (T)(object)trimmed.Substring(1, trimmed.Length - 2);
-                }
-
-                return (T)(object)jsonString;
+                return trimmed.StartsWith("\"") && trimmed.EndsWith("\"")
+                    ? (T)(object)trimmed.Substring(1, trimmed.Length - 2)
+                    : (T)(object)jsonString;
             }
 
             if (typeof(T) == typeof(int) && int.TryParse(jsonString.Trim(), out var intValue))

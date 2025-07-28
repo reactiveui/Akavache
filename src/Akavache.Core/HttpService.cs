@@ -103,7 +103,7 @@ public class HttpService : IHttpService
 
         var conn = ret.PublishLast();
         conn.Connect();
-        return conn.Select(x => x ?? Array.Empty<byte>());
+        return conn.Select(x => x ?? []);
     }
 
     /// <summary>

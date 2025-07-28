@@ -147,7 +147,7 @@ public static class SerializerExtensions
             {
                 // Empty byte array could indicate a null value was stored
                 // In this case, return default(T) as the stored null value
-                return default(T);
+                return default;
             }
 
             try
