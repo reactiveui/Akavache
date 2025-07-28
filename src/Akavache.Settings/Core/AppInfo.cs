@@ -139,8 +139,26 @@ public static class AppInfo
 #endif
     public static async Task DeleteSettingsStore<T>(string? overrideDatabaseName = null)
     {
-        await DisposeSettingsStore<T>().ConfigureAwait(false);
-        File.Delete(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"));
+        await DisposeSettingsStore<T>(overrideDatabaseName).ConfigureAwait(false);
+
+        try
+        {
+            // Ensure the directory exists before attempting to delete the file
+            if (!string.IsNullOrEmpty(SettingsCachePath) && Directory.Exists(SettingsCachePath))
+            {
+                var filePath = Path.Combine(SettingsCachePath, $"{overrideDatabaseName ?? typeof(T).Name}.db");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Silently ignore file deletion errors - the store might not exist
+            // or might be in use, which is acceptable for cleanup operations
+            System.Diagnostics.Debug.WriteLine($"Error deleting settings store: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -157,7 +175,8 @@ public static class AppInfo
 #endif
     public static ISettingsStorage? GetSettingsStore<T>(string? overrideDatabaseName = null)
     {
-        if (SettingsStores.TryGetValue(overrideDatabaseName ?? typeof(T).Name, out var settings))
+        var key = overrideDatabaseName ?? typeof(T).Name;
+        if (SettingsStores.TryGetValue(key, out var settings))
         {
             return settings;
         }
@@ -179,20 +198,22 @@ public static class AppInfo
 #endif
     public static async Task DisposeSettingsStore<T>(string? overrideDatabaseName = null)
     {
+        var key = overrideDatabaseName ?? typeof(T).Name;
         var settings = GetSettingsStore<T>(overrideDatabaseName);
         if (settings != null)
         {
             await settings.DisposeAsync().ConfigureAwait(false);
+            SettingsStores.Remove(key);
         }
 
-        if (BlobCaches.TryGetValue(overrideDatabaseName ?? typeof(T).Name, out var cache))
+        if (BlobCaches.TryGetValue(key, out var cache))
         {
-            if (cache == null)
+            if (cache != null)
             {
-                return;
+                await cache.DisposeAsync().ConfigureAwait(false);
             }
 
-            await cache.DisposeAsync().ConfigureAwait(false);
+            BlobCaches.Remove(key);
         }
     }
 
@@ -215,11 +236,12 @@ public static class AppInfo
     public static async Task<T?> SetupSettingsStore<T>(string password, bool initialise = true, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
+        var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(SettingsCachePath!);
-        BlobCaches[typeof(T).Name] = new EncryptedSqliteBlobCache(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"), password);
+        BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(SettingsCachePath!, $"{key}.db"), password);
 
         var viewSettings = new T();
-        SettingsStores[typeof(T).Name] = viewSettings;
+        SettingsStores[key] = viewSettings;
         if (initialise)
         {
             await viewSettings.InitializeAsync().ConfigureAwait(false);
@@ -246,11 +268,12 @@ public static class AppInfo
     public static async Task<T?> SetupSettingsStore<T>(bool initialise = true, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
+        var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(SettingsCachePath!);
-        BlobCaches[typeof(T).Name] = new SqliteBlobCache(Path.Combine(SettingsCachePath!, $"{overrideDatabaseName ?? typeof(T).Name}.db"));
+        BlobCaches[key] = new SqliteBlobCache(Path.Combine(SettingsCachePath!, $"{key}.db"));
 
         var viewSettings = new T();
-        SettingsStores[typeof(T).Name] = viewSettings;
+        SettingsStores[key] = viewSettings;
         if (initialise)
         {
             await viewSettings.InitializeAsync().ConfigureAwait(false);

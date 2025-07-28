@@ -22,7 +22,7 @@ public abstract class SettingsBase : SettingsStorage
     /// </summary>
     /// <param name="className">Name of the class.</param>
     protected SettingsBase(string className)
-        : base($"__{className}__", AppInfo.BlobCaches[className]!)
+        : base($"__{className}__", GetBlobCacheForClass(className))
     {
     }
 
@@ -32,7 +32,33 @@ public abstract class SettingsBase : SettingsStorage
     /// <param name="className">Name of the class.</param>
     /// <param name="serializer">The serializer.</param>
     protected SettingsBase(string className, ISerializer serializer)
-        : base($"__{className}__", AppInfo.BlobCaches[className]!, serializer)
+        : base($"__{className}__", GetBlobCacheForClass(className), serializer)
     {
+    }
+
+    /// <summary>
+    /// Gets the blob cache for the specified class, handling override database names.
+    /// </summary>
+    /// <param name="className">The class name.</param>
+    /// <returns>The blob cache for the class.</returns>
+    private static IBlobCache GetBlobCacheForClass(string className)
+    {
+        // First try to get the cache with the exact class name
+        if (AppInfo.BlobCaches.TryGetValue(className, out var cache) && cache != null)
+        {
+            return cache;
+        }
+
+        // If not found, look for any cache in the collection (for override database names)
+        foreach (var kvp in AppInfo.BlobCaches)
+        {
+            if (kvp.Value != null)
+            {
+                return kvp.Value;
+            }
+        }
+
+        // If no cache is found, throw a descriptive exception
+        throw new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {string.Join(", ", AppInfo.BlobCaches.Keys)}");
     }
 }
