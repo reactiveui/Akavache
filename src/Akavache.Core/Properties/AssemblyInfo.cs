@@ -1,0 +1,16 @@
+﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
+using Akavache.Core;
+
+[assembly: Preserve(AllMembers = true)]
+[assembly: InternalsVisibleTo("Akavache.Sqlite3")]
+[assembly: InternalsVisibleTo("Akavache.EncryptedSqlite3")]
+[assembly: InternalsVisibleTo("Akavache.NewtonsoftJson")]
+[assembly: InternalsVisibleTo("Akavache.NewtonsoftJson.Bson")]
+[assembly: InternalsVisibleTo("Akavache.SystemTextJson")]
+[assembly: InternalsVisibleTo("Akavache.SystemTextJson.Bson")]
+[assembly: InternalsVisibleTo("Akavache.Drawing")]

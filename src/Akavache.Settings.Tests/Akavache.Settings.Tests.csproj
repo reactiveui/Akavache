@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
+    <ProjectReference Include="..\Akavache.Settings\Akavache.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

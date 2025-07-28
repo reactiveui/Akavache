@@ -1,10 +1,10 @@
-# Migration Guide: Akavache to ReactiveMarbles.CacheDatabase
+# Migration Guide: Akavache 10 to Akavache 11
 
-This guide provides a comprehensive overview of migrating from Akavache to ReactiveMarbles.CacheDatabase, including new features and compatibility information.
+This guide provides a comprehensive overview of migrating from Akavache to Akavache, including new features and compatibility information.
 
 ## Overview
 
-ReactiveMarbles.CacheDatabase is the next generation of Akavache, providing improved performance, better serialization options, and enhanced features while maintaining backward compatibility for most use cases.
+Akavache is the next generation of Akavache, providing improved performance, better serialization options, and enhanced features while maintaining backward compatibility for most use cases.
 
 ## Package Migration
 
@@ -16,30 +16,28 @@ ReactiveMarbles.CacheDatabase is the next generation of Akavache, providing impr
 <PackageReference Include="akavache.drawing" Version="..." />
 ```
 
-### New ReactiveMarbles.CacheDatabase Packages
+### New Akavache Packages
 ```xml
 <!-- Core package with interfaces and base functionality -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.Core" Version="..." />
+<PackageReference Include="Akavache.Core" Version="..." />
 
 <!-- Choose your preferred serializer -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.SystemTextJson" Version="..." />
+<PackageReference Include="Akavache.SystemTextJson" Version="..." />
 <!-- OR -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.NewtonsoftJson" Version="..." />
-<!-- OR -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson" Version="..." />
+<PackageReference Include="Akavache.NewtonsoftJson" Version="..." />
 
 <!-- Optional: SQLite support -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.Sqlite3" Version="..." />
+<PackageReference Include="Akavache.Sqlite3" Version="..." />
 
 <!-- Optional: Encrypted SQLite support -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.EncryptedSqlite3" Version="..." />
+<PackageReference Include="Akavache.EncryptedSqlite3" Version="..." />
 
 <!-- Optional: Drawing/Image support -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.Drawing" Version="..." />
+<PackageReference Include="Akavache.Drawing" Version="..." />
 
 <!-- Optional: Settings cache -->
-<PackageReference Include="ReactiveMarbles.CacheDatabase.Settings" Version="..." />
-<PackageReference Include="ReactiveMarbles.CacheDatabase.EncryptedSettings" Version="..." />
+<PackageReference Include="Akavache.Settings" Version="..." />
+<PackageReference Include="Akavache.EncryptedSettings" Version="..." />
 ```
 
 ## Initialization Changes
@@ -53,14 +51,19 @@ Akavache.Registrations.Start("ApplicationName");
 BlobCache.ApplicationName = "MyApp";
 ```
 
-### ReactiveMarbles.CacheDatabase Initialization
+### Akavache Initialization
 ```csharp
 // New initialization - choose your serializer
-using ReactiveMarbles.CacheDatabase.Core;
-using ReactiveMarbles.CacheDatabase.SystemTextJson;
+using Akavache.Core;
+using Akavache.SystemTextJson;
 
 // Initialize the serializer globally
+
+// For System.Text.Json
 CoreRegistrations.Serializer = new SystemJsonSerializer();
+
+// Or with System.Text.Json BSON
+// CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
 
 // Or with Newtonsoft.Json
 // CoreRegistrations.Serializer = new NewtonsoftSerializer();
@@ -96,7 +99,7 @@ var data = await BlobCache.UserAccount.GetOrFetchObject("key", () => FetchFromNe
 
 ### 1. Multiple Serializer Support
 
-ReactiveMarbles.CacheDatabase offers three serialization options:
+Akavache offers three serialization options:
 
 #### System.Text.Json (Recommended for new projects)
 ```csharp
@@ -139,15 +142,11 @@ Each serializer package provides its own InMemoryBlobCache implementation:
 
 ```csharp
 // System.Text.Json InMemoryBlobCache
-using ReactiveMarbles.CacheDatabase.SystemTextJson;
+using Akavache.SystemTextJson;
 var cache = new InMemoryBlobCache();
 
 // Newtonsoft.Json InMemoryBlobCache  
-using ReactiveMarbles.CacheDatabase.NewtonsoftJson;
-var cache = new InMemoryBlobCache();
-
-// Newtonsoft.Json BSON InMemoryBlobCache (most Akavache-compatible)
-using ReactiveMarbles.CacheDatabase.NewtonsoftJson.Bson;
+using Akavache.NewtonsoftJson;
 var cache = new InMemoryBlobCache();
 ```
 
@@ -181,7 +180,7 @@ var userKeys = await cache.GetAllKeys(typeof(User)).ToList();
 New dedicated settings cache for application configuration:
 
 ```csharp
-using ReactiveMarbles.CacheDatabase.Settings;
+using Akavache.Settings;
 
 // Create settings cache
 var settings = new SettingsCache();
@@ -200,7 +199,7 @@ var timeout = await settings.GetValue("timeout", TimeSpan.FromMinutes(1));
 Secure storage for sensitive configuration:
 
 ```csharp
-using ReactiveMarbles.CacheDatabase.EncryptedSettings;
+using Akavache.EncryptedSettings;
 
 var encryptedSettings = new EncryptedSettingsCache();
 await encryptedSettings.SetValue("apiKey", "secret-key");
@@ -210,7 +209,7 @@ var apiKey = await encryptedSettings.GetValue<string>("apiKey");
 ## Migration Steps
 
 ### Step 1: Update Package References
-Replace Akavache packages with ReactiveMarbles.CacheDatabase packages.
+Replace Akavache packages with Akavache packages.
 
 ### Step 2: Choose and Initialize Serializer
 Select the appropriate serializer for your needs:
@@ -287,6 +286,6 @@ If you encounter serialization issues:
 
 ## Conclusion
 
-ReactiveMarbles.CacheDatabase provides a clear upgrade path from Akavache with minimal breaking changes and significant new features. The choice of serializer allows you to balance compatibility with performance based on your specific needs.
+Akavache provides a clear upgrade path from Akavache with minimal breaking changes and significant new features. The choice of serializer allows you to balance compatibility with performance based on your specific needs.
 
 For most migrations, start with NewtonsoftBsonSerializer for maximum compatibility, then consider migrating to System.Text.Json for new features and better performance.

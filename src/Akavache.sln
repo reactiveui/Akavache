@@ -16,27 +16,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Sqlite3", "ReactiveMarbles.CacheDatabase.Sqlite3\ReactiveMarbles.CacheDatabase.Sqlite3.csproj", "{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3", "Akavache.Sqlite3\Akavache.Sqlite3.csproj", "{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Core", "ReactiveMarbles.CacheDatabase.Core\ReactiveMarbles.CacheDatabase.Core.csproj", "{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Core", "Akavache.Core\Akavache.Core.csproj", "{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.SystemTextJson", "ReactiveMarbles.CacheDatabase.SystemTextJson\ReactiveMarbles.CacheDatabase.SystemTextJson.csproj", "{ADFC7975-D670-11D3-A7F2-35B85D528F7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.SystemTextJson", "Akavache.SystemTextJson\Akavache.SystemTextJson.csproj", "{ADFC7975-D670-11D3-A7F2-35B85D528F7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.NewtonsoftJson", "ReactiveMarbles.CacheDatabase.NewtonsoftJson\ReactiveMarbles.CacheDatabase.NewtonsoftJson.csproj", "{D430DD89-35AA-6061-7CDC-D46BE32FC669}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.NewtonsoftJson", "Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj", "{D430DD89-35AA-6061-7CDC-D46BE32FC669}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.EncryptedSqlite3", "ReactiveMarbles.CacheDatabase.EncryptedSqlite3\ReactiveMarbles.CacheDatabase.EncryptedSqlite3.csproj", "{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.EncryptedSqlite3", "Akavache.EncryptedSqlite3\Akavache.EncryptedSqlite3.csproj", "{CA51D698-CE5B-EE7A-B6CD-DE9F89518805}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Drawing", "ReactiveMarbles.CacheDatabase.Drawing\ReactiveMarbles.CacheDatabase.Drawing.csproj", "{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Drawing", "Akavache.Drawing\Akavache.Drawing.csproj", "{077CF6A4-F8C3-29C9-D78B-C7F759DB5384}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Tests", "ReactiveMarbles.CacheDatabase.Tests\ReactiveMarbles.CacheDatabase.Tests.csproj", "{5139E4F4-4F2A-0299-5284-3D166D7D5841}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Tests", "Akavache.Tests\Akavache.Tests.csproj", "{5139E4F4-4F2A-0299-5284-3D166D7D5841}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Settings", "ReactiveMarbles.CacheDatabase.Settings\ReactiveMarbles.CacheDatabase.Settings.csproj", "{447307C3-35CF-E072-988D-682C7636A116}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Settings", "Akavache.Settings\Akavache.Settings.csproj", "{447307C3-35CF-E072-988D-682C7636A116}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.Settings.Tests", "ReactiveMarbles.CacheDatabase.Settings.Tests\ReactiveMarbles.CacheDatabase.Settings.Tests.csproj", "{95375AF7-E250-AA8B-01D4-370859335666}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Settings.Tests", "Akavache.Settings.Tests\Akavache.Settings.Tests.csproj", "{95375AF7-E250-AA8B-01D4-370859335666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.EncryptedSettings", "ReactiveMarbles.CacheDatabase.EncryptedSettings\ReactiveMarbles.CacheDatabase.EncryptedSettings.csproj", "{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.EncryptedSettings", "Akavache.EncryptedSettings\Akavache.EncryptedSettings.csproj", "{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests", "ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests\ReactiveMarbles.CacheDatabase.EncryptedSettings.Tests.csproj", "{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.EncryptedSettings.Tests", "Akavache.EncryptedSettings.Tests\Akavache.EncryptedSettings.Tests.csproj", "{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Benchmarks", "Akavache.Benchmarks\Akavache.Benchmarks.csproj", "{8F48F915-99AB-CDD0-6C11-EFD66E12E295}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +90,10 @@ Global
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

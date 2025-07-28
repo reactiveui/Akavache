@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Akavache.EncryptedSettings</RootNamespace>
+    <LangVersion>preview</LangVersion>
+    <DefineConstants>ENCRYPTED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Akavache.Settings\Core\*.cs" LinkBase="Core" />
+    <Compile Include="..\Akavache.Settings\SettingsBase.cs" Link="SettingsBase.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.EncryptedSqlite3\Akavache.EncryptedSqlite3.csproj" />
+  </ItemGroup>
+
+</Project>
