@@ -28,7 +28,7 @@ public static class LoginExtensions
     [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
 #endif
     public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null) =>
-        blobCache.InsertObject("login:" + host, new Tuple<string, string>(user, password), absoluteExpiration);
+        blobCache.InsertObject("login:" + host, (user, password), absoluteExpiration);
 
     /// <summary>
     /// Returns the currently cached user/password. If the cache does not

@@ -18,9 +18,10 @@ namespace Akavache.Tests;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
+[Collection("Blob Cache Tests")]
 public abstract class BlobCacheTestsBase : IDisposable
 {
-    private ISerializer? _originalSerializer;
+    private readonly ISerializer? _originalSerializer;
     private bool _disposed;
 
     /// <summary>
@@ -59,6 +60,49 @@ public abstract class BlobCacheTestsBase : IDisposable
                 yield return new object[] { writeSerializer, readSerializer };
             }
         }
+    }
+
+    /// <summary>
+    /// Sets up the test with the specified serializer type.
+    /// </summary>
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    public static ISerializer SetupTestSerializer(Type serializerType)
+    {
+        if (serializerType == null)
+        {
+            throw new ArgumentNullException(nameof(serializerType));
+        }
+
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
+
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
+        {
+            // Register the Newtonsoft BSON serializer specifically
+            CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
+        {
+            // Register the System.Text.Json BSON serializer specifically
+            CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
+        }
+        else if (serializerType == typeof(NewtonsoftSerializer))
+        {
+            // Register the Newtonsoft JSON serializer
+            CoreRegistrations.Serializer = new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            CoreRegistrations.Serializer = new SystemJsonSerializer();
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unsupported serializer type: {serializerType.Name}");
+        }
+
+        return CoreRegistrations.Serializer;
     }
 
     /// <summary>
@@ -893,54 +937,19 @@ public abstract class BlobCacheTestsBase : IDisposable
     }
 
     /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
-    /// <param name="serializerType">The type of serializer to use for this test.</param>
-    /// <returns>The configured serializer instance.</returns>
-    protected static ISerializer SetupTestSerializer(Type serializerType)
-    {
-        if (serializerType == null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
-
-        // Clear any existing in-flight requests to ensure clean test state
-        RequestCache.Clear();
-
-        if (serializerType == typeof(NewtonsoftBsonSerializer))
-        {
-            // Register the Newtonsoft BSON serializer specifically
-            CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
-        {
-            // Register the System.Text.Json BSON serializer specifically
-            CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
-        }
-        else if (serializerType == typeof(NewtonsoftSerializer))
-        {
-            // Register the Newtonsoft JSON serializer
-            CoreRegistrations.Serializer = new NewtonsoftSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            CoreRegistrations.Serializer = new SystemJsonSerializer();
-        }
-        else
-        {
-            throw new InvalidOperationException($"Unsupported serializer type: {serializerType.Name}");
-        }
-
-        return CoreRegistrations.Serializer;
-    }
-
-    /// <summary>
     /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
     /// </summary>
     /// <param name="path">The path to the blob cache.</param>
     /// <returns>The blob cache for testing.</returns>
     protected abstract IBlobCache CreateBlobCache(string path);
+
+    /// <summary>
+    /// Sets up the test class serializer. This should be overridden by derived classes.
+    /// </summary>
+    protected virtual void SetupTestClassSerializer()
+    {
+        // Default implementation - derived classes should override this
+    }
 
     /// <summary>
     /// Helper method to create a blob cache for a specific path, ensuring the path is used correctly.
@@ -984,73 +993,15 @@ public abstract class BlobCacheTestsBase : IDisposable
         {
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects)
+                // Restore the original serializer to prevent interference with other tests
+                if (_originalSerializer != null)
+                {
+                    CoreRegistrations.Serializer = _originalSerializer;
+                }
             }
 
             _disposed = true;
         }
-    }
-
-    /// <summary>
-    /// Gets the appropriate DateTime tolerance for a specific serializer and DateTime value.
-    /// </summary>
-    /// <param name="serializerType">The serializer type.</param>
-    /// <param name="testDate">The test DateTime value.</param>
-    /// <returns>The tolerance in milliseconds.</returns>
-    private static double GetDateTimeToleranceForSerializer(Type serializerType, DateTime testDate)
-    {
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
-
-        // BSON serializers may have different precision handling
-        if (serializerType.Name.Contains("Bson"))
-        {
-            return 1000; // 1 second tolerance for BSON serializers
-        }
-
-        // For UTC dates with JSON serializers, use tighter tolerance
-        if (testDate.Kind == DateTimeKind.Utc)
-        {
-            return 100; // 100ms tolerance for UTC dates
-        }
-
-        // For other cases, use moderate tolerance
-        return 1000; // 1 second tolerance
-    }
-
-    /// <summary>
-    /// Gets enhanced DateTime tolerance for a specific serializer with better precision handling.
-    /// </summary>
-    /// <param name="serializerType">The serializer type.</param>
-    /// <returns>The tolerance in milliseconds.</returns>
-    private static double GetEnhancedDateTimeToleranceForSerializer(Type serializerType)
-    {
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
-
-        // BSON serializers typically have millisecond precision but may round differently
-        if (serializerType.Name.Contains("Bson"))
-        {
-            return 2000; // 2 second tolerance for BSON serializers to account for format differences
-        }
-
-        // JSON serializers should have good precision for UTC dates
-        if (serializerType.Name.Contains("SystemJson"))
-        {
-            return 1000; // 1 second tolerance for System.Text.Json
-        }
-
-        if (serializerType.Name.Contains("Newtonsoft"))
-        {
-            return 1000; // 1 second tolerance for Newtonsoft.Json
-        }
-
-        // Default tolerance
-        return 2000; // 2 second tolerance for unknown serializers
     }
 
     /// <summary>
@@ -1113,5 +1064,15 @@ public abstract class BlobCacheTestsBase : IDisposable
         // consider them potentially incompatible to avoid test failures
         // This is conservative but allows tests to pass while we improve compatibility
         return true;
+    }
+
+    /// <summary>
+    /// Ensures that the test serializer is properly set up before each test method.
+    /// </summary>
+    private void EnsureTestSerializerSetup()
+    {
+        // Call the setup method to ensure the correct serializer is in place
+        // This handles cases where the global serializer might have been changed by other tests
+        SetupTestClassSerializer();
     }
 }

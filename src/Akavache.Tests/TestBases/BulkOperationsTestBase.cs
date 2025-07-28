@@ -12,8 +12,21 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-public abstract class BulkOperationsTestBase
+[Collection("Bulk Operations Tests")]
+public abstract class BulkOperationsTestBase : IDisposable
 {
+    private readonly ISerializer? _originalSerializer;
+    private bool _disposed;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BulkOperationsTestBase"/> class.
+    /// </summary>
+    protected BulkOperationsTestBase()
+    {
+        // Store the original serializer to restore it after each test
+        _originalSerializer = CoreRegistrations.Serializer;
+    }
+
     /// <summary>
     /// Tests if Get with multiple keys work correctly.
     /// </summary>
@@ -21,6 +34,9 @@ public abstract class BulkOperationsTestBase
     [Fact]
     public async Task GetShouldWorkWithMultipleKeys()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -45,6 +61,9 @@ public abstract class BulkOperationsTestBase
     [Fact]
     public async Task GetShouldInvalidateOldKeys()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -66,6 +85,9 @@ public abstract class BulkOperationsTestBase
     [Fact]
     public async Task InsertShouldWorkWithMultipleKeys()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -90,6 +112,9 @@ public abstract class BulkOperationsTestBase
     [Fact]
     public async Task InvalidateShouldTrashMultipleKeys()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
@@ -107,9 +132,57 @@ public abstract class BulkOperationsTestBase
     }
 
     /// <summary>
+    /// Disposes the test base, restoring the original serializer.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
     /// </summary>
     /// <param name="path">The path to the blob cache.</param>
     /// <returns>The blob cache for testing.</returns>
     protected abstract IBlobCache CreateBlobCache(string path);
+
+    /// <summary>
+    /// Sets up the test class serializer. This should be overridden by derived classes.
+    /// </summary>
+    protected virtual void SetupTestClassSerializer()
+    {
+        // Default implementation - derived classes should override this
+    }
+
+    /// <summary>
+    /// Disposes resources.
+    /// </summary>
+    /// <param name="disposing">True to dispose managed resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Restore the original serializer to prevent interference with other tests
+                if (_originalSerializer != null)
+                {
+                    CoreRegistrations.Serializer = _originalSerializer;
+                }
+            }
+
+            _disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Ensures that the test serializer is properly set up before each test method.
+    /// </summary>
+    private void EnsureTestSerializerSetup()
+    {
+        // Call the setup method to ensure the correct serializer is in place
+        // This handles cases where the global serializer might have been changed by other tests
+        SetupTestClassSerializer();
+    }
 }

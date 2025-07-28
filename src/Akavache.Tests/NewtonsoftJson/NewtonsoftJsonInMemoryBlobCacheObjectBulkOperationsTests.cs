@@ -14,13 +14,13 @@ namespace Akavache.Tests;
 /// </summary>
 public class NewtonsoftJsonInMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NewtonsoftJsonInMemoryBlobCacheObjectBulkOperationsTests"/> class.
-    /// Ensure proper serializer setup for these tests.
-    /// </summary>
-    public NewtonsoftJsonInMemoryBlobCacheObjectBulkOperationsTests() =>
-        CoreRegistrations.Serializer = new NewtonsoftSerializer();
-
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
+
+    /// <inheritdoc />
+    protected override void SetupTestClassSerializer()
+    {
+        // Ensure proper serializer setup for these tests
+        CoreRegistrations.Serializer = new NewtonsoftSerializer();
+    }
 }
