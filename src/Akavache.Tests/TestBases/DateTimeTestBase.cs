@@ -13,8 +13,21 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
-public abstract class DateTimeTestBase
+[Collection("DateTime Tests")]
+public abstract class DateTimeTestBase : IDisposable
 {
+    private readonly ISerializer? _originalSerializer;
+    private bool _disposed;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DateTimeTestBase"/> class.
+    /// </summary>
+    protected DateTimeTestBase()
+    {
+        // Store the original serializer to restore it after each test
+        _originalSerializer = CoreRegistrations.Serializer;
+    }
+
     /// <summary>
     /// Gets the date time offsets used in theory tests.
     /// </summary>
@@ -69,6 +82,9 @@ public abstract class DateTimeTestBase
     [MemberData(nameof(DateTimeOffsetData))]
     public async Task GetOrFetchAsyncDateTimeOffsetShouldBeEqualEveryTime(TestObjectDateTimeOffset data)
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
@@ -122,6 +138,9 @@ public abstract class DateTimeTestBase
     [MemberData(nameof(DateTimeData))]
     public async Task GetOrFetchAsyncDateTimeShouldBeEqualEveryTime(TestObjectDateTime data)
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
@@ -158,6 +177,9 @@ public abstract class DateTimeTestBase
     [MemberData(nameof(DateLocalTimeData))]
     public async Task GetOrFetchAsyncDateTimeWithForcedLocal(TestObjectDateTime data)
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
@@ -210,6 +232,9 @@ public abstract class DateTimeTestBase
     [Fact]
     public async Task DateTimeKindCanBeForced()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path))
         {
@@ -229,6 +254,9 @@ public abstract class DateTimeTestBase
     [Fact]
     public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
@@ -306,6 +334,9 @@ public abstract class DateTimeTestBase
     [Fact]
     public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly()
     {
+        // Ensure the test uses the correct serializer
+        EnsureTestSerializerSetup();
+
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path))
         {
@@ -365,11 +396,49 @@ public abstract class DateTimeTestBase
     }
 
     /// <summary>
+    /// Disposes the test base, restoring the original serializer.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
     /// </summary>
     /// <param name="path">The path to the blob cache.</param>
     /// <returns>The blob cache for testing.</returns>
     protected abstract IBlobCache CreateBlobCache(string path);
+
+    /// <summary>
+    /// Sets up the test class serializer. This should be overridden by derived classes.
+    /// </summary>
+    protected virtual void SetupTestClassSerializer()
+    {
+        // Default implementation - derived classes should override this
+    }
+
+    /// <summary>
+    /// Disposes resources.
+    /// </summary>
+    /// <param name="disposing">True to dispose managed resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // Restore the original serializer to prevent interference with other tests
+                if (_originalSerializer != null)
+                {
+                    CoreRegistrations.Serializer = _originalSerializer;
+                }
+            }
+
+            _disposed = true;
+        }
+    }
 
     /// <summary>
     /// Performs the actual time stamp grab.
@@ -597,5 +666,15 @@ public abstract class DateTimeTestBase
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Ensures that the test serializer is properly set up before each test method.
+    /// </summary>
+    private void EnsureTestSerializerSetup()
+    {
+        // Call the setup method to ensure the correct serializer is in place
+        // This handles cases where the global serializer might have been changed by other tests
+        SetupTestClassSerializer();
     }
 }

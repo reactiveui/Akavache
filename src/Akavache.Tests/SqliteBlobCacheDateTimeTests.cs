@@ -15,16 +15,14 @@ namespace Akavache.Tests;
 /// </summary>
 public class SqliteBlobCacheDateTimeTests : DateTimeTestBase
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SqliteBlobCacheDateTimeTests"/> class.
-    /// </summary>
-    public SqliteBlobCacheDateTimeTests()
+    /// <inheritdoc />
+    protected override IBlobCache CreateBlobCache(string path) => new SqliteBlobCache(Path.Combine(path, "test.db"));
+
+    /// <inheritdoc />
+    protected override void SetupTestClassSerializer()
     {
         // Use NewtonsoftBsonSerializer for maximum compatibility with existing Akavache data
         // This is the most appropriate serializer for SQLite tests to ensure Akavache compatibility
         CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
     }
-
-    /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path) => new SqliteBlobCache(Path.Combine(path, "test.db"));
 }

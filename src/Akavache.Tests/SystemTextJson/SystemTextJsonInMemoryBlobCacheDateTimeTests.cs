@@ -14,13 +14,13 @@ namespace Akavache.Tests;
 /// </summary>
 public class SystemTextJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SystemTextJsonInMemoryBlobCacheDateTimeTests"/> class.
-    /// Ensure proper serializer setup for these tests.
-    /// </summary>
-    public SystemTextJsonInMemoryBlobCacheDateTimeTests() =>
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
-
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
+
+    /// <inheritdoc />
+    protected override void SetupTestClassSerializer()
+    {
+        // Ensure proper serializer setup for these tests
+        CoreRegistrations.Serializer = new SystemJsonSerializer();
+    }
 }

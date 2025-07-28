@@ -14,13 +14,13 @@ namespace Akavache.Tests;
 /// </summary>
 public class NewtonsoftJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NewtonsoftJsonInMemoryBlobCacheDateTimeTests"/> class.
-    /// Ensure proper serializer setup for these tests.
-    /// </summary>
-    public NewtonsoftJsonInMemoryBlobCacheDateTimeTests() =>
-        CoreRegistrations.Serializer = new NewtonsoftSerializer();
-
     /// <inheritdoc />
     protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
+
+    /// <inheritdoc />
+    protected override void SetupTestClassSerializer()
+    {
+        // Ensure proper serializer setup for these tests
+        CoreRegistrations.Serializer = new NewtonsoftSerializer();
+    }
 }
