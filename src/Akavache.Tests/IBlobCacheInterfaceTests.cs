@@ -379,7 +379,7 @@ public class IBlobCacheInterfaceTests
                 }
 
                 // Test null collections validation - simplified approach that should work consistently
-                await Assert.ThrowsAsync<NullReferenceException>(async () => await cache.Insert((Dictionary<string, byte[]>)null!).FirstAsync());
+                await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.Insert((Dictionary<string, byte[]>)null!).FirstAsync());
                 await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.Get((string[])null!).ToList().FirstAsync());
 
                 // For empty/whitespace string validation, different cache implementations may handle this differently

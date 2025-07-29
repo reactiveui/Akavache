@@ -65,6 +65,11 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
         }
 
+        if (keyValuePairs is null)
+        {
+            throw new ArgumentNullException(nameof(keyValuePairs));
+        }
+
         return Observable.Start(
             () =>
         {
