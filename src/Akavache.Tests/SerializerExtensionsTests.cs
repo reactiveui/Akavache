@@ -140,16 +140,20 @@ public class SerializerExtensionsTests
 
                 try
                 {
-                    // Insert test data
+                    // Insert test data using extension methods to ensure proper type association
                     await cache.InsertObject("user1", user1).FirstAsync();
                     await cache.InsertObject("user2", user2).FirstAsync();
 
-                    // Act - just verify we can call the method without error
-                    var count = 0;
-                    await cache.GetAllObjects<UserObject>().ForEachAsync(_ => count++);
+                    // Act - GetAllObjects returns IObservable<IEnumerable<T>>
+                    var allObjects = await cache.GetAllObjects<UserObject>().FirstAsync();
 
-                    // Assert
-                    Assert.Equal(2, count);
+                    // Assert - Convert to list and check count
+                    var results = allObjects.ToList();
+                    Assert.Equal(2, results.Count);
+
+                    // Verify the objects are correct
+                    Assert.Contains(results, u => u.Name == "User1");
+                    Assert.Contains(results, u => u.Name == "User2");
                 }
                 finally
                 {
@@ -278,9 +282,9 @@ public class SerializerExtensionsTests
                     await cache.InsertObject("user1", user1).FirstAsync();
                     await cache.InsertObject("user2", user2).FirstAsync();
 
-                    // Verify objects exist
-                    var beforeInvalidation = await cache.GetAllObjects<UserObject>().ToList().FirstAsync();
-                    Assert.Equal(2, beforeInvalidation.Count);
+                    // Verify objects exist before invalidation
+                    var beforeInvalidation = await cache.GetAllObjects<UserObject>().FirstAsync();
+                    Assert.Equal(2, beforeInvalidation.Count());
 
                     // Act
                     await cache.InvalidateAllObjects<UserObject>().FirstAsync();
@@ -290,14 +294,9 @@ public class SerializerExtensionsTests
 
                     await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user2").FirstAsync());
 
-                    // Additional check - GetAllObjects should return empty or near-empty result
-                    // Some cache implementations may return a collection with empty/null entries
-                    var results = await cache.GetAllObjects<UserObject>().ToList().FirstAsync();
-
-                    // Note: GetAllObjects returns IEnumerable<UserObject>, not KeyValuePair
-                    // Filter out any null entries that might be returned by some implementations
-                    var validResults = results.Where(user => user != null).ToList();
-                    Assert.Empty(validResults);
+                    // Additional check - GetAllObjects should return empty result
+                    var results = await cache.GetAllObjects<UserObject>().FirstAsync();
+                    Assert.Empty(results);
                 }
                 finally
                 {

@@ -259,12 +259,11 @@ public class ImageCacheExtensionsTests
             fallbackBytes[i] = (byte)(i % 256);
         }
 
-        var originalLoader = BitmapLoader.Current;
-
+        // Set up mock bitmap loader for testing
+        var originalLoader = GetCurrentBitmapLoader();
         try
         {
-            // Mock the BitmapLoader
-            BitmapLoader.Current = new MockBitmapLoader();
+            SetupMockBitmapLoader();
 
             // Act - Try to load non-existent image
             var bitmap = await cache.LoadImageWithFallback("nonexistent_key", fallbackBytes).FirstAsync();
@@ -280,14 +279,7 @@ public class ImageCacheExtensionsTests
         }
         finally
         {
-            try
-            {
-                BitmapLoader.Current = originalLoader;
-            }
-            catch
-            {
-                // Ignore errors when restoring
-            }
+            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -307,12 +299,11 @@ public class ImageCacheExtensionsTests
             fallbackBytes[i] = (byte)(i % 256);
         }
 
-        var originalLoader = BitmapLoader.Current;
-
+        // Set up mock bitmap loader for testing
+        var originalLoader = GetCurrentBitmapLoader();
         try
         {
-            // Mock the BitmapLoader
-            BitmapLoader.Current = new MockBitmapLoader();
+            SetupMockBitmapLoader();
 
             // Act - Try to load from invalid URL
             var bitmap = await cache.LoadImageFromUrlWithFallback("http://invalid-url-that-does-not-exist.com/image.png", fallbackBytes).FirstAsync();
@@ -328,14 +319,7 @@ public class ImageCacheExtensionsTests
         }
         finally
         {
-            try
-            {
-                BitmapLoader.Current = originalLoader;
-            }
-            catch
-            {
-                // Ignore errors when restoring
-            }
+            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -374,15 +358,15 @@ public class ImageCacheExtensionsTests
         }
 
         var key = "size_test_image";
-        var originalLoader = BitmapLoader.Current;
+        var originalLoader = GetCurrentBitmapLoader();
 
         try
         {
             // Insert valid image data
             await cache.Insert(key, validImageData).FirstAsync();
 
-            // Mock the BitmapLoader
-            BitmapLoader.Current = new MockBitmapLoader();
+            // Set up mock bitmap loader for testing
+            SetupMockBitmapLoader();
 
             // Act
             var size = await cache.GetImageSize(key).FirstAsync();
@@ -399,14 +383,7 @@ public class ImageCacheExtensionsTests
         }
         finally
         {
-            try
-            {
-                BitmapLoader.Current = originalLoader;
-            }
-            catch
-            {
-                // Ignore errors when restoring
-            }
+            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -495,6 +472,56 @@ public class ImageCacheExtensionsTests
 
         // Assert - Should complete gracefully
         Assert.Equal(Unit.Default, result);
+    }
+
+    /// <summary>
+    /// Gets the current bitmap loader safely.
+    /// </summary>
+    /// <returns>The current bitmap loader or null if not available.</returns>
+    private static IBitmapLoader? GetCurrentBitmapLoader()
+    {
+        try
+        {
+            return BitmapLoader.Current;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Sets up a mock bitmap loader for testing.
+    /// </summary>
+    private static void SetupMockBitmapLoader()
+    {
+        try
+        {
+            BitmapLoader.Current = new MockBitmapLoader();
+        }
+        catch
+        {
+            // If we can't set the bitmap loader, the tests will skip appropriately
+        }
+    }
+
+    /// <summary>
+    /// Restores the original bitmap loader.
+    /// </summary>
+    /// <param name="originalLoader">The original loader to restore.</param>
+    private static void RestoreBitmapLoader(IBitmapLoader? originalLoader)
+    {
+        try
+        {
+            if (originalLoader != null)
+            {
+                BitmapLoader.Current = originalLoader;
+            }
+        }
+        catch
+        {
+            // Ignore errors when restoring
+        }
     }
 
     /// <summary>

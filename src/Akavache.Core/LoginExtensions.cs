@@ -28,7 +28,7 @@ public static class LoginExtensions
     [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
 #endif
     public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null) =>
-        blobCache.InsertObject("login:" + host, (user, password), absoluteExpiration);
+        blobCache.InsertObject("login:" + host, new LoginInfo(user, password), absoluteExpiration);
 
     /// <summary>
     /// Returns the currently cached user/password. If the cache does not
@@ -43,7 +43,7 @@ public static class LoginExtensions
     [RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
 #endif
     public static IObservable<LoginInfo> GetLogin(this ISecureBlobCache blobCache, string host = "default") =>
-        blobCache.GetObject<(string, string)>("login:" + host).Select(x => new LoginInfo(x));
+        blobCache.GetObject<LoginInfo>("login:" + host).Select(x => x ?? throw new KeyNotFoundException($"Login for host '{host}' not found in cache."));
 
     /// <summary>
     /// Erases the login associated with the specified host.
@@ -52,5 +52,5 @@ public static class LoginExtensions
     /// <param name="host">The host associated with the data.</param>
     /// <returns>A observable which signals when the erase is completed.</returns>
     public static IObservable<Unit> EraseLogin(this ISecureBlobCache blobCache, string host = "default") =>
-        blobCache.InvalidateObject<(string, string)>("login:" + host);
+        blobCache.InvalidateObject<LoginInfo>("login:" + host);
 }

@@ -142,12 +142,19 @@ public class UniversalSerializerTests
     [Fact]
     public void UniversalSerializerShouldThrowForInvalidInput()
     {
-        // Arrange & Act & Assert
+        // Arrange & Act & Assert - Test null serializer
         Assert.Throws<ArgumentNullException>(() =>
-            UniversalSerializer.Deserialize<string>([], null!));
+            UniversalSerializer.Deserialize<string>(new byte[] { 1, 2, 3 }, null!));
 
         Assert.Throws<ArgumentNullException>(() =>
             UniversalSerializer.Serialize("test", null!));
+
+        // Test null data - should return null rather than throw for empty/null data
+        var nullDataResult = UniversalSerializer.Deserialize<string>(null!, new SystemJsonSerializer());
+        Assert.Null(nullDataResult);
+
+        var emptyDataResult = UniversalSerializer.Deserialize<string>([], new SystemJsonSerializer());
+        Assert.Null(emptyDataResult);
     }
 
     /// <summary>
@@ -278,10 +285,7 @@ public class UniversalSerializerTests
         circularRef.Add(circularRef);
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            UniversalSerializer.Serialize(circularRef, serializer);
-        });
+        Assert.Throws<InvalidOperationException>(() => UniversalSerializer.Serialize(circularRef, serializer));
     }
 
     /// <summary>

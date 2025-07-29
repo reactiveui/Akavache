@@ -71,8 +71,25 @@ public static class HttpExtensions
     /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>The data downloaded from the URL.</returns>
-    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
-        HttpService.DownloadUrl(blobCache, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
+    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
+        }
+
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            throw new ArgumentException("URL cannot be empty or whitespace.", nameof(url));
+        }
+
+        return HttpService.DownloadUrl(blobCache, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
+    }
 
     /// <summary>
     /// Download data from an HTTP URL and insert the result into the
@@ -87,8 +104,20 @@ public static class HttpExtensions
     /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>The data downloaded from the URL.</returns>
-    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
-        HttpService.DownloadUrl(blobCache, url, method, headers, fetchAlways, absoluteExpiration);
+    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
+        }
+
+        return HttpService.DownloadUrl(blobCache, url, method, headers, fetchAlways, absoluteExpiration);
+    }
 
     /// <summary>
     /// Download data from an HTTP URL and insert the result into the
@@ -104,8 +133,35 @@ public static class HttpExtensions
     /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>The data downloaded from the URL.</returns>
-    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
-        HttpService.DownloadUrl(blobCache, key, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
+    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Key cannot be empty or whitespace.", nameof(key));
+        }
+
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
+        }
+
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            throw new ArgumentException("URL cannot be empty or whitespace.", nameof(url));
+        }
+
+        return HttpService.DownloadUrl(blobCache, key, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
+    }
 
     /// <summary>
     /// Download data from an HTTP URL and insert the result into the
@@ -121,6 +177,28 @@ public static class HttpExtensions
     /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>The data downloaded from the URL.</returns>
-    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
-        HttpService.DownloadUrl(blobCache, key, url, method, headers, fetchAlways, absoluteExpiration);
+    public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Key cannot be empty or whitespace.", nameof(key));
+        }
+
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
+        }
+
+        return HttpService.DownloadUrl(blobCache, key, url, method, headers, fetchAlways, absoluteExpiration);
+    }
 }
