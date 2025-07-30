@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <DefineConstants>ENCRYPTED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Akavache.Settings.Tests\Mocks\*.cs" LinkBase="Mocks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
+    <ProjectReference Include="..\Akavache.EncryptedSettings\Akavache.EncryptedSettings.csproj" />
+  </ItemGroup>
+
+</Project>

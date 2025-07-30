@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2024 .NET Foundation and Contributors. All rights reserved.
+﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
 
-namespace Akavache.Tests;
+namespace Akavache.Tests.Helpers;
 
 /// <summary>
 /// A set of utility helper methods for use throughout tests.
@@ -18,7 +18,7 @@ internal static class Utility
     /// <param name="directoryPath">The path to delete.</param>
     public static void DeleteDirectory(string directoryPath)
     {
-        // From http://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
+        // From https://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
         try
         {
             var di = new DirectoryInfo(directoryPath);

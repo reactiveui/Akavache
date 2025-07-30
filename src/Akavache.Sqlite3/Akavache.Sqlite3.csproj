@@ -2,28 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
-    <AssemblyName>Akavache.Sqlite3</AssemblyName>
-    <RootNamespace>Akavache.Sqlite3</RootNamespace>
-    <Description>Akavache Sqlite3</Description>
-    <PackageId>akavache.sqlite3</PackageId>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <DefineConstants>$(DefineConstants)</DefineConstants>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <Using Remove="Foundation" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
-    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.7" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Remove="EncryptedBlobCache.cs" />
-  </ItemGroup>
 
   <ItemGroup>
-    <None Remove="PerformanceGraphs.xlsx" />
-    <None Remove="sqlite-ng-notes.md" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
   </ItemGroup>
 
   <ItemGroup>

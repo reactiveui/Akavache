@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net9.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
+    <ProjectReference Include="..\Akavache.EncryptedSqlite3\Akavache.EncryptedSqlite3.csproj" />
+    <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <ProjectReference Include="..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
+  </ItemGroup>
+</Project>

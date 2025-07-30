@@ -1,4 +1,5 @@
 {
-   "shadowCopy": false
+  "parallelizeAssembly": true,
+  "parallelizeTestCollections": false,
+  "maxParallelThreads": 4
 }
-

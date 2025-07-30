@@ -1,13 +1,13 @@
 <Project>  
   <PropertyGroup>
-    <Copyright>Copyright (c) .NET Foundation and Contributors</Copyright>
+    <Copyright>Copyright (c) ReactiveUI and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/reactiveui/akavache/</PackageProjectUrl>
     <PackageIcon>logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Authors>.NET Foundation and Contributors</Authors>
-    <Owners>xanaisbettsx;ghuntley</Owners>
-    <PackageTags>Akavache;Cache;Xamarin;Sqlite3;Magic</PackageTags>
+    <Authors>ReactiveUI and Contributors</Authors>
+    <Owners>xanaisbettsx;glennawatson;chrispulman</Owners>
+    <PackageTags>Akavache;Cache;Maui;Sqlite3;Magic</PackageTags>
     <PackageReleaseNotes>https://github.com/reactiveui/akavache/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/reactiveui/akavache</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -28,7 +28,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>IDE1006;SA1313;SA1010</NoWarn>
-    <AkavacheTargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net8.0-android;net8.0-ios;net8.0-tvos;net8.0-macos;net8.0-maccatalyst;net9.0;net9.0-android;net9.0-ios;net9.0-tvos;net9.0-macos;net9.0-maccatalyst</AkavacheTargetFrameworks>
+    <AkavacheTargetFrameworks>netstandard2.0;net8.0;net9.0</AkavacheTargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')))">
     <IsAotCompatible>true</IsAotCompatible>
@@ -51,6 +51,21 @@
 
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" /> 
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="8.5.0" />
+    <PackageReference Include="ReactiveUI.Testing" Version="20.4.1" />
   </ItemGroup>
 
   <ItemGroup>
