@@ -3,20 +3,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Windows;
 using AkavacheTodoWpf.Models;
+using ReactiveUI;
 
 namespace AkavacheTodoWpf.Services;
 
 /// <summary>
 /// Service for handling todo notifications and reminders in WPF.
 /// </summary>
-public class NotificationService : IDisposable
+public class NotificationService : ReactiveObject, IDisposable
 {
-    private readonly TodoCacheService _cacheService;
+    // Cache info property
+    private readonly ObservableAsPropertyHelper<CacheInfo> _cacheInfo;
     private readonly Subject<TodoItem> _reminderSubject = new();
     private readonly Timer? _reminderTimer;
     private AppSettings _currentSettings = new();
@@ -25,18 +24,29 @@ public class NotificationService : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="NotificationService"/> class.
     /// </summary>
-    /// <param name="cacheService">The cache service.</param>
-    public NotificationService(TodoCacheService cacheService)
+    public NotificationService()
     {
-        _cacheService = cacheService;
-
         // Subscribe to settings changes
         TodoCacheService.GetSettings()
-            .Subscribe(settings => _currentSettings = settings);
+            .Subscribe(settings => _currentSettings = settings ?? new AppSettings());
 
         // Start reminder timer
         _reminderTimer = new Timer(CheckForReminders, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+
+        // Setup cache info
+        _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
+            .SelectMany(_ => TodoCacheService.GetCacheInfo())
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .ToProperty(this, x => x.CacheInfo, new CacheInfo());
     }
+
+    /// <summary>
+    /// Gets the cache information.
+    /// </summary>
+    /// <value>
+    /// The cache information.
+    /// </value>
+    public CacheInfo CacheInfo => _cacheInfo.Value;
 
     /// <summary>
     /// Gets an observable that emits todos that need reminders.
@@ -118,17 +128,17 @@ public class NotificationService : IDisposable
 
         // Schedule future notification
         var delay = reminderTime - DateTimeOffset.Now;
-        if (delay == null || delay < TimeSpan.Zero)
+        if (delay == null || delay.Value < TimeSpan.Zero)
         {
             // If the delay is negative, it means the todo is overdue
             _reminderSubject.OnNext(todo!);
             return Observable.Return(Unit.Default);
         }
 
-        return Observable.Timer(delay)
+        return Observable.Timer(delay.Value)
             .Select(_ =>
             {
-                if (!todo.IsCompleted)
+                if (todo?.IsCompleted == false)
                 {
                     _reminderSubject.OnNext(todo);
                 }
@@ -173,9 +183,18 @@ public class NotificationService : IDisposable
     /// </summary>
     /// <returns>Observable unit.</returns>
     public IObservable<Unit> CheckImmediateReminders() => GetTodosNeedingReminders()
-            .SelectMany(todos => Observable.FromIterable(todos))
-            .SelectMany(todo => SendNotification(todo, GetNotificationMessage(todo)))
-            .Aggregate(Unit.Default, (_, __) => Unit.Default);
+            .SelectMany(todos =>
+            {
+                if (todos == null || todos.Count == 0)
+                {
+                    return Observable.Return(Unit.Default);
+                }
+
+                return todos.ToObservable()
+                    .SelectMany(todo => SendNotification(todo, GetNotificationMessage(todo)))
+                    .DefaultIfEmpty(Unit.Default)
+                    .Take(1);
+            });
 
     /// <summary>
     /// Updates notification settings and reschedules reminders.
@@ -198,10 +217,19 @@ public class NotificationService : IDisposable
 
         // Reschedule all reminders with new settings
         return TodoCacheService.GetAllTodos()
-            .SelectMany(todos => Observable.FromIterable(todos))
-            .Where(todo => !todo.IsCompleted && todo.DueDate.HasValue)
-            .SelectMany(ScheduleReminder)
-            .Aggregate(Unit.Default, (_, __) => Unit.Default);
+            .SelectMany(todos =>
+            {
+                if (todos == null || todos.Count == 0)
+                {
+                    return Observable.Return(Unit.Default);
+                }
+
+                return todos.ToObservable()
+                    .Where(todo => !todo.IsCompleted && todo.DueDate.HasValue)
+                    .SelectMany(ScheduleReminder)
+                    .DefaultIfEmpty(Unit.Default)
+                    .Take(1);
+            });
     }
 
     /// <summary>
@@ -223,6 +251,7 @@ public class NotificationService : IDisposable
         {
             _reminderTimer?.Dispose();
             _reminderSubject?.Dispose();
+            _cacheInfo?.Dispose();
             _disposed = true;
         }
     }

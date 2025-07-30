@@ -3,9 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Media;
 using AkavacheTodoWpf.Models;
@@ -19,7 +17,6 @@ namespace AkavacheTodoWpf.ViewModels;
 /// </summary>
 public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
-    private readonly TodoCacheService _cacheService;
     private readonly NotificationService _notificationService;
     private readonly ObservableAsPropertyHelper<string> _dueDateDisplay;
     private readonly ObservableAsPropertyHelper<string> _priorityDisplay;
@@ -32,18 +29,18 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// Initializes a new instance of the <see cref="TodoItemViewModel"/> class.
     /// </summary>
     /// <param name="todoItem">The todo item model.</param>
-    /// <param name="cacheService">The cache service.</param>
     /// <param name="notificationService">The notification service.</param>
-    public TodoItemViewModel(TodoItem todoItem, TodoCacheService cacheService, NotificationService notificationService)
+    /// <param name="deleteAction">Action to call when deleting this item.</param>
+    public TodoItemViewModel(TodoItem todoItem, NotificationService notificationService, Action<TodoItemViewModel>? deleteAction = null)
     {
         TodoItem = todoItem;
-        _cacheService = cacheService;
         _notificationService = notificationService;
+        DeleteAction = deleteAction;
 
         // Create commands
         ToggleCompletedCommand = ReactiveCommand.CreateFromObservable(ExecuteToggleCompleted);
         DeleteCommand = ReactiveCommand.CreateFromObservable(ExecuteDelete);
-        EditCommand = ReactiveCommand.Create(ExecuteEdit);
+        EditCommand = ReactiveCommand.CreateFromObservable(ExecuteEdit);
         ScheduleReminderCommand = ReactiveCommand.CreateFromObservable(ExecuteScheduleReminder);
 
         // Setup computed properties
@@ -88,7 +85,9 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 .Skip(1) // Skip initial value
                 .Throttle(TimeSpan.FromMilliseconds(500))
                 .SelectMany(_ => SaveTodoItem())
-                .Subscribe()
+                .Subscribe(
+                    _ => { },
+                    ex => System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex}"))
                 .DisposeWith(disposables);
         });
     }
@@ -102,6 +101,11 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// Gets the todo item model.
     /// </summary>
     public TodoItem TodoItem { get; }
+
+    /// <summary>
+    /// Gets or sets the delete action to call when deleting this item.
+    /// </summary>
+    public Action<TodoItemViewModel>? DeleteAction { get; set; }
 
     /// <summary>
     /// Gets the formatted due date display.
@@ -189,34 +193,44 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     private IObservable<Unit> ExecuteDelete()
     {
-        return TodoCacheService.InvalidateTodo(TodoItem.Id)
-            .SelectMany(_ =>
+        return Observable.FromAsync(async () =>
+        {
+            // Remove from parent collection first
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                // In a real app, you might want to remove from parent collection
-                // This is typically handled by the parent view model
-                return Observable.Return(Unit.Default);
+                DeleteAction?.Invoke(this);
             });
+
+            // Then invalidate cache
+            await TodoCacheService.InvalidateTodo(TodoItem.Id);
+        });
     }
 
-    private Unit ExecuteEdit()
+    private IObservable<Unit> ExecuteEdit()
     {
-        // In a real app, this would open an edit dialog or navigate to an edit view
-        // For this demo, we'll show a simple input dialog using a basic approach
-        Application.Current.Dispatcher.Invoke(() =>
+        return Observable.FromAsync(async () =>
         {
-            var dialog = new EditTodoDialog(TodoItem.Title);
-            if (dialog.ShowDialog() == true)
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                var newTitle = dialog.TodoTitle;
-                if (!string.IsNullOrWhiteSpace(newTitle) && newTitle != TodoItem.Title)
+                var dialog = new Views.EditTodoDialog(TodoItem);
+                if (dialog.ShowDialog() == true)
                 {
-                    TodoItem.Title = newTitle;
-                    SaveTodoItem().Subscribe();
-                }
-            }
-        });
+                    var updatedTodo = dialog.UpdatedTodo;
+                    if (updatedTodo != null)
+                    {
+                        TodoItem.Title = updatedTodo.Title;
+                        TodoItem.Description = updatedTodo.Description;
+                        TodoItem.DueDate = updatedTodo.DueDate;
+                        TodoItem.Priority = updatedTodo.Priority;
 
-        return Unit.Default;
+                        // Trigger property notifications
+                        this.RaisePropertyChanged(nameof(TodoItem));
+
+                        SaveTodoItem().Subscribe();
+                    }
+                }
+            });
+        });
     }
 
     private IObservable<Unit> ExecuteScheduleReminder()

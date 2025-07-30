@@ -10,7 +10,10 @@
     Title="Akavache Todo WPF"
     Width="1000"
     Height="700"
+    d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
     WindowStartupLocation="CenterScreen"
+    Loaded="OnLoaded"
+    Closing="OnClosing"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -243,12 +246,58 @@
                                 </TextBox.Style>
                             </TextBox>
 
-                            <DatePicker
+                            <StackPanel
                                 Grid.Row="2"
                                 Grid.Column="0"
-                                Margin="5"
-                                Padding="5"
-                                SelectedDate="{Binding NewTodoDueDate}" />
+                                Orientation="Horizontal">
+                                <DatePicker
+                                    Width="120"
+                                    Margin="5"
+                                    Padding="5"
+                                    SelectedDate="{Binding NewTodoDueDate}" />
+                                <TextBox
+                                    Width="80"
+                                    Margin="5"
+                                    Padding="5"
+                                    Text="{Binding NewTodoTime, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="TextBox">
+                                                        <Border
+                                                            Background="White"
+                                                            BorderBrush="Gray"
+                                                            BorderThickness="1"
+                                                            CornerRadius="3">
+                                                            <ScrollViewer x:Name="PART_ContentHost" />
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="Text" Value="">
+                                                                <Setter Property="Background">
+                                                                    <Setter.Value>
+                                                                        <VisualBrush
+                                                                            AlignmentX="Left"
+                                                                            AlignmentY="Center"
+                                                                            Stretch="None">
+                                                                            <VisualBrush.Visual>
+                                                                                <TextBlock
+                                                                                    Margin="5,0"
+                                                                                    Foreground="Gray"
+                                                                                    Text="HH:mm" />
+                                                                            </VisualBrush.Visual>
+                                                                        </VisualBrush>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                            </StackPanel>
 
                             <ComboBox
                                 Grid.Row="2"
