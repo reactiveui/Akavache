@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using BenchmarkDotNet.Attributes;
@@ -23,11 +22,11 @@ namespace Akavache.Benchmarks
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     public class CacheDatabaseReadBenchmarks
     {
-        private readonly Random _randomNumberGenerator = new Random();
+        private readonly Random _randomNumberGenerator = new();
         private string _tempDirectory;
         private IDisposable _directoryCleanup;
 
-        [Params(10, 100, 1000)] 
+        [Params(10, 100, 1000)]
         public int BenchmarkSize { get; set; }
 
         [GlobalSetup]
@@ -35,7 +34,7 @@ namespace Akavache.Benchmarks
         {
             // Initialize the serializer first
             CoreRegistrations.Serializer = new SystemJsonSerializer();
-            
+
             // Create temporary directory
             _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
 
@@ -77,7 +76,7 @@ namespace Akavache.Benchmarks
         public async Task RandomRead()
         {
             var tasks = new List<Task>();
-            
+
             for (int i = 0; i < Size; i++)
             {
                 var randomKey = Keys[_randomNumberGenerator.Next(0, Keys.Count - 1)];
@@ -103,12 +102,12 @@ namespace Akavache.Benchmarks
         /// </summary>
         /// <param name="path">A path to use for generating it.</param>
         /// <returns>The blob cache.</returns>
-        private IBlobCache GenerateAGiantDatabaseSync(string path)
+        private Sqlite3.SqliteBlobCache GenerateAGiantDatabaseSync(string path)
         {
             try
             {
                 path ??= GetIntegrationTestRootDirectory();
-                
+
                 var giantDbSize = Math.Max(1000, BenchmarkSize * 10); // Ensure enough data for benchmarks
                 var cache = new Sqlite3.SqliteBlobCache(Path.Combine(path, "benchmarks-read.db"));
 
@@ -119,25 +118,25 @@ namespace Akavache.Benchmarks
                 }
 
                 cache.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
-                
+
                 // Generate smaller chunks to avoid memory issues
                 var ret = new List<string>();
                 var remaining = giantDbSize;
-                
+
                 while (remaining > 0)
                 {
                     var chunkSize = Math.Min(500, remaining); // Process in reasonable chunks
                     var toWrite = PerfHelper.GenerateRandomDatabaseContents(chunkSize);
-                    
+
                     cache.Insert(toWrite).FirstAsync().GetAwaiter().GetResult();
-                    
+
                     foreach (var k in toWrite.Keys)
                     {
                         ret.Add(k);
                     }
-                    
+
                     remaining -= chunkSize;
-                    
+
                     if (remaining % 2000 == 0 || remaining == 0)
                     {
                         Console.WriteLine($"Generated {giantDbSize - remaining}/{giantDbSize} items");
