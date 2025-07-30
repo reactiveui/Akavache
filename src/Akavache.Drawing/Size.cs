@@ -72,7 +72,7 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
             return hash;
         }
 #else
-            return HashCode.Combine(Width, Height);
+        return HashCode.Combine(Width, Height);
 #endif
     }
 }
