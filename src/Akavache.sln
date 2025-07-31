@@ -42,10 +42,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Benchmarks", "Akav
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoBlazor", "Samples\AkavacheTodoBlazor\AkavacheTodoBlazor.csproj", "{9B65B0D1-B588-3AF2-4994-F48D54029395}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoMaui", "Samples\AkavacheTodoMaui\AkavacheTodoMaui.csproj", "{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoWpf", "Samples\AkavacheTodoWpf\AkavacheTodoWpf.csproj", "{AF425552-A630-4106-353B-6DB5F8AF614F}"
 EndProject
 Global
@@ -102,14 +98,6 @@ Global
 		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F48F915-99AB-CDD0-6C11-EFD66E12E295}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9B65B0D1-B588-3AF2-4994-F48D54029395}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B65B0D1-B588-3AF2-4994-F48D54029395}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B65B0D1-B588-3AF2-4994-F48D54029395}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B65B0D1-B588-3AF2-4994-F48D54029395}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AF425552-A630-4106-353B-6DB5F8AF614F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AF425552-A630-4106-353B-6DB5F8AF614F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF425552-A630-4106-353B-6DB5F8AF614F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -119,8 +107,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{9B65B0D1-B588-3AF2-4994-F48D54029395} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{AF425552-A630-4106-353B-6DB5F8AF614F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
