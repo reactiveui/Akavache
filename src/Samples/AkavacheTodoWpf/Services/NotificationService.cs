@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.Versioning;
 using System.Windows;
 using AkavacheTodoWpf.Models;
 using ReactiveUI;
@@ -12,6 +13,7 @@ namespace AkavacheTodoWpf.Services;
 /// <summary>
 /// Service for handling todo notifications and reminders in WPF.
 /// </summary>
+[SupportedOSPlatform("windows10.0.19041.0")]
 public class NotificationService : ReactiveObject, IDisposable
 {
     // Cache info property

@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
+using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Media;
 using AkavacheTodoWpf.Models;
@@ -15,6 +16,7 @@ namespace AkavacheTodoWpf.ViewModels;
 /// <summary>
 /// View model for individual todo items with reactive behaviors for WPF.
 /// </summary>
+[SupportedOSPlatform("windows10.0.19041.0")]
 public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
     private readonly NotificationService _notificationService;
@@ -79,6 +81,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         Activator = new ViewModelActivator();
 
         this.WhenActivated(disposables =>
+
             // Auto-save when properties change
             this.WhenAnyValue(x => x.TodoItem.IsCompleted)
                 .Skip(1) // Skip initial value
@@ -187,6 +190,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
             }))
         .SelectMany(_ => SaveTodoItem())
         .SelectMany(_ =>
+
             // Invalidate cache for this specific todo to force refresh
             TodoCacheService.InvalidateTodo(TodoItem.Id));
 

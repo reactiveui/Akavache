@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
+using System.Runtime.Versioning;
 using System.Windows;
 using Akavache.Core;
 using Akavache.Sqlite3;
@@ -18,6 +19,7 @@ namespace AkavacheTodoWpf;
 /// <summary>
 /// Interaction logic for App.xaml with Akavache and dependency injection setup.
 /// </summary>
+[SupportedOSPlatform("windows10.0.19041.0")]
 public partial class App : Application
 {
     private IHost? _host;
@@ -58,7 +60,7 @@ public partial class App : Application
                     {
                         // Deactivate the view model to stop all timers and subscriptions
                         mainViewModel.Activator?.Deactivate();
-                        
+
                         // Save application state
                         await mainViewModel.SaveApplicationState().ToTask();
                     }

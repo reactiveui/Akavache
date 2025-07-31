@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.Versioning;
 using System.Windows;
 using AkavacheTodoWpf.ViewModels;
 using ReactiveUI;
@@ -12,6 +13,7 @@ namespace AkavacheTodoWpf;
 /// <summary>
 /// Interaction logic for MainWindow.xaml with ReactiveUI integration.
 /// </summary>
+[SupportedOSPlatform("windows10.0.19041.0")]
 public partial class MainWindow : Window, IViewFor<MainViewModel>
 {
     /// <summary>

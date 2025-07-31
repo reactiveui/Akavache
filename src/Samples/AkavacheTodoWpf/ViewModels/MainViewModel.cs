@@ -5,6 +5,7 @@
 
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
+using System.Runtime.Versioning;
 using System.Windows;
 using AkavacheTodoWpf.Models;
 using AkavacheTodoWpf.Services;
@@ -17,6 +18,7 @@ namespace AkavacheTodoWpf.ViewModels;
 /// <summary>
 /// Main view model for the WPF Todo application demonstrating ReactiveUI and Akavache integration.
 /// </summary>
+[SupportedOSPlatform("windows10.0.19041.0")]
 public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 {
     private readonly NotificationService _notificationService;
