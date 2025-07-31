@@ -59,6 +59,8 @@ public static class BlobCacheBuilderExtensions
             throw new InvalidOperationException("Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.");
         }
 
+        SQLitePCL.Batteries_V2.Init();
+
 #if ENCRYPTED
         // Create SQLite caches for persistent storage
         builder.WithUserAccount(CreateEncryptedSqliteCache("UserAccount", applicationName, password))

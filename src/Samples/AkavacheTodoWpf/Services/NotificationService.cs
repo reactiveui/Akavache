@@ -61,9 +61,6 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <returns>Observable unit.</returns>
     public static IObservable<Unit> ShowTrayNotification(TodoItem todo, string message) =>
         Observable.FromAsync(async () =>
-        {
-            // In a real application, you might use NotifyIcon or Toast notifications
-            // For this demo, we'll use a simple approach
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 // Create a simple notification window or use system tray
@@ -102,8 +99,7 @@ public class NotificationService : ReactiveObject, IDisposable
                 timer.Start();
 
                 notificationWindow.Show();
-            });
-        });
+            }));
 
     /// <summary>
     /// Schedules a reminder for a specific todo item.

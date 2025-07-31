@@ -79,7 +79,6 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         Activator = new ViewModelActivator();
 
         this.WhenActivated(disposables =>
-        {
             // Auto-save when properties change
             this.WhenAnyValue(x => x.TodoItem.IsCompleted)
                 .Skip(1) // Skip initial value
@@ -88,8 +87,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 .Subscribe(
                     _ => { },
                     ex => System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex}"))
-                .DisposeWith(disposables);
-        });
+                .DisposeWith(disposables));
     }
 
     /// <summary>
@@ -174,43 +172,37 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// </summary>
     public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : "No tags";
 
-    private IObservable<Unit> ExecuteToggleCompleted()
-    {
-        return Observable.FromAsync(async () =>
-        {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
+    private IObservable<Unit> ExecuteToggleCompleted() =>
+        Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 TodoItem.IsCompleted = !TodoItem.IsCompleted;
-            });
-        })
+
+                // Trigger property notifications for UI updates
+                this.RaisePropertyChanged(nameof(TodoItem));
+                this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
+                this.RaisePropertyChanged(nameof(IsOverdue));
+                this.RaisePropertyChanged(nameof(IsDueSoon));
+                this.RaisePropertyChanged(nameof(BackgroundBrush));
+                this.RaisePropertyChanged(nameof(ForegroundBrush));
+            }))
         .SelectMany(_ => SaveTodoItem())
         .SelectMany(_ =>
-        {
             // Invalidate cache for this specific todo to force refresh
-            return TodoCacheService.InvalidateTodo(TodoItem.Id);
-        });
-    }
+            TodoCacheService.InvalidateTodo(TodoItem.Id));
 
-    private IObservable<Unit> ExecuteDelete()
-    {
-        return Observable.FromAsync(async () =>
+    private IObservable<Unit> ExecuteDelete() =>
+        Observable.FromAsync(async () =>
         {
             // Remove from parent collection first
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                DeleteAction?.Invoke(this);
-            });
+            await Application.Current.Dispatcher.InvokeAsync(() => DeleteAction?.Invoke(this));
 
             // Then invalidate cache
             await TodoCacheService.InvalidateTodo(TodoItem.Id);
         });
-    }
 
     private IObservable<Unit> ExecuteEdit()
     {
-        return Observable.FromAsync(async () =>
-        {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
+        return Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 var dialog = new Views.EditTodoDialog(TodoItem);
                 if (dialog.ShowDialog() == true)
@@ -223,14 +215,18 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                         TodoItem.DueDate = updatedTodo.DueDate;
                         TodoItem.Priority = updatedTodo.Priority;
 
-                        // Trigger property notifications
+                        // Trigger property notifications for ALL relevant properties
                         this.RaisePropertyChanged(nameof(TodoItem));
+                        this.RaisePropertyChanged(nameof(TodoItem.Title));
+                        this.RaisePropertyChanged(nameof(TodoItem.Description));
+                        this.RaisePropertyChanged(nameof(TodoItem.DueDate));
+                        this.RaisePropertyChanged(nameof(TodoItem.Priority));
+                        this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
 
                         SaveTodoItem().Subscribe();
                     }
                 }
-            });
-        });
+            }));
     }
 
     private IObservable<Unit> ExecuteScheduleReminder()

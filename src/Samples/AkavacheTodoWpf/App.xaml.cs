@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Threading.Tasks;
 using System.Windows;
 using Akavache.Core;
 using Akavache.Sqlite3;
@@ -47,19 +48,57 @@ public partial class App : Application
     {
         try
         {
-            // Shutdown Akavache properly to flush all pending operations
-            await BlobCache.Shutdown();
-
-            // Shutdown dependency injection host
+            // Step 1: Stop all ViewModels and their timers first
             if (_host != null)
             {
-                await _host.StopAsync();
-                _host.Dispose();
+                var mainViewModel = _host.Services.GetService<MainViewModel>();
+                if (mainViewModel != null)
+                {
+                    try
+                    {
+                        // Deactivate the view model to stop all timers and subscriptions
+                        mainViewModel.Activator?.Deactivate();
+                        
+                        // Save application state
+                        await mainViewModel.SaveApplicationState().ToTask();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error saving application state: {ex}");
+                    }
+                }
+            }
+
+            // Step 2: Give a moment for any pending operations to complete
+            await Task.Delay(500);
+
+            // Step 3: Shutdown Akavache properly to flush all pending operations
+            try
+            {
+                await BlobCache.Shutdown().ToTask();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during BlobCache shutdown: {ex}");
+            }
+
+            // Step 4: Shutdown dependency injection host
+            if (_host != null)
+            {
+                try
+                {
+                    await _host.StopAsync();
+                    _host.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error during host shutdown: {ex}");
+                }
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error during shutdown: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Error during application shutdown: {ex}");
         }
         finally
         {
@@ -75,15 +114,9 @@ public partial class App : Application
         // Step 2: Configure DateTime handling for consistent behavior
         BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
 
-        ////// Step 3: Initialize SQLite support
-        ////SQLitePCL.Batteries_V2.Init();
-
-        // Step 4: Use the builder pattern to configure Akavache with SQLite persistence
-        BlobCache.Initialize(builder =>
-        {
-            builder.WithApplicationName("AkavacheTodoWpf")
-                   .WithSqliteDefaults(); // This creates SQLite caches for all cache types
-        });
+        // Step 3: Use the builder pattern to configure Akavache with SQLite persistence
+        BlobCache.Initialize(builder => builder.WithApplicationName("AkavacheTodoWpf")
+                   .WithSqliteDefaults());
     }
 
     private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
@@ -110,10 +143,7 @@ public partial class App : Application
         mainWindow.Show();
 
         // Force activation after window is shown
-        mainWindow.Loaded += (s, e) =>
-        {
-            mainViewModel.Activator?.Activate();
-        };
+        mainWindow.Loaded += (s, e) => mainViewModel.Activator?.Activate();
         mainViewModel.Activator.Activate();
     }
 }

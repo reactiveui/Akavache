@@ -64,42 +64,79 @@ public static class TodoCacheService
             {
                 TotalTodos = todos.Count,
                 CompletedTodos = todos.Count(t => t.IsCompleted),
-                OverdueTodos = todos.Count(t => !t.IsCompleted && t.DueDate.HasValue && t.DueDate < now),
-                DueSoonTodos = todos.Count(t => !t.IsCompleted && t.DueDate.HasValue &&
-                    t.DueDate >= now && t.DueDate <= now.AddDays(1))
+                OverdueTodos = todos.Count(t => !t.IsOverdue),
+                DueSoonTodos = todos.Count(t => !t.IsDueSoon)
             };
         });
 
     /// <summary>
-    /// Gets cache information.
+    /// Gets cache information with enhanced debugging and error handling.
     /// </summary>
     /// <returns>Observable cache information.</returns>
-    public static IObservable<CacheInfo> GetCacheInfo() => Observable.FromAsync(async () =>
-    {
-        try
+    public static IObservable<CacheInfo> GetCacheInfo() =>
+        Observable.Defer(() =>
         {
-            var userKeys = await BlobCache.UserAccount.GetAllKeys();
-            var localKeys = await BlobCache.LocalMachine.GetAllKeys();
-            var secureKeys = await BlobCache.Secure.GetAllKeys();
+            System.Diagnostics.Debug.WriteLine("Getting cache info...");
 
-            return new CacheInfo
-            {
-                UserAccountKeys = userKeys?.Length ?? 0,
-                LocalMachineKeys = localKeys?.Length ?? 0,
-                SecureKeys = secureKeys?.Length ?? 0
-            };
-        }
-        catch (Exception)
-        {
-            // Return empty cache info if any cache operation fails
-            return new CacheInfo
-            {
-                UserAccountKeys = 0,
-                LocalMachineKeys = 0,
-                SecureKeys = 0
-            };
-        }
-    });
+            // Use timeout and better error handling for each cache operation
+            var userKeysObs = BlobCache.UserAccount.GetAllKeys()
+                .ToArray()
+                .Timeout(TimeSpan.FromSeconds(5))
+                .Catch((Exception ex) =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"UserAccount cache error: {ex.Message}");
+                    return Observable.Return(Array.Empty<string>());
+                });
+
+            var localKeysObs = BlobCache.LocalMachine.GetAllKeys()
+                .ToArray()
+                .Timeout(TimeSpan.FromSeconds(5))
+                .Catch((Exception ex) =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"LocalMachine cache error: {ex.Message}");
+                    return Observable.Return(Array.Empty<string>());
+                });
+
+            var secureKeysObs = BlobCache.Secure.GetAllKeys()
+                .ToArray()
+                .Timeout(TimeSpan.FromSeconds(5))
+                .Catch((Exception ex) =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"Secure cache error: {ex.Message}");
+                    return Observable.Return(Array.Empty<string>());
+                });
+
+            return userKeysObs.CombineLatest(
+                localKeysObs,
+                secureKeysObs,
+                (userKeys, localKeys, secureKeys) =>
+                {
+                    var result = new CacheInfo
+                    {
+                        UserAccountKeys = userKeys?.Length ?? 0,
+                        LocalMachineKeys = localKeys?.Length ?? 0,
+                        SecureKeys = secureKeys?.Length ?? 0,
+                        TotalKeys = (userKeys?.Length ?? 0) + (localKeys?.Length ?? 0) + (secureKeys?.Length ?? 0),
+                        LastChecked = DateTimeOffset.Now
+                    };
+
+                    System.Diagnostics.Debug.WriteLine($"Cache keys found: User={result.UserAccountKeys}, Local={result.LocalMachineKeys}, Secure={result.SecureKeys}");
+                    return result;
+                })
+                .Timeout(TimeSpan.FromSeconds(15)) // Overall timeout
+                .Catch((Exception ex) =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"Cache info error: {ex}");
+                    return Observable.Return(new CacheInfo
+                    {
+                        UserAccountKeys = -1,
+                        LocalMachineKeys = -1,
+                        SecureKeys = -1,
+                        TotalKeys = -3,
+                        LastChecked = DateTimeOffset.Now
+                    });
+                });
+        });
 
     /// <summary>
     /// Invalidates a todo by ID.

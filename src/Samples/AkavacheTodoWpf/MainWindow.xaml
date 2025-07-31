@@ -11,9 +11,9 @@
     Width="1000"
     Height="700"
     d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-    WindowStartupLocation="CenterScreen"
-    Loaded="OnLoaded"
     Closing="OnClosing"
+    Loaded="OnLoaded"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <Window.Resources>
