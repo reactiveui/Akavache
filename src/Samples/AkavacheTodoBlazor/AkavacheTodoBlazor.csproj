@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <AssemblyTitle>Akavache Todo Blazor</AssemblyTitle>
+    <AssemblyDescription>Demonstrates Akavache features in a Blazor Server application</AssemblyDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Blazor" Version="20.4.1" />
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Akavache.Core\Akavache.Core.csproj" />
+    <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
+    <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <ProjectReference Include="..\..\Akavache.Settings\Akavache.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

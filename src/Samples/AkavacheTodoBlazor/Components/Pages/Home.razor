@@ -1,0 +1,311 @@
+@page "/"
+@using AkavacheTodoBlazor.ViewModels
+@using AkavacheTodoBlazor.Models
+@using ReactiveUI.Blazor
+@inherits ReactiveComponentBase<MainViewModel>
+@inject MainViewModel ViewModel
+
+<PageTitle>Akavache Todo - Blazor Server</PageTitle>
+
+<style>
+    .todo-completed { opacity: 0.6; text-decoration: line-through; }
+    .todo-overdue { border-left: 4px solid #dc3545; background-color: #f8d7da; }
+    .todo-due-soon { border-left: 4px solid #ffc107; background-color: #fff3cd; }
+    .todo-normal { border-left: 4px solid #28a745; }
+    .priority-critical { color: #dc3545; }
+    .priority-high { color: #fd7e14; }
+    .priority-medium { color: #28a745; }
+    .priority-low { color: #007bff; }
+    .cache-info { background-color: #e9ecef; border-radius: 0.375rem; }
+</style>
+
+<!-- Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="bg-primary text-white p-4 rounded">
+            <h1 class="h2 mb-2">??? Akavache Todo Demo - Blazor Server</h1>
+            <p class="mb-1">Demonstrating comprehensive Akavache caching features in Blazor</p>
+            <small class="text-light">@ViewModel.StatusMessage</small>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary">@ViewModel.TodoStats.TotalTodos</h5>
+                <p class="card-text">Total</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">@ViewModel.TodoStats.CompletedTodos</h5>
+                <p class="card-text">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-danger">@ViewModel.TodoStats.OverdueTodos</h5>
+                <p class="card-text">Overdue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">@ViewModel.TodoStats.DueSoonTodos</h5>
+                <p class="card-text">Due Soon</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Todo -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">? Add New Todo</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Title *</label>
+                <input type="text" class="form-control" placeholder="Todo title..." @bind="ViewModel.NewTodoTitle" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Due Date</label>
+                <input type="datetime-local" class="form-control" @bind="ViewModel.NewTodoDueDate" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" rows="2" placeholder="Description (optional)..." @bind="ViewModel.NewTodoDescription"></textarea>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Priority</label>
+                <select class="form-select" @bind="ViewModel.NewTodoPriority">
+                    @foreach (var priority in ViewModel.PriorityOptions)
+                    {
+                        <option value="@priority">@priority</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-primary" disabled="@ViewModel.IsLoading" @onclick="() => ViewModel.AddTodoCommand.Execute().Subscribe()">
+            @if (ViewModel.IsLoading)
+            {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Add Todo
+        </button>
+    </div>
+</div>
+
+<!-- Todo List -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">?? Your Todos</h5>
+        <div>
+            <button class="btn btn-outline-primary btn-sm" @onclick="() => ViewModel.ToggleThemeCommand.Execute().Subscribe()">
+                ?? Theme: @ViewModel.Settings.Theme
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (ViewModel.Todos.Any())
+        {
+            @foreach (var todo in ViewModel.Todos)
+            {
+                <div class="card mb-2 @todo.StatusCssClass">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           checked="@todo.TodoItem.IsCompleted" 
+                                           @onchange="() => todo.ToggleCompletedCommand.Execute().Subscribe()" />
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h6 class="card-title mb-1 @todo.StatusCssClass">
+                                    @todo.TodoItem.Title
+                                    <span class="@todo.PriorityBadgeClass ms-2">@todo.PriorityDisplay</span>
+                                </h6>
+                                @if (!string.IsNullOrEmpty(todo.TodoItem.Description))
+                                {
+                                    <p class="card-text small text-muted">@todo.TodoItem.Description</p>
+                                }
+                                <small class="text-muted">
+                                    ?? @todo.RelativeTimeDisplay
+                                    @if (todo.TodoItem.Tags.Any())
+                                    {
+                                        <span class="ms-2">??? @todo.TagsDisplay</span>
+                                    }
+                                </small>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" @onclick="() => todo.EditCommand.Execute().Subscribe()">
+                                        ?? Edit
+                                    </button>
+                                    <button class="btn btn-outline-danger" @onclick="() => todo.DeleteCommand.Execute().Subscribe()">
+                                        ??? Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Pagination -->
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(ViewModel.HasPreviousPage ? "" : "disabled")">
+                        <button class="page-link" @onclick="() => ViewModel.PreviousPageCommand.Execute().Subscribe()">Previous</button>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">Page @ViewModel.CurrentPage of @ViewModel.TotalPages</span>
+                    </li>
+                    <li class="page-item @(ViewModel.HasNextPage ? "" : "disabled")">
+                        <button class="page-link" @onclick="() => ViewModel.NextPageCommand.Execute().Subscribe()">Next</button>
+                    </li>
+                </ul>
+            </nav>
+        }
+        else
+        {
+            <div class="text-center text-muted py-5">
+                <h4>?? No todos yet</h4>
+                <p>Add your first todo above to get started!</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Settings Panel -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">?? Settings</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" 
+                           checked="@ViewModel.Settings.ShowCompleted" 
+                           @onchange="(e) => { ViewModel.Settings.ShowCompleted = (bool)e.Value!; ViewModel.SaveSettingsCommand.Execute().Subscribe(); }" />
+                    <label class="form-check-label">Show completed todos</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" 
+                           checked="@ViewModel.Settings.AutoRefresh" 
+                           @onchange="(e) => { ViewModel.Settings.AutoRefresh = (bool)e.Value!; ViewModel.SaveSettingsCommand.Execute().Subscribe(); }" />
+                    <label class="form-check-label">Auto-refresh data</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Items per page</label>
+                    <select class="form-select" @bind="ViewModel.Settings.ItemsPerPage" 
+                            @onchange="() => ViewModel.SaveSettingsCommand.Execute().Subscribe()">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sort order</label>
+                    <select class="form-select" @bind="ViewModel.Settings.SortOrder" 
+                            @onchange="() => ViewModel.SaveSettingsCommand.Execute().Subscribe()">
+                        <option value="@TodoSortOrder.DueDate">Due Date</option>
+                        <option value="@TodoSortOrder.Priority">Priority</option>
+                        <option value="@TodoSortOrder.Title">Title</option>
+                        <option value="@TodoSortOrder.CreatedDate">Created Date</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cache Information -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">?? Cache Information</h5>
+    </div>
+    <div class="card-body cache-info">
+        <div class="row text-center">
+            <div class="col-md-3 col-sm-6 mb-2">
+                <strong>@ViewModel.CacheInfo.UserAccountKeys</strong><br>
+                <small>User Cache</small>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2">
+                <strong>@ViewModel.CacheInfo.LocalMachineKeys</strong><br>
+                <small>Local Cache</small>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2">
+                <strong>@ViewModel.CacheInfo.SecureKeys</strong><br>
+                <small>Secure Cache</small>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2">
+                <strong>@ViewModel.CacheInfo.InMemoryKeys</strong><br>
+                <small>Memory Cache</small>
+            </div>
+        </div>
+        <hr>
+        <div class="row text-center">
+            <div class="col">
+                <strong>@ViewModel.CacheInfo.TotalKeys</strong> total cache keys<br>
+                <small class="text-muted">Last checked: @ViewModel.CacheInfo.LastChecked.ToString("HH:mm:ss")</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <button class="btn btn-outline-primary" disabled="@ViewModel.IsLoading" @onclick="() => ViewModel.RefreshCommand.Execute().Subscribe()">
+                ?? Refresh
+            </button>
+            <button class="btn btn-outline-warning" @onclick="() => ViewModel.ClearCompletedCommand.Execute().Subscribe()">
+                ?? Clear Completed
+            </button>
+            <button class="btn btn-outline-success" @onclick="() => ViewModel.LoadSampleDataCommand.Execute().Subscribe()">
+                ?? Load Sample Data
+            </button>
+            <button class="btn btn-outline-danger" @onclick="() => ViewModel.CleanupCacheCommand.Execute().Subscribe()">
+                ??? Cleanup Cache
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+@if (ViewModel.IsLoading)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+         style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="card p-4 text-center">
+            <div class="spinner-border text-primary mb-2"></div>
+            <p class="mb-0">Loading...</p>
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        ViewModel = ViewModel;
+        base.OnInitialized();
+    }
+}
