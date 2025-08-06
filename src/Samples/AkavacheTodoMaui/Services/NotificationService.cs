@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using AkavacheTodoMaui.Models;
 
 namespace AkavacheTodoMaui.Services;
@@ -20,6 +21,8 @@ public class NotificationService : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="NotificationService"/> class.
     /// </summary>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public NotificationService()
     {
         // Subscribe to settings changes
@@ -100,6 +103,8 @@ public class NotificationService : IDisposable
     /// Gets all todos that are due soon and need reminders.
     /// </summary>
     /// <returns>Observable list of todos needing reminders.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<List<TodoItem>> GetTodosNeedingReminders()
     {
         return TodoCacheService.GetAllTodos()
@@ -134,6 +139,8 @@ public class NotificationService : IDisposable
     /// Checks for todos that need immediate reminders.
     /// </summary>
     /// <returns>Observable unit.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<Unit> CheckImmediateReminders() => GetTodosNeedingReminders()
             .SelectMany(todos => todos.ToObservable())
             .SelectMany(todo => SendNotification(todo, GetNotificationMessage(todo)))
@@ -144,6 +151,8 @@ public class NotificationService : IDisposable
     /// </summary>
     /// <param name="settings">The new settings.</param>
     /// <returns>Observable unit.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<Unit> UpdateSettings(AppSettings? settings)
     {
         _currentSettings = settings ?? new AppSettings();
@@ -184,6 +193,8 @@ public class NotificationService : IDisposable
         }
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private void CheckForReminders(object? state)
     {
         if (!_currentSettings.NotificationsEnabled)

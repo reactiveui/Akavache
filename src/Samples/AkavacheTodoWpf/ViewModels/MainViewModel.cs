@@ -12,6 +12,7 @@ using AkavacheTodoWpf.Services;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using ReactiveUI.SourceGenerators;
 
 namespace AkavacheTodoWpf.ViewModels;
 
@@ -26,13 +27,19 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     private readonly ObservableAsPropertyHelper<TodoStats?> _todoStats;
     private readonly ObservableAsPropertyHelper<CacheInfo?> _cacheInfo;
 
-    // Private backing fields for reactive properties
+    [Reactive]
     private string _newTodoTitle = string.Empty;
+    [Reactive]
     private string _newTodoDescription = string.Empty;
+    [Reactive]
     private DateTime? _newTodoDueDate;
+    [Reactive]
     private TodoPriority _newTodoPriority = TodoPriority.Medium;
+    [Reactive]
     private AppSettings? _settings = new();
+    [Reactive]
     private string _statusMessage = "Ready";
+    [Reactive]
     private string _newTodoTime = string.Empty;
 
     /// <summary>
@@ -101,69 +108,6 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
         // Manually activate immediately to ensure initial data loading
         Activator.Activate();
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo title.
-    /// </summary>
-    public string NewTodoTitle
-    {
-        get => _newTodoTitle;
-        set => this.RaiseAndSetIfChanged(ref _newTodoTitle, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo description.
-    /// </summary>
-    public string NewTodoDescription
-    {
-        get => _newTodoDescription;
-        set => this.RaiseAndSetIfChanged(ref _newTodoDescription, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo due date.
-    /// </summary>
-    public DateTime? NewTodoDueDate
-    {
-        get => _newTodoDueDate;
-        set => this.RaiseAndSetIfChanged(ref _newTodoDueDate, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo priority.
-    /// </summary>
-    public TodoPriority NewTodoPriority
-    {
-        get => _newTodoPriority;
-        set => this.RaiseAndSetIfChanged(ref _newTodoPriority, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the application settings.
-    /// </summary>
-    public AppSettings? Settings
-    {
-        get => _settings;
-        set => this.RaiseAndSetIfChanged(ref _settings, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the status message.
-    /// </summary>
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo time.
-    /// </summary>
-    public string NewTodoTime
-    {
-        get => _newTodoTime;
-        set => this.RaiseAndSetIfChanged(ref _newTodoTime, value);
     }
 
     /// <summary>

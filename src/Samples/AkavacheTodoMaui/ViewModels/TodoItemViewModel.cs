@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
@@ -13,7 +14,7 @@ namespace AkavacheTodoMaui.ViewModels;
 /// <summary>
 /// View model for individual todo items with reactive behaviors.
 /// </summary>
-public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
+public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
     private readonly NotificationService _notificationService;
     private readonly ObservableAsPropertyHelper<string> _dueDateDisplay;
@@ -27,6 +28,8 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// <param name="todoItem">The todo item model.</param>
     /// <param name="notificationService">The notification service.</param>
     /// <param name="deleteAction">Action to call when deleting this item.</param>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public TodoItemViewModel(TodoItem todoItem, NotificationService notificationService, Action<TodoItemViewModel>? deleteAction = null)
     {
         TodoItem = todoItem;
@@ -197,6 +200,8 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// </summary>
     public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : string.Empty;
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> ExecuteToggleCompleted() =>
         Observable.FromAsync(async () => await MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -232,6 +237,8 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
             await TodoCacheService.InvalidateTodo(TodoItem.Id);
         });
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private Unit ExecuteEdit()
     {
         // Navigate to edit page for MAUI

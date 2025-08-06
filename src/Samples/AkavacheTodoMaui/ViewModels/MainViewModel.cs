@@ -4,10 +4,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using ReactiveUI;
+using ReactiveUI.SourceGenerators;
 
 namespace AkavacheTodoMaui.ViewModels;
 
@@ -21,20 +23,29 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     private readonly ObservableAsPropertyHelper<TodoStats?> _todoStats;
     private readonly ObservableAsPropertyHelper<CacheInfo?> _cacheInfo;
 
-    // Private backing fields for reactive properties
+    [Reactive]
     private string _newTodoTitle = string.Empty;
+    [Reactive]
     private string _newTodoDescription = string.Empty;
+    [Reactive]
     private string _newTodoTags = string.Empty;
+    [Reactive]
     private DateTime? _newTodoDueDate = DateTime.Now;
+    [Reactive]
     private TodoPriority _newTodoPriority = TodoPriority.Medium;
+    [Reactive]
     private AppSettings? _settings = new();
+    [Reactive]
     private string _statusMessage = "Ready";
+    [Reactive]
     private string _newTodoTime = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainViewModel"/> class.
     /// </summary>
     /// <param name="notificationService">The notification service.</param>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public MainViewModel(NotificationService notificationService)
     {
         _notificationService = notificationService;
@@ -97,78 +108,6 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
         // Manually activate immediately to ensure initial data loading
         Activator.Activate();
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo title.
-    /// </summary>
-    public string NewTodoTitle
-    {
-        get => _newTodoTitle;
-        set => this.RaiseAndSetIfChanged(ref _newTodoTitle, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo description.
-    /// </summary>
-    public string NewTodoDescription
-    {
-        get => _newTodoDescription;
-        set => this.RaiseAndSetIfChanged(ref _newTodoDescription, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo tags as a comma-separated string.
-    /// </summary>
-    public string NewTodoTags
-    {
-        get => _newTodoTags;
-        set => this.RaiseAndSetIfChanged(ref _newTodoTags, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo due date.
-    /// </summary>
-    public DateTime? NewTodoDueDate
-    {
-        get => _newTodoDueDate;
-        set => this.RaiseAndSetIfChanged(ref _newTodoDueDate, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo priority.
-    /// </summary>
-    public TodoPriority NewTodoPriority
-    {
-        get => _newTodoPriority;
-        set => this.RaiseAndSetIfChanged(ref _newTodoPriority, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the application settings.
-    /// </summary>
-    public AppSettings? Settings
-    {
-        get => _settings;
-        set => this.RaiseAndSetIfChanged(ref _settings, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the status message.
-    /// </summary>
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the new todo time.
-    /// </summary>
-    public string NewTodoTime
-    {
-        get => _newTodoTime;
-        set => this.RaiseAndSetIfChanged(ref _newTodoTime, value);
     }
 
     /// <summary>
@@ -298,6 +237,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         ];
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private void SetupBindings(CompositeDisposable disposables)
     {
         // Dispose the property helpers when deactivated
@@ -440,6 +381,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .DisposeWith(disposables);
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> LoadInitialData()
     {
         StatusMessage = "Loading data...";
@@ -449,6 +392,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         .Finally(() => StatusMessage = "Ready");
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> LoadTodos() => TodoCacheService.GetAllTodos()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(todos =>
@@ -472,6 +417,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     /// Removes a todo from the collection and updates the cache.
     /// </summary>
     /// <param name="todoViewModel">The todo view model to remove.</param>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private void RemoveTodoFromCollection(TodoItemViewModel todoViewModel)
     {
         Todos.Remove(todoViewModel);
@@ -482,6 +429,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         RefreshStatistics();
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> LoadSettings() => TodoCacheService.GetSettings()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(settings => Settings = settings)
@@ -494,6 +443,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .Do(_ => StatusMessage = $"Saved {todos.Count} todos");
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> ExecuteAddTodo()
     {
         // Validate required fields
@@ -593,6 +544,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         });
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> ExecuteRefresh()
     {
         StatusMessage = "Refreshing...";
@@ -626,6 +579,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .Do(_ => StatusMessage = "Cache cleaned up");
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> ExecuteLoadSampleData()
     {
         var sampleTodos = CreateSampleTodos();
@@ -643,6 +598,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         .Do(_ => StatusMessage = $"Loaded {sampleTodos.Count} sample todos");
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> ExecuteTestDate()
     {
         // Create a test todo with a specific due date for verification
@@ -678,6 +635,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>
     /// Forces an immediate refresh of the TodoStats.
     /// </summary>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private void RefreshStatistics()
     {
         // Simple immediate property change notification

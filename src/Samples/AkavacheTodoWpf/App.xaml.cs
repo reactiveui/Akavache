@@ -117,7 +117,8 @@ public partial class App : Application
         BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
 
         // Step 3: Use the builder pattern to configure Akavache with SQLite persistence
-        BlobCache.Initialize(builder => builder.WithApplicationName("AkavacheTodoWpf")
+        BlobCache.Initialize(builder =>
+            builder.WithApplicationName("AkavacheTodoWpf")
                    .WithSqliteDefaults());
     }
 

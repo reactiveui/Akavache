@@ -214,34 +214,32 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
             await TodoCacheService.InvalidateTodo(TodoItem.Id);
         });
 
-    private IObservable<Unit> ExecuteEdit()
-    {
-        return Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
+    private IObservable<Unit> ExecuteEdit() =>
+        Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            var dialog = new Views.EditTodoDialog(TodoItem);
+            if (dialog.ShowDialog() == true)
             {
-                var dialog = new Views.EditTodoDialog(TodoItem);
-                if (dialog.ShowDialog() == true)
+                var updatedTodo = dialog.UpdatedTodo;
+                if (updatedTodo != null)
                 {
-                    var updatedTodo = dialog.UpdatedTodo;
-                    if (updatedTodo != null)
-                    {
-                        TodoItem.Title = updatedTodo.Title;
-                        TodoItem.Description = updatedTodo.Description;
-                        TodoItem.DueDate = updatedTodo.DueDate;
-                        TodoItem.Priority = updatedTodo.Priority;
+                    TodoItem.Title = updatedTodo.Title;
+                    TodoItem.Description = updatedTodo.Description;
+                    TodoItem.DueDate = updatedTodo.DueDate;
+                    TodoItem.Priority = updatedTodo.Priority;
 
-                        // Trigger property notifications for ALL relevant properties
-                        this.RaisePropertyChanged(nameof(TodoItem));
-                        this.RaisePropertyChanged(nameof(TodoItem.Title));
-                        this.RaisePropertyChanged(nameof(TodoItem.Description));
-                        this.RaisePropertyChanged(nameof(TodoItem.DueDate));
-                        this.RaisePropertyChanged(nameof(TodoItem.Priority));
-                        this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
+                    // Trigger property notifications for ALL relevant properties
+                    this.RaisePropertyChanged(nameof(TodoItem));
+                    this.RaisePropertyChanged(nameof(TodoItem.Title));
+                    this.RaisePropertyChanged(nameof(TodoItem.Description));
+                    this.RaisePropertyChanged(nameof(TodoItem.DueDate));
+                    this.RaisePropertyChanged(nameof(TodoItem.Priority));
+                    this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
 
-                        SaveTodoItem().Subscribe();
-                    }
+                    SaveTodoItem().Subscribe();
                 }
-            }));
-    }
+            }
+        }));
 
     private IObservable<Unit> ExecuteScheduleReminder()
     {
@@ -261,10 +259,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
             .Take(1)
             .SelectMany(todos =>
             {
-                if (todos == null)
-                {
-                    todos = [];
-                }
+                todos ??= [];
 
                 // Update the todo in the list
                 var existingTodo = todos.FirstOrDefault(t => t.Id == TodoItem.Id);

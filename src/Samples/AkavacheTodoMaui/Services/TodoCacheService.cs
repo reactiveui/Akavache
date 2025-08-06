@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
 using AkavacheTodoMaui.Models;
 
@@ -17,6 +18,8 @@ public static class TodoCacheService
     /// Gets all todos from cache.
     /// </summary>
     /// <returns>Observable list of todos.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<List<TodoItem>> GetAllTodos() => BlobCache.UserAccount
         .GetObject<List<TodoItem>>("todos")
         .Catch(Observable.Return(new List<TodoItem>()))
@@ -28,6 +31,8 @@ public static class TodoCacheService
     /// <param name="todos">The todos to save.</param>
     /// <param name="expiration">Optional expiration time.</param>
     /// <returns>Observable unit.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveTodos(List<TodoItem> todos, DateTimeOffset? expiration = null) =>
         BlobCache.UserAccount.InsertObject("todos", todos, expiration);
 
@@ -35,6 +40,8 @@ public static class TodoCacheService
     /// Gets application settings.
     /// </summary>
     /// <returns>Observable app settings.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<AppSettings> GetSettings() => BlobCache.UserAccount
         .GetOrCreateObject("app_settings", () => new AppSettings())
         .Select(settings => settings ?? new AppSettings());
@@ -44,6 +51,8 @@ public static class TodoCacheService
     /// </summary>
     /// <param name="settings">The settings to save.</param>
     /// <returns>Observable unit.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveSettings(AppSettings? settings) =>
         BlobCache.UserAccount.InsertObject("app_settings", settings);
 
@@ -51,6 +60,8 @@ public static class TodoCacheService
     /// Gets todo statistics.
     /// </summary>
     /// <returns>Observable todo statistics.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<TodoStats> GetTodoStats() => GetAllTodos()
         .Select(todos =>
         {
@@ -155,6 +166,8 @@ public static class TodoCacheService
     /// Saves application state.
     /// </summary>
     /// <returns>Observable unit.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveApplicationState() =>
         BlobCache.UserAccount.InsertObject("last_shutdown", DateTimeOffset.Now);
 }

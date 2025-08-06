@@ -3,28 +3,39 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using AkavacheTodoMaui.Models;
 using ReactiveUI;
+using ReactiveUI.SourceGenerators;
 
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>
 /// View model for editing existing todo items.
 /// </summary>
-public class EditTodoViewModel : ReactiveObject
+public partial class EditTodoViewModel : ReactiveObject
 {
     private readonly TodoItem _originalTodo;
+
+    [Reactive]
     private string _title = string.Empty;
+    [Reactive]
     private string _description = string.Empty;
+    [Reactive]
     private string _tagsString = string.Empty;
+    [Reactive]
     private DateTime _dueDate = DateTime.Today;
+    [Reactive]
     private string _dueTime = string.Empty;
+    [Reactive]
     private TodoPriority _priority = TodoPriority.Medium;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EditTodoViewModel"/> class.
     /// </summary>
     /// <param name="todoItem">The todo item to edit.</param>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public EditTodoViewModel(TodoItem todoItem)
     {
         _originalTodo = todoItem ?? throw new ArgumentNullException(nameof(todoItem));
@@ -47,60 +58,6 @@ public class EditTodoViewModel : ReactiveObject
 
         // Initialize priority options
         PriorityOptions = Enum.GetValues<TodoPriority>();
-    }
-
-    /// <summary>
-    /// Gets or sets the todo title.
-    /// </summary>
-    public string Title
-    {
-        get => _title;
-        set => this.RaiseAndSetIfChanged(ref _title, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the todo description.
-    /// </summary>
-    public string Description
-    {
-        get => _description;
-        set => this.RaiseAndSetIfChanged(ref _description, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the tags as a comma-separated string.
-    /// </summary>
-    public string TagsString
-    {
-        get => _tagsString;
-        set => this.RaiseAndSetIfChanged(ref _tagsString, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the due date.
-    /// </summary>
-    public DateTime DueDate
-    {
-        get => _dueDate;
-        set => this.RaiseAndSetIfChanged(ref _dueDate, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the due time.
-    /// </summary>
-    public string DueTime
-    {
-        get => _dueTime;
-        set => this.RaiseAndSetIfChanged(ref _dueTime, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the priority.
-    /// </summary>
-    public TodoPriority Priority
-    {
-        get => _priority;
-        set => this.RaiseAndSetIfChanged(ref _priority, value);
     }
 
     /// <summary>
