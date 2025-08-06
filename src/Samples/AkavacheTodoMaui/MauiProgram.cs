@@ -38,7 +38,6 @@ public static class MauiProgram
         ConfigureAkavache();
 
         // Register services
-        builder.Services.AddSingleton<TodoCacheService>();
         builder.Services.AddSingleton<NotificationService>();
         builder.Services.AddTransient<MainViewModel>();
 

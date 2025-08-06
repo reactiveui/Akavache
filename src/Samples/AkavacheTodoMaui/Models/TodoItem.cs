@@ -4,14 +4,17 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Text.Json.Serialization;
+using ReactiveUI;
 
 namespace AkavacheTodoMaui.Models;
 
 /// <summary>
 /// Represents a Todo item with all necessary properties for demonstration.
 /// </summary>
-public class TodoItem
+public class TodoItem : ReactiveObject
 {
+    private bool _isCompleted;
+
     /// <summary>
     /// Gets or sets the unique identifier for the todo item.
     /// </summary>
@@ -34,7 +37,11 @@ public class TodoItem
     /// Gets or sets a value indicating whether the todo item is completed.
     /// </summary>
     [JsonPropertyName("isCompleted")]
-    public bool IsCompleted { get; set; }
+    public bool IsCompleted
+    {
+        get => _isCompleted;
+        set => this.RaiseAndSetIfChanged(ref _isCompleted, value);
+    }
 
     /// <summary>
     /// Gets or sets the creation date of the todo item.
@@ -74,30 +81,13 @@ public class TodoItem
                              DueDate.Value > DateTimeOffset.Now &&
                              DueDate.Value <= DateTimeOffset.Now.AddHours(24) &&
                              !IsCompleted;
-}
-
-/// <summary>
-/// Represents the priority levels for todo items.
-/// </summary>
-public enum TodoPriority
-{
-    /// <summary>
-    /// Low priority.
-    /// </summary>
-    Low = 1,
 
     /// <summary>
-    /// Medium priority.
+    /// Raises property changed for time-dependent properties.
     /// </summary>
-    Medium = 2,
-
-    /// <summary>
-    /// High priority.
-    /// </summary>
-    High = 3,
-
-    /// <summary>
-    /// Critical priority.
-    /// </summary>
-    Critical = 4
+    public void RefreshTimeBasedProperties()
+    {
+        this.RaisePropertyChanged(nameof(IsOverdue));
+        this.RaisePropertyChanged(nameof(IsDueSoon));
+    }
 }

@@ -173,7 +173,17 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>
     /// Gets formatted tags as a single string.
     /// </summary>
-    public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : "No tags";
+    public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : string.Empty;
+
+    /// <summary>
+    /// Gets the CSS class for the priority badge.
+    /// </summary>
+    public string PriorityBadgeClass => GetPriorityBadgeClass();
+
+    /// <summary>
+    /// Gets the CSS class for the completion icon.
+    /// </summary>
+    public string CompletionIconClass => TodoItem.IsCompleted ? "bi bi-check-circle-fill text-success" : "bi bi-circle text-muted";
 
     private IObservable<Unit> ExecuteToggleCompleted() =>
         Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -312,4 +322,58 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
         return new SolidColorBrush(Color.FromRgb(33, 33, 33));
     }
+
+    private string GetRelativeTimeDisplay()
+    {
+        if (!TodoItem.DueDate.HasValue)
+        {
+            return "No due date";
+        }
+
+        var now = DateTimeOffset.Now;
+        var dueDate = TodoItem.DueDate.Value;
+        var timeSpan = dueDate - now;
+
+        if (timeSpan.TotalDays > 1)
+        {
+            return $"Due in {(int)timeSpan.TotalDays} days";
+        }
+
+        if (timeSpan.TotalHours > 1)
+        {
+            return $"Due in {(int)timeSpan.TotalHours} hours";
+        }
+
+        if (timeSpan.TotalMinutes > 1)
+        {
+            return $"Due in {(int)timeSpan.TotalMinutes} minutes";
+        }
+
+        if (timeSpan.TotalMinutes > 0)
+        {
+            return "Due soon";
+        }
+
+        var overdue = now - dueDate;
+        if (overdue.TotalDays > 1)
+        {
+            return $"Overdue by {(int)overdue.TotalDays} days";
+        }
+
+        if (overdue.TotalHours > 1)
+        {
+            return $"Overdue by {(int)overdue.TotalHours} hours";
+        }
+
+        return "Overdue";
+    }
+
+    private string GetPriorityBadgeClass() => TodoItem.Priority switch
+    {
+        TodoPriority.Critical => "badge bg-danger",
+        TodoPriority.High => "badge bg-warning",
+        TodoPriority.Medium => "badge bg-success",
+        TodoPriority.Low => "badge bg-info",
+        _ => "badge bg-secondary"
+    };
 }

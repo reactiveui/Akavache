@@ -17,7 +17,6 @@ namespace AkavacheTodoMaui.ViewModels;
 /// </summary>
 public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
-    private readonly TodoCacheService _cacheService;
     private readonly NotificationService _notificationService;
     private readonly ObservableAsPropertyHelper<string> _dueDateDisplay;
     private readonly ObservableAsPropertyHelper<string> _priorityDisplay;
@@ -28,13 +27,13 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// Initializes a new instance of the <see cref="TodoItemViewModel"/> class.
     /// </summary>
     /// <param name="todoItem">The todo item model.</param>
-    /// <param name="cacheService">The cache service.</param>
     /// <param name="notificationService">The notification service.</param>
-    public TodoItemViewModel(TodoItem todoItem, TodoCacheService cacheService, NotificationService notificationService)
+    /// <param name="deleteAction">Action to call when deleting this item.</param>
+    public TodoItemViewModel(TodoItem todoItem, NotificationService notificationService, Action<TodoItemViewModel>? deleteAction = null)
     {
         TodoItem = todoItem;
-        _cacheService = cacheService;
         _notificationService = notificationService;
+        DeleteAction = deleteAction;
 
         // Create commands
         ToggleCompletedCommand = ReactiveCommand.CreateFromObservable(ExecuteToggleCompleted);
@@ -69,7 +68,9 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 .Skip(1) // Skip initial value
                 .Throttle(TimeSpan.FromMilliseconds(500))
                 .SelectMany(_ => SaveTodoItem())
-                .Subscribe()
+                .Subscribe(
+                    _ => { },
+                    ex => System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex}"))
                 .DisposeWith(disposables);
         });
     }
@@ -83,6 +84,11 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// Gets the todo item model.
     /// </summary>
     public TodoItem TodoItem { get; }
+
+    /// <summary>
+    /// Gets or sets the delete action to call when deleting this item.
+    /// </summary>
+    public Action<TodoItemViewModel>? DeleteAction { get; set; }
 
     /// <summary>
     /// Gets the formatted due date display.
@@ -133,20 +139,20 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         {
             if (TodoItem.IsCompleted)
             {
-                return "#F0F0F0";
+                return "#E8F5E8"; // Light green background for completed
             }
 
             if (IsOverdue)
             {
-                return "#FFEBEE";
+                return "#FFEBEE"; // Light red background for overdue
             }
 
             if (IsDueSoon)
             {
-                return "#FFF3E0";
+                return "#FFF3E0"; // Light orange background for due soon
             }
 
-            return "Transparent";
+            return "White"; // Clean white background for normal todos
         }
     }
 
@@ -159,20 +165,20 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         {
             if (TodoItem.IsCompleted)
             {
-                return "#666666";
+                return "#2E7D32"; // Dark green text for completed
             }
 
             if (IsOverdue)
             {
-                return "#D32F2F";
+                return "#C62828"; // Dark red text for overdue
             }
 
             if (IsDueSoon)
             {
-                return "#F57C00";
+                return "#E65100"; // Dark orange text for due soon
             }
 
-            return "#212121";
+            return "#212121"; // Dark text for normal todos
         }
     }
 
@@ -191,39 +197,46 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>
     /// Gets formatted tags as a single string.
     /// </summary>
-    public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : "No tags";
+    public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : string.Empty;
 
-    private IObservable<Unit> ExecuteToggleCompleted()
-    {
-        return Observable.FromAsync(async () =>
-        {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+    private IObservable<Unit> ExecuteToggleCompleted() =>
+        Observable.FromAsync(async () => await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 TodoItem.IsCompleted = !TodoItem.IsCompleted;
-            });
-        })
-        .SelectMany(_ => SaveTodoItem())
-        .SelectMany(_ =>
-        {
-            // Invalidate cache for this specific todo to force refresh
-            return _cacheService.InvalidateTodo(TodoItem.Id);
-        });
-    }
 
-    private IObservable<Unit> ExecuteDelete()
-    {
-        return _cacheService.InvalidateTodo(TodoItem.Id)
-            .SelectMany(_ =>
-            {
-                // In a real app, you might want to remove from parent collection
-                // This is typically handled by the parent view model
-                return Observable.Return(Unit.Default);
-            });
-    }
+                // Trigger property notifications for UI updates
+                this.RaisePropertyChanged(nameof(TodoItem));
+                this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
+                this.RaisePropertyChanged(nameof(IsOverdue));
+                this.RaisePropertyChanged(nameof(IsDueSoon));
+                this.RaisePropertyChanged(nameof(BackgroundColor));
+                this.RaisePropertyChanged(nameof(TextColor));
+
+                // Refresh time-based properties
+                TodoItem.RefreshTimeBasedProperties();
+            }))
+        .SelectMany(_ => SaveTodoItem())
+        .SelectMany(_ => TodoCacheService.InvalidateTodo(TodoItem.Id))
+        .Do(_ =>
+        {
+            // Ensure the TodoItem property change is properly propagated
+            this.RaisePropertyChanged(nameof(TodoItem));
+            this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
+        });
+
+    private IObservable<Unit> ExecuteDelete() =>
+        Observable.FromAsync(async () =>
+        {
+            // Remove from parent collection first
+            await MainThread.InvokeOnMainThreadAsync(() => DeleteAction?.Invoke(this));
+
+            // Then invalidate cache
+            await TodoCacheService.InvalidateTodo(TodoItem.Id);
+        });
 
     private Unit ExecuteEdit()
     {
-        // In a real app, this would navigate to an edit page or open a modal
+        // In a real MAUI app, this would navigate to an edit page or open a modal
         // For this demo, we'll just demonstrate the pattern
         return Unit.Default;
     }
@@ -242,10 +255,15 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     {
         // Use individual cache key for this todo
         var key = $"todo_{TodoItem.Id}";
-        return _cacheService.GetAllTodos()
+        return TodoCacheService.GetAllTodos()
             .Take(1)
             .SelectMany(todos =>
             {
+                if (todos == null)
+                {
+                    todos = [];
+                }
+
                 // Update the todo in the list
                 var existingTodo = todos.FirstOrDefault(t => t.Id == TodoItem.Id);
                 if (existingTodo != null)
@@ -259,7 +277,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 }
 
                 // Save the updated list
-                return _cacheService.SaveTodos(todos);
+                return TodoCacheService.SaveTodos(todos);
             });
     }
 }

@@ -22,14 +22,11 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
         InitializeComponent();
 
         // Set up data context with dependency injection
-        var cacheService = Handler?.MauiContext?.Services?.GetService<TodoCacheService>();
-        var notificationService = Handler?.MauiContext?.Services?.GetService<NotificationService>();
+        var notificationService = Handler?.MauiContext?.Services?.GetService<NotificationService>()
+                                 ?? new NotificationService();
 
-        if (cacheService != null && notificationService != null)
-        {
-            ViewModel = new MainViewModel(cacheService, notificationService);
-            BindingContext = ViewModel;
-        }
+        ViewModel = new MainViewModel(notificationService);
+        BindingContext = ViewModel;
     }
 
     /// <summary>

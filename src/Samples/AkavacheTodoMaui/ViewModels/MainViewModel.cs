@@ -7,7 +7,6 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Windows.Input;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using ReactiveUI;
@@ -15,35 +14,36 @@ using ReactiveUI;
 namespace AkavacheTodoMaui.ViewModels;
 
 /// <summary>
-/// Main view model for the Todo application demonstrating ReactiveUI and Akavache integration.
+/// Main view model for the MAUI Todo application demonstrating ReactiveUI and Akavache integration.
 /// </summary>
-public class MainViewModel : ReactiveObject, IActivatableViewModel
+public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 {
-    private readonly TodoCacheService _cacheService;
     private readonly NotificationService _notificationService;
     private readonly ObservableAsPropertyHelper<bool> _isLoading;
-    private readonly ObservableAsPropertyHelper<TodoStats> _todoStats;
-    private readonly ObservableAsPropertyHelper<CacheInfo> _cacheInfo;
+    private readonly ObservableAsPropertyHelper<TodoStats?> _todoStats;
+    private readonly ObservableAsPropertyHelper<CacheInfo?> _cacheInfo;
+
+    // Private backing fields for reactive properties
     private string _newTodoTitle = string.Empty;
     private string _newTodoDescription = string.Empty;
-    private DateTimeOffset? _newTodoDueDate;
+    private DateTime? _newTodoDueDate;
     private TodoPriority _newTodoPriority = TodoPriority.Medium;
-    private AppSettings _settings = new();
+    private AppSettings? _settings = new();
     private string _statusMessage = "Ready";
+    private string _newTodoTime = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainViewModel"/> class.
     /// </summary>
-    /// <param name="cacheService">The cache service.</param>
     /// <param name="notificationService">The notification service.</param>
-    public MainViewModel(TodoCacheService cacheService, NotificationService notificationService)
+    public MainViewModel(NotificationService notificationService)
     {
-        _cacheService = cacheService;
         _notificationService = notificationService;
 
         // Initialize collections
-        Todos = new ObservableCollection<TodoItemViewModel>();
-        Notifications = new ObservableCollection<string>();
+        Todos = [];
+        Notifications = [];
+        PriorityOptions = Enum.GetValues<TodoPriority>();
 
         // Create commands
         AddTodoCommand = ReactiveCommand.CreateFromObservable(ExecuteAddTodo);
@@ -53,79 +53,51 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
         CleanupCacheCommand = ReactiveCommand.CreateFromObservable(ExecuteCleanupCache);
         LoadSampleDataCommand = ReactiveCommand.CreateFromObservable(ExecuteLoadSampleData);
 
-        // Setup loading indicator
-        var loadingCommands = new[] { AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand };
+        // Initialize observable properties in constructor
+        var loadingCommands = new[] { AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand, CleanupCacheCommand, LoadSampleDataCommand };
         _isLoading = loadingCommands
             .Select(cmd => cmd.IsExecuting)
             .CombineLatest(executing => executing.Any(x => x))
             .ToProperty(this, x => x.IsLoading);
 
-        // Setup todo statistics
-        _todoStats = this.WhenAnyValue(x => x.Todos.Count)
-            .Where(_ => Todos.Count > 0)
-            .SelectMany(_ => _cacheService.GetTodoStats())
+        // Enhanced statistics calculation that responds to individual todo property changes
+        _todoStats = Observable.Merge(
+            this.WhenAnyValue(x => x.Todos.Count).Select(_ => Unit.Default),
+            Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1)).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.TodoStats).Select(_ => Unit.Default).Skip(1))
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .SelectMany(_ => TodoCacheService.GetTodoStats())
+            .Catch(Observable.Return(new TodoStats()))
             .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, x => x.TodoStats, new TodoStats());
+            .ToProperty(this, x => x.TodoStats);
 
-        // Setup cache info
-        _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
-            .SelectMany(_ => _cacheService.GetCacheInfo())
+        // Setup cache info with reduced frequency and better error handling
+        _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(5))
+            .SelectMany(_ => TodoCacheService.GetCacheInfo())
+            .Retry(3)
+            .Catch((Exception ex) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"Cache info failed: {ex}");
+                return Observable.Return(new CacheInfo
+                {
+                    UserAccountKeys = 0,
+                    LocalMachineKeys = 0,
+                    SecureKeys = 0,
+                    TotalKeys = 0,
+                    LastChecked = DateTimeOffset.Now
+                });
+            })
             .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, x => x.CacheInfo, new CacheInfo());
+            .ToProperty(this, x => x.CacheInfo);
 
         // Setup activator for proper lifecycle management
         Activator = new ViewModelActivator();
 
-        this.WhenActivated(disposables =>
-        {
-            // Load initial data
-            LoadInitialData().Subscribe().DisposeWith(disposables);
+        this.WhenActivated(SetupBindings);
 
-            // Subscribe to notifications
-            _notificationService.ReminderNotifications
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(todo =>
-                {
-                    var message = $"Reminder: {todo.Title}";
-                    Notifications.Insert(0, message);
-                    StatusMessage = message;
-                })
-                .DisposeWith(disposables);
-
-            // Auto-save when todos change
-            this.WhenAnyValue(x => x.Todos.Count)
-                .Skip(1) // Skip initial load
-                .Throttle(TimeSpan.FromSeconds(2))
-                .SelectMany(_ => SaveCurrentTodos())
-                .Subscribe()
-                .DisposeWith(disposables);
-
-            // Validation for add command
-            var canAddTodo = this.WhenAnyValue(
-                x => x.NewTodoTitle,
-                title => !string.IsNullOrWhiteSpace(title));
-
-            AddTodoCommand.CanExecute
-                .CombineLatest(canAddTodo, (cmdCanExecute, validTitle) => cmdCanExecute && validTitle)
-                .Subscribe()
-                .DisposeWith(disposables);
-        });
+        // Manually activate immediately to ensure initial data loading
+        Activator.Activate();
     }
-
-    /// <summary>
-    /// Gets the view model activator for lifecycle management.
-    /// </summary>
-    public ViewModelActivator Activator { get; }
-
-    /// <summary>
-    /// Gets the collection of todo items.
-    /// </summary>
-    public ObservableCollection<TodoItemViewModel> Todos { get; }
-
-    /// <summary>
-    /// Gets the collection of notification messages.
-    /// </summary>
-    public ObservableCollection<string> Notifications { get; }
 
     /// <summary>
     /// Gets or sets the new todo title.
@@ -148,7 +120,7 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>
     /// Gets or sets the new todo due date.
     /// </summary>
-    public DateTimeOffset? NewTodoDueDate
+    public DateTime? NewTodoDueDate
     {
         get => _newTodoDueDate;
         set => this.RaiseAndSetIfChanged(ref _newTodoDueDate, value);
@@ -166,7 +138,7 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>
     /// Gets or sets the application settings.
     /// </summary>
-    public AppSettings Settings
+    public AppSettings? Settings
     {
         get => _settings;
         set => this.RaiseAndSetIfChanged(ref _settings, value);
@@ -182,6 +154,15 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
     }
 
     /// <summary>
+    /// Gets or sets the new todo time.
+    /// </summary>
+    public string NewTodoTime
+    {
+        get => _newTodoTime;
+        set => this.RaiseAndSetIfChanged(ref _newTodoTime, value);
+    }
+
+    /// <summary>
     /// Gets a value indicating whether any operation is loading.
     /// </summary>
     public bool IsLoading => _isLoading.Value;
@@ -189,12 +170,32 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>
     /// Gets the current todo statistics.
     /// </summary>
-    public TodoStats TodoStats => _todoStats.Value;
+    public TodoStats? TodoStats => _todoStats?.Value ?? default;
 
     /// <summary>
     /// Gets the current cache information.
     /// </summary>
-    public CacheInfo CacheInfo => _cacheInfo.Value;
+    public CacheInfo? CacheInfo => _cacheInfo.Value;
+
+    /// <summary>
+    /// Gets the view model activator for lifecycle management.
+    /// </summary>
+    public ViewModelActivator Activator { get; }
+
+    /// <summary>
+    /// Gets the collection of todo items.
+    /// </summary>
+    public ObservableCollection<TodoItemViewModel> Todos { get; }
+
+    /// <summary>
+    /// Gets the collection of notification messages.
+    /// </summary>
+    public ObservableCollection<string> Notifications { get; }
+
+    /// <summary>
+    /// Gets the priority options for the Picker.
+    /// </summary>
+    public TodoPriority[] PriorityOptions { get; }
 
     /// <summary>
     /// Gets the command to add a new todo.
@@ -230,13 +231,10 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
     /// Saves application state when shutting down.
     /// </summary>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> SaveApplicationState()
-    {
-        return Observable.Merge(
+    public IObservable<Unit> SaveApplicationState() => Observable.Merge(
             SaveCurrentTodos(),
-            _cacheService.SaveSettings(Settings),
-            _cacheService.SaveApplicationState());
-    }
+            TodoCacheService.SaveSettings(Settings),
+            TodoCacheService.SaveApplicationState());
 
     private static List<TodoItem> CreateSampleTodos()
     {
@@ -286,62 +284,232 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
         ];
     }
 
+    private void SetupBindings(CompositeDisposable disposables)
+    {
+        // Dispose the property helpers when deactivated
+        _isLoading.DisposeWith(disposables);
+        _todoStats.DisposeWith(disposables);
+        _cacheInfo.DisposeWith(disposables);
+
+        // Timer to refresh time-dependent properties (IsOverdue, IsDueSoon) every minute
+        Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                // Trigger property notifications for all todos to refresh time-dependent UI
+                foreach (var todoViewModel in Todos)
+                {
+                    todoViewModel.TodoItem.RaisePropertyChanged(nameof(TodoItem.IsOverdue));
+                    todoViewModel.TodoItem.RaisePropertyChanged(nameof(TodoItem.IsDueSoon));
+
+                    // Also refresh the view model colors
+                    todoViewModel.RaisePropertyChanged(nameof(TodoItemViewModel.BackgroundColor));
+                    todoViewModel.RaisePropertyChanged(nameof(TodoItemViewModel.TextColor));
+                }
+
+                // Force statistics refresh for time-based changes
+                this.RaisePropertyChanged(nameof(TodoStats));
+            })
+            .DisposeWith(disposables);
+
+        // Subscribe to collection changes to track todo completion status changes
+        Observable.FromEventPattern<System.Collections.Specialized.NotifyCollectionChangedEventHandler, System.Collections.Specialized.NotifyCollectionChangedEventArgs>(
+                handler => Todos.CollectionChanged += handler,
+                handler => Todos.CollectionChanged -= handler)
+            .Subscribe(args =>
+            {
+                // When todos are added, subscribe to their property changes
+                if (args.EventArgs.NewItems != null)
+                {
+                    foreach (TodoItemViewModel todoVm in args.EventArgs.NewItems)
+                    {
+                        // Subscribe to completion status changes
+                        todoVm.WhenAnyValue(x => x.TodoItem.IsCompleted)
+                            .Skip(1) // Skip initial value
+                            .Throttle(TimeSpan.FromMilliseconds(500))
+                            .ObserveOn(RxApp.MainThreadScheduler)
+                            .Subscribe(_ =>
+                            {
+                                // Force statistics refresh when any todo completion changes
+                                this.RaisePropertyChanged(nameof(TodoStats));
+                                StatusMessage = todoVm.TodoItem.IsCompleted ?
+                                    $"Completed: {todoVm.TodoItem.Title}" :
+                                    $"Reopened: {todoVm.TodoItem.Title}";
+                            })
+                            .DisposeWith(disposables);
+                    }
+                }
+            })
+            .DisposeWith(disposables);
+
+        // Load initial data
+        LoadInitialData().Subscribe(
+            _ => { },
+            ex => StatusMessage = $"Error loading data: {ex.Message}")
+            .DisposeWith(disposables);
+
+        // Subscribe to notifications with timestamp-based deduplication
+        _notificationService.ReminderNotifications
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(todo =>
+            {
+                var timestamp = DateTimeOffset.Now.ToString("HH:mm:ss");
+                var baseMessage = $"Reminder: {todo.Title}";
+                var messageWithTimestamp = baseMessage + " [" + timestamp + "]";
+
+                // Check if a notification for this todo already exists
+                var existingIndex = -1;
+                for (var i = 0; i < Notifications.Count; i++)
+                {
+                    if (Notifications[i].Contains(baseMessage))
+                    {
+                        existingIndex = i;
+                        break;
+                    }
+                }
+
+                if (existingIndex >= 0)
+                {
+                    // Update existing notification with new timestamp
+                    Notifications[existingIndex] = messageWithTimestamp;
+                }
+                else
+                {
+                    // Add new notification
+                    Notifications.Insert(0, messageWithTimestamp);
+
+                    // Keep only the latest 10 notifications to prevent overflow
+                    while (Notifications.Count > 10)
+                    {
+                        Notifications.RemoveAt(Notifications.Count - 1);
+                    }
+                }
+
+                StatusMessage = baseMessage;
+            })
+            .DisposeWith(disposables);
+
+        // Auto-save when todos change and refresh statistics
+        this.WhenAnyValue(x => x.Todos.Count)
+            .Skip(1) // Skip initial load
+            .Throttle(TimeSpan.FromSeconds(2))
+            .SelectMany(_ => SaveCurrentTodos())
+            .Subscribe(
+                _ =>
+                {
+                    // Force statistics refresh when collection changes
+                    this.RaisePropertyChanged(nameof(TodoStats));
+                },
+                ex => StatusMessage = $"Auto-save failed: {ex.Message}")
+            .DisposeWith(disposables);
+
+        // Handle command errors globally
+        Observable.Merge(
+            AddTodoCommand.ThrownExceptions,
+            RefreshCommand.ThrownExceptions,
+            ClearCompletedCommand.ThrownExceptions,
+            SaveSettingsCommand.ThrownExceptions,
+            CleanupCacheCommand.ThrownExceptions,
+            LoadSampleDataCommand.ThrownExceptions)
+            .Subscribe(ex =>
+            {
+                StatusMessage = $"Error: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Command error: {ex}");
+            })
+            .DisposeWith(disposables);
+    }
+
     private IObservable<Unit> LoadInitialData()
     {
         StatusMessage = "Loading data...";
 
-        return Observable.Merge(
-            LoadTodos(),
+        return LoadTodos().Merge(
             LoadSettings())
         .Finally(() => StatusMessage = "Ready");
     }
 
-    private IObservable<Unit> LoadTodos()
-    {
-        return _cacheService.GetAllTodos()
+    private IObservable<Unit> LoadTodos() => TodoCacheService.GetAllTodos()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(todos =>
             {
+                if (todos == null || todos.Count == 0)
+                {
+                    StatusMessage = "No todos found. You can add some!";
+                    return;
+                }
+
                 Todos.Clear();
                 foreach (var todo in todos.OrderBy(GetSortKey))
                 {
-                    Todos.Add(new TodoItemViewModel(todo, _cacheService, _notificationService));
+                    var todoViewModel = new TodoItemViewModel(todo, _notificationService, RemoveTodoFromCollection);
+                    Todos.Add(todoViewModel);
                 }
             })
             .Select(_ => Unit.Default);
+
+    /// <summary>
+    /// Removes a todo from the collection and updates the cache.
+    /// </summary>
+    /// <param name="todoViewModel">The todo view model to remove.</param>
+    private void RemoveTodoFromCollection(TodoItemViewModel todoViewModel)
+    {
+        Todos.Remove(todoViewModel);
+        StatusMessage = $"Deleted todo: {todoViewModel.TodoItem.Title}";
+
+        // Save the updated collection
+        SaveCurrentTodos().Subscribe();
     }
 
-    private IObservable<Unit> LoadSettings()
-    {
-        return _cacheService.GetSettings()
+    private IObservable<Unit> LoadSettings() => TodoCacheService.GetSettings()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Do(settings => Settings = settings)
             .Select(_ => Unit.Default);
-    }
 
     private IObservable<Unit> SaveCurrentTodos()
     {
         var todos = Todos.Select(vm => vm.TodoItem).ToList();
-        return _cacheService.SaveTodos(todos)
+        return TodoCacheService.SaveTodos(todos)
             .Do(_ => StatusMessage = $"Saved {todos.Count} todos");
     }
 
     private IObservable<Unit> ExecuteAddTodo()
     {
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(NewTodoTitle))
+        {
+            StatusMessage = "Title is required";
+            return Observable.Return(Unit.Default);
+        }
+
+        // Parse the date and time more robustly
+        DateTimeOffset? dueDate = null;
+        if (NewTodoDueDate.HasValue)
+        {
+            var date = NewTodoDueDate.Value.Date;
+
+            // Parse time if provided
+            if (!string.IsNullOrWhiteSpace(NewTodoTime) && TimeSpan.TryParse(NewTodoTime, out var time))
+            {
+                date = date.Add(time);
+            }
+
+            dueDate = new DateTimeOffset(date);
+        }
+
         var newTodo = new TodoItem
         {
             Title = NewTodoTitle,
             Description = NewTodoDescription,
-            DueDate = NewTodoDueDate,
+            DueDate = dueDate,
             Priority = NewTodoPriority,
             CreatedAt = DateTimeOffset.Now
         };
 
-        var viewModel = new TodoItemViewModel(newTodo, _cacheService, _notificationService);
+        var viewModel = new TodoItemViewModel(newTodo, _notificationService, RemoveTodoFromCollection);
 
-        return Observable.FromAsync(async () =>
-        {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+        return Observable.Start(
+            () =>
+            MainThread.InvokeOnMainThreadAsync(() =>
             {
                 Todos.Insert(0, viewModel);
 
@@ -349,11 +517,23 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
                 NewTodoTitle = string.Empty;
                 NewTodoDescription = string.Empty;
                 NewTodoDueDate = null;
-                NewTodoPriority = Settings.DefaultPriority;
-            });
-        })
+                NewTodoTime = string.Empty;
+                NewTodoPriority = Settings?.DefaultPriority ?? TodoPriority.Medium;
+
+                // Immediately refresh statistics after adding
+                this.RaisePropertyChanged(nameof(TodoStats));
+            }),
+            RxApp.MainThreadScheduler)
+        .SelectMany(_ => SaveCurrentTodos())
         .SelectMany(_ => _notificationService.ScheduleReminder(newTodo))
-        .Do(_ => StatusMessage = $"Added todo: {newTodo.Title}");
+        .ObserveOn(RxApp.MainThreadScheduler)
+        .Do(_ =>
+        {
+            StatusMessage = $"Added todo: {newTodo.Title}" + (dueDate.HasValue ? $" (Due: {dueDate.Value:MMM dd, yyyy HH:mm})" : string.Empty);
+
+            // Force statistics refresh after adding
+            this.RaisePropertyChanged(nameof(TodoStats));
+        });
     }
 
     private IObservable<Unit> ExecuteRefresh()
@@ -362,9 +542,8 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
         return LoadInitialData();
     }
 
-    private IObservable<Unit> ExecuteClearCompleted()
-    {
-        return Observable.FromAsync(async () =>
+    private IObservable<Unit> ExecuteClearCompleted() =>
+        Observable.FromAsync(async () =>
         {
             var completedTodos = Todos.Where(vm => vm.TodoItem.IsCompleted).ToList();
 
@@ -378,19 +557,15 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
 
             StatusMessage = $"Removed {completedTodos.Count} completed todos";
         });
-    }
 
-    private IObservable<Unit> ExecuteSaveSettings()
-    {
-        return _cacheService.SaveSettings(Settings)
+    private IObservable<Unit> ExecuteSaveSettings() => TodoCacheService.SaveSettings(Settings)
             .SelectMany(_ => _notificationService.UpdateSettings(Settings))
             .Do(_ => StatusMessage = "Settings saved");
-    }
 
     private IObservable<Unit> ExecuteCleanupCache()
     {
         StatusMessage = "Cleaning up cache...";
-        return _cacheService.CleanupCache()
+        return TodoCacheService.CleanupCache()
             .Do(_ => StatusMessage = "Cache cleaned up");
     }
 
@@ -398,22 +573,19 @@ public class MainViewModel : ReactiveObject, IActivatableViewModel
     {
         var sampleTodos = CreateSampleTodos();
 
-        return Observable.FromAsync(async () =>
-        {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+        return Observable.FromAsync(async () => await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 Todos.Clear();
                 foreach (var todo in sampleTodos)
                 {
-                    Todos.Add(new TodoItemViewModel(todo, _cacheService, _notificationService));
+                    Todos.Add(new TodoItemViewModel(todo, _notificationService, RemoveTodoFromCollection));
                 }
-            });
-        })
+            }))
         .SelectMany(_ => SaveCurrentTodos())
         .Do(_ => StatusMessage = $"Loaded {sampleTodos.Count} sample todos");
     }
 
-    private object GetSortKey(TodoItem todo) => Settings.SortOrder switch
+    private object GetSortKey(TodoItem todo) => Settings?.SortOrder switch
     {
         TodoSortOrder.CreatedDate => todo.CreatedAt,
         TodoSortOrder.DueDate => todo.DueDate ?? DateTimeOffset.MaxValue,
