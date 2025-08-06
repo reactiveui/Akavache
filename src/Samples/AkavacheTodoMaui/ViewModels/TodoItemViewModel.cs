@@ -236,8 +236,42 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     private Unit ExecuteEdit()
     {
-        // In a real MAUI app, this would navigate to an edit page or open a modal
-        // For this demo, we'll just demonstrate the pattern
+        // Navigate to edit page for MAUI
+        var editViewModel = new EditTodoViewModel(TodoItem);
+        var editPage = new Views.EditTodoPage(editViewModel);
+
+        // Subscribe to the page disappearing to check if changes were made
+        editPage.Disappearing += async (sender, e) =>
+        {
+            if (editViewModel.WasSaved && editViewModel.UpdatedTodo != null)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    // Update the current todo with the edited values
+                    TodoItem.Title = editViewModel.UpdatedTodo.Title;
+                    TodoItem.Description = editViewModel.UpdatedTodo.Description;
+                    TodoItem.DueDate = editViewModel.UpdatedTodo.DueDate;
+                    TodoItem.Priority = editViewModel.UpdatedTodo.Priority;
+                    TodoItem.Tags = editViewModel.UpdatedTodo.Tags;
+
+                    // Trigger property notifications
+                    this.RaisePropertyChanged(nameof(TodoItem));
+                    this.RaisePropertyChanged(nameof(DueDateDisplay));
+                    this.RaisePropertyChanged(nameof(PriorityDisplay));
+                    this.RaisePropertyChanged(nameof(TagsDisplay));
+                    this.RaisePropertyChanged(nameof(IsOverdue));
+                    this.RaisePropertyChanged(nameof(IsDueSoon));
+                    this.RaisePropertyChanged(nameof(BackgroundColor));
+                    this.RaisePropertyChanged(nameof(TextColor));
+
+                    // Save the updated todo
+                    SaveTodoItem().Subscribe();
+                });
+            }
+        };
+
+        // Navigate to the edit page
+        Application.Current?.MainPage?.Navigation.PushAsync(editPage);
         return Unit.Default;
     }
 

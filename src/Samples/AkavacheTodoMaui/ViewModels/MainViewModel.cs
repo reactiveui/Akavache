@@ -26,7 +26,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     // Private backing fields for reactive properties
     private string _newTodoTitle = string.Empty;
     private string _newTodoDescription = string.Empty;
-    private DateTime? _newTodoDueDate;
+    private string _newTodoTags = string.Empty;
+    private DateTime? _newTodoDueDate = DateTime.Now;
     private TodoPriority _newTodoPriority = TodoPriority.Medium;
     private AppSettings? _settings = new();
     private string _statusMessage = "Ready";
@@ -52,9 +53,10 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         SaveSettingsCommand = ReactiveCommand.CreateFromObservable(ExecuteSaveSettings);
         CleanupCacheCommand = ReactiveCommand.CreateFromObservable(ExecuteCleanupCache);
         LoadSampleDataCommand = ReactiveCommand.CreateFromObservable(ExecuteLoadSampleData);
+        TestDateCommand = ReactiveCommand.CreateFromObservable(ExecuteTestDate);
 
         // Initialize observable properties in constructor
-        var loadingCommands = new[] { AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand, CleanupCacheCommand, LoadSampleDataCommand };
+        var loadingCommands = new[] { AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand, CleanupCacheCommand, LoadSampleDataCommand, TestDateCommand };
         _isLoading = loadingCommands
             .Select(cmd => cmd.IsExecuting)
             .CombineLatest(executing => executing.Any(x => x))
@@ -115,6 +117,15 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     {
         get => _newTodoDescription;
         set => this.RaiseAndSetIfChanged(ref _newTodoDescription, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the new todo tags as a comma-separated string.
+    /// </summary>
+    public string NewTodoTags
+    {
+        get => _newTodoTags;
+        set => this.RaiseAndSetIfChanged(ref _newTodoTags, value);
     }
 
     /// <summary>
@@ -226,6 +237,11 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     /// Gets the command to load sample data.
     /// </summary>
     public ReactiveCommand<Unit, Unit> LoadSampleDataCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test date setting functionality.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestDateCommand { get; }
 
     /// <summary>
     /// Saves application state when shutting down.
@@ -410,7 +426,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             ClearCompletedCommand.ThrownExceptions,
             SaveSettingsCommand.ThrownExceptions,
             CleanupCacheCommand.ThrownExceptions,
-            LoadSampleDataCommand.ThrownExceptions)
+            LoadSampleDataCommand.ThrownExceptions,
+            TestDateCommand.ThrownExceptions)
             .Subscribe(ex =>
             {
                 StatusMessage = $"Error: {ex.Message}";
@@ -483,17 +500,39 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
         // Parse the date and time more robustly
         DateTimeOffset? dueDate = null;
+
+        // Debug what we have for date input
+        System.Diagnostics.Debug.WriteLine($"NewTodoDueDate: {NewTodoDueDate}");
+        System.Diagnostics.Debug.WriteLine($"NewTodoTime: '{NewTodoTime}'");
+
         if (NewTodoDueDate.HasValue)
         {
-            var date = NewTodoDueDate.Value.Date;
-
-            // Parse time if provided
-            if (!string.IsNullOrWhiteSpace(NewTodoTime) && TimeSpan.TryParse(NewTodoTime, out var time))
+            try
             {
-                date = date.Add(time);
-            }
+                var date = NewTodoDueDate.Value.Date;
 
-            dueDate = new DateTimeOffset(date);
+                // Parse time if provided
+                if (!string.IsNullOrWhiteSpace(NewTodoTime) && TimeSpan.TryParse(NewTodoTime, out var time))
+                {
+                    date = date.Add(time);
+                    System.Diagnostics.Debug.WriteLine($"Added time {time} to date, result: {date}");
+                }
+
+                dueDate = new DateTimeOffset(date);
+
+                // Debug logging to see what date we're setting
+                System.Diagnostics.Debug.WriteLine($"Final due date: {dueDate.Value:yyyy-MM-dd HH:mm:ss}");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Invalid date/time format: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Date parsing error: {ex}");
+                return Observable.Return(Unit.Default);
+            }
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("No due date selected - NewTodoDueDate is null");
         }
 
         var newTodo = new TodoItem
@@ -504,6 +543,18 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             Priority = NewTodoPriority,
             CreatedAt = DateTimeOffset.Now
         };
+
+        // Parse tags if provided
+        if (!string.IsNullOrWhiteSpace(NewTodoTags))
+        {
+            newTodo.Tags = NewTodoTags.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(tag => tag.Trim())
+                                     .Where(tag => !string.IsNullOrEmpty(tag))
+                                     .ToList();
+        }
+
+        // Debug the created todo
+        System.Diagnostics.Debug.WriteLine($"Created todo: {newTodo.Title}, Due: {newTodo.DueDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "No due date"}");
 
         var viewModel = new TodoItemViewModel(newTodo, _notificationService, RemoveTodoFromCollection);
 
@@ -516,9 +567,13 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 // Clear form
                 NewTodoTitle = string.Empty;
                 NewTodoDescription = string.Empty;
+                NewTodoTags = string.Empty;
                 NewTodoDueDate = null;
                 NewTodoTime = string.Empty;
                 NewTodoPriority = Settings?.DefaultPriority ?? TodoPriority.Medium;
+
+                // Notify that DatePicker should reset
+                this.RaisePropertyChanged(nameof(NewTodoDueDate));
 
                 // Immediately refresh statistics after adding
                 this.RaisePropertyChanged(nameof(TodoStats));
@@ -529,7 +584,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         .ObserveOn(RxApp.MainThreadScheduler)
         .Do(_ =>
         {
-            StatusMessage = $"Added todo: {newTodo.Title}" + (dueDate.HasValue ? $" (Due: {dueDate.Value:MMM dd, yyyy HH:mm})" : string.Empty);
+            StatusMessage = $"Added todo: {newTodo.Title}" + (dueDate.HasValue ? $" (Due: {dueDate.Value:MMM dd, yyyy HH:mm})" : " (No due date)");
 
             // Force statistics refresh after adding
             this.RaisePropertyChanged(nameof(TodoStats));
@@ -583,6 +638,29 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             }))
         .SelectMany(_ => SaveCurrentTodos())
         .Do(_ => StatusMessage = $"Loaded {sampleTodos.Count} sample todos");
+    }
+
+    private IObservable<Unit> ExecuteTestDate()
+    {
+        // Create a test todo with a specific due date for verification
+        var testDate = DateTime.Today.AddDays(1).AddHours(14); // Tomorrow at 2 PM
+        NewTodoTitle = "Test Todo with Due Date";
+        NewTodoDescription = "This is a test to verify due dates are working";
+        NewTodoTags = "test, verification, demo";
+        NewTodoDueDate = testDate;
+        NewTodoTime = "14:00";
+        NewTodoPriority = TodoPriority.High;
+
+        // Refresh UI to show the set values
+        this.RaisePropertyChanged(nameof(NewTodoTitle));
+        this.RaisePropertyChanged(nameof(NewTodoDescription));
+        this.RaisePropertyChanged(nameof(NewTodoTags));
+        this.RaisePropertyChanged(nameof(NewTodoDueDate));
+        this.RaisePropertyChanged(nameof(NewTodoTime));
+        this.RaisePropertyChanged(nameof(NewTodoPriority));
+
+        StatusMessage = $"Pre-filled form with test data - Due: {testDate:MMM dd, yyyy} at 2:00 PM";
+        return Observable.Return(Unit.Default);
     }
 
     private object GetSortKey(TodoItem todo) => Settings?.SortOrder switch

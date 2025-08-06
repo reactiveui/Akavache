@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="AkavacheTodoMaui.Views.EditTodoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Edit Todo"
+    BackgroundColor="White">
+
+    <ScrollView Padding="20" BackgroundColor="White">
+        <StackLayout BackgroundColor="White" Spacing="15">
+            <Label
+                FontAttributes="Bold"
+                FontSize="24"
+                HorizontalOptions="Center"
+                Text="Edit Todo"
+                TextColor="#673AB7" />
+
+            <Frame
+                Padding="15"
+                BackgroundColor="#F8F9FA"
+                CornerRadius="8">
+                <StackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="Todo Details"
+                        TextColor="#212121" />
+
+                    <Entry
+                        x:Name="TitleEntry"
+                        BackgroundColor="White"
+                        Placeholder="Todo title..."
+                        Text="{Binding Title}"
+                        TextColor="#212121" />
+
+                    <Entry
+                        x:Name="DescriptionEntry"
+                        BackgroundColor="White"
+                        Placeholder="Description (optional)..."
+                        Text="{Binding Description}"
+                        TextColor="#212121" />
+
+                    <Entry
+                        x:Name="TagsEntry"
+                        BackgroundColor="White"
+                        Placeholder="Tags (comma-separated, optional)..."
+                        Text="{Binding TagsString}"
+                        TextColor="#212121" />
+                </StackLayout>
+            </Frame>
+
+            <Frame
+                Padding="15"
+                BackgroundColor="#F0F4FF"
+                CornerRadius="8">
+                <StackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="Due Date and Time"
+                        TextColor="#212121" />
+
+                    <Grid ColumnDefinitions="*,100">
+                        <DatePicker
+                            x:Name="DueDatePicker"
+                            Grid.Column="0"
+                            BackgroundColor="White"
+                            Date="{Binding DueDate}"
+                            TextColor="#212121" />
+                        <Entry
+                            x:Name="TimeEntry"
+                            Grid.Column="1"
+                            BackgroundColor="White"
+                            Placeholder="HH:mm"
+                            Text="{Binding DueTime}"
+                            TextColor="#212121" />
+                    </Grid>
+                </StackLayout>
+            </Frame>
+
+            <Frame
+                Padding="15"
+                BackgroundColor="#FFF3E0"
+                CornerRadius="8">
+                <StackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="Priority Level"
+                        TextColor="#212121" />
+
+                    <Picker
+                        x:Name="PriorityPicker"
+                        Title="Priority"
+                        BackgroundColor="White"
+                        ItemsSource="{Binding PriorityOptions}"
+                        SelectedItem="{Binding Priority}"
+                        TextColor="#212121" />
+                </StackLayout>
+            </Frame>
+
+            <Grid Margin="0,20,0,0" ColumnDefinitions="*,*">
+                <Button
+                    Grid.Column="0"
+                    Margin="0,0,5,0"
+                    BackgroundColor="#673AB7"
+                    Command="{Binding SaveCommand}"
+                    CornerRadius="8"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="Save"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    Margin="5,0,0,0"
+                    BackgroundColor="#E0E0E0"
+                    Command="{Binding CancelCommand}"
+                    CornerRadius="8"
+                    FontSize="16"
+                    Text="Cancel"
+                    TextColor="#424242" />
+            </Grid>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>
