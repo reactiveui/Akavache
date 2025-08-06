@@ -15,10 +15,7 @@
                 Text="Edit Todo"
                 TextColor="#673AB7" />
 
-            <Frame
-                Padding="15"
-                BackgroundColor="#F8F9FA"
-                CornerRadius="8">
+            <Border Padding="15" BackgroundColor="#F8F9FA">
                 <StackLayout Spacing="10">
                     <Label
                         FontAttributes="Bold"
@@ -47,12 +44,9 @@
                         Text="{Binding TagsString}"
                         TextColor="#212121" />
                 </StackLayout>
-            </Frame>
+            </Border>
 
-            <Frame
-                Padding="15"
-                BackgroundColor="#F0F4FF"
-                CornerRadius="8">
+            <Border Padding="15" BackgroundColor="#F0F4FF">
                 <StackLayout Spacing="10">
                     <Label
                         FontAttributes="Bold"
@@ -76,12 +70,9 @@
                             TextColor="#212121" />
                     </Grid>
                 </StackLayout>
-            </Frame>
+            </Border>
 
-            <Frame
-                Padding="15"
-                BackgroundColor="#FFF3E0"
-                CornerRadius="8">
+            <Border Padding="15" BackgroundColor="#FFF3E0">
                 <StackLayout Spacing="10">
                     <Label
                         FontAttributes="Bold"
@@ -97,7 +88,7 @@
                         SelectedItem="{Binding Priority}"
                         TextColor="#212121" />
                 </StackLayout>
-            </Frame>
+            </Border>
 
             <Grid Margin="0,20,0,0" ColumnDefinitions="*,*">
                 <Button

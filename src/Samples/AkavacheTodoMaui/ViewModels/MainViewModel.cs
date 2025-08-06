@@ -4,9 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Reactive;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using ReactiveUI;
@@ -339,18 +337,24 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 {
                     foreach (TodoItemViewModel todoVm in args.EventArgs.NewItems)
                     {
-                        // Subscribe to completion status changes
+                        // Subscribe to completion status changes with immediate response
                         todoVm.WhenAnyValue(x => x.TodoItem.IsCompleted)
                             .Skip(1) // Skip initial value
-                            .Throttle(TimeSpan.FromMilliseconds(500))
                             .ObserveOn(RxApp.MainThreadScheduler)
-                            .Subscribe(_ =>
+                            .Subscribe(isCompleted =>
                             {
-                                // Force statistics refresh when any todo completion changes
-                                this.RaisePropertyChanged(nameof(TodoStats));
-                                StatusMessage = todoVm.TodoItem.IsCompleted ?
-                                    $"Completed: {todoVm.TodoItem.Title}" :
-                                    $"Reopened: {todoVm.TodoItem.Title}";
+                                // Save the updated todo to cache immediately
+                                SaveCurrentTodos().Subscribe(
+                                    _ =>
+                                    {
+                                        // Force statistics refresh after save completes
+                                        RefreshStatistics();
+
+                                        StatusMessage = isCompleted ?
+                                            $"Completed: {todoVm.TodoItem.Title}" :
+                                            $"Reopened: {todoVm.TodoItem.Title}";
+                                    },
+                                    ex => System.Diagnostics.Debug.WriteLine($"Save failed: {ex.Message}"));
                             })
                             .DisposeWith(disposables);
                     }
@@ -473,8 +477,9 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         Todos.Remove(todoViewModel);
         StatusMessage = $"Deleted todo: {todoViewModel.TodoItem.Title}";
 
-        // Save the updated collection
+        // Save the updated collection and refresh statistics
         SaveCurrentTodos().Subscribe();
+        RefreshStatistics();
     }
 
     private IObservable<Unit> LoadSettings() => TodoCacheService.GetSettings()
@@ -574,9 +579,6 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
                 // Notify that DatePicker should reset
                 this.RaisePropertyChanged(nameof(NewTodoDueDate));
-
-                // Immediately refresh statistics after adding
-                this.RaisePropertyChanged(nameof(TodoStats));
             }),
             RxApp.MainThreadScheduler)
         .SelectMany(_ => SaveCurrentTodos())
@@ -633,7 +635,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Todos.Clear();
                 foreach (var todo in sampleTodos)
                 {
-                    Todos.Add(new TodoItemViewModel(todo, _notificationService, RemoveTodoFromCollection));
+                    var todoViewModel = new TodoItemViewModel(todo, _notificationService, RemoveTodoFromCollection);
+                    Todos.Add(todoViewModel);
                 }
             }))
         .SelectMany(_ => SaveCurrentTodos())
@@ -671,4 +674,16 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         TodoSortOrder.Title => todo.Title,
         _ => todo.CreatedAt
     };
+
+    /// <summary>
+    /// Forces an immediate refresh of the TodoStats.
+    /// </summary>
+    private void RefreshStatistics()
+    {
+        // Simple immediate property change notification
+        this.RaisePropertyChanged(nameof(TodoStats));
+
+        // Log for debugging
+        System.Diagnostics.Debug.WriteLine("Statistics refresh triggered");
+    }
 }

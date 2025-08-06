@@ -322,31 +322,26 @@
             <Button
                 BackgroundColor="White"
                 Command="{Binding RefreshCommand}"
-                HorizontalOptions="FillAndExpand"
                 Text="Refresh"
                 TextColor="#212121" />
             <Button
                 BackgroundColor="White"
                 Command="{Binding ClearCompletedCommand}"
-                HorizontalOptions="FillAndExpand"
                 Text="Clear Completed"
                 TextColor="#212121" />
             <Button
                 BackgroundColor="White"
                 Command="{Binding LoadSampleDataCommand}"
-                HorizontalOptions="FillAndExpand"
                 Text="Load Sample"
                 TextColor="#212121" />
             <Button
                 BackgroundColor="LightBlue"
                 Command="{Binding TestDateCommand}"
-                HorizontalOptions="FillAndExpand"
                 Text="Test Date"
                 TextColor="#212121" />
             <Button
                 BackgroundColor="White"
                 Command="{Binding CleanupCacheCommand}"
-                HorizontalOptions="FillAndExpand"
                 Text="Cleanup Cache"
                 TextColor="#212121" />
         </StackLayout>
