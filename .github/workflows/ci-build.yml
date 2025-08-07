@@ -15,3 +15,5 @@ jobs:
     with:
       configuration: Release
       productNamespacePrefix: "Akavache"
+      installWorkflows: true
+      useVisualStudioPreview: true

@@ -44,6 +44,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{02
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoWpf", "Samples\AkavacheTodoWpf\AkavacheTodoWpf.csproj", "{AF425552-A630-4106-353B-6DB5F8AF614F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoMaui", "Samples\AkavacheTodoMaui\AkavacheTodoMaui.csproj", "{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,12 +104,17 @@ Global
 		{AF425552-A630-4106-353B-6DB5F8AF614F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF425552-A630-4106-353B-6DB5F8AF614F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF425552-A630-4106-353B-6DB5F8AF614F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{AF425552-A630-4106-353B-6DB5F8AF614F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {90907D23-7F59-41C3-8FCD-3402C9B66143}

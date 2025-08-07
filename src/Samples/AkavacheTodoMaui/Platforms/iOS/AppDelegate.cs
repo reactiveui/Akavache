@@ -7,8 +7,15 @@ using Foundation;
 
 namespace AkavacheTodoMaui;
 
+/// <summary>
+/// iOS App Delegate.
+/// </summary>
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {
+    /// <summary>
+    /// Creates the MAUI app.
+    /// </summary>
+    /// <returns>The configured MAUI app.</returns>
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }

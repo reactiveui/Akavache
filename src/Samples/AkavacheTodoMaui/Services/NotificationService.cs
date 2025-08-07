@@ -3,9 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using System.Diagnostics.CodeAnalysis;
 using AkavacheTodoMaui.Models;
 
 namespace AkavacheTodoMaui.Services;
@@ -15,7 +13,6 @@ namespace AkavacheTodoMaui.Services;
 /// </summary>
 public class NotificationService : IDisposable
 {
-    private readonly TodoCacheService _cacheService;
     private readonly Subject<TodoItem> _reminderSubject = new();
     private readonly Timer? _reminderTimer;
     private AppSettings _currentSettings = new();
@@ -24,13 +21,12 @@ public class NotificationService : IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="NotificationService"/> class.
     /// </summary>
-    /// <param name="cacheService">The cache service.</param>
-    public NotificationService(TodoCacheService cacheService)
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    public NotificationService()
     {
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-
         // Subscribe to settings changes
-        _cacheService.GetSettings()
+        TodoCacheService.GetSettings()
             .Subscribe(settings => _currentSettings = settings);
 
         // Start reminder timer
@@ -107,9 +103,11 @@ public class NotificationService : IDisposable
     /// Gets all todos that are due soon and need reminders.
     /// </summary>
     /// <returns>Observable list of todos needing reminders.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<List<TodoItem>> GetTodosNeedingReminders()
     {
-        return _cacheService.GetAllTodos()
+        return TodoCacheService.GetAllTodos()
             .Select(todos => todos.Where(todo =>
                 !todo.IsCompleted &&
                 todo.DueDate.HasValue &&
@@ -141,20 +139,21 @@ public class NotificationService : IDisposable
     /// Checks for todos that need immediate reminders.
     /// </summary>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> CheckImmediateReminders()
-    {
-        return GetTodosNeedingReminders()
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    public IObservable<Unit> CheckImmediateReminders() => GetTodosNeedingReminders()
             .SelectMany(todos => todos.ToObservable())
             .SelectMany(todo => SendNotification(todo, GetNotificationMessage(todo)))
             .Aggregate(Unit.Default, (_, __) => Unit.Default);
-    }
 
     /// <summary>
     /// Updates notification settings and reschedules reminders.
     /// </summary>
     /// <param name="settings">The new settings.</param>
     /// <returns>Observable unit.</returns>
-    public IObservable<Unit> UpdateSettings(AppSettings settings)
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    public IObservable<Unit> UpdateSettings(AppSettings? settings)
     {
         _currentSettings = settings ?? new AppSettings();
 
@@ -164,7 +163,7 @@ public class NotificationService : IDisposable
         }
 
         // Reschedule all reminders with new settings
-        return _cacheService.GetAllTodos()
+        return TodoCacheService.GetAllTodos()
             .SelectMany(todos => todos.ToObservable())
             .Where(todo => !todo.IsCompleted && todo.DueDate.HasValue)
             .SelectMany(ScheduleReminder)
@@ -194,6 +193,8 @@ public class NotificationService : IDisposable
         }
     }
 
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private void CheckForReminders(object? state)
     {
         if (!_currentSettings.NotificationsEnabled)

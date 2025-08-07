@@ -96,8 +96,5 @@ public partial class EditTodoDialog : Window
     /// </summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
-    private void BtnCancel_Click(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false;
-    }
+    private void BtnCancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
 }

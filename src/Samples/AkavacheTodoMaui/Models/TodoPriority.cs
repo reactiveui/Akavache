@@ -3,30 +3,30 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AkavacheTodoBlazor.Models;
+namespace AkavacheTodoMaui.Models;
 
 /// <summary>
-/// Represents todo sort orders.
+/// Represents the priority levels for todo items.
 /// </summary>
-public enum TodoSortOrder
+public enum TodoPriority
 {
     /// <summary>
-    /// Sort by creation date.
+    /// Low priority.
     /// </summary>
-    CreatedDate = 1,
+    Low = 1,
 
     /// <summary>
-    /// Sort by due date.
+    /// Medium priority.
     /// </summary>
-    DueDate = 2,
+    Medium = 2,
 
     /// <summary>
-    /// Sort by priority.
+    /// High priority.
     /// </summary>
-    Priority = 3,
+    High = 3,
 
     /// <summary>
-    /// Sort alphabetically by title.
+    /// Critical priority.
     /// </summary>
-    Title = 4
+    Critical = 4
 }

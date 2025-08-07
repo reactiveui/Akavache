@@ -3,25 +3,30 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AkavacheTodoBlazor.Models;
+namespace AkavacheTodoMaui.Models;
 
 /// <summary>
-/// Represents available app themes.
+/// Represents todo sort orders.
 /// </summary>
-public enum AppTheme
+public enum TodoSortOrder
 {
     /// <summary>
-    /// Follow system theme.
+    /// Sort by creation date.
     /// </summary>
-    System = 0,
+    CreatedDate = 1,
 
     /// <summary>
-    /// Light theme.
+    /// Sort by due date.
     /// </summary>
-    Light = 1,
+    DueDate = 2,
 
     /// <summary>
-    /// Dark theme.
+    /// Sort by priority.
     /// </summary>
-    Dark = 2
+    Priority = 3,
+
+    /// <summary>
+    /// Sort alphabetically by title.
+    /// </summary>
+    Title = 4
 }

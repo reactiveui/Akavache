@@ -3,25 +3,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace AkavacheTodoBlazor.Services;
+namespace AkavacheTodoMaui.Models;
 
 /// <summary>
-/// Represents application state information.
+/// Represents available app themes.
 /// </summary>
-public class AppState
+public enum AppTheme
 {
     /// <summary>
-    /// Gets or sets the last shutdown time.
+    /// Follow system theme.
     /// </summary>
-    public DateTimeOffset LastShutdown { get; set; }
+    System = 0,
 
     /// <summary>
-    /// Gets or sets the application version.
+    /// Light theme.
     /// </summary>
-    public string Version { get; set; } = string.Empty;
+    Light = 1,
 
     /// <summary>
-    /// Gets or sets the platform information.
+    /// Dark theme.
     /// </summary>
-    public string Platform { get; set; } = string.Empty;
+    Dark = 2
 }

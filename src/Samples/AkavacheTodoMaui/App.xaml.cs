@@ -13,8 +13,6 @@ namespace AkavacheTodoMaui;
 /// </summary>
 public partial class App : Application
 {
-    private TodoCacheService? _cacheService;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="App"/> class.
     /// </summary>
@@ -45,9 +43,7 @@ public partial class App : Application
     protected override void OnStart()
     {
         base.OnStart();
-
-        // Get cache service from DI container
-        _cacheService = Handler?.MauiContext?.Services?.GetService<TodoCacheService>();
+        System.Diagnostics.Debug.WriteLine("Application started");
     }
 
     /// <summary>
@@ -58,7 +54,7 @@ public partial class App : Application
         base.OnSleep();
 
         // Save application state when going to sleep
-        _cacheService?.SaveApplicationState()
+        TodoCacheService.SaveApplicationState()
             .Subscribe(
                 _ => System.Diagnostics.Debug.WriteLine("Application state saved"),
                 ex => System.Diagnostics.Debug.WriteLine($"Failed to save state: {ex}"));
@@ -87,10 +83,7 @@ public partial class App : Application
         try
         {
             // Save final application state
-            if (_cacheService != null)
-            {
-                await _cacheService.SaveApplicationState();
-            }
+            await TodoCacheService.SaveApplicationState();
 
             // Shutdown Akavache properly to ensure all data is flushed
             await BlobCache.Shutdown();

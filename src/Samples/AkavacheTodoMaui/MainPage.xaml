@@ -1,222 +1,358 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:AkavacheTodoMaui.ViewModels"
-             x:Class="AkavacheTodoMaui.MainPage"
-             Title="Akavache Todo MAUI">
+<ContentPage
+    x:Class="AkavacheTodoMaui.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:conv="clr-namespace:AkavacheTodoMaui.Converters"
+    xmlns:vm="clr-namespace:AkavacheTodoMaui.ViewModels"
+    Title="Akavache Todo MAUI">
 
-    <ContentPage.BindingContext>
-        <vm:MainViewModel />
-    </ContentPage.BindingContext>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:DateTimeOffsetToDateTimeConverter x:Key="DateTimeOffsetToDateTimeConverter" />
+            <conv:StringToBoolConverter x:Key="StringToBoolConverter" />
+            <conv:IntToBoolConverter x:Key="IntToBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Header Section -->
-        <StackLayout Grid.Row="0" Padding="20" BackgroundColor="#673AB7">
-            <Label Text="Akavache Todo Demo" 
-                   FontSize="24" 
-                   FontAttributes="Bold" 
-                   TextColor="White" 
-                   HorizontalOptions="Center" />
-            <Label Text="{Binding StatusMessage}" 
-                   FontSize="14" 
-                   TextColor="White" 
-                   HorizontalOptions="Center" />
+        <!--  Header Section  -->
+        <StackLayout
+            Grid.Row="0"
+            Padding="20"
+            BackgroundColor="#673AB7">
+            <Label
+                FontAttributes="Bold"
+                FontSize="24"
+                HorizontalOptions="Center"
+                Text="Akavache Todo Demo - MAUI"
+                TextColor="White" />
+            <Label
+                FontSize="14"
+                HorizontalOptions="Center"
+                Text="{Binding StatusMessage}"
+                TextColor="White" />
         </StackLayout>
 
-        <!-- Main Content -->
+        <!--  Main Content  -->
         <ScrollView Grid.Row="1">
             <StackLayout Padding="20" Spacing="15">
-                
-                <!-- Statistics Panel -->
-                <Frame BackgroundColor="#F5F5F5" Padding="15" CornerRadius="8">
-                    <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto">
+
+                <!--  Statistics Panel  -->
+                <Border Padding="15" BackgroundColor="#F5F5F5">
+                    <Grid ColumnDefinitions="*,*,*,*">
                         <StackLayout Grid.Column="0">
-                            <Label Text="{Binding TodoStats.TotalTodos}" 
-                                   FontSize="18" 
-                                   FontAttributes="Bold" 
-                                   HorizontalOptions="Center" />
-                            <Label Text="Total" 
-                                   FontSize="12" 
-                                   HorizontalOptions="Center" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalOptions="Center"
+                                Text="{Binding TodoStats.TotalTodos}"
+                                TextColor="#212121" />
+                            <Label
+                                FontSize="12"
+                                HorizontalOptions="Center"
+                                Text="Total"
+                                TextColor="#666666" />
                         </StackLayout>
-                        
+
                         <StackLayout Grid.Column="1">
-                            <Label Text="{Binding TodoStats.CompletedTodos}" 
-                                   FontSize="18" 
-                                   FontAttributes="Bold" 
-                                   TextColor="Green" 
-                                   HorizontalOptions="Center" />
-                            <Label Text="Completed" 
-                                   FontSize="12" 
-                                   HorizontalOptions="Center" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalOptions="Center"
+                                Text="{Binding TodoStats.CompletedTodos}"
+                                TextColor="#2E7D32" />
+                            <Label
+                                FontSize="12"
+                                HorizontalOptions="Center"
+                                Text="Completed"
+                                TextColor="#666666" />
                         </StackLayout>
-                        
+
                         <StackLayout Grid.Column="2">
-                            <Label Text="{Binding TodoStats.OverdueTodos}" 
-                                   FontSize="18" 
-                                   FontAttributes="Bold" 
-                                   TextColor="Red" 
-                                   HorizontalOptions="Center" />
-                            <Label Text="Overdue" 
-                                   FontSize="12" 
-                                   HorizontalOptions="Center" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalOptions="Center"
+                                Text="{Binding TodoStats.OverdueTodos}"
+                                TextColor="#D32F2F" />
+                            <Label
+                                FontSize="12"
+                                HorizontalOptions="Center"
+                                Text="Overdue"
+                                TextColor="#666666" />
                         </StackLayout>
-                        
+
                         <StackLayout Grid.Column="3">
-                            <Label Text="{Binding TodoStats.DueSoonTodos}" 
-                                   FontSize="18" 
-                                   FontAttributes="Bold" 
-                                   TextColor="Orange" 
-                                   HorizontalOptions="Center" />
-                            <Label Text="Due Soon" 
-                                   FontSize="12" 
-                                   HorizontalOptions="Center" />
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="18"
+                                HorizontalOptions="Center"
+                                Text="{Binding TodoStats.DueSoonTodos}"
+                                TextColor="#F57C00" />
+                            <Label
+                                FontSize="12"
+                                HorizontalOptions="Center"
+                                Text="Due Soon"
+                                TextColor="#666666" />
                         </StackLayout>
                     </Grid>
-                </Frame>
+                </Border>
 
-                <!-- Add New Todo Section -->
-                <Frame BackgroundColor="White" Padding="15" CornerRadius="8">
+                <!--  Add New Todo Section  -->
+                <Border Padding="15" BackgroundColor="White">
                     <StackLayout Spacing="10">
-                        <Label Text="Add New Todo" FontSize="16" FontAttributes="Bold" />
-                        
-                        <Entry Placeholder="Todo title..." 
-                               Text="{Binding NewTodoTitle}" />
-                        
-                        <Entry Placeholder="Description (optional)..." 
-                               Text="{Binding NewTodoDescription}" />
-                        
-                        <DatePicker Date="{Binding NewTodoDueDate, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}" />
-                        
-                        <Picker ItemsSource="{Binding PriorityOptions}"
-                                SelectedItem="{Binding NewTodoPriority}"
-                                Title="Priority" />
-                        
-                        <Button Text="Add Todo" 
-                                Command="{Binding AddTodoCommand}"
-                                BackgroundColor="#673AB7" 
-                                TextColor="White" />
-                    </StackLayout>
-                </Frame>
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="Add New Todo"
+                            TextColor="#212121" />
 
-                <!-- Todo List -->
-                <Frame BackgroundColor="White" Padding="15" CornerRadius="8">
+                        <Entry
+                            Placeholder="Todo title..."
+                            Text="{Binding NewTodoTitle}"
+                            TextColor="#212121" />
+
+                        <Entry
+                            Placeholder="Description (optional)..."
+                            Text="{Binding NewTodoDescription}"
+                            TextColor="#212121" />
+
+                        <Entry
+                            Placeholder="Tags (comma-separated, optional)..."
+                            Text="{Binding NewTodoTags}"
+                            TextColor="#212121" />
+
+                        <Grid ColumnDefinitions="*,100">
+                            <DatePicker
+                                Grid.Column="0"
+                                Date="{Binding NewTodoDueDate}"
+                                TextColor="#212121" />
+                            <Entry
+                                Grid.Column="1"
+                                Placeholder="HH:mm"
+                                Text="{Binding NewTodoTime}"
+                                TextColor="#212121" />
+                        </Grid>
+
+                        <Picker
+                            Title="Priority"
+                            ItemsSource="{Binding PriorityOptions}"
+                            SelectedItem="{Binding NewTodoPriority}"
+                            TextColor="#212121" />
+
+                        <Button
+                            BackgroundColor="#673AB7"
+                            Command="{Binding AddTodoCommand}"
+                            Text="Add Todo"
+                            TextColor="White" />
+                    </StackLayout>
+                </Border>
+
+                <!--  Todo List  -->
+                <Border Padding="15" BackgroundColor="White">
                     <StackLayout>
-                        <Label Text="Your Todos" FontSize="16" FontAttributes="Bold" />
-                        
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="Your Todos"
+                            TextColor="#212121" />
+
                         <CollectionView ItemsSource="{Binding Todos}">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Padding="10" ColumnDefinitions="Auto,*,Auto,Auto">
-                                        <!-- Priority Indicator -->
-                                        <BoxView Grid.Column="0" 
-                                                 WidthRequest="4" 
-                                                 HeightRequest="40" 
-                                                 BackgroundColor="{Binding PriorityColor}" 
-                                                 VerticalOptions="Center" />
-                                        
-                                        <!-- Todo Content -->
-                                        <StackLayout Grid.Column="1" Margin="10,0,0,0">
-                                            <Label Text="{Binding TodoItem.Title}" 
-                                                   FontSize="16" 
-                                                   FontAttributes="Bold"
-                                                   TextColor="{Binding TextColor}" />
-                                            <Label Text="{Binding TodoItem.Description}" 
-                                                   FontSize="14"
-                                                   TextColor="{Binding TextColor}"
-                                                   IsVisible="{Binding TodoItem.Description, Converter={StaticResource StringToBoolConverter}}" />
-                                            <Label Text="{Binding DueDateDisplay}" 
-                                                   FontSize="12" 
-                                                   TextColor="Gray" />
-                                            <Label Text="{Binding TagsDisplay}" 
-                                                   FontSize="10" 
-                                                   TextColor="Purple" />
-                                        </StackLayout>
-                                        
-                                        <!-- Completion Toggle -->
-                                        <CheckBox Grid.Column="2" 
-                                                  IsChecked="{Binding TodoItem.IsCompleted}"
-                                                  VerticalOptions="Center" />
-                                        
-                                        <!-- Delete Button -->
-                                        <Button Grid.Column="3" 
-                                                Text="×" 
-                                                FontSize="18"
+                                    <Border
+                                        Margin="2"
+                                        Padding="10"
+                                        BackgroundColor="{Binding BackgroundColor}">
+                                        <Grid ColumnDefinitions="8,*,Auto,Auto,Auto">
+                                            <!--  Priority Indicator  -->
+                                            <BoxView
+                                                Grid.Column="0"
+                                                BackgroundColor="{Binding PriorityColor}"
+                                                HeightRequest="40"
+                                                VerticalOptions="Center"
+                                                WidthRequest="4" />
+
+                                            <!--  Todo Content  -->
+                                            <StackLayout Grid.Column="1" Margin="10,0,0,0">
+                                                <Label
+                                                    FontAttributes="Bold"
+                                                    FontSize="16"
+                                                    Text="{Binding TodoItem.Title}"
+                                                    TextColor="{Binding TextColor}" />
+                                                <Label
+                                                    FontSize="14"
+                                                    IsVisible="{Binding TodoItem.Description, Converter={StaticResource StringToBoolConverter}}"
+                                                    Text="{Binding TodoItem.Description}"
+                                                    TextColor="{Binding TextColor}" />
+                                                <Label
+                                                    FontSize="12"
+                                                    Text="{Binding DueDateDisplay}"
+                                                    TextColor="#666666" />
+                                                <Label
+                                                    FontSize="10"
+                                                    IsVisible="{Binding TagsDisplay, Converter={StaticResource StringToBoolConverter}}"
+                                                    Text="{Binding TagsDisplay}"
+                                                    TextColor="#9C27B0" />
+                                            </StackLayout>
+
+                                            <!--  Completion Toggle  -->
+                                            <CheckBox
+                                                Grid.Column="2"
+                                                IsChecked="{Binding TodoItem.IsCompleted}"
+                                                VerticalOptions="Center" />
+
+                                            <!--  Edit Button  -->
+                                            <Button
+                                                Grid.Column="3"
+                                                BackgroundColor="LightGray"
+                                                Command="{Binding EditCommand}"
+                                                FontSize="12"
+                                                HeightRequest="30"
+                                                Text="Edit"
+                                                TextColor="Black"
+                                                WidthRequest="50" />
+
+                                            <!--  Delete Button  -->
+                                            <Button
+                                                Grid.Column="4"
+                                                BackgroundColor="Red"
                                                 Command="{Binding DeleteCommand}"
-                                                BackgroundColor="Red" 
+                                                FontAttributes="Bold"
+                                                FontSize="18"
+                                                HeightRequest="30"
+                                                Text="Ã—"
                                                 TextColor="White"
-                                                WidthRequest="30"
-                                                HeightRequest="30" />
-                                    </Grid>
+                                                WidthRequest="30" />
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </StackLayout>
-                </Frame>
+                </Border>
 
-                <!-- Notifications Panel -->
-                <Frame BackgroundColor="#FFFDE7" Padding="15" CornerRadius="8"
-                       IsVisible="{Binding Notifications.Count, Converter={StaticResource IntToBoolConverter}}">
+                <!--  Notifications Panel  -->
+                <Border
+                    Padding="15"
+                    BackgroundColor="#FFFDE7"
+                    IsVisible="{Binding Notifications.Count, Converter={StaticResource IntToBoolConverter}}">
                     <StackLayout>
-                        <Label Text="Recent Notifications" FontSize="16" FontAttributes="Bold" />
-                        <CollectionView ItemsSource="{Binding Notifications}" HeightRequest="100">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="Recent Notifications"
+                            TextColor="#E65100" />
+                        <CollectionView HeightRequest="100" ItemsSource="{Binding Notifications}">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
-                                    <Label Text="{Binding .}" 
-                                           FontSize="12" 
-                                           Padding="5" 
-                                           BackgroundColor="#FFF8E1" />
+                                    <Label
+                                        Padding="5"
+                                        BackgroundColor="#FFF8E1"
+                                        FontSize="12"
+                                        Text="{Binding .}"
+                                        TextColor="#BF360C" />
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </StackLayout>
-                </Frame>
+                </Border>
 
-                <!-- Cache Information Panel -->
-                <Frame BackgroundColor="#E3F2FD" Padding="15" CornerRadius="8">
+                <!--  Cache Information Panel  -->
+                <Border Padding="15" BackgroundColor="#E3F2FD">
                     <StackLayout>
-                        <Label Text="Cache Information" FontSize="16" FontAttributes="Bold" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="Cache Information"
+                            TextColor="#0D47A1" />
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
-                            <Label Grid.Row="0" Grid.Column="0" Text="User Cache Keys:" FontSize="12" />
-                            <Label Grid.Row="0" Grid.Column="1" Text="{Binding CacheInfo.UserAccountKeys}" FontSize="12" />
-                            
-                            <Label Grid.Row="1" Grid.Column="0" Text="Local Cache Keys:" FontSize="12" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding CacheInfo.LocalMachineKeys}" FontSize="12" />
-                            
-                            <Label Grid.Row="2" Grid.Column="0" Text="Secure Cache Keys:" FontSize="12" />
-                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding CacheInfo.SecureKeys}" FontSize="12" />
+                            <Label
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                FontSize="12"
+                                Text="User Cache Keys:"
+                                TextColor="#1565C0" />
+                            <Label
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                FontSize="12"
+                                Text="{Binding CacheInfo.UserAccountKeys}"
+                                TextColor="#1976D2" />
+
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                FontSize="12"
+                                Text="Local Cache Keys:"
+                                TextColor="#1565C0" />
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                FontSize="12"
+                                Text="{Binding CacheInfo.LocalMachineKeys}"
+                                TextColor="#1976D2" />
+
+                            <Label
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                FontSize="12"
+                                Text="Secure Cache Keys:"
+                                TextColor="#1565C0" />
+                            <Label
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                FontSize="12"
+                                Text="{Binding CacheInfo.SecureKeys}"
+                                TextColor="#1976D2" />
                         </Grid>
                     </StackLayout>
-                </Frame>
+                </Border>
             </StackLayout>
         </ScrollView>
 
-        <!-- Footer Actions -->
-        <StackLayout Grid.Row="2" 
-                     Orientation="Horizontal" 
-                     Padding="20" 
-                     Spacing="10" 
-                     BackgroundColor="#F5F5F5">
-            <Button Text="Refresh" 
-                    Command="{Binding RefreshCommand}" 
-                    HorizontalOptions="FillAndExpand" />
-            <Button Text="Clear Completed" 
-                    Command="{Binding ClearCompletedCommand}" 
-                    HorizontalOptions="FillAndExpand" />
-            <Button Text="Load Sample" 
-                    Command="{Binding LoadSampleDataCommand}" 
-                    HorizontalOptions="FillAndExpand" />
-            <Button Text="Cleanup Cache" 
-                    Command="{Binding CleanupCacheCommand}" 
-                    HorizontalOptions="FillAndExpand" />
+        <!--  Footer Actions  -->
+        <StackLayout
+            Grid.Row="2"
+            Padding="20"
+            BackgroundColor="#F5F5F5"
+            Orientation="Horizontal"
+            Spacing="10">
+            <Button
+                BackgroundColor="White"
+                Command="{Binding RefreshCommand}"
+                Text="Refresh"
+                TextColor="#212121" />
+            <Button
+                BackgroundColor="White"
+                Command="{Binding ClearCompletedCommand}"
+                Text="Clear Completed"
+                TextColor="#212121" />
+            <Button
+                BackgroundColor="White"
+                Command="{Binding LoadSampleDataCommand}"
+                Text="Load Sample"
+                TextColor="#212121" />
+            <Button
+                BackgroundColor="LightBlue"
+                Command="{Binding TestDateCommand}"
+                Text="Test Date"
+                TextColor="#212121" />
+            <Button
+                BackgroundColor="White"
+                Command="{Binding CleanupCacheCommand}"
+                Text="Cleanup Cache"
+                TextColor="#212121" />
         </StackLayout>
 
-        <!-- Loading Indicator -->
-        <ActivityIndicator Grid.Row="1" 
-                          IsVisible="{Binding IsLoading}" 
-                          IsRunning="{Binding IsLoading}"
-                          VerticalOptions="Center" 
-                          HorizontalOptions="Center" />
+        <!--  Loading Indicator  -->
+        <ActivityIndicator
+            Grid.Row="1"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsLoading}"
+            IsVisible="{Binding IsLoading}"
+            VerticalOptions="Center" />
     </Grid>
 
 </ContentPage>
