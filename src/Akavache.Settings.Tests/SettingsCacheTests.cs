@@ -22,9 +22,9 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestCreateAndInsertNewtonsoft()
     {
-        var builder = CacheDatabase.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder()
+            .WithSerializer(new NewtonsoftSerializer());
         await builder.DeleteSettingsStore<ViewSettings>();
-        builder.WithSerializser(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
 
@@ -50,7 +50,7 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var builder = CacheDatabase.CreateBuilder();
-        builder.WithSerializser(new NewtonsoftSerializer());
+        builder.WithSerializer(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
         viewSettings!.EnumTest = EnumTestValue.Option2;
@@ -69,7 +69,7 @@ public class SettingsCacheTests
     {
         var builder = CacheDatabase.CreateBuilder();
         await builder.DeleteSettingsStore<ViewSettings>();
-        builder.WithSerializser(new NewtonsoftSerializer());
+        builder.WithSerializer(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
 
@@ -95,7 +95,7 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var builder = CacheDatabase.CreateBuilder();
-        builder.WithSerializser(new NewtonsoftSerializer());
+        builder.WithSerializer(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
         viewSettings!.EnumTest = EnumTestValue.Option2;

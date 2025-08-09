@@ -22,11 +22,11 @@ public class AotCompatibilityTests
     public void NullSerializerShouldThrowException()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
-            CoreRegistrations.Serializer = null;
+            CacheDatabase.Serializer = null;
 
             // Act & Assert - The exception should occur when creating the cache, not when using it
             Assert.Throws<ArgumentNullException>(() =>
@@ -36,7 +36,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -47,8 +47,8 @@ public class AotCompatibilityTests
     public void SerializeWithContextShouldHandleNullValues()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -61,7 +61,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -72,8 +72,8 @@ public class AotCompatibilityTests
     public void DeserializeWithContextShouldHandleNullData()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -86,7 +86,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -98,8 +98,8 @@ public class AotCompatibilityTests
     public async Task SerializationErrorsShouldBeHandledCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -131,7 +131,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -143,8 +143,8 @@ public class AotCompatibilityTests
     public async Task DateTimeKindForcingShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -187,7 +187,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -199,8 +199,8 @@ public class AotCompatibilityTests
     public async Task ArgumentValidationShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -226,7 +226,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -238,8 +238,8 @@ public class AotCompatibilityTests
     public async Task TypeSafetyShouldBeMaintained()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -291,7 +291,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -303,8 +303,8 @@ public class AotCompatibilityTests
     public async Task ConcurrentOperationsShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -346,7 +346,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -358,8 +358,8 @@ public class AotCompatibilityTests
     public async Task MemoryCleanupShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -395,7 +395,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -407,8 +407,8 @@ public class AotCompatibilityTests
     public async Task LargeObjectsShouldBeHandledCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -437,7 +437,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -449,8 +449,8 @@ public class AotCompatibilityTests
     public async Task ObservableExtensionMethodsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -476,7 +476,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -488,8 +488,8 @@ public class AotCompatibilityTests
     public async Task CacheDisposalShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -513,7 +513,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -525,8 +525,8 @@ public class AotCompatibilityTests
     public async Task BulkOperationsShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -566,7 +566,7 @@ public class AotCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 }

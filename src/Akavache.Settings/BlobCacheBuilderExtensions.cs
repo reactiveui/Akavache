@@ -20,13 +20,10 @@ public static class BlobCacheBuilderExtensions
     /// </summary>
     static BlobCacheBuilderExtensions()
     {
-        BlobCaches = [];
-        SettingsStores = [];
+        // Initialize static collections to avoid null reference exceptions
+        BlobCacheBuilder.BlobCaches = [];
+        BlobCacheBuilder.SettingsStores = [];
     }
-
-    internal static Dictionary<string, IBlobCache?> BlobCaches { get; }
-
-    internal static Dictionary<string, ISettingsStorage?> SettingsStores { get; }
 
     /// <summary>
     /// Withes the settings cache path.
@@ -95,8 +92,13 @@ public static class BlobCacheBuilderExtensions
     /// </returns>
     public static ISettingsStorage? GetSettingsStore<T>(this IBlobCacheBuilder builder, string? overrideDatabaseName = null)
     {
+        if (BlobCacheBuilder.SettingsStores == null)
+        {
+            return null;
+        }
+
         var key = overrideDatabaseName ?? typeof(T).Name;
-        if (SettingsStores.TryGetValue(key, out var settings))
+        if (BlobCacheBuilder.SettingsStores.TryGetValue(key, out var settings))
         {
             return settings;
         }
@@ -115,22 +117,27 @@ public static class BlobCacheBuilderExtensions
     /// </returns>
     public static async Task DisposeSettingsStore<T>(this IBlobCacheBuilder builder, string? overrideDatabaseName = null)
     {
+        if (BlobCacheBuilder.SettingsStores == null || BlobCacheBuilder.BlobCaches == null)
+        {
+            return;
+        }
+
         var key = overrideDatabaseName ?? typeof(T).Name;
         var settings = builder.GetSettingsStore<T>(overrideDatabaseName);
         if (settings != null)
         {
             await settings.DisposeAsync().ConfigureAwait(false);
-            SettingsStores.Remove(key);
+            BlobCacheBuilder.SettingsStores.Remove(key);
         }
 
-        if (BlobCaches.TryGetValue(key, out var cache))
+        if (BlobCacheBuilder.BlobCaches.TryGetValue(key, out var cache))
         {
             if (cache != null)
             {
                 await cache.DisposeAsync().ConfigureAwait(false);
             }
 
-            BlobCaches.Remove(key);
+            BlobCacheBuilder.BlobCaches.Remove(key);
         }
     }
 
@@ -154,12 +161,17 @@ public static class BlobCacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
+        if (BlobCacheBuilder.SettingsStores == null || BlobCacheBuilder.BlobCaches == null)
+        {
+            throw new InvalidOperationException("BlobCacheBuilder has not been initialized. Call BlobCacheBuilder.Initialize() first.");
+        }
+
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password);
+        BlobCacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password);
 
         var viewSettings = new T();
-        SettingsStores[key] = viewSettings;
+        BlobCacheBuilder.SettingsStores[key] = viewSettings;
         settings?.Invoke(viewSettings);
         return builder;
     }
@@ -181,12 +193,17 @@ public static class BlobCacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
+        if (BlobCacheBuilder.SettingsStores == null || BlobCacheBuilder.BlobCaches == null)
+        {
+            throw new InvalidOperationException("BlobCacheBuilder has not been initialized. Call BlobCacheBuilder.Initialize() first.");
+        }
+
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"));
+        BlobCacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"));
 
         var viewSettings = new T();
-        SettingsStores[key] = viewSettings;
+        BlobCacheBuilder.SettingsStores[key] = viewSettings;
         settings?.Invoke(viewSettings);
         return builder;
     }

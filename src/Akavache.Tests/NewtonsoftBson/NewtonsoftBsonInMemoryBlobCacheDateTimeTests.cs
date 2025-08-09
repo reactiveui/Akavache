@@ -21,6 +21,6 @@ public class NewtonsoftBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     protected override void SetupTestClassSerializer()
     {
         // Ensure proper serializer setup for these tests
-        CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
+        CacheDatabase.Serializer = new NewtonsoftBsonSerializer();
     }
 }

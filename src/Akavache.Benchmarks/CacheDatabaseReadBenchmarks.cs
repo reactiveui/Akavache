@@ -33,7 +33,7 @@ namespace Akavache.Benchmarks
         public void GlobalSetup()
         {
             // Initialize the serializer first
-            CoreRegistrations.Serializer = new SystemJsonSerializer();
+            CacheDatabase.Serializer = new SystemJsonSerializer();
 
             // Create temporary directory
             _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);

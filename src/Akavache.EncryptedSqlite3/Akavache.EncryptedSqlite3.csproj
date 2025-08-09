@@ -15,7 +15,6 @@
   <ItemGroup>
     <Compile Include="../Akavache.Sqlite3/CacheEntry.cs" />
     <Compile Include="../Akavache.Sqlite3/SqliteBlobCache.cs" />
-    <Compile Include="../Akavache.Sqlite3/Registrations.cs" />
     <Compile Include="../Akavache.Sqlite3/BlobCacheBuilderExtensions.cs" />
   </ItemGroup>
 

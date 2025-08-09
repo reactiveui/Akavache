@@ -22,7 +22,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? seriali
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class with default scheduler.
     /// </summary>
     public InMemoryBlobCache()
-        : this(CoreRegistrations.TaskpoolScheduler, CoreRegistrations.Serializer)
+        : this(CacheDatabase.TaskpoolScheduler, CacheDatabase.Serializer)
     {
     }
 }

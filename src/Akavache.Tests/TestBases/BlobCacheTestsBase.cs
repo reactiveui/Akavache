@@ -28,7 +28,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     protected BlobCacheTestsBase()
     {
         // Store the original serializer to restore it after each test
-        _originalSerializer = CoreRegistrations.Serializer;
+        _originalSerializer = CacheDatabase.Serializer;
     }
 
     /// <summary>
@@ -78,29 +78,29 @@ public abstract class BlobCacheTestsBase : IDisposable
         if (serializerType == typeof(NewtonsoftBsonSerializer))
         {
             // Register the Newtonsoft BSON serializer specifically
-            CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
+            CacheDatabase.Serializer = new NewtonsoftBsonSerializer();
         }
         else if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
-            CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
+            CacheDatabase.Serializer = new SystemJsonBsonSerializer();
         }
         else if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
-            CoreRegistrations.Serializer = new NewtonsoftSerializer();
+            CacheDatabase.Serializer = new NewtonsoftSerializer();
         }
         else if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
-            CoreRegistrations.Serializer = new SystemJsonSerializer();
+            CacheDatabase.Serializer = new SystemJsonSerializer();
         }
         else
         {
             throw new InvalidOperationException($"Unsupported serializer type: {serializerType.Name}");
         }
 
-        return CoreRegistrations.Serializer;
+        return CacheDatabase.Serializer;
     }
 
     /// <summary>
@@ -372,7 +372,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     {
                         // Enhanced diagnostics for debugging
                         var dbFiles = Directory.GetFiles(path, "*.db");
-                        var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
+                        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
                         var diagnosticInfo = $"DB files in directory: [{string.Join(", ", dbFiles.Select(f => Path.GetFileName(f)))}]. " +
                             $"Serializer: {serializerName}";
 
@@ -934,7 +934,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
         // Set up serializer first
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        CoreRegistrations.Serializer = serializer;
+        CacheDatabase.Serializer = serializer;
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -1046,7 +1046,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 // Restore the original serializer to prevent interference with other tests
                 if (_originalSerializer != null)
                 {
-                    CoreRegistrations.Serializer = _originalSerializer;
+                    CacheDatabase.Serializer = _originalSerializer;
                 }
             }
 

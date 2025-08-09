@@ -46,8 +46,8 @@ public class IBlobCacheInterfaceTests
     public async Task BasicBlobCacheOperationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -87,7 +87,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -99,8 +99,8 @@ public class IBlobCacheInterfaceTests
     public async Task BulkBlobCacheOperationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -145,7 +145,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -157,8 +157,8 @@ public class IBlobCacheInterfaceTests
     public async Task ExpirationOperationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -212,7 +212,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -224,8 +224,8 @@ public class IBlobCacheInterfaceTests
     public async Task InvalidateAllShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -261,7 +261,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -273,8 +273,8 @@ public class IBlobCacheInterfaceTests
     public async Task FlushShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -299,7 +299,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -311,8 +311,8 @@ public class IBlobCacheInterfaceTests
     public async Task VacuumShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -339,7 +339,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -351,8 +351,8 @@ public class IBlobCacheInterfaceTests
     public async Task ArgumentValidationShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -428,7 +428,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -440,8 +440,8 @@ public class IBlobCacheInterfaceTests
     public async Task CachePropertiesShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -469,7 +469,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -481,8 +481,8 @@ public class IBlobCacheInterfaceTests
     public async Task ConcurrentDisposeShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -507,7 +507,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -519,8 +519,8 @@ public class IBlobCacheInterfaceTests
     public async Task GetCreatedAtShouldHandleMissingKeys()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -539,7 +539,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -551,8 +551,8 @@ public class IBlobCacheInterfaceTests
     public async Task TypeBasedOperationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -625,7 +625,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -637,8 +637,8 @@ public class IBlobCacheInterfaceTests
     public async Task BulkCollectionOperationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -706,7 +706,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -718,8 +718,8 @@ public class IBlobCacheInterfaceTests
     public async Task EmptyCollectionOperationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -754,7 +754,7 @@ public class IBlobCacheInterfaceTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 }

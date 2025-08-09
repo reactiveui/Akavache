@@ -104,7 +104,7 @@ public class SqliteBlobCache : IBlobCache
 #endif
 
         Connection = new SQLiteAsyncConnection(connectionString);
-        Scheduler = scheduler ?? CoreRegistrations.TaskpoolScheduler;
+        Scheduler = scheduler ?? CacheDatabase.TaskpoolScheduler;
         _initialized = Initialize();
     }
 

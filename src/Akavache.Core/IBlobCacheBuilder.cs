@@ -112,7 +112,7 @@ public interface IBlobCacheBuilder
     /// </summary>
     /// <param name="serializer">The serializer.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithSerializser(ISerializer serializer);
+    IBlobCacheBuilder WithSerializer(ISerializer serializer);
 
     /// <summary>
     /// Configures default in-memory caches for all cache types.

@@ -27,7 +27,7 @@ public static class BlobCacheBuilderExtensions
     /// </returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
     /// <exception cref="System.InvalidOperationException">
-    /// No serializer has been registered. Call CoreRegistrations.Serializer = new [SerializerType]() before using SQLite defaults.
+    /// No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite defaults.
     /// or
     /// Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.
     /// </exception>
@@ -46,9 +46,9 @@ public static class BlobCacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        if (CoreRegistrations.Serializer == null)
+        if (CacheDatabase.Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CoreRegistrations.Serializer = new [SerializerType]() before using SQLite defaults.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite defaults.");
         }
 
         var applicationName = CacheDatabase.ApplicationName;
@@ -124,49 +124,6 @@ public static class BlobCacheBuilderExtensions
 
         return cache;
     }
-
-    ////private static ISecureBlobCache CreateEncryptedSqliteCache(string name, string applicationName)
-    ////{
-    ////    if (string.IsNullOrWhiteSpace(name))
-    ////    {
-    ////        throw new ArgumentException("Cache name cannot be null or empty.", nameof(name));
-    ////    }
-
-    ////    if (string.IsNullOrWhiteSpace(applicationName))
-    ////    {
-    ////        throw new ArgumentException("Application name cannot be null or empty.", nameof(applicationName));
-    ////    }
-
-    ////    var directory = GetCacheDirectory(name, applicationName);
-    ////    try
-    ////    {
-    ////        Directory.CreateDirectory(directory);
-    ////    }
-    ////    catch (Exception ex)
-    ////    {
-    ////        throw new InvalidOperationException($"Failed to create cache directory '{directory}': {ex.Message}", ex);
-    ////    }
-
-    ////    var filePath = Path.Combine(directory, $"{name}.db");
-
-    ////    // For encrypted cache, we need a password. Use a default that can be overridden.
-    ////    var password = Environment.GetEnvironmentVariable("AKAVACHE_SECURE_PASSWORD") ?? "DefaultSecurePassword";
-
-    ////    var encryptedType = Type.GetType("Akavache.EncryptedSqlite3.EncryptedSqliteBlobCache, Akavache.EncryptedSqlite3");
-    ////    if (encryptedType == null)
-    ////    {
-    ////        throw new InvalidOperationException("Akavache.EncryptedSqlite3.EncryptedSqliteBlobCache type not found. Ensure Akavache.EncryptedSqlite3 is properly referenced.");
-    ////    }
-
-    ////    var cache = (ISecureBlobCache)Activator.CreateInstance(encryptedType, filePath, password)!;
-
-    ////    if (BlobCache.ForcedDateTimeKind.HasValue)
-    ////    {
-    ////        cache.ForcedDateTimeKind = BlobCache.ForcedDateTimeKind.Value;
-    ////    }
-
-    ////    return cache;
-    ////}
 
     private static string GetCacheDirectory(string cacheName, string applicationName)
     {

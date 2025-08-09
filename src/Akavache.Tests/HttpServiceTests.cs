@@ -56,7 +56,7 @@ public class HttpServiceTests
     public async Task DownloadUrlWithUriShouldValidateArguments()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
         var cache = new InMemoryBlobCache();
         Uri? nullUri = null;
@@ -81,7 +81,7 @@ public class HttpServiceTests
     public async Task DownloadUrlWithKeyShouldValidateArguments()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
         var cache = new InMemoryBlobCache();
 
@@ -145,7 +145,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldHandleNullHeadersGracefully()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
         var cache = new InMemoryBlobCache();
 
@@ -179,7 +179,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldHandleDifferentHttpMethods()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
         var cache = new InMemoryBlobCache();
 
@@ -209,7 +209,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldRespectFetchAlwaysParameter()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
         var cache = new InMemoryBlobCache();
 
@@ -250,7 +250,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldSupportAbsoluteExpiration()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
         var cache = new InMemoryBlobCache();
         var expiration = DateTimeOffset.Now.AddHours(1);

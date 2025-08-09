@@ -28,7 +28,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// </summary>
     /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
     protected InMemoryBlobCacheBase(ISerializer? serializer)
-        : this(CoreRegistrations.TaskpoolScheduler, serializer)
+        : this(CacheDatabase.TaskpoolScheduler, serializer)
     {
     }
 
@@ -53,7 +53,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
-            CoreRegistrations.Serializer?.ForcedDateTimeKind = value;
+            CacheDatabase.Serializer?.ForcedDateTimeKind = value;
         }
     }
 

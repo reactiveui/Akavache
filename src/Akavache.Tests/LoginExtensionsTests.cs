@@ -24,7 +24,7 @@ public class LoginExtensionsTests
     public async Task SaveLoginAndGetLoginShouldWorkWithDefaultHost()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -59,7 +59,7 @@ public class LoginExtensionsTests
     public async Task SaveLoginAndGetLoginShouldWorkWithCustomHost()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -95,7 +95,7 @@ public class LoginExtensionsTests
     public async Task SaveLoginWithExpirationShouldWork()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -137,7 +137,7 @@ public class LoginExtensionsTests
     public async Task EraseLoginShouldRemoveLoginCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -179,7 +179,7 @@ public class LoginExtensionsTests
     public async Task GetLoginShouldThrowKeyNotFoundExceptionWhenNoLoginExists()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -208,7 +208,7 @@ public class LoginExtensionsTests
     public async Task MultipleHostsShouldHaveDifferentCredentials()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -259,7 +259,7 @@ public class LoginExtensionsTests
     public async Task SaveLoginShouldOverwritePreviousCredentials()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -309,7 +309,7 @@ public class LoginExtensionsTests
     public async Task LoginCredentialsShouldPersistAcrossCacheInstances()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "persistent_login_test.db");
@@ -360,7 +360,7 @@ public class LoginExtensionsTests
     public async Task LoginMethodsShouldHandleEdgeCases()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -402,7 +402,7 @@ public class LoginExtensionsTests
     public async Task EraseLoginShouldBeIdempotent()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");

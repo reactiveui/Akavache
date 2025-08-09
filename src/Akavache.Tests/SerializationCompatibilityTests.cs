@@ -219,12 +219,12 @@ public class SerializationCompatibilityTests
         }
 
         // Store and restore the original serializer to prevent interference
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         try
         {
             // Arrange
             var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            CoreRegistrations.Serializer = serializer;
+            CacheDatabase.Serializer = serializer;
 
             using (Utility.WithEmptyDirectory(out var path))
             {
@@ -261,7 +261,7 @@ public class SerializationCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -291,7 +291,7 @@ public class SerializationCompatibilityTests
         }
 
         // Store and restore the original serializer to prevent interference
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         try
         {
             var testObject = new TestObject
@@ -308,7 +308,7 @@ public class SerializationCompatibilityTests
                 // Write with first serializer
                 {
                     var writeSerializer = (ISerializer)Activator.CreateInstance(writeSerializerType)!;
-                    CoreRegistrations.Serializer = writeSerializer;
+                    CacheDatabase.Serializer = writeSerializer;
 
                     await using var writeCache = new SqliteBlobCache(dbPath);
                     await writeCache.InsertObject("cross_test", testObject).FirstAsync();
@@ -318,7 +318,7 @@ public class SerializationCompatibilityTests
                 // Read with second serializer
                 {
                     var readSerializer = (ISerializer)Activator.CreateInstance(readSerializerType)!;
-                    CoreRegistrations.Serializer = readSerializer;
+                    CacheDatabase.Serializer = readSerializer;
 
                     await using var readCache = new SqliteBlobCache(dbPath);
 
@@ -345,7 +345,7 @@ public class SerializationCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -367,12 +367,12 @@ public class SerializationCompatibilityTests
         }
 
         // Store and restore the original serializer to prevent interference
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         try
         {
             // Arrange
             var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            CoreRegistrations.Serializer = serializer;
+            CacheDatabase.Serializer = serializer;
 
             using (Utility.WithEmptyDirectory(out var path))
             {
@@ -409,7 +409,7 @@ public class SerializationCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -431,12 +431,12 @@ public class SerializationCompatibilityTests
         }
 
         // Store and restore the original serializer to prevent interference
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         try
         {
             // Arrange
             var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            CoreRegistrations.Serializer = serializer;
+            CacheDatabase.Serializer = serializer;
 
             using (Utility.WithEmptyDirectory(out var path))
             {
@@ -505,7 +505,7 @@ public class SerializationCompatibilityTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -528,14 +528,14 @@ public class SerializationCompatibilityTests
         }
 
         // Store and restore the original serializer to prevent interference
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
             // Set up serializer with UTC DateTime handling for cross-platform consistency
             var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
             serializer.ForcedDateTimeKind = DateTimeKind.Utc;
-            CoreRegistrations.Serializer = serializer;
+            CacheDatabase.Serializer = serializer;
 
             using (Utility.WithEmptyDirectory(out var path))
             {
@@ -568,7 +568,7 @@ public class SerializationCompatibilityTests
                             var cache = new SqliteBlobCache(dbPath);
 
                             // Ensure the serializer is still set for this cache instance
-                            CoreRegistrations.Serializer = serializer;
+                            CacheDatabase.Serializer = serializer;
 
                             try
                             {
@@ -593,7 +593,7 @@ public class SerializationCompatibilityTests
                             var cache = new SqliteBlobCache(dbPath);
 
                             // Ensure the serializer is still set for this cache instance
-                            CoreRegistrations.Serializer = serializer;
+                            CacheDatabase.Serializer = serializer;
 
                             try
                             {
@@ -648,7 +648,7 @@ public class SerializationCompatibilityTests
         finally
         {
             // Always restore the original serializer
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 

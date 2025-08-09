@@ -24,7 +24,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     protected ObjectBulkOperationsTestBase()
     {
         // Store the original serializer to restore it after each test
-        _originalSerializer = CoreRegistrations.Serializer;
+        _originalSerializer = CacheDatabase.Serializer;
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
                 // Restore the original serializer to prevent interference with other tests
                 if (_originalSerializer != null)
                 {
-                    CoreRegistrations.Serializer = _originalSerializer;
+                    CacheDatabase.Serializer = _originalSerializer;
                 }
             }
 

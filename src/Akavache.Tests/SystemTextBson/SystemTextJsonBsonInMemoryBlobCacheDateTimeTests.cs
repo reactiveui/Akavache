@@ -21,6 +21,6 @@ public class SystemTextJsonBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     protected override void SetupTestClassSerializer()
     {
         // Ensure proper serializer setup for these tests
-        CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonBsonSerializer();
     }
 }

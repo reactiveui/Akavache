@@ -211,7 +211,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesShouldWorkWithValidData()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -249,7 +249,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesShouldThrowWhenImageDataIsNull()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();

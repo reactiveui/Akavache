@@ -235,21 +235,21 @@ public class CoreUtilityTests
     public void SerializerRegistrationShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         var testSerializer = new SystemJsonSerializer();
 
         try
         {
             // Act
-            CoreRegistrations.Serializer = testSerializer;
+            CacheDatabase.Serializer = testSerializer;
 
             // Assert
-            Assert.Same(testSerializer, CoreRegistrations.Serializer);
+            Assert.Same(testSerializer, CacheDatabase.Serializer);
         }
         finally
         {
             // Restore original serializer
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -260,7 +260,7 @@ public class CoreUtilityTests
     public void SchedulerRegistrationShouldWorkCorrectly()
     {
         // Arrange & Act
-        var taskpoolScheduler = CoreRegistrations.TaskpoolScheduler;
+        var taskpoolScheduler = CacheDatabase.TaskpoolScheduler;
         var immediateScheduler = ImmediateScheduler.Instance;
 
         // Assert

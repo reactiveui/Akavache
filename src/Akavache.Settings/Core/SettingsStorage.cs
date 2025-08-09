@@ -37,12 +37,12 @@ public abstract class SettingsStorage : ISettingsStorage
             throw new ArgumentException("Invalid key prefix", nameof(keyPrefix));
         }
 
-        if (CoreRegistrations.Serializer == null && serializer != null)
+        if (CacheDatabase.Serializer == null && serializer != null)
         {
-            CoreRegistrations.Serializer = serializer;
+            CacheDatabase.Serializer = serializer;
         }
 
-        if (CoreRegistrations.Serializer == null)
+        if (CacheDatabase.Serializer == null)
         {
             throw new ArgumentException("Serializer is not set. Please set the serializer before using the settings storage.", nameof(serializer));
         }

@@ -57,7 +57,7 @@ public static class MauiProgram
     private static void ConfigureAkavache()
     {
         // Initialize Akavache with System.Text.Json serializer for best performance
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         // Configure DateTime handling for consistent behavior
         CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;

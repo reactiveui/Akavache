@@ -30,7 +30,7 @@ public class SettingsCacheTests
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             var viewSettings = default(ViewSettings);
-            builder.WithSerializser(new NewtonsoftSerializer())
+            builder.WithSerializer(new NewtonsoftSerializer())
                 .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
                 .Build();
 
@@ -72,7 +72,7 @@ public class SettingsCacheTests
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             var viewSettings = default(ViewSettings);
-            builder.WithSerializser(new NewtonsoftSerializer())
+            builder.WithSerializer(new NewtonsoftSerializer())
                 .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
                 .Build();
             viewSettings!.EnumTest = EnumTestValue.Option2;
@@ -106,7 +106,7 @@ public class SettingsCacheTests
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             var viewSettings = default(ViewSettings);
-            builder.WithSerializser(new SystemJsonSerializer())
+            builder.WithSerializer(new SystemJsonSerializer())
                 .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
                 .Build();
 
@@ -148,7 +148,7 @@ public class SettingsCacheTests
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             var viewSettings = default(ViewSettings);
-            builder.WithSerializser(new SystemJsonSerializer())
+            builder.WithSerializer(new SystemJsonSerializer())
                 .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
                 .Build();
 
@@ -197,7 +197,7 @@ public class SettingsCacheTests
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             var originalSettings = default(ViewSettings);
-            builder.WithSerializser(new NewtonsoftSerializer())
+            builder.WithSerializer(new NewtonsoftSerializer())
                 .WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName)
                 .Build();
 
@@ -258,7 +258,7 @@ public class SettingsCacheTests
             // Create settings with one password
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             var originalSettings = default(ViewSettings);
-            builder.WithSerializser(new NewtonsoftSerializer())
+            builder.WithSerializer(new NewtonsoftSerializer())
                 .WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName)
                 .Build();
 
@@ -318,7 +318,7 @@ public class SettingsCacheTests
         try
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSerializser(new NewtonsoftSerializer());
+            builder.WithSerializer(new NewtonsoftSerializer());
 
             for (var i = 0; i < 3; i++)
             {
@@ -369,7 +369,7 @@ public class SettingsCacheTests
         try
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSerializser(new NewtonsoftSerializer());
+            builder.WithSerializer(new NewtonsoftSerializer());
 
             // Initially should return null
             var nonExistentStore = builder.GetSettingsStore<ViewSettings>(testName);
@@ -428,38 +428,38 @@ public class SettingsCacheTests
     public void TestSerializerSetAndGet()
     {
         var builder = CacheDatabase.CreateBuilder();
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
             // Test setting SystemJsonSerializer
             var systemJsonSerializer = new SystemJsonSerializer();
-            CoreRegistrations.Serializer = systemJsonSerializer;
+            CacheDatabase.Serializer = systemJsonSerializer;
 
             // For encrypted settings, the serializer might be wrapped or managed differently
             // Just verify that setting and getting works, not necessarily same instance
-            var retrievedSerializer = CoreRegistrations.Serializer;
+            var retrievedSerializer = CacheDatabase.Serializer;
             Assert.NotNull(retrievedSerializer);
             Assert.IsType<SystemJsonSerializer>(retrievedSerializer);
 
             // Test setting NewtonsoftSerializer
             var newtonsoftSerializer = new NewtonsoftSerializer();
-            CoreRegistrations.Serializer = newtonsoftSerializer;
+            CacheDatabase.Serializer = newtonsoftSerializer;
 
-            var retrievedNewtonsoft = CoreRegistrations.Serializer;
+            var retrievedNewtonsoft = CacheDatabase.Serializer;
             Assert.NotNull(retrievedNewtonsoft);
             Assert.IsType<NewtonsoftSerializer>(retrievedNewtonsoft);
 
             // Test setting same serializer again (should work)
-            CoreRegistrations.Serializer = newtonsoftSerializer;
-            var retrievedAgain = CoreRegistrations.Serializer;
+            CacheDatabase.Serializer = newtonsoftSerializer;
+            var retrievedAgain = CacheDatabase.Serializer;
             Assert.NotNull(retrievedAgain);
             Assert.IsType<NewtonsoftSerializer>(retrievedAgain);
         }
         finally
         {
             // Restore original serializer
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 }

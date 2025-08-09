@@ -17,7 +17,7 @@ public class SqliteBlobCacheTests : BlobCacheTestsBase
     protected override IBlobCache CreateBlobCache(string path)
     {
         // Create separate database files for each serializer AND format type to ensure compatibility
-        var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
+        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
 
         // Further separate JSON and BSON formats to prevent cross-contamination
         var formatType = serializerName.Contains("Bson") ? "bson" : "json";

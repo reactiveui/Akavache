@@ -13,7 +13,7 @@ namespace Akavache.Core;
 /// </summary>
 public static class SerializerExtensions
 {
-    private static ISerializer Serializer => CoreRegistrations.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer. Please ensure a CacheDatabase serializer package is referenced (Akavache.NewtonsoftJson.Bson for maximum Akavache compatibility, Akavache.SystemTextJson for best performance, or Akavache.NewtonsoftJson for balance), then initialize CoreRegistrations.Serializer with an instance, or call the appropriate registration method.");
+    private static ISerializer Serializer => CacheDatabase.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer. Please ensure a CacheDatabase serializer package is referenced (Akavache.NewtonsoftJson.Bson for maximum Akavache compatibility, Akavache.SystemTextJson for best performance, or Akavache.NewtonsoftJson for balance), then initialize CacheDatabase.Serializer with an instance, or call the appropriate registration method.");
 
     /// <summary>
     /// Inserts the specified key/value pairs into the blob.

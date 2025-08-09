@@ -25,8 +25,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -63,7 +63,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -75,8 +75,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlWithUriShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -114,7 +114,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -126,8 +126,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlWithKeyShouldStoreData()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -166,7 +166,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -178,8 +178,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlWithUriAndKeyShouldStoreData()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -219,7 +219,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -231,8 +231,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldHandleInvalidUrls()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -261,7 +261,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -273,8 +273,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldValidateArguments()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -344,7 +344,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -356,8 +356,8 @@ public class DownloadUrlExtensionsTests
     public async Task ConcurrentDownloadsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -413,7 +413,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -425,8 +425,8 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldRespectExpiration()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -475,7 +475,7 @@ public class DownloadUrlExtensionsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 }

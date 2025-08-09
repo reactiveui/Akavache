@@ -23,7 +23,7 @@ public class RelativeTimeExtensionsTests
     public async Task InsertWithTimeSpanShouldCalculateExpirationCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -55,7 +55,7 @@ public class RelativeTimeExtensionsTests
     public async Task InsertObjectWithTimeSpanShouldCalculateExpirationCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -165,7 +165,7 @@ public class RelativeTimeExtensionsTests
     public async Task RelativeTimeExtensionsShouldWorkWithDifferentTimeSpans(int seconds)
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -196,7 +196,7 @@ public class RelativeTimeExtensionsTests
     public async Task ZeroTimeSpanShouldWorkCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -222,7 +222,7 @@ public class RelativeTimeExtensionsTests
     public async Task NegativeTimeSpanShouldResultInPastExpiration()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();

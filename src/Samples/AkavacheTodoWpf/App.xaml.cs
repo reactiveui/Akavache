@@ -111,7 +111,7 @@ public partial class App : Application
     private static void ConfigureAkavache()
     {
         // Step 1: Initialize the serializer first
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         // Step 2: Configure DateTime handling for consistent behavior
         CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;

@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Settings.Core;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -14,6 +16,34 @@ public static class CacheDatabase
 {
     private static IBlobCacheBuilder? _builder;
     private static bool _isInitialized;
+    private static IScheduler? _taskPoolOverride;
+
+    /// <summary>
+    /// Gets the builder.
+    /// </summary>
+    /// <value>
+    /// The builder.
+    /// </value>
+    public static IBlobCacheBuilder? Builder => _builder;
+
+    /// <summary>
+    /// Gets or sets the serializer.
+    /// </summary>
+    public static ISerializer? Serializer { get; set; }
+
+    /// <summary>
+    /// Gets or sets the http service.
+    /// </summary>
+    public static IHttpService? HttpService { get; set; } = new HttpService();
+
+    /// <summary>
+    /// Gets or sets the Scheduler used for task pools.
+    /// </summary>
+    public static IScheduler TaskpoolScheduler
+    {
+        get => _taskPoolOverride ?? TaskPoolScheduler.Default;
+        set => _taskPoolOverride = value;
+    }
 
     /// <summary>
     /// Gets or sets the application name used for cache file paths.
@@ -90,12 +120,21 @@ public static class CacheDatabase
     /// Initializes BlobCache with a custom builder configuration.
     /// </summary>
     /// <param name="configure">An action to configure the BlobCache builder.</param>
-    /// <returns>The configured builder.</returns>
-    public static IBlobCacheBuilder Initialize(Action<IBlobCacheBuilder> configure)
+    /// <param name="applicationName">Name of the application.</param>
+    /// <returns>
+    /// The configured builder.
+    /// </returns>
+    /// <exception cref="System.ArgumentNullException">configure.</exception>
+    public static IBlobCacheBuilder Initialize(Action<IBlobCacheBuilder> configure, string? applicationName = null)
     {
         if (configure == null)
         {
             throw new ArgumentNullException(nameof(configure));
+        }
+
+        if (applicationName != null)
+        {
+            ApplicationName = applicationName;
         }
 
         var builder = CreateBuilder().WithApplicationName(ApplicationName);
@@ -117,6 +156,33 @@ public static class CacheDatabase
         }
 
         var shutdownTasks = new List<IObservable<Unit>>();
+
+        // dispose the settings store
+        if (BlobCacheBuilder.BlobCaches != null)
+        {
+            var shutdownSettingsBlobs = Observable.Start(static async () =>
+            {
+                var tasks = BlobCacheBuilder.BlobCaches
+                .Where(cachePair => cachePair.Value != null)
+                .Select(async cache => await cache.Value!.DisposeAsync())
+                .ToList();
+                await Task.WhenAll(tasks);
+            }).Select(_ => Unit.Default);
+            shutdownTasks.Add(shutdownSettingsBlobs);
+        }
+
+        if (BlobCacheBuilder.SettingsStores != null)
+        {
+            var shutdownSettingsStores = Observable.Start(static async () =>
+            {
+                var tasks = BlobCacheBuilder.SettingsStores
+                .Where(cachePair => cachePair.Value != null)
+                .Select(async cache => await cache.Value!.DisposeAsync())
+                .ToList();
+                await Task.WhenAll(tasks);
+            }).Select(_ => Unit.Default);
+            shutdownTasks.Add(shutdownSettingsStores);
+        }
 
         try
         {

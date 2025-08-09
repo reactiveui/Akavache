@@ -43,8 +43,8 @@ This package provides image caching and bitmap manipulation functionality for Ak
 using Akavache.Core;
 using Akavache.Drawing;
 
-// Initialize drawing support
-Registrations.Initialize();
+// Initialize drawing support - ONLY Net8.0 and later
+Locator.CurrentMutable.RegisterPlatformBitmapLoader();
 
 // Set up cache
 CacheDatabase.ApplicationName = "MyApp";

@@ -21,6 +21,6 @@ public class NewtonsoftJsonInMemoryBlobCacheObjectBulkOperationsTests : ObjectBu
     protected override void SetupTestClassSerializer()
     {
         // Ensure proper serializer setup for these tests
-        CoreRegistrations.Serializer = new NewtonsoftSerializer();
+        CacheDatabase.Serializer = new NewtonsoftSerializer();
     }
 }

@@ -10,7 +10,7 @@ namespace Akavache.Core;
 /// </summary>
 public static class HttpExtensions
 {
-    private static IHttpService HttpService => CoreRegistrations.HttpService ?? throw new InvalidOperationException("Unable to resolve IHttpService, make sure you are including the correct CacheDatabase NuGet packages.");
+    private static IHttpService HttpService => CacheDatabase.HttpService ?? throw new InvalidOperationException("Unable to resolve IHttpService, make sure you are including the correct CacheDatabase NuGet packages.");
 
     /// <summary>
     /// Writes to a stream and returns a observable.

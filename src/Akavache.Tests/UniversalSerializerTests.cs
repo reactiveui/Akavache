@@ -238,8 +238,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldTryAlternativeKeys()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -253,7 +253,7 @@ public class UniversalSerializerTests
 
                 // Act - Try to find with alternative keys
                 var result = await UniversalSerializer.TryFindDataWithAlternativeKeys<UserObject>(
-                    cache, "test_key", CoreRegistrations.Serializer);
+                    cache, "test_key", CacheDatabase.Serializer);
 
                 // Assert
                 Assert.NotNull(result);
@@ -266,7 +266,7 @@ public class UniversalSerializerTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
