@@ -3,9 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
-
 namespace Akavache.Core;
 
 /// <summary>
@@ -13,7 +10,7 @@ namespace Akavache.Core;
 /// convenient static properties for accessing common cache locations.
 /// This V11 implementation uses a builder pattern for configuration.
 /// </summary>
-public static class BlobCache
+public static class CacheDatabase
 {
     private static IBlobCacheBuilder? _builder;
     private static bool _isInitialized;

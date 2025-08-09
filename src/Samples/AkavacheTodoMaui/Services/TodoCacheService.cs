@@ -20,7 +20,7 @@ public static class TodoCacheService
     /// <returns>Observable list of todos.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    public static IObservable<List<TodoItem>> GetAllTodos() => BlobCache.UserAccount
+    public static IObservable<List<TodoItem>> GetAllTodos() => CacheDatabase.UserAccount
         .GetObject<List<TodoItem>>("todos")
         .Catch(Observable.Return(new List<TodoItem>()))
         .Select(todos => todos ?? new List<TodoItem>());
@@ -34,7 +34,7 @@ public static class TodoCacheService
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveTodos(List<TodoItem> todos, DateTimeOffset? expiration = null) =>
-        BlobCache.UserAccount.InsertObject("todos", todos, expiration);
+        CacheDatabase.UserAccount.InsertObject("todos", todos, expiration);
 
     /// <summary>
     /// Gets application settings.
@@ -42,7 +42,7 @@ public static class TodoCacheService
     /// <returns>Observable app settings.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    public static IObservable<AppSettings> GetSettings() => BlobCache.UserAccount
+    public static IObservable<AppSettings> GetSettings() => CacheDatabase.UserAccount
         .GetOrCreateObject("app_settings", () => new AppSettings())
         .Select(settings => settings ?? new AppSettings());
 
@@ -54,7 +54,7 @@ public static class TodoCacheService
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveSettings(AppSettings? settings) =>
-        BlobCache.UserAccount.InsertObject("app_settings", settings);
+        CacheDatabase.UserAccount.InsertObject("app_settings", settings);
 
     /// <summary>
     /// Gets todo statistics.
@@ -89,7 +89,7 @@ public static class TodoCacheService
             System.Diagnostics.Debug.WriteLine("Getting cache info...");
 
             // Use timeout and better error handling for each cache operation
-            var userKeysObs = BlobCache.UserAccount.GetAllKeys()
+            var userKeysObs = CacheDatabase.UserAccount.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(5))
                 .Catch((Exception ex) =>
@@ -98,7 +98,7 @@ public static class TodoCacheService
                     return Observable.Return(Array.Empty<string>());
                 });
 
-            var localKeysObs = BlobCache.LocalMachine.GetAllKeys()
+            var localKeysObs = CacheDatabase.LocalMachine.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(5))
                 .Catch((Exception ex) =>
@@ -107,7 +107,7 @@ public static class TodoCacheService
                     return Observable.Return(Array.Empty<string>());
                 });
 
-            var secureKeysObs = BlobCache.Secure.GetAllKeys()
+            var secureKeysObs = CacheDatabase.Secure.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(5))
                 .Catch((Exception ex) =>
@@ -154,13 +154,13 @@ public static class TodoCacheService
     /// <param name="todoId">The todo ID to invalidate.</param>
     /// <returns>Observable unit.</returns>
     public static IObservable<Unit> InvalidateTodo(string todoId) =>
-        BlobCache.UserAccount.Invalidate($"todo_{todoId}");
+        CacheDatabase.UserAccount.Invalidate($"todo_{todoId}");
 
     /// <summary>
     /// Cleans up the cache.
     /// </summary>
     /// <returns>Observable unit.</returns>
-    public static IObservable<Unit> CleanupCache() => BlobCache.UserAccount.Vacuum();
+    public static IObservable<Unit> CleanupCache() => CacheDatabase.UserAccount.Vacuum();
 
     /// <summary>
     /// Saves application state.
@@ -169,5 +169,5 @@ public static class TodoCacheService
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveApplicationState() =>
-        BlobCache.UserAccount.InsertObject("last_shutdown", DateTimeOffset.Now);
+        CacheDatabase.UserAccount.InsertObject("last_shutdown", DateTimeOffset.Now);
 }

@@ -6,7 +6,6 @@
 using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
 using Xunit;
 
