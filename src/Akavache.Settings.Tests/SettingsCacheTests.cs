@@ -5,7 +5,6 @@
 
 using Akavache.Core;
 using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
 
 namespace Akavache.Settings.Tests;
 
@@ -23,7 +22,7 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestCreateAndInsertNewtonsoft()
     {
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         await builder.DeleteSettingsStore<ViewSettings>();
         builder.WithSerializser(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
@@ -50,7 +49,7 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestUpdateAndReadNewtonsoft()
     {
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         builder.WithSerializser(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
@@ -68,7 +67,7 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestCreateAndInsertSystemTextJson()
     {
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         await builder.DeleteSettingsStore<ViewSettings>();
         builder.WithSerializser(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
@@ -95,7 +94,7 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestUpdateAndReadSystemTextJson()
     {
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         builder.WithSerializser(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
@@ -111,7 +110,7 @@ public class SettingsCacheTests
     public void TestOverrideSettingsCachePath()
     {
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         builder.WithSettingsCachePath(path);
         Assert.Equal(path, builder.SettingsCachePath);
     }

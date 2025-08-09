@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.UI.Xaml;
 
 namespace AkavacheTodoMaui.WinUI;
 

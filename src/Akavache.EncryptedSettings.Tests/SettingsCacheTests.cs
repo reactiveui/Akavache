@@ -24,7 +24,7 @@ public class SettingsCacheTests
     public async Task TestCreateAndInsertNewtonsoft()
     {
         var testName = $"newtonsoft_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -66,7 +66,7 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var testName = $"newtonsoft_update_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -100,7 +100,7 @@ public class SettingsCacheTests
     public async Task TestCreateAndInsertSystemTextJson()
     {
         var testName = $"systemjson_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -142,7 +142,7 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var testName = $"systemjson_update_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -176,7 +176,7 @@ public class SettingsCacheTests
     public void TestOverrideSettingsCachePath()
     {
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         builder.WithSettingsCachePath(path)
             .Build();
         Assert.Equal(path, builder.SettingsCachePath);
@@ -191,7 +191,7 @@ public class SettingsCacheTests
     {
         // Use a unique test name to avoid conflicts
         var testName = $"persistence_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -251,7 +251,7 @@ public class SettingsCacheTests
     public async Task TestEncryptedSettingsWrongPassword()
     {
         var testName = $"wrong_password_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -313,7 +313,7 @@ public class SettingsCacheTests
     public async Task TestMultipleDisposeAndRecreate()
     {
         var testName = $"multi_dispose_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -364,7 +364,7 @@ public class SettingsCacheTests
     public async Task TestGetSettingsStore()
     {
         var testName = $"get_store_test_{Guid.NewGuid():N}";
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
 
         try
         {
@@ -413,7 +413,7 @@ public class SettingsCacheTests
     [Fact]
     public void TestAppInfoProperties()
     {
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         Assert.NotNull(builder.ExecutingAssembly);
         Assert.NotNull(builder.ExecutingAssemblyName);
         Assert.NotNull(builder.ApplicationRootPath);
@@ -427,7 +427,7 @@ public class SettingsCacheTests
     [Fact]
     public void TestSerializerSetAndGet()
     {
-        var builder = BlobCache.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder();
         var originalSerializer = CoreRegistrations.Serializer;
 
         try

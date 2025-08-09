@@ -99,7 +99,7 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
     /// <inheritdoc />
     public IBlobCacheBuilder Build()
     {
-        BlobCache.SetBuilder(this);
+        CacheDatabase.SetBuilder(this);
         return this;
     }
 
@@ -168,9 +168,9 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
 
     private static void ApplyForcedDateTimeKind(IBlobCache cache)
     {
-        if (BlobCache.ForcedDateTimeKind.HasValue)
+        if (CacheDatabase.ForcedDateTimeKind.HasValue)
         {
-            cache.ForcedDateTimeKind = BlobCache.ForcedDateTimeKind.Value;
+            cache.ForcedDateTimeKind = CacheDatabase.ForcedDateTimeKind.Value;
         }
     }
 

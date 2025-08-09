@@ -89,7 +89,7 @@ public partial class App : Application
             await TodoCacheService.SaveApplicationState();
 
             // Shutdown Akavache properly to ensure all data is flushed
-            await BlobCache.Shutdown();
+            await CacheDatabase.Shutdown();
         }
         catch (Exception ex)
         {
