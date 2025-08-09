@@ -34,8 +34,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Settings", "Akavac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Settings.Tests", "Akavache.Settings.Tests\Akavache.Settings.Tests.csproj", "{95375AF7-E250-AA8B-01D4-370859335666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.EncryptedSettings", "Akavache.EncryptedSettings\Akavache.EncryptedSettings.csproj", "{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.EncryptedSettings.Tests", "Akavache.EncryptedSettings.Tests\Akavache.EncryptedSettings.Tests.csproj", "{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Benchmarks", "Akavache.Benchmarks\Akavache.Benchmarks.csproj", "{8F48F915-99AB-CDD0-6C11-EFD66E12E295}"
@@ -45,6 +43,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoWpf", "Samples\AkavacheTodoWpf\AkavacheTodoWpf.csproj", "{AF425552-A630-4106-353B-6DB5F8AF614F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoMaui", "Samples\AkavacheTodoMaui\AkavacheTodoMaui.csproj", "{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,10 +88,6 @@ Global
 		{95375AF7-E250-AA8B-01D4-370859335666}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95375AF7-E250-AA8B-01D4-370859335666}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{95375AF7-E250-AA8B-01D4-370859335666}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CB78A78C-6C0D-D1BE-AAAA-9AE2A2E6C0F4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -113,6 +109,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{5139E4F4-4F2A-0299-5284-3D166D7D5841} = {AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}
+		{95375AF7-E250-AA8B-01D4-370859335666} = {AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}
+		{EE8213FF-94DB-E2B7-2766-A11D9DB38C42} = {AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}
 		{AF425552-A630-4106-353B-6DB5F8AF614F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection

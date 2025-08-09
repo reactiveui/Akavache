@@ -13,6 +13,8 @@ namespace AkavacheTodoMaui.ViewModels;
 /// <summary>
 /// View model for editing existing todo items.
 /// </summary>
+[RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
+[RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class EditTodoViewModel : ReactiveObject
 {
     private readonly TodoItem _originalTodo;

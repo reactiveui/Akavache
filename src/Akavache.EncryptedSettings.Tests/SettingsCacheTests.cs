@@ -3,7 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
 using Akavache.NewtonsoftJson;
+using Akavache.Settings;
 using Akavache.Settings.Tests;
 using Akavache.SystemTextJson;
 
@@ -22,12 +24,15 @@ public class SettingsCacheTests
     public async Task TestCreateAndInsertNewtonsoft()
     {
         var testName = $"newtonsoft_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new NewtonsoftSerializer();
-            var viewSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test1234", true, testName);
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            var viewSettings = default(ViewSettings);
+            builder.WithSerializser(new NewtonsoftSerializer())
+                .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
+                .Build();
 
             Assert.NotNull(viewSettings);
             Assert.True(viewSettings!.BoolTest);
@@ -44,7 +49,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -61,12 +66,15 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var testName = $"newtonsoft_update_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new NewtonsoftSerializer();
-            var viewSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test1234", true, testName);
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            var viewSettings = default(ViewSettings);
+            builder.WithSerializser(new NewtonsoftSerializer())
+                .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
+                .Build();
             viewSettings!.EnumTest = EnumTestValue.Option2;
             Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
             await viewSettings.DisposeAsync();
@@ -75,7 +83,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -92,12 +100,15 @@ public class SettingsCacheTests
     public async Task TestCreateAndInsertSystemTextJson()
     {
         var testName = $"systemjson_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new SystemJsonSerializer();
-            var viewSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test1234", true, testName);
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            var viewSettings = default(ViewSettings);
+            builder.WithSerializser(new SystemJsonSerializer())
+                .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
+                .Build();
 
             Assert.NotNull(viewSettings);
             Assert.True(viewSettings!.BoolTest);
@@ -114,7 +125,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -131,12 +142,16 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var testName = $"systemjson_update_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new SystemJsonSerializer();
-            var viewSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test1234", true, testName);
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            var viewSettings = default(ViewSettings);
+            builder.WithSerializser(new SystemJsonSerializer())
+                .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
+                .Build();
+
             viewSettings!.EnumTest = EnumTestValue.Option2;
             Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
             await viewSettings.DisposeAsync();
@@ -145,7 +160,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -161,8 +176,10 @@ public class SettingsCacheTests
     public void TestOverrideSettingsCachePath()
     {
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
-        AppInfo.OverrideSettingsCachePath(path);
-        Assert.Equal(path, AppInfo.SettingsCachePath);
+        var builder = BlobCache.CreateBuilder();
+        builder.WithSettingsCachePath(path)
+            .Build();
+        Assert.Equal(path, builder.SettingsCachePath);
     }
 
     /// <summary>
@@ -174,14 +191,17 @@ public class SettingsCacheTests
     {
         // Use a unique test name to avoid conflicts
         var testName = $"persistence_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new SystemJsonSerializer();
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            var originalSettings = default(ViewSettings);
+            builder.WithSerializser(new NewtonsoftSerializer())
+                .WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName)
+                .Build();
 
             // Create and modify settings
-            var originalSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test_password", true, testName);
             Assert.NotNull(originalSettings);
 
             // Set values and ensure they're committed
@@ -197,7 +217,8 @@ public class SettingsCacheTests
             await Task.Delay(200);
 
             // Retrieve settings with same password
-            var retrievedSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test_password", true, testName);
+            var retrievedSettings = default(ViewSettings);
+            builder.WithSecureSettingsStore<ViewSettings>("test_password", (settings) => retrievedSettings = settings, testName);
             Assert.NotNull(retrievedSettings);
 
             // For encrypted settings, the persistence might not work the same way as regular settings
@@ -213,7 +234,7 @@ public class SettingsCacheTests
             // Cleanup
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -230,15 +251,16 @@ public class SettingsCacheTests
     public async Task TestEncryptedSettingsWrongPassword()
     {
         var testName = $"wrong_password_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new SystemJsonSerializer();
-
             // Create settings with one password
-            var originalSettings = await AppInfo.SetupSettingsStore<ViewSettings>("correct_password", true, testName);
-            Assert.NotNull(originalSettings);
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            var originalSettings = default(ViewSettings);
+            builder.WithSerializser(new NewtonsoftSerializer())
+                .WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName)
+                .Build();
 
             originalSettings!.StringTest = "Secret Data";
             await Task.Delay(100);
@@ -249,7 +271,8 @@ public class SettingsCacheTests
             var wrongPasswordWorked = false;
             try
             {
-                var wrongPasswordSettings = await AppInfo.SetupSettingsStore<ViewSettings>("wrong_password", true, testName);
+                var wrongPasswordSettings = default(ViewSettings);
+                builder.WithSecureSettingsStore<ViewSettings>("wrong_password", (settings) => wrongPasswordSettings = settings, testName);
                 Assert.NotNull(wrongPasswordSettings);
 
                 // The encrypted data should not be readable with wrong password
@@ -273,7 +296,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -290,15 +313,17 @@ public class SettingsCacheTests
     public async Task TestMultipleDisposeAndRecreate()
     {
         var testName = $"multi_dispose_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new NewtonsoftSerializer();
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            builder.WithSerializser(new NewtonsoftSerializer());
 
             for (var i = 0; i < 3; i++)
             {
-                var settings = await AppInfo.SetupSettingsStore<ViewSettings>("test_password", true, testName);
+                var settings = default(ViewSettings);
+                builder.WithSecureSettingsStore<ViewSettings>("test_password", (s) => settings = s, testName);
                 Assert.NotNull(settings);
 
                 settings!.IntTest = i * 100;
@@ -307,7 +332,8 @@ public class SettingsCacheTests
                 await Task.Delay(100);
 
                 // Verify we can recreate - but don't expect exact persistence for encrypted settings
-                var recreatedSettings = await AppInfo.SetupSettingsStore<ViewSettings>("test_password", true, testName);
+                var recreatedSettings = default(ViewSettings);
+                builder.WithSecureSettingsStore<ViewSettings>("test_password", (s) => recreatedSettings = s, testName);
                 Assert.NotNull(recreatedSettings);
 
                 // For encrypted settings, just verify we can create and access them
@@ -321,7 +347,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -338,23 +364,25 @@ public class SettingsCacheTests
     public async Task TestGetSettingsStore()
     {
         var testName = $"get_store_test_{Guid.NewGuid():N}";
+        var builder = BlobCache.CreateBuilder();
 
         try
         {
-            await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
-            AppInfo.Serializer = new SystemJsonSerializer();
+            await builder.DeleteSettingsStore<ViewSettings>(testName);
+            builder.WithSerializser(new NewtonsoftSerializer());
 
             // Initially should return null
-            var nonExistentStore = AppInfo.GetSettingsStore<ViewSettings>(testName);
+            var nonExistentStore = builder.GetSettingsStore<ViewSettings>(testName);
             Assert.Null(nonExistentStore);
 
             // Create a store
-            var createdStore = await AppInfo.SetupSettingsStore<ViewSettings>("test_password", true, testName);
+            var createdStore = default(ViewSettings);
+            builder.WithSecureSettingsStore<ViewSettings>("test_password", s => createdStore = s, testName);
             Assert.NotNull(createdStore);
 
             // For encrypted settings, GetSettingsStore might not return the same instance
             // due to the way encrypted settings are managed
-            var retrievedStore = AppInfo.GetSettingsStore<ViewSettings>(testName);
+            var retrievedStore = builder.GetSettingsStore<ViewSettings>(testName);
 
             // Just verify that we get a valid store back, not necessarily the same instance
             if (retrievedStore != null)
@@ -370,7 +398,7 @@ public class SettingsCacheTests
         {
             try
             {
-                await AppInfo.DeleteSettingsStore<ViewSettings>(testName);
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
             }
             catch
             {
@@ -385,11 +413,12 @@ public class SettingsCacheTests
     [Fact]
     public void TestAppInfoProperties()
     {
-        Assert.NotNull(AppInfo.ExecutingAssembly);
-        Assert.NotNull(AppInfo.ExecutingAssemblyName);
-        Assert.NotNull(AppInfo.ApplicationRootPath);
-        Assert.NotNull(AppInfo.SettingsCachePath);
-        Assert.NotNull(AppInfo.Version);
+        var builder = BlobCache.CreateBuilder();
+        Assert.NotNull(builder.ExecutingAssembly);
+        Assert.NotNull(builder.ExecutingAssemblyName);
+        Assert.NotNull(builder.ApplicationRootPath);
+        Assert.NotNull(builder.SettingsCachePath);
+        Assert.NotNull(builder.Version);
     }
 
     /// <summary>
@@ -398,38 +427,39 @@ public class SettingsCacheTests
     [Fact]
     public void TestSerializerSetAndGet()
     {
-        var originalSerializer = AppInfo.Serializer;
+        var builder = BlobCache.CreateBuilder();
+        var originalSerializer = CoreRegistrations.Serializer;
 
         try
         {
             // Test setting SystemJsonSerializer
             var systemJsonSerializer = new SystemJsonSerializer();
-            AppInfo.Serializer = systemJsonSerializer;
+            CoreRegistrations.Serializer = systemJsonSerializer;
 
             // For encrypted settings, the serializer might be wrapped or managed differently
             // Just verify that setting and getting works, not necessarily same instance
-            var retrievedSerializer = AppInfo.Serializer;
+            var retrievedSerializer = CoreRegistrations.Serializer;
             Assert.NotNull(retrievedSerializer);
             Assert.IsType<SystemJsonSerializer>(retrievedSerializer);
 
             // Test setting NewtonsoftSerializer
             var newtonsoftSerializer = new NewtonsoftSerializer();
-            AppInfo.Serializer = newtonsoftSerializer;
+            CoreRegistrations.Serializer = newtonsoftSerializer;
 
-            var retrievedNewtonsoft = AppInfo.Serializer;
+            var retrievedNewtonsoft = CoreRegistrations.Serializer;
             Assert.NotNull(retrievedNewtonsoft);
             Assert.IsType<NewtonsoftSerializer>(retrievedNewtonsoft);
 
             // Test setting same serializer again (should work)
-            AppInfo.Serializer = newtonsoftSerializer;
-            var retrievedAgain = AppInfo.Serializer;
+            CoreRegistrations.Serializer = newtonsoftSerializer;
+            var retrievedAgain = CoreRegistrations.Serializer;
             Assert.NotNull(retrievedAgain);
             Assert.IsType<NewtonsoftSerializer>(retrievedAgain);
         }
         finally
         {
             // Restore original serializer
-            AppInfo.Serializer = originalSerializer;
+            CoreRegistrations.Serializer = originalSerializer;
         }
     }
 }
