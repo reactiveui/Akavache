@@ -9,30 +9,30 @@ This package provides image caching and bitmap manipulation functionality for Ak
 ## Features
 
 ### Core Functionality
-- ? Load images from cache
-- ? Load images from URLs with caching
-- ? Save images to cache
-- ? Image validation and error handling
-- ? Custom image sizing support
-- ? Multiple image format support (PNG, JPEG, GIF, BMP, WebP)
+- Load images from cache
+- Load images from URLs with caching
+- Save images to cache
+- Image validation and error handling
+- Custom image sizing support
+- Multiple image format support (PNG, JPEG, GIF, BMP, WebP)
 
 ### Advanced Features
-- ? Batch image loading
-- ? Image preloading from URLs
-- ? Fallback image support
-- ? Thumbnail generation and caching
-- ? Image size detection
-- ? Pattern-based cache clearing
+- Batch image loading
+- Image preloading from URLs
+- Fallback image support
+- Thumbnail generation and caching
+- Image size detection
+- Pattern-based cache clearing
 
 ### Migration Support
-- ? Akavache.Drawing compatibility layer
-- ? Same method signatures and behavior
-- ? Drop-in replacement capability
+- Akavache.Drawing compatibility layer
+- Same method signatures and behavior
+- Drop-in replacement capability
 
 ## Installation
 
 ```xml
-<PackageReference Include="Akavache.Drawing" Version="1.0.0" />
+<PackageReference Include="Akavache.Drawing" Version="11.0.*" />
 ```
 
 ## Usage
@@ -47,8 +47,10 @@ using Akavache.Drawing;
 Locator.CurrentMutable.RegisterPlatformBitmapLoader();
 
 // Set up cache
-CacheDatabase.ApplicationName = "MyApp";
-CacheDatabase.LocalMachine = new SqliteBlobCache("cache.db");
+CacheDatabase.Initialize(builder =>
+    builder.WithApplicationName("MyApp")
+           .WithSerializer(new SystemJsonSerializer())
+           .WithSqliteDefaults());
 ```
 
 ### Load Images
@@ -113,13 +115,9 @@ var imageFromUrl = await CacheDatabase.LocalMachine.LoadImageFromUrl("url");
 
 ## Platform Support
 
-- ? .NET Standard 2.0
-- ? .NET 8.0
-- ? .NET 9.0
-- ? Xamarin.iOS/Android/Mac
-- ? MAUI
-- ? WPF/WinForms
-- ? UWP
+- .NET Standard 2.0
+- .NET 8.0
+- .NET 9.0
 
 ## Dependencies
 
