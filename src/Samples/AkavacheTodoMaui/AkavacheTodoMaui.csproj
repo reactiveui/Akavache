@@ -65,6 +65,10 @@
     <PackageReference Include="ReactiveUI.Maui" Version="20.4.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
   </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Akavache.Core\Akavache.Core.csproj" />

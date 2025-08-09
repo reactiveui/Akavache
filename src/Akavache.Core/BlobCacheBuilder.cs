@@ -3,6 +3,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -11,6 +15,74 @@ namespace Akavache.Core;
 internal class BlobCacheBuilder : IBlobCacheBuilder
 {
     private string _applicationName = "Akavache";
+
+    [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
+    public BlobCacheBuilder()
+    {
+        var fileLocation = string.Empty;
+        try
+        {
+            fileLocation = ExecutingAssembly.Location;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+
+        if (string.IsNullOrWhiteSpace(fileLocation))
+        {
+            fileLocation = AppContext.BaseDirectory;
+        }
+
+        ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
+        ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
+        SettingsCachePath = Path.Combine(ApplicationRootPath, "SettingsCache");
+        var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
+        Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
+
+        // Ensure the settings cache directory exists
+        Directory.CreateDirectory(SettingsCachePath);
+    }
+
+    /// <summary>
+    /// Gets the executing assembly.
+    /// </summary>
+    /// <value>
+    /// The executing assembly.
+    /// </value>
+    public Assembly ExecutingAssembly => Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+
+    /// <summary>
+    /// Gets the application root path.
+    /// </summary>
+    /// <value>
+    /// The application root path.
+    /// </value>
+    public string? ApplicationRootPath { get; }
+
+    /// <summary>
+    /// Gets or sets the settings cache path.
+    /// </summary>
+    /// <value>
+    /// The settings cache path.
+    /// </value>
+    public string? SettingsCachePath { get; set; }
+
+    /// <summary>
+    /// Gets the name of the executing assembly.
+    /// </summary>
+    /// <value>
+    /// The name of the executing assembly.
+    /// </value>
+    public string? ExecutingAssemblyName { get; }
+
+    /// <summary>
+    /// Gets the version.
+    /// </summary>
+    /// <value>
+    /// The version.
+    /// </value>
+    public Version? Version { get; }
 
     /// <inheritdoc />
     public IBlobCache? InMemory { get; private set; }
@@ -23,10 +95,11 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
 
     /// <inheritdoc />
     public IBlobCache? UserAccount { get; private set; }
+
     /// <inheritdoc />
     public IBlobCacheBuilder Build()
     {
-        BlobCache.SetBuilder(this);
+        CacheDatabase.SetBuilder(this);
         return this;
     }
 
@@ -52,10 +125,10 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
             throw new InvalidOperationException("No serializer has been registered. Call CoreRegistrations.Serializer = new [SerializerType]() before using InMemory defaults.");
         }
 
-        UserAccount ??= BlobCacheBuilder.CreateInMemoryCache();
-        LocalMachine ??= BlobCacheBuilder.CreateInMemoryCache();
-        Secure ??= new SecureBlobCacheWrapper(BlobCacheBuilder.CreateInMemoryCache());
-        InMemory ??= BlobCacheBuilder.CreateInMemoryCache();
+        UserAccount ??= CreateInMemoryCache();
+        LocalMachine ??= CreateInMemoryCache();
+        Secure ??= new SecureBlobCacheWrapper(CreateInMemoryCache());
+        InMemory ??= CreateInMemoryCache();
 
         return this;
     }
@@ -81,11 +154,23 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
         return this;
     }
 
+    /// <inheritdoc />
+    public IBlobCacheBuilder WithSerializser(ISerializer serializer)
+    {
+        if (serializer == null)
+        {
+            throw new ArgumentNullException(nameof(serializer));
+        }
+
+        CoreRegistrations.Serializer = serializer;
+        return this;
+    }
+
     private static void ApplyForcedDateTimeKind(IBlobCache cache)
     {
-        if (BlobCache.ForcedDateTimeKind.HasValue)
+        if (CacheDatabase.ForcedDateTimeKind.HasValue)
         {
-            cache.ForcedDateTimeKind = BlobCache.ForcedDateTimeKind.Value;
+            cache.ForcedDateTimeKind = CacheDatabase.ForcedDateTimeKind.Value;
         }
     }
 

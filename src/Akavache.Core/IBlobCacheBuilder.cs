@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -10,6 +12,46 @@ namespace Akavache.Core;
 /// </summary>
 public interface IBlobCacheBuilder
 {
+    /// <summary>
+    /// Gets the executing assembly.
+    /// </summary>
+    /// <value>
+    /// The executing assembly.
+    /// </value>
+    Assembly ExecutingAssembly { get; }
+
+    /// <summary>
+    /// Gets the application root path.
+    /// </summary>
+    /// <value>
+    /// The application root path.
+    /// </value>
+    string? ApplicationRootPath { get; }
+
+    /// <summary>
+    /// Gets or sets the settings cache path.
+    /// </summary>
+    /// <value>
+    /// The settings cache path.
+    /// </value>
+    string? SettingsCachePath { get; internal set; }
+
+    /// <summary>
+    /// Gets the name of the executing assembly.
+    /// </summary>
+    /// <value>
+    /// The name of the executing assembly.
+    /// </value>
+    string? ExecutingAssemblyName { get; }
+
+    /// <summary>
+    /// Gets the version.
+    /// </summary>
+    /// <value>
+    /// The version.
+    /// </value>
+    Version? Version { get; }
+
     /// <summary>
     /// Gets the UserAccount cache instance.
     /// </summary>
@@ -64,6 +106,13 @@ public interface IBlobCacheBuilder
     /// <param name="cache">The cache instance to use for InMemory operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     IBlobCacheBuilder WithInMemory(IBlobCache cache);
+
+    /// <summary>
+    /// Withes the serializser.
+    /// </summary>
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    IBlobCacheBuilder WithSerializser(ISerializer serializer);
 
     /// <summary>
     /// Configures default in-memory caches for all cache types.

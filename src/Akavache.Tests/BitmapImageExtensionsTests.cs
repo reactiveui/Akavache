@@ -7,7 +7,6 @@ using System.Reflection;
 using Akavache.Core;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
 using Splat;
 using Xunit;
 

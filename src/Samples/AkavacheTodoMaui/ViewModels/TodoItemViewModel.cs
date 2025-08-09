@@ -14,6 +14,8 @@ namespace AkavacheTodoMaui.ViewModels;
 /// <summary>
 /// View model for individual todo items with reactive behaviors.
 /// </summary>
+[RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
+[RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
     private readonly NotificationService _notificationService;

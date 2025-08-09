@@ -9,6 +9,8 @@ using Akavache.Core;
 [assembly: Preserve(AllMembers = true)]
 [assembly: InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: InternalsVisibleTo("Akavache.EncryptedSqlite3")]
+[assembly: InternalsVisibleTo("Akavache.EncryptedSettings")]
+[assembly: InternalsVisibleTo("Akavache.Settings")]
 [assembly: InternalsVisibleTo("Akavache.NewtonsoftJson")]
 [assembly: InternalsVisibleTo("Akavache.NewtonsoftJson.Bson")]
 [assembly: InternalsVisibleTo("Akavache.SystemTextJson")]

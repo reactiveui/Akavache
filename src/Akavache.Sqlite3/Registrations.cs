@@ -43,7 +43,7 @@ public static class Registrations
         initializeSqlite?.Invoke();
 
         // Initialize BlobCache with SQLite defaults
-        BlobCache.Initialize(builder =>
+        CacheDatabase.Initialize(builder =>
         {
             builder.WithApplicationName(applicationName);
 #if ENCRYPTED

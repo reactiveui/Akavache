@@ -3,8 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
 using Akavache.Core;
 
 #if ENCRYPTED
@@ -53,7 +51,7 @@ public static class BlobCacheBuilderExtensions
             throw new InvalidOperationException("No serializer has been registered. Call CoreRegistrations.Serializer = new [SerializerType]() before using SQLite defaults.");
         }
 
-        var applicationName = BlobCache.ApplicationName;
+        var applicationName = CacheDatabase.ApplicationName;
         if (string.IsNullOrWhiteSpace(applicationName))
         {
             throw new InvalidOperationException("Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.");
@@ -119,9 +117,9 @@ public static class BlobCacheBuilderExtensions
 #else
         var cache = new SqliteBlobCache(filePath);
 #endif
-        if (BlobCache.ForcedDateTimeKind.HasValue)
+        if (CacheDatabase.ForcedDateTimeKind.HasValue)
         {
-            cache.ForcedDateTimeKind = BlobCache.ForcedDateTimeKind.Value;
+            cache.ForcedDateTimeKind = CacheDatabase.ForcedDateTimeKind.Value;
         }
 
         return cache;

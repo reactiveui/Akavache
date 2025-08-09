@@ -77,7 +77,7 @@ public partial class App : Application
             // Step 3: Shutdown Akavache properly to flush all pending operations
             try
             {
-                await BlobCache.Shutdown().ToTask();
+                await CacheDatabase.Shutdown().ToTask();
             }
             catch (Exception ex)
             {
@@ -114,10 +114,10 @@ public partial class App : Application
         CoreRegistrations.Serializer = new SystemJsonSerializer();
 
         // Step 2: Configure DateTime handling for consistent behavior
-        BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+        CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
 
         // Step 3: Use the builder pattern to configure Akavache with SQLite persistence
-        BlobCache.Initialize(builder =>
+        CacheDatabase.Initialize(builder =>
             builder.WithApplicationName("AkavacheTodoWpf")
                    .WithSqliteDefaults());
     }

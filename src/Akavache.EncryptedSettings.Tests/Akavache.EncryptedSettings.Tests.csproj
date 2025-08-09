@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\Akavache.Settings\Akavache.Settings.csproj" />
     <ProjectReference Include="..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
-    <ProjectReference Include="..\Akavache.EncryptedSettings\Akavache.EncryptedSettings.csproj" />
   </ItemGroup>
 
 </Project>

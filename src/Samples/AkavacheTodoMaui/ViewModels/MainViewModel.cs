@@ -16,6 +16,8 @@ namespace AkavacheTodoMaui.ViewModels;
 /// <summary>
 /// Main view model for the MAUI Todo application demonstrating ReactiveUI and Akavache integration.
 /// </summary>
+[RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
+[RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 {
     private readonly NotificationService _notificationService;
@@ -436,6 +438,8 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .Do(settings => Settings = settings)
             .Select(_ => Unit.Default);
 
+    [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
+    [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
     private IObservable<Unit> SaveCurrentTodos()
     {
         var todos = Todos.Select(vm => vm.TodoItem).ToList();

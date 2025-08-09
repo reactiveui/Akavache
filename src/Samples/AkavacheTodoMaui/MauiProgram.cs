@@ -60,10 +60,10 @@ public static class MauiProgram
         CoreRegistrations.Serializer = new SystemJsonSerializer();
 
         // Configure DateTime handling for consistent behavior
-        BlobCache.ForcedDateTimeKind = DateTimeKind.Utc;
+        CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
 
         // Initialize SQLite support - use the new V11 initialization pattern
-        BlobCache.Initialize(builder =>
+        CacheDatabase.Initialize(builder =>
         {
             builder.WithApplicationName("AkavacheTodoMaui")
                    .WithSqliteDefaults();

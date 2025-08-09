@@ -3,13 +3,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Microsoft.UI.Xaml;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AkavacheTodoMaui.WinUI;
 
 /// <summary>
 /// Provides application-specific behavior to supplement the default Application class.
 /// </summary>
+[RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
+[RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class App : MauiWinUIApplication
 {
     /// <summary>
