@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
 using Splat;

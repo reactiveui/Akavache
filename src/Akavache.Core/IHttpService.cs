@@ -3,7 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// A interface that represents a service for providing HTTP functionality.

@@ -6,7 +6,7 @@
 using System.Reactive.Threading.Tasks;
 using System.Runtime.Versioning;
 using System.Windows;
-using Akavache.Core;
+using Akavache;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using AkavacheTodoWpf.Services;

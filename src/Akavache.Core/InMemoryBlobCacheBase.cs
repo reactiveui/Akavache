@@ -5,7 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Base class for in-memory blob cache implementations that provides common functionality
@@ -16,7 +16,7 @@ namespace Akavache.Core;
 /// </remarks>
 /// <param name="scheduler">The scheduler to use for Observable based operations.</param>
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
-public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : IBlobCache, ISecureBlobCache, IDisposable
+public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : ISecureBlobCache
 {
     private readonly Dictionary<string, CacheEntry> _cache = [];
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
@@ -397,7 +397,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             {
                 lock (_lock)
                 {
-                    return _cache.TryGetValue(key, out var entry) ? (key, (DateTimeOffset?)entry.CreatedAt) : (key, (DateTimeOffset?)null);
+                    return _cache.TryGetValue(key, out var entry) ? (key, (DateTimeOffset?)entry.CreatedAt) : (key, null);
                 }
             });
     }

@@ -5,24 +5,23 @@
 
 using Akavache.Core;
 using Akavache.EncryptedSqlite3;
-using Akavache.Settings.Core;
 using Akavache.Sqlite3;
 
 namespace Akavache.Settings;
 
 /// <summary>
-/// BlobCacheBuilderExtensions.
+/// AkavacheBuilderExtensions.
 /// </summary>
-public static class BlobCacheBuilderExtensions
+public static class AkavacheBuilderExtensions
 {
     /// <summary>
-    /// Initializes static members of the <see cref="BlobCacheBuilderExtensions"/> class.
+    /// Initializes static members of the <see cref="AkavacheBuilderExtensions"/> class.
     /// </summary>
-    static BlobCacheBuilderExtensions()
+    static AkavacheBuilderExtensions()
     {
         // Initialize static collections to avoid null reference exceptions
-        BlobCacheBuilder.BlobCaches = [];
-        BlobCacheBuilder.SettingsStores = [];
+        AkavacheBuilder.BlobCaches = [];
+        AkavacheBuilder.SettingsStores = [];
     }
 
     /// <summary>
@@ -30,9 +29,9 @@ public static class BlobCacheBuilderExtensions
     /// </summary>
     /// <param name="builder">The builder.</param>
     /// <param name="path">The path.</param>
-    /// <returns>IBlobCacheBuilder.</returns>
+    /// <returns>IAkavacheBuilder.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
-    public static IBlobCacheBuilder WithSettingsCachePath(this IBlobCacheBuilder builder, string path)
+    public static IAkavacheBuilder WithSettingsCachePath(this IAkavacheBuilder builder, string path)
     {
         if (builder == null)
         {
@@ -52,7 +51,7 @@ public static class BlobCacheBuilderExtensions
     /// <returns>
     /// A Task.
     /// </returns>
-    public static async Task DeleteSettingsStore<T>(this IBlobCacheBuilder builder, string? overrideDatabaseName = null)
+    public static async Task DeleteSettingsStore<T>(this IAkavacheBuilder builder, string? overrideDatabaseName = null)
     {
         if (builder == null)
         {
@@ -90,15 +89,15 @@ public static class BlobCacheBuilderExtensions
     /// <returns>
     /// A Settings Store.
     /// </returns>
-    public static ISettingsStorage? GetSettingsStore<T>(this IBlobCacheBuilder builder, string? overrideDatabaseName = null)
+    public static ISettingsStorage? GetSettingsStore<T>(this IAkavacheBuilder builder, string? overrideDatabaseName = null)
     {
-        if (BlobCacheBuilder.SettingsStores == null)
+        if (AkavacheBuilder.SettingsStores == null)
         {
             return null;
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
-        if (BlobCacheBuilder.SettingsStores.TryGetValue(key, out var settings))
+        if (AkavacheBuilder.SettingsStores.TryGetValue(key, out var settings))
         {
             return settings;
         }
@@ -115,9 +114,9 @@ public static class BlobCacheBuilderExtensions
     /// <returns>
     /// A Task.
     /// </returns>
-    public static async Task DisposeSettingsStore<T>(this IBlobCacheBuilder builder, string? overrideDatabaseName = null)
+    public static async Task DisposeSettingsStore<T>(this IAkavacheBuilder builder, string? overrideDatabaseName = null)
     {
-        if (BlobCacheBuilder.SettingsStores == null || BlobCacheBuilder.BlobCaches == null)
+        if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
             return;
         }
@@ -127,17 +126,17 @@ public static class BlobCacheBuilderExtensions
         if (settings != null)
         {
             await settings.DisposeAsync().ConfigureAwait(false);
-            BlobCacheBuilder.SettingsStores.Remove(key);
+            AkavacheBuilder.SettingsStores.Remove(key);
         }
 
-        if (BlobCacheBuilder.BlobCaches.TryGetValue(key, out var cache))
+        if (AkavacheBuilder.BlobCaches.TryGetValue(key, out var cache))
         {
             if (cache != null)
             {
                 await cache.DisposeAsync().ConfigureAwait(false);
             }
 
-            BlobCacheBuilder.BlobCaches.Remove(key);
+            AkavacheBuilder.BlobCaches.Remove(key);
         }
     }
 
@@ -150,10 +149,10 @@ public static class BlobCacheBuilderExtensions
     /// <param name="settings">The new settings.</param>
     /// <param name="overrideDatabaseName">Name of the override database.</param>
     /// <returns>
-    /// IBlobCacheBuilder for chaining.
+    /// IAkavacheBuilder for chaining.
     /// </returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
-    public static IBlobCacheBuilder WithSecureSettingsStore<T>(this IBlobCacheBuilder builder, string password, Action<T?> settings, string? overrideDatabaseName = null)
+    public static IAkavacheBuilder WithSecureSettingsStore<T>(this IAkavacheBuilder builder, string password, Action<T?> settings, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
         if (builder == null)
@@ -161,17 +160,17 @@ public static class BlobCacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        if (BlobCacheBuilder.SettingsStores == null || BlobCacheBuilder.BlobCaches == null)
+        if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
-            throw new InvalidOperationException("BlobCacheBuilder has not been initialized. Call BlobCacheBuilder.Initialize() first.");
+            throw new InvalidOperationException("AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.");
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        BlobCacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password);
+        AkavacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password);
 
         var viewSettings = new T();
-        BlobCacheBuilder.SettingsStores[key] = viewSettings;
+        AkavacheBuilder.SettingsStores[key] = viewSettings;
         settings?.Invoke(viewSettings);
         return builder;
     }
@@ -183,9 +182,9 @@ public static class BlobCacheBuilderExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="settings">The new settings.</param>
     /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>IBlobCacheBuilder for chaining.</returns>
+    /// <returns>IAkavacheBuilder for chaining.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
-    public static IBlobCacheBuilder WithSettingsStore<T>(this IBlobCacheBuilder builder, Action<T?> settings, string? overrideDatabaseName = null)
+    public static IAkavacheBuilder WithSettingsStore<T>(this IAkavacheBuilder builder, Action<T?> settings, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
         if (builder == null)
@@ -193,17 +192,17 @@ public static class BlobCacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        if (BlobCacheBuilder.SettingsStores == null || BlobCacheBuilder.BlobCaches == null)
+        if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
-            throw new InvalidOperationException("BlobCacheBuilder has not been initialized. Call BlobCacheBuilder.Initialize() first.");
+            throw new InvalidOperationException("AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.");
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        BlobCacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"));
+        AkavacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"));
 
         var viewSettings = new T();
-        BlobCacheBuilder.SettingsStores[key] = viewSettings;
+        AkavacheBuilder.SettingsStores[key] = viewSettings;
         settings?.Invoke(viewSettings);
         return builder;
     }

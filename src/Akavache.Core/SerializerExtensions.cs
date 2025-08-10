@@ -5,8 +5,9 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
+using Akavache.Core;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Extension methods associated with the serializer.
@@ -324,7 +325,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize<T>(x.Value))), absoluteExpiration);
+            : blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize(x.Value))), absoluteExpiration);
 
     /// <summary>
     /// <para>

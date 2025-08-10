@@ -243,7 +243,7 @@ public class UniversalSerializerTests
 
         try
         {
-            var cache = new SystemTextJson.InMemoryBlobCache();
+            var cache = new InMemoryBlobCache();
             var testObject = new UserObject { Name = "Alt Key Test", Bio = "Alt Bio", Blog = "Alt Blog" };
 
             try

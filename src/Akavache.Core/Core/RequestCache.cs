@@ -10,7 +10,7 @@ namespace Akavache.Core;
 /// <summary>
 /// A cache for deduplicating concurrent requests for the same key.
 /// </summary>
-public static class RequestCache
+internal static class RequestCache
 {
     private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new();
 

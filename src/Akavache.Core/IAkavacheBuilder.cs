@@ -5,12 +5,12 @@
 
 using System.Reflection;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Interface for building and configuring BlobCache instances.
 /// </summary>
-public interface IBlobCacheBuilder
+public interface IAkavacheBuilder
 {
     /// <summary>
     /// Gets the executing assembly.
@@ -77,53 +77,53 @@ public interface IBlobCacheBuilder
     /// </summary>
     /// <param name="applicationName">The application name.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithApplicationName(string applicationName);
+    IAkavacheBuilder WithApplicationName(string applicationName);
 
     /// <summary>
     /// Sets the UserAccount cache instance.
     /// </summary>
     /// <param name="cache">The cache instance to use for UserAccount operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithUserAccount(IBlobCache cache);
+    IAkavacheBuilder WithUserAccount(IBlobCache cache);
 
     /// <summary>
     /// Sets the LocalMachine cache instance.
     /// </summary>
     /// <param name="cache">The cache instance to use for LocalMachine operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithLocalMachine(IBlobCache cache);
+    IAkavacheBuilder WithLocalMachine(IBlobCache cache);
 
     /// <summary>
     /// Sets the Secure cache instance.
     /// </summary>
     /// <param name="cache">The secure cache instance to use for Secure operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithSecure(ISecureBlobCache cache);
+    IAkavacheBuilder WithSecure(ISecureBlobCache cache);
 
     /// <summary>
     /// Sets the InMemory cache instance.
     /// </summary>
     /// <param name="cache">The cache instance to use for InMemory operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithInMemory(IBlobCache cache);
+    IAkavacheBuilder WithInMemory(IBlobCache cache);
 
     /// <summary>
     /// Withes the serializser.
     /// </summary>
     /// <param name="serializer">The serializer.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithSerializer(ISerializer serializer);
+    IAkavacheBuilder WithSerializer(ISerializer serializer);
 
     /// <summary>
     /// Configures default in-memory caches for all cache types.
     /// Uses the appropriate InMemoryBlobCache based on the configured serializer.
     /// </summary>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IBlobCacheBuilder WithInMemoryDefaults();
+    IAkavacheBuilder WithInMemoryDefaults();
 
     /// <summary>
     /// Builds and applies the configuration to BlobCache.
     /// </summary>
     /// <returns>The builder instance.</returns>
-    IBlobCacheBuilder Build();
+    IAkavacheBuilder Build();
 }

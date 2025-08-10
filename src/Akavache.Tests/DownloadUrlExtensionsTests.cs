@@ -5,7 +5,6 @@
 
 using System.Net.Sockets;
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Xunit;

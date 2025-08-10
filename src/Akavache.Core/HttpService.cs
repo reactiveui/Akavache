@@ -5,7 +5,7 @@
 
 using System.Net;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// A default http service.

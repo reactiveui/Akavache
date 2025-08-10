@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Akavache.Core;
 
 namespace Akavache.Settings.Core;
 

@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 

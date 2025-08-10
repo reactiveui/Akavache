@@ -71,7 +71,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Akavache.Core\Akavache.Core.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
     <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
     <ProjectReference Include="..\..\Akavache.Settings\Akavache.Settings.csproj" />

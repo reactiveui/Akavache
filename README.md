@@ -103,21 +103,21 @@ var data = await CacheDatabase.LocalMachine.GetOrFetchObject("api_data",
 
 Akavache V11.0 uses a modular package structure. Choose the packages that match your needs:
 
-### Core Package (Required)
+### Core Package (Included with Serializers, In Memory only)
 ```xml
-<PackageReference Include="Akavache.Core" Version="11.0.**" />
+<PackageReference Include="Akavache" Version="11.0.**" />
 ```
 
-### Storage Backends
+### Sqlite Storage Backends (recommended)
 ```xml
-<!-- SQLite persistence (recommended) -->
+<!-- SQLite persistence -->
 <PackageReference Include="Akavache.Sqlite3" Version="11.0.**" />
 
 <!-- Encrypted SQLite persistence -->
 <PackageReference Include="Akavache.EncryptedSqlite3" Version="11.0.**" />
 ```
 
-### Serializers (Choose One)
+### Serializers (Choose One (Required!))
 ```xml
 <!-- System.Text.Json (fastest, .NET native) -->
 <PackageReference Include="Akavache.SystemTextJson" Version="11.0.**" />
@@ -1388,6 +1388,13 @@ Performance comparison of different serializers (operations per second):
 | Deserialize small object | 45,000 | 22,000 | 18,000 |
 | Serialize large object | 5,000 | 2,500 | 2,000 |
 | Deserialize large object | 4,500 | 2,200 | 1,800 |
+
+### Performance Reports
+
+For comprehensive performance analysis and V10 vs V11 comparison:
+
+- 📊 **[Performance Summary](src/PERFORMANCE_SUMMARY.md)** - Quick comparison and migration decision matrix
+- 📈 **[Comprehensive Benchmark Report](src/BENCHMARK_REPORT.md)** - Detailed performance analysis, architectural differences, and recommendations
 
 ### Performance Tips
 

@@ -3,8 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
-
 #if ENCRYPTED
 namespace Akavache.EncryptedSqlite3;
 #else
@@ -12,9 +10,9 @@ namespace Akavache.Sqlite3;
 #endif
 
 /// <summary>
-/// Extension methods for IBlobCacheBuilder to add SQLite support.
+/// Extension methods for IAkavacheBuilder to add SQLite support.
 /// </summary>
-public static class BlobCacheBuilderExtensions
+public static class AkavacheBuilderExtensions
 {
 #if ENCRYPTED
     /// <summary>
@@ -31,14 +29,14 @@ public static class BlobCacheBuilderExtensions
     /// or
     /// Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.
     /// </exception>
-    public static IBlobCacheBuilder WithSqliteDefaults(this IBlobCacheBuilder builder, string password)
+    public static IAkavacheBuilder WithSqliteDefaults(this IAkavacheBuilder builder, string password)
 #else
     /// <summary>
     /// Configures default SQLite-based caches for all cache types.
     /// </summary>
     /// <param name="builder">The builder instance.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    public static IBlobCacheBuilder WithSqliteDefaults(this IBlobCacheBuilder builder)
+    public static IAkavacheBuilder WithSqliteDefaults(this IAkavacheBuilder builder)
 #endif
     {
         if (builder == null)
@@ -63,13 +61,13 @@ public static class BlobCacheBuilderExtensions
         // Create SQLite caches for persistent storage
         builder.WithUserAccount(CreateEncryptedSqliteCache("UserAccount", applicationName, password))
                .WithLocalMachine(CreateEncryptedSqliteCache("LocalMachine", applicationName, password))
-               .WithInMemory(CreateEncryptedSqliteCache(":memory:", applicationName, password))
+               .WithInMemory()
                .WithSecure(CreateEncryptedSqliteCache("Secure", applicationName, password));
 #else
         // Create SQLite caches for persistent storage
         builder.WithUserAccount(CreateSqliteCache("UserAccount", applicationName))
                .WithLocalMachine(CreateSqliteCache("LocalMachine", applicationName))
-               .WithInMemory(CreateSqliteCache(":memory:", applicationName))
+               .WithInMemory()
                .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache("Secure", applicationName)));
 #endif
 

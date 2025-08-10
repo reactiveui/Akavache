@@ -5,8 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-using Akavache.Core;
-
 using SQLite;
 
 #if ENCRYPTED
@@ -529,8 +527,18 @@ public class SqliteBlobCache : IBlobCache
 
                 await Connection.RunInTransactionAsync(sql =>
                 {
+                    if (sql.Handle == null)
+                    {
+                        return;
+                    }
+
                     foreach (var entry in entries)
                     {
+                        if (sql.Handle == null)
+                        {
+                            return;
+                        }
+
                         sql.InsertOrReplace(entry);
                     }
                 }).ConfigureAwait(false);

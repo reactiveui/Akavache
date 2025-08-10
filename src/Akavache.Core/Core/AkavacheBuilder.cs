@@ -6,19 +6,19 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Akavache.Settings.Core;
+using Akavache.Settings;
 
 namespace Akavache.Core;
 
 /// <summary>
-/// Default implementation of IBlobCacheBuilder.
+/// Default implementation of IAkavacheBuilder.
 /// </summary>
-internal class BlobCacheBuilder : IBlobCacheBuilder
+internal class AkavacheBuilder : IAkavacheBuilder
 {
     private string _applicationName = "Akavache";
 
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
-    public BlobCacheBuilder()
+    public AkavacheBuilder()
     {
         var fileLocation = string.Empty;
         try
@@ -102,7 +102,7 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
     internal static Dictionary<string, ISettingsStorage?>? SettingsStores { get; set; }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder Build()
+    public IAkavacheBuilder Build()
     {
         if (CacheDatabase.Serializer == null)
         {
@@ -114,21 +114,21 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithApplicationName(string applicationName)
+    public IAkavacheBuilder WithApplicationName(string applicationName)
     {
         _applicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithInMemory(IBlobCache cache)
+    public IAkavacheBuilder WithInMemory(IBlobCache cache)
     {
         InMemory = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithInMemoryDefaults()
+    public IAkavacheBuilder WithInMemoryDefaults()
     {
         if (CacheDatabase.Serializer == null)
         {
@@ -144,28 +144,28 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithLocalMachine(IBlobCache cache)
+    public IAkavacheBuilder WithLocalMachine(IBlobCache cache)
     {
         LocalMachine = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithSecure(ISecureBlobCache cache)
+    public IAkavacheBuilder WithSecure(ISecureBlobCache cache)
     {
         Secure = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithUserAccount(IBlobCache cache)
+    public IAkavacheBuilder WithUserAccount(IBlobCache cache)
     {
         UserAccount = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithSerializer(ISerializer serializer)
+    public IAkavacheBuilder WithSerializer(ISerializer serializer)
     {
         if (serializer == null)
         {
