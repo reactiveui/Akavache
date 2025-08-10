@@ -30,6 +30,19 @@ Akavache V11.0 introduces a new **Builder Pattern** for initialization, improved
 - 📱 **Enhanced .NET MAUI Support**: First-class support for modern cross-platform development
 - 🔒 **Improved Security**: Better encrypted cache implementation
 
+### Development History
+
+Akavache V11.0 represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.0 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
+
+**Key Development Milestones:**
+
+- **🧪 Incubation Phase**: The builder pattern, modular serialization system, and enhanced API were first developed and tested in ReactiveMarbles.CacheDatabase
+- **🔬 Community Testing**: Early adopters and contributors provided valuable feedback on the new architecture through real-world usage scenarios
+- **🚀 Production Validation**: The incubator project allowed us to validate performance improvements, API ergonomics, and cross-platform compatibility before integrating into Akavache
+- **📈 Iterative Refinement**: Multiple iterations based on community feedback helped shape the final V11.0 API design and feature set
+
+This careful incubation process ensured that V11.0 delivers not just new features, but a more robust, flexible, and maintainable caching solution that builds upon years of community experience and testing. The ReactiveMarbles organization continues to serve as a proving ground for innovative reactive programming concepts that eventually make their way into the broader ReactiveUI ecosystem.
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
