@@ -15,6 +15,20 @@ namespace Akavache.EncryptedSettings.Tests;
 /// </summary>
 public class SettingsCacheTests
 {
+    static SettingsCacheTests()
+    {
+        // Initialize SQLite provider for CI environments
+        try
+        {
+            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlcipher());
+        }
+        catch
+        {
+            // Fallback initialization
+            SQLitePCL.Batteries_V2.Init();
+        }
+    }
+
     /// <summary>
     /// Test1s this instance.
     /// </summary>

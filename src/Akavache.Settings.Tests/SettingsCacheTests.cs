@@ -12,6 +12,20 @@ namespace Akavache.Settings.Tests;
 /// </summary>
 public class SettingsCacheTests
 {
+    static SettingsCacheTests()
+    {
+        // Initialize SQLite provider for CI environments
+        try
+        {
+            SQLitePCL.Batteries_V2.Init();
+        }
+        catch
+        {
+            // Fallback initialization
+            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
+        }
+    }
+
     /// <summary>
     /// Test1s this instance.
     /// </summary>

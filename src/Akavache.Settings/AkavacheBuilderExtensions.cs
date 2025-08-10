@@ -167,6 +167,7 @@ public static class AkavacheBuilderExtensions
 
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
+        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlcipher());
         AkavacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password);
 
         var viewSettings = new T();
@@ -199,6 +200,7 @@ public static class AkavacheBuilderExtensions
 
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
+        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
         AkavacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"));
 
         var viewSettings = new T();
