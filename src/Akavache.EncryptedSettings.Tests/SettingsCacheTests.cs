@@ -264,6 +264,7 @@ public class SettingsCacheTests
             originalSettings!.StringTest = "Secret Data";
             await Task.Delay(100);
             await originalSettings.DisposeAsync();
+            await builder.DisposeSettingsStore<ViewSettings>(testName);
             await Task.Delay(200);
 
             // Try to read with wrong password - this should fail or return default values
