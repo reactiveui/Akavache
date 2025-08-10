@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.EncryptedSqlite3;
 using Akavache.SystemTextJson;
 
@@ -18,7 +17,7 @@ public class EncryptedSqliteBlobCacheInterfaceTests : BlobCacheTestsBase
     protected override IBlobCache CreateBlobCache(string path)
     {
         // Create separate database files for each serializer to ensure compatibility
-        var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
+        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
 
         // Further separate JSON and BSON formats to prevent cross-contamination
         var formatType = serializerName.Contains("Bson") ? "bson" : "json";
@@ -31,7 +30,7 @@ public class EncryptedSqliteBlobCacheInterfaceTests : BlobCacheTestsBase
     protected override void SetupTestClassSerializer()
     {
         // Ensure proper serializer setup for these tests
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
     }
 
     private static string GetTestPassword() => "test123";

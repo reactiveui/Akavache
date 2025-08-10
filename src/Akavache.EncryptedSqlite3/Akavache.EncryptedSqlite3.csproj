@@ -15,11 +15,10 @@
   <ItemGroup>
     <Compile Include="../Akavache.Sqlite3/CacheEntry.cs" />
     <Compile Include="../Akavache.Sqlite3/SqliteBlobCache.cs" />
-    <Compile Include="../Akavache.Sqlite3/Registrations.cs" />
-    <Compile Include="../Akavache.Sqlite3/BlobCacheBuilderExtensions.cs" />
+    <Compile Include="../Akavache.Sqlite3/AkavacheBuilderExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
+    <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
   </ItemGroup>
 </Project>

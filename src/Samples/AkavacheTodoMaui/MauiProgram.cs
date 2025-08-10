@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using Akavache.Core;
+using Akavache;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using AkavacheTodoMaui.Services;
@@ -57,7 +57,7 @@ public static class MauiProgram
     private static void ConfigureAkavache()
     {
         // Initialize Akavache with System.Text.Json serializer for best performance
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         // Configure DateTime handling for consistent behavior
         CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;

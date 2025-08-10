@@ -14,7 +14,6 @@ jobs:
       configuration: Release
       productNamespacePrefix: "Akavache"
       installWorkflows: true
-      useVisualStudioPreview: true
     secrets:
       SIGN_CLIENT_USER_ID: ${{ secrets.SIGN_CLIENT_USER_ID }}
       SIGN_CLIENT_SECRET: ${{ secrets.SIGN_CLIENT_SECRET }}

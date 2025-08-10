@@ -3,14 +3,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Extension methods for handling http operations.
 /// </summary>
 public static class HttpExtensions
 {
-    private static IHttpService HttpService => CoreRegistrations.HttpService ?? throw new InvalidOperationException("Unable to resolve IHttpService, make sure you are including the correct CacheDatabase NuGet packages.");
+    private static IHttpService HttpService => CacheDatabase.HttpService ?? throw new InvalidOperationException("Unable to resolve IHttpService, make sure you are including the correct CacheDatabase NuGet packages.");
 
     /// <summary>
     /// Writes to a stream and returns a observable.

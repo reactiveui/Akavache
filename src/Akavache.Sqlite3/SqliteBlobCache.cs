@@ -5,8 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-using Akavache.Core;
-
 using SQLite;
 
 #if ENCRYPTED
@@ -104,7 +102,7 @@ public class SqliteBlobCache : IBlobCache
 #endif
 
         Connection = new SQLiteAsyncConnection(connectionString);
-        Scheduler = scheduler ?? CoreRegistrations.TaskpoolScheduler;
+        Scheduler = scheduler ?? CacheDatabase.TaskpoolScheduler;
         _initialized = Initialize();
     }
 
@@ -526,14 +524,37 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.SelectMany(async (_, _, _) =>
             {
                 var entries = keyValuePairs.Select(x => new CacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry, TypeName = type.FullName });
-
-                await Connection.RunInTransactionAsync(sql =>
+                try
                 {
-                    foreach (var entry in entries)
+                    await Connection.RunInTransactionAsync(sql =>
                     {
-                        sql.InsertOrReplace(entry);
-                    }
-                }).ConfigureAwait(false);
+                        if (sql.Handle == null)
+                        {
+                            return;
+                        }
+
+                        foreach (var entry in entries)
+                        {
+                            try
+                            {
+                                if (sql.Handle == null)
+                                {
+                                    return;
+                                }
+
+                                sql.InsertOrReplace(entry);
+                            }
+                            catch (Exception)
+                            {
+                                return;
+                            }
+                        }
+                    }).ConfigureAwait(false);
+                }
+                catch
+                {
+                    return Unit.Default;
+                }
 
                 // Ensure data is immediately persisted to disk for multi-instance scenarios
                 try

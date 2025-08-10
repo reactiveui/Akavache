@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Splat;
 
 namespace Akavache.Drawing;

@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.NewtonsoftJson;
 
 namespace Akavache.Settings.Tests;
@@ -13,6 +12,20 @@ namespace Akavache.Settings.Tests;
 /// </summary>
 public class SettingsCacheTests
 {
+    static SettingsCacheTests()
+    {
+        // Initialize SQLite provider for CI environments
+        try
+        {
+            SQLitePCL.Batteries_V2.Init();
+        }
+        catch
+        {
+            // Fallback initialization
+            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
+        }
+    }
+
     /// <summary>
     /// Test1s this instance.
     /// </summary>
@@ -22,9 +35,9 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestCreateAndInsertNewtonsoft()
     {
-        var builder = CacheDatabase.CreateBuilder();
+        var builder = CacheDatabase.CreateBuilder()
+            .WithSerializer(new NewtonsoftSerializer());
         await builder.DeleteSettingsStore<ViewSettings>();
-        builder.WithSerializser(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
 
@@ -50,7 +63,7 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var builder = CacheDatabase.CreateBuilder();
-        builder.WithSerializser(new NewtonsoftSerializer());
+        builder.WithSerializer(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
         viewSettings!.EnumTest = EnumTestValue.Option2;
@@ -69,7 +82,7 @@ public class SettingsCacheTests
     {
         var builder = CacheDatabase.CreateBuilder();
         await builder.DeleteSettingsStore<ViewSettings>();
-        builder.WithSerializser(new NewtonsoftSerializer());
+        builder.WithSerializer(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
 
@@ -95,7 +108,7 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var builder = CacheDatabase.CreateBuilder();
-        builder.WithSerializser(new NewtonsoftSerializer());
+        builder.WithSerializer(new NewtonsoftSerializer());
         var viewSettings = default(ViewSettings);
         builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
         viewSettings!.EnumTest = EnumTestValue.Option2;

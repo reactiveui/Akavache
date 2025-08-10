@@ -39,14 +39,19 @@ public abstract class SettingsBase : SettingsStorage
     /// <returns>The blob cache for the class.</returns>
     private static IBlobCache GetBlobCacheForClass(string className)
     {
+        if (AkavacheBuilder.BlobCaches == null)
+        {
+            throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
+        }
+
         // First try to get the cache with the exact class name
-        if (BlobCacheBuilderExtensions.BlobCaches.TryGetValue(className, out var cache) && cache != null)
+        if (AkavacheBuilder.BlobCaches.TryGetValue(className, out var cache) && cache != null)
         {
             return cache;
         }
 
         // If not found, look for any cache in the collection (for override database names)
-        foreach (var kvp in BlobCacheBuilderExtensions.BlobCaches)
+        foreach (var kvp in AkavacheBuilder.BlobCaches)
         {
             if (kvp.Value != null)
             {
@@ -55,6 +60,6 @@ public abstract class SettingsBase : SettingsStorage
         }
 
         // If no cache is found, throw a descriptive exception
-        throw new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {string.Join(", ", BlobCacheBuilderExtensions.BlobCaches.Keys)}");
+        throw new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {string.Join(", ", AkavacheBuilder.BlobCaches.Keys)}");
     }
 }

@@ -5,7 +5,7 @@
 
 using System.Net;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// A default http service.
@@ -179,7 +179,7 @@ public class HttpService : IHttpService
             return Observable.FromAsync(() => HttpClient.SendAsync(httpRequest));
         });
 
-        return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), CoreRegistrations.TaskpoolScheduler).Retry(retries);
+        return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), CacheDatabase.TaskpoolScheduler).Retry(retries);
     }
 
     private static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)

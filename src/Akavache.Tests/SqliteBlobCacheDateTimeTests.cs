@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.Tests.TestBases;
@@ -23,6 +22,6 @@ public class SqliteBlobCacheDateTimeTests : DateTimeTestBase
     {
         // Use NewtonsoftBsonSerializer for maximum compatibility with existing Akavache data
         // This is the most appropriate serializer for SQLite tests to ensure Akavache compatibility
-        CoreRegistrations.Serializer = new NewtonsoftBsonSerializer();
+        CacheDatabase.Serializer = new NewtonsoftBsonSerializer();
     }
 }

@@ -9,9 +9,8 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
-
-using Akavache.Core;
 using Akavache.SystemTextJson;
+using Akavache.Sqlite3;
 using System.Reactive.Threading.Tasks;
 
 namespace Akavache.Benchmarks
@@ -33,7 +32,7 @@ namespace Akavache.Benchmarks
         public void GlobalSetup()
         {
             // Initialize the serializer first
-            CoreRegistrations.Serializer = new SystemJsonSerializer();
+            CacheDatabase.Serializer = new SystemJsonSerializer();
 
             // Create temporary directory
             _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
@@ -102,14 +101,14 @@ namespace Akavache.Benchmarks
         /// </summary>
         /// <param name="path">A path to use for generating it.</param>
         /// <returns>The blob cache.</returns>
-        private Sqlite3.SqliteBlobCache GenerateAGiantDatabaseSync(string path)
+        private SqliteBlobCache GenerateAGiantDatabaseSync(string path)
         {
             try
             {
                 path ??= GetIntegrationTestRootDirectory();
 
                 var giantDbSize = Math.Max(1000, BenchmarkSize * 10); // Ensure enough data for benchmarks
-                var cache = new Sqlite3.SqliteBlobCache(Path.Combine(path, "benchmarks-read.db"));
+                var cache = new SqliteBlobCache(Path.Combine(path, "benchmarks-read.db"));
 
                 var keys = cache.GetAllKeys().ToList().FirstAsync().GetAwaiter().GetResult();
                 if (keys.Count >= giantDbSize)

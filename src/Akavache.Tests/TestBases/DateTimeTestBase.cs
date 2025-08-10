@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
 using Xunit;
@@ -25,7 +24,7 @@ public abstract class DateTimeTestBase : IDisposable
     protected DateTimeTestBase()
     {
         // Store the original serializer to restore it after each test
-        _originalSerializer = CoreRegistrations.Serializer;
+        _originalSerializer = CacheDatabase.Serializer;
     }
 
     /// <summary>
@@ -345,7 +344,7 @@ public abstract class DateTimeTestBase : IDisposable
                     var toleranceMs = GetDateTimeToleranceForEdgeCase(i, testCase);
 
                     // Enhanced tolerance for BSON serializers and encrypted caches
-                    var cacheTypeName = CoreRegistrations.Serializer?.GetType().Name;
+                    var cacheTypeName = CacheDatabase.Serializer?.GetType().Name;
                     var isEncryptedCache = blobCache.GetType().Name.Contains("Encrypted");
 
                     if (cacheTypeName?.Contains("Newton") == true || cacheTypeName?.Contains("Bson") == true || IsUsingBsonSerializer())
@@ -524,7 +523,7 @@ public abstract class DateTimeTestBase : IDisposable
                 // Restore the original serializer to prevent interference with other tests
                 if (_originalSerializer != null)
                 {
-                    CoreRegistrations.Serializer = _originalSerializer;
+                    CacheDatabase.Serializer = _originalSerializer;
                 }
             }
 
@@ -670,7 +669,7 @@ public abstract class DateTimeTestBase : IDisposable
     {
         try
         {
-            var serializer = CoreRegistrations.Serializer;
+            var serializer = CacheDatabase.Serializer;
             if (serializer == null)
             {
                 return false;

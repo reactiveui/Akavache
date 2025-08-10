@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.NewtonsoftJson;
 
 namespace Akavache.Tests;
@@ -20,6 +19,6 @@ public class NewtonsoftJsonInMemoryBlobCacheTests : BlobCacheTestsBase
     protected override void SetupTestClassSerializer()
     {
         // Ensure proper serializer setup for these tests
-        CoreRegistrations.Serializer = new NewtonsoftSerializer();
+        CacheDatabase.Serializer = new NewtonsoftSerializer();
     }
 }

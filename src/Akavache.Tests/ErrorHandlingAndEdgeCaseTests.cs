@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
 using Xunit;
@@ -23,8 +22,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -45,7 +44,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -57,8 +56,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleExtremelyLargeDataCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -84,7 +83,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -96,8 +95,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleNullObjectsCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -125,7 +124,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -137,8 +136,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleInvalidKeysCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -255,7 +254,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -267,8 +266,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleConcurrentAccessCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -328,7 +327,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -340,8 +339,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleExpirationEdgeCasesCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -397,7 +396,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -409,8 +408,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleComplexObjectHierarchiesCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -462,7 +461,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -474,8 +473,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleMemoryPressureCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -536,7 +535,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -548,8 +547,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleUnicodeAndSpecialCharactersCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -608,7 +607,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -620,8 +619,8 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleDateTimeEdgeCasesCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        var originalSerializer = CacheDatabase.Serializer;
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         try
         {
@@ -711,7 +710,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 }

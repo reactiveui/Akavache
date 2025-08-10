@@ -18,7 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Sqlite3", "Akavache.Sqlite3\Akavache.Sqlite3.csproj", "{E98682E0-EB39-B46A-31B6-9BAE0D9F6AA4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Core", "Akavache.Core\Akavache.Core.csproj", "{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache", "Akavache.Core\Akavache.csproj", "{8B317CB9-6BBE-8DFD-FAE4-AE65594F713A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.SystemTextJson", "Akavache.SystemTextJson\Akavache.SystemTextJson.csproj", "{ADFC7975-D670-11D3-A7F2-35B85D528F7A}"
 EndProject
@@ -45,6 +45,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoMaui", "Samples\AkavacheTodoMaui\AkavacheTodoMaui.csproj", "{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Benchmarks.V10", "Akavache.Benchmarks.V10\Akavache.Benchmarks.V10.csproj", "{A41FEAB7-936F-D012-EBA9-7680EC72EA0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +106,10 @@ Global
 		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A41FEAB7-936F-D012-EBA9-7680EC72EA0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A41FEAB7-936F-D012-EBA9-7680EC72EA0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A41FEAB7-936F-D012-EBA9-7680EC72EA0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A41FEAB7-936F-D012-EBA9-7680EC72EA0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -115,6 +121,7 @@ Global
 		{8F48F915-99AB-CDD0-6C11-EFD66E12E295} = {AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}
 		{AF425552-A630-4106-353B-6DB5F8AF614F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{CC6B457B-C92C-8831-72A6-2EB8BF032ACB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A41FEAB7-936F-D012-EBA9-7680EC72EA0D} = {AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {90907D23-7F59-41C3-8FCD-3402C9B66143}

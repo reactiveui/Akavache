@@ -3,7 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Extension methods for working with images and bitmaps in the cache.
@@ -122,7 +122,7 @@ public static class ImageExtensions
     /// <returns>The byte[], or OnError if the buffer is corrupt (empty or
     /// too small).</returns>
     public static IObservable<byte[]> ThrowOnBadImageBuffer(this byte[] compressedImage) =>
-        (compressedImage is null || compressedImage.Length < 64) ?
+        compressedImage is null || compressedImage.Length < 64 ?
             Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image")) :
             Observable.Return(compressedImage);
 

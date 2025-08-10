@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.Versioning;
-using Akavache.Core;
+using Akavache;
 using AkavacheTodoWpf.Models;
 
 namespace AkavacheTodoWpf.Services;

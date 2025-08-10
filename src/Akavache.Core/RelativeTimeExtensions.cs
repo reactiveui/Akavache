@@ -5,7 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// A set of extension methods that assist with setting expiration times

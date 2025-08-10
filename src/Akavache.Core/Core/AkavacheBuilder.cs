@@ -6,18 +6,19 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Akavache.Settings;
 
 namespace Akavache.Core;
 
 /// <summary>
-/// Default implementation of IBlobCacheBuilder.
+/// Default implementation of IAkavacheBuilder.
 /// </summary>
-internal class BlobCacheBuilder : IBlobCacheBuilder
+internal class AkavacheBuilder : IAkavacheBuilder
 {
     private string _applicationName = "Akavache";
 
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
-    public BlobCacheBuilder()
+    public AkavacheBuilder()
     {
         var fileLocation = string.Empty;
         try
@@ -96,33 +97,42 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
     /// <inheritdoc />
     public IBlobCache? UserAccount { get; private set; }
 
+    internal static Dictionary<string, IBlobCache?>? BlobCaches { get; set; }
+
+    internal static Dictionary<string, ISettingsStorage?>? SettingsStores { get; set; }
+
     /// <inheritdoc />
-    public IBlobCacheBuilder Build()
+    public IAkavacheBuilder Build()
     {
+        if (CacheDatabase.Serializer == null)
+        {
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using InMemory defaults.");
+        }
+
         CacheDatabase.SetBuilder(this);
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithApplicationName(string applicationName)
+    public IAkavacheBuilder WithApplicationName(string applicationName)
     {
         _applicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithInMemory(IBlobCache cache)
+    public IAkavacheBuilder WithInMemory(IBlobCache cache)
     {
         InMemory = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithInMemoryDefaults()
+    public IAkavacheBuilder WithInMemoryDefaults()
     {
-        if (CoreRegistrations.Serializer == null)
+        if (CacheDatabase.Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CoreRegistrations.Serializer = new [SerializerType]() before using InMemory defaults.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using InMemory defaults.");
         }
 
         UserAccount ??= CreateInMemoryCache();
@@ -134,35 +144,35 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithLocalMachine(IBlobCache cache)
+    public IAkavacheBuilder WithLocalMachine(IBlobCache cache)
     {
         LocalMachine = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithSecure(ISecureBlobCache cache)
+    public IAkavacheBuilder WithSecure(ISecureBlobCache cache)
     {
         Secure = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithUserAccount(IBlobCache cache)
+    public IAkavacheBuilder WithUserAccount(IBlobCache cache)
     {
         UserAccount = cache ?? throw new ArgumentNullException(nameof(cache));
         return this;
     }
 
     /// <inheritdoc />
-    public IBlobCacheBuilder WithSerializser(ISerializer serializer)
+    public IAkavacheBuilder WithSerializer(ISerializer serializer)
     {
         if (serializer == null)
         {
             throw new ArgumentNullException(nameof(serializer));
         }
 
-        CoreRegistrations.Serializer = serializer;
+        CacheDatabase.Serializer = serializer;
         return this;
     }
 
@@ -176,12 +186,12 @@ internal class BlobCacheBuilder : IBlobCacheBuilder
 
     private static IBlobCache CreateInMemoryCache()
     {
-        if (CoreRegistrations.Serializer == null)
+        if (CacheDatabase.Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CoreRegistrations.Serializer = new [SerializerType]() before using BlobCache.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using BlobCache.");
         }
 
-        var serializerType = CoreRegistrations.Serializer.GetType();
+        var serializerType = CacheDatabase.Serializer.GetType();
 
         // Try to create the appropriate InMemoryBlobCache based on serializer
         if (serializerType.Namespace?.Contains("SystemTextJson") == true)

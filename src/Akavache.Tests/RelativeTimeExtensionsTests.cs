@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Xunit;
@@ -23,7 +22,7 @@ public class RelativeTimeExtensionsTests
     public async Task InsertWithTimeSpanShouldCalculateExpirationCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -55,7 +54,7 @@ public class RelativeTimeExtensionsTests
     public async Task InsertObjectWithTimeSpanShouldCalculateExpirationCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -165,9 +164,9 @@ public class RelativeTimeExtensionsTests
     public async Task RelativeTimeExtensionsShouldWorkWithDifferentTimeSpans(int seconds)
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
+            CacheDatabase.Serializer = new SystemJsonSerializer();
             var cache = new InMemoryBlobCache();
             var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.FromSeconds(seconds);
@@ -196,7 +195,7 @@ public class RelativeTimeExtensionsTests
     public async Task ZeroTimeSpanShouldWorkCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -222,7 +221,7 @@ public class RelativeTimeExtensionsTests
     public async Task NegativeTimeSpanShouldResultInPastExpiration()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();

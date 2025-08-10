@@ -5,7 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Determines how to serialize to and from a byte.

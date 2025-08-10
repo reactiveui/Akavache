@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.Sqlite3;
 
 namespace Akavache.Tests;
@@ -17,7 +16,7 @@ public class SqliteBlobCacheTests : BlobCacheTestsBase
     protected override IBlobCache CreateBlobCache(string path)
     {
         // Create separate database files for each serializer AND format type to ensure compatibility
-        var serializerName = CoreRegistrations.Serializer?.GetType().Name ?? "Unknown";
+        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
 
         // Further separate JSON and BSON formats to prevent cross-contamination
         var formatType = serializerName.Contains("Bson") ? "bson" : "json";

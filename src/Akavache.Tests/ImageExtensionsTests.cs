@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Xunit;
@@ -211,7 +210,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesShouldWorkWithValidData()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();
@@ -249,7 +248,7 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesShouldThrowWhenImageDataIsNull()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache();

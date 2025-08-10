@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Xunit;
@@ -11,18 +10,18 @@ using Xunit;
 namespace Akavache.Tests;
 
 /// <summary>
-/// Tests for CoreRegistrations functionality and global configuration.
+/// Tests for CacheDatabase functionality and global configuration.
 /// </summary>
-public class CoreRegistrationsTests
+public class CacheDatabaseTests
 {
     /// <summary>
-    /// Tests that CoreRegistrations.Serializer can be set and retrieved correctly.
+    /// Tests that CacheDatabase.Serializer can be set and retrieved correctly.
     /// </summary>
     [Fact]
     public void SerializerRegistrationShouldWorkCorrectly()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         var testSerializers = new ISerializer[]
         {
             new SystemJsonSerializer(),
@@ -36,32 +35,32 @@ public class CoreRegistrationsTests
             foreach (var testSerializer in testSerializers)
             {
                 // Act
-                CoreRegistrations.Serializer = testSerializer;
+                CacheDatabase.Serializer = testSerializer;
 
                 // Assert
-                Assert.Same(testSerializer, CoreRegistrations.Serializer);
-                Assert.NotNull(CoreRegistrations.Serializer);
+                Assert.Same(testSerializer, CacheDatabase.Serializer);
+                Assert.NotNull(CacheDatabase.Serializer);
             }
 
             // Test setting to null
-            CoreRegistrations.Serializer = null;
-            Assert.Null(CoreRegistrations.Serializer);
+            CacheDatabase.Serializer = null;
+            Assert.Null(CacheDatabase.Serializer);
         }
         finally
         {
             // Restore original serializer
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations.TaskpoolScheduler is available and functional.
+    /// Tests that CacheDatabase.TaskpoolScheduler is available and functional.
     /// </summary>
     [Fact]
     public void TaskpoolSchedulerShouldBeAvailable()
     {
         // Act
-        var scheduler = CoreRegistrations.TaskpoolScheduler;
+        var scheduler = CacheDatabase.TaskpoolScheduler;
 
         // Assert
         Assert.NotNull(scheduler);
@@ -82,13 +81,13 @@ public class CoreRegistrationsTests
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations.HttpService is available and functional.
+    /// Tests that CacheDatabase.HttpService is available and functional.
     /// </summary>
     [Fact]
     public void HttpServiceShouldBeAvailable()
     {
         // Act
-        var httpService = CoreRegistrations.HttpService;
+        var httpService = CacheDatabase.HttpService;
 
         // Assert
         Assert.NotNull(httpService);
@@ -104,7 +103,7 @@ public class CoreRegistrationsTests
     public void MultipleSerializerRegistrationsShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
@@ -122,10 +121,10 @@ public class CoreRegistrationsTests
                 foreach (var serializer in serializers)
                 {
                     // Act
-                    CoreRegistrations.Serializer = serializer;
+                    CacheDatabase.Serializer = serializer;
 
                     // Assert
-                    Assert.Same(serializer, CoreRegistrations.Serializer);
+                    Assert.Same(serializer, CacheDatabase.Serializer);
 
                     // Test that serializer actually works
                     var testData = $"test_data_{i}_{serializer.GetType().Name}";
@@ -137,19 +136,19 @@ public class CoreRegistrationsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations handles concurrent access correctly.
+    /// Tests that CacheDatabase handles concurrent access correctly.
     /// </summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task ConcurrentAccessShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
@@ -161,7 +160,7 @@ public class CoreRegistrationsTests
                 new NewtonsoftBsonSerializer()
             };
 
-            // Act - Multiple threads accessing CoreRegistrations concurrently
+            // Act - Multiple threads accessing CacheDatabase concurrently
             var tasks = new List<Task>();
             var exceptions = new List<Exception>();
 
@@ -175,10 +174,10 @@ public class CoreRegistrationsTests
                         var serializer = serializers[taskIndex % serializers.Length];
 
                         // Set serializer
-                        CoreRegistrations.Serializer = serializer;
+                        CacheDatabase.Serializer = serializer;
 
                         // Get serializer
-                        var retrieved = CoreRegistrations.Serializer;
+                        var retrieved = CacheDatabase.Serializer;
 
                         // Use serializer
                         if (retrieved != null)
@@ -190,10 +189,10 @@ public class CoreRegistrationsTests
                         }
 
                         // Access other registrations
-                        var scheduler = CoreRegistrations.TaskpoolScheduler;
+                        var scheduler = CacheDatabase.TaskpoolScheduler;
                         Assert.NotNull(scheduler);
 
-                        var httpService = CoreRegistrations.HttpService;
+                        var httpService = CacheDatabase.HttpService;
                         Assert.NotNull(httpService);
                     }
                     catch (Exception ex)
@@ -214,18 +213,18 @@ public class CoreRegistrationsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations properly validates serializer functionality.
+    /// Tests that CacheDatabase properly validates serializer functionality.
     /// </summary>
     [Fact]
     public void SerializerFunctionalityValidationShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
@@ -254,7 +253,7 @@ public class CoreRegistrationsTests
             foreach (var serializer in serializers)
             {
                 // Act
-                CoreRegistrations.Serializer = serializer;
+                CacheDatabase.Serializer = serializer;
 
                 // Assert - Test each serializer with various data types
                 foreach (var testCase in testCases)
@@ -287,49 +286,49 @@ public class CoreRegistrationsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations handles null serializer scenarios correctly.
+    /// Tests that CacheDatabase handles null serializer scenarios correctly.
     /// </summary>
     [Fact]
     public void NullSerializerHandlingShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
             // Act - Set serializer to null
-            CoreRegistrations.Serializer = null;
+            CacheDatabase.Serializer = null;
 
             // Assert
-            Assert.Null(CoreRegistrations.Serializer);
+            Assert.Null(CacheDatabase.Serializer);
 
             // Other registrations should still work
-            Assert.NotNull(CoreRegistrations.TaskpoolScheduler);
-            Assert.NotNull(CoreRegistrations.HttpService);
+            Assert.NotNull(CacheDatabase.TaskpoolScheduler);
+            Assert.NotNull(CacheDatabase.HttpService);
 
             // Restore a valid serializer
-            CoreRegistrations.Serializer = new SystemJsonSerializer();
-            Assert.NotNull(CoreRegistrations.Serializer);
+            CacheDatabase.Serializer = new SystemJsonSerializer();
+            Assert.NotNull(CacheDatabase.Serializer);
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations serializer configuration persists correctly.
+    /// Tests that CacheDatabase serializer configuration persists correctly.
     /// </summary>
     [Fact]
     public void SerializerConfigurationPersistenceShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
@@ -337,9 +336,9 @@ public class CoreRegistrationsTests
             var systemJsonSerializer = new SystemJsonSerializer();
             systemJsonSerializer.ForcedDateTimeKind = DateTimeKind.Utc;
 
-            CoreRegistrations.Serializer = systemJsonSerializer;
+            CacheDatabase.Serializer = systemJsonSerializer;
 
-            var retrieved = CoreRegistrations.Serializer;
+            var retrieved = CacheDatabase.Serializer;
             Assert.Same(systemJsonSerializer, retrieved);
             Assert.Equal(DateTimeKind.Utc, retrieved.ForcedDateTimeKind);
 
@@ -347,43 +346,43 @@ public class CoreRegistrationsTests
             var newtonsoftSerializer = new NewtonsoftSerializer();
             newtonsoftSerializer.ForcedDateTimeKind = DateTimeKind.Local;
 
-            CoreRegistrations.Serializer = newtonsoftSerializer;
+            CacheDatabase.Serializer = newtonsoftSerializer;
 
-            retrieved = CoreRegistrations.Serializer;
+            retrieved = CacheDatabase.Serializer;
             Assert.Same(newtonsoftSerializer, retrieved);
             Assert.Equal(DateTimeKind.Local, retrieved.ForcedDateTimeKind);
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations handles serializer disposal scenarios correctly.
+    /// Tests that CacheDatabase handles serializer disposal scenarios correctly.
     /// </summary>
     [Fact]
     public void SerializerDisposalScenariosShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
 
         try
         {
             // Create a disposable serializer
             var serializer = new SystemJsonSerializer();
-            CoreRegistrations.Serializer = serializer;
+            CacheDatabase.Serializer = serializer;
 
             // Verify it's set
-            Assert.Same(serializer, CoreRegistrations.Serializer);
+            Assert.Same(serializer, CacheDatabase.Serializer);
 
             // Replace with another serializer
             var newSerializer = new NewtonsoftSerializer();
-            CoreRegistrations.Serializer = newSerializer;
+            CacheDatabase.Serializer = newSerializer;
 
             // Verify replacement
-            Assert.Same(newSerializer, CoreRegistrations.Serializer);
-            Assert.NotSame(serializer, CoreRegistrations.Serializer);
+            Assert.Same(newSerializer, CacheDatabase.Serializer);
+            Assert.NotSame(serializer, CacheDatabase.Serializer);
 
             // Test that the new serializer works
             var testData = "disposal_test";
@@ -393,19 +392,19 @@ public class CoreRegistrationsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
     /// <summary>
-    /// Tests that CoreRegistrations maintains thread safety.
+    /// Tests that CacheDatabase maintains thread safety.
     /// </summary>
     /// <returns>A task representing the asynchronous test.</returns>
     [Fact]
     public async Task ThreadSafetyShouldWork()
     {
         // Arrange
-        var originalSerializer = CoreRegistrations.Serializer;
+        var originalSerializer = CacheDatabase.Serializer;
         var exceptions = new List<Exception>();
         var barrier = new Barrier(Environment.ProcessorCount);
 
@@ -413,7 +412,7 @@ public class CoreRegistrationsTests
         {
             var tasks = new List<Task>();
 
-            // Create multiple threads that simultaneously access and modify CoreRegistrations
+            // Create multiple threads that simultaneously access and modify CacheDatabase
             for (var i = 0; i < Environment.ProcessorCount; i++)
             {
                 var threadIndex = i;
@@ -428,21 +427,21 @@ public class CoreRegistrationsTests
                             // Alternate between different operations
                             if (j % 4 == 0)
                             {
-                                CoreRegistrations.Serializer = new SystemJsonSerializer();
+                                CacheDatabase.Serializer = new SystemJsonSerializer();
                             }
                             else if (j % 4 == 1)
                             {
-                                var serializer = CoreRegistrations.Serializer;
+                                var serializer = CacheDatabase.Serializer;
                                 Assert.NotNull(serializer);
                             }
                             else if (j % 4 == 2)
                             {
-                                var scheduler = CoreRegistrations.TaskpoolScheduler;
+                                var scheduler = CacheDatabase.TaskpoolScheduler;
                                 Assert.NotNull(scheduler);
                             }
                             else
                             {
-                                var httpService = CoreRegistrations.HttpService;
+                                var httpService = CacheDatabase.HttpService;
                                 Assert.NotNull(httpService);
                             }
 
@@ -468,7 +467,7 @@ public class CoreRegistrationsTests
         }
         finally
         {
-            CoreRegistrations.Serializer = originalSerializer;
+            CacheDatabase.Serializer = originalSerializer;
             barrier.Dispose();
         }
     }

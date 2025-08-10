@@ -14,6 +14,7 @@ namespace Akavache.Core;
 public static class UniversalSerializer
 {
     private static readonly Dictionary<string, Type> _serializerTypeCache = [];
+    private static List<ISerializer>? _alternativeSerializers;
 
     /// <summary>
     /// Attempts to deserialize data using fallback mechanisms when the primary serializer fails.
@@ -265,9 +266,9 @@ public static class UniversalSerializer
     private static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
     {
         // Try to find and use an alternative serializer
-        var alternativeSerializers = GetAvailableAlternativeSerializers(targetSerializer);
+        _alternativeSerializers ??= GetAvailableAlternativeSerializers(targetSerializer);
 
-        foreach (var altSerializer in alternativeSerializers)
+        foreach (var altSerializer in _alternativeSerializers)
         {
             try
             {
@@ -301,9 +302,9 @@ public static class UniversalSerializer
 #endif
     private static T? TryAlternativeSerializers<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind)
     {
-        var alternativeSerializers = GetAvailableAlternativeSerializers(primarySerializer);
+        _alternativeSerializers ??= GetAvailableAlternativeSerializers(primarySerializer);
 
-        foreach (var altSerializer in alternativeSerializers)
+        foreach (var altSerializer in _alternativeSerializers)
         {
             try
             {

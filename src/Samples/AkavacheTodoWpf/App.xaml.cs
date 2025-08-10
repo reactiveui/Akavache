@@ -6,7 +6,7 @@
 using System.Reactive.Threading.Tasks;
 using System.Runtime.Versioning;
 using System.Windows;
-using Akavache.Core;
+using Akavache;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using AkavacheTodoWpf.Services;
@@ -111,7 +111,7 @@ public partial class App : Application
     private static void ConfigureAkavache()
     {
         // Step 1: Initialize the serializer first
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
 
         // Step 2: Configure DateTime handling for consistent behavior
         CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;

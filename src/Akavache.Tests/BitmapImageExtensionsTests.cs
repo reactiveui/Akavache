@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
 using Splat;
@@ -118,7 +117,7 @@ public class BitmapImageExtensionsTests
     public void SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         using var cache = new InMemoryBlobCache();
         IBitmap? nullBitmap = null;
 
@@ -196,7 +195,7 @@ public class BitmapImageExtensionsTests
     public async Task LoadImageShouldHandleMissingKeysCorrectly()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache();
 
         // Act & Assert
@@ -229,7 +228,7 @@ public class BitmapImageExtensionsTests
         }
 
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache();
         var mockBitmap = new MockBitmap();
         const string key = "test_image";
@@ -380,7 +379,7 @@ public class BitmapImageExtensionsTests
         }
 
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache();
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
@@ -440,7 +439,7 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageWithExpirationShouldWork()
     {
         // Arrange
-        CoreRegistrations.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache();
         var mockBitmap = new MockBitmap();
         const string key = "expiring_image";

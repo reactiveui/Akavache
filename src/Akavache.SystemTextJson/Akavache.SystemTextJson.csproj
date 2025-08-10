@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akavache.Core\Akavache.Core.csproj" />
+    <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
   </ItemGroup>
 
   <ItemGroup>

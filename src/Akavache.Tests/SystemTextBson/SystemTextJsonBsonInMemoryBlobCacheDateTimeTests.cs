@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.TestBases;
 
@@ -21,6 +20,6 @@ public class SystemTextJsonBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     protected override void SetupTestClassSerializer()
     {
         // Ensure proper serializer setup for these tests
-        CoreRegistrations.Serializer = new SystemJsonBsonSerializer();
+        CacheDatabase.Serializer = new SystemJsonBsonSerializer();
     }
 }

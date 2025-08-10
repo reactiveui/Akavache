@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.Tests.Helpers;
 using Xunit;
 
@@ -24,7 +23,7 @@ public abstract class BulkOperationsTestBase : IDisposable
     protected BulkOperationsTestBase()
     {
         // Store the original serializer to restore it after each test
-        _originalSerializer = CoreRegistrations.Serializer;
+        _originalSerializer = CacheDatabase.Serializer;
     }
 
     /// <summary>
@@ -168,7 +167,7 @@ public abstract class BulkOperationsTestBase : IDisposable
                 // Restore the original serializer to prevent interference with other tests
                 if (_originalSerializer != null)
                 {
-                    CoreRegistrations.Serializer = _originalSerializer;
+                    CacheDatabase.Serializer = _originalSerializer;
                 }
             }
 

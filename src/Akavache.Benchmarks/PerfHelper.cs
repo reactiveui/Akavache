@@ -5,8 +5,6 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Akavache.Core;
-
 namespace Akavache.Benchmarks
 {
     internal static class PerfHelper

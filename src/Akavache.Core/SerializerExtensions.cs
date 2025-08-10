@@ -5,15 +5,16 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
+using Akavache.Core;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Extension methods associated with the serializer.
 /// </summary>
 public static class SerializerExtensions
 {
-    private static ISerializer Serializer => CoreRegistrations.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer. Please ensure a CacheDatabase serializer package is referenced (Akavache.NewtonsoftJson.Bson for maximum Akavache compatibility, Akavache.SystemTextJson for best performance, or Akavache.NewtonsoftJson for balance), then initialize CoreRegistrations.Serializer with an instance, or call the appropriate registration method.");
+    private static ISerializer Serializer => CacheDatabase.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer. Please ensure a CacheDatabase serializer package is referenced (Akavache.NewtonsoftJson.Bson for maximum Akavache compatibility, Akavache.SystemTextJson for best performance, or Akavache.NewtonsoftJson for balance), then initialize CacheDatabase.Serializer with an instance, or call the appropriate registration method.");
 
     /// <summary>
     /// Inserts the specified key/value pairs into the blob.
@@ -324,7 +325,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize<T>(x.Value))), absoluteExpiration);
+            : blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize(x.Value))), absoluteExpiration);
 
     /// <summary>
     /// <para>

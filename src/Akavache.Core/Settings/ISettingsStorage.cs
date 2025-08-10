@@ -6,14 +6,14 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Akavache.Settings.Core;
+namespace Akavache.Settings;
 
 /// <summary>
 /// Interface for SettingsStorage.
 /// </summary>
-/// <seealso cref="System.ComponentModel.INotifyPropertyChanged" />
-/// <seealso cref="System.IDisposable" />
-/// <seealso cref="System.IAsyncDisposable" />
+/// <seealso cref="INotifyPropertyChanged" />
+/// <seealso cref="IDisposable" />
+/// <seealso cref="IAsyncDisposable" />
 public interface ISettingsStorage : INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
     /// <summary>

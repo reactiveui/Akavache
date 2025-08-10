@@ -5,7 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace Akavache.Core;
+namespace Akavache;
 
 /// <summary>
 /// Extension methods handling login use cases.

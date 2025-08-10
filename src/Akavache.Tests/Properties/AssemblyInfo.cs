@@ -6,5 +6,5 @@
 using Xunit;
 
 // Configure xunit to disable test collection parallelization for DateTime tests to prevent race conditions
-// on the shared CoreRegistrations.Serializer state
+// on the shared CacheDatabase.Serializer state
 [assembly: CollectionBehavior(DisableTestParallelization = false, MaxParallelThreads = 4)]
