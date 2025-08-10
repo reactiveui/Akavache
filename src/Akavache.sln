@@ -46,6 +46,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkavacheTodoMaui", "Samples
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AA698A1F-7DC8-4BCC-9BA1-3F4B3CBD94B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akavache.Benchmarks.V10", "Akavache.Benchmarks.V10\Akavache.Benchmarks.V10.csproj", "{A41FEAB7-936F-D012-EBA9-7680EC72EA0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
