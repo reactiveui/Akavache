@@ -13,6 +13,8 @@ using AkavacheTodoWpf.Services;
 using AkavacheTodoWpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Splat;
+using Splat.Builder;
 
 namespace AkavacheTodoWpf;
 
@@ -108,19 +110,16 @@ public partial class App : Application
         }
     }
 
-    private static void ConfigureAkavache()
-    {
-        // Step 1: Initialize the serializer first
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-
-        // Step 2: Configure DateTime handling for consistent behavior
-        CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
-
-        // Step 3: Use the builder pattern to configure Akavache with SQLite persistence
-        CacheDatabase.Initialize(builder =>
-            builder.WithApplicationName("AkavacheTodoWpf")
-                   .WithSqliteDefaults());
-    }
+    /// <summary>
+    /// Use the builder pattern to configure Akavache with SQLite persistence.
+    /// </summary>
+    private static void ConfigureAkavache() =>
+        AppBuilder.CreateSplatBuilder()
+            .WithAkavache(builder =>
+                builder.UseForcedDateTimeKind(DateTimeKind.Utc)
+                        .UseSystemTextJson()
+                        .WithApplicationName("AkavacheTodoWpf")
+                        .WithSqliteDefaults());
 
     private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>

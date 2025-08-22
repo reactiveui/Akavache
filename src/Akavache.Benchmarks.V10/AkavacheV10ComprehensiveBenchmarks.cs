@@ -4,12 +4,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
-using Akavache;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
-using Splat;
-using SQLite;
 
 namespace Akavache.Benchmarks.V10
 {

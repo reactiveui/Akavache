@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -12,6 +11,7 @@ using BenchmarkDotNet.Jobs;
 using Akavache.SystemTextJson;
 using Akavache.Sqlite3;
 using System.Reactive.Threading.Tasks;
+using Splat.Builder;
 
 namespace Akavache.Benchmarks
 {
@@ -25,6 +25,7 @@ namespace Akavache.Benchmarks
         private string _tempDirectory;
         private IDisposable _directoryCleanup;
         private List<TestDataV11> _testObjects;
+        private AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
 
         [Params(10, 100, 1000)]
         public int BenchmarkSize { get; set; }
@@ -36,7 +37,7 @@ namespace Akavache.Benchmarks
             CacheDatabase.Serializer = new SystemJsonSerializer();
 
             // Initialize with builder pattern
-            CacheDatabase.Initialize(builder =>
+            _appBuilder.WithAkavache(builder =>
                 builder.WithApplicationName("AkavacheBenchmarksV11Comprehensive")
                        .WithSqliteDefaults());
 

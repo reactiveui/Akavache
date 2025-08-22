@@ -439,7 +439,7 @@ public class DownloadUrlExtensionsTests
                     try
                     {
                         const string key = "expiring_content";
-                        var expiration = DateTimeOffset.Now.AddSeconds(1);
+                        var expiration = DateTimeOffset.Now.AddSeconds(2);
 
                         // Download with expiration - fix parameter order
                         await cache.DownloadUrl(key, "http://httpbin.org/html", null, null, false, expiration).FirstAsync();
@@ -449,7 +449,7 @@ public class DownloadUrlExtensionsTests
                         Assert.True(initialData.Length > 0);
 
                         // Wait for expiration
-                        await Task.Delay(1500);
+                        await Task.Delay(2500);
 
                         // Data should now be expired (though this might depend on cache implementation)
                         // This test mainly verifies the expiration parameter is accepted

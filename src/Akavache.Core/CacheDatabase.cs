@@ -90,57 +90,6 @@ public static class CacheDatabase
     /// </summary>
     public static IBlobCache UserAccount => GetOrThrowIfNotInitialized()?.UserAccount ??
         throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
-    /// <summary>
-    /// Creates a new BlobCache builder for configuration.
-    /// </summary>
-    /// <returns>A new BlobCache builder instance.</returns>
-    public static IAkavacheBuilder CreateBuilder() => new AkavacheBuilder();
-
-    /// <summary>
-    /// Initializes BlobCache with default in-memory caches.
-    /// This is the safest default as it doesn't require any additional packages.
-    /// </summary>
-    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <returns>A BlobCache builder for further configuration.</returns>
-    public static IAkavacheBuilder Initialize(string? applicationName = null)
-    {
-        if (applicationName != null)
-        {
-            ApplicationName = applicationName;
-        }
-
-        var builder = CreateBuilder()
-            .WithApplicationName(ApplicationName)
-            .WithInMemoryDefaults();
-
-        return builder.Build();
-    }
-
-    /// <summary>
-    /// Initializes BlobCache with a custom builder configuration.
-    /// </summary>
-    /// <param name="configure">An action to configure the BlobCache builder.</param>
-    /// <param name="applicationName">Name of the application.</param>
-    /// <returns>
-    /// The configured builder.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">configure.</exception>
-    public static IAkavacheBuilder Initialize(Action<IAkavacheBuilder> configure, string? applicationName = null)
-    {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
-
-        if (applicationName != null)
-        {
-            ApplicationName = applicationName;
-        }
-
-        var builder = CreateBuilder().WithApplicationName(ApplicationName);
-        configure(builder);
-        return builder.Build();
-    }
 
     /// <summary>
     /// Shuts down all cache instances and flushes any pending operations.
@@ -200,6 +149,59 @@ public static class CacheDatabase
             ? shutdownTasks.Merge().TakeLast(1).Select(_ => Unit.Default)
             : Observable.Return(Unit.Default);
     }
+
+    /// <summary>
+    /// Initializes BlobCache with default in-memory caches.
+    /// This is the safest default as it doesn't require any additional packages.
+    /// </summary>
+    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
+    /// <returns>A BlobCache builder for further configuration.</returns>
+    internal static IAkavacheBuilder Initialize(string? applicationName = null)
+    {
+        if (applicationName != null)
+        {
+            ApplicationName = applicationName;
+        }
+
+        var builder = CreateBuilder()
+            .WithApplicationName(ApplicationName)
+            .WithInMemoryDefaults();
+
+        return builder.Build();
+    }
+
+    /// <summary>
+    /// Initializes BlobCache with a custom builder configuration.
+    /// </summary>
+    /// <param name="configure">An action to configure the BlobCache builder.</param>
+    /// <param name="applicationName">Name of the application.</param>
+    /// <returns>
+    /// The configured builder.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">configure.</exception>
+    internal static IAkavacheBuilder Initialize(Action<IAkavacheBuilder> configure, string? applicationName = null)
+    {
+        if (configure == null)
+        {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
+        var builder = CreateBuilder();
+        if (applicationName != null)
+        {
+            ApplicationName = applicationName;
+            builder.WithApplicationName(ApplicationName);
+        }
+
+        configure(builder);
+        return builder.Build();
+    }
+
+    /// <summary>
+    /// Creates a new BlobCache builder for configuration.
+    /// </summary>
+    /// <returns>A new BlobCache builder instance.</returns>
+    internal static IAkavacheBuilder CreateBuilder() => new AkavacheBuilder();
 
     /// <summary>
     /// Internal method to set the builder instance. Used by the builder pattern.

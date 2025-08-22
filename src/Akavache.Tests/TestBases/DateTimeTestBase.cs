@@ -532,6 +532,12 @@ public abstract class DateTimeTestBase : IDisposable
     }
 
     /// <summary>
+    /// Returns the serializer required for this test class. Override in derived classes.
+    /// </summary>
+    /// <returns>The serializer instance to use for this test class.</returns>
+    protected virtual ISerializer? GetTestSerializer() => null;
+
+    /// <summary>
     /// Performs the actual time stamp grab.
     /// </summary>
     /// <typeparam name="TData">The type of data we are grabbing.</typeparam>
@@ -764,8 +770,15 @@ public abstract class DateTimeTestBase : IDisposable
     /// </summary>
     private void EnsureTestSerializerSetup()
     {
-        // Call the setup method to ensure the correct serializer is in place
-        // This handles cases where the global serializer might have been changed by other tests
-        SetupTestClassSerializer();
+        // Always store and restore the original serializer for test isolation
+        var requiredSerializer = GetTestSerializer();
+        if (requiredSerializer != null)
+        {
+            CacheDatabase.Serializer = requiredSerializer;
+        }
+        else
+        {
+            SetupTestClassSerializer();
+        }
     }
 }

@@ -23,7 +23,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     protected ObjectBulkOperationsTestBase()
     {
         // Store the original serializer to restore it after each test
-        _originalSerializer = CacheDatabase.Serializer;
+        _originalSerializer = CacheDatabase.Serializer ??= new SystemTextJson.SystemJsonSerializer();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     {
         // Ensure the test uses the correct serializer
         EnsureTestSerializerSetup();
-
+        Assert.NotNull(CacheDatabase.Serializer);
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path))
         {
