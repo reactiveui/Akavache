@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.50.3" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>
