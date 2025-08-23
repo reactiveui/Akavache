@@ -93,8 +93,11 @@ public class LoginExtensionsTests
     [Fact]
     public async Task SaveLoginWithExpirationShouldWork()
     {
+        // Use a single serializer instance to avoid issues
+        var serializer = new SystemJsonSerializer();
+
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        CacheDatabase.Serializer = serializer;
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password");
@@ -105,8 +108,14 @@ public class LoginExtensionsTests
 
             try
             {
+                // Ensure serializer is set before every cache operation
+                CacheDatabase.Serializer = serializer;
+
                 // Act - Save login with expiration
                 await cache.SaveLogin(username, password, host, expiration).FirstAsync();
+
+                // Ensure serializer is set before every cache operation
+                CacheDatabase.Serializer = serializer;
 
                 // Act - Get login before expiration
                 var loginInfo = await cache.GetLogin(host).FirstAsync();

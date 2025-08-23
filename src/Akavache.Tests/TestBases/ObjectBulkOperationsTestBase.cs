@@ -213,8 +213,8 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// </summary>
     private void EnsureTestSerializerSetup()
     {
-        // Call the setup method to ensure the correct serializer is in place
-        // This handles cases where the global serializer might have been changed by other tests
+        // Always set the serializer before every test to avoid race conditions
+        CacheDatabase.Serializer = new SystemTextJson.SystemJsonSerializer();
         SetupTestClassSerializer();
     }
 }
