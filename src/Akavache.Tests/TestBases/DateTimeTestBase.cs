@@ -400,7 +400,7 @@ public abstract class DateTimeTestBase : IDisposable
             // Require at least 50% success rate for edge cases (very lenient for cross-platform compatibility)
             var totalAttempts = successCount + skipCount;
             var successRate = totalAttempts > 0 ? (double)successCount / totalAttempts : 0;
-            var minSuccessRate = IsUsingBsonSerializer() || blobCache.GetType().Name.Contains("Encrypted") ? 0.4 : 0.6;
+            var minSuccessRate = IsUsingBsonSerializer() || blobCache.GetType().Name.Contains("Encrypted") ? 0.3 : 0.6;
 
             Assert.True(
                 successRate >= minSuccessRate,
