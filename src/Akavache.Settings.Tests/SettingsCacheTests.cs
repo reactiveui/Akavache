@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.NewtonsoftJson;
+using Splat.Builder;
 
 namespace Akavache.Settings.Tests;
 
@@ -12,6 +13,8 @@ namespace Akavache.Settings.Tests;
 /// </summary>
 public class SettingsCacheTests
 {
+    private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
+
     static SettingsCacheTests()
     {
         // Initialize SQLite provider for CI environments
@@ -35,22 +38,29 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestCreateAndInsertNewtonsoft()
     {
-        var builder = CacheDatabase.CreateBuilder()
-            .WithSerializer(new NewtonsoftSerializer());
-        await builder.DeleteSettingsStore<ViewSettings>();
-        var viewSettings = default(ViewSettings);
-        builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+        GetBuilder().WithAkavache(async builder =>
+        {
+            builder.WithSerializer(new NewtonsoftSerializer());
+            await builder.DeleteSettingsStore<ViewSettings>();
+            var viewSettings = default(ViewSettings);
+            builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
 
-        Assert.NotNull(viewSettings);
-        Assert.True(viewSettings!.BoolTest);
-        Assert.Equal((short)16, viewSettings.ShortTest);
-        Assert.Equal(1, viewSettings.IntTest);
-        Assert.Equal(123456L, viewSettings.LongTest);
-        Assert.Equal("TestString", viewSettings.StringTest);
-        Assert.Equal(2.2f, viewSettings.FloatTest);
-        Assert.Equal(23.8d, viewSettings.DoubleTest);
-        Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
-        await viewSettings.DisposeAsync();
+            Assert.NotNull(viewSettings);
+            Assert.True(viewSettings!.BoolTest);
+            Assert.Equal((short)16, viewSettings.ShortTest);
+            Assert.Equal(1, viewSettings.IntTest);
+            Assert.Equal(123456L, viewSettings.LongTest);
+            Assert.Equal("TestString", viewSettings.StringTest);
+            Assert.Equal(2.2f, viewSettings.FloatTest);
+            Assert.Equal(23.8d, viewSettings.DoubleTest);
+            Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
+            await viewSettings.DisposeAsync();
+        }).Build();
+
+        while (!AppBuilder.HasBeenBuilt)
+        {
+            await Task.Delay(100);
+        }
     }
 
     /// <summary>
@@ -62,13 +72,20 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestUpdateAndReadNewtonsoft()
     {
-        var builder = CacheDatabase.CreateBuilder();
-        builder.WithSerializer(new NewtonsoftSerializer());
-        var viewSettings = default(ViewSettings);
-        builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
-        viewSettings!.EnumTest = EnumTestValue.Option2;
-        Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
-        await viewSettings.DisposeAsync();
+        GetBuilder().WithAkavache(async builder =>
+        {
+            builder.WithSerializer(new NewtonsoftSerializer());
+            var viewSettings = default(ViewSettings);
+            builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+            viewSettings!.EnumTest = EnumTestValue.Option2;
+            Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
+            await viewSettings.DisposeAsync();
+        }).Build();
+
+        while (!AppBuilder.HasBeenBuilt)
+        {
+            await Task.Delay(100);
+        }
     }
 
     /// <summary>
@@ -80,22 +97,29 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestCreateAndInsertSystemTextJson()
     {
-        var builder = CacheDatabase.CreateBuilder();
-        await builder.DeleteSettingsStore<ViewSettings>();
-        builder.WithSerializer(new NewtonsoftSerializer());
-        var viewSettings = default(ViewSettings);
-        builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+        GetBuilder().WithAkavache(async builder =>
+        {
+            await builder.DeleteSettingsStore<ViewSettings>();
+            builder.WithSerializer(new NewtonsoftSerializer());
+            var viewSettings = default(ViewSettings);
+            builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
 
-        Assert.NotNull(viewSettings);
-        Assert.True(viewSettings!.BoolTest);
-        Assert.Equal((short)16, viewSettings.ShortTest);
-        Assert.Equal(1, viewSettings.IntTest);
-        Assert.Equal(123456L, viewSettings.LongTest);
-        Assert.Equal("TestString", viewSettings.StringTest);
-        Assert.Equal(2.2f, viewSettings.FloatTest);
-        Assert.Equal(23.8d, viewSettings.DoubleTest);
-        Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
-        await viewSettings.DisposeAsync();
+            Assert.NotNull(viewSettings);
+            Assert.True(viewSettings!.BoolTest);
+            Assert.Equal((short)16, viewSettings.ShortTest);
+            Assert.Equal(1, viewSettings.IntTest);
+            Assert.Equal(123456L, viewSettings.LongTest);
+            Assert.Equal("TestString", viewSettings.StringTest);
+            Assert.Equal(2.2f, viewSettings.FloatTest);
+            Assert.Equal(23.8d, viewSettings.DoubleTest);
+            Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
+            await viewSettings.DisposeAsync();
+        }).Build();
+
+        while (!AppBuilder.HasBeenBuilt)
+        {
+            await Task.Delay(100);
+        }
     }
 
     /// <summary>
@@ -107,24 +131,51 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestUpdateAndReadSystemTextJson()
     {
-        var builder = CacheDatabase.CreateBuilder();
-        builder.WithSerializer(new NewtonsoftSerializer());
-        var viewSettings = default(ViewSettings);
-        builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
-        viewSettings!.EnumTest = EnumTestValue.Option2;
-        Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
-        await viewSettings.DisposeAsync();
+        GetBuilder().WithAkavache(async builder =>
+        {
+            builder.WithSerializer(new NewtonsoftSerializer());
+            var viewSettings = default(ViewSettings);
+            builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+            viewSettings!.EnumTest = EnumTestValue.Option2;
+            Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
+            await viewSettings.DisposeAsync();
+        }).Build();
+
+        while (!AppBuilder.HasBeenBuilt)
+        {
+            await Task.Delay(100);
+        }
     }
 
     /// <summary>
     /// Tests the override settings cache path.
     /// </summary>
+    /// <returns>
+    /// A <see cref="Task" /> representing the asynchronous unit test.
+    /// </returns>
     [Fact]
-    public void TestOverrideSettingsCachePath()
+    public async Task TestOverrideSettingsCachePath()
     {
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
-        var builder = CacheDatabase.CreateBuilder();
-        builder.WithSettingsCachePath(path);
-        Assert.Equal(path, builder.SettingsCachePath);
+        var akavacheBuilder = default(IAkavacheBuilder);
+        GetBuilder().WithAkavache(builder =>
+        {
+            builder.WithSerializer(new NewtonsoftSerializer())
+                .WithSettingsCachePath(path);
+            akavacheBuilder = builder;
+        }).Build();
+
+        while (!AppBuilder.HasBeenBuilt)
+        {
+            await Task.Delay(100);
+        }
+
+        Assert.Equal(path, akavacheBuilder!.SettingsCachePath);
+    }
+
+    private AppBuilder GetBuilder()
+    {
+        AppBuilder.ResetBuilderStateForTests();
+        return _appBuilder;
     }
 }

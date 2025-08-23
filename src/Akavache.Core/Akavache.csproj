@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.8" />
+    <PackageReference Include="Splat.Builder" Version="16.0.1" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 </Project>

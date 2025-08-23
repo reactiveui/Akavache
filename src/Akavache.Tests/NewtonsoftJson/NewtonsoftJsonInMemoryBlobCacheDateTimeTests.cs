@@ -17,9 +17,5 @@ public class NewtonsoftJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
 
     /// <inheritdoc />
-    protected override void SetupTestClassSerializer()
-    {
-        // Ensure proper serializer setup for these tests
-        CacheDatabase.Serializer = new NewtonsoftSerializer();
-    }
+    protected override ISerializer? GetTestSerializer() => new NewtonsoftSerializer();
 }

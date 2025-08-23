@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 
@@ -11,7 +8,6 @@ using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using Akavache.SystemTextJson;
 using Akavache.Sqlite3;
-using System.Reactive.Threading.Tasks;
 
 namespace Akavache.Benchmarks
 {

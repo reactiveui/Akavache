@@ -17,9 +17,5 @@ public class SystemTextJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
 
     /// <inheritdoc />
-    protected override void SetupTestClassSerializer()
-    {
-        // Ensure proper serializer setup for these tests
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-    }
+    protected override ISerializer? GetTestSerializer() => new SystemJsonSerializer();
 }

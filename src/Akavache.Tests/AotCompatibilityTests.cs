@@ -529,6 +529,7 @@ public class AotCompatibilityTests
 
         try
         {
+            CacheDatabase.Serializer = new SystemJsonSerializer();
             var cache = new InMemoryBlobCache();
 
             try

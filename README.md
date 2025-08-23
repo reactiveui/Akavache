@@ -73,9 +73,10 @@ This careful incubation process ensured that V11.0 delivers not just new feature
 using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Sqlite3;
+using Splat.Builder;
 
 // Initialize with the builder pattern
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSqliteDefaults());
@@ -161,7 +162,7 @@ await BlobCache.LocalMachine.InsertObject("key", myData);
 ```csharp
 // V11.0 initialization
 
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer()) // Required!
            .WithSqliteDefaults());
@@ -181,7 +182,7 @@ public static class AkavacheMigration
     public static void InitializeV11(string appName)
     {
         // Initialize with SQLite (most common V10.x setup)
-        CacheDatabase.Initialize(builder =>
+        AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
             builder.WithApplicationName(appName)
                    .WithSerializer(new SystemJsonSerializer()) // Choose your preferred serializer, Required!
                    .WithSqliteDefaults());
@@ -199,7 +200,7 @@ AkavacheMigration.InitializeV11("MyApp");
 Akavache V11.0 uses a fluent builder pattern for configuration:
 
 ```csharp
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")           // Required
            .WithSerializer(new SystemJsonSerializer()) // Custom serializer
            .WithSqliteDefaults());                   // SQLite persistence
@@ -209,7 +210,7 @@ CacheDatabase.Initialize(builder =>
 
 #### 1. In-Memory Only (for testing or non retensive applications)
 ```csharp
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("TestApp")
            .WithSerializer(new SystemJsonSerializer()) // Custom serializer
            .WithInMemoryDefaults());
@@ -217,7 +218,7 @@ CacheDatabase.Initialize(builder =>
 
 #### 2. SQLite Persistence
 ```csharp
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer()) // Custom serializer
            .WithSqliteDefaults());
@@ -225,7 +226,7 @@ CacheDatabase.Initialize(builder =>
 
 #### 3. Encrypted SQLite
 ```csharp
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer()) // Custom serializer
            .WithSqliteDefaults("mySecretPassword"));
@@ -233,7 +234,7 @@ CacheDatabase.Initialize(builder =>
 
 #### 4. Custom Cache Instances
 ```csharp
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer()) // Custom serializer
            .WithUserAccount(new SqliteBlobCache("custom-user.db"))
@@ -248,7 +249,7 @@ CacheDatabase.Initialize(builder =>
 CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
 
 CacheDatabase.Serializer = new SystemJsonSerializer();
-CacheDatabase.Initialize(builder => builder.WithApplicationName("MyApp").WithSqliteDefaults());
+AppBuilder.CreateSplatBuilder().WithAkavache(builder => builder.WithApplicationName("MyApp").WithSqliteDefaults());
 ```
 
 ## Serializers
@@ -837,7 +838,7 @@ public class PhotoGalleryService
     public PhotoGalleryService()
     {
         // Initialize Akavache with drawing support
-        CacheDatabase.Initialize(builder =>
+        AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
             builder.WithApplicationName("PhotoGallery")
                    .WithSerializer(new SystemJsonSerializer())
                    .WithSqliteDefaults());
@@ -1001,7 +1002,7 @@ using Akavache.Settings;
 // Initialize Akavache with settings support
 var appSettings = default(AppSettings);
 
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSettingsStore<AppSettings>(settings => appSettings = settings));
@@ -1022,7 +1023,7 @@ Console.WriteLine($"Notifications: {appSettings.EnableNotifications}");
 By default, settings are stored in a subfolder of your application directory. You can customize this path:
 
 ```csharp
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSettingsCachePath(@"C:\MyApp\Settings")  // Custom path
@@ -1060,7 +1061,7 @@ public class NetworkSettings : SettingsBase
 var userSettings = default(UserSettings);
 var networkSettings = default(NetworkSettings);
 
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSettingsStore<UserSettings>(settings => userSettings = settings)
@@ -1092,7 +1093,7 @@ public class SecureSettings : SettingsBase
 // Initialize with encryption
 var secureSettings = default(SecureSettings);
 
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSecureSettingsStore<SecureSettings>("mySecurePassword", 
@@ -1110,7 +1111,7 @@ You can specify custom database names for settings:
 ```csharp
 var appSettings = default(AppSettings);
 
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSettingsStore<AppSettings>(
@@ -1216,7 +1217,7 @@ public class WindowPosition
 
 // Usage
 var settings = default(ComprehensiveSettings);
-CacheDatabase.Initialize(builder =>
+AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
            .WithSettingsStore<ComprehensiveSettings>(s => settings = s));
@@ -1289,7 +1290,7 @@ public static class MauiProgram
         CacheDatabase.Serializer = new SystemJsonSerializer();
         CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
         
-        CacheDatabase.Initialize(cacheBuilder =>
+        AppBuilder.CreateSplatBuilder().WithAkavache(cacheBuilder =>
             cacheBuilder.WithApplicationName("MyMauiApp")
                        .WithSqliteDefaults());
 
@@ -1322,7 +1323,7 @@ public partial class App : Application
         CacheDatabase.Serializer = new SystemJsonSerializer();
         CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
 
-        CacheDatabase.Initialize(builder =>
+        AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
             builder.WithApplicationName("MyWpfApp")
                    .WithSqliteDefaults());
     }
@@ -1336,7 +1337,7 @@ public partial class App : Application
 public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
 {
     CacheDatabase.Serializer = new SystemJsonSerializer();
-    CacheDatabase.Initialize(builder =>
+    AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
         builder.WithApplicationName("MyiOSApp")
                .WithSqliteDefaults());
 
@@ -1353,7 +1354,7 @@ protected override void OnCreate(Bundle savedInstanceState)
     base.OnCreate(savedInstanceState);
 
     CacheDatabase.Serializer = new SystemJsonSerializer();
-    CacheDatabase.Initialize(builder =>
+    AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
         builder.WithApplicationName("MyAndroidApp")
                .WithSqliteDefaults());
 }
@@ -1366,7 +1367,7 @@ protected override void OnCreate(Bundle savedInstanceState)
 protected override void OnLaunched(LaunchActivatedEventArgs e)
 {
     CacheDatabase.Serializer = new SystemJsonSerializer();
-    CacheDatabase.Initialize(builder =>
+    AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
         builder.WithApplicationName("MyUwpApp")
                .WithSqliteDefaults());
 
@@ -1430,8 +1431,9 @@ public class App
     static App()
     {
         CacheDatabase.Serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(builder =>
-            builder.WithApplicationName("MyApp")
+        AppBuilder.CreateSplatBuilder().WithAkavache(builder =>
+            builder.UseSystemTextJson()
+                   .WithApplicationName("MyApp")
                    .WithSqliteDefaults());
     }
 }

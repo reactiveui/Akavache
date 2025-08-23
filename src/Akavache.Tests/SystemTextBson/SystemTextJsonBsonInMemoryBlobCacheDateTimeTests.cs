@@ -9,7 +9,7 @@ using Akavache.Tests.TestBases;
 namespace Akavache.Tests;
 
 /// <summary>
-/// Tests for DateTime operations associated with the <see cref="SystemTextJson.InMemoryBlobCache"/> class with BSON serialization.
+/// Tests for DateTime operations associated with the <see cref="InMemoryBlobCache"/> class with BSON serialization.
 /// </summary>
 public class SystemTextJsonBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
@@ -17,9 +17,5 @@ public class SystemTextJsonBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
     protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
 
     /// <inheritdoc />
-    protected override void SetupTestClassSerializer()
-    {
-        // Ensure proper serializer setup for these tests
-        CacheDatabase.Serializer = new SystemJsonBsonSerializer();
-    }
+    protected override ISerializer? GetTestSerializer() => new SystemJsonBsonSerializer();
 }

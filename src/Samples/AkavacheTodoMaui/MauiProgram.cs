@@ -12,6 +12,7 @@ using AkavacheTodoMaui.ViewModels;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using Splat;
+using Splat.Builder;
 
 namespace AkavacheTodoMaui;
 
@@ -54,19 +55,14 @@ public static class MauiProgram
         return builder.Build();
     }
 
-    private static void ConfigureAkavache()
-    {
-        // Initialize Akavache with System.Text.Json serializer for best performance
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-
-        // Configure DateTime handling for consistent behavior
-        CacheDatabase.ForcedDateTimeKind = DateTimeKind.Utc;
-
-        // Initialize SQLite support - use the new V11 initialization pattern
-        CacheDatabase.Initialize(builder =>
-        {
-            builder.WithApplicationName("AkavacheTodoMaui")
-                   .WithSqliteDefaults();
-        });
-    }
+    /// <summary>
+    /// Initialize SQLite support - use the new V11 initialization pattern.
+    /// </summary>
+    private static void ConfigureAkavache() =>
+        AppBuilder.CreateSplatBuilder()
+            .WithAkavache(builder =>
+                builder.WithApplicationName("AkavacheTodoMaui")
+                    .UseForcedDateTimeKind(DateTimeKind.Utc)
+                    .UseSystemTextJson()
+                    .WithSqliteDefaults());
 }
