@@ -21,7 +21,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? seriali
     /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class with default scheduler.
     /// </summary>
     public InMemoryBlobCache()
-        : this(CacheDatabase.TaskpoolScheduler, CacheDatabase.Serializer)
+        : this(CacheDatabase.TaskpoolScheduler, CacheDatabase.Serializer ?? throw new ArgumentNullException(nameof(serializer), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
     {
     }
 }
