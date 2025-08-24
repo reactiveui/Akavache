@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace Akavache.SystemTextJson
@@ -18,7 +19,13 @@ namespace Akavache.SystemTextJson
         /// <param name="builder">The builder.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="System.ArgumentNullException">builder.</exception>
+#if NET6_0_OR_GREATER
+
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
         public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder)
+#else
+        public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder)
+#endif
         {
             if (builder == null)
             {
@@ -40,7 +47,13 @@ namespace Akavache.SystemTextJson
         /// or
         /// settings.
         /// </exception>
+#if NET6_0_OR_GREATER
+
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
         public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder, JsonSerializerOptions settings)
+#else
+        public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder, JsonSerializerOptions settings)
+#endif
         {
             if (builder == null)
             {
@@ -67,7 +80,13 @@ namespace Akavache.SystemTextJson
         /// or
         /// configure.
         /// </exception>
+#if NET6_0_OR_GREATER
+
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
         public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
+#else
+        public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
+#endif
         {
             if (builder == null)
             {
@@ -91,7 +110,13 @@ namespace Akavache.SystemTextJson
         /// <param name="builder">The builder.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="System.ArgumentNullException">builder.</exception>
+#if NET6_0_OR_GREATER
+
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
         public static IAkavacheBuilder UseSystemJsonBsonSerializer(this IAkavacheBuilder builder)
+#else
+        public static IAkavacheBuilder UseSystemJsonBsonSerializer(this IAkavacheBuilder builder)
+#endif
         {
             if (builder == null)
             {
@@ -113,7 +138,13 @@ namespace Akavache.SystemTextJson
         /// or
         /// settings.
         /// </exception>
+#if NET6_0_OR_GREATER
+
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
         public static IAkavacheBuilder UseSystemJsonBsonSerializer(this IAkavacheBuilder builder, JsonSerializerOptions settings)
+#else
+        public static IAkavacheBuilder UseSystemJsonBsonSerializer(this IAkavacheBuilder builder, JsonSerializerOptions settings)
+#endif
         {
             if (builder == null)
             {
@@ -140,7 +171,13 @@ namespace Akavache.SystemTextJson
         /// or
         /// configure.
         /// </exception>
+#if NET6_0_OR_GREATER
+
+        [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
         public static IAkavacheBuilder UseSystemJsonBsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
+#else
+        public static IAkavacheBuilder UseSystemJsonBsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
+#endif
         {
             if (builder == null)
             {

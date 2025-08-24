@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Splat;
+
 #if ENCRYPTED
 namespace Akavache.EncryptedSqlite3;
 #else
@@ -115,10 +117,13 @@ public static class AkavacheBuilderExtensions
             filePath = Path.Combine(directory, $"{name}.db");
         }
 
+        // Resolve the serializer from the service locator to ensure proper lifecycle management
+        var serializer = AppLocator.Current.GetService<ISerializer>(builder.SerializerTypeName) ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
+
 #if ENCRYPTED
-        var cache = new EncryptedSqliteBlobCache(filePath, password, builder.Serializer);
+        var cache = new EncryptedSqliteBlobCache(filePath, password, serializer);
 #else
-        var cache = new SqliteBlobCache(filePath, builder.Serializer);
+        var cache = new SqliteBlobCache(filePath, serializer);
 #endif
         if (builder.ForcedDateTimeKind.HasValue)
         {

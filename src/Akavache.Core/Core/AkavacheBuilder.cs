@@ -157,7 +157,12 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
+#if NET6_0_OR_GREATER
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public IAkavacheBuilder WithSerializer<T>()
+#else
+    public IAkavacheBuilder WithSerializer<T>()
+#endif
         where T : ISerializer, new()
     {
         var serializerType = typeof(T);
@@ -173,7 +178,12 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
+#if NET6_0_OR_GREATER
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+#else
+    public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+#endif
         where T : ISerializer
     {
         var serializerType = typeof(T);

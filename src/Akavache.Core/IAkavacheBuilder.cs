@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Akavache;
@@ -61,7 +62,13 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <returns>
     /// The builder instance for fluent configuration.
     /// </returns>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     IAkavacheBuilder WithSerializer<T>()
+#else
+    IAkavacheBuilder WithSerializer<T>()
+#endif
         where T : ISerializer, new();
 
     /// <summary>
@@ -72,7 +79,13 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <returns>
     /// The builder instance for fluent configuration.
     /// </returns>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+#else
+    IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+#endif
         where T : ISerializer;
 
     /// <summary>

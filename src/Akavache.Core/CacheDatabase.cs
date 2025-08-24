@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
 
 namespace Akavache;
@@ -149,8 +150,14 @@ public static class CacheDatabase
     /// </summary>
     /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <exception cref="System.InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+    /// <exception cref="InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(string? applicationName = null)
+#else
+    public static void Initialize<T>(string? applicationName = null)
+#endif
        where T : ISerializer, new() => SetBuilder(CreateBuilder()
             .WithApplicationName(applicationName)
             .WithSerializer<T>()
@@ -164,8 +171,14 @@ public static class CacheDatabase
     /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="configureSerializer">The Serializer configuration.</param>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <exception cref="System.InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+    /// <exception cref="InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(Func<T> configureSerializer, string? applicationName = null)
+#else
+    public static void Initialize<T>(Func<T> configureSerializer, string? applicationName = null)
+#endif
        where T : ISerializer, new() => SetBuilder(CreateBuilder()
             .WithApplicationName(applicationName)
             .WithSerializer(configureSerializer)
@@ -179,7 +192,13 @@ public static class CacheDatabase
     /// <param name="configure">An action to configure the BlobCache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
     /// <exception cref="ArgumentNullException">configure.</exception>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(Action<IAkavacheBuilder> configure, string? applicationName = null)
+#else
+    public static void Initialize<T>(Action<IAkavacheBuilder> configure, string? applicationName = null)
+#endif
         where T : ISerializer, new()
     {
         if (configure == null)
@@ -204,7 +223,13 @@ public static class CacheDatabase
     /// <param name="configure">An action to configure the BlobCache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
     /// <exception cref="ArgumentNullException">configure.</exception>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
+#else
+    public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
+#endif
         where T : ISerializer, new()
     {
         if (configure == null)
