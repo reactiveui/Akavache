@@ -23,19 +23,13 @@ public class SettingsCacheTests
         // Initialize SQLite provider for CI environments
         try
         {
-#if WINDOWS
-            Console.Error.WriteLine($"Initializing SQLCipher provider for Windows");
-            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlcipher());
-#else
-            Console.Error.WriteLine("Initializing default SQLitePCL provider (non-Windows)");
+            Console.Out.WriteLine("Initializing SQLite provider");
             SQLitePCL.Batteries_V2.Init();
-#endif
         }
         catch (Exception ex)
         {
             // Log error for CI diagnostics
-            Console.Error.WriteLine($"SQLitePCL provider initialization failed: {ex}");
-            SQLitePCL.Batteries_V2.Init();
+            Console.Error.WriteLine($"SQLCipher provider initialization failed: {ex}");
         }
     }
 

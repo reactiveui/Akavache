@@ -22,10 +22,9 @@ public class SettingsCacheTests
         {
             SQLitePCL.Batteries_V2.Init();
         }
-        catch
+        catch (Exception ex)
         {
-            // Fallback initialization
-            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
+            Console.Error.WriteLine($"***** Failed to initialize SQLite provider!! ***** {ex}");
         }
     }
 
