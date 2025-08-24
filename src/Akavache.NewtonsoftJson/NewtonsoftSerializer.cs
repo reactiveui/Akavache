@@ -352,7 +352,7 @@ public class NewtonsoftSerializer : ISerializer
     /// Simple ObjectWrapper for compatibility with other serializers.
     /// </summary>
     /// <typeparam name="T">The wrapped type.</typeparam>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Used for JSON deserialization")]
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Used for JSON deserialization")]
     private class SimpleObjectWrapper<T>
     {
         public T? Value { get; set; }

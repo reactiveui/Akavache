@@ -117,8 +117,7 @@ public class BitmapImageExtensionsTests
     public void SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
         IBitmap? nullBitmap = null;
 
         // Act & Assert
@@ -195,8 +194,7 @@ public class BitmapImageExtensionsTests
     public async Task LoadImageShouldHandleMissingKeysCorrectly()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache();
+        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key").FirstAsync());
@@ -228,8 +226,7 @@ public class BitmapImageExtensionsTests
         }
 
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache();
+        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
         var mockBitmap = new MockBitmap();
         const string key = "test_image";
 
@@ -379,8 +376,7 @@ public class BitmapImageExtensionsTests
         }
 
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache();
+        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -439,8 +435,7 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageWithExpirationShouldWork()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache();
+        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
         var mockBitmap = new MockBitmap();
         const string key = "expiring_image";
         var expiration = DateTimeOffset.Now.AddMinutes(10);

@@ -31,9 +31,6 @@ namespace Akavache.Benchmarks
         [GlobalSetup]
         public void GlobalSetup()
         {
-            // Initialize the serializer first
-            CacheDatabase.Serializer = new SystemJsonSerializer();
-
             // Create temporary directory
             _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
 
@@ -108,7 +105,7 @@ namespace Akavache.Benchmarks
                 path ??= GetIntegrationTestRootDirectory();
 
                 var giantDbSize = Math.Max(1000, BenchmarkSize * 10); // Ensure enough data for benchmarks
-                var cache = new SqliteBlobCache(Path.Combine(path, "benchmarks-read.db"));
+                var cache = new SqliteBlobCache(Path.Combine(path, "benchmarks-read.db"), new SystemJsonSerializer());
 
                 var keys = cache.GetAllKeys().ToList().FirstAsync().GetAwaiter().GetResult();
                 if (keys.Count >= giantDbSize)

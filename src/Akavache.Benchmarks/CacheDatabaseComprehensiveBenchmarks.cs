@@ -33,32 +33,34 @@ namespace Akavache.Benchmarks
         [GlobalSetup]
         public void GlobalSetup()
         {
-            // Initialize the serializer first
-            CacheDatabase.Serializer = new SystemJsonSerializer();
-
             // Initialize with builder pattern
-            _appBuilder.WithAkavache(builder =>
-                builder.WithApplicationName("AkavacheBenchmarksV11Comprehensive")
-                       .WithSqliteDefaults());
+            _appBuilder.WithAkavache<SystemJsonSerializer>(
+                "AkavacheBenchmarksV11Comprehensive",
+                builder =>
+                builder.WithSqliteDefaults(),
+                instance =>
+                    {
+                        // Register the BlobCache as the default IBlobCache
 
-            // Create temporary directory
-            _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
+                        // Create temporary directory
+                        _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
 
-            // Create database
-            BlobCache = new SqliteBlobCache(Path.Combine(_tempDirectory, "benchmarks-comprehensive-v11.db"));
-            
-            // Pre-generate test objects
-            _testObjects = new List<TestDataV11>();
-            for (int i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
-            {
-                _testObjects.Add(new TestDataV11
-                {
-                    Id = Guid.NewGuid(),
-                    Name = $"Test Object {i}",
-                    Value = _randomNumberGenerator.Next(1, 10000),
-                    Created = DateTimeOffset.Now.AddDays(-_randomNumberGenerator.Next(0, 365))
-                });
-            }
+                        // Create database
+                        BlobCache = new SqliteBlobCache(Path.Combine(_tempDirectory, "benchmarks-comprehensive-v11.db"), instance.Serializer);
+
+                        // Pre-generate test objects
+                        _testObjects = new List<TestDataV11>();
+                        for (int i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
+                        {
+                            _testObjects.Add(new TestDataV11
+                            {
+                                Id = Guid.NewGuid(),
+                                Name = $"Test Object {i}",
+                                Value = _randomNumberGenerator.Next(1, 10000),
+                                Created = DateTimeOffset.Now.AddDays(-_randomNumberGenerator.Next(0, 365))
+                            });
+                        }
+                    });
         }
 
         [GlobalCleanup]
@@ -86,8 +88,8 @@ namespace Akavache.Benchmarks
             {
                 var key = $"get_or_fetch_{i}";
                 var testData = _testObjects[i % _testObjects.Count];
-                
-                await BlobCache.GetOrFetchObject(key, () => 
+
+                await BlobCache.GetOrFetchObject(key, () =>
                     Observable.Return(testData));
             }
         }
@@ -109,16 +111,16 @@ namespace Akavache.Benchmarks
             {
                 var key = $"get_and_fetch_{i}";
                 var testData = _testObjects[i % _testObjects.Count];
-                
-                var task = BlobCache.GetAndFetchLatest(key, () => 
+
+                var task = BlobCache.GetAndFetchLatest(key, () =>
                     Observable.Return(testData))
                     .Take(1) // Just take the first result to avoid infinite waiting
                     .FirstAsync()
                     .ToTask();
-                
+
                 tasks.Add(task);
             }
-            
+
             await Task.WhenAll(tasks);
         }
 
@@ -148,7 +150,7 @@ namespace Akavache.Benchmarks
         public async Task InsertWithExpiration()
         {
             var expiration = DateTimeOffset.Now.AddMinutes(30);
-            
+
             for (int i = 0; i < BenchmarkSize; i++)
             {
                 var testData = _testObjects[i % _testObjects.Count];
@@ -161,15 +163,15 @@ namespace Akavache.Benchmarks
         public async Task UserAccountOperations()
         {
             var userCache = CacheDatabase.UserAccount;
-            
+
             for (int i = 0; i < BenchmarkSize; i++)
             {
                 var testData = _testObjects[i % _testObjects.Count];
                 var key = $"user_data_{i}";
-                
+
                 await userCache.InsertObject(key, testData);
                 var retrieved = await userCache.GetObject<TestDataV11>(key);
-                
+
                 // Verify data integrity
                 if (retrieved.Id != testData.Id)
                 {
@@ -183,15 +185,15 @@ namespace Akavache.Benchmarks
         public async Task LocalMachineOperations()
         {
             var localCache = CacheDatabase.LocalMachine;
-            
+
             for (int i = 0; i < BenchmarkSize; i++)
             {
                 var testData = _testObjects[i % _testObjects.Count];
                 var key = $"local_data_{i}";
-                
+
                 await localCache.InsertObject(key, testData);
                 var retrieved = await localCache.GetObject<TestDataV11>(key);
-                
+
                 // Verify data integrity
                 if (retrieved.Id != testData.Id)
                 {
@@ -205,15 +207,15 @@ namespace Akavache.Benchmarks
         public async Task SecureOperations()
         {
             var secureCache = CacheDatabase.Secure;
-            
+
             for (int i = 0; i < BenchmarkSize; i++)
             {
                 var testData = _testObjects[i % _testObjects.Count];
                 var key = $"secure_data_{i}";
-                
+
                 await secureCache.InsertObject(key, testData);
                 var retrieved = await secureCache.GetObject<TestDataV11>(key);
-                
+
                 // Verify data integrity
                 if (retrieved.Id != testData.Id)
                 {
@@ -227,15 +229,15 @@ namespace Akavache.Benchmarks
         public async Task InMemoryOperations()
         {
             var memoryCache = CacheDatabase.InMemory;
-            
+
             for (int i = 0; i < BenchmarkSize; i++)
             {
                 var testData = _testObjects[i % _testObjects.Count];
                 var key = $"memory_data_{i}";
-                
+
                 await memoryCache.InsertObject(key, testData);
                 var retrieved = await memoryCache.GetObject<TestDataV11>(key);
-                
+
                 // Verify data integrity
                 if (retrieved.Id != testData.Id)
                 {
@@ -248,32 +250,32 @@ namespace Akavache.Benchmarks
         [BenchmarkCategory("Mixed")]
         public async Task MixedOperations()
         {
-            var caches = new IBlobCache[] 
-            { 
-                CacheDatabase.UserAccount, 
-                CacheDatabase.LocalMachine, 
-                CacheDatabase.InMemory 
+            var caches = new IBlobCache[]
+            {
+                CacheDatabase.UserAccount,
+                CacheDatabase.LocalMachine,
+                CacheDatabase.InMemory
             };
-            
+
             for (int i = 0; i < BenchmarkSize; i++)
             {
                 var cache = caches[i % caches.Length];
                 var testData = _testObjects[i % _testObjects.Count];
                 var key = $"mixed_data_{i}";
-                
+
                 // Insert
                 await cache.InsertObject(key, testData);
-                
+
                 // Read
                 var retrieved = await cache.GetObject<TestDataV11>(key);
-                
+
                 // Update
                 retrieved.Value += 1;
                 await cache.InsertObject(key, retrieved);
-                
+
                 // Read again
                 var updated = await cache.GetObject<TestDataV11>(key);
-                
+
                 // Verify update
                 if (updated.Value != testData.Value + 1)
                 {
@@ -290,11 +292,11 @@ namespace Akavache.Benchmarks
             {
                 var testData = _testObjects[i % _testObjects.Count];
                 var key = $"serializer_test_{i}";
-                
+
                 // Test the serializer performance by inserting and retrieving complex objects
                 await BlobCache.InsertObject(key, testData);
                 var retrieved = await BlobCache.GetObject<TestDataV11>(key);
-                
+
                 // Verify serialization worked correctly
                 if (retrieved.Id != testData.Id || retrieved.Name != testData.Name)
                 {

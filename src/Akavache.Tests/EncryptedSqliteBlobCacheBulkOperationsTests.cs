@@ -14,23 +14,21 @@ namespace Akavache.Tests;
 public class EncryptedSqliteBlobCacheBulkOperationsTests : BulkOperationsTestBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path)
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
     {
+        if (serializer == null)
+        {
+            throw new ArgumentNullException(nameof(serializer));
+        }
+
         // Create separate database files for each serializer to ensure compatibility
-        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
+        var serializerName = serializer.GetType().Name ?? "Unknown";
 
         // Further separate JSON and BSON formats to prevent cross-contamination
         var formatType = serializerName.Contains("Bson") ? "bson" : "json";
         var fileName = $"encrypted-bulk-{serializerName}-{formatType}.db";
 
-        return new EncryptedSqliteBlobCache(Path.Combine(path, fileName), GetTestPassword());
-    }
-
-    /// <inheritdoc />
-    protected override void SetupTestClassSerializer()
-    {
-        // Let the test base handle the serializer setup through the test parameters
-        // This class doesn't force a specific serializer
+        return new EncryptedSqliteBlobCache(Path.Combine(path, fileName), GetTestPassword(), serializer);
     }
 
     private static string GetTestPassword() => "test123";

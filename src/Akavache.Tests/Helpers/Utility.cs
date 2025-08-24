@@ -28,7 +28,7 @@ internal static class Utility
             foreach (var file in files)
             {
                 File.SetAttributes(file.FullName, FileAttributes.Normal);
-                new Action(() => file.Delete()).Retry();
+                new Action(() => file.Delete()).Retry(10); // Increase retries for CI
             }
 
             foreach (var dir in dirs)
@@ -37,6 +37,9 @@ internal static class Utility
             }
 
             File.SetAttributes(directoryPath, FileAttributes.Normal);
+
+            // Add delay before final directory delete to allow file handles to release
+            Thread.Sleep(100);
             Directory.Delete(directoryPath, false);
         }
         catch (Exception ex)
@@ -72,7 +75,7 @@ internal static class Utility
             catch (Exception) when (retries != 0)
             {
                 retries--;
-                Thread.Sleep(10);
+                Thread.Sleep(500); // Further increase delay for CI
             }
         }
     }

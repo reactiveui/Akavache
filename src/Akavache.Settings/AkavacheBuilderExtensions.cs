@@ -15,16 +15,6 @@ namespace Akavache.Settings;
 public static class AkavacheBuilderExtensions
 {
     /// <summary>
-    /// Initializes static members of the <see cref="AkavacheBuilderExtensions"/> class.
-    /// </summary>
-    static AkavacheBuilderExtensions()
-    {
-        // Initialize static collections to avoid null reference exceptions
-        AkavacheBuilder.BlobCaches = [];
-        AkavacheBuilder.SettingsStores = [];
-    }
-
-    /// <summary>
     /// Withes the settings cache path.
     /// </summary>
     /// <param name="builder">The builder.</param>
@@ -51,7 +41,7 @@ public static class AkavacheBuilderExtensions
     /// <returns>
     /// A Task.
     /// </returns>
-    public static async Task DeleteSettingsStore<T>(this IAkavacheBuilder builder, string? overrideDatabaseName = null)
+    public static async Task DeleteSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
         if (builder == null)
         {
@@ -81,7 +71,7 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Gets the settings store.
+    /// Gets a settings store that has already been loaded.
     /// </summary>
     /// <typeparam name="T">The store to get.</typeparam>
     /// <param name="builder">The builder.</param>
@@ -89,7 +79,7 @@ public static class AkavacheBuilderExtensions
     /// <returns>
     /// A Settings Store.
     /// </returns>
-    public static ISettingsStorage? GetSettingsStore<T>(this IAkavacheBuilder builder, string? overrideDatabaseName = null)
+    public static ISettingsStorage? GetLoadedSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
         if (AkavacheBuilder.SettingsStores == null)
         {
@@ -114,7 +104,7 @@ public static class AkavacheBuilderExtensions
     /// <returns>
     /// A Task.
     /// </returns>
-    public static async Task DisposeSettingsStore<T>(this IAkavacheBuilder builder, string? overrideDatabaseName = null)
+    public static async Task DisposeSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
         if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
@@ -122,7 +112,7 @@ public static class AkavacheBuilderExtensions
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
-        var settings = builder.GetSettingsStore<T>(overrideDatabaseName);
+        var settings = builder.GetLoadedSettingsStore<T>(overrideDatabaseName);
         if (settings != null)
         {
             await settings.DisposeAsync().ConfigureAwait(false);
@@ -160,6 +150,33 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
+        settings?.Invoke(builder.GetSecureSettingsStore<T>(password, overrideDatabaseName));
+        return builder;
+    }
+
+    /// <summary>
+    /// Gets the secure settings store.
+    /// </summary>
+    /// /// <typeparam name="T">The settings type.</typeparam>
+    /// <param name="builder">The builder.</param>
+    /// <param name="password">The password.</param>
+    /// <param name="overrideDatabaseName">Name of the override database.</param>
+    /// <returns>The new settings.</returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <exception cref="System.InvalidOperationException">AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.</exception>
+    public static T? GetSecureSettingsStore<T>(this IAkavacheInstance builder, string password, string? overrideDatabaseName = null)
+        where T : ISettingsStorage?, new()
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (builder.Serializer == null)
+        {
+            throw new InvalidOperationException("AkavacheInstance serializer is not set. Ensure the builder has a serializer configured.");
+        }
+
         if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
             throw new InvalidOperationException("AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.");
@@ -167,13 +184,12 @@ public static class AkavacheBuilderExtensions
 
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlcipher());
-        AkavacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password);
+        SQLitePCL.Batteries_V2.Init();
+        AkavacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password, builder.Serializer);
 
         var viewSettings = new T();
         AkavacheBuilder.SettingsStores[key] = viewSettings;
-        settings?.Invoke(viewSettings);
-        return builder;
+        return viewSettings;
     }
 
     /// <summary>
@@ -193,6 +209,32 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
+        settings?.Invoke(builder.GetSettingsStore<T>(overrideDatabaseName));
+        return builder;
+    }
+
+    /// <summary>
+    /// Gets the settings store.
+    /// </summary>
+    /// <typeparam name="T">The settings type.</typeparam>
+    /// <param name="builder">The builder.</param>
+    /// <param name="overrideDatabaseName">Name of the override database.</param>
+    /// <returns>The new settings.</returns>
+    /// <exception cref="ArgumentNullException">nameof(builder).</exception>
+    /// <exception cref="InvalidOperationException">AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.</exception>
+    public static T? GetSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
+        where T : ISettingsStorage?, new()
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (builder.Serializer == null)
+        {
+            throw new InvalidOperationException("AkavacheInstance serializer is not set. Ensure the builder has a serializer configured.");
+        }
+
         if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
             throw new InvalidOperationException("AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.");
@@ -200,12 +242,11 @@ public static class AkavacheBuilderExtensions
 
         var key = overrideDatabaseName ?? typeof(T).Name;
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());
-        AkavacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"));
+        SQLitePCL.Batteries_V2.Init();
+        AkavacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), builder.Serializer);
 
         var viewSettings = new T();
         AkavacheBuilder.SettingsStores[key] = viewSettings;
-        settings?.Invoke(viewSettings);
-        return builder;
+        return viewSettings;
     }
 }

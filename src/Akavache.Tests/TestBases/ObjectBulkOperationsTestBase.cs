@@ -3,6 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
+using Akavache.NewtonsoftJson;
+using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Xunit;
 
@@ -14,30 +17,63 @@ namespace Akavache.Tests.TestBases;
 [Collection("Object Bulk Operations Tests")]
 public abstract class ObjectBulkOperationsTestBase : IDisposable
 {
-    private readonly ISerializer? _originalSerializer;
     private bool _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ObjectBulkOperationsTestBase"/> class.
+    /// Sets up the test with the specified serializer type.
     /// </summary>
-    protected ObjectBulkOperationsTestBase()
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    public static ISerializer SetupTestSerializer(Type? serializerType)
     {
-        // Store the original serializer to restore it after each test
-        _originalSerializer = CacheDatabase.Serializer ??= new SystemTextJson.SystemJsonSerializer();
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
+
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
+        {
+            // Register the Newtonsoft BSON serializer specifically
+            return new NewtonsoftBsonSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
+        {
+            // Register the System.Text.Json BSON serializer specifically
+            return new SystemJsonBsonSerializer();
+        }
+        else if (serializerType == typeof(NewtonsoftSerializer))
+        {
+            // Register the Newtonsoft JSON serializer
+            return new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            return new SystemJsonSerializer();
+        }
+        else
+        {
+            return null!;
+        }
     }
 
     /// <summary>
     /// Tests to make sure that Get works with multiple key types.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetShouldWorkWithMultipleKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task GetShouldWorkWithMultipleKeys(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
-        Assert.NotNull(CacheDatabase.Serializer);
+        var serializer = SetupTestSerializer(serializerType);
+
+        Assert.NotNull(serializer);
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
@@ -56,15 +92,21 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// <summary>
     /// Tests to make sure that Get works with multiple key types.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task GetShouldInvalidateOldKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task GetShouldInvalidateOldKeys(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
@@ -80,15 +122,21 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// <summary>
     /// Tests to make sure that insert works with multiple keys.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InsertShouldWorkWithMultipleKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task InsertShouldWorkWithMultipleKeys(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
@@ -107,15 +155,21 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// <summary>
     /// Invalidate should be able to trash multiple keys.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InvalidateShouldTrashMultipleKeys()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task InvalidateShouldTrashMultipleKeys(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             var data = Tuple.Create("Foo", 4);
             var keys = new[] { "Foo", "Bar", "Baz", };
@@ -133,15 +187,21 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// <summary>
     /// Tests to make sure that InvalidateObjects works with the correct type parameter.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task InvalidateObjectsShouldOnlyInvalidateCorrectType()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task InvalidateObjectsShouldOnlyInvalidateCorrectType(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             var tupleData = Tuple.Create("Foo", 4);
             var stringData = "TestString";
@@ -173,19 +233,14 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     }
 
     /// <summary>
-    /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
+    /// Gets the <see cref="IBlobCache" /> we want to do the tests against.
     /// </summary>
     /// <param name="path">The path to the blob cache.</param>
-    /// <returns>The blob cache for testing.</returns>
-    protected abstract IBlobCache CreateBlobCache(string path);
-
-    /// <summary>
-    /// Sets up the test class serializer. This should be overridden by derived classes.
-    /// </summary>
-    protected virtual void SetupTestClassSerializer()
-    {
-        // Default implementation - derived classes should override this
-    }
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>
+    /// The blob cache for testing.
+    /// </returns>
+    protected abstract IBlobCache CreateBlobCache(string path, ISerializer serializer);
 
     /// <summary>
     /// Disposes resources.
@@ -197,24 +252,9 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         {
             if (disposing)
             {
-                // Restore the original serializer to prevent interference with other tests
-                if (_originalSerializer != null)
-                {
-                    CacheDatabase.Serializer = _originalSerializer;
-                }
             }
 
             _disposed = true;
         }
-    }
-
-    /// <summary>
-    /// Ensures that the test serializer is properly set up before each test method.
-    /// </summary>
-    private void EnsureTestSerializerSetup()
-    {
-        // Call the setup method to ensure the correct serializer is in place
-        // This handles cases where the global serializer might have been changed by other tests
-        SetupTestClassSerializer();
     }
 }

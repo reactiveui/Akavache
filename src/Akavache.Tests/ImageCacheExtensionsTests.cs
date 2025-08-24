@@ -65,8 +65,8 @@ public class ImageCacheExtensionsTests
     public void LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         byte[]? nullFallback = null;
 
         // Act & Assert
@@ -94,8 +94,8 @@ public class ImageCacheExtensionsTests
     public void LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         byte[]? nullFallback = null;
 
         // Act & Assert
@@ -148,8 +148,8 @@ public class ImageCacheExtensionsTests
     public void ClearImageCacheShouldThrowArgumentNullExceptionWhenPatternIsNull()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         Func<string, bool>? nullPattern = null;
 
         // Act & Assert
@@ -164,8 +164,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesShouldHandleEmptyKeyCollections()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var emptyKeys = Array.Empty<string>();
 
         // Act
@@ -183,8 +183,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsShouldHandleEmptyUrlCollections()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var emptyUrls = Array.Empty<string>();
 
         // Act
@@ -202,8 +202,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesShouldGracefullyHandleMissingKeys()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var keys = new[] { "missing_key1", "missing_key2" };
 
         // Act
@@ -221,8 +221,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsShouldGracefullyHandleInvalidUrls()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
 
         // Use URLs that will cause UriFormatException to test error handling
         var invalidUrls = new[] { "not-a-url", "also/invalid" };
@@ -250,8 +250,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackShouldUseFallbackWhenMainImageFails()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -290,8 +290,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageFromUrlWithFallbackShouldUseFallbackWhenUrlFails()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -330,8 +330,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldHandleMissingImages()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
@@ -348,8 +348,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldWorkWithValidImageData()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -394,8 +394,8 @@ public class ImageCacheExtensionsTests
     public async Task ClearImageCacheShouldWorkWithPatternMatching()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
 
         // Insert some test data
         await cache.Insert("image_1", new byte[] { 1, 2, 3 }).FirstAsync();
@@ -419,8 +419,8 @@ public class ImageCacheExtensionsTests
     public async Task ClearImageCacheShouldHandleEmptyPatternMatches()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
 
         // Insert some test data
         await cache.Insert("test_key", new byte[] { 1, 2, 3 }).FirstAsync();
@@ -442,8 +442,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesWithDimensionsShouldWork()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var keys = new[] { "missing1", "missing2" }; // Use missing keys to test error handling
 
         // Act
@@ -461,8 +461,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsWithExpirationShouldWork()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache();
+        var serializer = new SystemJsonSerializer();
+        using var cache = new InMemoryBlobCache(serializer);
         var urls = new[] { "http://invalid1.com", "http://invalid2.com" }; // Use invalid URLs to test error handling
         var expiration = DateTimeOffset.Now.AddHours(1);
 

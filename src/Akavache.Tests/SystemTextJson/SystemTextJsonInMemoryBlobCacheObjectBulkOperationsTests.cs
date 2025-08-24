@@ -14,12 +14,5 @@ namespace Akavache.Tests;
 public class SystemTextJsonInMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path) => new InMemoryBlobCache();
-
-    /// <inheritdoc />
-    protected override void SetupTestClassSerializer()
-    {
-        // Ensure proper serializer setup for these tests
-        CacheDatabase.Serializer = new SystemJsonSerializer();
-    }
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) => new InMemoryBlobCache(serializer);
 }

@@ -27,23 +27,12 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <param name="keyPrefix">This value will be used as prefix for all settings keys. It should be reasonably unique,
     /// so that it doesn't collide with other keys in the same <see cref="IBlobCache" />.</param>
     /// <param name="cache">An <see cref="IBlobCache" /> implementation where you want your settings to be stored.</param>
-    /// <param name="serializer">The serializer.</param>
     /// <exception cref="System.ArgumentException">Invalid key prefix - keyPrefix.</exception>
-    protected SettingsStorage(string keyPrefix, IBlobCache cache, ISerializer? serializer = null)
+    protected SettingsStorage(string keyPrefix, IBlobCache cache)
     {
         if (string.IsNullOrWhiteSpace(keyPrefix))
         {
             throw new ArgumentException("Invalid key prefix", nameof(keyPrefix));
-        }
-
-        if (CacheDatabase.Serializer == null && serializer != null)
-        {
-            CacheDatabase.Serializer = serializer;
-        }
-
-        if (CacheDatabase.Serializer == null)
-        {
-            throw new ArgumentException("Serializer is not set. Please set the serializer before using the settings storage.", nameof(serializer));
         }
 
         _keyPrefix = keyPrefix;

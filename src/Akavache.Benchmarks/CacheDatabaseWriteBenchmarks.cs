@@ -27,14 +27,11 @@ namespace Akavache.Benchmarks
         [GlobalSetup]
         public void GlobalSetup()
         {
-            // Initialize the serializer first
-            CacheDatabase.Serializer = new SystemJsonSerializer();
-
             // Create temporary directory
             _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
 
             // Create fresh database for each run
-            BlobCache = new SqliteBlobCache(Path.Combine(_tempDirectory, "benchmarks-write-v11.db"));
+            BlobCache = new SqliteBlobCache(Path.Combine(_tempDirectory, "benchmarks-write-v11.db"), new SystemJsonSerializer());
         }
 
         [GlobalCleanup]

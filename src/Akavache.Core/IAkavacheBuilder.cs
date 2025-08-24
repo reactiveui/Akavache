@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Akavache;
@@ -10,81 +11,28 @@ namespace Akavache;
 /// <summary>
 /// Interface for building and configuring BlobCache instances.
 /// </summary>
-public interface IAkavacheBuilder
+public interface IAkavacheBuilder : IAkavacheInstance
 {
-    /// <summary>
-    /// Gets the executing assembly.
-    /// </summary>
-    /// <value>
-    /// The executing assembly.
-    /// </value>
-    Assembly ExecutingAssembly { get; }
-
-    /// <summary>
-    /// Gets the application root path.
-    /// </summary>
-    /// <value>
-    /// The application root path.
-    /// </value>
-    string? ApplicationRootPath { get; }
-
-    /// <summary>
-    /// Gets or sets the settings cache path.
-    /// </summary>
-    /// <value>
-    /// The settings cache path.
-    /// </value>
-    string? SettingsCachePath { get; internal set; }
-
-    /// <summary>
-    /// Gets the name of the executing assembly.
-    /// </summary>
-    /// <value>
-    /// The name of the executing assembly.
-    /// </value>
-    string? ExecutingAssemblyName { get; }
-
-    /// <summary>
-    /// Gets the version.
-    /// </summary>
-    /// <value>
-    /// The version.
-    /// </value>
-    Version? Version { get; }
-
-    /// <summary>
-    /// Gets the UserAccount cache instance.
-    /// </summary>
-    IBlobCache? UserAccount { get; }
-
-    /// <summary>
-    /// Gets the LocalMachine cache instance.
-    /// </summary>
-    IBlobCache? LocalMachine { get; }
-
-    /// <summary>
-    /// Gets the Secure cache instance.
-    /// </summary>
-    ISecureBlobCache? Secure { get; }
-
-    /// <summary>
-    /// Gets the InMemory cache instance.
-    /// </summary>
-    IBlobCache? InMemory { get; }
-
     /// <summary>
     /// Sets the application name for cache directory paths.
     /// </summary>
     /// <param name="applicationName">The application name.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IAkavacheBuilder WithApplicationName(string applicationName);
+    IAkavacheBuilder WithApplicationName(string? applicationName);
 
     /// <summary>
-    /// Sets the UserAccount cache instance.
+    /// Sets the InMemory cache instance.
     /// </summary>
-    /// <param name="cache">The cache instance to use for UserAccount operations.</param>
+    /// <param name="cache">The cache instance to use for InMemory operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IAkavacheBuilder WithUserAccount(IBlobCache cache);
+    IAkavacheBuilder WithInMemory(IBlobCache cache);
+
+    /// <summary>
+    /// Configures default in-memory caches for all cache types.
+    /// Uses the appropriate InMemoryBlobCache based on the configured serializer.
+    /// </summary>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    IAkavacheBuilder WithInMemoryDefaults();
 
     /// <summary>
     /// Sets the LocalMachine cache instance.
@@ -101,29 +49,55 @@ public interface IAkavacheBuilder
     IAkavacheBuilder WithSecure(ISecureBlobCache cache);
 
     /// <summary>
-    /// Sets the InMemory cache instance.
+    /// Sets the UserAccount cache instance.
     /// </summary>
-    /// <param name="cache">The cache instance to use for InMemory operations.</param>
+    /// <param name="cache">The cache instance to use for UserAccount operations.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IAkavacheBuilder WithInMemory(IBlobCache cache);
+    IAkavacheBuilder WithUserAccount(IBlobCache cache);
 
     /// <summary>
     /// Withes the serializser.
     /// </summary>
-    /// <param name="serializer">The serializer.</param>
-    /// <returns>The builder instance for fluent configuration.</returns>
-    IAkavacheBuilder WithSerializer(ISerializer serializer);
+    /// <typeparam name="T">The type of Serializer.</typeparam>
+    /// <returns>
+    /// The builder instance for fluent configuration.
+    /// </returns>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+    IAkavacheBuilder WithSerializer<T>()
+#else
+    IAkavacheBuilder WithSerializer<T>()
+#endif
+        where T : ISerializer, new();
 
     /// <summary>
-    /// Configures default in-memory caches for all cache types.
-    /// Uses the appropriate InMemoryBlobCache based on the configured serializer.
+    /// Withes the serializer.
     /// </summary>
+    /// <typeparam name="T">The type of Serializer.</typeparam>
+    /// <param name="configure">The configure.</param>
+    /// <returns>
+    /// The builder instance for fluent configuration.
+    /// </returns>
+#if NET6_0_OR_GREATER
+
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+    IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+#else
+    IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+#endif
+        where T : ISerializer;
+
+    /// <summary>
+    /// Uses the kind of the forced date time.
+    /// </summary>
+    /// <param name="kind">The kind.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    IAkavacheBuilder WithInMemoryDefaults();
+    IAkavacheBuilder UseForcedDateTimeKind(DateTimeKind kind);
 
     /// <summary>
     /// Builds and applies the configuration to BlobCache.
     /// </summary>
     /// <returns>The builder instance.</returns>
-    IAkavacheBuilder Build();
+    IAkavacheInstance Build();
 }

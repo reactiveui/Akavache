@@ -10,8 +10,6 @@ namespace Akavache;
 /// </summary>
 public static class HttpExtensions
 {
-    private static IHttpService HttpService => CacheDatabase.HttpService ?? throw new InvalidOperationException("Unable to resolve IHttpService, make sure you are including the correct CacheDatabase NuGet packages.");
-
     /// <summary>
     /// Writes to a stream and returns a observable.
     /// </summary>
@@ -88,7 +86,7 @@ public static class HttpExtensions
             throw new ArgumentException("URL cannot be empty or whitespace.", nameof(url));
         }
 
-        return HttpService.DownloadUrl(blobCache, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
+        return blobCache.HttpService.DownloadUrl(blobCache, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
     }
 
     /// <summary>
@@ -116,7 +114,7 @@ public static class HttpExtensions
             throw new ArgumentNullException(nameof(url));
         }
 
-        return HttpService.DownloadUrl(blobCache, url, method, headers, fetchAlways, absoluteExpiration);
+        return blobCache.HttpService.DownloadUrl(blobCache, url, method, headers, fetchAlways, absoluteExpiration);
     }
 
     /// <summary>
@@ -160,7 +158,7 @@ public static class HttpExtensions
             throw new ArgumentException("URL cannot be empty or whitespace.", nameof(url));
         }
 
-        return HttpService.DownloadUrl(blobCache, key, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
+        return blobCache.HttpService.DownloadUrl(blobCache, key, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
     }
 
     /// <summary>
@@ -199,6 +197,6 @@ public static class HttpExtensions
             throw new ArgumentNullException(nameof(url));
         }
 
-        return HttpService.DownloadUrl(blobCache, key, url, method, headers, fetchAlways, absoluteExpiration);
+        return blobCache.HttpService.DownloadUrl(blobCache, key, url, method, headers, fetchAlways, absoluteExpiration);
     }
 }

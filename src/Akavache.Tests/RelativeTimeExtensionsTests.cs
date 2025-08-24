@@ -22,10 +22,10 @@ public class RelativeTimeExtensionsTests
     public async Task InsertWithTimeSpanShouldCalculateExpirationCorrectly()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache();
+            var cache = new InMemoryBlobCache(serializer);
             var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.FromSeconds(1);
             var beforeInsert = DateTimeOffset.Now;
@@ -54,10 +54,10 @@ public class RelativeTimeExtensionsTests
     public async Task InsertObjectWithTimeSpanShouldCalculateExpirationCorrectly()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache();
+            var cache = new InMemoryBlobCache(serializer);
             var testObject = new { Name = "Test", Value = 42 };
             var expiration = TimeSpan.FromMinutes(1);
             var beforeInsert = DateTimeOffset.Now;
@@ -166,8 +166,8 @@ public class RelativeTimeExtensionsTests
         // Arrange
         using (Utility.WithEmptyDirectory(out var path))
         {
-            CacheDatabase.Serializer = new SystemJsonSerializer();
-            var cache = new InMemoryBlobCache();
+            var serializer = new SystemJsonSerializer();
+            var cache = new InMemoryBlobCache(serializer);
             var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.FromSeconds(seconds);
             var beforeInsert = DateTimeOffset.Now;
@@ -195,10 +195,10 @@ public class RelativeTimeExtensionsTests
     public async Task ZeroTimeSpanShouldWorkCorrectly()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache();
+            var cache = new InMemoryBlobCache(serializer);
             var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.Zero;
 
@@ -221,10 +221,10 @@ public class RelativeTimeExtensionsTests
     public async Task NegativeTimeSpanShouldResultInPastExpiration()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache();
+            var cache = new InMemoryBlobCache(serializer);
             var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.FromSeconds(-1); // Past expiration
 

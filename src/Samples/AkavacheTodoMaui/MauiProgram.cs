@@ -38,12 +38,12 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Configure Akavache
-        ConfigureAkavache();
-
         // Register services
         builder.Services.AddSingleton<NotificationService>();
         builder.Services.AddTransient<MainViewModel>();
+
+        // Configure Akavache
+        ConfigureAkavache();
 
         // Configure ReactiveUI
         Locator.CurrentMutable.RegisterViewsForViewModels(typeof(MauiProgram).Assembly);
@@ -58,11 +58,11 @@ public static class MauiProgram
     /// <summary>
     /// Initialize SQLite support - use the new V11 initialization pattern.
     /// </summary>
-    private static void ConfigureAkavache() =>
+    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
+    private static AppBuilder ConfigureAkavache() =>
         AppBuilder.CreateSplatBuilder()
-            .WithAkavache(builder =>
+            .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
                 builder.WithApplicationName("AkavacheTodoMaui")
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
-                    .UseSystemTextJson()
                     .WithSqliteDefaults());
 }

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <Description>Newtonsoft.Json serialization support for Akavache with optional BSON compatibility</Description>
+    <NoWarn>$(NoWarn);CA1510</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
