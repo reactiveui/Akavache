@@ -81,7 +81,7 @@ Based on comprehensive benchmarks across different operation types and data size
 
 ## Key Performance Insights
 
-### ?? Performance Strengths of V11
+### Performance Strengths of V11
 
 1. **Bulk Operations Excel**: 
    - 1000 items processed in just 17.992 ms
@@ -102,7 +102,7 @@ Based on comprehensive benchmarks across different operation types and data size
    - 122ms for 1000 complex object operations
    - **Ideal for session data and temporary caching**
 
-### ? V11 vs V10 Comparison Highlights
+### V11 vs V10 Comparison Highlights
 
 #### Read Performance
 Based on earlier comparative runs:
@@ -221,24 +221,24 @@ var data = await cache.GetOrFetchObject("api_data",
 
 ## Recommendations
 
-### ? Choose V11 for New Projects
+### Choose V11 for New Projects
 - **Similar or better performance**
 - **Modern, maintainable architecture**
 - **Future-proof design**
 - **Enhanced developer experience**
 
-### ? Migrate from V10 When
+### Migrate from V10 When
 - You need **multiple serializer support**
 - You want **better error handling**
 - You require **cross-serializer compatibility**
 - Performance is **not the primary concern** (impact minimal)
 
-### ?? Consider Carefully for
+### Consider Carefully for
 - **Large sequential read workloads** (8.6% slower in some cases)
 - **Legacy data requiring specific serialization**
 - **Applications with extremely tight performance budgets**
 
-### ?? Performance-Critical Applications
+### Performance-Critical Applications
 - Use **System.Text.Json** serializer
 - Leverage **bulk operations** wherever possible
 - Consider **InMemory cache** for frequently accessed data
@@ -248,10 +248,10 @@ var data = await cache.GetOrFetchObject("api_data",
 
 Akavache V11.0 successfully delivers on its architectural improvements while maintaining **excellent performance characteristics**. The comprehensive benchmarks show:
 
-- **?? Performance**: Generally equal or better than V10
-- **?? Consistency**: Much more predictable performance patterns  
-- **?? Flexibility**: Multiple serializer options for optimization
-- **??? Architecture**: Modern, maintainable, and extensible design
+- **Performance** : Generally equal or better than V10
+- **Consistency** : Much more predictable performance patterns  
+- **Flexibility** : Multiple serializer options for optimization
+- **Architecture** : Modern, maintainable, and extensible design
 
 **Bottom Line**: V11 is a compelling upgrade that provides architectural benefits without significant performance regression. The slight trade-offs in specific scenarios are more than offset by the improved developer experience, better error handling, and future-proof design.
 

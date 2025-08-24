@@ -5,6 +5,7 @@
 
 using Akavache.NewtonsoftJson;
 using Splat.Builder;
+using SQLitePCL;
 
 namespace Akavache.Settings.Tests;
 
@@ -14,19 +15,6 @@ namespace Akavache.Settings.Tests;
 public class SettingsCacheTests
 {
     private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
-
-    static SettingsCacheTests()
-    {
-        // Initialize SQLite provider for CI environments
-        try
-        {
-            SQLitePCL.Batteries_V2.Init();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"***** Failed to initialize SQLite provider!! ***** {ex}");
-        }
-    }
 
     /// <summary>
     /// Test1s this instance.
@@ -47,6 +35,8 @@ public class SettingsCacheTests
             },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 Assert.NotNull(viewSettings);
                 Assert.True(viewSettings!.BoolTest);
                 Assert.Equal((short)16, viewSettings.ShortTest);
@@ -80,6 +70,8 @@ public class SettingsCacheTests
             builder => builder.WithSettingsStore<ViewSettings>(s => viewSettings = s),
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 viewSettings!.EnumTest = EnumTestValue.Option2;
                 Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
                 await viewSettings.DisposeAsync();
@@ -110,6 +102,8 @@ public class SettingsCacheTests
         },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 Assert.NotNull(viewSettings);
                 Assert.True(viewSettings!.BoolTest);
                 Assert.Equal((short)16, viewSettings.ShortTest);
@@ -146,6 +140,8 @@ public class SettingsCacheTests
             },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 viewSettings!.EnumTest = EnumTestValue.Option2;
                 Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
                 await viewSettings.DisposeAsync();
@@ -184,6 +180,7 @@ public class SettingsCacheTests
     private AppBuilder GetBuilder()
     {
         AppBuilder.ResetBuilderStateForTests();
+        Batteries_V2.Init();
         return _appBuilder;
     }
 }

@@ -16,7 +16,7 @@ namespace Akavache.Core;
 /// </summary>
 internal class AkavacheBuilder : IAkavacheBuilder
 {
-    private string _applicationName = "Akavache";
+    private static readonly object _lock = new();
 
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
     public AkavacheBuilder()
@@ -50,7 +50,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     public Assembly ExecutingAssembly => Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
 
     /// <inheritdoc />
-    public string ApplicationName => _applicationName;
+    public string ApplicationName { get; private set; } = "Akavache";
 
     /// <inheritdoc />
     public string? ApplicationRootPath { get; }
@@ -108,7 +108,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
             return this;
         }
 
-        _applicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
+        ApplicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
         return this;
     }
 
@@ -167,11 +167,13 @@ internal class AkavacheBuilder : IAkavacheBuilder
     {
         var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
-
-        // Register the serializer if not already registered, we only want one instance of each serializer type
-        if (!AppLocator.CurrentMutable.HasRegistration(typeof(ISerializer), contract: SerializerTypeName))
+        lock (_lock)
         {
-            AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => new T(), contract: SerializerTypeName);
+            // Register the serializer if not already registered, we only want one instance of each serializer type
+            if (!AppLocator.CurrentMutable.HasRegistration(typeof(ISerializer), contract: SerializerTypeName))
+            {
+                AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => new T(), contract: SerializerTypeName);
+            }
         }
 
         return this;
@@ -189,11 +191,14 @@ internal class AkavacheBuilder : IAkavacheBuilder
         var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
 
-        // Register the serializer if not already registered, we only want one instance of each serializer type
-        if (!AppLocator.CurrentMutable.HasRegistration(serializerType, contract: SerializerTypeName))
+        lock (_lock)
         {
-            var serializer = configure();
-            AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => serializer, contract: SerializerTypeName);
+            // Register the serializer if not already registered, we only want one instance of each serializer type
+            if (!AppLocator.CurrentMutable.HasRegistration(serializerType, contract: SerializerTypeName))
+            {
+                var serializer = configure();
+                AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => serializer, contract: SerializerTypeName);
+            }
         }
 
         return this;

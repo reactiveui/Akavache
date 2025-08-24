@@ -2,20 +2,20 @@
 
 ## Quick Performance Comparison
 
-### ?? V11 Wins
+### V11 Wins
 - **Bulk Operations**: 10x+ faster than individual operations
-- **GetOrFetch Pattern**: Sub-linear scaling (1.5ms ? 45ms for 100x data)
+- **GetOrFetch Pattern**: Sub-linear scaling (1.5ms to 45ms for 100x data)
 - **Memory Consistency**: More predictable allocation patterns
 - **In-Memory Performance**: 122ms for 1000 complex operations
 - **Architecture**: Modern builder pattern with better error handling
 
-### ?? Equivalent Performance
+### Equivalent Performance
 - **Cache Type Operations**: All persistent caches within 2% of each other
 - **Read Operations**: Generally comparable with V10
 - **Object Serialization**: SystemTextJson matches or exceeds V10 performance
 - **Memory Usage**: Similar allocation patterns across versions
 
-### ?? V11 Trade-offs
+### V11 Trade-offs
 - **Large Sequential Reads**: Up to 8.6% slower in some cases
 - **Initialization Overhead**: Builder pattern adds slight complexity
 - **Package Dependencies**: More granular package structure
@@ -31,13 +31,13 @@
 
 ## Migration Decision Matrix
 
-| Factor | V10 ? V11 Migration Recommended |
+| Factor | V10 to V11 Migration Recommended |
 |--------|--------------------------------|
-| **New Projects** | ? **Always** |
-| **Performance Critical** | ? **Yes** (with SystemTextJson) |
-| **Legacy Data Compatibility** | ? **Yes** (with Newtonsoft BSON) |
-| **Large Sequential Reads** | ?? **Evaluate** (8.6% slower) |
-| **Developer Experience** | ? **Highly Recommended** |
+| **New Projects** | **Always** |
+| **Performance Critical** | **Yes** (with SystemTextJson) |
+| **Legacy Data Compatibility** | **Yes** (with Newtonsoft BSON) |
+| **Large Sequential Reads** | **Evaluate** (8.6% slower) |
+| **Developer Experience** | **Highly Recommended** |
 
 ## Bottom Line
 

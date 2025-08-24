@@ -154,7 +154,7 @@ public class HttpServiceTests
             var observable = httpService.DownloadUrl(
                 cache,
                 "test_key",
-                "http://httpbin.org/status/200",
+                "https://httpbin.org/status/200",
                 HttpMethod.Get,
                 null,
                 false,
@@ -185,9 +185,9 @@ public class HttpServiceTests
         try
         {
             // Act & Assert - Should create observables for different methods without error
-            var getObservable = httpService.DownloadUrl(cache, "get_key", "http://httpbin.org/status/200", HttpMethod.Get);
-            var postObservable = httpService.DownloadUrl(cache, "post_key", "http://httpbin.org/status/200", HttpMethod.Post);
-            var putObservable = httpService.DownloadUrl(cache, "put_key", "http://httpbin.org/status/200", HttpMethod.Put);
+            var getObservable = httpService.DownloadUrl(cache, "get_key", "https://httpbin.org/status/200", HttpMethod.Get);
+            var postObservable = httpService.DownloadUrl(cache, "post_key", "https://httpbin.org/status/200", HttpMethod.Post);
+            var putObservable = httpService.DownloadUrl(cache, "put_key", "https://httpbin.org/status/200", HttpMethod.Put);
 
             Assert.NotNull(getObservable);
             Assert.NotNull(postObservable);
@@ -218,14 +218,14 @@ public class HttpServiceTests
             var cachedObservable = httpService.DownloadUrl(
                 cache,
                 "cached_key",
-                "http://httpbin.org/status/200",
+                "https://httpbin.org/status/200",
                 HttpMethod.Get,
                 null,
                 false);
             var alwaysFetchObservable = httpService.DownloadUrl(
                 cache,
                 "always_key",
-                "http://httpbin.org/status/200",
+                "https://httpbin.org/status/200",
                 HttpMethod.Get,
                 null,
                 true);
@@ -260,7 +260,7 @@ public class HttpServiceTests
             var observable = httpService.DownloadUrl(
                 cache,
                 "expiry_key",
-                "http://httpbin.org/status/200",
+                "https://httpbin.org/status/200",
                 HttpMethod.Get,
                 null,
                 false,
