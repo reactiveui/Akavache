@@ -57,9 +57,23 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <summary>
     /// Withes the serializser.
     /// </summary>
-    /// <param name="serializer">The serializer.</param>
-    /// <returns>The builder instance for fluent configuration.</returns>
-    IAkavacheBuilder WithSerializer(ISerializer serializer);
+    /// <typeparam name="T">The type of Serializer.</typeparam>
+    /// <returns>
+    /// The builder instance for fluent configuration.
+    /// </returns>
+    IAkavacheBuilder WithSerializer<T>()
+        where T : ISerializer, new();
+
+    /// <summary>
+    /// Withes the serializer.
+    /// </summary>
+    /// <typeparam name="T">The type of Serializer.</typeparam>
+    /// <param name="configure">The configure.</param>
+    /// <returns>
+    /// The builder instance for fluent configuration.
+    /// </returns>
+    IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+        where T : ISerializer;
 
     /// <summary>
     /// Uses the kind of the forced date time.

@@ -32,6 +32,7 @@ public class SqliteBlobCache : IBlobCache
     private readonly IObservable<Unit> _initialized;
 
     private bool _disposed;
+    private IHttpService? _httpService;
 
 #if ENCRYPTED
     /// <summary>
@@ -125,6 +126,9 @@ public class SqliteBlobCache : IBlobCache
 
     /// <inheritdoc/>
     public ISerializer Serializer { get; }
+
+    /// <inheritdoc/>
+    public IHttpService HttpService { get => _httpService ??= new HttpService(); set => _httpService = value; }
 
     /// <inheritdoc/>
     public IObservable<Unit> Flush()

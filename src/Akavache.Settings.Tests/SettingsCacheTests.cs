@@ -39,11 +39,10 @@ public class SettingsCacheTests
     public async Task TestCreateAndInsertNewtonsoft()
     {
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
             async builder =>
             {
-                builder.WithSerializer(new NewtonsoftSerializer());
                 await builder.DeleteSettingsStore<ViewSettings>();
                 builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
             },
@@ -77,13 +76,9 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
-            builder =>
-            {
-                builder.WithSerializer(new NewtonsoftSerializer());
-                builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
-            },
+            builder => builder.WithSettingsStore<ViewSettings>(s => viewSettings = s),
             async instance =>
             {
                 viewSettings!.EnumTest = EnumTestValue.Option2;
@@ -107,12 +102,11 @@ public class SettingsCacheTests
     public async Task TestCreateAndInsertSystemTextJson()
     {
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
             async builder =>
         {
             await builder.DeleteSettingsStore<ViewSettings>();
-            builder.WithSerializer(new NewtonsoftSerializer());
             builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
         },
             async instance =>
@@ -145,11 +139,10 @@ public class SettingsCacheTests
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
             builder =>
             {
-                builder.WithSerializer(new NewtonsoftSerializer());
                 builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
             },
             async instance =>
@@ -176,10 +169,9 @@ public class SettingsCacheTests
     {
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
         var akavacheBuilder = default(IAkavacheInstance);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
-            builder => builder.WithSerializer(new NewtonsoftSerializer())
-                    .WithSettingsCachePath(path),
+            builder => builder.WithSettingsCachePath(path),
             instance => akavacheBuilder = instance).Build();
 
         while (!AppBuilder.HasBeenBuilt)

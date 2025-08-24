@@ -129,7 +129,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
         UserAccount ??= CreateInMemoryCache();
         LocalMachine ??= CreateInMemoryCache();
-        Secure ??= new SecureBlobCacheWrapper(CreateInMemoryCache(), Serializer);
+        Secure ??= new SecureBlobCacheWrapper(CreateInMemoryCache());
         InMemory ??= CreateInMemoryCache();
 
         return this;
@@ -157,20 +157,33 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
-    public IAkavacheBuilder WithSerializer(ISerializer serializer)
+    public IAkavacheBuilder WithSerializer<T>()
+        where T : ISerializer, new()
     {
-        if (serializer == null)
+        var serializerType = typeof(T);
+        SerializerTypeName = serializerType.AssemblyQualifiedName;
+
+        // Register the serializer if not already registered, we only want one instance of each serializer type
+        if (!AppLocator.CurrentMutable.HasRegistration(typeof(ISerializer), contract: SerializerTypeName))
         {
-            throw new ArgumentNullException(nameof(serializer));
+            AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => new T(), contract: SerializerTypeName);
         }
 
-        var serializerType = serializer.GetType();
+        return this;
+    }
+
+    /// <inheritdoc />
+    public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
+        where T : ISerializer
+    {
+        var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
 
         // Register the serializer if not already registered, we only want one instance of each serializer type
         if (!AppLocator.CurrentMutable.HasRegistration(serializerType, contract: SerializerTypeName))
         {
-            AppLocator.CurrentMutable.RegisterLazySingleton(() => serializer, contract: SerializerTypeName);
+            var serializer = configure();
+            AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => serializer, contract: SerializerTypeName);
         }
 
         return this;
@@ -206,47 +219,23 @@ internal class AkavacheBuilder : IAkavacheBuilder
         }
     }
 
-    private IBlobCache CreateInMemoryCache()
+    private InMemoryBlobCache CreateInMemoryCache()
     {
         if (Serializer == null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using BlobCache.");
         }
 
-        var serializer = Serializer ?? throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using BlobCache.");
-        var serializerType = serializer.GetType();
-
-        // Try to create the appropriate InMemoryBlobCache based on serializer
-        if (serializerType.Namespace?.Contains("SystemTextJson") == true)
-        {
-            var type = Type.GetType("Akavache.InMemoryBlobCache, Akavache.SystemTextJson");
-            if (type != null)
-            {
-                var cache = (IBlobCache)Activator.CreateInstance(type)!;
-                ApplyForcedDateTimeKind(cache);
-                return cache;
-            }
-        }
-        else if (serializerType.Namespace?.Contains("NewtonsoftJson") == true)
-        {
-            var type = Type.GetType("Akavache.InMemoryBlobCache, Akavache.NewtonsoftJson");
-            if (type != null)
-            {
-                var cache = (IBlobCache)Activator.CreateInstance(type)!;
-                ApplyForcedDateTimeKind(cache);
-                return cache;
-            }
-        }
-
-        throw new InvalidOperationException(
-            "No suitable InMemoryBlobCache implementation found. " +
-            "Install one of: Akavache.SystemTextJson or Akavache.NewtonsoftJson packages and ensure a serializer is registered.");
+        // Always use Akavache.InMemoryBlobCache from Akavache.Core and pass the serializer
+        var cache = new InMemoryBlobCache(Serializer);
+        ApplyForcedDateTimeKind(cache);
+        return cache;
     }
 
     /// <summary>
     /// A wrapper that implements ISecureBlobCache by delegating to an IBlobCache.
     /// </summary>
-    private class SecureBlobCacheWrapper(IBlobCache inner, ISerializer serializer) : ISecureBlobCache
+    private class SecureBlobCacheWrapper(IBlobCache inner) : ISecureBlobCache
     {
         public DateTimeKind? ForcedDateTimeKind
         {
@@ -256,7 +245,13 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
         public IScheduler Scheduler => inner.Scheduler;
 
-        public ISerializer Serializer => serializer;
+        public ISerializer Serializer => inner.Serializer;
+
+        public IHttpService HttpService
+        {
+            get => inner.HttpService;
+            set => inner.HttpService = value;
+        }
 
         public void Dispose()
         {

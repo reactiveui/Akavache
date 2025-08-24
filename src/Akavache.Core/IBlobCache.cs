@@ -26,6 +26,14 @@ public interface IBlobCache : IDisposable, IAsyncDisposable
     IScheduler Scheduler { get; }
 
     /// <summary>
+    /// Gets or sets the HTTP service.
+    /// </summary>
+    /// <value>
+    /// The HTTP service.
+    /// </value>
+    IHttpService HttpService { get; set; }
+
+    /// <summary>
     /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
     /// </summary>
     /// <remarks>

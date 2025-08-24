@@ -23,6 +23,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
     private readonly object _lock = new();
     private bool _disposed;
+    private IHttpService? _httpService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryBlobCacheBase"/> class with default scheduler.
@@ -36,13 +37,11 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// <inheritdoc />
     public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
 
-    /// <summary>
-    /// Gets the serializer used by this cache instance.
-    /// </summary>
-    /// <value>
-    /// The serializer.
-    /// </value>
+    /// <inheritdoc/>
     public ISerializer Serializer { get; } = serializer ?? throw new ArgumentNullException(nameof(serializer));
+
+    /// <inheritdoc/>
+    public IHttpService HttpService { get => _httpService ??= new HttpService(); set => _httpService = value; }
 
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind

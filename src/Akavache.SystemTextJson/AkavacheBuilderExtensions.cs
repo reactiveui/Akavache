@@ -18,14 +18,14 @@ namespace Akavache.SystemTextJson
         /// <param name="builder">The builder.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="System.ArgumentNullException">builder.</exception>
-        public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder)
+        public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder)
         {
             if (builder == null)
             {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.WithSerializer(new SystemJsonSerializer());
+            builder.WithSerializer<SystemJsonSerializer>();
             return builder;
         }
 
@@ -40,7 +40,7 @@ namespace Akavache.SystemTextJson
         /// or
         /// settings.
         /// </exception>
-        public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder, JsonSerializerOptions settings)
+        public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder, JsonSerializerOptions settings)
         {
             if (builder == null)
             {
@@ -52,7 +52,7 @@ namespace Akavache.SystemTextJson
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            builder.WithSerializer(new SystemJsonSerializer { Options = settings });
+            builder.WithSerializer(() => new SystemJsonSerializer { Options = settings });
             return builder;
         }
 
@@ -81,7 +81,7 @@ namespace Akavache.SystemTextJson
 
             var settings = new JsonSerializerOptions();
             configure(settings);
-            builder.WithSerializer(new SystemJsonSerializer { Options = settings });
+            builder.WithSerializer(() => new SystemJsonSerializer { Options = settings });
             return builder;
         }
 
@@ -98,7 +98,7 @@ namespace Akavache.SystemTextJson
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.WithSerializer(new SystemJsonBsonSerializer());
+            builder.WithSerializer<SystemJsonBsonSerializer>();
             return builder;
         }
 
@@ -125,7 +125,7 @@ namespace Akavache.SystemTextJson
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            builder.WithSerializer(new SystemJsonBsonSerializer { Options = settings, });
+            builder.WithSerializer(() => new SystemJsonBsonSerializer { Options = settings, });
             return builder;
         }
 
@@ -154,7 +154,7 @@ namespace Akavache.SystemTextJson
 
             var settings = new JsonSerializerOptions();
             configure(settings);
-            builder.WithSerializer(new SystemJsonBsonSerializer { Options = settings, });
+            builder.WithSerializer(() => new SystemJsonBsonSerializer { Options = settings, });
             return builder;
         }
     }

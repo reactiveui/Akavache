@@ -42,13 +42,12 @@ public class SettingsCacheTests
         var testName = $"newtonsoft_test_{Guid.NewGuid():N}";
         var viewSettings = default(ViewSettings);
 
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
             async builder =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSerializer(new NewtonsoftSerializer())
-                        .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
+                builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
             },
             async instance =>
             {
@@ -93,14 +92,12 @@ public class SettingsCacheTests
     {
         var testName = $"newtonsoft_update_test_{Guid.NewGuid():N}";
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
             async builder =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSerializer(new NewtonsoftSerializer())
-                    .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
-                    .Build();
+                builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
             },
             async instance =>
             {
@@ -138,14 +135,12 @@ public class SettingsCacheTests
     {
         var testName = $"systemjson_test_{Guid.NewGuid():N}";
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<SystemJsonSerializer>(
             testName,
             async builder =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSerializer(new SystemJsonSerializer())
-                    .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
-                    .Build();
+                builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
             },
             async instance =>
             {
@@ -190,14 +185,12 @@ public class SettingsCacheTests
     {
         var testName = $"systemjson_update_test_{Guid.NewGuid():N}";
         var viewSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<SystemJsonSerializer>(
             testName,
             async builder =>
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSerializer(new SystemJsonSerializer())
-                .WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName)
-                .Build();
+            builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
         },
             async instance =>
             {
@@ -236,9 +229,9 @@ public class SettingsCacheTests
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
 
         var akavacheBuilder = default(IAkavacheInstance);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<SystemJsonSerializer>(
             null,
-            builder => builder.UseSystemTextJsonSerializer().WithSettingsCachePath(path),
+            builder => builder.WithSettingsCachePath(path),
             instance => akavacheBuilder = instance)
             .Build();
 
@@ -260,14 +253,12 @@ public class SettingsCacheTests
         // Use a unique test name to avoid conflicts
         var testName = $"persistence_test_{Guid.NewGuid():N}";
         var originalSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
             async builder =>
         {
             await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSerializer(new NewtonsoftSerializer())
-                .WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName)
-                .Build();
+            builder.WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName);
         },
             async instance =>
             {
@@ -329,15 +320,13 @@ public class SettingsCacheTests
     {
         var testName = $"wrong_password_test_{Guid.NewGuid():N}";
         var originalSettings = default(ViewSettings);
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
             async builder =>
         {
             // Create settings with one password
             await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSerializer(new NewtonsoftSerializer())
-                .WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName)
-                .Build();
+            builder.WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName);
         },
             async instance =>
             {
@@ -400,13 +389,9 @@ public class SettingsCacheTests
     public async Task TestMultipleDisposeAndRecreate()
     {
         var testName = $"multi_dispose_test_{Guid.NewGuid():N}";
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSerializer(new NewtonsoftSerializer());
-            },
+            async builder => await builder.DeleteSettingsStore<ViewSettings>(testName),
             async instance =>
             {
                 try
@@ -459,13 +444,9 @@ public class SettingsCacheTests
     public async Task TestGetSettingsStore()
     {
         var testName = $"get_store_test_{Guid.NewGuid():N}";
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
-            async builder =>
-        {
-            await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSerializer(new NewtonsoftSerializer());
-        },
+            async builder => await builder.DeleteSettingsStore<ViewSettings>(testName),
             async instance =>
             {
                 try
@@ -518,9 +499,9 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestAppInfoPropertiesAsync()
     {
-        GetBuilder().WithAkavache(
+        GetBuilder().WithAkavache<SystemJsonSerializer>(
             null,
-            builder => builder.WithSerializer(new SystemJsonSerializer()),
+            builder => builder.WithApplicationName("TestAppInfo"),
             instance =>
             {
                 Assert.NotNull(instance.ExecutingAssembly);

@@ -25,7 +25,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -68,7 +68,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -112,7 +112,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -157,7 +157,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -203,7 +203,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         var cache = new InMemoryBlobCache(serializer);
 
@@ -313,7 +313,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -375,7 +375,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(serializer);
+        CacheDatabase.Initialize(() => serializer);
 
         using (Utility.WithEmptyDirectory(out var path))
         {

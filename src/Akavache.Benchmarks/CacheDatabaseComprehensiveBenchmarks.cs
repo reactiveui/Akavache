@@ -34,11 +34,10 @@ namespace Akavache.Benchmarks
         public void GlobalSetup()
         {
             // Initialize with builder pattern
-            _appBuilder.WithAkavache(
+            _appBuilder.WithAkavache<SystemJsonSerializer>(
                 "AkavacheBenchmarksV11Comprehensive",
                 builder =>
-                builder.UseSystemTextJsonSerializer()
-                    .WithSqliteDefaults(),
+                builder.WithSqliteDefaults(),
                 instance =>
                     {
                         // Register the BlobCache as the default IBlobCache

@@ -47,12 +47,6 @@ public static class CacheDatabase
         throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
-    /// Gets the http service.
-    /// </summary>
-    public static IHttpService? HttpService => GetOrThrowIfNotInitialized()?.HttpService ??
-        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
-
-    /// <summary>
     /// Gets the forced DateTime kind for DateTime serialization.
     /// When set, all DateTime values will be converted to this kind during cache operations.
     /// </summary>
@@ -153,28 +147,74 @@ public static class CacheDatabase
     /// Initializes BlobCache with default in-memory caches.
     /// This is the safest default as it doesn't require any additional packages.
     /// </summary>
-    /// <param name="serializer">The serializer.</param>
+    /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
     /// <exception cref="System.InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
-    public static void Initialize(ISerializer serializer, string? applicationName = null) => SetBuilder(CreateBuilder()
+    public static void Initialize<T>(string? applicationName = null)
+       where T : ISerializer, new() => SetBuilder(CreateBuilder()
             .WithApplicationName(applicationName)
-            .WithSerializer(serializer)
-            .WithInMemoryDefaults().Build());
+            .WithSerializer<T>()
+            .WithInMemoryDefaults()
+            .Build());
+
+    /// <summary>
+    /// Initializes BlobCache with default in-memory caches.
+    /// This is the safest default as it doesn't require any additional packages.
+    /// </summary>
+    /// <typeparam name="T">The serializer.</typeparam>
+    /// <param name="configureSerializer">The Serializer configuration.</param>
+    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
+    /// <exception cref="System.InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+    public static void Initialize<T>(Func<T> configureSerializer, string? applicationName = null)
+       where T : ISerializer, new() => SetBuilder(CreateBuilder()
+            .WithApplicationName(applicationName)
+            .WithSerializer(configureSerializer)
+            .WithInMemoryDefaults()
+            .Build());
 
     /// <summary>
     /// Initializes BlobCache with a custom builder configuration.
     /// </summary>
+    /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="configure">An action to configure the BlobCache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
     /// <exception cref="ArgumentNullException">configure.</exception>
-    public static void Initialize(Action<IAkavacheBuilder> configure, string? applicationName = null)
+    public static void Initialize<T>(Action<IAkavacheBuilder> configure, string? applicationName = null)
+        where T : ISerializer, new()
     {
         if (configure == null)
         {
             throw new ArgumentNullException(nameof(configure));
         }
 
-        var builder = CreateBuilder().WithApplicationName(applicationName);
+        var builder = CreateBuilder()
+            .WithApplicationName(applicationName)
+            .WithSerializer<T>();
+
+        configure(builder);
+
+        SetBuilder(builder.Build());
+    }
+
+    /// <summary>
+    /// Initializes BlobCache with a custom builder configuration.
+    /// </summary>
+    /// <typeparam name="T">The serializer.</typeparam>
+    /// <param name="configureSerializer">The Serializer configuration.</param>
+    /// <param name="configure">An action to configure the BlobCache builder.</param>
+    /// <param name="applicationName">Name of the application.</param>
+    /// <exception cref="ArgumentNullException">configure.</exception>
+    public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
+        where T : ISerializer, new()
+    {
+        if (configure == null)
+        {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
+        var builder = CreateBuilder()
+            .WithApplicationName(applicationName)
+            .WithSerializer(configureSerializer);
 
         configure(builder);
 

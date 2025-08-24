@@ -68,7 +68,7 @@ public static class AkavacheBuilderExtensions
         builder.WithUserAccount(CreateSqliteCache("UserAccount", builder))
                .WithLocalMachine(CreateSqliteCache("LocalMachine", builder))
                .WithInMemory()
-               .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache("Secure", builder), builder.Serializer));
+               .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache("Secure", builder)));
 #endif
 
         return builder;
@@ -153,7 +153,7 @@ public static class AkavacheBuilderExtensions
     /// <summary>
     /// A wrapper that implements ISecureBlobCache by delegating to an IBlobCache.
     /// </summary>
-    private class SecureBlobCacheWrapper(IBlobCache inner, ISerializer serializer) : ISecureBlobCache
+    private class SecureBlobCacheWrapper(IBlobCache inner) : ISecureBlobCache
     {
         private readonly IBlobCache _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         private bool _disposed;
@@ -166,7 +166,13 @@ public static class AkavacheBuilderExtensions
 
         public IScheduler Scheduler => _inner.Scheduler;
 
-        public ISerializer Serializer => serializer ?? throw new ArgumentNullException(nameof(serializer));
+        public ISerializer Serializer => inner.Serializer ?? throw new ArgumentNullException(nameof(inner.Serializer));
+
+        public IHttpService HttpService
+        {
+            get => _inner.HttpService;
+            set => _inner.HttpService = value;
+        }
 
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
             _inner.Insert(keyValuePairs, absoluteExpiration);

@@ -47,10 +47,10 @@ public class CacheDatabaseTests
     [Fact]
     public void HttpServiceShouldBeAvailable()
     {
-        CacheDatabase.Initialize(new SystemJsonSerializer());
+        CacheDatabase.Initialize<SystemJsonSerializer>();
 
         // Act
-        var httpService = CacheDatabase.HttpService;
+        var httpService = CacheDatabase.InMemory.HttpService;
 
         // Assert
         Assert.NotNull(httpService);
