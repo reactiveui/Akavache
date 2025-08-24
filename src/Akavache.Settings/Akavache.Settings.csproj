@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Akavache.Settings</RootNamespace>
     <LangVersion>preview</LangVersion>
+    <NoWarn>$(NoWarn);CA1510</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

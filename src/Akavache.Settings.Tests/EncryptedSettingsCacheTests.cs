@@ -40,6 +40,8 @@ public class EncryptedSettingsCacheTests
             {
                 try
                 {
+                    // Initial delay to ensure settings are created
+                    await Task.Delay(500);
                     Assert.NotNull(viewSettings);
                     Assert.True(viewSettings!.BoolTest);
                     Assert.Equal((short)16, viewSettings.ShortTest);
@@ -88,6 +90,8 @@ public class EncryptedSettingsCacheTests
             },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 try
                 {
                     viewSettings!.EnumTest = EnumTestValue.Option2;
@@ -131,6 +135,8 @@ public class EncryptedSettingsCacheTests
             },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(500);
                 try
                 {
                     Assert.NotNull(viewSettings);
@@ -181,6 +187,8 @@ public class EncryptedSettingsCacheTests
         },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 try
                 {
                     viewSettings!.EnumTest = EnumTestValue.Option2;

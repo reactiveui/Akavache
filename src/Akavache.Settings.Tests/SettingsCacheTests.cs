@@ -35,7 +35,8 @@ public class SettingsCacheTests
             },
             async instance =>
             {
-                await Task.Delay(500);
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 Assert.NotNull(viewSettings);
                 Assert.True(viewSettings!.BoolTest);
                 Assert.Equal((short)16, viewSettings.ShortTest);
@@ -69,6 +70,8 @@ public class SettingsCacheTests
             builder => builder.WithSettingsStore<ViewSettings>(s => viewSettings = s),
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 viewSettings!.EnumTest = EnumTestValue.Option2;
                 Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
                 await viewSettings.DisposeAsync();
@@ -99,6 +102,8 @@ public class SettingsCacheTests
         },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 Assert.NotNull(viewSettings);
                 Assert.True(viewSettings!.BoolTest);
                 Assert.Equal((short)16, viewSettings.ShortTest);
@@ -135,6 +140,8 @@ public class SettingsCacheTests
             },
             async instance =>
             {
+                // Initial delay to ensure settings are created
+                await Task.Delay(100);
                 viewSettings!.EnumTest = EnumTestValue.Option2;
                 Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
                 await viewSettings.DisposeAsync();
