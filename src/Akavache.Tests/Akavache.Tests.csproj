@@ -4,6 +4,7 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1510</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

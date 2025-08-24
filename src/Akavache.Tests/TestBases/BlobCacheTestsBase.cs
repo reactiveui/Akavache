@@ -339,8 +339,10 @@ public abstract class BlobCacheTestsBase : IDisposable
                         disposable.Dispose();
                     }
 
-                    // Small delay to ensure cleanup is complete
-                    await Task.Delay(100);
+                    // Force GC and finalizer run to release file handles
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    await Task.Delay(100); // Allow cleanup
                 }
             }
 
@@ -421,6 +423,10 @@ public abstract class BlobCacheTestsBase : IDisposable
                     {
                         disposable.Dispose();
                     }
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    await Task.Delay(100);
                 }
             }
         }
@@ -485,10 +491,9 @@ public abstract class BlobCacheTestsBase : IDisposable
                         disposable.Dispose();
                     }
 
-                    if (fixture.GetType().Name.Contains("SqliteBlobCache"))
-                    {
-                        await Task.Delay(50);
-                    }
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    await Task.Delay(100); // Allow cleanup
                 }
             }
 
@@ -537,6 +542,10 @@ public abstract class BlobCacheTestsBase : IDisposable
                     {
                         disposable.Dispose();
                     }
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    await Task.Delay(100);
                 }
             }
         }
@@ -939,6 +948,8 @@ public abstract class BlobCacheTestsBase : IDisposable
                 finally
                 {
                     await cache.DisposeAsync();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
                     await Task.Delay(100); // Allow cleanup
                 }
             }
@@ -958,6 +969,9 @@ public abstract class BlobCacheTestsBase : IDisposable
                 finally
                 {
                     await cache.DisposeAsync();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    await Task.Delay(100); // Allow cleanup
                 }
             }
         }
