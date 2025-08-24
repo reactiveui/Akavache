@@ -23,11 +23,17 @@ public class SettingsCacheTests
         // Initialize SQLite provider for CI environments
         try
         {
+#if WINDOWS
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlcipher());
+#else
+            // On non-Windows platforms, use default provider
+            SQLitePCL.Batteries_V2.Init();
+#endif
         }
-        catch
+        catch (Exception ex)
         {
-            // Fallback initialization
+            // Log error for CI diagnostics
+            Console.Error.WriteLine($"SQLitePCL provider initialization failed: {ex}");
             SQLitePCL.Batteries_V2.Init();
         }
     }
@@ -226,7 +232,9 @@ public class SettingsCacheTests
     [Fact]
     public async Task TestOverrideSettingsCachePathAsync()
     {
-        const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
+        // Use platform-agnostic path
+        var path = Path.Combine(Path.GetTempPath(), "SettingsStoreage", "ApplicationSettings");
+        Directory.CreateDirectory(path);
 
         var akavacheBuilder = default(IAkavacheInstance);
         GetBuilder().WithAkavache<SystemJsonSerializer>(
