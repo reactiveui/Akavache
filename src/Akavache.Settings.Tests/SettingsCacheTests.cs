@@ -35,6 +35,7 @@ public class SettingsCacheTests
             },
             async instance =>
             {
+                await Task.Delay(500);
                 Assert.NotNull(viewSettings);
                 Assert.True(viewSettings!.BoolTest);
                 Assert.Equal((short)16, viewSettings.ShortTest);
@@ -172,6 +173,7 @@ public class SettingsCacheTests
     private AppBuilder GetBuilder()
     {
         AppBuilder.ResetBuilderStateForTests();
+        Batteries_V2.Init();
         return _appBuilder;
     }
 }

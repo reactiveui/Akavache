@@ -253,6 +253,9 @@ public class EncryptedSettingsCacheTests
             {
                 try
                 {
+                    // Initial delay to ensure settings are created
+                    await Task.Delay(100);
+
                     // Create and modify settings
                     Assert.NotNull(originalSettings);
 
@@ -321,6 +324,9 @@ public class EncryptedSettingsCacheTests
             {
                 try
                 {
+                    // Initial delay to ensure settings are created
+                    await Task.Delay(100);
+
                     originalSettings!.StringTest = "Secret Data";
                     await Task.Delay(100);
                     await originalSettings.DisposeAsync();
@@ -509,6 +515,7 @@ public class EncryptedSettingsCacheTests
     private AppBuilder GetBuilder()
     {
         AppBuilder.ResetBuilderStateForTests();
+        Batteries_V2.Init();
         return _appBuilder;
     }
 }
