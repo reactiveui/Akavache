@@ -48,7 +48,7 @@ public static class AkavacheBuilderExtensions
 
         if (builder.Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite defaults.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite defaults.");
         }
 
         var applicationName = builder.ApplicationName;
@@ -84,7 +84,7 @@ public static class AkavacheBuilderExtensions
     {
         if (builder.Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite caches.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
         }
 
         if (string.IsNullOrWhiteSpace(name))

@@ -124,7 +124,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     {
         if (Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using InMemory defaults.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using InMemory defaults.");
         }
 
         UserAccount ??= CreateInMemoryCache();
@@ -215,7 +215,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     {
         if (Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using InMemory defaults.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using InMemory defaults.");
         }
 
         return this;
@@ -233,7 +233,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     {
         if (Serializer == null)
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using BlobCache.");
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using this BlobCache.");
         }
 
         // Always use Akavache.InMemoryBlobCache from Akavache.Core and pass the serializer

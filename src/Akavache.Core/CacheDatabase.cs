@@ -9,7 +9,7 @@ using Akavache.Core;
 namespace Akavache;
 
 /// <summary>
-/// BlobCache is the main entry point for interacting with Akavache. It provides
+/// CacheDatabase is the main entry point for interacting with Akavache. It provides
 /// convenient static properties for accessing common cache locations.
 /// This V11 implementation uses a builder pattern for configuration.
 /// </summary>
@@ -31,21 +31,13 @@ public static class CacheDatabase
     /// <summary>
     /// Gets the application name used for cache file paths.
     /// </summary>
-    public static string? ApplicationName => Builder?.ApplicationName;
+    public static string? ApplicationName => GetOrThrowIfNotInitialized()?.ApplicationName ??
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
-    /// Gets a value indicating whether BlobCache has been initialized.
+    /// Gets a value indicating whether CacheDatabase has been initialized.
     /// </summary>
     public static bool IsInitialized => _isInitialized;
-
-    /// <summary>
-    /// Gets the builder, only valid after Built.
-    /// </summary>
-    /// <value>
-    /// The builder.
-    /// </value>
-    public static IAkavacheInstance? Builder => GetOrThrowIfNotInitialized() ??
-        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
     /// Gets the forced DateTime kind for DateTime serialization.
@@ -145,7 +137,7 @@ public static class CacheDatabase
     }
 
     /// <summary>
-    /// Initializes BlobCache with default in-memory caches.
+    /// Initializes CacheDatabase with default in-memory caches.
     /// This is the safest default as it doesn't require any additional packages.
     /// </summary>
     /// <typeparam name="T">The serializer.</typeparam>
@@ -165,7 +157,7 @@ public static class CacheDatabase
             .Build());
 
     /// <summary>
-    /// Initializes BlobCache with default in-memory caches.
+    /// Initializes CacheDatabase with default in-memory caches.
     /// This is the safest default as it doesn't require any additional packages.
     /// </summary>
     /// <typeparam name="T">The serializer.</typeparam>
@@ -186,10 +178,10 @@ public static class CacheDatabase
             .Build());
 
     /// <summary>
-    /// Initializes BlobCache with a custom builder configuration.
+    /// Initializes CacheDatabase with a custom builder configuration.
     /// </summary>
     /// <typeparam name="T">The serializer.</typeparam>
-    /// <param name="configure">An action to configure the BlobCache builder.</param>
+    /// <param name="configure">An action to configure the Akavache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
     /// <exception cref="ArgumentNullException">configure.</exception>
 #if NET6_0_OR_GREATER
@@ -216,11 +208,11 @@ public static class CacheDatabase
     }
 
     /// <summary>
-    /// Initializes BlobCache with a custom builder configuration.
+    /// Initializes CacheDatabase with a custom builder configuration.
     /// </summary>
     /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="configureSerializer">The Serializer configuration.</param>
-    /// <param name="configure">An action to configure the BlobCache builder.</param>
+    /// <param name="configure">An action to configure the Akavache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
     /// <exception cref="ArgumentNullException">configure.</exception>
 #if NET6_0_OR_GREATER
@@ -247,16 +239,16 @@ public static class CacheDatabase
     }
 
     /// <summary>
-    /// Creates a new BlobCache builder for configuration.
+    /// Creates a new Akavache builder for configuration.
     /// </summary>
-    /// <returns>A new BlobCache builder instance.</returns>
-    internal static IAkavacheBuilder CreateBuilder() => new AkavacheBuilder();
+    /// <returns>A new Akavache builder instance.</returns>
+    public static IAkavacheBuilder CreateBuilder() => new AkavacheBuilder();
 
     /// <summary>
     /// Internal method to set the builder instance. Used by the builder pattern.
     /// </summary>
     /// <param name="builder">The configured builder instance.</param>
-    internal static void SetBuilder(IAkavacheInstance builder)
+    private static void SetBuilder(IAkavacheInstance builder)
     {
         _builder = builder;
         _isInitialized = true;
