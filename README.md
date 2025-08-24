@@ -1583,13 +1583,27 @@ CacheDatabase.Initialize<NewtonsoftBsonSerializer>(/* ... */); // Most compatibl
 ```
 
 #### 4. SQLite errors on mobile
-```csharp
+```xml
 // Fix: Ensure SQLitePCL.raw bundle is installed
 // Add to your project:
-// <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
+<ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
+    
 // If using Encrypted SQLite, also add:
-// <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" Version="2.1.11" />
+</ItemGroup>
+
 ```
+
+#### 5. Linker removing types IL2104
+
+You will need to preserve certain types to prevent the linker from stripping them out in release builds.
+
+```xml
+// Add to your .csproj file:
+<ItemGroup>
+  <TrimmerRootAssembly Include="SQLitePCLRaw.lib.e_sqlite3.## YOUR-PLATFORM ##" RootMode="All" />
+</ItemGroup>
 
 ### Platform-Specific Issues
 
@@ -1600,8 +1614,8 @@ public static class LinkerPreserve
 {
     static LinkerPreserve()
     {
-        var persistentName = typeof(SQLitePersistentBlobCache).FullName;
-        var encryptedName = typeof(SQLiteEncryptedBlobCache).FullName;
+        var sqliteBlobCachetName = typeof(SqliteBlobCache).FullName;
+        var encryptedSqliteBlobCacheName = typeof(EncryptedSqliteBlobCache).FullName;
     }
 }
 ```
