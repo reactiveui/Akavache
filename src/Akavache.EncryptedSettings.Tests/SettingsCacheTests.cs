@@ -24,9 +24,10 @@ public class SettingsCacheTests
         try
         {
 #if WINDOWS
+            Console.Error.WriteLine($"Initializing SQLCipher provider for Windows");
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlcipher());
 #else
-            // On non-Windows platforms, use default provider
+            Console.Error.WriteLine("Initializing default SQLitePCL provider (non-Windows)");
             SQLitePCL.Batteries_V2.Init();
 #endif
         }
