@@ -8,30 +8,16 @@ using Akavache.Settings;
 using Akavache.Settings.Tests;
 using Akavache.SystemTextJson;
 using Splat.Builder;
+using SQLitePCL;
 
 namespace Akavache.EncryptedSettings.Tests;
 
 /// <summary>
 /// Settings Cache Tests.
 /// </summary>
-public class SettingsCacheTests
+public class EncryptedSettingsCacheTests
 {
     private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
-
-    static SettingsCacheTests()
-    {
-        // Initialize SQLite provider for CI environments
-        try
-        {
-            Console.Out.WriteLine("Initializing SQLite provider");
-            SQLitePCL.Batteries_V2.Init();
-        }
-        catch (Exception ex)
-        {
-            // Log error for CI diagnostics
-            Console.Error.WriteLine($"SQLCipher provider initialization failed: {ex}");
-        }
-    }
 
     /// <summary>
     /// Test1s this instance.

@@ -5,6 +5,7 @@
 
 using Akavache.NewtonsoftJson;
 using Splat.Builder;
+using SQLitePCL;
 
 namespace Akavache.Settings.Tests;
 
@@ -14,19 +15,6 @@ namespace Akavache.Settings.Tests;
 public class SettingsCacheTests
 {
     private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
-
-    static SettingsCacheTests()
-    {
-        // Initialize SQLite provider for CI environments
-        try
-        {
-            SQLitePCL.Batteries_V2.Init();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"***** Failed to initialize SQLite provider!! ***** {ex}");
-        }
-    }
 
     /// <summary>
     /// Test1s this instance.

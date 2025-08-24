@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Splat;
+using SQLitePCL;
 
 #if ENCRYPTED
 namespace Akavache.EncryptedSqlite3;
@@ -57,16 +58,16 @@ public static class AkavacheBuilderExtensions
             throw new InvalidOperationException("Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.");
         }
 
-        SQLitePCL.Batteries_V2.Init();
-
 #if ENCRYPTED
         // Create SQLite caches for persistent storage
+        raw.SetProvider(new SQLite3Provider_e_sqlcipher());
         builder.WithUserAccount(CreateEncryptedSqliteCache("UserAccount", builder, password))
                .WithLocalMachine(CreateEncryptedSqliteCache("LocalMachine", builder, password))
                .WithInMemory()
                .WithSecure(CreateEncryptedSqliteCache("Secure", builder, password));
 #else
         // Create SQLite caches for persistent storage
+        raw.SetProvider(new SQLite3Provider_e_sqlite3());
         builder.WithUserAccount(CreateSqliteCache("UserAccount", builder))
                .WithLocalMachine(CreateSqliteCache("LocalMachine", builder))
                .WithInMemory()
