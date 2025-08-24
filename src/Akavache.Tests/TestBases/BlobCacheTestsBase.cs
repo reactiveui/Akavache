@@ -107,7 +107,7 @@ public abstract class BlobCacheTestsBase : IDisposable
         {
             try
             {
-                var bytes = await fixture.DownloadUrl("http://httpbin.org/html").FirstAsync();
+                var bytes = await fixture.DownloadUrl("https://httpbin.org/html").FirstAsync();
                 Assert.True(bytes.Length > 0);
             }
             catch (HttpRequestException)
@@ -144,7 +144,7 @@ public abstract class BlobCacheTestsBase : IDisposable
         {
             try
             {
-                var bytes = await fixture.DownloadUrl(new Uri("http://httpbin.org/html")).FirstAsync();
+                var bytes = await fixture.DownloadUrl(new Uri("https://httpbin.org/html")).FirstAsync();
                 Assert.True(bytes.Length > 0);
             }
             catch (HttpRequestException)
@@ -182,7 +182,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             try
             {
                 var key = Guid.NewGuid().ToString();
-                await fixture.DownloadUrl(key, "http://httpbin.org/html").FirstAsync();
+                await fixture.DownloadUrl(key, "https://httpbin.org/html").FirstAsync();
                 var bytes = await fixture.Get(key);
                 Assert.True(bytes.Length > 0);
             }
@@ -221,7 +221,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             try
             {
                 var key = Guid.NewGuid().ToString();
-                await fixture.DownloadUrl(key, new Uri("http://httpbin.org/html")).FirstAsync();
+                await fixture.DownloadUrl(key, new Uri("https://httpbin.org/html")).FirstAsync();
                 var bytes = await fixture.Get(key);
                 Assert.True(bytes.Length > 0);
             }

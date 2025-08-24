@@ -36,7 +36,7 @@ public class DownloadUrlExtensionsTests
                 // Act - Skip if httpbin is unavailable (CI/test environments)
                 try
                 {
-                    var bytes = await cache.DownloadUrl("http://httpbin.org/html").FirstAsync();
+                    var bytes = await cache.DownloadUrl("https://httpbin.org/html").FirstAsync();
 
                     // Assert
                     Assert.True(bytes.Length > 0);
@@ -79,7 +79,7 @@ public class DownloadUrlExtensionsTests
                 // Act - Skip if httpbin is unavailable
                 try
                 {
-                    var uri = new Uri("http://httpbin.org/html");
+                    var uri = new Uri("https://httpbin.org/html");
                     var bytes = await cache.DownloadUrl(uri).FirstAsync();
 
                     // Assert
@@ -124,7 +124,7 @@ public class DownloadUrlExtensionsTests
                 try
                 {
                     const string key = "downloaded_content";
-                    await cache.DownloadUrl(key, "http://httpbin.org/html").FirstAsync();
+                    await cache.DownloadUrl(key, "https://httpbin.org/html").FirstAsync();
 
                     // Assert - verify data was stored
                     var storedBytes = await cache.Get(key);
@@ -169,7 +169,7 @@ public class DownloadUrlExtensionsTests
                 try
                 {
                     const string key = "downloaded_uri_content";
-                    var uri = new Uri("http://httpbin.org/html");
+                    var uri = new Uri("https://httpbin.org/html");
                     await cache.DownloadUrl(key, uri).FirstAsync();
 
                     // Assert - verify data was stored
@@ -326,9 +326,9 @@ public class DownloadUrlExtensionsTests
                 {
                     var tasks = new[]
                     {
-                            cache.DownloadUrl("content1", "http://httpbin.org/html").FirstAsync().ToTask(),
-                            cache.DownloadUrl("content2", "http://httpbin.org/json").FirstAsync().ToTask(),
-                            cache.DownloadUrl("content3", "http://httpbin.org/user-agent").FirstAsync().ToTask()
+                            cache.DownloadUrl("content1", "https://httpbin.org/html").FirstAsync().ToTask(),
+                            cache.DownloadUrl("content2", "https://httpbin.org/json").FirstAsync().ToTask(),
+                            cache.DownloadUrl("content3", "https://httpbin.org/user-agent").FirstAsync().ToTask()
                     };
 
                     await Task.WhenAll(tasks);
@@ -390,7 +390,7 @@ public class DownloadUrlExtensionsTests
                     var expiration = DateTimeOffset.Now.AddSeconds(2);
 
                     // Download with expiration - fix parameter order
-                    await cache.DownloadUrl(key, "http://httpbin.org/html", null, null, false, expiration).FirstAsync();
+                    await cache.DownloadUrl(key, "https://httpbin.org/html", null, null, false, expiration).FirstAsync();
 
                     // Verify data is initially available
                     var initialData = await cache.Get(key);
