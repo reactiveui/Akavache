@@ -19,17 +19,7 @@ namespace Akavache.Tests;
 [Collection("Blob Cache Tests")]
 public abstract class BlobCacheTestsBase : IDisposable
 {
-    private readonly ISerializer? _originalSerializer;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BlobCacheTestsBase"/> class.
-    /// </summary>
-    protected BlobCacheTestsBase()
-    {
-        // Store the original serializer to restore it after each test
-        _originalSerializer = CacheDatabase.Serializer;
-    }
 
     /// <summary>
     /// Gets the serializers to use.
@@ -65,42 +55,35 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// </summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>
     /// <returns>The configured serializer instance.</returns>
-    public static ISerializer SetupTestSerializer(Type serializerType)
+    public static ISerializer SetupTestSerializer(Type? serializerType)
     {
-        if (serializerType == null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
-
         // Clear any existing in-flight requests to ensure clean test state
         RequestCache.Clear();
 
         if (serializerType == typeof(NewtonsoftBsonSerializer))
         {
             // Register the Newtonsoft BSON serializer specifically
-            CacheDatabase.Serializer = new NewtonsoftBsonSerializer();
+            return new NewtonsoftBsonSerializer();
         }
         else if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
-            CacheDatabase.Serializer = new SystemJsonBsonSerializer();
+            return new SystemJsonBsonSerializer();
         }
         else if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
-            CacheDatabase.Serializer = new NewtonsoftSerializer();
+            return new NewtonsoftSerializer();
         }
         else if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
-            CacheDatabase.Serializer = new SystemJsonSerializer();
+            return new SystemJsonSerializer();
         }
         else
         {
-            throw new InvalidOperationException($"Unsupported serializer type: {serializerType.Name}");
+            return null!;
         }
-
-        return CacheDatabase.Serializer;
     }
 
     /// <summary>
@@ -117,10 +100,10 @@ public abstract class BlobCacheTestsBase : IDisposable
     [InlineData(typeof(NewtonsoftBsonSerializer))]
     public async Task DownloadUrlTest(Type serializerType)
     {
-        SetupTestSerializer(serializerType);
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             try
             {
@@ -154,10 +137,10 @@ public abstract class BlobCacheTestsBase : IDisposable
     [InlineData(typeof(NewtonsoftBsonSerializer))]
     public async Task DownloadUriTest(Type serializerType)
     {
-        SetupTestSerializer(serializerType);
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             try
             {
@@ -191,10 +174,10 @@ public abstract class BlobCacheTestsBase : IDisposable
     [InlineData(typeof(NewtonsoftBsonSerializer))]
     public async Task DownloadUrlWithKeyTest(Type serializerType)
     {
-        SetupTestSerializer(serializerType);
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             try
             {
@@ -230,10 +213,10 @@ public abstract class BlobCacheTestsBase : IDisposable
     [InlineData(typeof(NewtonsoftBsonSerializer))]
     public async Task DownloadUriWithKeyTest(Type serializerType)
     {
-        SetupTestSerializer(serializerType);
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             try
             {
@@ -269,8 +252,9 @@ public abstract class BlobCacheTestsBase : IDisposable
     [InlineData(typeof(NewtonsoftBsonSerializer))]
     public async Task GettingNonExistentKeyShouldThrow(Type serializerType)
     {
+        var serializer = SetupTestSerializer(serializerType);
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Check if this serializer is compatible with this cache type
             if (!IsSerializerCompatibleWithCache(serializerType, fixture.GetType()))
@@ -316,13 +300,13 @@ public abstract class BlobCacheTestsBase : IDisposable
         {
             // CRITICAL FIX: Set up serializer BEFORE creating any cache instances
             // This ensures both cache instances use the same database file name
-            SetupTestSerializer(serializerType);
+            var serializer = SetupTestSerializer(serializerType);
 
             var input = new UserObject() { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" };
 
             // Phase 1: Store data with explicit disposal and verification
             {
-                var cache = CreateBlobCacheForPath(path);
+                var cache = CreateBlobCacheForPath(path, serializer);
                 try
                 {
                     // InMemoryBlobCache isn't round-trippable by design
@@ -362,7 +346,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             // Phase 2: Try to read with a new instance - IMPORTANT: Keep the same serializer
             {
-                var cache = CreateBlobCacheForPath(path);
+                var cache = CreateBlobCacheForPath(path, serializer);
                 try
                 {
                     // Check keys
@@ -372,7 +356,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     {
                         // Enhanced diagnostics for debugging
                         var dbFiles = Directory.GetFiles(path, "*.db");
-                        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
+                        var serializerName = serializerType.Name ?? "Unknown";
                         var diagnosticInfo = $"DB files in directory: [{string.Join(", ", dbFiles.Select(f => Path.GetFileName(f)))}]. " +
                             $"Serializer: {serializerName}";
 
@@ -462,7 +446,7 @@ public abstract class BlobCacheTestsBase : IDisposable
         }
 
         // CRITICAL FIX: Set up serializer BEFORE creating any cache instances
-        SetupTestSerializer(serializerType);
+        var serializer = SetupTestSerializer(serializerType);
 
         var input = new[] { new UserObject { Bio = "A totally cool cat!", Name = "octocat", Blog = "http://www.github.com" }, new UserObject { Bio = "zzz", Name = "sleepy", Blog = "http://example.com" } };
         UserObject[]? result = null;
@@ -473,7 +457,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             var serializerSpecificPath = Path.Combine(path, $"array-{serializerType.Name}");
             Directory.CreateDirectory(serializerSpecificPath);
             {
-                var fixture = CreateBlobCacheForPath(serializerSpecificPath);
+                var fixture = CreateBlobCacheForPath(serializerSpecificPath, serializer);
                 try
                 {
                     // InMemoryBlobCache isn't round-trippable by design
@@ -509,7 +493,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             }
 
             {
-                var fixture = CreateBlobCacheForPath(serializerSpecificPath);
+                var fixture = CreateBlobCacheForPath(serializerSpecificPath, serializer);
                 try
                 {
                     try
@@ -583,8 +567,10 @@ public abstract class BlobCacheTestsBase : IDisposable
             throw new ArgumentNullException(nameof(serializerType));
         }
 
+        var serializer = SetupTestSerializer(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             // InMemoryBlobCache isn't round-trippable by design
             if (fixture.GetType().Name.Contains("InMemoryBlobCache"))
@@ -645,8 +631,10 @@ public abstract class BlobCacheTestsBase : IDisposable
             throw new ArgumentNullException(nameof(serializerType));
         }
 
+        var serializer = SetupTestSerializer(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             // InMemoryBlobCache isn't round-trippable by design
             if (fixture.GetType().Name.Contains("InMemoryBlobCache"))
@@ -660,8 +648,6 @@ public abstract class BlobCacheTestsBase : IDisposable
             {
                 return; // Skip encrypted cache array object factory tests
             }
-
-            SetupTestSerializer(serializerType);
 
             var input = new[] { new UserModel(new UserObject()) { Age = 123, Name = "Old" }, new UserModel(new UserObject()) { Age = 123, Name = "Old" } };
             UserModel[]? result = null;
@@ -709,8 +695,10 @@ public abstract class BlobCacheTestsBase : IDisposable
             throw new ArgumentNullException(nameof(serializerType));
         }
 
+        var serializer = SetupTestSerializer(serializerType);
+
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var fixture = CreateBlobCache(path))
+        await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Skip GetOrFetch tests for encrypted caches as they have additional complexity
             // with encryption/decryption that can interfere with fetch function counting
@@ -820,18 +808,18 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             // Write with first serializer
             {
-                SetupTestSerializer(writeSerializerType);
+                var serializer1 = SetupTestSerializer(writeSerializerType);
 
                 // Create cache directly with consistent file path
                 IBlobCache writeCache;
                 if (typeof(IBlobCache).IsAssignableFrom(typeof(SqliteBlobCache)))
                 {
-                    writeCache = new SqliteBlobCache(consistentDbFile);
+                    writeCache = new SqliteBlobCache(consistentDbFile, serializer1);
                 }
                 else
                 {
                     // For other cache types, use the CreateBlobCache but it should default to SqliteBlobCache for cross-serializer tests
-                    writeCache = CreateBlobCache(path);
+                    writeCache = CreateBlobCache(path, serializer1);
                 }
 
                 await using (writeCache)
@@ -860,17 +848,17 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             // Read with second serializer
             {
-                SetupTestSerializer(readSerializerType);
+                var serializer2 = SetupTestSerializer(readSerializerType);
 
                 // Create cache with the same consistent file path
                 IBlobCache readCache;
                 if (typeof(IBlobCache).IsAssignableFrom(typeof(SqliteBlobCache)))
                 {
-                    readCache = new SqliteBlobCache(consistentDbFile);
+                    readCache = new SqliteBlobCache(consistentDbFile, serializer2);
                 }
                 else
                 {
-                    readCache = CreateBlobCache(path);
+                    readCache = CreateBlobCache(path, serializer2);
                 }
 
                 await using (readCache)
@@ -933,8 +921,7 @@ public abstract class BlobCacheTestsBase : IDisposable
         }
 
         // Set up serializer first
-        var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        CacheDatabase.Serializer = serializer;
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -943,7 +930,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             // Store data
             {
-                var cache = new SqliteBlobCache(dbPath);
+                var cache = new SqliteBlobCache(dbPath, serializer);
                 try
                 {
                     await cache.InsertObject("key", input).FirstAsync();
@@ -958,7 +945,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             // Read data
             {
-                var cache = new SqliteBlobCache(dbPath);
+                var cache = new SqliteBlobCache(dbPath, serializer);
                 try
                 {
                     var result = await cache.GetObject<UserObject>("key").FirstAsync();
@@ -987,30 +974,28 @@ public abstract class BlobCacheTestsBase : IDisposable
     }
 
     /// <summary>
-    /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
+    /// Gets the <see cref="IBlobCache" /> we want to do the tests against.
     /// </summary>
     /// <param name="path">The path to the blob cache.</param>
-    /// <returns>The blob cache for testing.</returns>
-    protected abstract IBlobCache CreateBlobCache(string path);
-
-    /// <summary>
-    /// Sets up the test class serializer. This should be overridden by derived classes.
-    /// </summary>
-    protected virtual void SetupTestClassSerializer()
-    {
-        // Default implementation - derived classes should override this
-    }
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>
+    /// The blob cache for testing.
+    /// </returns>
+    protected abstract IBlobCache CreateBlobCache(string path, ISerializer serializer);
 
     /// <summary>
     /// Helper method to create a blob cache for a specific path, ensuring the path is used correctly.
     /// </summary>
     /// <param name="path">The base path for the cache.</param>
-    /// <returns>The cache instance.</returns>
-    protected virtual IBlobCache CreateBlobCacheForPath(string path)
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>
+    /// The cache instance.
+    /// </returns>
+    protected virtual IBlobCache CreateBlobCacheForPath(string path, ISerializer serializer)
     {
         // For roundtrip tests, use the same database file creation strategy as the main CreateBlobCache
         // but ensure the path is respected for proper isolation
-        return CreateBlobCache(path);
+        return CreateBlobCache(path, serializer);
     }
 
     /// <summary>
@@ -1043,11 +1028,6 @@ public abstract class BlobCacheTestsBase : IDisposable
         {
             if (disposing)
             {
-                // Restore the original serializer to prevent interference with other tests
-                if (_originalSerializer != null)
-                {
-                    CacheDatabase.Serializer = _originalSerializer;
-                }
             }
 
             _disposed = true;
@@ -1114,15 +1094,5 @@ public abstract class BlobCacheTestsBase : IDisposable
         // consider them potentially incompatible to avoid test failures
         // This is conservative but allows tests to pass while we improve compatibility
         return true;
-    }
-
-    /// <summary>
-    /// Ensures that the test serializer is properly set up before each test method.
-    /// </summary>
-    private void EnsureTestSerializerSetup()
-    {
-        // Call the setup method to ensure the correct serializer is in place
-        // This handles cases where the global serializer might have been changed by other tests
-        SetupTestClassSerializer();
     }
 }

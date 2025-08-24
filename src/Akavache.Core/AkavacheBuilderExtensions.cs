@@ -13,17 +13,17 @@ namespace Akavache;
 public static class AkavacheBuilderExtensions
 {
     /// <summary>
-    /// Initializes BlobCache with a custom builder configuration.
+    /// Initializes CacheDatabase with a custom builder configuration.
     /// </summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="configure">An action to configure the BlobCache builder.</param>
+    /// <param name="configure">An action to configure the CacheDatabase builder.</param>
     /// <param name="applicationName">Name of the application.</param>
     /// <returns>
     /// The configured builder.
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
     /// <exception cref="ArgumentNullException">configure.</exception>
-    public static AppBuilder WithAkavache(this AppBuilder builder, Action<IAkavacheBuilder> configure, string? applicationName = null)
+    public static AppBuilder WithAkavacheCacheDatabase(this AppBuilder builder, Action<IAkavacheBuilder> configure, string? applicationName = null)
     {
         if (builder == null)
         {
@@ -36,23 +36,97 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes BlobCache with default in-memory caches.
+    /// Initializes CacheDatabase with default in-memory caches.
     /// This is the safest default as it doesn't require any additional packages.
     /// </summary>
     /// <param name="builder">The builder.</param>
+    /// <param name="serializer">The serializer.</param>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
     /// <returns>
     /// A BlobCache builder for further configuration.
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
-    public static AppBuilder WithAkavache(this AppBuilder builder, string? applicationName = null)
+    public static AppBuilder WithAkavacheCacheDatabase(this AppBuilder builder, ISerializer serializer, string? applicationName = null)
     {
         if (builder == null)
         {
             throw new ArgumentNullException(nameof(builder));
         }
 
-        CacheDatabase.Initialize(applicationName);
+        CacheDatabase.Initialize(serializer, applicationName);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Initializes CacheDatabase with a custom builder configuration.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="applicationName">Name of the application.</param>
+    /// <param name="configure">An action to configure the CacheDatabase builder.</param>
+    /// <param name="instance">The instance.</param>
+    /// <returns>
+    /// The configured builder.
+    /// </returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// builder
+    /// or
+    /// configure
+    /// or
+    /// instance.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">builder.</exception>
+    public static AppBuilder WithAkavache(this AppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (configure == null)
+        {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
+        if (instance == null)
+        {
+            throw new ArgumentNullException(nameof(instance));
+        }
+
+        var akavacheBuilder = CacheDatabase.CreateBuilder().WithApplicationName(applicationName);
+        configure(akavacheBuilder);
+        instance(akavacheBuilder.Build());
+        return builder;
+    }
+
+    /// <summary>
+    /// Initializes CacheDatabase with a set of default in-memory caches.
+    /// This is the safest default as it doesn't require any additional packages.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="serializer">The serializer.</param>
+    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
+    /// <param name="instance">The instance created.</param>
+    /// <returns>
+    /// A BlobCache builder for further configuration.
+    /// </returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    public static AppBuilder WithAkavache(this AppBuilder builder, ISerializer serializer, string? applicationName, Action<IAkavacheInstance> instance)
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (instance == null)
+        {
+            throw new ArgumentNullException(nameof(instance));
+        }
+
+        instance(CacheDatabase.CreateBuilder()
+            .WithApplicationName(applicationName)
+            .WithSerializer(serializer)
+            .WithInMemoryDefaults().Build());
 
         return builder;
     }
@@ -94,24 +168,11 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        return builder.WithInMemory(new InMemoryBlobCache());
-    }
-
-    /// <summary>
-    /// Uses the kind of the forced date time.
-    /// </summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="kind">The kind.</param>
-    /// <returns>The builder instance for fluent configuration.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
-    public static IAkavacheBuilder UseForcedDateTimeKind(this IAkavacheBuilder builder, DateTimeKind kind)
-    {
-        if (builder == null)
+        if (builder.SerializerTypeName == null)
         {
-            throw new ArgumentNullException(nameof(builder));
+            throw new InvalidOperationException("A serializer must be configured before using in-memory cache.");
         }
 
-        CacheDatabase.ForcedDateTimeKind = kind;
-        return builder;
+        return builder.WithInMemory(new InMemoryBlobCache(builder.SerializerTypeName));
     }
 }

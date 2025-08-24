@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Splat;
+
 namespace Akavache;
 
 /// <summary>
@@ -18,10 +20,20 @@ namespace Akavache;
 public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? serializer) : InMemoryBlobCacheBase(scheduler, serializer)
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class with default scheduler.
+    /// Initializes a new instance of the <see cref="InMemoryBlobCache" /> class with default scheduler.
     /// </summary>
-    public InMemoryBlobCache()
-        : this(CacheDatabase.TaskpoolScheduler, CacheDatabase.Serializer ?? throw new ArgumentNullException(nameof(serializer), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
+    /// <param name="serialzerType">Type of the serialzer.</param>
+    public InMemoryBlobCache(string serialzerType)
+        : this(CacheDatabase.TaskpoolScheduler, AppLocator.Current.GetService<ISerializer>(contract: serialzerType) ?? throw new ArgumentNullException(nameof(serializer), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
+    /// </summary>
+    /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
+    public InMemoryBlobCache(ISerializer serializer)
+        : this(CacheDatabase.TaskpoolScheduler, serializer ?? throw new ArgumentNullException(nameof(serializer), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
     {
     }
 }

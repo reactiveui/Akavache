@@ -6,6 +6,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
 using Akavache.Core;
+using Splat;
 
 namespace Akavache;
 
@@ -14,8 +15,6 @@ namespace Akavache;
 /// </summary>
 public static class SerializerExtensions
 {
-    private static ISerializer Serializer => CacheDatabase.Serializer ?? throw new InvalidOperationException("Unable to resolve ISerializer. Please ensure a CacheDatabase serializer package is referenced (Akavache.NewtonsoftJson.Bson for maximum Akavache compatibility, Akavache.SystemTextJson for best performance, or Akavache.NewtonsoftJson for balance), then initialize CacheDatabase.Serializer with an instance, or call the appropriate registration method.");
-
     /// <summary>
     /// Inserts the specified key/value pairs into the blob.
     /// </summary>
@@ -35,7 +34,7 @@ public static class SerializerExtensions
             throw new ArgumentNullException(nameof(blobCache));
         }
 
-        var items = keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize(x.Value)));
+        var items = keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, blobCache.Serializer.Serialize(x.Value)));
 
         return blobCache.Insert(items, typeof(T), absoluteExpiration);
     }
@@ -60,7 +59,7 @@ public static class SerializerExtensions
 
         return blobCache
             .Get(keys, typeof(T))
-            .Select(x => (x.Key, Data: Serializer.Deserialize<T>(x.Value)))
+            .Select(x => (x.Key, Data: blobCache.Serializer.Deserialize<T>(x.Value)))
             .Where(x => x.Data is not null).Select(x => new KeyValuePair<string, T>(x.Key, x.Data!));
     }
 
@@ -100,7 +99,7 @@ public static class SerializerExtensions
         {
             try
             {
-                serializedData = SerializeWithContext(value, blobCache.ForcedDateTimeKind);
+                serializedData = SerializeWithContext(value, blobCache);
             }
             catch (Exception ex)
             {
@@ -153,7 +152,7 @@ public static class SerializerExtensions
 
             try
             {
-                return DeserializeWithContext<T>(x, blobCache.ForcedDateTimeKind);
+                return DeserializeWithContext<T>(x, blobCache);
             }
             catch (Exception ex)
             {
@@ -202,7 +201,7 @@ public static class SerializerExtensions
             // Use reflection to call Deserialize<T> with the correct type
             var method = typeof(ISerializer).GetMethod(nameof(ISerializer.Deserialize))!;
             var genericMethod = method.MakeGenericMethod(type);
-            return genericMethod.Invoke(Serializer, [bytes]);
+            return genericMethod.Invoke(blobCache.Serializer, [bytes]);
         });
     }
 
@@ -222,7 +221,7 @@ public static class SerializerExtensions
             ? throw new ArgumentNullException(nameof(blobCache))
             : blobCache
                 .GetAll(typeof(T))
-                .Select(x => Serializer.Deserialize<T>(x.Value))
+                .Select(x => blobCache.Serializer.Deserialize<T>(x.Value))
                 .Where(x => x is not null)
                 .Select(x => x!);
 
@@ -325,7 +324,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InsertAllObjects<T>(this IBlobCache blobCache, IEnumerable<KeyValuePair<string, T>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
-            : blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, Serializer.Serialize(x.Value))), absoluteExpiration);
+            : blobCache.Insert(keyValuePairs.Select(x => new KeyValuePair<string, byte[]>(x.Key, blobCache.Serializer.Serialize(x.Value))), absoluteExpiration);
 
     /// <summary>
     /// <para>
@@ -609,7 +608,7 @@ public static class SerializerExtensions
 
         // For mixed object types, we need to serialize each one individually and use its specific type
         var insertOperations = keyValuePairs
-            .Select(kvp => blobCache.Insert(kvp.Key, Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
+            .Select(kvp => blobCache.Insert(kvp.Key, blobCache.Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
             .ToList();
 
         // Wait for all insert operations to complete by merging and taking the count
@@ -624,29 +623,36 @@ public static class SerializerExtensions
     /// </summary>
     /// <typeparam name="T">The type of object to serialize.</typeparam>
     /// <param name="value">The value to serialize.</param>
-    /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
-    /// <returns>The serialized data as byte array.</returns>
+    /// <param name="cache">The cache.</param>
+    /// <returns>
+    /// The serialized data as byte array.
+    /// </returns>
     /// <exception cref="InvalidOperationException">Thrown when serialization fails.</exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Serialization requires types to be preserved.")]
     [RequiresDynamicCode("Serialization requires types to be preserved.")]
 #endif
-    public static byte[] SerializeWithContext<T>(T value, DateTimeKind? forcedDateTimeKind = null)
+    public static byte[] SerializeWithContext<T>(T value, IBlobCache cache)
     {
-        var serializer = Serializer;
+        if (cache is null)
+        {
+            throw new ArgumentNullException(nameof(cache));
+        }
+
+        var serializer = cache.Serializer;
 
         try
         {
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
             if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
             {
-                return UniversalSerializer.Serialize(value, serializer, forcedDateTimeKind);
+                return UniversalSerializer.Serialize(value, serializer, cache.ForcedDateTimeKind);
             }
 
             // For regular serialization, apply forced DateTime kind if specified
-            if (forcedDateTimeKind.HasValue)
+            if (cache.ForcedDateTimeKind.HasValue)
             {
-                serializer.ForcedDateTimeKind = forcedDateTimeKind;
+                serializer.ForcedDateTimeKind = cache.ForcedDateTimeKind;
             }
 
             return serializer.Serialize(value);
@@ -666,33 +672,39 @@ public static class SerializerExtensions
     /// </summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
-    /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
-    /// <returns>The deserialized object.</returns>
+    /// <param name="cache">The cache.</param>
+    /// <returns>
+    /// The deserialized object.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">$"Failed to deserialize data to type {typeof(T).Name}. " +
+    ///                 $"Data length: {data.Length} bytes. " +
+    ///                 "Please ensure the data was serialized with a compatible serializer. " +
+    ///                 $"Error: {ex.Message}, ex.</exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Deserialization requires types to be preserved.")]
     [RequiresDynamicCode("Deserialization requires types to be preserved.")]
 #endif
-    public static T? DeserializeWithContext<T>(byte[] data, DateTimeKind? forcedDateTimeKind = null)
+    public static T? DeserializeWithContext<T>(byte[] data, IBlobCache cache)
     {
-        if (data == null || data.Length == 0)
+        if (cache == null || data == null || data.Length == 0)
         {
             return default;
         }
 
-        var serializer = Serializer;
+        var serializer = cache.Serializer;
 
         try
         {
             // For DateTime objects, use the Universal Serializer Shim for better compatibility
             if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
             {
-                return UniversalSerializer.Deserialize<T>(data, serializer, forcedDateTimeKind);
+                return UniversalSerializer.Deserialize<T>(data, serializer, cache.ForcedDateTimeKind);
             }
 
             // For regular deserialization, apply forced DateTime kind if specified
-            if (forcedDateTimeKind.HasValue)
+            if (cache.ForcedDateTimeKind.HasValue)
             {
-                serializer.ForcedDateTimeKind = forcedDateTimeKind;
+                serializer.ForcedDateTimeKind = cache.ForcedDateTimeKind;
             }
 
             return serializer.Deserialize<T>(data);
@@ -705,7 +717,7 @@ public static class SerializerExtensions
             {
                 try
                 {
-                    return UniversalSerializer.Deserialize<T>(data, serializer, forcedDateTimeKind);
+                    return UniversalSerializer.Deserialize<T>(data, serializer, cache.ForcedDateTimeKind);
                 }
                 catch
                 {

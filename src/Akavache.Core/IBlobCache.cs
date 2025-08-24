@@ -12,6 +12,14 @@ namespace Akavache;
 public interface IBlobCache : IDisposable, IAsyncDisposable
 {
     /// <summary>
+    /// Gets the serializer.
+    /// </summary>
+    /// <value>
+    /// The serializer.
+    /// </value>
+    ISerializer Serializer { get; }
+
+    /// <summary>
     /// Gets the IScheduler used to defer operations. By default, this is
     /// BlobCache.TaskpoolScheduler.
     /// </summary>

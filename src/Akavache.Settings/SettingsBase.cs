@@ -23,16 +23,6 @@ public abstract class SettingsBase : SettingsStorage
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsBase"/> class.
-    /// </summary>
-    /// <param name="className">Name of the class.</param>
-    /// <param name="serializer">The serializer.</param>
-    protected SettingsBase(string className, ISerializer serializer)
-        : base($"__{className}__", GetBlobCacheForClass(className), serializer)
-    {
-    }
-
-    /// <summary>
     /// Gets the blob cache for the specified class, handling override database names.
     /// </summary>
     /// <param name="className">The class name.</param>

@@ -60,9 +60,9 @@ public static class MauiProgram
     /// </summary>
     private static void ConfigureAkavache() =>
         AppBuilder.CreateSplatBuilder()
-            .WithAkavache(builder =>
+            .WithAkavacheCacheDatabase(builder =>
                 builder.WithApplicationName("AkavacheTodoMaui")
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
-                    .UseSystemTextJson()
+                    .UseSystemTextJsonSerializer()
                     .WithSqliteDefaults());
 }

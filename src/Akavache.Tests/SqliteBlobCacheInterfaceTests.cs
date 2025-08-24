@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
 
@@ -14,22 +13,20 @@ namespace Akavache.Tests;
 public class SqliteBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path)
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
     {
+        if (serializer == null)
+        {
+            throw new ArgumentNullException(nameof(serializer));
+        }
+
         // Create separate database files for each serializer to ensure compatibility
-        var serializerName = CacheDatabase.Serializer?.GetType().Name ?? "Unknown";
+        var serializerName = serializer.GetType().Name ?? "Unknown";
 
         // Further separate JSON and BSON formats to prevent cross-contamination
         var formatType = serializerName.Contains("Bson") ? "bson" : "json";
         var fileName = $"sqlite-interface-{serializerName}-{formatType}.db";
 
-        return new SqliteBlobCache(Path.Combine(path, fileName));
-    }
-
-    /// <inheritdoc />
-    protected override void SetupTestClassSerializer()
-    {
-        // Ensure proper serializer setup for these tests
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        return new SqliteBlobCache(Path.Combine(path, fileName), serializer);
     }
 }

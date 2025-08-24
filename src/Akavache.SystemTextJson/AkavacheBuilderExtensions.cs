@@ -18,7 +18,7 @@ namespace Akavache.SystemTextJson
         /// <param name="builder">The builder.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="System.ArgumentNullException">builder.</exception>
-        public static IAkavacheBuilder UseSystemTextJson(this IAkavacheBuilder builder)
+        public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder)
         {
             if (builder == null)
             {
@@ -40,7 +40,7 @@ namespace Akavache.SystemTextJson
         /// or
         /// settings.
         /// </exception>
-        public static IAkavacheBuilder UseSystemTextJson(this IAkavacheBuilder builder, JsonSerializerOptions settings)
+        public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder, JsonSerializerOptions settings)
         {
             if (builder == null)
             {
@@ -67,7 +67,7 @@ namespace Akavache.SystemTextJson
         /// or
         /// configure.
         /// </exception>
-        public static IAkavacheBuilder UseSystemTextJson(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
+        public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
         {
             if (builder == null)
             {

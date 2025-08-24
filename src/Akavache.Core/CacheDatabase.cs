@@ -14,27 +14,9 @@ namespace Akavache;
 /// </summary>
 public static class CacheDatabase
 {
-    private static IAkavacheBuilder? _builder;
+    private static IAkavacheInstance? _builder;
     private static bool _isInitialized;
     private static IScheduler? _taskPoolOverride;
-
-    /// <summary>
-    /// Gets the builder.
-    /// </summary>
-    /// <value>
-    /// The builder.
-    /// </value>
-    public static IAkavacheBuilder? Builder => _builder;
-
-    /// <summary>
-    /// Gets or sets the serializer.
-    /// </summary>
-    public static ISerializer? Serializer { get; set; }
-
-    /// <summary>
-    /// Gets or sets the http service.
-    /// </summary>
-    public static IHttpService? HttpService { get; set; } = new HttpService();
 
     /// <summary>
     /// Gets or sets the Scheduler used for task pools.
@@ -46,15 +28,36 @@ public static class CacheDatabase
     }
 
     /// <summary>
-    /// Gets or sets the application name used for cache file paths.
+    /// Gets the application name used for cache file paths.
     /// </summary>
-    public static string ApplicationName { get; set; } = "Akavache";
+    public static string? ApplicationName => Builder?.ApplicationName;
 
     /// <summary>
-    /// Gets or sets the forced DateTime kind for DateTime serialization.
+    /// Gets a value indicating whether BlobCache has been initialized.
+    /// </summary>
+    public static bool IsInitialized => _isInitialized;
+
+    /// <summary>
+    /// Gets the builder, only valid after Built.
+    /// </summary>
+    /// <value>
+    /// The builder.
+    /// </value>
+    public static IAkavacheInstance? Builder => GetOrThrowIfNotInitialized() ??
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
+
+    /// <summary>
+    /// Gets the http service.
+    /// </summary>
+    public static IHttpService? HttpService => GetOrThrowIfNotInitialized()?.HttpService ??
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
+
+    /// <summary>
+    /// Gets the forced DateTime kind for DateTime serialization.
     /// When set, all DateTime values will be converted to this kind during cache operations.
     /// </summary>
-    public static DateTimeKind? ForcedDateTimeKind { get; set; }
+    public static DateTimeKind? ForcedDateTimeKind => GetOrThrowIfNotInitialized()?.ForcedDateTimeKind ??
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
     /// Gets the InMemory cache instance. This cache stores data only in memory
@@ -62,26 +65,22 @@ public static class CacheDatabase
     /// and session state.
     /// </summary>
     public static IBlobCache InMemory => GetOrThrowIfNotInitialized()?.InMemory ??
-        throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
-    /// <summary>
-    /// Gets a value indicating whether BlobCache has been initialized.
-    /// </summary>
-    public static bool IsInitialized => _isInitialized;
     /// <summary>
     /// Gets the LocalMachine cache instance. This cache persists data but is suitable
     /// for temporary/cached data that can be safely deleted. On mobile platforms,
     /// the system may delete this data to free up disk space.
     /// </summary>
     public static IBlobCache LocalMachine => GetOrThrowIfNotInitialized()?.LocalMachine ??
-        throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
     /// Gets the Secure cache instance. This cache provides encrypted storage
     /// for sensitive data like credentials and API keys.
     /// </summary>
     public static ISecureBlobCache Secure => GetOrThrowIfNotInitialized()?.Secure ??
-        throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
     /// Gets the UserAccount cache instance. This cache persists data and is suitable
@@ -89,7 +88,7 @@ public static class CacheDatabase
     /// On some platforms, this data may be backed up to the cloud.
     /// </summary>
     public static IBlobCache UserAccount => GetOrThrowIfNotInitialized()?.UserAccount ??
-        throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
+        throw new InvalidOperationException("CacheDatabase has not been initialized. Call CacheDatabase.Initialize() first.");
 
     /// <summary>
     /// Shuts down all cache instances and flushes any pending operations.
@@ -109,7 +108,7 @@ public static class CacheDatabase
         // dispose the settings store
         if (AkavacheBuilder.BlobCaches != null)
         {
-            var shutdownSettingsBlobs = Observable.Start(static async () =>
+            var shutdownSettingsBlobs = Observable.Start(async () =>
             {
                 var tasks = AkavacheBuilder.BlobCaches
                 .Where(cachePair => cachePair.Value != null)
@@ -122,7 +121,7 @@ public static class CacheDatabase
 
         if (AkavacheBuilder.SettingsStores != null)
         {
-            var shutdownSettingsStores = Observable.Start(static async () =>
+            var shutdownSettingsStores = Observable.Start(async () =>
             {
                 var tasks = AkavacheBuilder.SettingsStores
                 .Where(cachePair => cachePair.Value != null)
@@ -154,47 +153,32 @@ public static class CacheDatabase
     /// Initializes BlobCache with default in-memory caches.
     /// This is the safest default as it doesn't require any additional packages.
     /// </summary>
+    /// <param name="serializer">The serializer.</param>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <returns>A BlobCache builder for further configuration.</returns>
-    internal static IAkavacheBuilder Initialize(string? applicationName = null)
-    {
-        if (applicationName != null)
-        {
-            ApplicationName = applicationName;
-        }
-
-        var builder = CreateBuilder()
-            .WithApplicationName(ApplicationName)
-            .WithInMemoryDefaults();
-
-        return builder.Build();
-    }
+    /// <exception cref="System.InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+    public static void Initialize(ISerializer serializer, string? applicationName = null) => SetBuilder(CreateBuilder()
+            .WithApplicationName(applicationName)
+            .WithSerializer(serializer)
+            .WithInMemoryDefaults().Build());
 
     /// <summary>
     /// Initializes BlobCache with a custom builder configuration.
     /// </summary>
     /// <param name="configure">An action to configure the BlobCache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
-    /// <returns>
-    /// The configured builder.
-    /// </returns>
     /// <exception cref="ArgumentNullException">configure.</exception>
-    internal static IAkavacheBuilder Initialize(Action<IAkavacheBuilder> configure, string? applicationName = null)
+    public static void Initialize(Action<IAkavacheBuilder> configure, string? applicationName = null)
     {
         if (configure == null)
         {
             throw new ArgumentNullException(nameof(configure));
         }
 
-        var builder = CreateBuilder();
-        if (applicationName != null)
-        {
-            ApplicationName = applicationName;
-            builder.WithApplicationName(ApplicationName);
-        }
+        var builder = CreateBuilder().WithApplicationName(applicationName);
 
         configure(builder);
-        return builder.Build();
+
+        SetBuilder(builder.Build());
     }
 
     /// <summary>
@@ -207,13 +191,13 @@ public static class CacheDatabase
     /// Internal method to set the builder instance. Used by the builder pattern.
     /// </summary>
     /// <param name="builder">The configured builder instance.</param>
-    internal static void SetBuilder(IAkavacheBuilder builder)
+    internal static void SetBuilder(IAkavacheInstance builder)
     {
         _builder = builder;
         _isInitialized = true;
     }
 
-    private static IAkavacheBuilder? GetOrThrowIfNotInitialized()
+    private static IAkavacheInstance? GetOrThrowIfNotInitialized()
     {
         if (!_isInitialized)
         {

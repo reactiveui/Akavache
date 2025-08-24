@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
-using Akavache.SystemTextJson;
 using Xunit;
 
 namespace Akavache.Tests;
@@ -226,31 +225,6 @@ public class CoreUtilityTests
 
         Assert.Contains("test_cache", objectDisposedEx.Message);
         Assert.Contains("disposed", objectDisposedEx.Message);
-    }
-
-    /// <summary>
-    /// Tests that serializer registration works correctly.
-    /// </summary>
-    [Fact]
-    public void SerializerRegistrationShouldWorkCorrectly()
-    {
-        // Arrange
-        var originalSerializer = CacheDatabase.Serializer;
-        var testSerializer = new SystemJsonSerializer();
-
-        try
-        {
-            // Act
-            CacheDatabase.Serializer = testSerializer;
-
-            // Assert
-            Assert.Same(testSerializer, CacheDatabase.Serializer);
-        }
-        finally
-        {
-            // Restore original serializer
-            CacheDatabase.Serializer = originalSerializer;
-        }
     }
 
     /// <summary>

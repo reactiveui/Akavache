@@ -238,35 +238,27 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldTryAlternativeKeys()
     {
         // Arrange
-        var originalSerializer = CacheDatabase.Serializer;
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
+
+        var cache = new InMemoryBlobCache(serializer);
+        var testObject = new UserObject { Name = "Alt Key Test", Bio = "Alt Bio", Blog = "Alt Blog" };
 
         try
         {
-            var cache = new InMemoryBlobCache();
-            var testObject = new UserObject { Name = "Alt Key Test", Bio = "Alt Bio", Blog = "Alt Blog" };
+            // Store object with prefixed key
+            await cache.InsertObject("test_key", testObject).FirstAsync();
 
-            try
-            {
-                // Store object with prefixed key
-                await cache.InsertObject("test_key", testObject).FirstAsync();
+            // Act - Try to find with alternative keys
+            var result = await UniversalSerializer.TryFindDataWithAlternativeKeys<UserObject>(
+                cache, "test_key", serializer);
 
-                // Act - Try to find with alternative keys
-                var result = await UniversalSerializer.TryFindDataWithAlternativeKeys<UserObject>(
-                    cache, "test_key", CacheDatabase.Serializer);
-
-                // Assert
-                Assert.NotNull(result);
-                Assert.Equal("Alt Key Test", result!.Name);
-            }
-            finally
-            {
-                await cache.DisposeAsync();
-            }
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("Alt Key Test", result!.Name);
         }
         finally
         {
-            CacheDatabase.Serializer = originalSerializer;
+            await cache.DisposeAsync();
         }
     }
 

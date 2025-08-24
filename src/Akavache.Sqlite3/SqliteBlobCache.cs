@@ -35,22 +35,22 @@ public class SqliteBlobCache : IBlobCache
 
 #if ENCRYPTED
     /// <summary>
-    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache"/> class.
+    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache" /> class.
     /// </summary>
     /// <param name="fileName">The database file name.</param>
     /// <param name="password">The password.</param>
+    /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    /// <param name="storeDateTimeAsTicks">
-    /// Specifies whether to store DateTime properties as ticks (true) or strings (false).
+    /// <param name="storeDateTimeAsTicks">Specifies whether to store DateTime properties as ticks (true) or strings (false).
     /// You absolutely do want to store them as Ticks in all new projects. The value
     /// of false is only here for backwards compatibility. There is a *significant* speed
     /// advantage, with no down sides, when setting storeDateTimeAsTicks = true. If you
     /// use DateTimeOffset properties, it will be always stored as ticks regardingless
-    /// the storeDateTimeAsTicks parameter.
-    /// </param>
-    public EncryptedSqliteBlobCache(string fileName, string password, IScheduler? scheduler = null, bool storeDateTimeAsTicks = true)
+    /// the storeDateTimeAsTicks parameter.</param>
+    public EncryptedSqliteBlobCache(string fileName, string password, ISerializer serializer, IScheduler? scheduler = null, bool storeDateTimeAsTicks = true)
         : this(
               new SQLiteConnectionString(fileName ?? throw new ArgumentNullException(nameof(fileName)), storeDateTimeAsTicks, key: password ?? throw new ArgumentNullException(nameof(password))),
+              serializer,
               scheduler)
     {
     }
@@ -59,6 +59,7 @@ public class SqliteBlobCache : IBlobCache
     /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class.
     /// </summary>
     /// <param name="fileName">The database file name.</param>
+    /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <param name="storeDateTimeAsTicks">
     /// Specifies whether to store DateTime properties as ticks (true) or strings (false).
@@ -68,9 +69,10 @@ public class SqliteBlobCache : IBlobCache
     /// use DateTimeOffset properties, it will be always stored as ticks regardingless
     /// the storeDateTimeAsTicks parameter.
     /// </param>
-    public SqliteBlobCache(string fileName, IScheduler? scheduler = null, bool storeDateTimeAsTicks = true)
+    public SqliteBlobCache(string fileName, ISerializer serializer, IScheduler? scheduler = null, bool storeDateTimeAsTicks = true)
         : this(
               new SQLiteConnectionString(fileName ?? throw new ArgumentNullException(nameof(fileName)), storeDateTimeAsTicks),
+              serializer,
               scheduler)
     {
     }
@@ -78,18 +80,21 @@ public class SqliteBlobCache : IBlobCache
 
 #if ENCRYPTED
     /// <summary>
-    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache"/> class.
+    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache" /> class.
     /// </summary>
     /// <param name="connectionString">The connection string.</param>
+    /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public EncryptedSqliteBlobCache(SQLiteConnectionString connectionString, IScheduler? scheduler = null)
+    /// <exception cref="System.ArgumentNullException">connectionString.</exception>
+    public EncryptedSqliteBlobCache(SQLiteConnectionString connectionString, ISerializer serializer, IScheduler? scheduler = null)
 #else
     /// <summary>
     /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class.
     /// </summary>
     /// <param name="connectionString">The connection string.</param>
+    /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public SqliteBlobCache(SQLiteConnectionString connectionString, IScheduler? scheduler = null)
+    public SqliteBlobCache(SQLiteConnectionString connectionString, ISerializer serializer, IScheduler? scheduler = null)
 #endif
     {
 #if NETSTANDARD
@@ -101,6 +106,7 @@ public class SqliteBlobCache : IBlobCache
         ArgumentNullException.ThrowIfNull(connectionString);
 #endif
 
+        Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         Connection = new SQLiteAsyncConnection(connectionString);
         Scheduler = scheduler ?? CacheDatabase.TaskpoolScheduler;
         _initialized = Initialize();
@@ -116,6 +122,9 @@ public class SqliteBlobCache : IBlobCache
 
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind { get; set; }
+
+    /// <inheritdoc/>
+    public ISerializer Serializer { get; }
 
     /// <inheritdoc/>
     public IObservable<Unit> Flush()

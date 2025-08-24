@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.Tests.TestBases;
 
@@ -15,8 +14,5 @@ namespace Akavache.Tests;
 public class SqliteBlobCacheDateTimeTests : DateTimeTestBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path) => new SqliteBlobCache(Path.Combine(path, "test.db"));
-
-    /// <inheritdoc />
-    protected override ISerializer? GetTestSerializer() => new NewtonsoftBsonSerializer();
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) => new SqliteBlobCache(Path.Combine(path, "test.db"), serializer);
 }

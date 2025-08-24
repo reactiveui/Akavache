@@ -3,6 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
+using Akavache.NewtonsoftJson;
+using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
 using Xunit;
@@ -15,17 +18,7 @@ namespace Akavache.Tests.TestBases;
 [Collection("DateTime Tests")]
 public abstract class DateTimeTestBase : IDisposable
 {
-    private readonly ISerializer? _originalSerializer;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DateTimeTestBase"/> class.
-    /// </summary>
-    protected DateTimeTestBase()
-    {
-        // Store the original serializer to restore it after each test
-        _originalSerializer = CacheDatabase.Serializer;
-    }
 
     /// <summary>
     /// Gets the date time offsets used in theory tests.
@@ -73,222 +66,59 @@ public abstract class DateTimeTestBase : IDisposable
     private static DateTimeOffset TestNowOffset { get; } = new DateTimeOffset(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(5));
 
     /// <summary>
-    /// Makes sure that the DateTimeOffset are serialized correctly.
+    /// Sets up the test with the specified serializer type.
     /// </summary>
-    /// <param name="data">The data in the theory.</param>
-    /// <returns>A task to monitor the progress.</returns>
-    [Theory(Skip = "Not repeatable so skipping until have more time to resolve")]
-    [MemberData(nameof(DateTimeOffsetData))]
-    public async Task GetOrFetchAsyncDateTimeOffsetShouldBeEqualEveryTime(TestObjectDateTimeOffset data)
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    public static ISerializer SetupTestSerializer(Type? serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
 
-        using (Utility.WithEmptyDirectory(out var path))
-        await using (var blobCache = CreateBlobCache(path))
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
         {
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-
-            // Add null checks to prevent NullReferenceException
-            if (firstResult == null || secondResult == null)
-            {
-                Assert.True(false, $"Serialization failed: firstResult={firstResult}, secondResult={secondResult}");
-                return;
-            }
-
-            // For cross-serializer compatibility, we need to be more flexible with DateTimeOffset
-            // Some serializers may normalize the offset to UTC or handle timezone information differently
-
-            // Check for default/uninitialized DateTimeOffset values that indicate serialization issues
-            if (firstResult.Timestamp == default || secondResult.Timestamp == default)
-            {
-                Assert.True(false, $"DateTimeOffset serialization resulted in default values: first={firstResult.Timestamp}, second={secondResult.Timestamp}");
-                return;
-            }
-
-            // Primary test: UTC time should be consistent
-            Assert.Equal(firstResult.Timestamp.UtcTicks, secondResult.Timestamp.UtcTicks);
-
-            // Offset comparison: be more flexible as some serializers normalize offsets
-            var offsetDifference = Math.Abs((firstResult.Timestamp.Offset - secondResult.Timestamp.Offset).TotalHours);
-
-            // Enhanced tolerance for BSON serializers
-            var offsetTolerance = IsUsingBsonSerializer() ? 48.0 : 24.0; // 48 hours for BSON, 24 for others
-
-            Assert.True(offsetDifference <= offsetTolerance, $"DateTimeOffset offset difference too large: {firstResult.Timestamp.Offset} vs {secondResult.Timestamp.Offset} (diff: {offsetDifference} hours)");
-
-            // Ticks comparison: be flexible for cross-serializer scenarios
-            var ticksDifference = Math.Abs(firstResult.Timestamp.Ticks - secondResult.Timestamp.Ticks);
-            var toleranceTicks = TimeSpan.FromHours(offsetTolerance).Ticks;
-            Assert.True(ticksDifference <= toleranceTicks, $"DateTimeOffset ticks difference too large: {firstResult.Timestamp.Ticks} vs {secondResult.Timestamp.Ticks} (diff: {ticksDifference} ticks)");
-
-            // Nullable timestamp handling
-            if (firstResult.TimestampNullable.HasValue && secondResult.TimestampNullable.HasValue)
-            {
-                Assert.Equal(firstResult.TimestampNullable.Value.UtcTicks, secondResult.TimestampNullable.Value.UtcTicks);
-            }
-            else
-            {
-                // Both should be null or both should have values (with some flexibility for serializer differences)
-                var firstHasValue = firstResult.TimestampNullable.HasValue;
-                var secondHasValue = secondResult.TimestampNullable.HasValue;
-
-                if (firstHasValue != secondHasValue)
-                {
-                    // For cross-serializer compatibility, log but don't fail
-                    System.Diagnostics.Debug.WriteLine($"DateTimeOffset nullable difference: first={firstHasValue}, second={secondHasValue}");
-                }
-            }
+            // Register the Newtonsoft BSON serializer specifically
+            return new NewtonsoftBsonSerializer();
         }
-    }
-
-    /// <summary>
-    /// Makes sure that the DateTime are serialized correctly.
-    /// </summary>
-    /// <param name="data">The data in the theory.</param>
-    /// <returns>A task to monitor the progress.</returns>
-    [Theory(Skip = "This test passes but also fails due to timing issues during test, skip until can locate the reason")]
-    [MemberData(nameof(DateTimeData))]
-    public async Task GetOrFetchAsyncDateTimeShouldBeEqualEveryTime(TestObjectDateTime data)
-    {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
-
-        using (Utility.WithEmptyDirectory(out var path))
-        await using (var blobCache = CreateBlobCache(path))
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
         {
-            var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-
-            // Add null checks to prevent NullReferenceException
-            if (firstResult == null || secondResult == null)
-            {
-                Assert.True(false, $"Serialization failed: firstResult={firstResult}, secondResult={secondResult}");
-                return;
-            }
-
-            // Check for default/uninitialized DateTime values that indicate serialization issues
-            // For BSON serializers, allow for more significant differences
-            if (IsUsingBsonSerializer())
-            {
-                // BSON serializers might have severe DateTime issues - handle gracefully
-                if (firstResult.Timestamp == default || secondResult.Timestamp == default ||
-                    firstResult.Timestamp.Year < 1900 || secondResult.Timestamp.Year < 1900)
-                {
-                    Assert.True(false, $"BSON DateTime serialization issue detected: first={firstResult.Timestamp}, second={secondResult.Timestamp}");
-                    return;
-                }
-            }
-            else if (firstResult.Timestamp == default || secondResult.Timestamp == default)
-            {
-                Assert.True(false, $"DateTime serialization resulted in default values: first={firstResult.Timestamp}, second={secondResult.Timestamp}");
-                return;
-            }
-
-            // Enhanced cross-serializer compatibility testing
-            var firstUtc = ConvertToComparableUtc(firstResult.Timestamp);
-            var secondUtc = ConvertToComparableUtc(secondResult.Timestamp);
-
-            // Different tolerance based on cache type and serializer
-            var tolerance = GetDateTimeToleranceForCacheType(blobCache);
-
-            // Additional tolerance for BSON serializers
-            if (IsUsingBsonSerializer())
-            {
-                tolerance *= 5; // 5x tolerance for BSON serializers
-            }
-
-            var difference = Math.Abs((firstUtc - secondUtc).TotalMilliseconds);
-
-            Assert.True(difference < tolerance, $"DateTime UTC values differ by {difference}ms ({difference / 3600000.0:F1} hours): {firstUtc} vs {secondUtc}. Cache type: {blobCache.GetType().Name}, Tolerance: {tolerance}ms");
-
-            // Check nullable timestamp with enhanced flexibility
-            HandleNullableDateTimeComparison(firstResult.TimestampNullable, secondResult.TimestampNullable, tolerance);
+            // Register the System.Text.Json BSON serializer specifically
+            return new SystemJsonBsonSerializer();
         }
-    }
-
-    /// <summary>
-    /// Makes sure that the DateTime are serialized correctly with forced local time.
-    /// </summary>
-    /// <param name="data">The data in the theory.</param>
-    /// <returns>A task to monitor the progress.</returns>
-    [Theory(Skip = "Skipping forced local time tests due to unreliable DateTime serialization behavior across different cache implementations and serializers")]
-    [MemberData(nameof(DateLocalTimeData))]
-    public async Task GetOrFetchAsyncDateTimeWithForcedLocal(TestObjectDateTime data)
-    {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
-
-        using (Utility.WithEmptyDirectory(out var path))
-        await using (var blobCache = CreateBlobCache(path))
+        else if (serializerType == typeof(NewtonsoftSerializer))
         {
-            var originalKind = blobCache.ForcedDateTimeKind;
-            try
-            {
-                blobCache.ForcedDateTimeKind = DateTimeKind.Local;
-                var (firstResult, secondResult) = await PerformTimeStampGrab(blobCache, data);
-
-                // Add null checks to prevent NullReferenceException
-                if (firstResult == null || secondResult == null)
-                {
-                    Assert.True(false, $"Serialization failed with forced local time: firstResult={firstResult}, secondResult={secondResult}");
-                    return;
-                }
-
-                // Check for default/uninitialized DateTime values that indicate serialization issues
-                if (firstResult.Timestamp == default || secondResult.Timestamp == default)
-                {
-                    Assert.True(false, $"DateTime serialization with forced local resulted in default values: first={firstResult.Timestamp}, second={secondResult.Timestamp}");
-                    return;
-                }
-
-                var firstUtc = ConvertToComparableUtc(firstResult.Timestamp);
-                var secondUtc = ConvertToComparableUtc(secondResult.Timestamp);
-
-                // Allow for very generous differences in cross-serializer scenarios
-                var timeDifference = Math.Abs((firstUtc - secondUtc).TotalMilliseconds);
-                Assert.True(timeDifference < 43_200_000, $"DateTime values differ by {timeDifference}ms ({timeDifference / 3600000.0:F1} hours): {firstUtc} vs {secondUtc}");
-
-                // Handle nullable timestamp comparison with null safety
-                var firstHasValue = firstResult.TimestampNullable.HasValue;
-                var secondHasValue = secondResult.TimestampNullable.HasValue;
-
-                if (firstHasValue && secondHasValue)
-                {
-                    var firstNullableUtc = ConvertToComparableUtc(firstResult.TimestampNullable!.Value);
-                    var secondNullableUtc = ConvertToComparableUtc(secondResult.TimestampNullable!.Value);
-
-                    var nullableTimeDifference = Math.Abs((firstNullableUtc - secondNullableUtc).TotalMilliseconds);
-                    Assert.True(nullableTimeDifference < 43_200_000, $"Nullable DateTime values differ by {nullableTimeDifference}ms ({nullableTimeDifference / 3600000.0:F1} hours): {firstNullableUtc} vs {secondNullableUtc}");
-                }
-                else if (!firstHasValue && !secondHasValue)
-                {
-                    // Both are null - this is fine
-                }
-                else
-                {
-                    // Log but don't fail for cross-serializer compatibility
-                    System.Diagnostics.Debug.WriteLine($"Nullable timestamp consistency issue: first={firstHasValue}, second={secondHasValue}");
-                }
-            }
-            finally
-            {
-                blobCache.ForcedDateTimeKind = originalKind;
-            }
+            // Register the Newtonsoft JSON serializer
+            return new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            return new SystemJsonSerializer();
+        }
+        else
+        {
+            return null!;
         }
     }
 
     /// <summary>
     /// Tests to make sure that we can force the DateTime kind.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DateTimeKindCanBeForced()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task DateTimeKindCanBeForced(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        using (var fixture = CreateBlobCache(path))
+        using (var fixture = CreateBlobCache(path, serializer))
         {
             fixture.ForcedDateTimeKind = DateTimeKind.Utc;
 
@@ -302,15 +132,22 @@ public abstract class DateTimeTestBase : IDisposable
     /// <summary>
     /// Tests comprehensive DateTime serialization scenarios including edge cases.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">$"DateTime edge case {i} failed for value {testCase} ({testCase.Kind}), ex.</exception>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var blobCache = CreateBlobCache(path))
+        await using (var blobCache = CreateBlobCache(path, serializer))
         {
             var edgeCases = new[]
             {
@@ -344,10 +181,10 @@ public abstract class DateTimeTestBase : IDisposable
                     var toleranceMs = GetDateTimeToleranceForEdgeCase(i, testCase);
 
                     // Enhanced tolerance for BSON serializers and encrypted caches
-                    var cacheTypeName = CacheDatabase.Serializer?.GetType().Name;
+                    var cacheTypeName = serializer.GetType().Name;
                     var isEncryptedCache = blobCache.GetType().Name.Contains("Encrypted");
 
-                    if (cacheTypeName?.Contains("Newton") == true || cacheTypeName?.Contains("Bson") == true || IsUsingBsonSerializer())
+                    if (cacheTypeName?.Contains("Newton") == true || cacheTypeName?.Contains("Bson") == true || IsUsingBsonSerializer(serializer))
                     {
                         toleranceMs *= 20; // 20x tolerance for BSON
                     }
@@ -386,7 +223,7 @@ public abstract class DateTimeTestBase : IDisposable
                 catch (Exception ex)
                 {
                     // For BSON serializers and encrypted caches, be more lenient with edge cases
-                    if ((IsUsingBsonSerializer() || blobCache.GetType().Name.Contains("Encrypted")) && (i == 0 || i == 1))
+                    if ((IsUsingBsonSerializer(serializer) || blobCache.GetType().Name.Contains("Encrypted")) && (i == 0 || i == 1))
                     {
                         System.Diagnostics.Debug.WriteLine($"DateTime edge case {i} failed but acceptable: {testCase} - {ex.Message}");
                         skipCount++;
@@ -400,7 +237,7 @@ public abstract class DateTimeTestBase : IDisposable
             // Require at least 50% success rate for edge cases (very lenient for cross-platform compatibility)
             var totalAttempts = successCount + skipCount;
             var successRate = totalAttempts > 0 ? (double)successCount / totalAttempts : 0;
-            var minSuccessRate = IsUsingBsonSerializer() || blobCache.GetType().Name.Contains("Encrypted") ? 0.3 : 0.6;
+            var minSuccessRate = IsUsingBsonSerializer(serializer) || blobCache.GetType().Name.Contains("Encrypted") ? 0.3 : 0.6;
 
             Assert.True(
                 successRate >= minSuccessRate,
@@ -412,17 +249,24 @@ public abstract class DateTimeTestBase : IDisposable
     /// Tests comprehensive DateTimeOffset serialization scenarios including edge cases.
     /// Enhanced version with better mobile/desktop scenario coverage.
     /// </summary>
-    /// <returns>A task to monitor the progress.</returns>
-    [Fact]
-    public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly()
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">$"DateTimeOffset edge case {i} failed for value {testCase}, ex.</exception>
+    [Theory]
+    [InlineData(typeof(SystemJsonSerializer))]
+    [InlineData(typeof(SystemJsonBsonSerializer))]
+    [InlineData(typeof(NewtonsoftSerializer))]
+    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
-        // Ensure the test uses the correct serializer
-        EnsureTestSerializerSetup();
+        var serializer = SetupTestSerializer(serializerType);
 
         using (Utility.WithEmptyDirectory(out var path))
-        await using (var blobCache = CreateBlobCache(path))
+        await using (var blobCache = CreateBlobCache(path, serializer))
         {
-            var edgeCases = GetMobileDesktopDateTimeOffsetTestCases();
+            var edgeCases = GetMobileDesktopDateTimeOffsetTestCases(serializer);
 
             var successCount = 0;
             var skipCount = 0;
@@ -437,7 +281,7 @@ public abstract class DateTimeTestBase : IDisposable
                     await blobCache.InsertObject(key, testCase);
                     var retrieved = await blobCache.GetObject<DateTimeOffset>(key);
 
-                    if (ValidateDateTimeOffsetRoundtrip(testCase, retrieved))
+                    if (ValidateDateTimeOffsetRoundtrip(testCase, retrieved, serializer))
                     {
                         successCount++;
                     }
@@ -454,7 +298,7 @@ public abstract class DateTimeTestBase : IDisposable
                 catch (Exception ex)
                 {
                     // For BSON serializers, be more lenient with edge cases
-                    if (IsUsingBsonSerializer() && (i == 0 || i == 1))
+                    if (IsUsingBsonSerializer(serializer) && (i == 0 || i == 1))
                     {
                         System.Diagnostics.Debug.WriteLine($"BSON DateTimeOffset edge case {i} failed but acceptable: {testCase} - {ex.Message}");
                         skipCount++;
@@ -480,7 +324,7 @@ public abstract class DateTimeTestBase : IDisposable
 
             // Allow for more failures with complex DateTimeOffset scenarios - be very lenient
             var minimumSuccessRate = blobCache.GetType().Name.Contains("Encrypted") ? 0.4 :
-                                   IsUsingBsonSerializer() ? 0.5 : 0.7;
+                                   IsUsingBsonSerializer(serializer) ? 0.5 : 0.7;
 
             Assert.True(successRate >= minimumSuccessRate, $"DateTimeOffset edge case success rate too low: {successCount}/{actualTests} = {successRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}");
         }
@@ -496,19 +340,14 @@ public abstract class DateTimeTestBase : IDisposable
     }
 
     /// <summary>
-    /// Gets the <see cref="IBlobCache"/> we want to do the tests against.
+    /// Gets the <see cref="IBlobCache" /> we want to do the tests against.
     /// </summary>
     /// <param name="path">The path to the blob cache.</param>
-    /// <returns>The blob cache for testing.</returns>
-    protected abstract IBlobCache CreateBlobCache(string path);
-
-    /// <summary>
-    /// Sets up the test class serializer. This should be overridden by derived classes.
-    /// </summary>
-    protected virtual void SetupTestClassSerializer()
-    {
-        // Default implementation - derived classes should override this
-    }
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>
+    /// The blob cache for testing.
+    /// </returns>
+    protected abstract IBlobCache CreateBlobCache(string path, ISerializer serializer);
 
     /// <summary>
     /// Disposes resources.
@@ -520,22 +359,11 @@ public abstract class DateTimeTestBase : IDisposable
         {
             if (disposing)
             {
-                // Restore the original serializer to prevent interference with other tests
-                if (_originalSerializer != null)
-                {
-                    CacheDatabase.Serializer = _originalSerializer;
-                }
             }
 
             _disposed = true;
         }
     }
-
-    /// <summary>
-    /// Returns the serializer required for this test class. Override in derived classes.
-    /// </summary>
-    /// <returns>The serializer instance to use for this test class.</returns>
-    protected virtual ISerializer? GetTestSerializer() => null;
 
     /// <summary>
     /// Performs the actual time stamp grab.
@@ -671,11 +499,10 @@ public abstract class DateTimeTestBase : IDisposable
     /// Determines if the current serializer is a BSON-based serializer.
     /// </summary>
     /// <returns>True if using a BSON serializer.</returns>
-    private static bool IsUsingBsonSerializer()
+    private static bool IsUsingBsonSerializer(ISerializer serializer)
     {
         try
         {
-            var serializer = CacheDatabase.Serializer;
             if (serializer == null)
             {
                 return false;
@@ -694,7 +521,7 @@ public abstract class DateTimeTestBase : IDisposable
     /// Gets DateTimeOffset test cases that cover mobile and desktop application scenarios.
     /// </summary>
     /// <returns>Array of DateTimeOffset test cases.</returns>
-    private static DateTimeOffset[] GetMobileDesktopDateTimeOffsetTestCases()
+    private static DateTimeOffset[] GetMobileDesktopDateTimeOffsetTestCases(ISerializer serializer)
     {
         var cases = new List<DateTimeOffset>
         {
@@ -716,7 +543,7 @@ public abstract class DateTimeTestBase : IDisposable
         };
 
         // Only add extreme edge cases for non-BSON serializers
-        if (!IsUsingBsonSerializer())
+        if (!IsUsingBsonSerializer(serializer))
         {
             cases.AddRange(new[]
             {
@@ -733,8 +560,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// </summary>
     /// <param name="original">The original DateTimeOffset.</param>
     /// <param name="retrieved">The retrieved DateTimeOffset.</param>
-    /// <returns>True if the roundtrip is valid.</returns>
-    private static bool ValidateDateTimeOffsetRoundtrip(DateTimeOffset original, DateTimeOffset retrieved)
+    /// <param name="serializer">The serializer.</param>
+    /// <returns>
+    /// True if the roundtrip is valid.
+    /// </returns>
+    private static bool ValidateDateTimeOffsetRoundtrip(DateTimeOffset original, DateTimeOffset retrieved, ISerializer serializer)
     {
         // UTC time should be very close
         var utcTicksDifference = Math.Abs(original.UtcTicks - retrieved.UtcTicks);
@@ -751,7 +581,7 @@ public abstract class DateTimeTestBase : IDisposable
 
         // Offset comparison: be flexible as some serializers normalize offsets
         var offsetDifference = Math.Abs((original.Offset - retrieved.Offset).TotalHours);
-        var offsetTolerance = IsUsingBsonSerializer() ? 48.0 : 24.0; // More tolerance for BSON
+        var offsetTolerance = IsUsingBsonSerializer(serializer) ? 48.0 : 24.0; // More tolerance for BSON
 
         if (offsetDifference > offsetTolerance)
         {
@@ -763,22 +593,5 @@ public abstract class DateTimeTestBase : IDisposable
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Ensures that the test serializer is properly set up before each test method.
-    /// </summary>
-    private void EnsureTestSerializerSetup()
-    {
-        // Always store and restore the original serializer for test isolation
-        var requiredSerializer = GetTestSerializer();
-        if (requiredSerializer != null)
-        {
-            CacheDatabase.Serializer = requiredSerializer;
-        }
-        else
-        {
-            SetupTestClassSerializer();
-        }
     }
 }

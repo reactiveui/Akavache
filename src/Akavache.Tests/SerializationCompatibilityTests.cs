@@ -217,50 +217,40 @@ public class SerializationCompatibilityTests
             throw new ArgumentNullException(nameof(serializerType));
         }
 
-        // Store and restore the original serializer to prevent interference
-        var originalSerializer = CacheDatabase.Serializer;
-        try
-        {
-            // Arrange
-            var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            CacheDatabase.Serializer = serializer;
+        // Arrange
+        var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
-            using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var dbPath = Path.Combine(path, "test.db");
+
+            var testObject = new TestObject
             {
-                var dbPath = Path.Combine(path, "test.db");
+                Name = "TestUser",
+                Value = 12345,
+                Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
+            };
 
-                var testObject = new TestObject
-                {
-                    Name = "TestUser",
-                    Value = 12345,
-                    Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
-                };
-
-                // Test storage phase
-                await using (var cache = new SqliteBlobCache(dbPath))
-                {
-                    await cache.InsertObject("test_key", testObject).FirstAsync();
-                    await cache.Flush().FirstAsync(); // Ensure data is written to disk
-                }
-
-                // Test retrieval phase with new cache instance
-                await using (var cache = new SqliteBlobCache(dbPath))
-                {
-                    var retrievedObject = await cache.GetObject<TestObject>("test_key").FirstAsync();
-
-                    Assert.NotNull(retrievedObject);
-                    Assert.Equal(testObject.Name, retrievedObject.Name);
-                    Assert.Equal(testObject.Value, retrievedObject.Value);
-
-                    // Allow for DateTime precision differences
-                    var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalSeconds);
-                    Assert.True(timeDiff < 60, $"DateTime difference too large: {timeDiff} seconds with {serializerType.Name}");
-                }
+            // Test storage phase
+            await using (var cache = new SqliteBlobCache(dbPath, serializer))
+            {
+                await cache.InsertObject("test_key", testObject).FirstAsync();
+                await cache.Flush().FirstAsync(); // Ensure data is written to disk
             }
-        }
-        finally
-        {
-            CacheDatabase.Serializer = originalSerializer;
+
+            // Test retrieval phase with new cache instance
+            await using (var cache = new SqliteBlobCache(dbPath, serializer))
+            {
+                var retrievedObject = await cache.GetObject<TestObject>("test_key").FirstAsync();
+
+                Assert.NotNull(retrievedObject);
+                Assert.Equal(testObject.Name, retrievedObject.Name);
+                Assert.Equal(testObject.Value, retrievedObject.Value);
+
+                // Allow for DateTime precision differences
+                var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalSeconds);
+                Assert.True(timeDiff < 60, $"DateTime difference too large: {timeDiff} seconds with {serializerType.Name}");
+            }
         }
     }
 
@@ -289,62 +279,51 @@ public class SerializationCompatibilityTests
             throw new ArgumentNullException(nameof(readSerializerType));
         }
 
-        // Store and restore the original serializer to prevent interference
-        var originalSerializer = CacheDatabase.Serializer;
-        try
+        var testObject = new TestObject
         {
-            var testObject = new TestObject
-            {
-                Name = "CrossSerializerTest",
-                Value = 99999,
-                Date = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
-            };
+            Name = "CrossSerializerTest",
+            Value = 99999,
+            Date = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
+        };
 
-            using (Utility.WithEmptyDirectory(out var path))
-            {
-                var dbPath = Path.Combine(path, "cross_serializer_test.db");
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var dbPath = Path.Combine(path, "cross_serializer_test.db");
 
-                // Write with first serializer
+            // Write with first serializer
+            {
+                var writeSerializer = (ISerializer)Activator.CreateInstance(writeSerializerType)!;
+
+                await using var writeCache = new SqliteBlobCache(dbPath, writeSerializer);
+                await writeCache.InsertObject("cross_test", testObject).FirstAsync();
+                await writeCache.Flush().FirstAsync();
+            }
+
+            // Read with second serializer
+            {
+                var readSerializer = (ISerializer)Activator.CreateInstance(readSerializerType)!;
+
+                await using var readCache = new SqliteBlobCache(dbPath, readSerializer);
+
+                try
                 {
-                    var writeSerializer = (ISerializer)Activator.CreateInstance(writeSerializerType)!;
-                    CacheDatabase.Serializer = writeSerializer;
+                    var retrievedObject = await readCache.GetObject<TestObject>("cross_test").FirstAsync();
 
-                    await using var writeCache = new SqliteBlobCache(dbPath);
-                    await writeCache.InsertObject("cross_test", testObject).FirstAsync();
-                    await writeCache.Flush().FirstAsync();
+                    Assert.NotNull(retrievedObject);
+                    Assert.Equal(testObject.Name, retrievedObject.Name);
+                    Assert.Equal(testObject.Value, retrievedObject.Value);
+
+                    // Allow for DateTime precision differences
+                    var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalMinutes);
+                    Assert.True(timeDiff < 1440, $"DateTime difference too large: {timeDiff} minutes with {writeSerializerType.Name} -> {readSerializerType.Name}");
                 }
-
-                // Read with second serializer
+                catch (KeyNotFoundException ex)
                 {
-                    var readSerializer = (ISerializer)Activator.CreateInstance(readSerializerType)!;
-                    CacheDatabase.Serializer = readSerializer;
-
-                    await using var readCache = new SqliteBlobCache(dbPath);
-
-                    try
-                    {
-                        var retrievedObject = await readCache.GetObject<TestObject>("cross_test").FirstAsync();
-
-                        Assert.NotNull(retrievedObject);
-                        Assert.Equal(testObject.Name, retrievedObject.Name);
-                        Assert.Equal(testObject.Value, retrievedObject.Value);
-
-                        // Allow for DateTime precision differences
-                        var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalMinutes);
-                        Assert.True(timeDiff < 1440, $"DateTime difference too large: {timeDiff} minutes with {writeSerializerType.Name} -> {readSerializerType.Name}");
-                    }
-                    catch (KeyNotFoundException ex)
-                    {
-                        throw new InvalidOperationException(
-                            $"Cross-serializer test failed: could not read data written with {writeSerializerType.Name} using {readSerializerType.Name}. " +
-                            $"Error: {ex.Message}");
-                    }
+                    throw new InvalidOperationException(
+                        $"Cross-serializer test failed: could not read data written with {writeSerializerType.Name} using {readSerializerType.Name}. " +
+                        $"Error: {ex.Message}");
                 }
             }
-        }
-        finally
-        {
-            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -365,50 +344,40 @@ public class SerializationCompatibilityTests
             throw new ArgumentNullException(nameof(serializerType));
         }
 
-        // Store and restore the original serializer to prevent interference
-        var originalSerializer = CacheDatabase.Serializer;
-        try
-        {
-            // Arrange
-            var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            CacheDatabase.Serializer = serializer;
+        // Arrange
+        var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
-            using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var dbPath = Path.Combine(path, "simple_test.db");
+
+            var testObject = new TestObject
             {
-                var dbPath = Path.Combine(path, "simple_test.db");
+                Name = "SimpleTest",
+                Value = 123,
+                Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
+            };
 
-                var testObject = new TestObject
-                {
-                    Name = "SimpleTest",
-                    Value = 123,
-                    Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
-                };
+            // Test in single cache instance to see if issue is with multiple instances
+            await using (var cache = new SqliteBlobCache(dbPath, serializer))
+            {
+                // Insert
+                await cache.InsertObject("simple_key", testObject).FirstAsync();
 
-                // Test in single cache instance to see if issue is with multiple instances
-                await using (var cache = new SqliteBlobCache(dbPath))
-                {
-                    // Insert
-                    await cache.InsertObject("simple_key", testObject).FirstAsync();
+                // Verify via keys
+                var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
+                var typedKeys = await cache.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
 
-                    // Verify via keys
-                    var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
-                    var typedKeys = await cache.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
+                Assert.True(allKeys.Count > 0, "No keys found at all. Expected at least 1 key.");
+                Assert.True(typedKeys.Count > 0, "No typed keys found. All keys: [" + string.Join(", ", allKeys) + "], Typed keys: [" + string.Join(", ", typedKeys) + "]");
 
-                    Assert.True(allKeys.Count > 0, "No keys found at all. Expected at least 1 key.");
-                    Assert.True(typedKeys.Count > 0, "No typed keys found. All keys: [" + string.Join(", ", allKeys) + "], Typed keys: [" + string.Join(", ", typedKeys) + "]");
+                // Get
+                var retrieved = await cache.GetObject<TestObject>("simple_key").FirstAsync();
 
-                    // Get
-                    var retrieved = await cache.GetObject<TestObject>("simple_key").FirstAsync();
-
-                    Assert.NotNull(retrieved);
-                    Assert.Equal(testObject.Name, retrieved.Name);
-                    Assert.Equal(testObject.Value, retrieved.Value);
-                }
+                Assert.NotNull(retrieved);
+                Assert.Equal(testObject.Name, retrieved.Name);
+                Assert.Equal(testObject.Value, retrieved.Value);
             }
-        }
-        finally
-        {
-            CacheDatabase.Serializer = originalSerializer;
         }
     }
 
@@ -429,82 +398,72 @@ public class SerializationCompatibilityTests
             throw new ArgumentNullException(nameof(serializerType));
         }
 
-        // Store and restore the original serializer to prevent interference
-        var originalSerializer = CacheDatabase.Serializer;
-        try
-        {
-            // Arrange
-            var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            CacheDatabase.Serializer = serializer;
+        // Arrange
+        var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
-            using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var dbPath = Path.Combine(path, "debug_multi_instance.db");
+
+            var testObject = new TestObject
             {
-                var dbPath = Path.Combine(path, "debug_multi_instance.db");
+                Name = "MultiInstanceDebug",
+                Value = 789,
+                Date = new DateTime(2025, 1, 15, 15, 30, 0, DateTimeKind.Utc)
+            };
 
-                var testObject = new TestObject
-                {
-                    Name = "MultiInstanceDebug",
-                    Value = 789,
-                    Date = new DateTime(2025, 1, 15, 15, 30, 0, DateTimeKind.Utc)
-                };
+            // Phase 1: Store data with explicit disposal and verification
+            {
+                var cache1 = new SqliteBlobCache(dbPath, serializer);
+                await cache1.InsertObject("debug_key", testObject).FirstAsync();
+                await cache1.Flush().FirstAsync();
 
-                // Phase 1: Store data with explicit disposal and verification
-                {
-                    var cache1 = new SqliteBlobCache(dbPath);
-                    await cache1.InsertObject("debug_key", testObject).FirstAsync();
-                    await cache1.Flush().FirstAsync();
+                // Verify the data exists before disposal
+                var keysBeforeDisposal = await cache1.GetAllKeys().ToList().FirstAsync();
+                Assert.True(keysBeforeDisposal.Count > 0, "No keys found in cache1 before disposal");
 
-                    // Verify the data exists before disposal
-                    var keysBeforeDisposal = await cache1.GetAllKeys().ToList().FirstAsync();
-                    Assert.True(keysBeforeDisposal.Count > 0, "No keys found in cache1 before disposal");
+                // Explicit async disposal with proper wait
+                await cache1.DisposeAsync();
 
-                    // Explicit async disposal with proper wait
-                    await cache1.DisposeAsync();
-
-                    // Small delay to ensure cleanup is complete
-                    await Task.Delay(100);
-                }
-
-                // Phase 2: Try to read with a new instance
-                {
-                    var cache2 = new SqliteBlobCache(dbPath);
-
-                    // Check if file exists
-                    Assert.True(File.Exists(dbPath), "Database file does not exist after cache1 disposal");
-
-                    // Check keys
-                    var allKeys = await cache2.GetAllKeys().ToList().FirstAsync();
-                    var typedKeys = await cache2.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
-
-                    // Enhanced diagnostics
-                    var fileInfo = new FileInfo(dbPath);
-                    var walFile = dbPath + "-wal";
-                    var shmFile = dbPath + "-shm";
-
-                    var diagnosticInfo = $"DB file size: {fileInfo.Length} bytes. " +
-                        $"WAL exists: {File.Exists(walFile)}. " +
-                        $"SHM exists: {File.Exists(shmFile)}. " +
-                        $"All keys count: {allKeys.Count}. " +
-                        $"Typed keys count: {typedKeys.Count}. " +
-                        $"All keys: [{string.Join(", ", allKeys)}]. " +
-                        $"Typed keys: [{string.Join(", ", typedKeys)}]";
-
-                    Assert.True(allKeys.Count > 0, $"No keys found in cache2. {diagnosticInfo}");
-
-                    // Try to retrieve
-                    var retrieved = await cache2.GetObject<TestObject>("debug_key").FirstAsync();
-
-                    Assert.NotNull(retrieved);
-                    Assert.Equal(testObject.Name, retrieved.Name);
-                    Assert.Equal(testObject.Value, retrieved.Value);
-
-                    await cache2.DisposeAsync();
-                }
+                // Small delay to ensure cleanup is complete
+                await Task.Delay(100);
             }
-        }
-        finally
-        {
-            CacheDatabase.Serializer = originalSerializer;
+
+            // Phase 2: Try to read with a new instance
+            {
+                var cache2 = new SqliteBlobCache(dbPath, serializer);
+
+                // Check if file exists
+                Assert.True(File.Exists(dbPath), "Database file does not exist after cache1 disposal");
+
+                // Check keys
+                var allKeys = await cache2.GetAllKeys().ToList().FirstAsync();
+                var typedKeys = await cache2.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
+
+                // Enhanced diagnostics
+                var fileInfo = new FileInfo(dbPath);
+                var walFile = dbPath + "-wal";
+                var shmFile = dbPath + "-shm";
+
+                var diagnosticInfo = $"DB file size: {fileInfo.Length} bytes. " +
+                    $"WAL exists: {File.Exists(walFile)}. " +
+                    $"SHM exists: {File.Exists(shmFile)}. " +
+                    $"All keys count: {allKeys.Count}. " +
+                    $"Typed keys count: {typedKeys.Count}. " +
+                    $"All keys: [{string.Join(", ", allKeys)}]. " +
+                    $"Typed keys: [{string.Join(", ", typedKeys)}]";
+
+                Assert.True(allKeys.Count > 0, $"No keys found in cache2. {diagnosticInfo}");
+
+                // Try to retrieve
+                var retrieved = await cache2.GetObject<TestObject>("debug_key").FirstAsync();
+
+                Assert.NotNull(retrieved);
+                Assert.Equal(testObject.Name, retrieved.Name);
+                Assert.Equal(testObject.Value, retrieved.Value);
+
+                await cache2.DisposeAsync();
+            }
         }
     }
 
@@ -526,128 +485,110 @@ public class SerializationCompatibilityTests
             throw new ArgumentNullException(nameof(serializerType));
         }
 
-        // Store and restore the original serializer to prevent interference
-        var originalSerializer = CacheDatabase.Serializer;
+        // Set up serializer with UTC DateTime handling for cross-platform consistency
+        var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
+        serializer.ForcedDateTimeKind = DateTimeKind.Utc;
 
-        try
+        using (Utility.WithEmptyDirectory(out var path))
         {
-            // Set up serializer with UTC DateTime handling for cross-platform consistency
-            var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-            serializer.ForcedDateTimeKind = DateTimeKind.Utc;
-            CacheDatabase.Serializer = serializer;
+            // Use format-specific database names to prevent conflicts
+            var formatType = serializerType.Name.Contains("Bson") ? "bson" : "json";
+            var dbPath = Path.Combine(path, $"datetime-{serializerType.Name}-{formatType}.db");
 
-            using (Utility.WithEmptyDirectory(out var path))
+            // Test dates that cover common desktop/mobile scenarios
+            var testDates = GetMobileDesktopTestDates(serializerType);
+
+            var successCount = 0;
+            var skipCount = 0;
+
+            for (var i = 0; i < testDates.Length; i++)
             {
-                // Use format-specific database names to prevent conflicts
-                var formatType = serializerType.Name.Contains("Bson") ? "bson" : "json";
-                var dbPath = Path.Combine(path, $"datetime-{serializerType.Name}-{formatType}.db");
+                var testDate = testDates[i];
+                var key = $"datetime_test_{i}";
 
-                // Test dates that cover common desktop/mobile scenarios
-                var testDates = GetMobileDesktopTestDates(serializerType);
-
-                var successCount = 0;
-                var skipCount = 0;
-
-                for (var i = 0; i < testDates.Length; i++)
+                // Skip problematic dates for BSON serializers (known limitations)
+                if (ShouldSkipDateForBsonSerializer(serializerType, testDate))
                 {
-                    var testDate = testDates[i];
-                    var key = $"datetime_test_{i}";
-
-                    // Skip problematic dates for BSON serializers (known limitations)
-                    if (ShouldSkipDateForBsonSerializer(serializerType, testDate))
-                    {
-                        skipCount++;
-                        continue;
-                    }
-
-                    try
-                    {
-                        // Store the DateTime with enhanced error handling
-                        {
-                            var cache = new SqliteBlobCache(dbPath);
-
-                            // Ensure the serializer is still set for this cache instance
-                            CacheDatabase.Serializer = serializer;
-
-                            try
-                            {
-                                await cache.InsertObject(key, testDate).FirstAsync();
-                                await cache.Flush().FirstAsync();
-                            }
-                            catch (Exception ex) when (IsBsonSerializationIssue(serializerType, ex))
-                            {
-                                System.Diagnostics.Debug.WriteLine($"BSON serialization issue for {testDate}: {ex.Message}");
-                                skipCount++;
-                                continue;
-                            }
-                            finally
-                            {
-                                await cache.DisposeAsync();
-                                await Task.Delay(50);
-                            }
-                        }
-
-                        // Retrieve and verify the DateTime with enhanced tolerance
-                        {
-                            var cache = new SqliteBlobCache(dbPath);
-
-                            // Ensure the serializer is still set for this cache instance
-                            CacheDatabase.Serializer = serializer;
-
-                            try
-                            {
-                                var retrieved = await cache.GetObject<DateTime>(key).FirstAsync();
-
-                                // Enhanced validation with better BSON handling
-                                if (ValidateDateTimeRoundtrip(serializerType, testDate, retrieved))
-                                {
-                                    successCount++;
-                                }
-                                else
-                                {
-                                    skipCount++;
-                                }
-                            }
-                            catch (Exception ex) when (IsBsonDeserializationIssue(serializerType, ex))
-                            {
-                                System.Diagnostics.Debug.WriteLine($"BSON deserialization issue for {testDate}: {ex.Message}");
-                                skipCount++;
-                            }
-                            finally
-                            {
-                                await cache.DisposeAsync();
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // For non-BSON issues, still throw but with better context
-                        throw new InvalidOperationException(
-                            $"DateTime test {i} failed for {serializerType.Name} with date {testDate}. " +
-                            "This may indicate a regression in DateTime handling.",
-                            ex);
-                    }
+                    skipCount++;
+                    continue;
                 }
 
-                // Verify we had reasonable success rate
-                var totalTests = testDates.Length;
-                var actualTests = successCount + skipCount;
+                try
+                {
+                    // Store the DateTime with enhanced error handling
+                    {
+                        var cache = new SqliteBlobCache(dbPath, serializer);
 
-                // For BSON serializers, allow more skipped tests due to known limitations
-                // For Newtonsoft serializers, also allow lower success rate due to DateTime precision issues
-                var minimumSuccessRate = serializerType.Name.Contains("Bson") ? 0.5 :
-                                        serializerType.Name.Contains("Newtonsoft") ? 0.6 : 0.8;
-                var actualSuccessRate = successCount / (double)actualTests;
+                        try
+                        {
+                            await cache.InsertObject(key, testDate).FirstAsync();
+                            await cache.Flush().FirstAsync();
+                        }
+                        catch (Exception ex) when (IsBsonSerializationIssue(serializerType, ex))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"BSON serialization issue for {testDate}: {ex.Message}");
+                            skipCount++;
+                            continue;
+                        }
+                        finally
+                        {
+                            await cache.DisposeAsync();
+                            await Task.Delay(50);
+                        }
+                    }
 
-                Assert.True(
-                    actualSuccessRate >= minimumSuccessRate,
-                    $"DateTime serialization success rate too low for {serializerType.Name}: {successCount}/{actualTests} = {actualSuccessRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}, Total: {totalTests}");
+                    // Retrieve and verify the DateTime with enhanced tolerance
+                    {
+                        var cache = new SqliteBlobCache(dbPath, serializer);
+
+                        try
+                        {
+                            var retrieved = await cache.GetObject<DateTime>(key).FirstAsync();
+
+                            // Enhanced validation with better BSON handling
+                            if (ValidateDateTimeRoundtrip(serializerType, testDate, retrieved))
+                            {
+                                successCount++;
+                            }
+                            else
+                            {
+                                skipCount++;
+                            }
+                        }
+                        catch (Exception ex) when (IsBsonDeserializationIssue(serializerType, ex))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"BSON deserialization issue for {testDate}: {ex.Message}");
+                            skipCount++;
+                        }
+                        finally
+                        {
+                            await cache.DisposeAsync();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // For non-BSON issues, still throw but with better context
+                    throw new InvalidOperationException(
+                        $"DateTime test {i} failed for {serializerType.Name} with date {testDate}. " +
+                        "This may indicate a regression in DateTime handling.",
+                        ex);
+                }
             }
-        }
-        finally
-        {
-            // Always restore the original serializer
-            CacheDatabase.Serializer = originalSerializer;
+
+            // Verify we had reasonable success rate
+            var totalTests = testDates.Length;
+            var actualTests = successCount + skipCount;
+
+            // For BSON serializers, allow more skipped tests due to known limitations
+            // For Newtonsoft serializers, also allow lower success rate due to DateTime precision issues
+            var minimumSuccessRate = serializerType.Name.Contains("Bson") ? 0.5 :
+                                    serializerType.Name.Contains("Newtonsoft") ? 0.6 : 0.8;
+            var actualSuccessRate = successCount / (double)actualTests;
+
+            Assert.True(
+                actualSuccessRate >= minimumSuccessRate,
+                $"DateTime serialization success rate too low for {serializerType.Name}: {successCount}/{actualTests} = {actualSuccessRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}, Total: {totalTests}");
         }
     }
 

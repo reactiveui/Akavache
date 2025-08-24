@@ -18,7 +18,7 @@ namespace Akavache.NewtonsoftJson
         /// <param name="builder">The builder.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="System.ArgumentNullException">builder.</exception>
-        public static IAkavacheBuilder UseNewtonsoftJson(this IAkavacheBuilder builder)
+        public static IAkavacheBuilder UseNewtonsoftJsonSerializer(this IAkavacheBuilder builder)
         {
             if (builder == null)
             {
@@ -40,7 +40,7 @@ namespace Akavache.NewtonsoftJson
         /// or
         /// settings.
         /// </exception>
-        public static IAkavacheBuilder UseNewtonsoftJson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
+        public static IAkavacheBuilder UseNewtonsoftJsonSerializer(this IAkavacheBuilder builder, JsonSerializerSettings settings)
         {
             if (builder == null)
             {
@@ -67,7 +67,7 @@ namespace Akavache.NewtonsoftJson
         /// or
         /// configure.
         /// </exception>
-        public static IAkavacheBuilder UseNewtonsoftJson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
+        public static IAkavacheBuilder UseNewtonsoftJsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
         {
             if (builder == null)
             {
@@ -91,7 +91,7 @@ namespace Akavache.NewtonsoftJson
         /// <param name="builder">The builder.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
         /// <exception cref="System.ArgumentNullException">builder.</exception>
-        public static IAkavacheBuilder UseNewtonsoftBson(this IAkavacheBuilder builder)
+        public static IAkavacheBuilder UseNewtonsoftBsonSerializer(this IAkavacheBuilder builder)
         {
             if (builder == null)
             {
@@ -113,7 +113,7 @@ namespace Akavache.NewtonsoftJson
         /// or
         /// settings.
         /// </exception>
-        public static IAkavacheBuilder UseNewtonsoftBson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
+        public static IAkavacheBuilder UseNewtonsoftBsonSerializer(this IAkavacheBuilder builder, JsonSerializerSettings settings)
         {
             if (builder == null)
             {
@@ -144,7 +144,7 @@ namespace Akavache.NewtonsoftJson
         /// or
         /// configure.
         /// </exception>
-        public static IAkavacheBuilder UseNewtonsoftBson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
+        public static IAkavacheBuilder UseNewtonsoftBsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
         {
             if (builder == null)
             {

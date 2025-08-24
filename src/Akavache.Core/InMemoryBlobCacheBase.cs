@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using Splat;
 
 namespace Akavache;
 
@@ -53,7 +54,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
-            CacheDatabase.Serializer?.ForcedDateTimeKind = value;
+            var serialzer = AppLocator.Current.GetService<ISerializer>();
+            serializer?.ForcedDateTimeKind = value;
         }
     }
 

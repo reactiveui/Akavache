@@ -44,12 +44,12 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        if (CacheDatabase.Serializer == null)
+        if (builder.Serializer == null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite defaults.");
         }
 
-        var applicationName = CacheDatabase.ApplicationName;
+        var applicationName = builder.ApplicationName;
         if (string.IsNullOrWhiteSpace(applicationName))
         {
             throw new InvalidOperationException("Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.");
@@ -59,35 +59,40 @@ public static class AkavacheBuilderExtensions
 
 #if ENCRYPTED
         // Create SQLite caches for persistent storage
-        builder.WithUserAccount(CreateEncryptedSqliteCache("UserAccount", applicationName, password))
-               .WithLocalMachine(CreateEncryptedSqliteCache("LocalMachine", applicationName, password))
+        builder.WithUserAccount(CreateEncryptedSqliteCache("UserAccount", builder, password))
+               .WithLocalMachine(CreateEncryptedSqliteCache("LocalMachine", builder, password))
                .WithInMemory()
-               .WithSecure(CreateEncryptedSqliteCache("Secure", applicationName, password));
+               .WithSecure(CreateEncryptedSqliteCache("Secure", builder, password));
 #else
         // Create SQLite caches for persistent storage
-        builder.WithUserAccount(CreateSqliteCache("UserAccount", applicationName))
-               .WithLocalMachine(CreateSqliteCache("LocalMachine", applicationName))
+        builder.WithUserAccount(CreateSqliteCache("UserAccount", builder))
+               .WithLocalMachine(CreateSqliteCache("LocalMachine", builder))
                .WithInMemory()
-               .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache("Secure", applicationName)));
+               .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache("Secure", builder), builder.Serializer));
 #endif
 
         return builder;
     }
 
 #if ENCRYPTED
-    private static EncryptedSqliteBlobCache CreateEncryptedSqliteCache(string name, string applicationName, string password)
+    private static EncryptedSqliteBlobCache CreateEncryptedSqliteCache(string name, IAkavacheBuilder builder, string password)
 #else
-    private static SqliteBlobCache CreateSqliteCache(string name, string applicationName)
+    private static SqliteBlobCache CreateSqliteCache(string name, IAkavacheBuilder builder)
 #endif
     {
+        if (builder.Serializer == null)
+        {
+            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite caches.");
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Cache name cannot be null or empty.", nameof(name));
         }
 
-        if (string.IsNullOrWhiteSpace(applicationName))
+        if (string.IsNullOrWhiteSpace(builder.ApplicationName))
         {
-            throw new ArgumentException("Application name cannot be null or empty.", nameof(applicationName));
+            throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
         }
 
         string filePath;
@@ -97,7 +102,7 @@ public static class AkavacheBuilderExtensions
         }
         else
         {
-            var directory = GetCacheDirectory(name, applicationName);
+            var directory = GetCacheDirectory(name, builder.ApplicationName);
             try
             {
                 Directory.CreateDirectory(directory);
@@ -111,13 +116,13 @@ public static class AkavacheBuilderExtensions
         }
 
 #if ENCRYPTED
-        var cache = new EncryptedSqliteBlobCache(filePath, password);
+        var cache = new EncryptedSqliteBlobCache(filePath, password, builder.Serializer);
 #else
-        var cache = new SqliteBlobCache(filePath);
+        var cache = new SqliteBlobCache(filePath, builder.Serializer);
 #endif
-        if (CacheDatabase.ForcedDateTimeKind.HasValue)
+        if (builder.ForcedDateTimeKind.HasValue)
         {
-            cache.ForcedDateTimeKind = CacheDatabase.ForcedDateTimeKind.Value;
+            cache.ForcedDateTimeKind = builder.ForcedDateTimeKind.Value;
         }
 
         return cache;
@@ -148,7 +153,7 @@ public static class AkavacheBuilderExtensions
     /// <summary>
     /// A wrapper that implements ISecureBlobCache by delegating to an IBlobCache.
     /// </summary>
-    private class SecureBlobCacheWrapper(IBlobCache inner) : ISecureBlobCache
+    private class SecureBlobCacheWrapper(IBlobCache inner, ISerializer serializer) : ISecureBlobCache
     {
         private readonly IBlobCache _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         private bool _disposed;
@@ -160,6 +165,8 @@ public static class AkavacheBuilderExtensions
         }
 
         public IScheduler Scheduler => _inner.Scheduler;
+
+        public ISerializer Serializer => serializer ?? throw new ArgumentNullException(nameof(serializer));
 
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
             _inner.Insert(keyValuePairs, absoluteExpiration);

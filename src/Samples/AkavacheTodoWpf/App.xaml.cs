@@ -113,13 +113,12 @@ public partial class App : Application
     /// <summary>
     /// Use the builder pattern to configure Akavache with SQLite persistence.
     /// </summary>
-    private static void ConfigureAkavache() =>
-        AppBuilder.CreateSplatBuilder()
-            .WithAkavache(builder =>
-                builder.UseForcedDateTimeKind(DateTimeKind.Utc)
-                        .UseSystemTextJson()
-                        .WithApplicationName("AkavacheTodoWpf")
-                        .WithSqliteDefaults());
+    private static void ConfigureAkavache() => AppBuilder.CreateSplatBuilder()
+            .WithAkavacheCacheDatabase(builder => builder
+                .WithApplicationName("AkavacheTodoWpf")
+                .UseForcedDateTimeKind(DateTimeKind.Utc)
+                .UseSystemTextJsonSerializer()
+                .WithSqliteDefaults());
 
     private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>

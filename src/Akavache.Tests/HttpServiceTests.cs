@@ -55,9 +55,9 @@ public class HttpServiceTests
     public async Task DownloadUrlWithUriShouldValidateArguments()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
-        var cache = new InMemoryBlobCache();
+        var cache = new InMemoryBlobCache(serializer);
         Uri? nullUri = null;
 
         try
@@ -80,9 +80,9 @@ public class HttpServiceTests
     public async Task DownloadUrlWithKeyShouldValidateArguments()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
-        var cache = new InMemoryBlobCache();
+        var cache = new InMemoryBlobCache(serializer);
 
         try
         {
@@ -144,9 +144,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldHandleNullHeadersGracefully()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
-        var cache = new InMemoryBlobCache();
+        var cache = new InMemoryBlobCache(serializer);
 
         try
         {
@@ -178,9 +178,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldHandleDifferentHttpMethods()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
-        var cache = new InMemoryBlobCache();
+        var cache = new InMemoryBlobCache(serializer);
 
         try
         {
@@ -208,9 +208,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldRespectFetchAlwaysParameter()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
-        var cache = new InMemoryBlobCache();
+        var cache = new InMemoryBlobCache(serializer);
 
         try
         {
@@ -249,9 +249,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldSupportAbsoluteExpiration()
     {
         // Arrange
-        CacheDatabase.Serializer = new SystemJsonSerializer();
+        var serializer = new SystemJsonSerializer();
         var httpService = new HttpService();
-        var cache = new InMemoryBlobCache();
+        var cache = new InMemoryBlobCache(serializer);
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         try
