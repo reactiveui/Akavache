@@ -80,6 +80,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     _cache[pair.Key] = new CacheEntry
                     {
+                        Id = pair.Key,
                         Value = pair.Value,
                         CreatedAt = Scheduler.Now,
                         ExpiresAt = absoluteExpiration
@@ -107,6 +108,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             {
                 _cache[key] = new CacheEntry
                 {
+                    Id = key,
                     Value = data,
                     CreatedAt = Scheduler.Now,
                     ExpiresAt = absoluteExpiration
@@ -141,6 +143,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     _cache[pair.Key] = new CacheEntry
                     {
+                        Id = pair.Key,
+                        TypeName = type.FullName,
                         Value = pair.Value,
                         CreatedAt = Scheduler.Now,
                         ExpiresAt = absoluteExpiration
@@ -175,6 +179,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
                 _cache[key] = new CacheEntry
                 {
+                    Id = key,
+                    TypeName = type.FullName,
                     Value = data,
                     CreatedAt = Scheduler.Now,
                     ExpiresAt = absoluteExpiration
@@ -598,6 +604,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     }
 
     /// <inheritdoc />
+    [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Dispose already calls SuppressFinalize")]
     public async ValueTask DisposeAsync() => await Task.Run(() => Dispose());
 
     /// <summary>
@@ -711,27 +718,5 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
             _disposed = true;
         }
-    }
-
-    /// <summary>
-    /// Represents a cache entry with its value, creation time, and optional expiration time.
-    /// </summary>
-    private class CacheEntry
-    {
-        /// <summary>
-        /// Gets or sets the cached value as a byte array.
-        /// </summary>
-        public byte[]? Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets the date and time when this entry was created.
-        /// </summary>
-        public DateTimeOffset CreatedAt { get; set; }
-
-        /// <summary>
-        /// Gets or sets the optional expiration date and time for this entry.
-        /// If null, the entry does not expire.
-        /// </summary>
-        public DateTimeOffset? ExpiresAt { get; set; }
     }
 }
