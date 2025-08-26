@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RunAnalyzers>false</RunAnalyzers>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <NoWarn>$(NoWarn);SA0001;SA1*;SA16*;SA12*;SA13*;SA14*;CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+  </ItemGroup>
+</Project>
