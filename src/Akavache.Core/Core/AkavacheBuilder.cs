@@ -38,7 +38,17 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
         ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
         ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
-        SettingsCachePath = Path.Combine(ApplicationRootPath, "SettingsCache");
+
+        // Compute SettingsCachePath under a writable location (fix iOS bundle write attempt)
+        var writableBase = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (string.IsNullOrWhiteSpace(writableBase))
+        {
+            writableBase = AppContext.BaseDirectory;
+        }
+
+        var appFolderName = string.IsNullOrWhiteSpace(ExecutingAssemblyName) ? "Akavache" : ExecutingAssemblyName;
+        SettingsCachePath = Path.Combine(writableBase, appFolderName, "SettingsCache");
+
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
         Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
 
