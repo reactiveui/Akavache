@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Akavache;
 using Akavache.NewtonsoftJson;
+using Akavache.SystemTextJson;
 using Akavache.Sqlite3;
 using Splat.Builder;
 
@@ -22,7 +23,8 @@ bool allPass = true;
 
 // Initialize Akavache v11 (Sqlite defaults just for serializer bootstrapping)
 var instance = CacheDatabase.CreateBuilder()
-    .WithSerializer<NewtonsoftBsonSerializer>()
+    //.WithSerializer<NewtonsoftBsonSerializer>()
+    .WithSerializer<SystemJsonSerializer>()
     .WithApplicationName("AkavacheCompatTest")
     .WithSqliteDefaults()
     .Build();

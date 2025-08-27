@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
@@ -11,5 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
     <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
   </ItemGroup>
 </Project>
