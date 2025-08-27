@@ -21,7 +21,6 @@ internal class AkavacheBuilder : IAkavacheBuilder
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
     public AkavacheBuilder()
     {
-        SQLitePCL.Batteries_V2.Init();
         string? fileLocation;
         try
         {
