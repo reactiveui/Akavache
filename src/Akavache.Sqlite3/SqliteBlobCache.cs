@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 using SQLite;
 
@@ -195,11 +196,31 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)));
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().FirstAsync(x => x.Id != null && x.ExpiresAt > time && x.Id == key))
-            .Catch<CacheEntry, InvalidOperationException>(ex => Observable.Throw<CacheEntry>(new KeyNotFoundException(ex.Message)))
-            .Where(x => x?.Value is not null)
-            .Select(x => x.Value!);
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            var time = DateTimeOffset.UtcNow;
+
+            // Try V11 table first
+            var rows = await Connection.Table<CacheEntry>()
+                .Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            var row = rows.FirstOrDefault();
+            if (row?.Value is not null)
+            {
+                return row.Value!;
+            }
+
+            // Fallback to legacy V10 table (CacheElement)
+            var legacy = await TryGetLegacyValueAsync(key, time, null).ConfigureAwait(false);
+            if (legacy is not null)
+            {
+                return legacy;
+            }
+
+            throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+        });
     }
 
     /// <inheritdoc/>
@@ -222,7 +243,7 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
 
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && keys.Contains(x.Id)).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Value is not null && x?.Id is not null)
             .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
@@ -251,11 +272,31 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<byte[]>(new InvalidOperationException("The Connection is null and therefore no database operations can happen."));
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().FirstAsync(x => x.Id != null && x.ExpiresAt > time && x.Id == key && x.TypeName == type.FullName))
-            .Catch<CacheEntry, InvalidOperationException>(ex => Observable.Throw<CacheEntry>(new KeyNotFoundException(ex.Message)))
-            .Where(x => x?.Value is not null)
-            .Select(x => x.Value!);
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            var time = DateTimeOffset.UtcNow;
+
+            // Try V11 table first
+            var rows = await Connection.Table<CacheEntry>()
+                .Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            var row = rows.FirstOrDefault();
+            if (row?.Value is not null)
+            {
+                return row.Value!;
+            }
+
+            // Fallback to legacy V10 table (CacheElement)
+            var legacy = await TryGetLegacyValueAsync(key, time, type).ConfigureAwait(false);
+            if (legacy is not null)
+            {
+                return legacy;
+            }
+
+            throw new KeyNotFoundException($"The given key '{key}' (type '{type.FullName}') was not present in the cache.");
+        });
     }
 
     /// <inheritdoc/>
@@ -282,7 +323,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Value is not null && x?.Id is not null)
             .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
@@ -307,7 +348,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Value is not null && x?.Id is not null)
             .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
@@ -327,7 +368,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time)).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x.Id!);
@@ -352,7 +393,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x.Id!);
@@ -377,7 +418,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && keys.Contains(x.Id)).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => (Key: x.Id!, Time: x?.CreatedAt));
@@ -402,7 +443,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && x.Id == key).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x?.CreatedAt);
@@ -432,7 +473,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => (Key: x.Id!, Time: x?.CreatedAt));
@@ -462,7 +503,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && x.ExpiresAt > time && x.Id == key && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x?.CreatedAt);
@@ -889,5 +930,51 @@ public class SqliteBlobCache : IBlobCache
         connected.Connect();
 
         return connected.SubscribeOn(Scheduler);
+    }
+
+    private async Task<byte[]?> TryGetLegacyValueAsync(string key, DateTimeOffset now, Type? type)
+    {
+        // v10 schema columns: Key (varchar), TypeName (varchar), Value (BLOB), Expiration (bigint), CreatedAt (bigint)
+        // Expiration is ticks (bigint). Treat NULL or 0 as unexpired. Otherwise require Expiration > nowTicks.
+        var nowTicks = DateTime.UtcNow.Ticks;
+        const string expiryPredicate = "(Expiration IS NULL OR Expiration = 0 OR Expiration > ?)";
+
+        var sqls = new List<(string Sql, object[] Args)>(4);
+        if (type is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(type.AssemblyQualifiedName))
+            {
+                sqls.Add((
+                    $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
+                    new object[] { key, nowTicks, type.AssemblyQualifiedName! }));
+            }
+
+            sqls.Add((
+                $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
+                new object[] { key, nowTicks, type.FullName! }));
+        }
+
+        // Without type name filter (handles raw bytes or missing type info)
+        sqls.Add((
+            $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate}",
+            new object[] { key, nowTicks }));
+
+        foreach (var (sql, args) in sqls)
+        {
+            try
+            {
+                var value = await Connection.ExecuteScalarAsync<byte[]?>(sql, args).ConfigureAwait(false);
+                if (value != null)
+                {
+                    return value;
+                }
+            }
+            catch
+            {
+                // try next form
+            }
+        }
+
+        return null;
     }
 }
