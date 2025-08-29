@@ -340,7 +340,6 @@ public static class AkavacheBuilderExtensions
     /// </summary>
     /// <param name="builder">The builder.</param>
     /// <param name="cacheName">Name of the cache.</param>
-    /// <param name="executingAssemblyName">Name of the executing assembly.</param>
     /// <returns>The Isolated cache path.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
     /// <exception cref="System.ArgumentException">
@@ -348,7 +347,7 @@ public static class AkavacheBuilderExtensions
     /// or
     /// Application name cannot be null or empty. - ApplicationName.
     /// </exception>
-    public static string? GetIsolatedCacheDirectory(this IAkavacheInstance builder, string cacheName, string? executingAssemblyName = null)
+    public static string? GetIsolatedCacheDirectory(this IAkavacheInstance builder, string cacheName)
     {
         // Ensure the builder is not null
         if (builder == null)
@@ -374,10 +373,9 @@ public static class AkavacheBuilderExtensions
             // Try to get a path within isolated storage for the settings cache using the application name
             try
             {
-                if (isoStore != null && !string.IsNullOrWhiteSpace(builder.ApplicationName))
+                if (isoStore != null)
                 {
-                    var baseFolderName = string.IsNullOrWhiteSpace(executingAssemblyName) ? "Akavache" : executingAssemblyName;
-                    var isoPath = Path.Combine(baseFolderName, builder.ApplicationName, "SettingsCache");
+                    var isoPath = Path.Combine(builder.ApplicationName, cacheName);
 
                     // Ensure the directory exists
                     if (!isoStore.DirectoryExists(isoPath))

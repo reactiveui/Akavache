@@ -5,7 +5,6 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO.IsolatedStorage;
 using System.Reflection;
 using Akavache.Settings;
 using Splat;
@@ -50,8 +49,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         }
 
         // Compute SettingsCachePath under a writable location (fix iOS bundle write attempt)
-        var appFolderName = string.IsNullOrWhiteSpace(ExecutingAssemblyName) ? "Akavache" : ExecutingAssemblyName;
-        SettingsCachePath = this.GetIsolatedCacheDirectory("SettingsCache", appFolderName);
+        SettingsCachePath = this.GetIsolatedCacheDirectory("SettingsCache");
     }
 
     /// <inheritdoc />

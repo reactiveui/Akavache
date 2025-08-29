@@ -98,30 +98,13 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
         }
 
-        string filePath;
-        if (name == ":memory:")
+        var directory = builder.GetIsolatedCacheDirectory(name);
+        if (string.IsNullOrWhiteSpace(directory))
         {
-            filePath = ":memory:";
+            throw new InvalidOperationException("Failed to determine a valid cache directory.");
         }
-        else
-        {
-            var directory = builder.GetIsolatedCacheDirectory(builder.ApplicationName, name);
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                throw new InvalidOperationException("Failed to determine a valid cache directory.");
-            }
 
-            try
-            {
-                Directory.CreateDirectory(directory);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to create cache directory '{directory}': {ex.Message}", ex);
-            }
-
-            filePath = Path.Combine(directory, $"{name}.db");
-        }
+        var filePath = Path.Combine(directory, $"{name}.db");
 
         // Resolve the serializer from the service locator to ensure proper lifecycle management
         var serializer = AppLocator.Current.GetService<ISerializer>(builder.SerializerTypeName) ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
