@@ -339,7 +339,14 @@ public static class AkavacheBuilderExtensions
     /// Gets the isolated cache directory.
     /// </summary>
     /// <param name="builder">The builder.</param>
-    /// <param name="cacheName">Name of the cache.</param>
+    /// <param name="cacheName">Name of the cache.
+    /// This will determine the file store to use.
+    /// LocalMachine will use Machine Store For Assembly.
+    /// UserAccount will use User Store For Assembly.
+    /// Secure will use User Store For Assembly.
+    /// SettingsCache will use User Store For Assembly.
+    /// Any other value will use User Store For Domain.
+    /// </param>
     /// <returns>The Isolated cache path.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
     /// <exception cref="System.ArgumentException">
@@ -366,9 +373,17 @@ public static class AkavacheBuilderExtensions
         }
 
         string? cachePath = null;
+        var store = cacheName switch
+        {
+            "LocalMachine" => IsolatedStorageFile.GetMachineStoreForAssembly(),
+            "UserAccount" => IsolatedStorageFile.GetUserStoreForAssembly(),
+            "Secure" => IsolatedStorageFile.GetUserStoreForAssembly(),
+            "SettingsCache" => IsolatedStorageFile.GetUserStoreForAssembly(),
+            _ => IsolatedStorageFile.GetUserStoreForDomain(),
+        };
 
         // Compute CachePath under a writable location (fix iOS bundle write attempt)
-        using (var isoStore = IsolatedStorageFile.GetStore(IsolatedStorageScope.User | IsolatedStorageScope.Domain | IsolatedStorageScope.Assembly, null, null))
+        using (var isoStore = store)
         {
             // Try to get a path within isolated storage for the settings cache using the application name
             try
