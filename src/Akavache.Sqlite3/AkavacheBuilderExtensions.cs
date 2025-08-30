@@ -17,6 +17,50 @@ namespace Akavache.Sqlite3;
 /// </summary>
 public static class AkavacheBuilderExtensions
 {
+    private const string UserAccount = "UserAccount";
+    private const string LocalMachine = "LocalMachine";
+    private const string Secure = "Secure";
+    private static ISQLite3Provider _sqliteProvider = null!;
+
+#if ENCRYPTED
+    /// <summary>
+    /// Uses the sqlite cypher provider.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    public static IAkavacheBuilder WithEncryptedSqliteProvider(this IAkavacheBuilder builder)
+#else
+    /// <summary>
+    /// Uses the sqlite provider.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    public static IAkavacheBuilder WithSqliteProvider(this IAkavacheBuilder builder)
+#endif
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        // Ensure SQLitePCL is initialized only once
+        if (_sqliteProvider != null)
+        {
+            return builder;
+        }
+
+#if ENCRYPTED
+        _sqliteProvider = new SQLite3Provider_e_sqlcipher();
+#else
+        _sqliteProvider = new SQLite3Provider_e_sqlite3();
+#endif
+        raw.SetProvider(_sqliteProvider);
+        Batteries_V2.Init();
+        return builder;
+    }
+
 #if ENCRYPTED
     /// <summary>
     /// Configures default SQLite-based caches for all cache types.
@@ -47,6 +91,11 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
+        if (_sqliteProvider == null)
+        {
+            throw new InvalidOperationException("SQLite provider has not been initialized. Call WithSqliteProvider() or WithEncryptedSqliteProvider() before using SQLite defaults.");
+        }
+
         if (builder.Serializer == null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite defaults.");
@@ -60,18 +109,16 @@ public static class AkavacheBuilderExtensions
 
 #if ENCRYPTED
         // Create SQLite caches for persistent storage
-        raw.SetProvider(new SQLite3Provider_e_sqlcipher());
-        builder.WithUserAccount(CreateEncryptedSqliteCache("UserAccount", builder, password))
-               .WithLocalMachine(CreateEncryptedSqliteCache("LocalMachine", builder, password))
+        builder.WithUserAccount(CreateEncryptedSqliteCache(UserAccount, builder, password))
+               .WithLocalMachine(CreateEncryptedSqliteCache(LocalMachine, builder, password))
                .WithInMemory()
-               .WithSecure(CreateEncryptedSqliteCache("Secure", builder, password));
+               .WithSecure(CreateEncryptedSqliteCache(Secure, builder, password));
 #else
         // Create SQLite caches for persistent storage
-        raw.SetProvider(new SQLite3Provider_e_sqlite3());
-        builder.WithUserAccount(CreateSqliteCache("UserAccount", builder))
-               .WithLocalMachine(CreateSqliteCache("LocalMachine", builder))
+        builder.WithUserAccount(CreateSqliteCache(UserAccount, builder))
+               .WithLocalMachine(CreateSqliteCache(LocalMachine, builder))
                .WithInMemory()
-               .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache("Secure", builder)));
+               .WithSecure(new SecureBlobCacheWrapper(CreateSqliteCache(Secure, builder)));
 #endif
 
         return builder;
