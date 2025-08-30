@@ -83,6 +83,7 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+               .WithSqliteProvider() // Use SQLite backend - new in V11.0.2 + (Required for Sqlite, this is to avoid confusion between Sqlite and EncryptedSqlite which both have `Batteries_V2.Init();` calls)
                .WithSqliteDefaults());
 ```
 
@@ -118,6 +119,7 @@ using Akavache.Sqlite3;
 var akavacheInstance = CacheDatabase.CreateBuilder()
     .WithSerializer<SystemJsonSerializer>()
     .WithApplicationName("MyApp")
+    .WithSqliteProvider()
     .WithSqliteDefaults()
     .Build();
 
@@ -206,7 +208,8 @@ await BlobCache.LocalMachine.InsertObject("key", myData);
 
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-        builder.WithApplicationName("MyApp")
+        builder.WithApplicationName("MyApp")        
+           .WithSqliteProvider()
            .WithSqliteDefaults());
 
 // Usage (same API)
@@ -226,7 +229,9 @@ public static class AkavacheMigration
         // Initialize with SQLite (most common V10.x setup)
         CacheDatabase
             .Initialize<SystemJsonSerializer>(builder =>
-                builder.WithSqliteDefaults(),
+                builder
+                .WithSqliteProvider()
+                .WithSqliteDefaults(),
                 appName);
     }
 }
@@ -245,6 +250,7 @@ Akavache V11.0 uses a fluent builder pattern for configuration:
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")           // Required
+               .WithSqliteProvider()                   // Initialize SQLite backend
                .WithSqliteDefaults());                 // SQLite persistence
 ```
 
@@ -263,6 +269,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
                .WithSqliteDefaults());
 ```
 
@@ -271,6 +278,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+               .WithEncryptedSqliteProvider()
                .WithSqliteDefaults("mySecretPassword"));
 ```
 
@@ -279,6 +287,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+           .WithEncryptedSqliteProvider()
            .WithUserAccount(new SqliteBlobCache("custom-user.db"))
            .WithLocalMachine(new SqliteBlobCache("custom-local.db"))
            .WithSecure(new EncryptedSqliteBlobCache("secure.db", "password"))
@@ -291,6 +300,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
            .WithForcedDateTimeKind(DateTimeKind.Utc)
            .WithSqliteDefaults());
 ```
@@ -354,6 +364,7 @@ AppBuilder.CreateSplatBuilder()
         () => serializer,
         builder =>
         builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
                .WithSqliteDefaults());
 ```
 
@@ -689,6 +700,7 @@ using Splat;
 // Initialize Akavache with drawing support
 CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
     builder.WithApplicationName("MyImageApp")
+           .WithSqliteProvider()
            .WithSqliteDefaults());
 
 // Register platform-specific bitmap loader using Splat (if needed (Net 8.0+))
@@ -861,7 +873,8 @@ public class PhotoGalleryService
         // Initialize Akavache with drawing support
         AppBuilder.CreateSplatBuilder().WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("PhotoGallery")
-                   .WithSqliteDefaults());
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
 
         _imageCache = CacheDatabase.LocalMachine;
         _thumbnailCache = CacheDatabase.UserAccount;
@@ -1025,6 +1038,7 @@ var appSettings = default(AppSettings);
 AppBuilder.CreateSplatBuilder().WithAkavache<SystemJsonSerializer>(builder =>
     builder.WithApplicationName("MyApp")
            .WithSerializer(new SystemJsonSerializer())
+           .WithSqliteProvider()
            .WithSettingsStore<AppSettings>(settings => appSettings = settings));
 
 // Now use the settings
@@ -1046,8 +1060,9 @@ By default, settings are stored in a subfolder of your application directory. Yo
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-           .WithSettingsCachePath(@"C:\MyApp\Settings")  // Custom path
-           .WithSettingsStore<AppSettings>(settings => appSettings = settings));
+               .WithSqliteProvider()
+               .WithSettingsCachePath(@"C:\MyApp\Settings")  // Custom path
+               .WithSettingsStore<AppSettings>(settings => appSettings = settings));
 ```
 
 #### Multiple Settings Classes
@@ -1084,6 +1099,7 @@ var networkSettings = default(NetworkSettings);
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
            .WithSettingsStore<UserSettings>(settings => userSettings = settings)
            .WithSettingsStore<NetworkSettings>(settings => networkSettings = settings));
 ```
@@ -1116,6 +1132,7 @@ var secureSettings = default(SecureSettings);
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+           .WithEncryptedSqliteProvider()
            .WithSecureSettingsStore<SecureSettings>("mySecurePassword", 
                settings => secureSettings = settings));
 
@@ -1134,6 +1151,7 @@ var appSettings = default(AppSettings);
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
            .WithSettingsStore<AppSettings>(
                settings => appSettings = settings, 
                "CustomAppConfig"));  // Custom database name
@@ -1240,6 +1258,7 @@ var settings = default(ComprehensiveSettings);
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
            .WithSettingsStore<ComprehensiveSettings>(s => settings = s));
 
 // Use the settings
@@ -1310,6 +1329,7 @@ public static class MauiProgram
         AppBuilder.CreateSplatBuilder()
             .WithAkavache<SystemJsonSerializer>(cacheBuilder =>
                 cacheBuilder.WithApplicationName("MyMauiApp")
+                        .WithSqliteProvider()
                         .WithForceDateTimeKind(DateTimeKind.Utc)
                         .WithSqliteDefaults());
 
@@ -1342,6 +1362,7 @@ public partial class App : Application
         AppBuilder.CreateSplatBuilder()
             .WithAkavache<SystemJsonSerializer>(builder =>
                 builder.WithApplicationName("MyWpfApp")
+                   .WithSqliteProvider()
                    .WithForceDateTimeKind(DateTimeKind.Utc)
                    .WithSqliteDefaults());
     }
@@ -1357,6 +1378,7 @@ public override bool FinishedLaunching(UIApplication application, NSDictionary l
     AppBuilder.CreateSplatBuilder()
         .WithAkavache<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("MyiOSApp")
+               .WithSqliteProvider()
                .WithSqliteDefaults());
 
     return base.FinishedLaunching(application, launchOptions);
@@ -1374,6 +1396,7 @@ protected override void OnCreate(Bundle savedInstanceState)
     AppBuilder.CreateSplatBuilder()
         .WithAkavache<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("MyAndroidApp")
+               .WithSqliteProvider()
                .WithSqliteDefaults());
 }
 ```
@@ -1387,6 +1410,7 @@ protected override void OnLaunched(LaunchActivatedEventArgs e)
     AppBuilder.CreateSplatBuilder()
         .WithAkavache<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("MyUwpApp")
+               .WithSqliteProvider()
                .WithSqliteDefaults());
 
     // Rest of initialization...
@@ -1451,6 +1475,7 @@ public class App
         AppBuilder.CreateSplatBuilder()
             .WithAkavache<SystemJsonSerializer>(builder =>
                 builder.WithApplicationName("MyApp")
+                   .WithSqliteProvider()
                    .WithSqliteDefaults());
     }
 }
