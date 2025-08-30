@@ -6,7 +6,6 @@
 using Akavache.Core;
 using Akavache.EncryptedSqlite3;
 using Akavache.Sqlite3;
-using SQLitePCL;
 
 namespace Akavache.Settings;
 
@@ -151,7 +150,8 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        settings?.Invoke(builder.GetSecureSettingsStore<T>(password, overrideDatabaseName));
+        var settingsDb = builder.GetSecureSettingsStore<T>(password, overrideDatabaseName);
+        settings?.Invoke(settingsDb);
         return builder;
     }
 
@@ -209,7 +209,8 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
-        settings?.Invoke(builder.GetSettingsStore<T>(overrideDatabaseName));
+        var settingsDb = builder.GetSettingsStore<T>(overrideDatabaseName);
+        settings?.Invoke(settingsDb);
         return builder;
     }
 

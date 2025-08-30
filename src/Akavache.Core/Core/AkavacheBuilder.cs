@@ -21,39 +21,35 @@ internal class AkavacheBuilder : IAkavacheBuilder
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
     public AkavacheBuilder()
     {
-        string? fileLocation;
         try
         {
-            fileLocation = ExecutingAssembly.Location;
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+            ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
+            string? fileLocation = null;
+            try
+            {
+                fileLocation = ExecutingAssembly.Location;
+            }
+            catch
+            {
+            }
 
-        if (string.IsNullOrWhiteSpace(fileLocation))
-        {
-            fileLocation = AppContext.BaseDirectory;
-        }
+            if (string.IsNullOrWhiteSpace(fileLocation))
+            {
+                fileLocation = AppContext.BaseDirectory;
+            }
 
-        ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
-        ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
+            ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
+
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
+            Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
+        }
+        catch
+        {
+            // Ignore exceptions and leave Version and ApplicationRootPath as null
+        }
 
         // Compute SettingsCachePath under a writable location (fix iOS bundle write attempt)
-        var writableBase = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        if (string.IsNullOrWhiteSpace(writableBase))
-        {
-            writableBase = AppContext.BaseDirectory;
-        }
-
-        var appFolderName = string.IsNullOrWhiteSpace(ExecutingAssemblyName) ? "Akavache" : ExecutingAssemblyName;
-        SettingsCachePath = Path.Combine(writableBase, appFolderName, "SettingsCache");
-
-        var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
-        Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
-
-        // Ensure the settings cache directory exists
-        Directory.CreateDirectory(SettingsCachePath);
+        SettingsCachePath = this.GetIsolatedCacheDirectory("SettingsCache");
     }
 
     /// <inheritdoc />

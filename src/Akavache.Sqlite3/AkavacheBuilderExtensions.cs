@@ -98,25 +98,13 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
         }
 
-        string filePath;
-        if (name == ":memory:")
+        var directory = builder.GetIsolatedCacheDirectory(name);
+        if (string.IsNullOrWhiteSpace(directory))
         {
-            filePath = ":memory:";
+            throw new InvalidOperationException("Failed to determine a valid cache directory.");
         }
-        else
-        {
-            var directory = GetCacheDirectory(name, builder.ApplicationName);
-            try
-            {
-                Directory.CreateDirectory(directory);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to create cache directory '{directory}': {ex.Message}", ex);
-            }
 
-            filePath = Path.Combine(directory, $"{name}.db");
-        }
+        var filePath = Path.Combine(directory, $"{name}.db");
 
         // Resolve the serializer from the service locator to ensure proper lifecycle management
         var serializer = AppLocator.Current.GetService<ISerializer>(builder.SerializerTypeName) ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
@@ -132,27 +120,6 @@ public static class AkavacheBuilderExtensions
         }
 
         return cache;
-    }
-
-    private static string GetCacheDirectory(string cacheName, string applicationName)
-    {
-        if (string.IsNullOrWhiteSpace(cacheName))
-        {
-            throw new ArgumentException("Cache name cannot be null or empty.", nameof(cacheName));
-        }
-
-        if (string.IsNullOrWhiteSpace(applicationName))
-        {
-            throw new ArgumentException("Application name cannot be null or empty.", nameof(applicationName));
-        }
-
-        var baseDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        if (string.IsNullOrWhiteSpace(baseDirectory))
-        {
-            throw new InvalidOperationException("Unable to determine local application data directory.");
-        }
-
-        return Path.Combine(baseDirectory, applicationName, cacheName);
     }
 
 #if !ENCRYPTED

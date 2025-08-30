@@ -4,6 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.IO.IsolatedStorage;
+using System.Reflection;
 using Splat;
 using Splat.Builder;
 
@@ -331,5 +333,84 @@ public static class AkavacheBuilderExtensions
         }
 
         return builder.WithInMemory(new InMemoryBlobCache(builder.SerializerTypeName));
+    }
+
+    /// <summary>
+    /// Gets the isolated cache directory.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="cacheName">Name of the cache.
+    /// This will determine the file store to use.
+    /// LocalMachine will use Machine Store For Assembly.
+    /// UserAccount will use User Store For Assembly.
+    /// Secure will use User Store For Assembly.
+    /// SettingsCache will use User Store For Assembly.
+    /// Any other value will use User Store For Domain.
+    /// </param>
+    /// <returns>The Isolated cache path.</returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <exception cref="System.ArgumentException">
+    /// Cache name cannot be null or empty. - cacheName
+    /// or
+    /// Application name cannot be null or empty. - ApplicationName.
+    /// </exception>
+    public static string? GetIsolatedCacheDirectory(this IAkavacheInstance builder, string cacheName)
+    {
+        // Ensure the builder is not null
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (string.IsNullOrWhiteSpace(cacheName))
+        {
+            throw new ArgumentException("Cache name cannot be null or empty.", nameof(cacheName));
+        }
+
+        if (string.IsNullOrWhiteSpace(builder.ApplicationName))
+        {
+            throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
+        }
+
+        string? cachePath = null;
+        var store = cacheName switch
+        {
+            "LocalMachine" => IsolatedStorageFile.GetMachineStoreForAssembly(),
+            "UserAccount" => IsolatedStorageFile.GetUserStoreForAssembly(),
+            "Secure" => IsolatedStorageFile.GetUserStoreForAssembly(),
+            "SettingsCache" => IsolatedStorageFile.GetUserStoreForAssembly(),
+            _ => IsolatedStorageFile.GetUserStoreForDomain(),
+        };
+
+        // Compute CachePath under a writable location (fix iOS bundle write attempt)
+        using (var isoStore = store)
+        {
+            // Try to get a path within isolated storage for the settings cache using the application name
+            try
+            {
+                if (isoStore != null)
+                {
+                    var isoPath = Path.Combine(builder.ApplicationName, cacheName);
+
+                    // Ensure the directory exists
+                    if (!isoStore.DirectoryExists(isoPath))
+                    {
+                        isoStore.CreateDirectory(isoPath);
+                    }
+
+                    if (isoStore.DirectoryExists(isoPath))
+                    {
+                        var dirNames = isoStore.GetDirectoryNames(isoPath);
+                        cachePath = Path.Combine(isoStore.GetType().GetProperty("RootDirectory", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(isoStore)?.ToString() ?? string.Empty, isoPath);
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore isolated storage exceptions and fall back to local app data path
+            }
+        }
+
+        return cachePath;
     }
 }
