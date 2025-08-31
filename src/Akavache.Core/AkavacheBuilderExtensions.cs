@@ -3,7 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 using System.IO.IsolatedStorage;
 using System.Reflection;
 using Splat;
@@ -29,12 +31,9 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentNullException">builder.</exception>
     /// <exception cref="ArgumentNullException">configure.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, Action<IAkavacheBuilder> configure, string? applicationName = null)
-#else
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, Action<IAkavacheBuilder> configure, string? applicationName = null)
 #endif
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Action<IAkavacheBuilder> configure, string? applicationName = null)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -60,12 +59,9 @@ public static class AkavacheBuilderExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
-#else
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
 #endif
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -90,12 +86,9 @@ public static class AkavacheBuilderExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, string? applicationName = null)
-#else
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, string? applicationName = null)
 #endif
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, string? applicationName = null)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -121,12 +114,9 @@ public static class AkavacheBuilderExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, Func<T> configureSerializer, string? applicationName = null)
-#else
-    public static AppBuilder WithAkavacheCacheDatabase<T>(this AppBuilder builder, Func<T> configureSerializer, string? applicationName = null)
 #endif
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, string? applicationName = null)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -157,12 +147,10 @@ public static class AkavacheBuilderExtensions
     /// instance.</exception>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
-#else
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
 #endif
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
+
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -206,12 +194,9 @@ public static class AkavacheBuilderExtensions
     /// instance.</exception>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
-#else
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
 #endif
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -250,12 +235,9 @@ public static class AkavacheBuilderExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IAkavacheInstance> instance)
-#else
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IAkavacheInstance> instance)
 #endif
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -289,12 +271,9 @@ public static class AkavacheBuilderExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException">builder.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
-#else
-    public static AppBuilder WithAkavache<T>(this AppBuilder builder, string? applicationName, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
 #endif
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)

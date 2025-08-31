@@ -1612,10 +1612,10 @@ CacheDatabase.Initialize<NewtonsoftBsonSerializer>(/* ... */); // Most compatibl
 // Fix: Ensure SQLitePCL.raw bundle is installed
 // Add to your project:
 <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
     
 // If using Encrypted SQLite, also add:
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
 </ItemGroup>
 
 ```

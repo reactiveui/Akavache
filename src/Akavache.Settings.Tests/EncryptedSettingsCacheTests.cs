@@ -3,12 +3,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.EncryptedSqlite3;
 using Akavache.NewtonsoftJson;
 using Akavache.Settings;
 using Akavache.Settings.Tests;
 using Akavache.SystemTextJson;
 using Splat.Builder;
-using SQLitePCL;
 
 namespace Akavache.EncryptedSettings.Tests;
 
@@ -33,6 +33,7 @@ public class EncryptedSettingsCacheTests
             testName,
             async builder =>
             {
+                builder.WithEncryptedSqliteProvider();
                 await builder.DeleteSettingsStore<ViewSettings>(testName);
                 builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
             },
@@ -66,10 +67,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -85,6 +84,7 @@ public class EncryptedSettingsCacheTests
             testName,
             async builder =>
             {
+                builder.WithEncryptedSqliteProvider();
                 await builder.DeleteSettingsStore<ViewSettings>(testName);
                 builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
             },
@@ -111,10 +111,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -130,6 +128,7 @@ public class EncryptedSettingsCacheTests
             testName,
             async builder =>
             {
+                builder.WithEncryptedSqliteProvider();
                 await builder.DeleteSettingsStore<ViewSettings>(testName);
                 builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
             },
@@ -163,10 +162,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -182,6 +179,7 @@ public class EncryptedSettingsCacheTests
             testName,
             async builder =>
         {
+            builder.WithEncryptedSqliteProvider();
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
         },
@@ -208,10 +206,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -228,14 +224,13 @@ public class EncryptedSettingsCacheTests
         var akavacheBuilder = default(IAkavacheInstance);
         GetBuilder().WithAkavache<SystemJsonSerializer>(
             null,
-            builder => builder.WithSettingsCachePath(path),
+            builder => builder.WithEncryptedSqliteProvider()
+                              .WithSettingsCachePath(path),
             instance => akavacheBuilder = instance)
             .Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
 
         Assert.Equal(path, akavacheBuilder!.SettingsCachePath);
     }
@@ -254,6 +249,7 @@ public class EncryptedSettingsCacheTests
             testName,
             async builder =>
         {
+            builder.WithEncryptedSqliteProvider();
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             builder.WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName);
         },
@@ -305,10 +301,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -325,6 +319,7 @@ public class EncryptedSettingsCacheTests
             async builder =>
         {
             // Create settings with one password
+            builder.WithEncryptedSqliteProvider();
             await builder.DeleteSettingsStore<ViewSettings>(testName);
             builder.WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName);
         },
@@ -378,10 +373,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -394,7 +387,9 @@ public class EncryptedSettingsCacheTests
         var testName = $"multi_dispose_test_{Guid.NewGuid():N}";
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
-            async builder => await builder.DeleteSettingsStore<ViewSettings>(testName),
+            async builder => await builder
+                            .WithEncryptedSqliteProvider()
+                            .DeleteSettingsStore<ViewSettings>(testName),
             async instance =>
             {
                 try
@@ -433,10 +428,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -449,7 +442,9 @@ public class EncryptedSettingsCacheTests
         var testName = $"get_store_test_{Guid.NewGuid():N}";
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
-            async builder => await builder.DeleteSettingsStore<ViewSettings>(testName),
+            async builder => await builder
+                            .WithEncryptedSqliteProvider()
+                            .DeleteSettingsStore<ViewSettings>(testName),
             async instance =>
             {
                 try
@@ -489,10 +484,8 @@ public class EncryptedSettingsCacheTests
                 }
             }).Build();
 
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     /// <summary>
@@ -513,17 +506,13 @@ public class EncryptedSettingsCacheTests
                 Assert.NotNull(instance.SettingsCachePath);
                 Assert.NotNull(instance.Version);
             }).Build();
-
-        while (!AppBuilder.HasBeenBuilt)
-        {
-            await Task.Delay(100);
-        }
+        await Task.Delay(100);
+        Assert.True(AppBuilder.HasBeenBuilt);
     }
 
     private AppBuilder GetBuilder()
     {
         AppBuilder.ResetBuilderStateForTests();
-        Batteries_V2.Init();
         return _appBuilder;
     }
 }

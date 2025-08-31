@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Limit vstest to a two CPUs to avoid cross-assembly static state bugs -->
+    <MaxCpuCount>2</MaxCpuCount>
+  </RunConfiguration>
+</RunSettings>

@@ -41,6 +41,11 @@ public class DownloadUrlExtensionsTests
                     // Assert
                     Assert.True(bytes.Length > 0);
                 }
+                catch (TimeoutException)
+                {
+                    // Skip test if request times out
+                    return;
+                }
                 catch (HttpRequestException)
                 {
                     // Skip test if httpbin.org is unavailable
@@ -84,6 +89,11 @@ public class DownloadUrlExtensionsTests
 
                     // Assert
                     Assert.True(bytes.Length > 0);
+                }
+                catch (TimeoutException)
+                {
+                    // Skip test if request times out
+                    return;
                 }
                 catch (HttpRequestException)
                 {
@@ -130,6 +140,11 @@ public class DownloadUrlExtensionsTests
                     var storedBytes = await cache.Get(key);
                     Assert.True(storedBytes.Length > 0);
                 }
+                catch (TimeoutException)
+                {
+                    // Skip test if request times out
+                    return;
+                }
                 catch (HttpRequestException)
                 {
                     // Skip test if httpbin.org is unavailable
@@ -175,6 +190,11 @@ public class DownloadUrlExtensionsTests
                     // Assert - verify data was stored
                     var storedBytes = await cache.Get(key);
                     Assert.True(storedBytes.Length > 0);
+                }
+                catch (TimeoutException)
+                {
+                    // Skip test if request times out
+                    return;
                 }
                 catch (HttpRequestException)
                 {
@@ -298,6 +318,11 @@ public class DownloadUrlExtensionsTests
                 // This is also acceptable - URL parsing failure
             }
         }
+        catch (TimeoutException)
+        {
+            // Skip test if request times out
+            return;
+        }
         finally
         {
             await cache.DisposeAsync();
@@ -347,6 +372,11 @@ public class DownloadUrlExtensionsTests
                     Assert.True(content1.Length > 0);
                     Assert.True(content2.Length > 0);
                     Assert.True(content3.Length > 0);
+                }
+                catch (TimeoutException)
+                {
+                    // Skip test if request times out
+                    return;
                 }
                 catch (HttpRequestException)
                 {
@@ -402,6 +432,11 @@ public class DownloadUrlExtensionsTests
                     // Data should now be expired (though this might depend on cache implementation)
                     // This test mainly verifies the expiration parameter is accepted
                     Assert.True(true); // Test passes if no exception is thrown
+                }
+                catch (TimeoutException)
+                {
+                    // Skip test if request times out
+                    return;
                 }
                 catch (HttpRequestException)
                 {

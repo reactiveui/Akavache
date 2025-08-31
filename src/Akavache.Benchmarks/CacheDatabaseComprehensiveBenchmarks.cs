@@ -37,7 +37,9 @@ namespace Akavache.Benchmarks
             _appBuilder.WithAkavache<SystemJsonSerializer>(
                 "AkavacheBenchmarksV11Comprehensive",
                 builder =>
-                builder.WithSqliteDefaults(),
+                builder
+                    .WithSqliteProvider()
+                    .WithSqliteDefaults(),
                 instance =>
                     {
                         // Register the BlobCache as the default IBlobCache

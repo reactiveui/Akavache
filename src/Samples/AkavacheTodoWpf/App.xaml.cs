@@ -116,6 +116,7 @@ public partial class App : Application
     private static void ConfigureAkavache() => AppBuilder.CreateSplatBuilder()
             .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder => builder
                 .WithApplicationName("AkavacheTodoWpf")
+                .WithSqliteProvider()
                 .UseForcedDateTimeKind(DateTimeKind.Utc)
                 .WithSqliteDefaults());
 
