@@ -2,6 +2,6 @@
 <RunSettings>
   <RunConfiguration>
     <!-- Limit vstest to a two CPUs to avoid cross-assembly static state bugs -->
-    <MaxCpuCount>2</MaxCpuCount>
+    <MaxCpuCount>4</MaxCpuCount>
   </RunConfiguration>
 </RunSettings>

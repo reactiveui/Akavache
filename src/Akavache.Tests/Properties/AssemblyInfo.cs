@@ -5,6 +5,8 @@
 
 using Xunit;
 
-// Configure xunit to disable test collection parallelization for DateTime tests to prevent race conditions
-// on the shared CacheDatabase.Serializer state
-[assembly: CollectionBehavior(DisableTestParallelization = false, MaxParallelThreads = 4)]
+// Configure xunit to limit parallelization to reduce cross-test interference (e.g., Splat.BitmapLoader)
+[assembly: CollectionBehavior(DisableTestParallelization = false, MaxParallelThreads = 2)]
+
+// Note: CollectionDefinition must be declared on a class, not via assembly attribute.
+// See NonParallelBitmapCollection in the test project.

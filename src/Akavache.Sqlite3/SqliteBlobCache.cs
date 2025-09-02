@@ -833,7 +833,7 @@ public class SqliteBlobCache : IBlobCache
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
-        await DisposeAsyncCore().ConfigureAwait(true);
+        await DisposeAsyncCore().ConfigureAwait(false);
 
         Dispose(false);
         GC.SuppressFinalize(this);
@@ -865,7 +865,26 @@ public class SqliteBlobCache : IBlobCache
             }
         }
 
-        await Connection.CloseAsync().ConfigureAwait(false);
+        // Switch to DELETE journal mode to release -wal and -shm as soon as possible
+        try
+        {
+            await Connection.ExecuteAsync("PRAGMA journal_mode=DELETE").ConfigureAwait(false);
+        }
+        catch
+        {
+        }
+
+        // Final close
+        try
+        {
+            await Connection.CloseAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+        }
+
+        // Small delay to allow OS to release file handles on Windows
+        await Task.Delay(50).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -881,6 +900,36 @@ public class SqliteBlobCache : IBlobCache
 
         if (isDisposing)
         {
+            try
+            {
+                // Best-effort synchronous cleanup for cases where async dispose isn't used
+                try
+                {
+                    Connection.ExecuteAsync("PRAGMA wal_checkpoint(TRUNCATE)").ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    Connection.ExecuteAsync("PRAGMA journal_mode=DELETE").ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    Connection.CloseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                }
+            }
+            catch
+            {
+            }
         }
 
         _disposed = true;

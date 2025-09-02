@@ -704,7 +704,7 @@ CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
            .WithSqliteDefaults());
 
 // Register platform-specific bitmap loader using Splat (if needed (Net 8.0+))
-Locator.CurrentMutable.RegisterPlatformBitmapLoader();
+AppLocator.CurrentMutable.RegisterPlatformBitmapLoader();
 ```
 
 #### 2. Load Images from Cache

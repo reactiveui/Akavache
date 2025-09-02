@@ -179,13 +179,15 @@ public static class ImageCacheExtensions
             .TakeLast(1);
     }
 
-    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
-    {
-        using var ms = new MemoryStream(compressedImage);
-        return Observable.FromAsync(async () =>
+    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
+        Observable.FromAsync(async () =>
         {
+#if NETSTANDARD2_0
+            using var ms = new MemoryStream(compressedImage);
+#else
+            await using var ms = new MemoryStream(compressedImage);
+#endif
             var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");
         });
-    }
 }

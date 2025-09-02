@@ -32,53 +32,16 @@ public class HttpService : IHttpService
     /// </summary>
     public HttpClient HttpClient { get; set; }
 
-    /// <summary>
-    /// Download data from an HTTP URL and insert the result into the
-    /// cache. If the data is already in the cache, this returns
-    /// a cached value. The URL itself is used as the key.
-    /// </summary>
-    /// <param name="blobCache">The blob cache associated with the action.</param>
-    /// <param name="url">The URL to download.</param>
-    /// <param name="method">The HTTP method.</param>
-    /// <param name="headers">An optional Dictionary containing the HTTP
-    /// request headers.</param>
-    /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>The data downloaded from the URL.</returns>
+    /// <inheritdoc />
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
         blobCache.DownloadUrl(url, url, method, headers, fetchAlways, absoluteExpiration);
 
-    /// <summary>
-    /// Download data from an HTTP URL and insert the result into the
-    /// cache. If the data is already in the cache, this returns
-    /// a cached value. The URL itself is used as the key.
-    /// </summary>
-    /// <param name="blobCache">The blob cache associated with the action.</param>
-    /// <param name="url">The URL to download.</param>
-    /// <param name="method">The HTTP method.</param>
-    /// <param name="headers">An optional Dictionary containing the HTTP
-    /// request headers.</param>
-    /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>The data downloaded from the URL.</returns>
+    /// <inheritdoc />
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => url is null
             ? throw new ArgumentNullException(nameof(url))
             : blobCache.DownloadUrl(url.ToString(), url, method, headers, fetchAlways, absoluteExpiration);
 
-    /// <summary>
-    /// Download data from an HTTP URL and insert the result into the
-    /// cache. If the data is already in the cache, this returns
-    /// a cached value. An explicit key is provided rather than the URL itself.
-    /// </summary>
-    /// <param name="blobCache">The blob cache associated with the action.</param>
-    /// <param name="key">The key to store with.</param>
-    /// <param name="url">The URL to download.</param>
-    /// <param name="method">The HTTP method.</param>
-    /// <param name="headers">An optional Dictionary containing the HTTP
-    /// request headers.</param>
-    /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>The data downloaded from the URL.</returns>
+    /// <inheritdoc />
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -106,20 +69,7 @@ public class HttpService : IHttpService
         return conn.Select(x => x ?? []);
     }
 
-    /// <summary>
-    /// Download data from an HTTP URL and insert the result into the
-    /// cache. If the data is already in the cache, this returns
-    /// a cached value. An explicit key is provided rather than the URL itself.
-    /// </summary>
-    /// <param name="blobCache">The blob cache associated with the action.</param>
-    /// <param name="key">The key to store with.</param>
-    /// <param name="url">The URL to download.</param>
-    /// <param name="method">The HTTP method.</param>
-    /// <param name="headers">An optional Dictionary containing the HTTP
-    /// request headers.</param>
-    /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>The data downloaded from the URL.</returns>
+    /// <inheritdoc />
     public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -208,4 +158,47 @@ public class HttpService : IHttpService
     }
 
     private static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
+
+    /// <summary>
+    /// A fast-failing HTTP service that reduces retries and timeouts to speed up tests.
+    /// </summary>
+    public class FastHttpService : HttpService
+    {
+        private readonly int _retries;
+        private readonly TimeSpan _timeout;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FastHttpService"/> class.
+        /// </summary>
+        /// <param name="retries">Number of retries to use (default 0).</param>
+        /// <param name="timeout">Timeout to use (default 2 seconds).</param>
+        public FastHttpService(int retries = 0, TimeSpan? timeout = null)
+        {
+            _retries = retries;
+            _timeout = timeout ?? TimeSpan.FromSeconds(2);
+
+            // Also set HttpClient.Timeout so HttpClient honors the same bound.
+            try
+            {
+                HttpClient.Timeout = _timeout;
+            }
+            catch
+            {
+                // ignore if platform HttpClient doesn't allow timeout
+            }
+        }
+
+        /// <inheritdoc />
+        protected override IObservable<HttpResponseMessage> MakeWebRequest(
+            Uri uri,
+            HttpMethod method,
+            IEnumerable<KeyValuePair<string, string>>? headers = null,
+            string? content = null,
+            int retries = 3,
+            TimeSpan? timeout = null)
+        {
+            // Force the configured fast retries/timeout
+            return base.MakeWebRequest(uri, method, headers, content, _retries, _timeout);
+        }
+    }
 }

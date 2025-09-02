@@ -195,12 +195,15 @@ public static class BitmapImageExtensions
         });
     }
 
-    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight)
-    {
-        using var ms = new MemoryStream(compressedImage);
-        return BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ToObservable()
-            .SelectMany(bitmap => bitmap is not null ?
-                Observable.Return(bitmap) :
-                Observable.Throw<IBitmap>(new IOException("Failed to load the bitmap!")));
-    }
+    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
+        Observable.FromAsync(async () =>
+        {
+#if NETSTANDARD2_0
+            using var ms = new MemoryStream(compressedImage);
+#else
+            await using var ms = new MemoryStream(compressedImage);
+#endif
+            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
+            return bitmap ?? throw new IOException("Failed to load the bitmap!");
+        });
 }
