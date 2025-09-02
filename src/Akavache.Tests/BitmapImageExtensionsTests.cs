@@ -14,8 +14,53 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for Akavache.Drawing BitmapImageExtensions functionality.
 /// </summary>
-public class BitmapImageExtensionsTests
+[Collection("Non-Parallel Bitmap Tests")]
+public class BitmapImageExtensionsTests : IAsyncLifetime
 {
+    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
+    private IBitmapLoader? _originalLoader;
+
+    /// <summary>
+    /// Performs per-test-class initialization.
+    /// </summary>
+    /// <returns>A completed task.</returns>
+    public Task InitializeAsync()
+    {
+        // Ensure a fast, deterministic bitmap loader for all tests in this class
+        try
+        {
+            _originalLoader = BitmapLoader.Current;
+        }
+        catch
+        {
+            _originalLoader = null;
+        }
+
+        BitmapLoader.Current = new MockBitmapLoader();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Performs per-test-class cleanup.
+    /// </summary>
+    /// <returns>A completed task.</returns>
+    public Task DisposeAsync()
+    {
+        try
+        {
+            if (_originalLoader is not null)
+            {
+                BitmapLoader.Current = _originalLoader;
+            }
+        }
+        catch
+        {
+            // Ignore restore failures
+        }
+
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// Tests that LoadImage throws ArgumentNullException when cache is null.
     /// </summary>
@@ -152,7 +197,9 @@ public class BitmapImageExtensionsTests
         }
 
         // Act
-        var result = await BitmapImageExtensions.ThrowOnBadImageBuffer(validImageData).FirstAsync();
+        var result = await BitmapImageExtensions.ThrowOnBadImageBuffer(validImageData)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Assert
         Assert.Equal(validImageData, result);
@@ -169,7 +216,9 @@ public class BitmapImageExtensionsTests
         byte[]? nullData = null;
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!).FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!)
+            .Timeout(TestTimeout)
+            .FirstAsync());
     }
 
     /// <summary>
@@ -183,7 +232,9 @@ public class BitmapImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(tooSmallData).FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(tooSmallData)
+            .Timeout(TestTimeout)
+            .FirstAsync());
     }
 
     /// <summary>
@@ -197,7 +248,9 @@ public class BitmapImageExtensionsTests
         await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key").FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key")
+            .Timeout(TestTimeout)
+            .FirstAsync());
     }
 
     /// <summary>
@@ -207,84 +260,29 @@ public class BitmapImageExtensionsTests
     [Fact]
     public async Task SaveImageAndLoadImageShouldWorkTogether()
     {
-        // This test depends on platform-specific bitmap loading which may not be available
-        // in all test environments. We'll skip gracefully if dependencies are not available.
-        try
-        {
-            // Check if we can access BitmapLoader without throwing
-            var currentLoader = BitmapLoader.Current;
-            if (currentLoader == null)
-            {
-                // No bitmap loader available - skip this test
-                return;
-            }
-        }
-        catch
-        {
-            // BitmapLoader access failed - skip this test
-            return;
-        }
-
         // Arrange
         await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
         var mockBitmap = new MockBitmap();
         const string key = "test_image";
 
-        // Store the original loader to restore later
-        var originalLoader = BitmapLoader.Current;
+        // Act - Save image (should serialize the bitmap data)
+        await cache.SaveImage(key, mockBitmap)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
-        try
-        {
-            // Use mock loader for testing
-            var mockLoader = new MockBitmapLoader();
-            BitmapLoader.Current = mockLoader;
+        // Act - Load image (should deserialize and recreate bitmap)
+        var loadedBitmap = await cache.LoadImage(key)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
-            // Act - Save image (should serialize the bitmap data)
-            await cache.SaveImage(key, mockBitmap).FirstAsync();
+        // Assert
+        Assert.NotNull(loadedBitmap);
 
-            // Act - Load image (should deserialize and recreate bitmap)
-            var loadedBitmap = await cache.LoadImage(key).FirstAsync();
+        // For the mock implementation, we can verify basic properties
+        Assert.Equal(mockBitmap.Width, loadedBitmap.Width);
+        Assert.Equal(mockBitmap.Height, loadedBitmap.Height);
 
-            // Assert
-            Assert.NotNull(loadedBitmap);
-
-            // For the mock implementation, we can verify basic properties
-            Assert.Equal(mockBitmap.Width, loadedBitmap.Width);
-            Assert.Equal(mockBitmap.Height, loadedBitmap.Height);
-        }
-        catch (Exception ex) when (
-            ex.Message.Contains("BitmapLoader") ||
-            ex.Message.Contains("Splat") ||
-            ex.Message.Contains("dependency resolver") ||
-            ex.Message.Contains("disposed") ||
-            ex.Message.Contains("not registered") ||
-            ex.Message.Contains("service") ||
-            ex is ObjectDisposedException ||
-            ex is NotSupportedException ||
-            ex is NotImplementedException ||
-            ex is InvalidOperationException)
-        {
-            // Skip if any platform bitmap loading issues occur
-            // This is acceptable since bitmap functionality depends on platform-specific implementations
-            return;
-        }
-        finally
-        {
-            // Restore original loader
-            try
-            {
-                if (originalLoader != null)
-                {
-                    BitmapLoader.Current = originalLoader;
-                }
-            }
-            catch
-            {
-                // Ignore errors when restoring
-            }
-
-            await cache.DisposeAsync();
-        }
+        await cache.DisposeAsync();
     }
 
     /// <summary>
@@ -297,21 +295,14 @@ public class BitmapImageExtensionsTests
         // Arrange
         var mockBitmap = new MockBitmap();
 
-        try
-        {
-            // Act
-            var bytes = await mockBitmap.ImageToBytes().FirstAsync();
+        // Act
+        var bytes = await mockBitmap.ImageToBytes()
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
-            // Assert
-            Assert.NotNull(bytes);
-            Assert.True(bytes.Length > 0);
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("Platform"))
-        {
-            // If platform-specific bitmap handling is not available, this is expected
-            // The Drawing library requires platform-specific implementations
-            return;
-        }
+        // Assert
+        Assert.NotNull(bytes);
+        Assert.True(bytes.Length > 0);
     }
 
     /// <summary>
@@ -339,7 +330,9 @@ public class BitmapImageExtensionsTests
         if (shouldSucceed)
         {
             // Act
-            var result = await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer).FirstAsync();
+            var result = await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
+                .Timeout(TestTimeout)
+                .FirstAsync();
 
             // Assert
             Assert.Equal(buffer, result);
@@ -347,7 +340,9 @@ public class BitmapImageExtensionsTests
         else
         {
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer).FirstAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
+                .Timeout(TestTimeout)
+                .FirstAsync());
         }
     }
 
@@ -358,23 +353,6 @@ public class BitmapImageExtensionsTests
     [Fact]
     public async Task LoadImageWithDimensionsShouldAcceptParameters()
     {
-        // Skip this test if we're in an environment without proper bitmap loading support
-        try
-        {
-            // Try to get the current bitmap loader to see if Splat is configured
-            var testLoader = BitmapLoader.Current;
-            if (testLoader == null)
-            {
-                // Skip test if no loader is available
-                return;
-            }
-        }
-        catch
-        {
-            // Skip test if bitmap loader access fails
-            return;
-        }
-
         // Arrange
         await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
         var validImageData = new byte[128];
@@ -384,47 +362,19 @@ public class BitmapImageExtensionsTests
         }
 
         const string key = "dimension_test_image";
-        var originalLoader = BitmapLoader.Current;
 
-        try
-        {
-            // Insert valid image data
-            await cache.Insert(key, validImageData).FirstAsync();
+        // Insert valid image data
+        await cache.Insert(key, validImageData)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
-            // Mock the BitmapLoader
-            BitmapLoader.Current = new MockBitmapLoader();
+        // Act - Load with dimensions
+        var loadedBitmap = await cache.LoadImage(key, 100f, 200f)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
-            // Act - Load with dimensions
-            var loadedBitmap = await cache.LoadImage(key, 100f, 200f).FirstAsync();
-
-            // Assert
-            Assert.NotNull(loadedBitmap);
-        }
-        catch (Exception ex) when (
-            ex.Message.Contains("BitmapLoader") ||
-            ex.Message.Contains("Splat") ||
-            ex.Message.Contains("dependency resolver") ||
-            ex.Message.Contains("disposed") ||
-            ex is ObjectDisposedException ||
-            ex is NotSupportedException)
-        {
-            // Skip if platform bitmap loading is not available
-            return;
-        }
-        finally
-        {
-            try
-            {
-                if (originalLoader != null)
-                {
-                    BitmapLoader.Current = originalLoader;
-                }
-            }
-            catch
-            {
-                // Ignore errors when restoring
-            }
-        }
+        // Assert
+        Assert.NotNull(loadedBitmap);
     }
 
     /// <summary>
@@ -440,19 +390,13 @@ public class BitmapImageExtensionsTests
         const string key = "expiring_image";
         var expiration = DateTimeOffset.Now.AddMinutes(10);
 
-        try
-        {
-            // Act
-            await cache.SaveImage(key, mockBitmap, expiration).FirstAsync();
+        // Act
+        await cache.SaveImage(key, mockBitmap, expiration)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
-            // Verify it was saved (just check that no exception was thrown)
-            Assert.True(true);
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat"))
-        {
-            // Skip if platform bitmap handling is not available
-            return;
-        }
+        // Verify it was saved (just check that no exception was thrown)
+        Assert.True(true);
     }
 
     /// <summary>
@@ -466,9 +410,25 @@ public class BitmapImageExtensionsTests
 
         public Task Save(CompressedBitmapFormat format, float quality, Stream target)
         {
-            // Write some mock PNG-like data
-            var mockPngData = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-            return target.WriteAsync(mockPngData, 0, mockPngData.Length);
+            // Produce a deterministic buffer >=64 bytes to satisfy ThrowOnBadImageBuffer
+            var buffer = new byte[128];
+
+            // PNG signature
+            buffer[0] = 0x89;
+            buffer[1] = 0x50;
+            buffer[2] = 0x4E;
+            buffer[3] = 0x47;
+            buffer[4] = 0x0D;
+            buffer[5] = 0x0A;
+            buffer[6] = 0x1A;
+            buffer[7] = 0x0A;
+
+            for (var i = 8; i < buffer.Length; i++)
+            {
+                buffer[i] = (byte)(i % 256);
+            }
+
+            return target.WriteAsync(buffer, 0, buffer.Length);
         }
 
         public void Dispose()

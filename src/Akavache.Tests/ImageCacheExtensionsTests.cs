@@ -6,6 +6,7 @@
 using System.Reflection;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
+using Akavache.Tests.Helpers;
 using Splat;
 using Xunit;
 
@@ -14,8 +15,11 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for Akavache.Drawing ImageCacheExtensions functionality.
 /// </summary>
+[Collection("Non-Parallel Bitmap Tests")]
 public class ImageCacheExtensionsTests
 {
+    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
+
     /// <summary>
     /// Tests that LoadImages throws ArgumentNullException when cache is null.
     /// </summary>
@@ -165,7 +169,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var emptyKeys = Array.Empty<string>();
 
         // Act
@@ -184,7 +188,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var emptyUrls = Array.Empty<string>();
 
         // Act
@@ -203,7 +207,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var keys = new[] { "missing_key1", "missing_key2" };
 
         // Act
@@ -222,7 +226,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
         // Use URLs that will cause UriFormatException to test error handling
         var invalidUrls = new[] { "not-a-url", "also/invalid" };
@@ -251,7 +255,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -265,7 +269,9 @@ public class ImageCacheExtensionsTests
             SetupMockBitmapLoader();
 
             // Act - Try to load non-existent image
-            var bitmap = await cache.LoadImageWithFallback("nonexistent_key", fallbackBytes).FirstAsync();
+            var bitmap = await cache.LoadImageWithFallback("nonexistent_key", fallbackBytes)
+                .Timeout(TestTimeout)
+                .FirstAsync();
 
             // Assert
             Assert.NotNull(bitmap);
@@ -291,7 +297,11 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer)
+        {
+            // Force immediate error to avoid any real network and ensure fallback path
+            HttpService = new ThrowingHttpService()
+        };
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -304,8 +314,10 @@ public class ImageCacheExtensionsTests
         {
             SetupMockBitmapLoader();
 
-            // Act - Try to load from invalid URL
-            var bitmap = await cache.LoadImageFromUrlWithFallback("http://invalid-url-that-does-not-exist.com/image.png", fallbackBytes).FirstAsync();
+            // Act - Any URL will do since HTTP service throws immediately
+            var bitmap = await cache.LoadImageFromUrlWithFallback("http://example.invalid/image.png", fallbackBytes)
+                .Timeout(TestTimeout)
+                .FirstAsync();
 
             // Assert
             Assert.NotNull(bitmap);
@@ -331,13 +343,12 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-        {
-            await cache.GetImageSize("nonexistent_image").FirstAsync();
-        });
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetImageSize("nonexistent_image")
+                .Timeout(TestTimeout)
+                .FirstAsync());
     }
 
     /// <summary>
@@ -349,26 +360,30 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
             validImageData[i] = (byte)(i % 256);
         }
 
-        var key = "size_test_image";
+        const string key = "size_test_image";
         var originalLoader = GetCurrentBitmapLoader();
 
         try
         {
             // Insert valid image data
-            await cache.Insert(key, validImageData).FirstAsync();
+            await cache.Insert(key, validImageData)
+                .Timeout(TestTimeout)
+                .FirstAsync();
 
             // Set up mock bitmap loader for testing
             SetupMockBitmapLoader();
 
             // Act
-            var size = await cache.GetImageSize(key).FirstAsync();
+            var size = await cache.GetImageSize(key)
+                .Timeout(TestTimeout)
+                .FirstAsync();
 
             // Assert
             Assert.NotNull(size);
@@ -395,18 +410,28 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
         // Insert some test data
-        await cache.Insert("image_1", new byte[] { 1, 2, 3 }).FirstAsync();
-        await cache.Insert("image_2", new byte[] { 4, 5, 6 }).FirstAsync();
-        await cache.Insert("other_data", new byte[] { 7, 8, 9 }).FirstAsync();
+        await cache.Insert("image_1", [1, 2, 3])
+            .Timeout(TestTimeout)
+            .FirstAsync();
+        await cache.Insert("image_2", [4, 5, 6])
+            .Timeout(TestTimeout)
+            .FirstAsync();
+        await cache.Insert("other_data", [7, 8, 9])
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Act - Clear only keys starting with "image_"
-        await cache.ClearImageCache(key => key.StartsWith("image_")).FirstAsync();
+        await cache.ClearImageCache(key => key.StartsWith("image_"))
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Assert - Only "other_data" should remain
-        var remainingKeys = await cache.GetAllKeys().ToList().FirstAsync();
+        var remainingKeys = await cache.GetAllKeys().ToList()
+            .Timeout(TestTimeout)
+            .FirstAsync();
         Assert.Single(remainingKeys);
         Assert.Contains("other_data", remainingKeys);
     }
@@ -420,16 +445,22 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
         // Insert some test data
-        await cache.Insert("test_key", new byte[] { 1, 2, 3 }).FirstAsync();
+        await cache.Insert("test_key", [1, 2, 3])
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Act - Use pattern that matches nothing
-        await cache.ClearImageCache(key => key.StartsWith("nonexistent_")).FirstAsync();
+        await cache.ClearImageCache(key => key.StartsWith("nonexistent_"))
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Assert - All data should remain
-        var remainingKeys = await cache.GetAllKeys().ToList().FirstAsync();
+        var remainingKeys = await cache.GetAllKeys().ToList()
+            .Timeout(TestTimeout)
+            .FirstAsync();
         Assert.Single(remainingKeys);
         Assert.Contains("test_key", remainingKeys);
     }
@@ -443,11 +474,13 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var keys = new[] { "missing1", "missing2" }; // Use missing keys to test error handling
 
         // Act
-        var results = await cache.LoadImages(keys, 100f, 200f).ToList().FirstAsync();
+        var results = await cache.LoadImages(keys, 100f, 200f).ToList()
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Assert - Should be empty due to missing keys being filtered out
         Assert.Empty(results);
@@ -462,12 +495,14 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        using var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
         var urls = new[] { "http://invalid1.com", "http://invalid2.com" }; // Use invalid URLs to test error handling
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         // Act
-        var result = await cache.PreloadImagesFromUrls(urls, expiration).FirstAsync();
+        var result = await cache.PreloadImagesFromUrls(urls, expiration)
+            .Timeout(TestTimeout)
+            .FirstAsync();
 
         // Assert - Should complete gracefully
         Assert.Equal(Unit.Default, result);
@@ -557,5 +592,23 @@ public class ImageCacheExtensionsTests
 
         public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) => Task.FromResult<IBitmap?>(new MockBitmap());
 #pragma warning restore CA1822 // Mark members as static
+    }
+
+    /// <summary>
+    /// A test-local HTTP service that immediately errors to avoid real network I/O.
+    /// </summary>
+    private sealed class ThrowingHttpService : IHttpService
+    {
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
+
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
+
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
+
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
     }
 }

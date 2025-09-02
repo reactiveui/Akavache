@@ -59,10 +59,11 @@ public static class MauiProgram
     /// Initialize SQLite support - use the new V11 initialization pattern.
     /// </summary>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    private static AppBuilder ConfigureAkavache() =>
+    private static IAppBuilder ConfigureAkavache() =>
         AppBuilder.CreateSplatBuilder()
             .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
                 builder.WithApplicationName("AkavacheTodoMaui")
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
+                    .WithSqliteProvider()
                     .WithSqliteDefaults());
 }

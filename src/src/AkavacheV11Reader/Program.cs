@@ -26,6 +26,7 @@ var instance = CacheDatabase.CreateBuilder()
     //.WithSerializer<NewtonsoftBsonSerializer>()
     .WithSerializer<SystemJsonSerializer>()
     .WithApplicationName("AkavacheCompatTest")
+    .WithSqliteProvider()
     .WithSqliteDefaults()
     .Build();
 

@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.NewtonsoftJson;
+using Akavache.Sqlite3;
 using Splat.Builder;
 using SQLitePCL;
 
@@ -30,6 +31,7 @@ public class SettingsCacheTests
             null,
             async builder =>
             {
+                builder.WithSqliteProvider();
                 await builder.DeleteSettingsStore<ViewSettings>();
                 builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
             },
@@ -67,7 +69,7 @@ public class SettingsCacheTests
         var viewSettings = default(ViewSettings);
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
-            builder => builder.WithSettingsStore<ViewSettings>(s => viewSettings = s),
+            builder => builder.WithSqliteProvider().WithSettingsStore<ViewSettings>(s => viewSettings = s),
             async instance =>
             {
                 // Initial delay to ensure settings are created
@@ -97,6 +99,7 @@ public class SettingsCacheTests
             null,
             async builder =>
         {
+            builder.WithSqliteProvider();
             await builder.DeleteSettingsStore<ViewSettings>();
             builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
         },
@@ -134,10 +137,7 @@ public class SettingsCacheTests
         var viewSettings = default(ViewSettings);
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
-            builder =>
-            {
-                builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
-            },
+            builder => builder.WithSqliteProvider().WithSettingsStore<ViewSettings>(s => viewSettings = s),
             async instance =>
             {
                 // Initial delay to ensure settings are created
@@ -166,7 +166,7 @@ public class SettingsCacheTests
         var akavacheBuilder = default(IAkavacheInstance);
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             null,
-            builder => builder.WithSettingsCachePath(path),
+            builder => builder.WithSqliteProvider().WithSettingsCachePath(path),
             instance => akavacheBuilder = instance).Build();
 
         while (!AppBuilder.HasBeenBuilt)
@@ -180,7 +180,6 @@ public class SettingsCacheTests
     private AppBuilder GetBuilder()
     {
         AppBuilder.ResetBuilderStateForTests();
-        Batteries_V2.Init();
         return _appBuilder;
     }
 }
