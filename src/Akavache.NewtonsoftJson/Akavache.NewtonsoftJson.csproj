@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheTargetFrameworks);$(MobileTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <Description>Newtonsoft.Json serialization support for Akavache with optional BSON compatibility</Description>

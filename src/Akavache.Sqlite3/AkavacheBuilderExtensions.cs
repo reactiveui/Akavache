@@ -21,7 +21,7 @@ public static class AkavacheBuilderExtensions
     private const string UserAccount = "UserAccount";
     private const string LocalMachine = "LocalMachine";
     private const string Secure = "Secure";
-    private static ISQLite3Provider _sqliteProvider = null!;
+    private static bool? _sqliteProvider;
 
 #if ENCRYPTED
     /// <summary>
@@ -52,23 +52,8 @@ public static class AkavacheBuilderExtensions
             return builder;
         }
 
-#if !AKAVACHE_MOBILE_IOS
-#if ENCRYPTED
-        _sqliteProvider = new SQLite3Provider_e_sqlcipher();
-#else
-        _sqliteProvider = new SQLite3Provider_e_sqlite3();
-#endif
-        raw.SetProvider(_sqliteProvider);
-#else
-        // iOS requires a different SQLite provider initialization
-#if ENCRYPTED
-        _sqliteProvider = new SQLite3Provider_internal();
-#else
-        _sqliteProvider = new SQLite3Provider_sqlite3();
-#endif
-        raw.SetProvider(_sqliteProvider);
-#endif
         Batteries_V2.Init();
+        _sqliteProvider = true;
         return builder;
     }
 

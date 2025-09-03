@@ -324,7 +324,7 @@ public static class AkavacheBuilderExtensions
     /// UserAccount will use User Store For Assembly.
     /// Secure will use User Store For Assembly.
     /// SettingsCache will use User Store For Assembly.
-    /// Any other value will use User Store For Domain.
+    /// Any other value will use Machine Store For Assembly.
     /// </param>
     /// <returns>The Isolated cache path.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
@@ -354,11 +354,19 @@ public static class AkavacheBuilderExtensions
         string? cachePath = null;
         var store = cacheName switch
         {
+#if AKAVACHE_MOBILE || AKAVACHE_MOBILE_IOS
+            "LocalMachine" => IsolatedStorageFile.GetUserStoreForAssembly(),
+#else
             "LocalMachine" => IsolatedStorageFile.GetMachineStoreForAssembly(),
+#endif
             "UserAccount" => IsolatedStorageFile.GetUserStoreForAssembly(),
             "Secure" => IsolatedStorageFile.GetUserStoreForAssembly(),
             "SettingsCache" => IsolatedStorageFile.GetUserStoreForAssembly(),
-            _ => IsolatedStorageFile.GetUserStoreForDomain(),
+#if AKAVACHE_MOBILE || AKAVACHE_MOBILE_IOS
+            _ => IsolatedStorageFile.GetUserStoreForAssembly(),
+#else
+            _ => IsolatedStorageFile.GetMachineStoreForAssembly(),
+#endif
         };
 
         // Compute CachePath under a writable location (fix iOS bundle write attempt)
