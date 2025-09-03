@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(AkavacheTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheTargetFrameworks);$(MobileTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <DefineConstants>$(DefineConstants);ENCRYPTED</DefineConstants>

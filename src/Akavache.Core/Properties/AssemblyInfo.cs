@@ -4,9 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Runtime.CompilerServices;
-using Akavache.Core;
 
-[assembly: Preserve(AllMembers = true)]
+[assembly: Akavache.Core.Preserve(AllMembers = true)]
 [assembly: InternalsVisibleTo("Akavache.Sqlite3")]
 [assembly: InternalsVisibleTo("Akavache.EncryptedSqlite3")]
 [assembly: InternalsVisibleTo("Akavache.NewtonsoftJson")]

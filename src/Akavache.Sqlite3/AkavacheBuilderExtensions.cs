@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Splat;
 using SQLitePCL;
 
@@ -51,12 +52,22 @@ public static class AkavacheBuilderExtensions
             return builder;
         }
 
+#if !AKAVACHE_MOBILE_IOS
 #if ENCRYPTED
         _sqliteProvider = new SQLite3Provider_e_sqlcipher();
 #else
         _sqliteProvider = new SQLite3Provider_e_sqlite3();
 #endif
         raw.SetProvider(_sqliteProvider);
+#else
+        // iOS requires a different SQLite provider initialization
+#if ENCRYPTED
+        _sqliteProvider = new SQLite3Provider_internal();
+#else
+        _sqliteProvider = new SQLite3Provider_sqlite3();
+#endif
+        raw.SetProvider(_sqliteProvider);
+#endif
         Batteries_V2.Init();
         return builder;
     }
@@ -204,7 +215,7 @@ public static class AkavacheBuilderExtensions
             _inner.Insert(keyValuePairs, type, absoluteExpiration);
 
         public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
-            _inner.Insert(key, data, type, absoluteExpiration);
+                    _inner.Insert(key, data, type, absoluteExpiration);
 
         public IObservable<byte[]?> Get(string key) => _inner.Get(key);
 
