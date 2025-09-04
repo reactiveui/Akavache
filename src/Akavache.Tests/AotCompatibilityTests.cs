@@ -5,32 +5,34 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for AOT compatibility and edge cases.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class AotCompatibilityTests
 {
     /// <summary>
     /// Tests that null serializer throws appropriate exception.
     /// </summary>
-    [Fact]
+    [Test]
     public void NullSerializerShouldThrowException()
     {
         // Act & Assert - The exception should occur when creating the cache, not when using it
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.That(() =>
         {
             using var cache = new InMemoryBlobCache(default(ISerializer)!);
-        });
+        }, Throws.TypeOf<ArgumentNullException>());
     }
 
     /// <summary>
     /// Tests that SerializeWithContext handles null values correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SerializeWithContextShouldHandleNullValues()
     {
         var blobCache = new InMemoryBlobCache(new SystemJsonSerializer());
@@ -39,31 +41,31 @@ public class AotCompatibilityTests
         var result = SerializerExtensions.SerializeWithContext<string?>(null, blobCache);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.True(result.Length == 0 || Encoding.UTF8.GetString(result) == "null");
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Length == 0 || Encoding.UTF8.GetString(result) == "null", Is.True);
     }
 
     /// <summary>
     /// Tests that DeserializeWithContext handles null/empty data.
     /// </summary>
-    [Fact]
+    [Test]
     public void DeserializeWithContextShouldHandleNullData()
     {
         var blobCache = new InMemoryBlobCache(new SystemJsonSerializer());
 
         // Act & Assert
         var nullResult = SerializerExtensions.DeserializeWithContext<string>(null!, blobCache);
-        Assert.Null(nullResult);
+        Assert.That(nullResult, Is.Null);
 
         var emptyResult = SerializerExtensions.DeserializeWithContext<string>([], blobCache);
-        Assert.Null(emptyResult);
+        Assert.That(emptyResult, Is.Null);
     }
 
     /// <summary>
     /// Tests that error handling works correctly for serialization failures.
     /// </summary>
     /// <returns>A task representing the test completion.</returns>
-    [Fact]
+    [Test]
     public async Task SerializationErrorsShouldBeHandledCorrectly()
     {
         using (Utility.WithEmptyDirectory(out var path))
@@ -77,13 +79,14 @@ public class AotCompatibilityTests
                 problemObject["self"] = problemObject; // Create circular reference
 
                 // Act & Assert - this should handle serialization gracefully
-                var exception = await Assert.ThrowsAnyAsync<Exception>(async () => await cache.InsertObject("problem", problemObject).FirstAsync());
+                var exception = await Assert.ThatAsync(async () => await cache.InsertObject("problem", problemObject).FirstAsync(), Throws.Exception);
 
                 // Verify it's a serialization-related exception
-                Assert.True(
+                Assert.That(
                     exception is InvalidOperationException ||
                     exception is System.Text.Json.JsonException ||
                     exception is NotSupportedException,
+                    Is.True,
                     $"Expected serialization exception, got {exception.GetType().Name}: {exception.Message}");
             }
             finally
@@ -97,7 +100,7 @@ public class AotCompatibilityTests
     /// Tests that DateTimeKind forcing works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DateTimeKindForcingShouldWorkCorrectly()
     {
         using (Utility.WithEmptyDirectory(out var path))
@@ -121,14 +124,15 @@ public class AotCompatibilityTests
                 var retrievedUtc = retrieved.ToUniversalTime();
                 var timeDifference = Math.Abs((originalUtc - retrievedUtc).TotalSeconds);
 
-                Assert.True(timeDifference < 2, $"DateTime values differ too much: {timeDifference} seconds");
+                Assert.That(timeDifference < 2, Is.True, $"DateTime values differ too much: {timeDifference} seconds");
 
                 // If ForcedDateTimeKind is working, retrieved should be UTC or Unspecified
                 // But some serializers may preserve the original kind
-                Assert.True(
+                Assert.That(
                     retrieved.Kind == DateTimeKind.Utc ||
                     retrieved.Kind == DateTimeKind.Unspecified ||
                     retrieved.Kind == DateTimeKind.Local, // Allow local for compatibility
+                    Is.True,
                     $"DateTime kind should be reasonable, got {retrieved.Kind}");
             }
             finally
@@ -142,7 +146,7 @@ public class AotCompatibilityTests
     /// Tests that argument validation works correctly.
     /// </summary>
     /// <returns>A task representing the test completion.</returns>
-    [Fact]
+    [Test]
     public async Task ArgumentValidationShouldWorkCorrectly()
     {
         var cache = new InMemoryBlobCache(new SystemJsonSerializer());
@@ -151,14 +155,14 @@ public class AotCompatibilityTests
         {
             // Act & Assert - InMemoryBlobCache may not validate empty strings the same way
             // Try to test actual argument validation if it exists
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InsertObject(null!, "value").FirstAsync());
+            Assert.ThatAsync(async () => await cache.InsertObject(null!, "value").FirstAsync(), Throws.TypeOf<ArgumentNullException>());
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObject<string>(null!).FirstAsync());
+            Assert.ThatAsync(async () => await cache.GetObject<string>(null!).FirstAsync(), Throws.TypeOf<ArgumentNullException>());
 
             // Test that actual empty strings work (they may be valid keys)
             await cache.InsertObject(string.Empty, "empty_key_value").FirstAsync();
             var emptyKeyResult = await cache.GetObject<string>(string.Empty).FirstAsync();
-            Assert.Equal("empty_key_value", emptyKeyResult);
+            Assert.That(emptyKeyResult, Is.EqualTo("empty_key_value"));
         }
         finally
         {
@@ -170,7 +174,7 @@ public class AotCompatibilityTests
     /// Tests that type safety is maintained with generic operations.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task TypeSafetyShouldBeMaintained()
     {
         using (Utility.WithEmptyDirectory(out var path))
@@ -195,7 +199,7 @@ public class AotCompatibilityTests
 
                 // Retrieve the same data with the correct type
                 var retrieved = await cache.GetObject<dynamic>("test_key").FirstAsync();
-                Assert.NotNull(retrieved);
+                Assert.That(retrieved, Is.Not.Null);
 
                 // For type safety, we actually want to verify that the system
                 // properly handles type conversions or fails appropriately
@@ -206,12 +210,12 @@ public class AotCompatibilityTests
                 await cache.InsertObject("user_key", userObject).FirstAsync();
                 var retrievedUser = await cache.GetObject<Mocks.UserObject>("user_key").FirstAsync();
 
-                Assert.Equal(userObject.Name, retrievedUser.Name);
-                Assert.Equal(userObject.Bio, retrievedUser.Bio);
-                Assert.Equal(userObject.Blog, retrievedUser.Blog);
+                Assert.That(retrievedUser.Name, Is.EqualTo(userObject.Name));
+                Assert.That(retrievedUser.Bio, Is.EqualTo(userObject.Bio));
+                Assert.That(retrievedUser.Blog, Is.EqualTo(userObject.Blog));
 
                 // Test that serialization is working correctly - this is the real type safety test
-                Assert.True(true, "Type safety is maintained through proper serialization/deserialization");
+                Assert.That(true, Is.True, "Type safety is maintained through proper serialization/deserialization");
             }
             finally
             {
@@ -224,7 +228,7 @@ public class AotCompatibilityTests
     /// Tests that concurrent operations work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ConcurrentOperationsShouldWorkCorrectly()
     {
         using (Utility.WithEmptyDirectory(out var path))
@@ -243,7 +247,7 @@ public class AotCompatibilityTests
                     {
                         await cache.InsertObject($"key_{index}", $"value_{index}").FirstAsync();
                         var retrieved = await cache.GetObject<string>($"key_{index}").FirstAsync();
-                        Assert.Equal($"value_{index}", retrieved);
+                        Assert.That(retrieved, Is.EqualTo($"value_{index}"));
                     }));
                 }
 
@@ -254,7 +258,7 @@ public class AotCompatibilityTests
                 for (var i = 0; i < 10; i++)
                 {
                     var value = await cache.GetObject<string>($"key_{i}").FirstAsync();
-                    Assert.Equal($"value_{i}", value);
+                    Assert.That(value, Is.EqualTo($"value_{i}"));
                 }
             }
             finally
@@ -268,7 +272,7 @@ public class AotCompatibilityTests
     /// Tests that memory cleanup works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task MemoryCleanupShouldWorkCorrectly()
     {
         using (Utility.WithEmptyDirectory(out var path))
@@ -288,12 +292,12 @@ public class AotCompatibilityTests
 
                 // Verify cleanup
                 var keys = await cache.GetAllKeys().ToList().FirstAsync();
-                Assert.Empty(keys);
+                Assert.That(keys, Is.Empty);
 
                 // Verify we can still use the cache
                 await cache.InsertObject("new_key", "new_value").FirstAsync();
                 var newValue = await cache.GetObject<string>("new_key").FirstAsync();
-                Assert.Equal("new_value", newValue);
+                Assert.That(newValue, Is.EqualTo("new_value"));
             }
             finally
             {
@@ -306,7 +310,7 @@ public class AotCompatibilityTests
     /// Tests that large objects are handled correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LargeObjectsShouldBeHandledCorrectly()
     {
         using (Utility.WithEmptyDirectory(out var path))
@@ -323,8 +327,8 @@ public class AotCompatibilityTests
                 var retrieved = await cache.GetObject<string>("large_object").FirstAsync();
 
                 // Assert
-                Assert.Equal(largeString, retrieved);
-                Assert.Equal(100000, retrieved!.Length);
+                Assert.That(retrieved, Is.EqualTo(largeString));
+                Assert.That(retrieved!.Length, Is.EqualTo(100000));
             }
             finally
             {
@@ -337,7 +341,7 @@ public class AotCompatibilityTests
     /// Tests that observable extension methods work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ObservableExtensionMethodsShouldWork()
     {
         var cache = new InMemoryBlobCache(new SystemJsonSerializer());
@@ -348,12 +352,12 @@ public class AotCompatibilityTests
             await cache.InsertObject("test", "value").FirstAsync();
             var result = await cache.GetObject<string>("test").FirstAsync();
 
-            Assert.Equal("value", result);
+            Assert.That(result, Is.EqualTo("value"));
 
             // Test GetAllKeys works
             var keys = await cache.GetAllKeys().ToList().FirstAsync();
-            Assert.Single(keys);
-            Assert.Contains("test", keys);
+            Assert.That(keys, Has.Count.EqualTo(1));
+            Assert.That(keys, Does.Contain("test"));
         }
         finally
         {
@@ -365,7 +369,7 @@ public class AotCompatibilityTests
     /// Tests that cache disposal works correctly in various scenarios.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheDisposalShouldWorkCorrectly()
     {
         InMemoryBlobCache cache;
@@ -375,7 +379,7 @@ public class AotCompatibilityTests
         {
             await cache.InsertObject("test", "value").FirstAsync();
             var result = await cache.GetObject<string>("test").FirstAsync();
-            Assert.Equal("value", result);
+            Assert.That(result, Is.EqualTo("value"));
         }
 
         // Test explicit disposal
@@ -391,7 +395,7 @@ public class AotCompatibilityTests
     /// Tests that bulk operations work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task BulkOperationsShouldWorkCorrectly()
     {
         var cache = new InMemoryBlobCache(new SystemJsonSerializer());
@@ -412,16 +416,16 @@ public class AotCompatibilityTests
             var keys = new[] { "key1", "key2", "key3" };
             var results = await cache.GetObjects<string>(keys).ToList().FirstAsync();
 
-            Assert.Equal(3, results.Count);
-            Assert.Contains(results, r => r.Key == "key1" && r.Value == "value1");
-            Assert.Contains(results, r => r.Key == "key2" && r.Value == "value2");
-            Assert.Contains(results, r => r.Key == "key3" && r.Value == "value3");
+            Assert.That(results.Count, Is.EqualTo(3));
+            Assert.That(results.Any(r => r.Key == "key1" && r.Value == "value1"), Is.True);
+            Assert.That(results.Any(r => r.Key == "key2" && r.Value == "value2"), Is.True);
+            Assert.That(results.Any(r => r.Key == "key3" && r.Value == "value3"), Is.True);
 
             // Test bulk invalidate
             await cache.InvalidateObjects<string>(keys).FirstAsync();
 
             var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
-            Assert.Empty(allKeys);
+            Assert.That(allKeys, Is.Empty);
         }
         finally
         {

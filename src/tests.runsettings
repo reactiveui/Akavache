@@ -4,4 +4,7 @@
     <!-- Limit vstest to a two CPUs to avoid cross-assembly static state bugs -->
     <MaxCpuCount>4</MaxCpuCount>
   </RunConfiguration>
+  <NUnit>
+    <NumberOfTestWorkers>4</NumberOfTestWorkers>
+  </NUnit>
 </RunSettings>
