@@ -61,8 +61,8 @@ public partial class App : Application
         // Save application state when going to sleep
         TodoCacheService.SaveApplicationState()
             .Subscribe(
-                _ => System.Diagnostics.Debug.WriteLine("Application state saved"),
-                ex => System.Diagnostics.Debug.WriteLine($"Failed to save state: {ex}"));
+                static _ => System.Diagnostics.Debug.WriteLine("Application state saved"),
+                static ex => System.Diagnostics.Debug.WriteLine($"Failed to save state: {ex}"));
     }
 
     /// <summary>
@@ -76,10 +76,7 @@ public partial class App : Application
         System.Diagnostics.Debug.WriteLine("Application resumed");
     }
 
-    private void OnWindowCreated(object? sender, EventArgs e)
-    {
-        System.Diagnostics.Debug.WriteLine("Window created");
-    }
+    private void OnWindowCreated(object? sender, EventArgs e) => System.Diagnostics.Debug.WriteLine("Window created");
 
     private async void OnWindowDestroying(object? sender, EventArgs e)
     {

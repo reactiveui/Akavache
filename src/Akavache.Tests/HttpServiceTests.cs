@@ -4,27 +4,50 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.SystemTextJson;
-using Xunit;
+using Akavache.Tests.Helpers;
+
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for HttpService functionality.
+/// Uses a local test server instead of external dependencies for reliable offline testing.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class HttpServiceTests
 {
+    private TestHttpServer? _testServer;
+
+    /// <summary>
+    /// Sets up the test fixture with a local HTTP server.
+    /// </summary>
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        _testServer = new TestHttpServer();
+        _testServer.SetupDefaultResponses();
+    }
+
+    /// <summary>
+    /// Cleans up the test fixture.
+    /// </summary>
+    [OneTimeTearDown]
+    public void OneTimeTearDown() => _testServer?.Dispose();
+
     /// <summary>
     /// Tests that HttpService can be instantiated correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldInstantiateCorrectly()
     {
         // Act
         var httpService = new HttpService();
 
         // Assert
-        Assert.NotNull(httpService);
-        Assert.NotNull(httpService.HttpClient);
+        Assert.That(httpService, Is.Not.Null);
+        Assert.That(httpService.HttpClient, Is.Not.Null);
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -33,15 +56,18 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that HttpService properly sets up compression.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldSetupCompressionCorrectly()
     {
         // Act
         var httpService = new HttpService();
 
         // Assert - HttpClient should be configured properly
-        Assert.NotNull(httpService.HttpClient);
-        Assert.NotNull(httpService.HttpClient.DefaultRequestHeaders);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(httpService.HttpClient, Is.Not.Null);
+            Assert.That(httpService.HttpClient.DefaultRequestHeaders, Is.Not.Null);
+        }
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -51,7 +77,7 @@ public class HttpServiceTests
     /// Tests that DownloadUrl with URI parameter validates arguments correctly.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithUriShouldValidateArguments()
     {
         // Arrange
@@ -76,7 +102,7 @@ public class HttpServiceTests
     /// Tests that DownloadUrl with key validates arguments correctly.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithKeyShouldValidateArguments()
     {
         // Arrange
@@ -99,27 +125,33 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that multiple HttpService instances can be created.
     /// </summary>
-    [Fact]
+    [Test]
     public void MultipleHttpServiceInstancesShouldBeCreatable()
     {
-        // Act
+        // Arrange & Act
+        // Use 'using' to ensure services (and their HttpClients) are always disposed
         var service1 = new HttpService();
         var service2 = new HttpService();
 
         // Assert
-        Assert.NotNull(service1);
-        Assert.NotNull(service2);
-        Assert.NotSame(service1.HttpClient, service2.HttpClient);
+        // 'Assert.Multiple' ensures all assertions run before the test fails
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(service1, Is.Not.Null);
+            Assert.That(service2, Is.Not.Null);
+            Assert.That(service1.HttpClient, Is.Not.SameAs(service2.HttpClient));
+        }
 
         // Cleanup
         service1.HttpClient.Dispose();
+
         service2.HttpClient.Dispose();
     }
 
     /// <summary>
     /// Tests that HttpService supports custom HttpClient configuration.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldSupportCustomConfiguration()
     {
         // Arrange
@@ -130,7 +162,7 @@ public class HttpServiceTests
         httpService.HttpClient.Timeout = customTimeout;
 
         // Assert
-        Assert.Equal(customTimeout, httpService.HttpClient.Timeout);
+        Assert.That(httpService.HttpClient.Timeout, Is.EqualTo(customTimeout));
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -140,7 +172,7 @@ public class HttpServiceTests
     /// Tests that HttpService handles null headers gracefully.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldHandleNullHeadersGracefully()
     {
         // Arrange
@@ -154,14 +186,14 @@ public class HttpServiceTests
             var observable = httpService.DownloadUrl(
                 cache,
                 "test_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 false,
                 null);
 
             // Assert - Observable should be created without error
-            Assert.NotNull(observable);
+            Assert.That(observable, Is.Not.Null);
         }
         finally
         {
@@ -174,7 +206,7 @@ public class HttpServiceTests
     /// Tests that HttpService handles different HTTP methods.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldHandleDifferentHttpMethods()
     {
         // Arrange
@@ -185,13 +217,16 @@ public class HttpServiceTests
         try
         {
             // Act & Assert - Should create observables for different methods without error
-            var getObservable = httpService.DownloadUrl(cache, "get_key", "https://httpbin.org/status/200", HttpMethod.Get);
-            var postObservable = httpService.DownloadUrl(cache, "post_key", "https://httpbin.org/status/200", HttpMethod.Post);
-            var putObservable = httpService.DownloadUrl(cache, "put_key", "https://httpbin.org/status/200", HttpMethod.Put);
+            var getObservable = httpService.DownloadUrl(cache, "get_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Get);
+            var postObservable = httpService.DownloadUrl(cache, "post_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Post);
+            var putObservable = httpService.DownloadUrl(cache, "put_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Put);
 
-            Assert.NotNull(getObservable);
-            Assert.NotNull(postObservable);
-            Assert.NotNull(putObservable);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(getObservable, Is.Not.Null);
+                Assert.That(postObservable, Is.Not.Null);
+                Assert.That(putObservable, Is.Not.Null);
+            }
         }
         finally
         {
@@ -204,7 +239,7 @@ public class HttpServiceTests
     /// Tests that HttpService respects fetchAlways parameter.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldRespectFetchAlwaysParameter()
     {
         // Arrange
@@ -218,21 +253,24 @@ public class HttpServiceTests
             var cachedObservable = httpService.DownloadUrl(
                 cache,
                 "cached_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 false);
             var alwaysFetchObservable = httpService.DownloadUrl(
                 cache,
                 "always_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 true);
 
             // Assert
-            Assert.NotNull(cachedObservable);
-            Assert.NotNull(alwaysFetchObservable);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(cachedObservable, Is.Not.Null);
+                Assert.That(alwaysFetchObservable, Is.Not.Null);
+            }
         }
         finally
         {
@@ -245,7 +283,7 @@ public class HttpServiceTests
     /// Tests that HttpService supports absolute expiration.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldSupportAbsoluteExpiration()
     {
         // Arrange
@@ -260,14 +298,14 @@ public class HttpServiceTests
             var observable = httpService.DownloadUrl(
                 cache,
                 "expiry_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 false,
                 expiration);
 
             // Assert
-            Assert.NotNull(observable);
+            Assert.That(observable, Is.Not.Null);
         }
         finally
         {

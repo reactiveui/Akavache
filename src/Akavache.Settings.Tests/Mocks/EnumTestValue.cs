@@ -29,5 +29,5 @@ public enum EnumTestValue
     /// <summary>
     /// The option4.
     /// </summary>
-    Option4,
+    Option4
 }

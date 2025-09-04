@@ -49,9 +49,9 @@ namespace Akavache.Benchmarks
         public static Dictionary<string, byte[]> GenerateRandomDatabaseContents(int toWriteSize)
         {
             return Enumerable.Range(0, toWriteSize)
-                .Select(_ => GenerateRandomKey())
+                .Select(static _ => GenerateRandomKey())
                 .Distinct()
-                .ToDictionary(k => k, _ => GenerateRandomBytes());
+                .ToDictionary(static k => k, static _ => GenerateRandomBytes());
         }
 
         /// <summary>

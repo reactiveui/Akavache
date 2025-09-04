@@ -1,3 +1,8 @@
+// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.IO;
 using System.Linq;
@@ -5,8 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Akavache;
 using Akavache.NewtonsoftJson;
-using Akavache.SystemTextJson;
 using Akavache.Sqlite3;
+using Akavache.SystemTextJson;
 using Splat.Builder;
 
 /*
@@ -19,11 +24,12 @@ using Splat.Builder;
 var dbPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "akavache-test.db"));
 Console.WriteLine($"V11 Reader starting. DB path: {dbPath}");
 
-bool allPass = true;
+var allPass = true;
 
 // Initialize Akavache v11 (Sqlite defaults just for serializer bootstrapping)
 var instance = CacheDatabase.CreateBuilder()
-    //.WithSerializer<NewtonsoftBsonSerializer>()
+
+    // .WithSerializer<NewtonsoftBsonSerializer>()
     .WithSerializer<SystemJsonSerializer>()
     .WithApplicationName("AkavacheCompatTest")
     .WithSqliteProvider()
@@ -42,16 +48,16 @@ try
     {
         try
         {
-            var count = await readerCache.Connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM \"{t.name}\"");
-            Console.WriteLine($" • {t.name} (rows={count})");
+            var count = await readerCache.Connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM \"{t.Name}\"");
+            Console.WriteLine($" • {t.Name} (rows={count})");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($" • {t.name} (count error: {ex.Message})");
+            Console.WriteLine($" • {t.Name} (count error: {ex.Message})");
         }
     }
 
-    var hasCacheElement = tables.Any(x => string.Equals(x.name, "CacheElement", StringComparison.OrdinalIgnoreCase));
+    var hasCacheElement = tables.Any(x => string.Equals(x.Name, "CacheElement", StringComparison.OrdinalIgnoreCase));
     if (hasCacheElement)
     {
         Console.WriteLine("PRAGMA table_info('CacheElement'):");
@@ -60,7 +66,7 @@ try
             var cols = await readerCache.Connection.QueryAsync<PragmaRow>("PRAGMA table_info('CacheElement')");
             foreach (var c in cols)
             {
-                Console.WriteLine($" • {c.name} (type={c.type})");
+                Console.WriteLine($" • {c.Name} (type={c.Type})");
             }
         }
         catch (Exception ex)
@@ -169,26 +175,33 @@ Environment.ExitCode = allPass ? 0 : 1;
 public class Person
 {
     public string Name { get; set; } = string.Empty;
+
     public int Age { get; set; }
+
     public string Email { get; set; } = string.Empty;
 }
 
 public class NameRow
 {
-    public string name { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 }
 
 public class PragmaRow
 {
-    public string name { get; set; } = string.Empty;
-    public string type { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+
+    public string Type { get; set; } = string.Empty;
 }
 
 public class SampleRow
 {
     public string Key { get; set; } = string.Empty;
+
     public string? TypeName { get; set; }
+
     public long? LenValue { get; set; }
+
     public long? LenData { get; set; }
+
     public string? ExpiresAt { get; set; }
 }

@@ -23,7 +23,7 @@ public static class TodoCacheService
     public static IObservable<List<TodoItem>> GetAllTodos() => CacheDatabase.UserAccount
         .GetObject<List<TodoItem>>("todos")
         .Catch(Observable.Return(new List<TodoItem>()))
-        .Select(todos => todos ?? new List<TodoItem>());
+        .Select(static todos => todos ?? []);
 
     /// <summary>
     /// Saves todos to cache.
@@ -43,8 +43,8 @@ public static class TodoCacheService
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<AppSettings> GetSettings() => CacheDatabase.UserAccount
-        .GetOrCreateObject("app_settings", () => new AppSettings())
-        .Select(settings => settings ?? new AppSettings());
+        .GetOrCreateObject("app_settings", static () => new AppSettings())
+        .Select(static settings => settings ?? new AppSettings());
 
     /// <summary>
     /// Saves application settings.
@@ -63,7 +63,7 @@ public static class TodoCacheService
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<TodoStats> GetTodoStats() => GetAllTodos()
-        .Select(todos =>
+        .Select(static todos =>
         {
             if (todos == null || todos.Count == 0)
             {
@@ -73,9 +73,9 @@ public static class TodoCacheService
             return new TodoStats
             {
                 TotalTodos = todos.Count,
-                CompletedTodos = todos.Count(t => t.IsCompleted),
-                OverdueTodos = todos.Count(t => t.IsOverdue),
-                DueSoonTodos = todos.Count(t => t.IsDueSoon)
+                CompletedTodos = todos.Count(static t => t.IsCompleted),
+                OverdueTodos = todos.Count(static t => t.IsOverdue),
+                DueSoonTodos = todos.Count(static t => t.IsDueSoon)
             };
         });
 
@@ -84,7 +84,7 @@ public static class TodoCacheService
     /// </summary>
     /// <returns>Observable cache information.</returns>
     public static IObservable<CacheInfo> GetCacheInfo() =>
-        Observable.Defer(() =>
+        Observable.Defer(static () =>
         {
             System.Diagnostics.Debug.WriteLine("Getting cache info...");
 
@@ -92,7 +92,7 @@ public static class TodoCacheService
             var userKeysObs = CacheDatabase.UserAccount.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(5))
-                .Catch((Exception ex) =>
+                .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"UserAccount cache error: {ex.Message}");
                     return Observable.Return(Array.Empty<string>());
@@ -101,7 +101,7 @@ public static class TodoCacheService
             var localKeysObs = CacheDatabase.LocalMachine.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(5))
-                .Catch((Exception ex) =>
+                .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"LocalMachine cache error: {ex.Message}");
                     return Observable.Return(Array.Empty<string>());
@@ -110,7 +110,7 @@ public static class TodoCacheService
             var secureKeysObs = CacheDatabase.Secure.GetAllKeys()
                 .ToArray()
                 .Timeout(TimeSpan.FromSeconds(5))
-                .Catch((Exception ex) =>
+                .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"Secure cache error: {ex.Message}");
                     return Observable.Return(Array.Empty<string>());
@@ -119,7 +119,7 @@ public static class TodoCacheService
             return userKeysObs.CombineLatest(
                 localKeysObs,
                 secureKeysObs,
-                (userKeys, localKeys, secureKeys) =>
+                static (userKeys, localKeys, secureKeys) =>
                 {
                     var result = new CacheInfo
                     {
@@ -134,7 +134,7 @@ public static class TodoCacheService
                     return result;
                 })
                 .Timeout(TimeSpan.FromSeconds(15)) // Overall timeout
-                .Catch((Exception ex) =>
+                .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"Cache info error: {ex}");
                     return Observable.Return(new CacheInfo

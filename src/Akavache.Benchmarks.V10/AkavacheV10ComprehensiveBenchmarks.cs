@@ -57,7 +57,7 @@ namespace Akavache.Benchmarks.V10
             BenchBlobCache = new Sqlite3.SqlRawPersistentBlobCache(Path.Combine(_tempDirectory, "benchmarks-comprehensive-v10.db"));
 
             // Pre-generate test objects
-            _testObjects = new List<TestData>();
+            _testObjects = [];
             for (var i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
             {
                 _testObjects.Add(new TestData
@@ -85,11 +85,10 @@ namespace Akavache.Benchmarks.V10
         /// Iterations the setup.
         /// </summary>
         [IterationSetup]
-        public void IterationSetup()
-        {
+        public void IterationSetup() =>
+
             // Clear the cache before each iteration
             BenchBlobCache!.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
-        }
 
         /// <summary>
         /// Gets the or fetch object.
@@ -302,12 +301,12 @@ namespace Akavache.Benchmarks.V10
         [BenchmarkCategory("Mixed")]
         public async Task MixedOperations()
         {
-            var caches = new IBlobCache[]
-            {
+            IBlobCache[] caches =
+            [
                 BlobCache.UserAccount,
                 BlobCache.LocalMachine,
                 BlobCache.InMemory
-            };
+            ];
 
             for (var i = 0; i < BenchmarkSize; i++)
             {

@@ -81,14 +81,14 @@ namespace Akavache.Benchmarks.V10
         {
             // Initialize Akavache V10 style
             BlobCache.ApplicationName = "AkavacheBenchmarksV10";
-            Akavache.Sqlite3.Registrations.Start("AkavacheExperiment", () => { });
+            Registrations.Start("AkavacheExperiment", static () => { });
 
             // Create temporary directory
             _directoryCleanup = Utility.WithEmptyDirectory(out _tempDirectory);
 
             // Generate database synchronously to avoid deadlocks
             BenchBlobCache = GenerateAGiantDatabaseSync(_tempDirectory);
-            Keys = await BenchBlobCache.GetAllKeys().Select(x => x.ToList());
+            Keys = await BenchBlobCache.GetAllKeys().Select(static x => x.ToList());
             Size = BenchmarkSize;
         }
 

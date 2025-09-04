@@ -39,8 +39,5 @@ public class IntToBoolConverter : IValueConverter
     /// <param name="culture">The culture.</param>
     /// <returns>Not supported.</returns>
     /// <exception cref="NotImplementedException">Always thrown.</exception>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
 }

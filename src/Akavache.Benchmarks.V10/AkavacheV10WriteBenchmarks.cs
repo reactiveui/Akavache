@@ -72,11 +72,10 @@ namespace Akavache.Benchmarks.V10
         /// Iterations the setup.
         /// </summary>
         [IterationSetup]
-        public void IterationSetup()
-        {
+        public void IterationSetup() =>
+
             // Clear the cache before each iteration
             BenchBlobCache!.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
-        }
 
         /// <summary>
         /// Sequentials the write.

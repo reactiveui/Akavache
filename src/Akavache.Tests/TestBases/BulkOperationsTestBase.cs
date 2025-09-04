@@ -7,53 +7,17 @@ using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests.TestBases;
 
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[Collection("Bulk Operations Tests")]
+[NonParallelizable]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     private bool _disposed;
-
-    /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
-    /// <param name="serializerType">The type of serializer to use for this test.</param>
-    /// <returns>The configured serializer instance.</returns>
-    public static ISerializer SetupTestSerializer(Type? serializerType)
-    {
-        // Clear any existing in-flight requests to ensure clean test state
-        RequestCache.Clear();
-
-        if (serializerType == typeof(NewtonsoftBsonSerializer))
-        {
-            // Register the Newtonsoft BSON serializer specifically
-            return new NewtonsoftBsonSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
-        {
-            // Register the System.Text.Json BSON serializer specifically
-            return new SystemJsonBsonSerializer();
-        }
-        else if (serializerType == typeof(NewtonsoftSerializer))
-        {
-            // Register the Newtonsoft JSON serializer
-            return new NewtonsoftSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-        else
-        {
-            return null!;
-        }
-    }
 
     /// <summary>
     /// Tests if Get with multiple keys work correctly.
@@ -62,28 +26,28 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task GetShouldWorkWithMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.Equal(keys.Length, allData.Count);
-            Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
+            Assert.That(allData, Has.Count.EqualTo(keys.Length));
+            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
         }
     }
 
@@ -94,25 +58,28 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task GetShouldInvalidateOldKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
-            Assert.Equal(0, allData.Count);
-            Assert.Equal(0, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(allData, Is.Empty);
+                Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Is.Empty);
+            }
         }
     }
 
@@ -123,28 +90,28 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task InsertShouldWorkWithMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await fixture.Insert(keys.ToDictionary(k => k, v => data)).FirstAsync();
 
-            Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.Equal(keys.Length, allData.Count);
-            Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
+            Assert.That(allData, Has.Count.EqualTo(keys.Length));
+            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
         }
     }
 
@@ -155,27 +122,27 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task InvalidateShouldTrashMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
 
             await fixture.Invalidate(keys).FirstAsync();
 
-            Assert.Equal(0, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Is.Empty);
         }
     }
 
@@ -211,6 +178,42 @@ public abstract class BulkOperationsTestBase : IDisposable
             }
 
             _disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Sets up the test with the specified serializer type.
+    /// </summary>
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    private static ISerializer SetupTestSerializer(Type? serializerType)
+    {
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
+
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
+        {
+            // Register the Newtonsoft BSON serializer specifically
+            return new NewtonsoftBsonSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
+        {
+            // Register the System.Text.Json BSON serializer specifically
+            return new SystemJsonBsonSerializer();
+        }
+        else if (serializerType == typeof(NewtonsoftSerializer))
+        {
+            // Register the Newtonsoft JSON serializer
+            return new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            return new SystemJsonSerializer();
+        }
+        else
+        {
+            return null!;
         }
     }
 }
