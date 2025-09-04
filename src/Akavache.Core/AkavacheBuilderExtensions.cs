@@ -320,7 +320,7 @@ public static class AkavacheBuilderExtensions
     /// </summary>
     /// <param name="builder">The builder.</param>
     /// <param name="cacheName">Name of the cache.
-    /// Any value will use will use User Store For Assembly.
+    /// Any value will use User Store For Assembly.
     /// </param>
     /// <returns>The Isolated cache path.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
