@@ -1423,7 +1423,7 @@ protected override void OnLaunched(LaunchActivatedEventArgs e)
 
 ### Benchmarks
 
-Akavache V11.0 delivers **architectural improvements with comparable performance**. The new features (multiple serializers, cross-compatibility, modern patterns) provide significant value with minimal performance impact.
+Akavache V11.0 delivers **architectural improvements with comparable performance** when using the recommended System.Text.Json serializer. **V11 with System.Text.Json outperforms V10 across all test scenarios**, while V11 with Newtonsoft.Json may be slower than V10 for very large datasets. The new features (multiple serializers, cross-compatibility, modern patterns) provide significant value with optimal performance when using the recommended serializer.
 
 #### Key Performance Metrics
 
@@ -1441,20 +1441,33 @@ Based on comprehensive benchmarks across different operation types and data size
 - **Read Performance**: V11 shows **1.8-3.4% faster** performance for smaller datasets with more consistent results
 - **Write Performance**: Comparable sequential writes, with **significant bulk write advantages** in V11
 - **Memory Usage**: Generally equivalent or better memory efficiency with more predictable allocation patterns
-- **Serialization**: **SystemTextJson in V11 outperforms** legacy serialization methods
+- **Serialization**: **System.Text.Json in V11 significantly outperforms** both V10 and V11 Newtonsoft serialization
+
+#### Serializer Performance Comparison
+
+**System.Text.Json (Recommended for V11)**:
+- ✅ **Best overall performance** for both small and large datasets
+- ✅ **Faster than V10** across all test scenarios
+- ✅ **Modern .NET optimization** with excellent memory efficiency
+
+**Newtonsoft.Json in V11**:
+- ⚠️ **Slower than V10 with large databases** - V10 Newtonsoft performs better for huge datasets
+- ✅ **Faster than V10** for smaller to medium datasets
+- ✅ **Compatible with existing V10 data** structures
 
 #### Known Limitations
 
-- **Large Sequential Reads**: Up to **8.6% slower** than V10 in some scenarios involving very large datasets
+- **Large Databases with Newtonsoft.Json**: V10 outperforms V11 when using Newtonsoft serialization with very large datasets
+- **Sequential Read Performance**: Up to **8.6% slower** than V10 specifically when using Newtonsoft.Json serializer
 - **Linux/macOS Build**: Benchmark projects and compatibility tests require **Windows** due to platform-specific dependencies
 - **Package Dependencies**: More granular package structure may require careful workload management
 
 #### Serialization and Versioning Notes
 
-- **V11 + System.Text.Json**: Best performance for new applications
-- **V11 + Newtonsoft.Json**: Maximum compatibility with existing V10 data  
+- **V11 + System.Text.Json**: **Best performance choice** - faster than V10 across all scenarios
+- **V11 + Newtonsoft.Json**: Maximum compatibility with existing V10 data, but slower for large datasets
 - **Cross-Version Compatibility**: V11 can read V10 databases; subsequent writes are stored in V11 format
-- **BSON Format**: When using Newtonsoft.Bson, reads and writes follow the V10 format for maximum compatibility
+- **BSON Format**: When using Newtonsoft.Bson, reads and writes follow the V10 format for maximum compatibility and performance parity
 
 ### Performance Reports
 
@@ -1507,16 +1520,21 @@ dotnet run -c Release -p Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj
 ### Performance Tips
 
 ```csharp
-// 1. Use System.Text.Json for best performance
+// 1. ALWAYS use System.Text.Json for optimal V11 performance
+// This is faster than V10 across all scenarios and significantly faster than V11 Newtonsoft
 .WithSerializer<SystemJsonSerializer>();
 
-// 2. Use batch operations for multiple items
+// 2. For V10 compatibility with large datasets, consider Newtonsoft BSON
+// (Only if you need V10 format compatibility - otherwise use System.Text.Json)
+.WithSerializer<NewtonsoftBsonSerializer>();
+
+// 3. Use batch operations for multiple items
 await CacheDatabase.UserAccount.InsertObjects(manyItems);
 
-// 3. Set appropriate expiration times
+// 4. Set appropriate expiration times
 await CacheDatabase.LocalMachine.InsertObject("temp", data, 30.Minutes().FromNow());
 
-// 4. Use InMemory cache for frequently accessed data
+// 5. Use InMemory cache for frequently accessed data
 await CacheDatabase.InMemory.InsertObject("hot_data", frequentData);
 
 // 5. Avoid storing very large objects
