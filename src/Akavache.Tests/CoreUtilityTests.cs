@@ -4,8 +4,8 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
+
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 

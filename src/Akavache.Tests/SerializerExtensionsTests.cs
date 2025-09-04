@@ -8,7 +8,6 @@ using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
 
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 

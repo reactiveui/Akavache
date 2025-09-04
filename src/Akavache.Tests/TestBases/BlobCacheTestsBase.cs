@@ -9,7 +9,6 @@ using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 
