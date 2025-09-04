@@ -112,7 +112,7 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
             Assert.That(allData.Count, Is.EqualTo(0));
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(0)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(0));
         }
     }
 
@@ -171,11 +171,11 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
 
             await fixture.Invalidate(keys).FirstAsync();
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(0)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(0));
         }
     }
 

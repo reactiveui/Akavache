@@ -107,7 +107,7 @@ public class CacheDatabaseTests
                         var deserialized = serializer.Deserialize<object>(serialized);
 
                         // For basic equality comparison, convert both to string
-                        Assert.That(deserialized?.ToString(, Is.EqualTo(testCase.ToString())));
+                        Assert.That(deserialized?.ToString(), Is.EqualTo(testCase.ToString()));
                     }
                 }
                 catch (Exception ex)

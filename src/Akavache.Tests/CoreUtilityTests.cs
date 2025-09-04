@@ -263,8 +263,8 @@ public class CoreUtilityTests
 
         // Assert
         Assert.That(unit2, Is.EqualTo(unit1));
-        Assert.That(unit1.Equals(unit2, Is.True));
-        Assert.That(unit2.GetHashCode(, Is.EqualTo(unit1.GetHashCode())));
-        Assert.That(unit1.ToString(, Is.EqualTo("()")));
+        Assert.That(unit1.Equals(unit2), Is.True);
+        Assert.That(unit2.GetHashCode(), Is.EqualTo(unit1.GetHashCode()));
+        Assert.That(unit1.ToString(), Is.EqualTo("()"));
     }
 }

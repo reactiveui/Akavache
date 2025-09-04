@@ -253,7 +253,7 @@ public class SerializerExtensionsTests
 
                 // Verify objects exist before invalidation
                 var beforeInvalidation = await cache.GetAllObjects<UserObject>().FirstAsync();
-                Assert.That(beforeInvalidation.Count(, Is.EqualTo(2)));
+                Assert.That(beforeInvalidation.Count(), Is.EqualTo(2));
 
                 // Act
                 await cache.InvalidateAllObjects<UserObject>().FirstAsync();

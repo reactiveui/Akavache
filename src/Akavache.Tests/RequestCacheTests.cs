@@ -326,8 +326,8 @@ public class RequestCacheTests
         var list2 = await observable2.ToList().FirstAsync();
 
         // Assert - Both should return the same sequence values
-        Assert.That(2, 3 }, list1, Is.EqualTo(new[] { 1));
-        Assert.That(2, 3 }, list2, Is.EqualTo(new[] { 1));
+        Assert.That(list1, Is.EqualTo(new[] { 1, 2, 3 }));
+        Assert.That(list2, Is.EqualTo(new[] { 1, 2, 3 }));
 
         // Factory will be called twice since RequestCache doesn't persist completed observables
         Assert.That(callCount, Is.EqualTo(2));
