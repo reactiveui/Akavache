@@ -219,3 +219,38 @@ Always reference these instructions first and fallback to search or bash command
 - **Performance regressions** detected in benchmarks
 - **Test failures** that persist across platforms
 - **Build system changes** affecting CI/CD pipeline
+
+## Resources
+
+### Governance & Contributing
+- **Contribution Hub**: https://www.reactiveui.net/contribute/index.html
+- **ReactiveUI Repository README**: https://github.com/reactiveui/ReactiveUI#readme
+- **Contributing Guidelines**: https://github.com/reactiveui/ReactiveUI/blob/main/CONTRIBUTING.md
+- **Code of Conduct**: https://github.com/reactiveui/ReactiveUI/blob/main/CODE_OF_CONDUCT.md
+
+### Engineering & Style
+- **ReactiveUI Coding/Style Guidance** (start here): https://www.reactiveui.net/contribute/
+- **Build & Project Structure Reference**: https://github.com/reactiveui/ReactiveUI#readme
+
+### Documentation & Samples
+- **Documentation Home**: https://www.reactiveui.net/
+- **Handbook** (core concepts like ReactiveObject, commands, routing): https://www.reactiveui.net/docs/
+- **Official Samples Repository**: https://github.com/reactiveui/ReactiveUI.Samples
+
+### Ecosystem
+- **Splat** (service location/DI and logging): https://github.com/reactiveui/splat
+- **DynamicData** (reactive collections): https://github.com/reactivemarbles/DynamicData
+
+### Source Generators & AOT/Trimming
+- **ReactiveUI.SourceGenerators**: https://github.com/reactiveui/ReactiveUI.SourceGenerators
+- **.NET Native AOT Overview**: https://learn.microsoft.com/dotnet/core/deploying/native-aot/
+- **Prepare Libraries for Trimming**: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
+- **Trimming Options (MSBuild)**: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options
+- **Fixing Trim Warnings**: https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-warnings
+
+### Copilot Coding Agent
+- **Best Practices for Copilot Coding Agent**: https://gh.io/copilot-coding-agent-tips
+
+### CI & Misc
+- **GitHub Actions** (Windows builds and workflow runs): https://github.com/reactiveui/ReactiveUI/actions
+- **ReactiveUI Website Source** (useful for docs cross-refs): https://github.com/reactiveui/website
