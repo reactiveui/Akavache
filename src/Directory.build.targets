@@ -3,25 +3,16 @@
     <Product>$(AssemblyName) ($(TargetFramework))</Product>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <DefineConstants>$(DefineConstants);NET_461;XAML</DefineConstants>
-  </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.EndsWith('0-macos'))">
-    <DefineConstants>$(DefineConstants);MONO;COCOA</DefineConstants>
+    <DefineConstants>$(DefineConstants);AKAVACHE_MAC</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.EndsWith('0-maccatalyst'))">
-    <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
+    <DefineConstants>$(DefineConstants);AKAVACHE_MAC</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.EndsWith('0-tvos'))">
-    <DefineConstants>$(DefineConstants);MONO;UIKIT;COCOA;XAMARIN_MOBILE</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework.EndsWith('0-ios'))">
+    <DefineConstants>$(DefineConstants);AKAVACHE_MOBILE_IOS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.EndsWith('0-android'))">
-    <DefineConstants>$(DefineConstants);MONO;ANDROID;XAMARIN_MOBILE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('tizen'))">
-    <DefineConstants>$(DefineConstants);TIZEN;XAMARIN_MOBILE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
-    <DefineConstants>$(DefineConstants);PORTABLE</DefineConstants>
+    <DefineConstants>$(DefineConstants);AKAVACHE_MOBILE</DefineConstants>
   </PropertyGroup>
 </Project>

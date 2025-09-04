@@ -17,6 +17,7 @@ namespace Akavache.Sqlite3;
 /// <summary>
 /// The Sqlite blob cache.
 /// </summary>
+[SQLite.Preserve(AllMembers = true)]
 #if ENCRYPTED
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "Reused file.")]
 public class EncryptedSqliteBlobCache : ISecureBlobCache

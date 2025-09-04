@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <RunAnalyzers>false</RunAnalyzers>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);SA0001;SA1*;SA16*;SA12*;SA13*;SA14*;CS1591</NoWarn>
   </PropertyGroup>
 

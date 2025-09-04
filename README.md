@@ -15,13 +15,13 @@
 
 <img alt="Akavache" src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png" width="150" />
 
-# Akavache V11.0: An Asynchronous Key-Value Store for Native Applications
+# Akavache V11.1: An Asynchronous Key-Value Store for Native Applications
 
 Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires.
 
-## What's New in V11.0
+## What's New in V11.1
 
-Akavache V11.0 introduces a new **Builder Pattern** for initialization, improved serialization support, and enhanced cross-serializer compatibility:
+Akavache V11.1 introduces a new **Builder Pattern** for initialization, improved serialization support, and enhanced cross-serializer compatibility:
 
 - 🏗️ **Builder Pattern**: New fluent API for configuring cache instances
 - 🔄 **Multiple Serializer Support**: Choose between System.Text.Json, Newtonsoft.Json, each with a BSON variant
@@ -32,16 +32,16 @@ Akavache V11.0 introduces a new **Builder Pattern** for initialization, improved
 
 ### Development History
 
-Akavache V11.0 represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.0 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
+Akavache V11.1 represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.1 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
 
 **Key Development Milestones:**
 
 - **🧪 Incubation Phase**: The builder pattern, modular serialization system, and enhanced API were first developed and tested in ReactiveMarbles.CacheDatabase
 - **🔬 Community Testing**: Early adopters and contributors provided valuable feedback on the new architecture through real-world usage scenarios
 - **🚀 Production Validation**: The incubator project allowed us to validate performance improvements, API ergonomics, and cross-platform compatibility before integrating into Akavache
-- **📈 Iterative Refinement**: Multiple iterations based on community feedback helped shape the final V11.0 API design and feature set
+- **📈 Iterative Refinement**: Multiple iterations based on community feedback helped shape the final V11.1 API design and feature set
 
-This careful incubation process ensured that V11.0 delivers not just new features, but a more robust, flexible, and maintainable caching solution that builds upon years of community experience and testing. The ReactiveMarbles organization continues to serve as a proving ground for innovative reactive programming concepts that eventually make their way into the broader ReactiveUI ecosystem.
+This careful incubation process ensured that V11.1 delivers not just new features, but a more robust, flexible, and maintainable caching solution that builds upon years of community experience and testing. The ReactiveMarbles organization continues to serve as a proving ground for innovative reactive programming concepts that eventually make their way into the broader ReactiveUI ecosystem.
 
 ## Table of Contents
 
@@ -63,8 +63,8 @@ This careful incubation process ensured that V11.0 delivers not just new feature
 ### 1. Install Packages
 
 ```xml
-<PackageReference Include="Akavache.Sqlite3" Version="11.0.*" />
-<PackageReference Include="Akavache.SystemTextJson" Version="11.0.*" />
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
 ```
 
 ### 2. Initialize Akavache
@@ -83,7 +83,7 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-               .WithSqliteProvider() // Use SQLite backend - new in V11.0.2 + (Required for Sqlite, this is to avoid confusion between Sqlite and EncryptedSqlite which both have `Batteries_V2.Init();` calls)
+               .WithSqliteProvider() // Use SQLite backend - new in V11.1.1 + (Required for Sqlite, this is to avoid confusion between Sqlite and EncryptedSqlite which both have `Batteries_V2.Init();` calls)
                .WithSqliteDefaults());
 ```
 
@@ -99,7 +99,7 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(
         "MyApp",
-        builder => builder.WithSqliteDefaults(),
+        builder => builder.WithSqliteProvider().WithSqliteDefaults(),
         (splat, instance) => splat.RegisterLazySingleton(() => instance));
 
 // For in-memory cache (testing or lightweight scenarios):
@@ -146,38 +146,38 @@ var data = await CacheDatabase.LocalMachine.GetOrFetchObject("api_data",
 
 ## Installation
 
-Akavache V11.0 uses a modular package structure. Choose the packages that match your needs:
+Akavache V11.1 uses a modular package structure. Choose the packages that match your needs:
 
 ### Core Package (Included with Serializers, In Memory only)
 ```xml
-<PackageReference Include="Akavache" Version="11.0.**" />
+<PackageReference Include="Akavache" Version="11.1.**" />
 ```
 
 ### Sqlite Storage Backends (recommended)
 ```xml
 <!-- SQLite persistence -->
-<PackageReference Include="Akavache.Sqlite3" Version="11.0.**" />
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.**" />
 
 <!-- Encrypted SQLite persistence -->
-<PackageReference Include="Akavache.EncryptedSqlite3" Version="11.0.**" />
+<PackageReference Include="Akavache.EncryptedSqlite3" Version="11.1.**" />
 ```
 
 ### Serializers (Choose One (Required!))
 ```xml
 <!-- System.Text.Json (fastest, .NET native) -->
-<PackageReference Include="Akavache.SystemTextJson" Version="11.0.**" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.**" />
 
 <!-- Newtonsoft.Json (most compatible) -->
-<PackageReference Include="Akavache.NewtonsoftJson" Version="11.0.**" />
+<PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.**" />
 ```
 
 ### Optional Extensions
 ```xml
 <!-- Image/Bitmap support -->
-<PackageReference Include="Akavache.Drawing" Version="11.0.**" />
+<PackageReference Include="Akavache.Drawing" Version="11.1.**" />
 
 <!-- Settings helpers -->
-<PackageReference Include="Akavache.Settings" Version="11.0.**" />
+<PackageReference Include="Akavache.Settings" Version="11.1.**" />
 ```
 
 ## Migration from V10.x
@@ -202,9 +202,9 @@ var data = await BlobCache.UserAccount.GetObject<MyData>("key");
 await BlobCache.LocalMachine.InsertObject("key", myData);
 ```
 
-#### New V11.0 Code:
+#### New V11.1 Code:
 ```csharp
-// V11.0 initialization
+// V11.1 initialization
 
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
@@ -244,7 +244,7 @@ AkavacheMigration.InitializeV11("MyApp");
 
 ### Builder Pattern
 
-Akavache V11.0 uses a fluent builder pattern for configuration:
+Akavache V11.1 uses a fluent builder pattern for configuration:
 
 ```csharp
 AppBuilder.CreateSplatBuilder()
@@ -307,7 +307,7 @@ AppBuilder.CreateSplatBuilder()
 
 ## Serializers
 
-Akavache V11.0 supports multiple serialization formats with automatic cross-compatibility.
+Akavache V11.1 supports multiple serialization formats with automatic cross-compatibility.
 
 ### System.Text.Json (Recommended)
 
@@ -678,7 +678,7 @@ Akavache.Drawing provides comprehensive image caching and bitmap manipulation fu
 ### Installation
 
 ```xml
-<PackageReference Include="Akavache.Drawing" Version="11.0.*" />
+<PackageReference Include="Akavache.Drawing" Version="11.1.*" />
 ```
 
 ### Dependencies
@@ -965,7 +965,7 @@ Akavache.Settings provides a specialized settings database for installable appli
 ### Installation
 
 ```xml
-<PackageReference Include="Akavache.Settings" Version="11.0.*" />
+<PackageReference Include="Akavache.Settings" Version="11.1.*" />
 ```
 
 ### Basic Usage
@@ -1663,6 +1663,15 @@ public static class LinkerPreserve
         var encryptedSqliteBlobCacheName = typeof(EncryptedSqliteBlobCache).FullName;
     }
 }
+```
+
+### 6. Provider not found errors
+Ensure you have the appropriate SQLitePCLRaw bundle installed for your platform:
+```csharp
+// For general use
+.WithSqliteProvider()
+// For encrypted databases
+.WithEncryptedSqliteProvider()
 ```
 
 #### UWP x64 Issues
