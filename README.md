@@ -32,14 +32,14 @@ Akavache V11.1 introduces a new **Builder Pattern** for initialization, improved
 
 ### Development History
 
-Akavache V11.1 represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.0 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
+Akavache V11.1 represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.1 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
 
 **Key Development Milestones:**
 
 - **🧪 Incubation Phase**: The builder pattern, modular serialization system, and enhanced API were first developed and tested in ReactiveMarbles.CacheDatabase
 - **🔬 Community Testing**: Early adopters and contributors provided valuable feedback on the new architecture through real-world usage scenarios
 - **🚀 Production Validation**: The incubator project allowed us to validate performance improvements, API ergonomics, and cross-platform compatibility before integrating into Akavache
-- **📈 Iterative Refinement**: Multiple iterations based on community feedback helped shape the final V11.0 API design and feature set
+- **📈 Iterative Refinement**: Multiple iterations based on community feedback helped shape the final V11.1 API design and feature set
 
 This careful incubation process ensured that V11.1 delivers not just new features, but a more robust, flexible, and maintainable caching solution that builds upon years of community experience and testing. The ReactiveMarbles organization continues to serve as a proving ground for innovative reactive programming concepts that eventually make their way into the broader ReactiveUI ecosystem.
 
@@ -83,7 +83,7 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-               .WithSqliteProvider() // Use SQLite backend - new in V11.0.2 + (Required for Sqlite, this is to avoid confusion between Sqlite and EncryptedSqlite which both have `Batteries_V2.Init();` calls)
+               .WithSqliteProvider() // Use SQLite backend - new in V11.1.1 + (Required for Sqlite, this is to avoid confusion between Sqlite and EncryptedSqlite which both have `Batteries_V2.Init();` calls)
                .WithSqliteDefaults());
 ```
 
