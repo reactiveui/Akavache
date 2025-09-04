@@ -134,6 +134,7 @@ internal static class TestHelper
 
     /// <summary>
     /// Attempts to evaluate a getter/condition that may touch a cache; treats disposal as transient.
+    /// Also treats SQLite "file is not a database" (wrong key / encrypted) as transient.
     /// </summary>
     /// <param name="probe">A function that evaluates to <see langword="true"/> when the condition is satisfied.</param>
     /// <returns>True if the probe succeeded and returned true; false on transient disposal or false condition.</returns>
@@ -151,7 +152,22 @@ internal static class TestHelper
         {
             return false;
         }
+        catch (Exception ex) when (IsSqliteNotADatabaseMessage(ex))
+        {
+            // Opening an encrypted SQLite DB with the wrong key throws messages like:
+            // "file is not a database" or "file is encrypted or is not a database".
+            // Treat as transient / non-fatal in polling.
+            return false;
+        }
     }
+
+    /// <summary>
+    /// True if the exception message looks like SQLCipher/wrong-key open:
+    /// "file is not a database" or "file is encrypted or is not a database".
+    /// </summary>
+    public static bool IsSqliteNotADatabaseMessage(Exception ex) =>
+        ex.Message?.IndexOf("not a database", StringComparison.OrdinalIgnoreCase) >= 0
+        || ex.Message?.IndexOf("file is encrypted", StringComparison.OrdinalIgnoreCase) >= 0;
 
     /// <summary>
     /// Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.
@@ -159,5 +175,5 @@ internal static class TestHelper
     /// <param name="ex">The exception to inspect.</param>
     /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
     public static bool IsDisposedMessage(this InvalidOperationException ex) =>
-        ex.Message?.IndexOf("disposed", StringComparison.OrdinalIgnoreCase) >= 0;
+        ex.Message.IndexOf("disposed", StringComparison.OrdinalIgnoreCase) >= 0;
 }

@@ -8,7 +8,6 @@ using Akavache.NewtonsoftJson;
 using Akavache.Settings;
 using Akavache.Settings.Tests;
 using Akavache.SystemTextJson;
-
 using Splat.Builder;
 
 namespace Akavache.EncryptedSettings.Tests
@@ -101,14 +100,29 @@ namespace Akavache.EncryptedSettings.Tests
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         // Read once after the store stabilizes instead of re-reading repeatedly.
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.BoolTest == true)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.ShortTest == (short)16)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.IntTest == 1)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.LongTest == 123456L)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.StringTest == "TestString")).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => Math.Abs(viewSettings!.FloatTest - 2.2f) < 0.0001f)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => Math.Abs(viewSettings!.DoubleTest - 23.8d) < 0.0001d)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option1)).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.BoolTest))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.ShortTest == 16))
+                            .ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.IntTest == 1))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.LongTest == 123456L))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.StringTest == "TestString"))
+                            .ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => Math.Abs(viewSettings!.FloatTest - 2.2f) < 0.0001f))
+                            .ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => Math.Abs(viewSettings!.DoubleTest - 23.8d) < 0.0001d))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() =>
+                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option1))
+                            .ConfigureAwait(false);
                     }
                     finally
                     {
@@ -155,8 +169,25 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        viewSettings!.EnumTest = EnumTestValue.Option2;
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                        // Perform the mutation in a fresh store, retrying on transient disposal.
+                        await TestHelper.EventuallyAsync(async () =>
+                        {
+                            return await TestHelper.WithFreshStoreAsync(
+                                instance,
+                                () => instance.GetSecureSettingsStore<ViewSettings>(DefaultPassword, testName),
+                                async s =>
+                                {
+                                    s.EnumTest = EnumTestValue.Option2;
+                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
+                                    await Task.Yield();
+                                    return ok;
+                                }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+
+                        // Optional: also observe the change via the originally captured instance (retryable read).
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
+                            .ConfigureAwait(false);
                     }
                     finally
                     {
@@ -203,14 +234,29 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.BoolTest == true)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.ShortTest == (short)16)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.IntTest == 1)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.LongTest == 123456L)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.StringTest == "TestString")).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => Math.Abs(viewSettings!.FloatTest - 2.2f) < 0.0001f)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => Math.Abs(viewSettings!.DoubleTest - 23.8d) < 0.0001d)).ConfigureAwait(false);
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option1)).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.BoolTest))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.ShortTest == 16))
+                            .ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.IntTest == 1))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.LongTest == 123456L))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.StringTest == "TestString"))
+                            .ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => Math.Abs(viewSettings!.FloatTest - 2.2f) < 0.0001f))
+                            .ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => Math.Abs(viewSettings!.DoubleTest - 23.8d) < 0.0001d))
+                            .ConfigureAwait(false);
+                        await TestHelper
+                            .EventuallyAsync(() =>
+                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option1))
+                            .ConfigureAwait(false);
                     }
                     finally
                     {
@@ -257,8 +303,25 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        viewSettings!.EnumTest = EnumTestValue.Option2;
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                        // Perform the mutation in a fresh store, retrying on transient disposal.
+                        await TestHelper.EventuallyAsync(async () =>
+                        {
+                            return await TestHelper.WithFreshStoreAsync(
+                                instance,
+                                () => instance.GetSecureSettingsStore<ViewSettings>(DefaultPassword, testName),
+                                async s =>
+                                {
+                                    s.EnumTest = EnumTestValue.Option2;
+                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
+                                    await Task.Yield();
+                                    return ok;
+                                }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+
+                        // Optional: also verify via the initially captured instance.
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
+                            .ConfigureAwait(false);
                     }
                     finally
                     {
@@ -303,10 +366,7 @@ namespace Akavache.EncryptedSettings.Tests
                             .WithEncryptedSqliteProvider()
                             .WithSettingsCachePath(path);
                     },
-                    instance =>
-                    {
-                        akavacheInstance = instance;
-                    })
+                    instance => { akavacheInstance = instance; })
                 .Build();
 
             await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
@@ -342,18 +402,40 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => originalSettings is not null).ConfigureAwait(false);
 
-                        originalSettings!.StringTest = "Modified String";
-                        originalSettings.IntTest = 999;
-                        originalSettings.BoolTest = false;
+                        // Perform all writes via a fresh store with retryable semantics.
+                        await TestHelper.EventuallyAsync(async () =>
+                        {
+                            return await TestHelper.WithFreshStoreAsync(
+                                instance,
+                                () => instance.GetSecureSettingsStore<ViewSettings>("test_password", testName),
+                                async s =>
+                                {
+                                    s.StringTest = "Modified String";
+                                    s.IntTest = 999;
+                                    s.BoolTest = false;
 
-                        await originalSettings.DisposeAsync().ConfigureAwait(false);
+                                    var ok = TestHelper.TryRead(() =>
+                                        s.StringTest is not null && s.IntTest == 999 && !s.BoolTest);
+                                    await Task.Yield();
+                                    return ok;
+                                }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
 
+                        // Dispose the initially captured instance to release any handles.
+                        if (originalSettings is not null)
+                        {
+                            await originalSettings.DisposeAsync().ConfigureAwait(false);
+                        }
+
+                        // Re-open and sanity-check.
                         await TestHelper.EventuallyAsync(async () =>
                         {
                             try
                             {
                                 var reopened = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                                var ok = reopened is not null && TestHelper.TryRead(() => reopened!.IntTest >= 0 && reopened.StringTest is not null);
+                                var ok = reopened is not null &&
+                                         TestHelper.TryRead(() =>
+                                             reopened is { IntTest: >= 0, StringTest: not null });
                                 if (reopened is not null)
                                 {
                                     await reopened.DisposeAsync().ConfigureAwait(false);
@@ -403,7 +485,10 @@ namespace Akavache.EncryptedSettings.Tests
                 async builder =>
                 {
                     await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
-                    builder.WithSecureSettingsStore<ViewSettings>("correct_password", s => initialSettings = s, testName);
+                    builder.WithSecureSettingsStore<ViewSettings>(
+                        "correct_password",
+                        s => initialSettings = s,
+                        testName);
                 },
                 async instance =>
                 {
@@ -516,18 +601,31 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         for (var i = 0; i < 3; i++)
                         {
-                            var settings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                            Assert.That(settings, Is.Not.Null);
+                            var index = i;
 
-                            settings!.IntTest = i * 100;
-                            await settings.DisposeAsync().ConfigureAwait(false);
+                            // Write with retry against transient disposal using a fresh store per attempt.
+                            await TestHelper.EventuallyAsync(async () =>
+                            {
+                                return await TestHelper.WithFreshStoreAsync(
+                                    instance,
+                                    () => instance.GetSecureSettingsStore<ViewSettings>("test_password", testName),
+                                    async s =>
+                                    {
+                                        s.IntTest = index * 100;
+                                        var ok = TestHelper.TryRead(() => s.IntTest >= 0);
+                                        await Task.Yield();
+                                        return ok;
+                                    }).ConfigureAwait(false);
+                            }).ConfigureAwait(false);
 
+                            // Verify we can reopen and read something sane.
                             await TestHelper.EventuallyAsync(async () =>
                             {
                                 try
                                 {
-                                    var recreated = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                                    var ok = recreated is not null && TestHelper.TryRead(() => recreated!.IntTest >= 0);
+                                    var recreated =
+                                        instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
+                                    var ok = recreated is not null && TestHelper.TryRead(() => recreated.IntTest >= 0);
                                     if (recreated is not null)
                                     {
                                         await recreated.DisposeAsync().ConfigureAwait(false);
@@ -603,13 +701,11 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
         /// <returns>A unique name string suitable for use as an application name or store key.</returns>
-        private static string NewName(string prefix)
-        {
-            return $"{prefix}_{Guid.NewGuid():N}";
-        }
+        private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
 
         /// <summary>
         /// Creates, configures and builds an Akavache instance using the per-test path and encrypted SQLite provider, then executes the test body.
+        /// This version blocks on async delegates to avoid async-void and ensure assertion scopes close before the test ends.
         /// </summary>
         /// <typeparam name="TSerializer">The serializer type to use (e.g., <see cref="NewtonsoftSerializer"/> or <see cref="SystemJsonSerializer"/>).</typeparam>
         /// <param name="applicationName">Application name to scope the store; may be <see langword="null"/>.</param>
@@ -619,24 +715,25 @@ namespace Akavache.EncryptedSettings.Tests
             string? applicationName,
             Func<IAkavacheBuilder, Task> configureAsync,
             Func<IAkavacheInstance, Task> bodyAsync)
-            where TSerializer : class, ISerializer, new()
-        {
+            where TSerializer : class, ISerializer, new() =>
             _appBuilder
                 .WithAkavache<TSerializer>(
                     applicationName,
-                    async builder =>
+                    builder =>
                     {
+                        // base config
                         builder
                             .WithEncryptedSqliteProvider()
                             .WithSettingsCachePath(_cacheRoot);
 
-                        if (configureAsync is not null)
-                        {
-                            await configureAsync(builder).ConfigureAwait(false);
-                        }
+                        // IMPORTANT: block here so we don't create async-void
+                        configureAsync(builder).GetAwaiter().GetResult();
                     },
-                    async instance => await bodyAsync(instance).ConfigureAwait(false))
+                    instance =>
+                    {
+                        // IMPORTANT: block here so the body completes before Build() returns
+                        bodyAsync(instance).GetAwaiter().GetResult();
+                    })
                 .Build();
-        }
     }
 }

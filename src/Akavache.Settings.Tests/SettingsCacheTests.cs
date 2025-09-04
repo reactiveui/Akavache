@@ -149,10 +149,28 @@ namespace Akavache.Settings.Tests
                 {
                     try
                     {
+                        // Ensure the initially captured store exists.
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        viewSettings!.EnumTest = EnumTestValue.Option2;
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                        // Perform the mutation in a FRESH store, retrying on transient disposal.
+                        await TestHelper.EventuallyAsync(async () =>
+                        {
+                            return await TestHelper.WithFreshStoreAsync(
+                                instance,
+                                () => instance.GetSettingsStore<ViewSettings>(),
+                                async s =>
+                                {
+                                    s.EnumTest = EnumTestValue.Option2;
+                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
+                                    await Task.Yield();
+                                    return ok;
+                                }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+
+                        // Optionally also verify via the initially captured instance (retryable read).
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
+                            .ConfigureAwait(false);
                     }
                     finally
                     {
@@ -255,10 +273,28 @@ namespace Akavache.Settings.Tests
                 {
                     try
                     {
+                        // Ensure the initially captured store exists.
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        viewSettings!.EnumTest = EnumTestValue.Option2;
-                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                        // Perform the mutation in a FRESH store, retrying on transient disposal.
+                        await TestHelper.EventuallyAsync(async () =>
+                        {
+                            return await TestHelper.WithFreshStoreAsync(
+                                instance,
+                                () => instance.GetSettingsStore<ViewSettings>(),
+                                async s =>
+                                {
+                                    s.EnumTest = EnumTestValue.Option2;
+                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
+                                    await Task.Yield();
+                                    return ok;
+                                }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+
+                        // Optionally also verify via the initially captured instance (retryable read).
+                        await TestHelper.EventuallyAsync(() =>
+                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
+                            .ConfigureAwait(false);
                     }
                     finally
                     {
@@ -303,10 +339,7 @@ namespace Akavache.Settings.Tests
                             .WithSqliteProvider()
                             .WithSettingsCachePath(path);
                     },
-                    instance =>
-                    {
-                        akavache = instance;
-                    })
+                    instance => { akavache = instance; })
                 .Build();
 
             await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
@@ -323,13 +356,11 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
         /// <returns>A unique name string suitable for use as an application name or store key.</returns>
-        private static string NewName(string prefix)
-        {
-            return $"{prefix}_{Guid.NewGuid():N}";
-        }
+        private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
 
         /// <summary>
         /// Creates, configures and builds an Akavache instance using the per-test path and SQLite provider, then executes the test body.
+        /// This version blocks on async delegates to avoid async-void and ensure assertion scopes close before the test ends.
         /// </summary>
         /// <typeparam name="TSerializer">The serializer type to use (e.g., <see cref="NewtonsoftSerializer"/> or <see cref="SystemJsonSerializer"/>).</typeparam>
         /// <param name="applicationName">Optional application name to scope the store; may be <see langword="null"/>.</param>
@@ -339,25 +370,25 @@ namespace Akavache.Settings.Tests
             string? applicationName,
             Func<IAkavacheBuilder, Task> configureAsync,
             Func<IAkavacheInstance, Task> bodyAsync)
-            where TSerializer : class, ISerializer, new()
-        {
+            where TSerializer : class, ISerializer, new() =>
             _appBuilder
                 .WithAkavache<TSerializer>(
                     applicationName,
-                    async builder =>
+                    builder =>
                     {
-
+                        // base config
                         builder
                             .WithSqliteProvider()
                             .WithSettingsCachePath(_cacheRoot);
 
-                        if (configureAsync is not null)
-                        {
-                            await configureAsync(builder).ConfigureAwait(false);
-                        }
+                        // IMPORTANT: block here so we don't create async-void
+                        configureAsync(builder).GetAwaiter().GetResult();
                     },
-                    async instance => await bodyAsync(instance).ConfigureAwait(false))
+                    instance =>
+                    {
+                        // IMPORTANT: block here so the body completes before Build() returns
+                        bodyAsync(instance).GetAwaiter().GetResult();
+                    })
                 .Build();
-        }
     }
 }
