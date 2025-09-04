@@ -9,14 +9,14 @@ using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[Collection("Blob Cache Tests")]
+[NonParallelizable]
 public abstract class BlobCacheTestsBase : IDisposable
 {
     private bool _disposed;
@@ -93,11 +93,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DownloadUrlTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -116,7 +116,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.DownloadUrl("https://httpbin.org/html").Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -153,11 +153,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DownloadUriTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -177,7 +177,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.DownloadUrl(uri).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -214,11 +214,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DownloadUrlWithKeyTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -239,7 +239,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.Get(key);
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -276,11 +276,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DownloadUriWithKeyTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -301,7 +301,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.Get(key);
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -336,11 +336,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="ArgumentNullException">nameof(serializerType).</exception>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task FetchFunctionShouldBeCalledOnceForGetOrFetchObject(Type serializerType)
     {
         if (serializerType == null)
@@ -371,17 +371,17 @@ public abstract class BlobCacheTestsBase : IDisposable
             {
                 var result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
-                Assert.NotNull(result);
-                Assert.Equal("Foo", result.Item1);
-                Assert.Equal("Bar", result.Item2);
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result.Item1, Is.EqualTo("Foo"));
+                Assert.That(result.Item2, Is.EqualTo("Bar"));
 
                 Assert.True(fetchCount >= 1, $"Expected fetch to be called at least once, but was {fetchCount}");
 
                 var initialFetchCount = fetchCount;
                 result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
-                Assert.NotNull(result);
-                Assert.Equal("Foo", result.Item1);
-                Assert.Equal("Bar", result.Item2);
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result.Item1, Is.EqualTo("Foo"));
+                Assert.That(result.Item2, Is.EqualTo("Bar"));
 
                 Assert.True(fetchCount <= initialFetchCount + 1, $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
             }

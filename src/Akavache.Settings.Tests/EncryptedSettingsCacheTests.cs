@@ -15,6 +15,8 @@ namespace Akavache.EncryptedSettings.Tests;
 /// <summary>
 /// Settings Cache Tests.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class EncryptedSettingsCacheTests
 {
     private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
@@ -23,7 +25,7 @@ public class EncryptedSettingsCacheTests
     /// Test1s this instance.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestCreateAndInsertNewtonsoft()
     {
         var testName = $"newtonsoft_test_{Guid.NewGuid():N}";
@@ -43,15 +45,15 @@ public class EncryptedSettingsCacheTests
                 {
                     // Initial delay to ensure settings are created
                     await Task.Delay(500);
-                    Assert.NotNull(viewSettings);
-                    Assert.True(viewSettings!.BoolTest);
-                    Assert.Equal((short)16, viewSettings.ShortTest);
-                    Assert.Equal(1, viewSettings.IntTest);
-                    Assert.Equal(123456L, viewSettings.LongTest);
-                    Assert.Equal("TestString", viewSettings.StringTest);
-                    Assert.Equal(2.2f, viewSettings.FloatTest);
-                    Assert.Equal(23.8d, viewSettings.DoubleTest);
-                    Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
+                    Assert.That(viewSettings, Is.Not.Null);
+                    Assert.That(viewSettings!.BoolTest, Is.True);
+                    Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                    Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                    Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                    Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                    Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                    Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
                 }
                 finally
                 {
@@ -68,14 +70,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests the update and read.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var testName = $"newtonsoft_update_test_{Guid.NewGuid():N}";
@@ -95,7 +97,7 @@ public class EncryptedSettingsCacheTests
                 try
                 {
                     viewSettings!.EnumTest = EnumTestValue.Option2;
-                    Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
+                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option2));
                     await viewSettings.DisposeAsync();
                 }
                 finally
@@ -112,14 +114,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Test1s this instance.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestCreateAndInsertSystemTextJson()
     {
         var testName = $"systemjson_test_{Guid.NewGuid():N}";
@@ -138,15 +140,15 @@ public class EncryptedSettingsCacheTests
                 await Task.Delay(500);
                 try
                 {
-                    Assert.NotNull(viewSettings);
-                    Assert.True(viewSettings!.BoolTest);
-                    Assert.Equal((short)16, viewSettings.ShortTest);
-                    Assert.Equal(1, viewSettings.IntTest);
-                    Assert.Equal(123456L, viewSettings.LongTest);
-                    Assert.Equal("TestString", viewSettings.StringTest);
-                    Assert.Equal(2.2f, viewSettings.FloatTest);
-                    Assert.Equal(23.8d, viewSettings.DoubleTest);
-                    Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
+                    Assert.That(viewSettings, Is.Not.Null);
+                    Assert.That(viewSettings!.BoolTest, Is.True);
+                    Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                    Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                    Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                    Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                    Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                    Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
                     await viewSettings.DisposeAsync();
                 }
                 finally
@@ -163,14 +165,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests the update and read.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var testName = $"systemjson_update_test_{Guid.NewGuid():N}";
@@ -190,7 +192,7 @@ public class EncryptedSettingsCacheTests
                 try
                 {
                     viewSettings!.EnumTest = EnumTestValue.Option2;
-                    Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
+                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option2));
                     await viewSettings.DisposeAsync();
                 }
                 finally
@@ -207,14 +209,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests the override settings cache path.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestOverrideSettingsCachePathAsync()
     {
         // Use platform-agnostic path
@@ -230,16 +232,16 @@ public class EncryptedSettingsCacheTests
             .Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
 
-        Assert.Equal(path, akavacheBuilder!.SettingsCachePath);
+        Assert.That(akavacheBuilder!.SettingsCachePath, Is.EqualTo(path));
     }
 
     /// <summary>
     /// Tests that encrypted settings can be persisted and retrieved across different instances.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestEncryptedSettingsPersistence()
     {
         // Use a unique test name to avoid conflicts
@@ -261,7 +263,7 @@ public class EncryptedSettingsCacheTests
                     await Task.Delay(100);
 
                     // Create and modify settings
-                    Assert.NotNull(originalSettings);
+                    Assert.That(originalSettings, Is.Not.Null);
 
                     // Set values and ensure they're committed
                     originalSettings!.StringTest = "Modified String";
@@ -277,13 +279,13 @@ public class EncryptedSettingsCacheTests
 
                     // Retrieve settings with same password
                     var retrievedSettings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                    Assert.NotNull(retrievedSettings);
+                    Assert.That(retrievedSettings, Is.Not.Null);
 
                     // For encrypted settings, the persistence might not work the same way as regular settings
                     // The test should verify that encrypted settings can be created and accessed, but persistence
                     // across instances might depend on the encryption implementation
-                    Assert.NotNull(retrievedSettings!.StringTest);
-                    Assert.True(retrievedSettings.IntTest >= 0); // Just verify it's a valid value
+                    Assert.That(retrievedSettings!.StringTest, Is.Not.Null);
+                    Assert.That(retrievedSettings.IntTest >= 0, Is.True); // Just verify it's a valid value
 
                     await retrievedSettings.DisposeAsync();
                 }
@@ -302,14 +304,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests that encrypted settings cannot be read with wrong password.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestEncryptedSettingsWrongPassword()
     {
         var testName = $"wrong_password_test_{Guid.NewGuid():N}";
@@ -341,7 +343,7 @@ public class EncryptedSettingsCacheTests
                     try
                     {
                         var wrongPasswordSettings = instance.GetSecureSettingsStore<ViewSettings>("wrong_password", testName);
-                        Assert.NotNull(wrongPasswordSettings);
+                        Assert.That(wrongPasswordSettings, Is.Not.Null);
 
                         // The encrypted data should not be readable with wrong password
                         // It should either fail to decrypt or return default values
@@ -374,14 +376,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests that settings can be disposed and recreated multiple times.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestMultipleDisposeAndRecreate()
     {
         var testName = $"multi_dispose_test_{Guid.NewGuid():N}";
@@ -397,7 +399,7 @@ public class EncryptedSettingsCacheTests
                     for (var i = 0; i < 3; i++)
                     {
                         var settings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                        Assert.NotNull(settings);
+                        Assert.That(settings, Is.Not.Null);
 
                         settings!.IntTest = i * 100;
                         await Task.Delay(50);
@@ -406,10 +408,10 @@ public class EncryptedSettingsCacheTests
 
                         // Verify we can recreate - but don't expect exact persistence for encrypted settings
                         var recreatedSettings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                        Assert.NotNull(recreatedSettings);
+                        Assert.That(recreatedSettings, Is.Not.Null);
 
                         // For encrypted settings, just verify we can create and access them
-                        Assert.True(recreatedSettings!.IntTest >= 0);
+                        Assert.That(recreatedSettings!.IntTest >= 0, Is.True);
 
                         await recreatedSettings.DisposeAsync();
                         await Task.Delay(50);
@@ -429,14 +431,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests that GetSettingsStore returns existing stores correctly.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestGetSettingsStore()
     {
         var testName = $"get_store_test_{Guid.NewGuid():N}";
@@ -451,11 +453,11 @@ public class EncryptedSettingsCacheTests
                 {
                     // Initially should return null
                     var nonExistentStore = instance.GetSettingsStore<ViewSettings>(testName);
-                    Assert.Null(nonExistentStore);
+                    Assert.That(nonExistentStore, Is.Null);
 
                     // Create a store
                     var createdStore = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                    Assert.NotNull(createdStore);
+                    Assert.That(createdStore, Is.Not.Null);
 
                     // For encrypted settings, GetSettingsStore might not return the same instance
                     // due to the way encrypted settings are managed
@@ -465,7 +467,7 @@ public class EncryptedSettingsCacheTests
                     if (retrievedStore != null)
                     {
                         // If we get a store back, it should be functional
-                        Assert.NotNull(retrievedStore);
+                        Assert.That(retrievedStore, Is.Not.Null);
                         await retrievedStore.DisposeAsync();
                     }
 
@@ -485,14 +487,14 @@ public class EncryptedSettingsCacheTests
             }).Build();
 
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     /// <summary>
     /// Tests that the AppInfo properties are correctly initialized.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task TestAppInfoPropertiesAsync()
     {
         GetBuilder().WithAkavache<SystemJsonSerializer>(
@@ -500,14 +502,14 @@ public class EncryptedSettingsCacheTests
             builder => builder.WithApplicationName("TestAppInfo"),
             instance =>
             {
-                Assert.NotNull(instance.ExecutingAssembly);
-                Assert.NotNull(instance.ExecutingAssemblyName);
-                Assert.NotNull(instance.ApplicationRootPath);
-                Assert.NotNull(instance.SettingsCachePath);
-                Assert.NotNull(instance.Version);
+                Assert.That(instance.ExecutingAssembly, Is.Not.Null);
+                Assert.That(instance.ExecutingAssemblyName, Is.Not.Null);
+                Assert.That(instance.ApplicationRootPath, Is.Not.Null);
+                Assert.That(instance.SettingsCachePath, Is.Not.Null);
+                Assert.That(instance.Version, Is.Not.Null);
             }).Build();
         await Task.Delay(100);
-        Assert.True(AppBuilder.HasBeenBuilt);
+        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
     }
 
     private AppBuilder GetBuilder()

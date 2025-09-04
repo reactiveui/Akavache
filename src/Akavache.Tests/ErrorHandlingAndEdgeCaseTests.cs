@@ -5,20 +5,22 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for error handling and edge case scenarios across Akavache functionality.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class ErrorHandlingAndEdgeCaseTests
 {
     /// <summary>
     /// Tests that caches handle ObjectDisposedException correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
     {
         // Arrange
@@ -44,7 +46,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle extremely large data correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleExtremelyLargeDataCorrectly()
     {
         // Arrange
@@ -62,8 +64,8 @@ public class ErrorHandlingAndEdgeCaseTests
             var retrieved = await cache.GetObject<string>("large_data").FirstAsync();
 
             // Assert
-            Assert.Equal(largeData, retrieved);
-            Assert.Equal(10_000_000, retrieved!.Length);
+            Assert.That(retrieved, Is.EqualTo(largeData));
+            Assert.That(retrieved!.Length, Is.EqualTo(10_000_000));
         }
         finally
         {
@@ -75,7 +77,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle null objects correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleNullObjectsCorrectly()
     {
         // Arrange
@@ -90,13 +92,13 @@ public class ErrorHandlingAndEdgeCaseTests
             var retrieved = await cache.GetObject<string?>("null_key").FirstAsync();
 
             // Assert
-            Assert.Null(retrieved);
+            Assert.That(retrieved, Is.Null);
 
             // Test with nullable reference types
             UserObject? nullUser = null;
             await cache.InsertObject("null_user", nullUser).FirstAsync();
             var retrievedUser = await cache.GetObject<UserObject?>("null_user").FirstAsync();
-            Assert.Null(retrievedUser);
+            Assert.That(retrievedUser, Is.Null);
         }
         finally
         {
@@ -108,7 +110,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle invalid keys correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleInvalidKeysCorrectly()
     {
         // Arrange
@@ -140,7 +142,7 @@ public class ErrorHandlingAndEdgeCaseTests
                     // InMemoryBlobCache may allow these keys - test that they work if allowed
                     await cache.InsertObject(edgeCaseKey, "edge_case_value").FirstAsync();
                     var retrieved = await cache.GetObject<string>(edgeCaseKey).FirstAsync();
-                    Assert.Equal("edge_case_value", retrieved);
+                    Assert.That(retrieved, Is.EqualTo("edge_case_value"));
                     await cache.InvalidateObject<string>(edgeCaseKey).FirstAsync();
                 }
                 catch (ArgumentException)
@@ -154,7 +156,7 @@ public class ErrorHandlingAndEdgeCaseTests
             var veryLongKey = new string('k', 10000);
             await cache.InsertObject(veryLongKey, "long_key_value").FirstAsync();
             var longKeyRetrieved = await cache.GetObject<string>(veryLongKey).FirstAsync();
-            Assert.Equal("long_key_value", longKeyRetrieved);
+            Assert.That(longKeyRetrieved, Is.EqualTo("long_key_value"));
 
             // Test keys with special characters - should work
             var specialCharKeys = new[]
@@ -191,7 +193,7 @@ public class ErrorHandlingAndEdgeCaseTests
             {
                 await cache.InsertObject(specialKey, $"value_for_{specialKey}").FirstAsync();
                 var specialRetrieved = await cache.GetObject<string>(specialKey).FirstAsync();
-                Assert.Equal($"value_for_{specialKey}", specialRetrieved);
+                Assert.That(specialRetrieved, Is.EqualTo($"value_for_{specialKey}"));
             }
 
             // Test Unicode keys
@@ -212,13 +214,13 @@ public class ErrorHandlingAndEdgeCaseTests
             {
                 await cache.InsertObject(unicodeKey, $"unicode_value_{unicodeKey}").FirstAsync();
                 var unicodeRetrieved = await cache.GetObject<string>(unicodeKey).FirstAsync();
-                Assert.Equal($"unicode_value_{unicodeKey}", unicodeRetrieved);
+                Assert.That(unicodeRetrieved, Is.EqualTo($"unicode_value_{unicodeKey}"));
             }
 
             // Test that regular operations still work after all these edge cases
             await cache.InsertObject("normal_key", "normal_value").FirstAsync();
             var normalRetrieved = await cache.GetObject<string>("normal_key").FirstAsync();
-            Assert.Equal("normal_value", normalRetrieved);
+            Assert.That(normalRetrieved, Is.EqualTo("normal_value"));
         }
         finally
         {
@@ -230,7 +232,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle concurrent access correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleConcurrentAccessCorrectly()
     {
         // Arrange
@@ -261,7 +263,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
                         // Retrieve
                         var retrieved = await cache.GetObject<string>(key).FirstAsync();
-                        Assert.Equal(value, retrieved);
+                        Assert.That(retrieved, Is.EqualTo(value));
 
                         // Update
                         var newValue = $"updated_{value}";
@@ -269,7 +271,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
                         // Retrieve updated
                         var updatedRetrieved = await cache.GetObject<string>(key).FirstAsync();
-                        Assert.Equal(newValue, updatedRetrieved);
+                        Assert.That(updatedRetrieved, Is.EqualTo(newValue));
 
                         // Invalidate
                         await cache.InvalidateObject<string>(key).FirstAsync();
@@ -283,7 +285,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await Task.WhenAll(tasks);
 
             // Assert - All operations should have completed without errors
-            Assert.True(tasks.All(t => t.IsCompletedSuccessfully));
+            Assert.That(tasks.All(t => t.IsCompletedSuccessfully, Is.True));
         }
         finally
         {
@@ -295,7 +297,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle expiration edge cases correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleExpirationEdgeCasesCorrectly()
     {
         // Arrange
@@ -317,7 +319,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await cache.InsertObject("far_future_key", "far_future_value", farFutureExpiration).FirstAsync();
 
             var farFutureRetrieved = await cache.GetObject<string>("far_future_key").FirstAsync();
-            Assert.Equal("far_future_value", farFutureRetrieved);
+            Assert.That(farFutureRetrieved, Is.EqualTo("far_future_value"));
 
             // Test edge case expiration times
             var minExpiration = DateTimeOffset.MinValue;
@@ -330,7 +332,7 @@ public class ErrorHandlingAndEdgeCaseTests
             // MaxValue expiration (should be valid)
             await cache.InsertObject("max_expiration", "max_value", maxExpiration).FirstAsync();
             var maxRetrieved = await cache.GetObject<string>("max_expiration").FirstAsync();
-            Assert.Equal("max_value", maxRetrieved);
+            Assert.That(maxRetrieved, Is.EqualTo("max_value"));
 
             // Test very short expiration
             var shortExpiration = DateTimeOffset.Now.AddMilliseconds(100);
@@ -338,7 +340,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
             // Should be available immediately
             var shortRetrieved = await cache.GetObject<string>("short_expiration").FirstAsync();
-            Assert.Equal("short_value", shortRetrieved);
+            Assert.That(shortRetrieved, Is.EqualTo("short_value"));
 
             // Wait for expiration
             await Task.Delay(200);
@@ -356,7 +358,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle complex object hierarchies correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleComplexObjectHierarchiesCorrectly()
     {
         // Arrange
@@ -401,7 +403,7 @@ public class ErrorHandlingAndEdgeCaseTests
             var retrieved = await cache.GetObject<dynamic>("complex_object").FirstAsync();
 
             // Assert - Complex objects should be serialized and deserialized correctly
-            Assert.NotNull(retrieved);
+            Assert.That(retrieved, Is.Not.Null);
         }
         finally
         {
@@ -413,7 +415,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle memory pressure correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleMemoryPressureCorrectly()
     {
         // Arrange
@@ -449,8 +451,8 @@ public class ErrorHandlingAndEdgeCaseTests
             for (var i = 0; i < objectCount; i++)
             {
                 var user = await cache.GetObject<UserObject>($"user_{i}").FirstAsync();
-                Assert.NotNull(user);
-                Assert.Equal($"User{i}", user!.Name);
+                Assert.That(user, Is.Not.Null);
+                Assert.That(user!.Name, Is.EqualTo($"User{i}"));
             }
 
             // Test bulk invalidation under memory pressure
@@ -479,7 +481,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle Unicode and special character data correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleUnicodeAndSpecialCharactersCorrectly()
     {
         // Arrange
@@ -513,7 +515,7 @@ public class ErrorHandlingAndEdgeCaseTests
                 var retrieved = await cache.GetObject<string>(testCase.Key).FirstAsync();
 
                 // Assert
-                Assert.Equal(testCase.Value, retrieved);
+                Assert.That(retrieved, Is.EqualTo(testCase.Value));
             }
 
             // Test Unicode in keys
@@ -530,7 +532,7 @@ public class ErrorHandlingAndEdgeCaseTests
             {
                 await cache.InsertObject(unicodeKey, $"value_for_{unicodeKey}").FirstAsync();
                 var retrieved = await cache.GetObject<string>(unicodeKey).FirstAsync();
-                Assert.Equal($"value_for_{unicodeKey}", retrieved);
+                Assert.That(retrieved, Is.EqualTo($"value_for_{unicodeKey}"));
             }
         }
         finally
@@ -543,7 +545,7 @@ public class ErrorHandlingAndEdgeCaseTests
     /// Tests that cache operations handle DateTime edge cases correctly across time zones.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CacheShouldHandleDateTimeEdgeCasesCorrectly()
     {
         // Arrange

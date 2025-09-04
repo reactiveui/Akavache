@@ -13,6 +13,8 @@ namespace Akavache.Settings.Tests;
 /// <summary>
 /// Settings Cache Tests.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class SettingsCacheTests
 {
     private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
@@ -23,7 +25,7 @@ public class SettingsCacheTests
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous unit test.
     /// </returns>
-    [Fact]
+    [Test]
     public async Task TestCreateAndInsertNewtonsoft()
     {
         var viewSettings = default(ViewSettings);
@@ -39,15 +41,15 @@ public class SettingsCacheTests
             {
                 // Initial delay to ensure settings are created
                 await Task.Delay(100);
-                Assert.NotNull(viewSettings);
-                Assert.True(viewSettings!.BoolTest);
-                Assert.Equal((short)16, viewSettings.ShortTest);
-                Assert.Equal(1, viewSettings.IntTest);
-                Assert.Equal(123456L, viewSettings.LongTest);
-                Assert.Equal("TestString", viewSettings.StringTest);
-                Assert.Equal(2.2f, viewSettings.FloatTest);
-                Assert.Equal(23.8d, viewSettings.DoubleTest);
-                Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
+                Assert.That(viewSettings, Is.Not.Null);
+                Assert.That(viewSettings!.BoolTest, Is.True);
+                Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
                 await viewSettings.DisposeAsync();
             }).Build();
 
@@ -63,7 +65,7 @@ public class SettingsCacheTests
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous unit test.
     /// </returns>
-    [Fact]
+    [Test]
     public async Task TestUpdateAndReadNewtonsoft()
     {
         var viewSettings = default(ViewSettings);
@@ -75,7 +77,7 @@ public class SettingsCacheTests
                 // Initial delay to ensure settings are created
                 await Task.Delay(100);
                 viewSettings!.EnumTest = EnumTestValue.Option2;
-                Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
+                Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option2));
                 await viewSettings.DisposeAsync();
             }).Build();
 
@@ -91,7 +93,7 @@ public class SettingsCacheTests
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous unit test.
     /// </returns>
-    [Fact]
+    [Test]
     public async Task TestCreateAndInsertSystemTextJson()
     {
         var viewSettings = default(ViewSettings);
@@ -107,15 +109,15 @@ public class SettingsCacheTests
             {
                 // Initial delay to ensure settings are created
                 await Task.Delay(100);
-                Assert.NotNull(viewSettings);
-                Assert.True(viewSettings!.BoolTest);
-                Assert.Equal((short)16, viewSettings.ShortTest);
-                Assert.Equal(1, viewSettings.IntTest);
-                Assert.Equal(123456L, viewSettings.LongTest);
-                Assert.Equal("TestString", viewSettings.StringTest);
-                Assert.Equal(2.2f, viewSettings.FloatTest);
-                Assert.Equal(23.8d, viewSettings.DoubleTest);
-                Assert.Equal(EnumTestValue.Option1, viewSettings.EnumTest);
+                Assert.That(viewSettings, Is.Not.Null);
+                Assert.That(viewSettings!.BoolTest, Is.True);
+                Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
                 await viewSettings.DisposeAsync();
             }).Build();
 
@@ -131,7 +133,7 @@ public class SettingsCacheTests
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous unit test.
     /// </returns>
-    [Fact]
+    [Test]
     public async Task TestUpdateAndReadSystemTextJson()
     {
         var viewSettings = default(ViewSettings);
@@ -143,7 +145,7 @@ public class SettingsCacheTests
                 // Initial delay to ensure settings are created
                 await Task.Delay(100);
                 viewSettings!.EnumTest = EnumTestValue.Option2;
-                Assert.Equal(EnumTestValue.Option2, viewSettings.EnumTest);
+                Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option2));
                 await viewSettings.DisposeAsync();
             }).Build();
 
@@ -159,7 +161,7 @@ public class SettingsCacheTests
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous unit test.
     /// </returns>
-    [Fact]
+    [Test]
     public async Task TestOverrideSettingsCachePath()
     {
         const string path = "c:\\SettingsStoreage\\ApplicationSettings\\";
@@ -174,7 +176,7 @@ public class SettingsCacheTests
             await Task.Delay(100);
         }
 
-        Assert.Equal(path, akavacheBuilder!.SettingsCachePath);
+        Assert.That(akavacheBuilder!.SettingsCachePath, Is.EqualTo(path));
     }
 
     private AppBuilder GetBuilder()

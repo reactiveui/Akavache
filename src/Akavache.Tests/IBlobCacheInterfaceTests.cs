@@ -4,20 +4,22 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.SystemTextJson;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for IBlobCache interface core functionality and helper methods.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class IBlobCacheInterfaceTests
 {
     /// <summary>
     /// Tests that IBlobCache.ExceptionHelpers work correctly.
     /// </summary>
     /// <returns>A task representing the test completion.</returns>
-    [Fact]
+    [Test]
     public async Task ExceptionHelpersShouldWorkCorrectly()
     {
         // Test KeyNotFoundException helper
@@ -25,23 +27,23 @@ public class IBlobCacheInterfaceTests
 
         var keyNotFoundEx = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await keyNotFoundObs.FirstAsync());
 
-        Assert.Contains("test_key", keyNotFoundEx.Message);
-        Assert.Contains("not present in the cache", keyNotFoundEx.Message);
+        Assert.That(keyNotFoundEx.Message, Does.Contain("test_key"));
+        Assert.That(keyNotFoundEx.Message, Does.Contain("not present in the cache"));
 
         // Test ObjectDisposedException helper
         var objectDisposedObs = IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>("test_cache");
 
         var objectDisposedEx = await Assert.ThrowsAsync<ObjectDisposedException>(async () => await objectDisposedObs.FirstAsync());
 
-        Assert.Contains("test_cache", objectDisposedEx.Message);
-        Assert.Contains("disposed", objectDisposedEx.Message);
+        Assert.That(objectDisposedEx.Message, Does.Contain("test_cache"));
+        Assert.That(objectDisposedEx.Message, Does.Contain("disposed"));
     }
 
     /// <summary>
     /// Tests that IBlobCache basic operations work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task BasicBlobCacheOperationsShouldWork()
     {
         // Arrange
@@ -59,16 +61,16 @@ public class IBlobCacheInterfaceTests
 
             // Get
             var retrieved = await cache.Get("byte_key").FirstAsync();
-            Assert.Equal(testData, retrieved);
+            Assert.That(retrieved, Is.EqualTo(testData));
 
             // GetCreatedAt
             var createdAt = await cache.GetCreatedAt("byte_key").FirstAsync();
-            Assert.NotNull(createdAt);
-            Assert.True(createdAt <= DateTimeOffset.Now);
+            Assert.That(createdAt, Is.Not.Null);
+            Assert.That(createdAt <= DateTimeOffset.Now, Is.True);
 
             // GetAllKeys
             var keys = await cache.GetAllKeys().ToList().FirstAsync();
-            Assert.Contains("byte_key", keys);
+            Assert.That(keys, Does.Contain("byte_key"));
 
             // Invalidate
             await cache.Invalidate("byte_key").FirstAsync();
@@ -86,7 +88,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache bulk operations work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task BulkBlobCacheOperationsShouldWork()
     {
         // Arrange
@@ -111,10 +113,10 @@ public class IBlobCacheInterfaceTests
             var keys = testData.Keys.ToArray();
             var retrieved = await cache.Get(keys).ToList().FirstAsync();
 
-            Assert.Equal(3, retrieved.Count);
+            Assert.That(retrieved.Count, Is.EqualTo(3));
             foreach (var item in retrieved)
             {
-                Assert.Equal(testData[item.Key], item.Value);
+                Assert.That(item.Value, Is.EqualTo(testData[item.Key]));
             }
 
             // Bulk invalidate
@@ -136,7 +138,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache expiration operations work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ExpirationOperationsShouldWork()
     {
         // Arrange
@@ -154,7 +156,7 @@ public class IBlobCacheInterfaceTests
 
             // Should be available immediately
             var retrieved = await cache.Get("expiring_key").FirstAsync();
-            Assert.Equal(testData, retrieved);
+            Assert.That(retrieved, Is.EqualTo(testData));
 
             // Wait for expiration
             await Task.Delay(1500);
@@ -174,7 +176,7 @@ public class IBlobCacheInterfaceTests
 
             // Should be available immediately
             var bulkRetrieved = await cache.Get(bulkData.Keys.ToArray()).ToList().FirstAsync();
-            Assert.Equal(2, bulkRetrieved.Count);
+            Assert.That(bulkRetrieved.Count, Is.EqualTo(2));
 
             // Wait for expiration
             await Task.Delay(1500);
@@ -195,7 +197,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache InvalidateAll works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InvalidateAllShouldWork()
     {
         // Arrange
@@ -212,14 +214,14 @@ public class IBlobCacheInterfaceTests
 
             // Verify items exist
             var keys = await cache.GetAllKeys().ToList().FirstAsync();
-            Assert.Equal(3, keys.Count);
+            Assert.That(keys.Count, Is.EqualTo(3));
 
             // InvalidateAll
             await cache.InvalidateAll().FirstAsync();
 
             // Verify all items are gone
             var keysAfter = await cache.GetAllKeys().ToList().FirstAsync();
-            Assert.Empty(keysAfter);
+            Assert.That(keysAfter, Is.Empty);
 
             // Verify individual gets fail
             await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key1").FirstAsync());
@@ -236,7 +238,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache Flush operation works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task FlushShouldWork()
     {
         // Arrange
@@ -254,7 +256,7 @@ public class IBlobCacheInterfaceTests
 
             // Data should still be available after flush
             var retrieved = await cache.Get("flush_test").FirstAsync();
-            Assert.Equal(new byte[] { 1, 2, 3 }, retrieved);
+            Assert.That(2, 3 }, retrieved, Is.EqualTo(new byte[] { 1));
         }
         finally
         {
@@ -266,7 +268,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache Vacuum operation works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task VacuumShouldWork()
     {
         // Arrange
@@ -286,7 +288,7 @@ public class IBlobCacheInterfaceTests
 
             // Remaining data should still be available
             var retrieved = await cache.Get("vacuum_test2").FirstAsync();
-            Assert.Equal(new byte[] { 4, 5, 6 }, retrieved);
+            Assert.That(5, 6 }, retrieved, Is.EqualTo(new byte[] { 4));
         }
         finally
         {
@@ -298,7 +300,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache handles argument validation correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ArgumentValidationShouldWork()
     {
         // Arrange
@@ -367,7 +369,7 @@ public class IBlobCacheInterfaceTests
             // Verify that valid operations still work
             await cache.Insert("valid_key", new byte[] { 1, 2, 3 }).FirstAsync();
             var validData = await cache.Get("valid_key").FirstAsync();
-            Assert.Equal(new byte[] { 1, 2, 3 }, validData);
+            Assert.That(2, 3 }, validData, Is.EqualTo(new byte[] { 1));
         }
         finally
         {
@@ -379,7 +381,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache properties work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task CachePropertiesShouldWork()
     {
         // Arrange
@@ -390,17 +392,17 @@ public class IBlobCacheInterfaceTests
         try
         {
             // Test Scheduler property
-            Assert.NotNull(cache.Scheduler);
+            Assert.That(cache.Scheduler, Is.Not.Null);
 
             // Test ForcedDateTimeKind property
             cache.ForcedDateTimeKind = DateTimeKind.Utc;
-            Assert.Equal(DateTimeKind.Utc, cache.ForcedDateTimeKind);
+            Assert.That(cache.ForcedDateTimeKind, Is.EqualTo(DateTimeKind.Utc));
 
             cache.ForcedDateTimeKind = DateTimeKind.Local;
-            Assert.Equal(DateTimeKind.Local, cache.ForcedDateTimeKind);
+            Assert.That(cache.ForcedDateTimeKind, Is.EqualTo(DateTimeKind.Local));
 
             cache.ForcedDateTimeKind = null;
-            Assert.Null(cache.ForcedDateTimeKind);
+            Assert.That(cache.ForcedDateTimeKind, Is.Null);
         }
         finally
         {
@@ -412,7 +414,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache handles concurrent dispose correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ConcurrentDisposeShouldWork()
     {
         // Arrange
@@ -442,7 +444,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache GetCreatedAt handles missing keys correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetCreatedAtShouldHandleMissingKeys()
     {
         // Arrange
@@ -454,7 +456,7 @@ public class IBlobCacheInterfaceTests
         {
             // GetCreatedAt for non-existent key should return null
             var createdAt = await cache.GetCreatedAt("non_existent_key").FirstAsync();
-            Assert.Null(createdAt);
+            Assert.That(createdAt, Is.Null);
         }
         finally
         {
@@ -466,7 +468,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache operations with Type parameters work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task TypeBasedOperationsShouldWork()
     {
         // Arrange
@@ -484,20 +486,20 @@ public class IBlobCacheInterfaceTests
 
             // Get with Type
             var retrieved = await cache.Get("typed_key", userType).FirstAsync();
-            Assert.Equal(testData, retrieved);
+            Assert.That(retrieved, Is.EqualTo(testData));
 
             // GetCreatedAt with Type
             var createdAt = await cache.GetCreatedAt("typed_key", userType).FirstAsync();
-            Assert.NotNull(createdAt);
+            Assert.That(createdAt, Is.Not.Null);
 
             // GetAllKeys with Type
             var typedKeys = await cache.GetAllKeys(userType).ToList().FirstAsync();
-            Assert.Contains("typed_key", typedKeys);
+            Assert.That(typedKeys, Does.Contain("typed_key"));
 
             // GetAll with Type
             var allTypedData = await cache.GetAll(userType).ToList().FirstAsync();
-            Assert.True(allTypedData.Count > 0);
-            Assert.Contains(allTypedData, kvp => kvp.Key == "typed_key");
+            Assert.That(allTypedData.Count > 0, Is.True);
+            Assert.That(kvp => kvp.Key == "typed_key", Does.Contain(allTypedData));
 
             // Bulk Insert with Type
             var bulkData = new Dictionary<string, byte[]>
@@ -509,11 +511,11 @@ public class IBlobCacheInterfaceTests
 
             // Bulk Get with Type
             var bulkRetrieved = await cache.Get(bulkData.Keys.ToArray(), userType).ToList().FirstAsync();
-            Assert.Equal(2, bulkRetrieved.Count);
+            Assert.That(bulkRetrieved.Count, Is.EqualTo(2));
 
             // Bulk GetCreatedAt with Type
             var bulkCreatedAt = await cache.GetCreatedAt(bulkData.Keys.ToArray(), userType).ToList().FirstAsync();
-            Assert.Equal(2, bulkCreatedAt.Count);
+            Assert.That(bulkCreatedAt.Count, Is.EqualTo(2));
 
             // Flush with Type
             await cache.Flush(userType).FirstAsync();
@@ -532,7 +534,7 @@ public class IBlobCacheInterfaceTests
 
             // Verify all are gone
             var keysAfterInvalidateAll = await cache.GetAllKeys(userType).ToList().FirstAsync();
-            Assert.Empty(keysAfterInvalidateAll);
+            Assert.That(keysAfterInvalidateAll, Is.Empty);
         }
         finally
         {
@@ -544,7 +546,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache bulk operations with collections work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task BulkCollectionOperationsShouldWork()
     {
         // Arrange
@@ -573,12 +575,12 @@ public class IBlobCacheInterfaceTests
                 if (createdAtResults.Count > 0)
                 {
                     // If we get results, validate them
-                    Assert.True(createdAtResults.Count <= testKeys.Length);
+                    Assert.That(createdAtResults.Count <= testKeys.Length, Is.True);
                     foreach (var result in createdAtResults)
                     {
-                        Assert.Contains(result.Key, testKeys);
-                        Assert.NotNull(result.Time);
-                        Assert.True(result.Time <= DateTimeOffset.Now);
+                        Assert.That(testKeys, Does.Contain(result.Key));
+                        Assert.That(result.Time, Is.Not.Null);
+                        Assert.That(result.Time <= DateTimeOffset.Now, Is.True);
                     }
                 }
                 else
@@ -598,14 +600,14 @@ public class IBlobCacheInterfaceTests
             foreach (var key in testKeys)
             {
                 var individualCreatedAt = await cache.GetCreatedAt(key).FirstAsync();
-                Assert.NotNull(individualCreatedAt);
-                Assert.True(individualCreatedAt <= DateTimeOffset.Now);
+                Assert.That(individualCreatedAt, Is.Not.Null);
+                Assert.That(individualCreatedAt <= DateTimeOffset.Now, Is.True);
             }
 
             // Test empty collection handling
             var emptyKeys = Array.Empty<string>();
             var emptyResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
-            Assert.Empty(emptyResults);
+            Assert.That(emptyResults, Is.Empty);
         }
         finally
         {
@@ -617,7 +619,7 @@ public class IBlobCacheInterfaceTests
     /// Tests that IBlobCache handles empty collections correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task EmptyCollectionOperationsShouldWork()
     {
         // Arrange
@@ -636,16 +638,16 @@ public class IBlobCacheInterfaceTests
 
             // Get empty collection
             var emptyGetResults = await cache.Get(emptyKeys).ToList().FirstAsync();
-            Assert.Empty(emptyGetResults);
+            Assert.That(emptyGetResults, Is.Empty);
 
             var emptyCreatedAtResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
-            Assert.Empty(emptyCreatedAtResults);
+            Assert.That(emptyCreatedAtResults, Is.Empty);
 
             // Invalidate empty collection
             await cache.Invalidate(emptyKeys).FirstAsync();
 
             // These operations should complete without error
-            Assert.True(true);
+            Assert.That(true, Is.True);
         }
         finally
         {

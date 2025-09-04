@@ -4,33 +4,35 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Drawing;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for Akavache.Drawing Size struct functionality.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class SizeTests
 {
     /// <summary>
     /// Tests that Size constructor sets properties correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeConstructorShouldSetPropertiesCorrectly()
     {
         // Act
         var size = new Size(100.5f, 200.75f);
 
         // Assert
-        Assert.Equal(100.5f, size.Width);
-        Assert.Equal(200.75f, size.Height);
+        Assert.That(size.Width, Is.EqualTo(100.5f));
+        Assert.That(size.Height, Is.EqualTo(200.75f));
     }
 
     /// <summary>
     /// Tests that Size with zero dimensions works correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeWithZeroDimensionsShouldWork()
     {
         // Act
@@ -39,12 +41,12 @@ public class SizeTests
         var zeroHeight = new Size(100, 0);
 
         // Assert
-        Assert.Equal(0f, zeroSize.Width);
-        Assert.Equal(0f, zeroSize.Height);
-        Assert.Equal(0f, zeroWidth.Width);
-        Assert.Equal(100f, zeroWidth.Height);
-        Assert.Equal(100f, zeroHeight.Width);
-        Assert.Equal(0f, zeroHeight.Height);
+        Assert.That(zeroSize.Width, Is.EqualTo(0f));
+        Assert.That(zeroSize.Height, Is.EqualTo(0f));
+        Assert.That(zeroWidth.Width, Is.EqualTo(0f));
+        Assert.That(zeroWidth.Height, Is.EqualTo(100f));
+        Assert.That(zeroHeight.Width, Is.EqualTo(100f));
+        Assert.That(zeroHeight.Height, Is.EqualTo(0f));
     }
 
     /// <summary>
@@ -53,13 +55,13 @@ public class SizeTests
     /// <param name="width">The width to test.</param>
     /// <param name="height">The height to test.</param>
     /// <param name="expectedRatio">The expected aspect ratio.</param>
-    [Theory]
-    [InlineData(100f, 100f, 1.0f)] // Square
-    [InlineData(200f, 100f, 2.0f)] // 2:1 landscape
-    [InlineData(100f, 200f, 0.5f)] // 1:2 portrait
-    [InlineData(16f, 9f, 1.777778f)] // 16:9 widescreen (approximately)
-    [InlineData(4f, 3f, 1.333333f)] // 4:3 standard (approximately)
-    [InlineData(100f, 0f, 0f)] // Zero height
+    [TestCase(100f, 100f, 1.0f)] // Square
+    [TestCase(200f, 100f, 2.0f)] // 2:1 landscape
+    [TestCase(100f, 200f, 0.5f)] // 1:2 portrait
+    [TestCase(16f, 9f, 1.777778f)] // 16:9 widescreen (approximately)
+    [TestCase(4f, 3f, 1.333333f)] // 4:3 standard (approximately)
+    [TestCase(100f, 0f, 0f)] // Zero height
+[Test]
     public void AspectRatioShouldBeCalculatedCorrectly(float width, float height, float expectedRatio)
     {
         // Arrange
@@ -69,13 +71,13 @@ public class SizeTests
         var actualRatio = size.AspectRatio;
 
         // Assert
-        Assert.Equal(expectedRatio, actualRatio, 5); // 5 decimal places precision
+        Assert.That(actualRatio, 5, Is.EqualTo(expectedRatio)); // 5 decimal places precision
     }
 
     /// <summary>
     /// Tests that AspectRatio handles zero width correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void AspectRatioWithZeroWidthShouldReturnZero()
     {
         // Arrange
@@ -85,13 +87,13 @@ public class SizeTests
         var ratio = size.AspectRatio;
 
         // Assert
-        Assert.Equal(0f, ratio);
+        Assert.That(ratio, Is.EqualTo(0f));
     }
 
     /// <summary>
     /// Tests that Size equality operators work correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeEqualityOperatorsShouldWork()
     {
         // Arrange
@@ -101,20 +103,20 @@ public class SizeTests
         var size4 = new Size(100f, 250f);
 
         // Act & Assert - Equality
-        Assert.True(size1 == size2);
-        Assert.False(size1 == size3);
-        Assert.False(size1 == size4);
+        Assert.That(size1 == size2, Is.True);
+        Assert.That(size1 == size3, Is.False);
+        Assert.That(size1 == size4, Is.False);
 
         // Act & Assert - Inequality
-        Assert.False(size1 != size2);
-        Assert.True(size1 != size3);
-        Assert.True(size1 != size4);
+        Assert.That(size1 != size2, Is.False);
+        Assert.That(size1 != size3, Is.True);
+        Assert.That(size1 != size4, Is.True);
     }
 
     /// <summary>
     /// Tests that Size.Equals method works correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeEqualsShouldWork()
     {
         // Arrange
@@ -123,21 +125,21 @@ public class SizeTests
         var size3 = new Size(150f, 200f);
 
         // Act & Assert - Equals with Size
-        Assert.True(size1.Equals(size2));
-        Assert.False(size1.Equals(size3));
+        Assert.That(size1.Equals(size2, Is.True));
+        Assert.That(size1.Equals(size3, Is.False));
 
         // Act & Assert - Equals with object
-        Assert.True(size1.Equals((object)size2));
-        Assert.False(size1.Equals((object)size3));
-        Assert.False(size1.Equals(null));
-        Assert.False(size1.Equals("not a size"));
-        Assert.False(size1.Equals(42));
+        Assert.That(size1.Equals((object, Is.True)size2));
+        Assert.That(size1.Equals((object, Is.False)size3));
+        Assert.That(size1.Equals(null, Is.False));
+        Assert.That(size1.Equals("not a size", Is.False));
+        Assert.That(size1.Equals(42, Is.False));
     }
 
     /// <summary>
     /// Tests that Size.GetHashCode works correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeGetHashCodeShouldWork()
     {
         // Arrange
@@ -151,14 +153,14 @@ public class SizeTests
         var hash3 = size3.GetHashCode();
 
         // Assert
-        Assert.Equal(hash1, hash2); // Equal objects should have equal hash codes
-        Assert.NotEqual(hash1, hash3); // Different objects should typically have different hash codes
+        Assert.That(hash2, Is.EqualTo(hash1)); // Equal objects should have equal hash codes
+        Assert.That(hash3, Is.Not.EqualTo(hash1)); // Different objects should typically have different hash codes
     }
 
     /// <summary>
     /// Tests that Size.ToString works correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeToStringShouldWork()
     {
         // Arrange
@@ -172,15 +174,15 @@ public class SizeTests
         var str3 = size3.ToString();
 
         // Assert
-        Assert.Equal("100x200", str1);
-        Assert.Equal("1.5x2.75", str2);
-        Assert.Equal("0x0", str3);
+        Assert.That(str1, Is.EqualTo("100x200"));
+        Assert.That(str2, Is.EqualTo("1.5x2.75"));
+        Assert.That(str3, Is.EqualTo("0x0"));
     }
 
     /// <summary>
     /// Tests Size with negative dimensions.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeWithNegativeDimensionsShouldWork()
     {
         // Arrange & Act
@@ -188,19 +190,19 @@ public class SizeTests
         var mixedSize = new Size(-50f, 100f);
 
         // Assert
-        Assert.Equal(-100f, negativeSize.Width);
-        Assert.Equal(-200f, negativeSize.Height);
-        Assert.Equal(0.5f, negativeSize.AspectRatio); // -100 / -200 = 0.5
+        Assert.That(negativeSize.Width, Is.EqualTo(-100f));
+        Assert.That(negativeSize.Height, Is.EqualTo(-200f));
+        Assert.That(negativeSize.AspectRatio, Is.EqualTo(0.5f)); // -100 / -200 = 0.5
 
-        Assert.Equal(-50f, mixedSize.Width);
-        Assert.Equal(100f, mixedSize.Height);
-        Assert.Equal(-0.5f, mixedSize.AspectRatio); // -50 / 100 = -0.5
+        Assert.That(mixedSize.Width, Is.EqualTo(-50f));
+        Assert.That(mixedSize.Height, Is.EqualTo(100f));
+        Assert.That(mixedSize.AspectRatio, Is.EqualTo(-0.5f)); // -50 / 100 = -0.5
     }
 
     /// <summary>
     /// Tests Size with very large dimensions.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeWithLargeDimensionsShouldWork()
     {
         // Arrange & Act
@@ -208,19 +210,19 @@ public class SizeTests
         var veryLargeSize = new Size(1e30f, 1e30f);
 
         // Assert
-        Assert.Equal(float.MaxValue, largeSize.Width);
-        Assert.Equal(float.MaxValue, largeSize.Height);
-        Assert.Equal(1.0f, largeSize.AspectRatio); // MaxValue / MaxValue = 1
+        Assert.That(largeSize.Width, Is.EqualTo(float.MaxValue));
+        Assert.That(largeSize.Height, Is.EqualTo(float.MaxValue));
+        Assert.That(largeSize.AspectRatio, Is.EqualTo(1.0f)); // MaxValue / MaxValue = 1
 
-        Assert.Equal(1e30f, veryLargeSize.Width);
-        Assert.Equal(1e30f, veryLargeSize.Height);
-        Assert.Equal(1.0f, veryLargeSize.AspectRatio);
+        Assert.That(veryLargeSize.Width, Is.EqualTo(1e30f));
+        Assert.That(veryLargeSize.Height, Is.EqualTo(1e30f));
+        Assert.That(veryLargeSize.AspectRatio, Is.EqualTo(1.0f));
     }
 
     /// <summary>
     /// Tests Size with very small dimensions.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeWithSmallDimensionsShouldWork()
     {
         // Arrange & Act
@@ -228,19 +230,19 @@ public class SizeTests
         var tinySize = new Size(1e-30f, 1e-30f);
 
         // Assert
-        Assert.Equal(float.Epsilon, smallSize.Width);
-        Assert.Equal(float.Epsilon, smallSize.Height);
-        Assert.Equal(1.0f, smallSize.AspectRatio); // Epsilon / Epsilon = 1
+        Assert.That(smallSize.Width, Is.EqualTo(float.Epsilon));
+        Assert.That(smallSize.Height, Is.EqualTo(float.Epsilon));
+        Assert.That(smallSize.AspectRatio, Is.EqualTo(1.0f)); // Epsilon / Epsilon = 1
 
-        Assert.Equal(1e-30f, tinySize.Width);
-        Assert.Equal(1e-30f, tinySize.Height);
-        Assert.Equal(1.0f, tinySize.AspectRatio);
+        Assert.That(tinySize.Width, Is.EqualTo(1e-30f));
+        Assert.That(tinySize.Height, Is.EqualTo(1e-30f));
+        Assert.That(tinySize.AspectRatio, Is.EqualTo(1.0f));
     }
 
     /// <summary>
     /// Tests Size with special float values.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeWithSpecialFloatValuesShouldWork()
     {
         // Arrange & Act
@@ -249,23 +251,23 @@ public class SizeTests
         var mixedSpecialSize = new Size(float.PositiveInfinity, 100f);
 
         // Assert
-        Assert.Equal(float.PositiveInfinity, infiniteSize.Width);
-        Assert.Equal(float.PositiveInfinity, infiniteSize.Height);
-        Assert.True(float.IsNaN(infiniteSize.AspectRatio)); // Infinity / Infinity = NaN
+        Assert.That(infiniteSize.Width, Is.EqualTo(float.PositiveInfinity));
+        Assert.That(infiniteSize.Height, Is.EqualTo(float.PositiveInfinity));
+        Assert.That(float.IsNaN(infiniteSize.AspectRatio, Is.True)); // Infinity / Infinity = NaN
 
-        Assert.True(float.IsNaN(nanSize.Width));
-        Assert.True(float.IsNaN(nanSize.Height));
-        Assert.True(float.IsNaN(nanSize.AspectRatio));
+        Assert.That(float.IsNaN(nanSize.Width, Is.True));
+        Assert.That(float.IsNaN(nanSize.Height, Is.True));
+        Assert.That(float.IsNaN(nanSize.AspectRatio, Is.True));
 
-        Assert.Equal(float.PositiveInfinity, mixedSpecialSize.Width);
-        Assert.Equal(100f, mixedSpecialSize.Height);
-        Assert.Equal(float.PositiveInfinity, mixedSpecialSize.AspectRatio); // Infinity / 100 = Infinity
+        Assert.That(mixedSpecialSize.Width, Is.EqualTo(float.PositiveInfinity));
+        Assert.That(mixedSpecialSize.Height, Is.EqualTo(100f));
+        Assert.That(mixedSpecialSize.AspectRatio, Is.EqualTo(float.PositiveInfinity)); // Infinity / 100 = Infinity
     }
 
     /// <summary>
     /// Tests that Size struct behaves correctly in collections.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeShouldWorkInCollections()
     {
         // Arrange
@@ -282,22 +284,22 @@ public class SizeTests
         var sortedSizes = sizes.OrderBy(s => s.Width).ThenBy(s => s.Height).ToArray();
 
         // Assert
-        Assert.Equal(3, uniqueSizes.Length); // Should remove one duplicate
-        Assert.Contains(new Size(100f, 200f), uniqueSizes);
-        Assert.Contains(new Size(150f, 300f), uniqueSizes);
-        Assert.Contains(new Size(200f, 400f), uniqueSizes);
+        Assert.That(uniqueSizes.Length, Is.EqualTo(3)); // Should remove one duplicate
+        Assert.That(200f, Does.Contain(new Size(100f)), uniqueSizes);
+        Assert.That(300f, Does.Contain(new Size(150f)), uniqueSizes);
+        Assert.That(400f, Does.Contain(new Size(200f)), uniqueSizes);
 
         // Check sorting
-        Assert.Equal(new Size(100f, 200f), sortedSizes[0]);
-        Assert.Equal(new Size(100f, 200f), sortedSizes[1]); // Duplicate
-        Assert.Equal(new Size(150f, 300f), sortedSizes[2]);
-        Assert.Equal(new Size(200f, 400f), sortedSizes[3]);
+        Assert.That(200f, Is.EqualTo(new Size(100f)), sortedSizes[0]);
+        Assert.That(200f, Is.EqualTo(new Size(100f)), sortedSizes[1]); // Duplicate
+        Assert.That(300f, Is.EqualTo(new Size(150f)), sortedSizes[2]);
+        Assert.That(400f, Is.EqualTo(new Size(200f)), sortedSizes[3]);
     }
 
     /// <summary>
     /// Tests that Size can be used as dictionary key.
     /// </summary>
-    [Fact]
+    [Test]
     public void SizeShouldWorkAsDictionaryKey()
     {
         // Arrange
@@ -312,10 +314,10 @@ public class SizeTests
         sizeDict[size3] = "Third"; // Should overwrite "First"
 
         // Assert
-        Assert.Equal(2, sizeDict.Count);
-        Assert.Equal("Third", sizeDict[size1]); // Overwritten by size3
-        Assert.Equal("Third", sizeDict[size3]); // Same as size1
-        Assert.Equal("Second", sizeDict[size2]);
+        Assert.That(sizeDict.Count, Is.EqualTo(2));
+        Assert.That(sizeDict[size1], Is.EqualTo("Third")); // Overwritten by size3
+        Assert.That(sizeDict[size3], Is.EqualTo("Third")); // Same as size1
+        Assert.That(sizeDict[size2], Is.EqualTo("Second"));
     }
 
     /// <summary>
@@ -323,22 +325,22 @@ public class SizeTests
     /// </summary>
     /// <param name="width">The width of the image.</param>
     /// <param name="height">The height of the image.</param>
-    [Theory]
-    [InlineData(1920f, 1080f)] // Full HD
-    [InlineData(3840f, 2160f)] // 4K UHD
-    [InlineData(1024f, 768f)] // XGA
-    [InlineData(800f, 600f)] // SVGA
-    [InlineData(640f, 480f)] // VGA
-    [InlineData(320f, 240f)] // QVGA
+    [TestCase(1920f, 1080f)] // Full HD
+    [TestCase(3840f, 2160f)] // 4K UHD
+    [TestCase(1024f, 768f)] // XGA
+    [TestCase(800f, 600f)] // SVGA
+    [TestCase(640f, 480f)] // VGA
+    [TestCase(320f, 240f)] // QVGA
+[Test]
     public void SizeWithRealisticImageDimensionsShouldWork(float width, float height)
     {
         // Arrange & Act
         var size = new Size(width, height);
 
         // Assert
-        Assert.Equal(width, size.Width);
-        Assert.Equal(height, size.Height);
-        Assert.True(size.AspectRatio > 0);
-        Assert.Contains("x", size.ToString());
+        Assert.That(size.Width, Is.EqualTo(width));
+        Assert.That(size.Height, Is.EqualTo(height));
+        Assert.That(size.AspectRatio > 0, Is.True);
+        Assert.That(size.ToString(, Does.Contain("x")));
     }
 }

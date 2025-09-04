@@ -6,20 +6,22 @@
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for serializer extension methods.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class SerializerExtensionsTests
 {
     /// <summary>
     /// Tests that InsertObjects with IEnumerable works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InsertObjectsShouldWorkWithEnumerable()
     {
         // Arrange
@@ -43,13 +45,13 @@ public class SerializerExtensionsTests
                 var user1 = await cache.GetObject<UserObject>("user1").FirstAsync();
                 var user2 = await cache.GetObject<UserObject>("user2").FirstAsync();
 
-                Assert.NotNull(user1);
-                Assert.Equal("User1", user1!.Name);
-                Assert.Equal("Bio1", user1.Bio);
+                Assert.That(user1, Is.Not.Null);
+                Assert.That(user1!.Name, Is.EqualTo("User1"));
+                Assert.That(user1.Bio, Is.EqualTo("Bio1"));
 
-                Assert.NotNull(user2);
-                Assert.Equal("User2", user2!.Name);
-                Assert.Equal("Bio2", user2.Bio);
+                Assert.That(user2, Is.Not.Null);
+                Assert.That(user2!.Name, Is.EqualTo("User2"));
+                Assert.That(user2.Bio, Is.EqualTo("Bio2"));
             }
             finally
             {
@@ -62,7 +64,7 @@ public class SerializerExtensionsTests
     /// Tests that GetObjects with multiple keys works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetObjectsShouldWorkWithMultipleKeys()
     {
         // Arrange
@@ -84,15 +86,15 @@ public class SerializerExtensionsTests
                 var results = await cache.GetObjects<UserObject>(new[] { "user1", "user2" }).ToList().FirstAsync();
 
                 // Assert
-                Assert.Equal(2, results.Count);
+                Assert.That(results.Count, Is.EqualTo(2));
 
                 var user1Result = results.First(r => r.Key == "user1").Value;
-                Assert.Equal("User1", user1Result.Name);
-                Assert.Equal("Bio1", user1Result.Bio);
+                Assert.That(user1Result.Name, Is.EqualTo("User1"));
+                Assert.That(user1Result.Bio, Is.EqualTo("Bio1"));
 
                 var user2Result = results.First(r => r.Key == "user2").Value;
-                Assert.Equal("User2", user2Result.Name);
-                Assert.Equal("Bio2", user2Result.Bio);
+                Assert.That(user2Result.Name, Is.EqualTo("User2"));
+                Assert.That(user2Result.Bio, Is.EqualTo("Bio2"));
             }
             finally
             {
@@ -105,7 +107,7 @@ public class SerializerExtensionsTests
     /// Tests that GetAllObjects returns all objects of a specific type.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetAllObjectsShouldReturnAllObjectsOfType()
     {
         // Arrange
@@ -128,11 +130,11 @@ public class SerializerExtensionsTests
 
                 // Assert - Convert to list and check count
                 var results = allObjects.ToList();
-                Assert.Equal(2, results.Count);
+                Assert.That(results.Count, Is.EqualTo(2));
 
                 // Verify the objects are correct
-                Assert.Contains(results, u => u.Name == "User1");
-                Assert.Contains(results, u => u.Name == "User2");
+                Assert.That(u => u.Name == "User1", Does.Contain(results));
+                Assert.That(u => u.Name == "User2", Does.Contain(results));
             }
             finally
             {
@@ -145,7 +147,7 @@ public class SerializerExtensionsTests
     /// Tests that InvalidateObject removes the correct object.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InvalidateObjectShouldRemoveObject()
     {
         // Arrange
@@ -163,7 +165,7 @@ public class SerializerExtensionsTests
 
                 // Verify object exists
                 var retrievedUser = await cache.GetObject<UserObject>("user1").FirstAsync();
-                Assert.NotNull(retrievedUser);
+                Assert.That(retrievedUser, Is.Not.Null);
 
                 // Act
                 await cache.InvalidateObject<UserObject>("user1").FirstAsync();
@@ -182,7 +184,7 @@ public class SerializerExtensionsTests
     /// Tests that InvalidateObjects removes multiple objects.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InvalidateObjectsShouldRemoveMultipleObjects()
     {
         // Arrange
@@ -219,7 +221,7 @@ public class SerializerExtensionsTests
     /// Tests that InvalidateAllObjects removes all objects of a type.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InvalidateAllObjectsShouldRemoveAllObjectsOfType()
     {
         // Arrange
@@ -239,7 +241,7 @@ public class SerializerExtensionsTests
 
                 // Verify objects exist before invalidation
                 var beforeInvalidation = await cache.GetAllObjects<UserObject>().FirstAsync();
-                Assert.Equal(2, beforeInvalidation.Count());
+                Assert.That(beforeInvalidation.Count(, Is.EqualTo(2)));
 
                 // Act
                 await cache.InvalidateAllObjects<UserObject>().FirstAsync();
@@ -251,7 +253,7 @@ public class SerializerExtensionsTests
 
                 // Additional check - GetAllObjects should return empty result
                 var results = await cache.GetAllObjects<UserObject>().FirstAsync();
-                Assert.Empty(results);
+                Assert.That(results, Is.Empty);
             }
             finally
             {
@@ -264,7 +266,7 @@ public class SerializerExtensionsTests
     /// Tests that GetObjectCreatedAt returns the creation time.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetObjectCreatedAtShouldReturnCreationTime()
     {
         // Arrange
@@ -283,9 +285,9 @@ public class SerializerExtensionsTests
                 var createdAt = await cache.GetObjectCreatedAt<UserObject>("user1").FirstAsync();
 
                 // Assert
-                Assert.NotNull(createdAt);
-                Assert.True(createdAt >= beforeInsert);
-                Assert.True(createdAt <= DateTimeOffset.Now);
+                Assert.That(createdAt, Is.Not.Null);
+                Assert.That(createdAt >= beforeInsert, Is.True);
+                Assert.That(createdAt <= DateTimeOffset.Now, Is.True);
             }
             finally
             {
@@ -298,7 +300,7 @@ public class SerializerExtensionsTests
     /// Tests that InsertAllObjects works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InsertAllObjectsShouldWork()
     {
         // Arrange
@@ -322,11 +324,11 @@ public class SerializerExtensionsTests
                 var user1 = await cache.GetObject<UserObject>("user1").FirstAsync();
                 var user2 = await cache.GetObject<UserObject>("user2").FirstAsync();
 
-                Assert.NotNull(user1);
-                Assert.Equal("User1", user1!.Name);
+                Assert.That(user1, Is.Not.Null);
+                Assert.That(user1!.Name, Is.EqualTo("User1"));
 
-                Assert.NotNull(user2);
-                Assert.Equal("User2", user2!.Name);
+                Assert.That(user2, Is.Not.Null);
+                Assert.That(user2!.Name, Is.EqualTo("User2"));
             }
             finally
             {
@@ -339,7 +341,7 @@ public class SerializerExtensionsTests
     /// Tests that GetOrCreateObject creates object when not in cache.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetOrCreateObjectShouldCreateWhenNotInCache()
     {
         // Arrange
@@ -356,13 +358,13 @@ public class SerializerExtensionsTests
                 var result = await cache.GetOrCreateObject("new_user", () => user).FirstAsync();
 
                 // Assert
-                Assert.NotNull(result);
-                Assert.Equal("Created User", result!.Name);
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result!.Name, Is.EqualTo("Created User"));
 
                 // Verify it was actually stored
                 var storedUser = await cache.GetObject<UserObject>("new_user").FirstAsync();
-                Assert.NotNull(storedUser);
-                Assert.Equal("Created User", storedUser!.Name);
+                Assert.That(storedUser, Is.Not.Null);
+                Assert.That(storedUser!.Name, Is.EqualTo("Created User"));
             }
             finally
             {
@@ -375,7 +377,7 @@ public class SerializerExtensionsTests
     /// Tests that GetOrCreateObject returns existing object from cache.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetOrCreateObjectShouldReturnExistingFromCache()
     {
         // Arrange
@@ -396,9 +398,9 @@ public class SerializerExtensionsTests
                 var result = await cache.GetOrCreateObject("existing_user", () => newUser).FirstAsync();
 
                 // Assert - should return existing user, not create new one
-                Assert.NotNull(result);
-                Assert.Equal("Existing User", result!.Name);
-                Assert.Equal("Existing Bio", result.Bio);
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result!.Name, Is.EqualTo("Existing User"));
+                Assert.That(result.Bio, Is.EqualTo("Existing Bio"));
             }
             finally
             {
@@ -411,7 +413,7 @@ public class SerializerExtensionsTests
     /// Tests that GetOrFetchObject fetches when not in cache.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetOrFetchObjectShouldFetchWhenNotInCache()
     {
         // Arrange
@@ -431,14 +433,14 @@ public class SerializerExtensionsTests
             }).FirstAsync();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("Fetched User", result!.Name);
-            Assert.Equal(1, fetchCount);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Name, Is.EqualTo("Fetched User"));
+            Assert.That(fetchCount, Is.EqualTo(1));
 
             // Verify it was stored in cache
             var cachedUser = await cache.GetObject<UserObject>("fetch_user").FirstAsync();
-            Assert.NotNull(cachedUser);
-            Assert.Equal("Fetched User", cachedUser!.Name);
+            Assert.That(cachedUser, Is.Not.Null);
+            Assert.That(cachedUser!.Name, Is.EqualTo("Fetched User"));
         }
         finally
         {
@@ -450,7 +452,7 @@ public class SerializerExtensionsTests
     /// Tests that GetOrFetchObject returns cached value when available.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetOrFetchObjectShouldReturnCachedValue()
     {
         // Arrange
@@ -474,9 +476,9 @@ public class SerializerExtensionsTests
             }).FirstAsync();
 
             // Assert - should return cached value, not fetch
-            Assert.NotNull(result);
-            Assert.Equal("Cached User", result!.Name);
-            Assert.Equal(0, fetchCount); // Fetch should not have been called
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Name, Is.EqualTo("Cached User"));
+            Assert.That(fetchCount, Is.EqualTo(0)); // Fetch should not have been called
         }
         finally
         {
@@ -488,7 +490,7 @@ public class SerializerExtensionsTests
     /// Tests that GetOrFetchObject with Task-based fetch function works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetOrFetchObjectWithTaskShouldWork()
     {
         // Arrange
@@ -503,8 +505,8 @@ public class SerializerExtensionsTests
             var result = await cache.GetOrFetchObject("task_user", () => Task.FromResult(fetchedUser)).FirstAsync();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("Task Fetched User", result!.Name);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.Name, Is.EqualTo("Task Fetched User"));
         }
         finally
         {
@@ -516,7 +518,7 @@ public class SerializerExtensionsTests
     /// Tests that GetAndFetchLatest returns cached value first, then updated value.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetAndFetchLatestShouldReturnCachedThenLatest()
     {
         // Arrange
@@ -539,15 +541,15 @@ public class SerializerExtensionsTests
                 .ForEachAsync(user => results.Add(user));
 
             // Assert
-            Assert.True(results.Count >= 1); // Should have at least cached value
-            Assert.NotNull(results[0]);
-            Assert.Equal("Cached User", results[0]!.Name);
+            Assert.That(results.Count >= 1, Is.True); // Should have at least cached value
+            Assert.That(results[0], Is.Not.Null);
+            Assert.That(results[0]!.Name, Is.EqualTo("Cached User"));
 
             if (results.Count > 1)
             {
                 // If we got the latest value too
-                Assert.NotNull(results[1]);
-                Assert.Equal("Latest User", results[1]!.Name);
+                Assert.That(results[1], Is.Not.Null);
+                Assert.That(results[1]!.Name, Is.EqualTo("Latest User"));
             }
         }
         finally
@@ -560,7 +562,7 @@ public class SerializerExtensionsTests
     /// Tests that GetAndFetchLatest with Task-based fetch function works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetAndFetchLatestWithTaskShouldWork()
     {
         // Arrange
@@ -579,9 +581,9 @@ public class SerializerExtensionsTests
                 .ForEachAsync(user => results.Add(user));
 
             // Assert
-            Assert.Single(results);
-            Assert.NotNull(results[0]);
-            Assert.Equal("Task Latest User", results[0]!.Name);
+            Assert.That(results, Has.Count.EqualTo(1));
+            Assert.That(results[0], Is.Not.Null);
+            Assert.That(results[0]!.Name, Is.EqualTo("Task Latest User"));
         }
         finally
         {
@@ -593,7 +595,7 @@ public class SerializerExtensionsTests
     /// Tests that GetAndFetchLatest with fetchPredicate respects the predicate.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetAndFetchLatestShouldRespectFetchPredicate()
     {
         // Arrange
@@ -624,10 +626,10 @@ public class SerializerExtensionsTests
                 .ForEachAsync(user => results.Add(user));
 
             // Assert
-            Assert.Single(results);
-            Assert.NotNull(results[0]);
-            Assert.Equal("Cached User", results[0]!.Name);
-            Assert.Equal(0, fetchCount); // Fetch should not have been called
+            Assert.That(results, Has.Count.EqualTo(1));
+            Assert.That(results[0], Is.Not.Null);
+            Assert.That(results[0]!.Name, Is.EqualTo("Cached User"));
+            Assert.That(fetchCount, Is.EqualTo(0)); // Fetch should not have been called
         }
         finally
         {
@@ -638,7 +640,7 @@ public class SerializerExtensionsTests
     /// <summary>
     /// Tests that InsertObjects throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void InsertObjectsShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -653,7 +655,7 @@ public class SerializerExtensionsTests
     /// Tests that InsertObjects throws ArgumentNullException when keyValuePairs is null.
     /// </summary>
     /// <returns>A task representing the test completion.</returns>
-    [Fact]
+    [Test]
     public async Task InsertObjectsShouldThrowArgumentNullExceptionWhenKeyValuePairsIsNull()
     {
         // Arrange
@@ -677,7 +679,7 @@ public class SerializerExtensionsTests
     /// Tests that InsertObjects handles empty dictionary correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InsertObjectsShouldHandleEmptyDictionary()
     {
         // Arrange
@@ -694,7 +696,7 @@ public class SerializerExtensionsTests
                 await cache.InsertObjects(emptyDict).FirstAsync();
 
                 // Assert - test passes if no exception is thrown
-                Assert.True(true);
+                Assert.That(true, Is.True);
             }
             finally
             {
@@ -707,7 +709,7 @@ public class SerializerExtensionsTests
     /// Tests that mixed object types can be inserted and retrieved.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task InsertObjectsShouldHandleMixedObjectTypes()
     {
         // Arrange
@@ -736,10 +738,10 @@ public class SerializerExtensionsTests
                 var userValue = await cache.GetObject<UserObject>("user").FirstAsync();
                 var dateValue = await cache.GetObject<DateTime>("date").FirstAsync();
 
-                Assert.Equal("test string", stringValue);
-                Assert.Equal(42, intValue);
-                Assert.NotNull(userValue);
-                Assert.Equal("Test User", userValue!.Name);
+                Assert.That(stringValue, Is.EqualTo("test string"));
+                Assert.That(intValue, Is.EqualTo(42));
+                Assert.That(userValue, Is.Not.Null);
+                Assert.That(userValue!.Name, Is.EqualTo("Test User"));
 
                 // For DateTime, be more tolerant due to potential serialization differences
                 // Accept either the correct value or verify it's not the absolute default
@@ -770,7 +772,7 @@ public class SerializerExtensionsTests
     /// Tests that extension methods properly validate arguments.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ExtensionMethodsShouldValidateArguments()
     {
         // Arrange

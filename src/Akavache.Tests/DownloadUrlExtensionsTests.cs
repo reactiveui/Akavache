@@ -7,20 +7,22 @@ using System.Net.Sockets;
 using System.Reactive.Threading.Tasks;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for download URL extension methods and HTTP functionality.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class DownloadUrlExtensionsTests
 {
     /// <summary>
     /// Tests that DownloadUrl extension method works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlShouldWorkCorrectly()
     {
         // Arrange
@@ -39,7 +41,7 @@ public class DownloadUrlExtensionsTests
                     var bytes = await cache.DownloadUrl("https://httpbin.org/html").FirstAsync();
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -68,7 +70,7 @@ public class DownloadUrlExtensionsTests
     /// Tests that DownloadUrl with Uri overload works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithUriShouldWorkCorrectly()
     {
         // Arrange
@@ -88,7 +90,7 @@ public class DownloadUrlExtensionsTests
                     var bytes = await cache.DownloadUrl(uri).FirstAsync();
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -117,7 +119,7 @@ public class DownloadUrlExtensionsTests
     /// Tests that DownloadUrl with key stores the data correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithKeyShouldStoreData()
     {
         // Arrange
@@ -138,7 +140,7 @@ public class DownloadUrlExtensionsTests
 
                     // Assert - verify data was stored
                     var storedBytes = await cache.Get(key);
-                    Assert.True(storedBytes.Length > 0);
+                    Assert.That(storedBytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -167,7 +169,7 @@ public class DownloadUrlExtensionsTests
     /// Tests that DownloadUrl with Uri and key stores the data correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithUriAndKeyShouldStoreData()
     {
         // Arrange
@@ -189,7 +191,7 @@ public class DownloadUrlExtensionsTests
 
                     // Assert - verify data was stored
                     var storedBytes = await cache.Get(key);
-                    Assert.True(storedBytes.Length > 0);
+                    Assert.That(storedBytes.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {
@@ -218,7 +220,7 @@ public class DownloadUrlExtensionsTests
     /// Tests that DownloadUrl handles invalid URLs gracefully.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlShouldHandleInvalidUrls()
     {
         // Arrange
@@ -253,7 +255,7 @@ public class DownloadUrlExtensionsTests
     /// Tests that DownloadUrl argument validation works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlShouldValidateArguments()
     {
         // Arrange
@@ -333,7 +335,7 @@ public class DownloadUrlExtensionsTests
     /// Tests that multiple concurrent downloads work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ConcurrentDownloadsShouldWork()
     {
         // Arrange
@@ -361,7 +363,7 @@ public class DownloadUrlExtensionsTests
                     // Assert - verify all downloads completed
                     foreach (var task in tasks)
                     {
-                        Assert.True(task.IsCompletedSuccessfully);
+                        Assert.That(task.IsCompletedSuccessfully, Is.True);
                     }
 
                     // Verify data was stored
@@ -369,9 +371,9 @@ public class DownloadUrlExtensionsTests
                     var content2 = await cache.Get("content2");
                     var content3 = await cache.Get("content3");
 
-                    Assert.True(content1.Length > 0);
-                    Assert.True(content2.Length > 0);
-                    Assert.True(content3.Length > 0);
+                    Assert.That(content1.Length > 0, Is.True);
+                    Assert.That(content2.Length > 0, Is.True);
+                    Assert.That(content3.Length > 0, Is.True);
                 }
                 catch (TimeoutException)
                 {

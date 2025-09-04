@@ -5,19 +5,21 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for image extension methods.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class ImageExtensionsTests
 {
     /// <summary>
     /// Tests that IsValidImageFormat correctly identifies PNG images.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldIdentifyPngCorrectly()
     {
         // Arrange - PNG header: 89 50 4E 47
@@ -27,13 +29,13 @@ public class ImageExtensionsTests
         var isValid = pngHeader.IsValidImageFormat();
 
         // Assert
-        Assert.True(isValid);
+        Assert.That(isValid, Is.True);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat correctly identifies JPEG images.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldIdentifyJpegCorrectly()
     {
         // Arrange - JPEG header: FF D8 FF
@@ -43,13 +45,13 @@ public class ImageExtensionsTests
         var isValid = jpegHeader.IsValidImageFormat();
 
         // Assert
-        Assert.True(isValid);
+        Assert.That(isValid, Is.True);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat correctly identifies GIF images.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldIdentifyGifCorrectly()
     {
         // Arrange - GIF header: 47 49 46
@@ -59,13 +61,13 @@ public class ImageExtensionsTests
         var isValid = gifHeader.IsValidImageFormat();
 
         // Assert
-        Assert.True(isValid);
+        Assert.That(isValid, Is.True);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat correctly identifies BMP images.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldIdentifyBmpCorrectly()
     {
         // Arrange - BMP header: 42 4D
@@ -75,13 +77,13 @@ public class ImageExtensionsTests
         var isValid = bmpHeader.IsValidImageFormat();
 
         // Assert
-        Assert.True(isValid);
+        Assert.That(isValid, Is.True);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat correctly identifies WebP images.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldIdentifyWebPCorrectly()
     {
         // Arrange - WebP header: 52 49 46 46 ... 57 45 42 50
@@ -91,13 +93,13 @@ public class ImageExtensionsTests
         var isValid = webpHeader.IsValidImageFormat();
 
         // Assert
-        Assert.True(isValid);
+        Assert.That(isValid, Is.True);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat returns false for invalid image data.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldReturnFalseForInvalidData()
     {
         // Arrange
@@ -107,13 +109,13 @@ public class ImageExtensionsTests
         var isValid = invalidData.IsValidImageFormat();
 
         // Assert
-        Assert.False(isValid);
+        Assert.That(isValid, Is.False);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat returns false for null data.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldReturnFalseForNullData()
     {
         // Arrange
@@ -123,13 +125,13 @@ public class ImageExtensionsTests
         var isValid = nullData!.IsValidImageFormat();
 
         // Assert
-        Assert.False(isValid);
+        Assert.That(isValid, Is.False);
     }
 
     /// <summary>
     /// Tests that IsValidImageFormat returns false for too short data.
     /// </summary>
-    [Fact]
+    [Test]
     public void IsValidImageFormatShouldReturnFalseForTooShortData()
     {
         // Arrange
@@ -139,13 +141,13 @@ public class ImageExtensionsTests
         var isValid = shortData.IsValidImageFormat();
 
         // Assert
-        Assert.False(isValid);
+        Assert.That(isValid, Is.False);
     }
 
     /// <summary>
     /// Tests that ThrowOnBadImageBuffer throws for null data.
     /// </summary>
-    [Fact]
+    [Test]
     public void ThrowOnBadImageBufferShouldThrowForNullData()
     {
         // Arrange
@@ -158,7 +160,7 @@ public class ImageExtensionsTests
     /// <summary>
     /// Tests that ThrowOnBadImageBuffer throws for too small data.
     /// </summary>
-    [Fact]
+    [Test]
     public void ThrowOnBadImageBufferShouldThrowForTooSmallData()
     {
         // Arrange
@@ -172,7 +174,7 @@ public class ImageExtensionsTests
     /// Tests that ThrowOnBadImageBuffer returns valid data for good image buffer.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ThrowOnBadImageBufferShouldReturnValidData()
     {
         // Arrange
@@ -186,13 +188,13 @@ public class ImageExtensionsTests
         var result = await validImageData.ThrowOnBadImageBuffer().FirstAsync();
 
         // Assert
-        Assert.Equal(validImageData, result);
+        Assert.That(result, Is.EqualTo(validImageData));
     }
 
     /// <summary>
     /// Tests that LoadImageBytes throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageBytesShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -206,7 +208,7 @@ public class ImageExtensionsTests
     /// Tests that LoadImageBytes works correctly with valid data.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LoadImageBytesShouldWorkWithValidData()
     {
         // Arrange
@@ -231,7 +233,7 @@ public class ImageExtensionsTests
                 var loadedData = await cache.LoadImageBytes(key).FirstAsync();
 
                 // Assert
-                Assert.Equal(imageData, loadedData);
+                Assert.That(loadedData, Is.EqualTo(imageData));
             }
             finally
             {
@@ -244,7 +246,7 @@ public class ImageExtensionsTests
     /// Tests that LoadImageBytes throws when image data is null.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LoadImageBytesShouldThrowWhenImageDataIsNull()
     {
         // Arrange
@@ -271,7 +273,7 @@ public class ImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageBytesFromUrl throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageBytesFromUrlShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -284,7 +286,7 @@ public class ImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageBytesFromUrl (Uri) throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageBytesFromUrlUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -298,7 +300,7 @@ public class ImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageBytesFromUrl with key throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageBytesFromUrlWithKeyShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -311,7 +313,7 @@ public class ImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageBytesFromUrl with key and Uri throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageBytesFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -325,7 +327,7 @@ public class ImageExtensionsTests
     /// <summary>
     /// Tests image format detection with real-world-like headers.
     /// </summary>
-    [Fact]
+    [Test]
     public void ImageFormatDetectionShouldWorkWithRealWorldLikeHeaders()
     {
         // Arrange & Act & Assert
@@ -394,13 +396,13 @@ public class ImageExtensionsTests
     /// <param name="bufferSize">The size of the buffer to test.</param>
     /// <param name="shouldSucceed">Whether the validation should succeed.</param>
     /// <returns>A task representing the test.</returns>
-    [Theory]
-    [InlineData(0, false)] // Empty buffer
-    [InlineData(32, false)] // Too small buffer
-    [InlineData(63, false)] // Just under threshold
-    [InlineData(64, true)] // At threshold
-    [InlineData(128, true)] // Above threshold
-    [InlineData(1024, true)] // Much larger buffer
+    [TestCase(0, false)] // Empty buffer
+    [TestCase(32, false)] // Too small buffer
+    [TestCase(63, false)] // Just under threshold
+    [TestCase(64, true)] // At threshold
+    [TestCase(128, true)] // Above threshold
+    [TestCase(1024, true)] // Much larger buffer
+[Test]
     public async Task ImageBufferValidationShouldWorkWithVariousSizes(int bufferSize, bool shouldSucceed)
     {
         // Arrange
@@ -416,7 +418,7 @@ public class ImageExtensionsTests
             var result = await buffer.ThrowOnBadImageBuffer().FirstAsync();
 
             // Assert
-            Assert.Equal(buffer, result);
+            Assert.That(result, Is.EqualTo(buffer));
         }
         else
         {

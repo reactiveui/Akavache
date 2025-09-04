@@ -7,14 +7,14 @@ using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests.TestBases;
 
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[Collection("Bulk Operations Tests")]
+[NonParallelizable]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     private bool _disposed;
@@ -62,11 +62,11 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task GetShouldWorkWithMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -78,12 +78,12 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.Equal(keys.Length, allData.Count);
-            Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
+            Assert.That(allData.Count, Is.EqualTo(keys.Length));
+            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1], Is.True));
         }
     }
 
@@ -94,11 +94,11 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task GetShouldInvalidateOldKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -111,8 +111,8 @@ public abstract class BulkOperationsTestBase : IDisposable
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
-            Assert.Equal(0, allData.Count);
-            Assert.Equal(0, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That(allData.Count, Is.EqualTo(0));
+            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(0)).ToList().FirstAsync()).Count);
         }
     }
 
@@ -123,11 +123,11 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task InsertShouldWorkWithMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -139,12 +139,12 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await fixture.Insert(keys.ToDictionary(k => k, v => data)).FirstAsync();
 
-            Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.Equal(keys.Length, allData.Count);
-            Assert.True(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]));
+            Assert.That(allData.Count, Is.EqualTo(keys.Length));
+            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1], Is.True));
         }
     }
 
@@ -155,11 +155,11 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task InvalidateShouldTrashMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -171,11 +171,11 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.Equal(keys.Length, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
 
             await fixture.Invalidate(keys).FirstAsync();
 
-            Assert.Equal(0, (await fixture.GetAllKeys().ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(0)).ToList().FirstAsync()).Count);
         }
     }
 

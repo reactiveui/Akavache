@@ -5,26 +5,28 @@
 
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for CacheDatabase functionality and global configuration.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class CacheDatabaseTests
 {
     /// <summary>
     /// Tests that CacheDatabase.TaskpoolScheduler is available and functional.
     /// </summary>
-    [Fact]
+    [Test]
     public void TaskpoolSchedulerShouldBeAvailable()
     {
         // Act
         var scheduler = CacheDatabase.TaskpoolScheduler;
 
         // Assert
-        Assert.NotNull(scheduler);
+        Assert.That(scheduler, Is.Not.Null);
 
         // Test that it can schedule work
         var workExecuted = false;
@@ -37,14 +39,14 @@ public class CacheDatabaseTests
         });
 
         // Wait for work to complete
-        Assert.True(resetEvent.Wait(5000), "Scheduled work did not complete within timeout");
-        Assert.True(workExecuted);
+        Assert.That(resetEvent.Wait(5000, Is.True), "Scheduled work did not complete within timeout");
+        Assert.That(workExecuted, Is.True);
     }
 
     /// <summary>
     /// Tests that CacheDatabase.HttpService is available and functional.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldBeAvailable()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>();
@@ -53,7 +55,7 @@ public class CacheDatabaseTests
         var httpService = CacheDatabase.InMemory.HttpService;
 
         // Assert
-        Assert.NotNull(httpService);
+        Assert.That(httpService, Is.Not.Null);
 
         // Test that it's a valid HttpService instance
         Assert.IsType<HttpService>(httpService);
@@ -62,7 +64,7 @@ public class CacheDatabaseTests
     /// <summary>
     /// Tests that CacheDatabase properly validates serializer functionality.
     /// </summary>
-    [Fact]
+    [Test]
     public void SerializerFunctionalityValidationShouldWork()
     {
         // Arrange
@@ -96,8 +98,8 @@ public class CacheDatabaseTests
                 try
                 {
                     var serialized = serializer.Serialize(testCase);
-                    Assert.NotNull(serialized);
-                    Assert.True(serialized.Length > 0);
+                    Assert.That(serialized, Is.Not.Null);
+                    Assert.That(serialized.Length > 0, Is.True);
 
                     // For simple types, test round-trip
                     if (testCase is string || testCase is int || testCase is double || testCase is bool)
@@ -105,7 +107,7 @@ public class CacheDatabaseTests
                         var deserialized = serializer.Deserialize<object>(serialized);
 
                         // For basic equality comparison, convert both to string
-                        Assert.Equal(testCase.ToString(), deserialized?.ToString());
+                        Assert.That(deserialized?.ToString(, Is.EqualTo(testCase.ToString())));
                     }
                 }
                 catch (Exception ex)

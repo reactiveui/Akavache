@@ -7,24 +7,26 @@ using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Focused serialization compatibility tests to ensure proper cross-serializer compatibility.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class SerializationCompatibilityTests
 {
     /// <summary>
     /// Tests that each serializer can roundtrip its own data.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public void SerializerShouldRoundTripOwnData(Type serializerType)
     {
         // Arrange
@@ -41,18 +43,18 @@ public class SerializationCompatibilityTests
         var deserializedObj = serializer.Deserialize<TestObject>(serializedData);
 
         // Assert
-        Assert.NotNull(deserializedObj);
-        Assert.Equal(testObj.Name, deserializedObj.Name);
-        Assert.Equal(testObj.Value, deserializedObj.Value);
+        Assert.That(deserializedObj, Is.Not.Null);
+        Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+        Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
 
         // Allow for some DateTime precision loss
-        Assert.True(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds) < 1);
+        Assert.That(Math.Abs((testObj.Date - deserializedObj.Date, Is.True).TotalSeconds) < 1);
     }
 
     /// <summary>
     /// Tests cross-serializer compatibility.
     /// </summary>
-    [Fact]
+    [Test]
     public void CrossSerializerCompatibilityShouldWork()
     {
         var testObj = new TestObject
@@ -90,9 +92,9 @@ public class SerializationCompatibilityTests
                             $"Data preview: {dataPreview.Substring(0, Math.Min(200, dataPreview.Length))}...");
                     }
 
-                    Assert.NotNull(deserializedObj);
-                    Assert.Equal(testObj.Name, deserializedObj.Name);
-                    Assert.Equal(testObj.Value, deserializedObj.Value);
+                    Assert.That(deserializedObj, Is.Not.Null);
+                    Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+                    Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
 
                     // Allow for DateTime precision differences between serializers
                     // BSON serializers may have different precision than JSON serializers
@@ -116,7 +118,7 @@ public class SerializationCompatibilityTests
     /// <summary>
     /// Tests all combinations of serializers for maximum compatibility coverage.
     /// </summary>
-    [Fact]
+    [Test]
     public void AllSerializerCombinationsShouldWork()
     {
         var testObj = new TestObject
@@ -151,8 +153,8 @@ public class SerializationCompatibilityTests
 
                     if (deserializedObj != null)
                     {
-                        Assert.Equal(testObj.Name, deserializedObj.Name);
-                        Assert.Equal(testObj.Value, deserializedObj.Value);
+                        Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+                        Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
 
                         // Allow for DateTime precision differences
                         var timeDiff = Math.Abs((testObj.Date - deserializedObj.Date).TotalMinutes);
@@ -205,11 +207,11 @@ public class SerializationCompatibilityTests
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task SqliteCacheShouldPersistDataCorrectlyWithAllSerializers(Type serializerType)
     {
         if (serializerType is null)
@@ -243,9 +245,9 @@ public class SerializationCompatibilityTests
             {
                 var retrievedObject = await cache.GetObject<TestObject>("test_key").FirstAsync();
 
-                Assert.NotNull(retrievedObject);
-                Assert.Equal(testObject.Name, retrievedObject.Name);
-                Assert.Equal(testObject.Value, retrievedObject.Value);
+                Assert.That(retrievedObject, Is.Not.Null);
+                Assert.That(retrievedObject.Name, Is.EqualTo(testObject.Name));
+                Assert.That(retrievedObject.Value, Is.EqualTo(testObject.Value));
 
                 // Allow for DateTime precision differences
                 var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalSeconds);
@@ -260,13 +262,13 @@ public class SerializationCompatibilityTests
     /// <param name="writeSerializerType">The serializer to use for writing.</param>
     /// <param name="readSerializerType">The serializer to use for reading.</param>
     /// <returns>A task representing the test operation.</returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer), typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer), typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer), typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer), typeof(NewtonsoftBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer), typeof(NewtonsoftBsonSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer), typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(SystemJsonSerializer), typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer), typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer), typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer), typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer), typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer), typeof(NewtonsoftSerializer))]
+[Test]
     public async Task SqliteCacheShouldSupportCrossSerializerCompatibility(Type writeSerializerType, Type readSerializerType)
     {
         if (writeSerializerType is null)
@@ -309,9 +311,9 @@ public class SerializationCompatibilityTests
                 {
                     var retrievedObject = await readCache.GetObject<TestObject>("cross_test").FirstAsync();
 
-                    Assert.NotNull(retrievedObject);
-                    Assert.Equal(testObject.Name, retrievedObject.Name);
-                    Assert.Equal(testObject.Value, retrievedObject.Value);
+                    Assert.That(retrievedObject, Is.Not.Null);
+                    Assert.That(retrievedObject.Name, Is.EqualTo(testObject.Name));
+                    Assert.That(retrievedObject.Value, Is.EqualTo(testObject.Value));
 
                     // Allow for DateTime precision differences
                     var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalMinutes);
@@ -332,11 +334,11 @@ public class SerializationCompatibilityTests
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task SimpleSqliteTest(Type serializerType)
     {
         if (serializerType is null)
@@ -374,9 +376,9 @@ public class SerializationCompatibilityTests
                 // Get
                 var retrieved = await cache.GetObject<TestObject>("simple_key").FirstAsync();
 
-                Assert.NotNull(retrieved);
-                Assert.Equal(testObject.Name, retrieved.Name);
-                Assert.Equal(testObject.Value, retrieved.Value);
+                Assert.That(retrieved, Is.Not.Null);
+                Assert.That(retrieved.Name, Is.EqualTo(testObject.Name));
+                Assert.That(retrieved.Value, Is.EqualTo(testObject.Value));
             }
         }
     }
@@ -386,11 +388,11 @@ public class SerializationCompatibilityTests
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DebuggingMultiInstancePersistence(Type serializerType)
     {
         if (serializerType is null)
@@ -434,7 +436,7 @@ public class SerializationCompatibilityTests
                 var cache2 = new SqliteBlobCache(dbPath, serializer);
 
                 // Check if file exists
-                Assert.True(File.Exists(dbPath), "Database file does not exist after cache1 disposal");
+                Assert.That(File.Exists(dbPath, Is.True), "Database file does not exist after cache1 disposal");
 
                 // Check keys
                 var allKeys = await cache2.GetAllKeys().ToList().FirstAsync();
@@ -458,9 +460,9 @@ public class SerializationCompatibilityTests
                 // Try to retrieve
                 var retrieved = await cache2.GetObject<TestObject>("debug_key").FirstAsync();
 
-                Assert.NotNull(retrieved);
-                Assert.Equal(testObject.Name, retrieved.Name);
-                Assert.Equal(testObject.Value, retrieved.Value);
+                Assert.That(retrieved, Is.Not.Null);
+                Assert.That(retrieved.Name, Is.EqualTo(testObject.Name));
+                Assert.That(retrieved.Value, Is.EqualTo(testObject.Value));
 
                 await cache2.DisposeAsync();
             }
@@ -473,11 +475,11 @@ public class SerializationCompatibilityTests
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
-    [Theory(Skip = "Skipping due to unreliable DateTime serialization issues across different serializers in CI environment")]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [Test, Ignore("Skipping due to unreliable DateTime serialization issues across different serializers in CI environment")]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
     public async Task DateTimeSerializationShouldBeConsistentAndAccurate(Type serializerType)
     {
         if (serializerType is null)

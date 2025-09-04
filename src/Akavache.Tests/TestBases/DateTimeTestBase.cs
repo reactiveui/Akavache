@@ -8,14 +8,14 @@ using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests.TestBases;
 
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
-[Collection("DateTime Tests")]
+[NonParallelizable]
 public abstract class DateTimeTestBase : IDisposable
 {
     private bool _disposed;
@@ -108,11 +108,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DateTimeKindCanBeForced(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -125,7 +125,7 @@ public abstract class DateTimeTestBase : IDisposable
             var value = DateTime.UtcNow;
             await fixture.InsertObject("key", value).FirstAsync();
             var result = await fixture.GetObject<DateTime>("key").FirstAsync();
-            Assert.Equal(DateTimeKind.Utc, result.Kind);
+            Assert.That(result.Kind, Is.EqualTo(DateTimeKind.Utc));
         }
     }
 
@@ -137,11 +137,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="InvalidOperationException">$"DateTime edge case {i} failed for value {testCase} ({testCase.Kind}), ex.</exception>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -254,11 +254,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="InvalidOperationException">$"DateTimeOffset edge case {i} failed for value {testCase}, ex.</exception>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+[Test]
     public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);

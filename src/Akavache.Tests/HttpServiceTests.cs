@@ -4,27 +4,29 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.SystemTextJson;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for HttpService functionality.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class HttpServiceTests
 {
     /// <summary>
     /// Tests that HttpService can be instantiated correctly.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldInstantiateCorrectly()
     {
         // Act
         var httpService = new HttpService();
 
         // Assert
-        Assert.NotNull(httpService);
-        Assert.NotNull(httpService.HttpClient);
+        Assert.That(httpService, Is.Not.Null);
+        Assert.That(httpService.HttpClient, Is.Not.Null);
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -33,15 +35,15 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that HttpService properly sets up compression.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldSetupCompressionCorrectly()
     {
         // Act
         var httpService = new HttpService();
 
         // Assert - HttpClient should be configured properly
-        Assert.NotNull(httpService.HttpClient);
-        Assert.NotNull(httpService.HttpClient.DefaultRequestHeaders);
+        Assert.That(httpService.HttpClient, Is.Not.Null);
+        Assert.That(httpService.HttpClient.DefaultRequestHeaders, Is.Not.Null);
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -51,7 +53,7 @@ public class HttpServiceTests
     /// Tests that DownloadUrl with URI parameter validates arguments correctly.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithUriShouldValidateArguments()
     {
         // Arrange
@@ -76,7 +78,7 @@ public class HttpServiceTests
     /// Tests that DownloadUrl with key validates arguments correctly.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task DownloadUrlWithKeyShouldValidateArguments()
     {
         // Arrange
@@ -99,7 +101,7 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that multiple HttpService instances can be created.
     /// </summary>
-    [Fact]
+    [Test]
     public void MultipleHttpServiceInstancesShouldBeCreatable()
     {
         // Act
@@ -107,8 +109,8 @@ public class HttpServiceTests
         var service2 = new HttpService();
 
         // Assert
-        Assert.NotNull(service1);
-        Assert.NotNull(service2);
+        Assert.That(service1, Is.Not.Null);
+        Assert.That(service2, Is.Not.Null);
         Assert.NotSame(service1.HttpClient, service2.HttpClient);
 
         // Cleanup
@@ -119,7 +121,7 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that HttpService supports custom HttpClient configuration.
     /// </summary>
-    [Fact]
+    [Test]
     public void HttpServiceShouldSupportCustomConfiguration()
     {
         // Arrange
@@ -130,7 +132,7 @@ public class HttpServiceTests
         httpService.HttpClient.Timeout = customTimeout;
 
         // Assert
-        Assert.Equal(customTimeout, httpService.HttpClient.Timeout);
+        Assert.That(httpService.HttpClient.Timeout, Is.EqualTo(customTimeout));
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -140,7 +142,7 @@ public class HttpServiceTests
     /// Tests that HttpService handles null headers gracefully.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldHandleNullHeadersGracefully()
     {
         // Arrange
@@ -161,7 +163,7 @@ public class HttpServiceTests
                 null);
 
             // Assert - Observable should be created without error
-            Assert.NotNull(observable);
+            Assert.That(observable, Is.Not.Null);
         }
         finally
         {
@@ -174,7 +176,7 @@ public class HttpServiceTests
     /// Tests that HttpService handles different HTTP methods.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldHandleDifferentHttpMethods()
     {
         // Arrange
@@ -189,9 +191,9 @@ public class HttpServiceTests
             var postObservable = httpService.DownloadUrl(cache, "post_key", "https://httpbin.org/status/200", HttpMethod.Post);
             var putObservable = httpService.DownloadUrl(cache, "put_key", "https://httpbin.org/status/200", HttpMethod.Put);
 
-            Assert.NotNull(getObservable);
-            Assert.NotNull(postObservable);
-            Assert.NotNull(putObservable);
+            Assert.That(getObservable, Is.Not.Null);
+            Assert.That(postObservable, Is.Not.Null);
+            Assert.That(putObservable, Is.Not.Null);
         }
         finally
         {
@@ -204,7 +206,7 @@ public class HttpServiceTests
     /// Tests that HttpService respects fetchAlways parameter.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldRespectFetchAlwaysParameter()
     {
         // Arrange
@@ -231,8 +233,8 @@ public class HttpServiceTests
                 true);
 
             // Assert
-            Assert.NotNull(cachedObservable);
-            Assert.NotNull(alwaysFetchObservable);
+            Assert.That(cachedObservable, Is.Not.Null);
+            Assert.That(alwaysFetchObservable, Is.Not.Null);
         }
         finally
         {
@@ -245,7 +247,7 @@ public class HttpServiceTests
     /// Tests that HttpService supports absolute expiration.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task HttpServiceShouldSupportAbsoluteExpiration()
     {
         // Arrange
@@ -267,7 +269,7 @@ public class HttpServiceTests
                 expiration);
 
             // Assert
-            Assert.NotNull(observable);
+            Assert.That(observable, Is.Not.Null);
         }
         finally
         {
