@@ -1423,14 +1423,38 @@ protected override void OnLaunched(LaunchActivatedEventArgs e)
 
 ### Benchmarks
 
-Performance comparison of different serializers (operations per second):
+Akavache V11.0 delivers **architectural improvements with comparable performance**. The new features (multiple serializers, cross-compatibility, modern patterns) provide significant value with minimal performance impact.
 
-| Operation | System.Text.Json | Newtonsoft.Json | BSON |
-|-----------|------------------|-----------------|------|
-| Serialize small object | 50,000 | 25,000 | 20,000 |
-| Deserialize small object | 45,000 | 22,000 | 18,000 |
-| Serialize large object | 5,000 | 2,500 | 2,000 |
-| Deserialize large object | 4,500 | 2,200 | 1,800 |
+#### Key Performance Metrics
+
+Based on comprehensive benchmarks across different operation types and data sizes:
+
+| Operation | Small (10 items) | Medium (100 items) | Large (1000 items) | Notes |
+|-----------|-------------------|--------------------|--------------------|-------|
+| **GetOrFetch** | 1.5ms | 15ms | 45ms | Sub-linear scaling, excellent for cache-miss scenarios |
+| **Bulk Operations** | 3.3ms | 4.5ms | 18ms | **10x+ faster** than individual operations |
+| **In-Memory** | 2.4ms | 19ms | 123ms | Ideal for session data and frequently accessed objects |
+| **Cache Types** | ~27ms | ~255ms | ~2,600ms | Consistent performance across UserAccount/LocalMachine/Secure |
+
+#### V11 vs V10 Performance Comparison
+
+- **Read Performance**: V11 shows **1.8-3.4% faster** performance for smaller datasets with more consistent results
+- **Write Performance**: Comparable sequential writes, with **significant bulk write advantages** in V11
+- **Memory Usage**: Generally equivalent or better memory efficiency with more predictable allocation patterns
+- **Serialization**: **SystemTextJson in V11 outperforms** legacy serialization methods
+
+#### Known Limitations
+
+- **Large Sequential Reads**: Up to **8.6% slower** than V10 in some scenarios involving very large datasets
+- **Linux/macOS Build**: Benchmark projects and compatibility tests require **Windows** due to platform-specific dependencies
+- **Package Dependencies**: More granular package structure may require careful workload management
+
+#### Serialization and Versioning Notes
+
+- **V11 + System.Text.Json**: Best performance for new applications
+- **V11 + Newtonsoft.Json**: Maximum compatibility with existing V10 data  
+- **Cross-Version Compatibility**: V11 can read V10 databases; subsequent writes are stored in V11 format
+- **BSON Format**: When using Newtonsoft.Bson, reads and writes follow the V10 format for maximum compatibility
 
 ### Performance Reports
 
@@ -1438,6 +1462,47 @@ For comprehensive performance analysis and V10 vs V11 comparison:
 
 - 📊 **[Performance Summary](src/PERFORMANCE_SUMMARY.md)** - Quick comparison and migration decision matrix
 - 📈 **[Comprehensive Benchmark Report](src/BENCHMARK_REPORT.md)** - Detailed performance analysis, architectural differences, and recommendations
+
+#### Reproducing the Benchmarks
+
+**Platform Requirements**: Benchmark reproduction requires **Windows hosts**. Linux/macOS are not supported due to Windows-specific projects and dependencies used in the benchmark harnesses.
+
+**Prerequisites**:
+- .NET 9.0 SDK 
+- Windows operating system
+- PowerShell 5.0+ (for automation script)
+
+**Test Applications**:
+- **[AkavacheV10Writer](src/src/AkavacheV10Writer/)** - Writes deterministic test data using Akavache V10 with Newtonsoft.Json serialization
+- **[AkavacheV11Reader](src/src/AkavacheV11Reader/)** - Reads the same data using Akavache V11 with System.Text.Json, demonstrating cross-version compatibility
+
+**Running Compatibility Tests**:
+```powershell
+# From the solution root directory
+.\src\RunCompatTest.ps1
+```
+
+This PowerShell script:
+1. Builds both test applications in Release configuration
+2. Runs AkavacheV10Writer to create a test database
+3. Runs AkavacheV11Reader to verify cross-compatibility
+4. Reports success/failure of the compatibility verification
+
+**Running Performance Benchmarks**:
+```bash
+# V11 benchmarks (current)
+cd src
+dotnet run -c Release -p Akavache.Benchmarks/Akavache.Benchmarks.csproj
+
+# V10 comparison benchmarks  
+dotnet run -c Release -p Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj
+```
+
+**Important Notes**:
+- Results vary by hardware configuration and system load
+- Benchmarks are indicative, not absolute measurements
+- Large benchmark runs can take 10-30 minutes to complete
+- Some benchmark projects use BenchmarkDotNet which requires Windows-specific optimizations
 
 ### Performance Tips
 
