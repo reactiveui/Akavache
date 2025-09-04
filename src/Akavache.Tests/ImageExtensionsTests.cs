@@ -262,7 +262,9 @@ public class ImageExtensionsTests
 
                 // Act & Assert - LoadImageBytes should throw when the key doesn't exist
                 // This could be either KeyNotFoundException or InvalidOperationException depending on implementation
-                Assert.ThrowsAsync<Exception>(async () => await cache.LoadImageBytes("nonexistent_key").FirstAsync());
+                Assert.ThrowsAsync(
+                    Is.InstanceOf<Exception>(),
+                    async () => await cache.LoadImageBytes("nonexistent_key").FirstAsync());
             }
             finally
             {

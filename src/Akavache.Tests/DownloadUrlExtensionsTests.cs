@@ -210,18 +210,15 @@ public class DownloadUrlExtensionsTests
         {
             // Act & Assert - Use a truly invalid URL that will definitely cause an exception
             // Using an invalid scheme or malformed URL that HttpClient will reject
-            var exception = Assert.ThrowsAsync<Exception>(async () => await cache.DownloadUrl("http://definitely-invalid-domain-that-does-not-exist-12345.invalid").FirstAsync());
-
-            // Verify it's a network-related exception or HTTP-related exception
-            Assert.That(
-                exception,
+            Assert.ThrowsAsync(
                 Is.TypeOf<HttpRequestException>()
                     .Or.TypeOf<SocketException>()
                     .Or.TypeOf<TaskCanceledException>()
                     .Or.TypeOf<TimeoutException>()
                     .Or.TypeOf<UriFormatException>()
                     .Or.TypeOf<ArgumentException>(),
-                $"Expected network-related exception, got {exception.GetType().Name}: {exception.Message}");
+                async () => await cache.DownloadUrl("http://definitely-invalid-domain-that-does-not-exist-12345.invalid").FirstAsync(),
+                "Unexpected exception");
         }
         finally
         {
@@ -256,28 +253,16 @@ public class DownloadUrlExtensionsTests
             }
 
             // Test empty/whitespace strings
-            var emptyUrlException = Assert.ThrowsAsync<Exception>(async () => await cache.DownloadUrl(string.Empty).FirstAsync());
-            var whitespaceUrlException = Assert.ThrowsAsync<Exception>(async () => await cache.DownloadUrl("   ").FirstAsync());
-
-            using (Assert.EnterMultipleScope())
-            {
-                // Accept various exception types for empty URL
-                // Accept various exception types for empty URL
-                Assert.That(
-                    emptyUrlException,
-                    Is.TypeOf<ArgumentException>()
-                        .Or.TypeOf<UriFormatException>()
-                        .Or.TypeOf<InvalidOperationException>(),
-                    $"Expected ArgumentException or UriFormatException for empty URL, got {emptyUrlException.GetType().Name}");
-
-                // Accept various exception types for whitespace URL
-                Assert.That(
-                    whitespaceUrlException,
-                    Is.TypeOf<ArgumentException>()
-                        .Or.TypeOf<UriFormatException>()
-                        .Or.TypeOf<InvalidOperationException>(),
-                    $"Expected ArgumentException or UriFormatException for whitespace URL, got {whitespaceUrlException.GetType().Name}");
-            }
+            var emptyUrlException = Assert.ThrowsAsync(
+                Is.TypeOf<ArgumentException>()
+                    .Or.TypeOf<UriFormatException>()
+                    .Or.TypeOf<InvalidOperationException>(),
+                async () => await cache.DownloadUrl(string.Empty).FirstAsync());
+            var whitespaceUrlException = Assert.ThrowsAsync(
+                Is.TypeOf<ArgumentException>()
+                    .Or.TypeOf<UriFormatException>()
+                    .Or.TypeOf<InvalidOperationException>(),
+                async () => await cache.DownloadUrl("   ").FirstAsync());
         }
         finally
         {

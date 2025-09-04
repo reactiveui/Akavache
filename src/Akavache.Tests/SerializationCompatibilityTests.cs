@@ -19,6 +19,15 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class SerializationCompatibilityTests
 {
+    // 1. Define the data source for the parameters
+    private static readonly ISerializer[] Serializers =
+    [
+        new SystemJsonSerializer(),
+        new SystemJsonBsonSerializer(),
+        new NewtonsoftSerializer(),
+        new NewtonsoftBsonSerializer()
+    ];
+
     /// <summary>
     /// Tests that each serializer can roundtrip its own data.
     /// </summary>
@@ -56,70 +65,54 @@ public class SerializationCompatibilityTests
     }
 
     /// <summary>
-    /// Tests cross-serializer compatibility.
+    /// Tests cross-serializer compatibility for all combinations.
     /// </summary>
+    /// <param name="writeSerializer">The writer serializer.</param>
+    /// <param name="readSerializer">The reader serializer.</param>
     [Test]
-    public void CrossSerializerCompatibilityShouldWork()
+    [Combinatorial]
+    public void CrossSerializerCompatibilityShouldWork(
+        [ValueSource(nameof(Serializers))] ISerializer writeSerializer,
+        [ValueSource(nameof(Serializers))] ISerializer readSerializer)
     {
+        ArgumentNullException.ThrowIfNull(writeSerializer);
+        ArgumentNullException.ThrowIfNull(readSerializer);
+
+        // Arrange
         var testObj = new TestObject
         {
             Name = "CrossTest",
             Value = 123,
-            Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) // Use precise datetime
+            Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
         };
 
-        ISerializer[] serializers =
-        [
-            new SystemJsonSerializer(),
-            new SystemJsonBsonSerializer(),
-            new NewtonsoftSerializer(),
-            new NewtonsoftBsonSerializer()
-        ];
-
-        // Test all combinations
-        foreach (var writeSerializer in serializers)
+        try
         {
+            // Act
             var serializedData = writeSerializer.Serialize(testObj);
+            var deserializedObj = readSerializer.Deserialize<TestObject>(serializedData);
 
-            foreach (var readSerializer in serializers)
+            // Assert
+            Assert.That(deserializedObj, Is.Not.Null);
+
+            using (Assert.EnterMultipleScope())
             {
-                try
-                {
-                    var deserializedObj = readSerializer.Deserialize<TestObject>(serializedData);
+                Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+                Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
 
-                    // Provide diagnostic information if null
-                    if (deserializedObj == null)
-                    {
-                        var dataPreview = Encoding.UTF8.GetString(serializedData);
-                        throw new InvalidOperationException(
-                            $"Deserialization returned null. Write: {writeSerializer.GetType().Name}, Read: {readSerializer.GetType().Name}. " +
-                            $"Data preview: {dataPreview.Substring(0, Math.Min(200, dataPreview.Length))}...");
-                    }
-
-                    using (Assert.EnterMultipleScope())
-                    {
-                        Assert.That(deserializedObj, Is.Not.Null);
-                        Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
-                        Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
-                    }
-
-                    // Allow for DateTime precision differences between serializers
-                    // BSON serializers may have different precision than JSON serializers
-                    var timeDifference = Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds);
-                    var expectedMessage = $"DateTime precision issue: expected {testObj.Date}, got {deserializedObj.Date} (diff: {timeDifference}s) " +
-                        $"when writing with {writeSerializer.GetType().Name} and reading with {readSerializer.GetType().Name}";
-                    Assert.That(
-                        timeDifference,
-                        Is.LessThan(60),
-                        expectedMessage);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(
-                        $"Cross-serializer compatibility failed: write with {writeSerializer.GetType().Name}, read with {readSerializer.GetType().Name}. Error: {ex.Message}",
-                        ex);
-                }
+                // Use a tolerance for DateTime comparisons, which is more readable
+                Assert.That(
+                    deserializedObj.Date.ToUniversalTime(),
+                    Is.EqualTo(testObj.Date.ToUniversalTime()).Within(TimeSpan.FromMinutes(1)),
+                    "DateTime precision should be within a 1-minute tolerance for cross-serializer compatibility.");
             }
+        }
+        catch (Exception ex)
+        {
+            // Re-throw with more context if any part of the process fails
+            throw new InvalidOperationException(
+                $"Compatibility failed: write with {writeSerializer.GetType().Name}, read with {readSerializer.GetType().Name}. Error: {ex.Message}",
+                ex);
         }
     }
 

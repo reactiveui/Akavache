@@ -80,16 +80,11 @@ public class AotCompatibilityTests
                 problemObject["self"] = problemObject; // Create circular reference
 
                 // Act & Assert - this should handle serialization gracefully
-                var exception = Assert.ThrowsAsync<Exception>(
-                    async () => await cache.InsertObject("problem", problemObject).FirstAsync());
-
-                // Verify it's a serialization-related exception
-                Assert.That(
-                    exception,
+                var exception = Assert.ThrowsAsync(
                     Is.TypeOf<InvalidOperationException>()
                       .Or.TypeOf<System.Text.Json.JsonException>()
                       .Or.TypeOf<NotSupportedException>(),
-                    $"Expected serialization exception, got {exception.GetType().Name}: {exception.Message}");
+                    async () => await cache.InsertObject("problem", problemObject).FirstAsync());
             }
             finally
             {
