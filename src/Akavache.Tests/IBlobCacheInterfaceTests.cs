@@ -647,7 +647,7 @@ public class IBlobCacheInterfaceTests
             await cache.Invalidate(emptyKeys).FirstAsync();
 
             // These operations should complete without error
-            Assert.That(true, Is.True);
+            Assert.Pass("All operations completed successfully");
         }
         finally
         {

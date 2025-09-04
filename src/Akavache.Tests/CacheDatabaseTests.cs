@@ -39,7 +39,7 @@ public class CacheDatabaseTests
         });
 
         // Wait for work to complete
-        Assert.That(resetEvent.Wait(5000, Is.True), "Scheduled work did not complete within timeout");
+        Assert.That(resetEvent.Wait(5000), Is.True, "Scheduled work did not complete within timeout");
         Assert.That(workExecuted, Is.True);
     }
 
@@ -99,7 +99,7 @@ public class CacheDatabaseTests
                 {
                     var serialized = serializer.Serialize(testCase);
                     Assert.That(serialized, Is.Not.Null);
-                    Assert.That(serialized.Length > 0, Is.True);
+                    Assert.That(serialized.Length, Is.GreaterThan(0));
 
                     // For simple types, test round-trip
                     if (testCase is string || testCase is int || testCase is double || testCase is bool)

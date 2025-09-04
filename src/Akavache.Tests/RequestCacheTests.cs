@@ -346,7 +346,7 @@ public class RequestCacheTests
 
         // Assert - Test passes if no OutOfMemoryException is thrown
         // This is mainly a regression test to ensure the cache doesn't leak memory
-        Assert.That(true, Is.True);
+        Assert.Pass("Memory stress test completed without OutOfMemoryException");
     }
 
     /// <summary>

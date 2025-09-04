@@ -116,7 +116,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.DownloadUrl("https://httpbin.org/html").Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                     // Assert
-                    Assert.That(bytes.Length > 0, Is.True);
+                    Assert.That(bytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -177,7 +177,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.DownloadUrl(uri).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                     // Assert
-                    Assert.That(bytes.Length > 0, Is.True);
+                    Assert.That(bytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -239,7 +239,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.Get(key);
 
                     // Assert
-                    Assert.That(bytes.Length > 0, Is.True);
+                    Assert.That(bytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -301,7 +301,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.Get(key);
 
                     // Assert
-                    Assert.That(bytes.Length > 0, Is.True);
+                    Assert.That(bytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {

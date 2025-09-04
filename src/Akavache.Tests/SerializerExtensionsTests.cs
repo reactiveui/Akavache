@@ -696,7 +696,7 @@ public class SerializerExtensionsTests
                 await cache.InsertObjects(emptyDict).FirstAsync();
 
                 // Assert - test passes if no exception is thrown
-                Assert.That(true, Is.True);
+                Assert.Pass("InsertObjects with empty dictionary completed successfully");
             }
             finally
             {

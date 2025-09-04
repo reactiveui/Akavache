@@ -48,7 +48,7 @@ public class SerializationCompatibilityTests
         Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
 
         // Allow for some DateTime precision loss
-        Assert.That(Math.Abs((testObj.Date - deserializedObj.Date, Is.True).TotalSeconds) < 1);
+        Assert.That(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds), Is.LessThan(1));
     }
 
     /// <summary>
@@ -436,7 +436,7 @@ public class SerializationCompatibilityTests
                 var cache2 = new SqliteBlobCache(dbPath, serializer);
 
                 // Check if file exists
-                Assert.That(File.Exists(dbPath, Is.True), "Database file does not exist after cache1 disposal");
+                Assert.That(File.Exists(dbPath), Is.True, "Database file does not exist after cache1 disposal");
 
                 // Check keys
                 var allKeys = await cache2.GetAllKeys().ToList().FirstAsync();
