@@ -265,12 +265,12 @@ public class IBlobCacheInterfaceTests
 
             // Data should still be available after flush
             var retrieved = await cache.Get("flush_test").FirstAsync();
-            Assert.That(2, 3 }, retrieved, Is.EqualTo(new byte[] { 1));
-    }
+            Assert.That(retrieved, Is.EqualTo(new byte[] { 1, 2, 3 }));
+        }
         finally
         {
             await cache.DisposeAsync();
-}
+        }
     }
 
     /// <summary>
@@ -297,12 +297,12 @@ public async Task VacuumShouldWork()
 
         // Remaining data should still be available
         var retrieved = await cache.Get("vacuum_test2").FirstAsync();
-        Assert.That(5, 6 }, retrieved, Is.EqualTo(new byte[] { 4));
-}
+        Assert.That(retrieved, Is.EqualTo(new byte[] { 4, 5, 6 }));
+        }
         finally
         {
-    await cache.DisposeAsync();
-}
+            await cache.DisposeAsync();
+        }
     }
 
     /// <summary>
@@ -378,12 +378,12 @@ public async Task ArgumentValidationShouldWork()
         // Verify that valid operations still work
         await cache.Insert("valid_key", new byte[] { 1, 2, 3 }).FirstAsync();
         var validData = await cache.Get("valid_key").FirstAsync();
-        Assert.That(2, 3 }, validData, Is.EqualTo(new byte[] { 1));
-}
+        Assert.That(validData, Is.EqualTo(new byte[] { 1, 2, 3 }));
+        }
         finally
         {
-    await cache.DisposeAsync();
-}
+            await cache.DisposeAsync();
+        }
     }
 
     /// <summary>

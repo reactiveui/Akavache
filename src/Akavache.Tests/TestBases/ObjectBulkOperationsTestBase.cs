@@ -80,7 +80,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
 
             var allData = await fixture.GetObjects<Tuple<string, int>>(keys).ToList().FirstAsync();
 
@@ -115,7 +115,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             var allData = await fixture.GetObjects<Tuple<string, int>>(keys).ToList().FirstAsync();
             Assert.That(allData.Count, Is.EqualTo(0));
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(0)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(0));
         }
     }
 
@@ -143,7 +143,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             await fixture.InsertObjects(keys.ToDictionary(k => k, v => data)).FirstAsync();
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
 
             var allData = await fixture.GetObjects<Tuple<string, int>>(keys).ToList().FirstAsync();
 
@@ -176,11 +176,11 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.InsertObject(v, data).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
 
             await fixture.InvalidateObjects<Tuple<string, int>>(keys).FirstAsync();
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(0)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(0));
         }
     }
 
@@ -211,7 +211,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             await Task.WhenAll(keys.Select(async key => await fixture.InsertObject(key, tupleData).FirstAsync()));
             await Task.WhenAll(keys.Select(async key => await fixture.InsertObject($"str_{key}", stringData).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(6)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(6));
 
             // Invalidate only the tuple objects
             await fixture.InvalidateObjects<Tuple<string, int>>(keys).FirstAsync();
