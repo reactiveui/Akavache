@@ -183,11 +183,11 @@ public class EncryptedSettingsCacheTests
         GetBuilder().WithAkavache<SystemJsonSerializer>(
             testName,
             async builder =>
-        {
-            builder.WithEncryptedSqliteProvider();
-            await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
-        },
+            {
+                builder.WithEncryptedSqliteProvider();
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
+                builder.WithSecureSettingsStore<ViewSettings>("test1234", (settings) => viewSettings = settings, testName);
+            },
             async instance =>
             {
                 // Initial delay to ensure settings are created
@@ -253,11 +253,11 @@ public class EncryptedSettingsCacheTests
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
             async builder =>
-        {
-            builder.WithEncryptedSqliteProvider();
-            await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName);
-        },
+            {
+                builder.WithEncryptedSqliteProvider();
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
+                builder.WithSecureSettingsStore<ViewSettings>("test_password", (settings) => originalSettings = settings, testName);
+            },
             async instance =>
             {
                 try
@@ -322,12 +322,12 @@ public class EncryptedSettingsCacheTests
         GetBuilder().WithAkavache<NewtonsoftSerializer>(
             testName,
             async builder =>
-        {
-            // Create settings with one password
-            builder.WithEncryptedSqliteProvider();
-            await builder.DeleteSettingsStore<ViewSettings>(testName);
-            builder.WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName);
-        },
+            {
+                // Create settings with one password
+                builder.WithEncryptedSqliteProvider();
+                await builder.DeleteSettingsStore<ViewSettings>(testName);
+                builder.WithSecureSettingsStore<ViewSettings>("correct_password", (settings) => originalSettings = settings, testName);
+            },
             async instance =>
             {
                 try
@@ -363,7 +363,7 @@ public class EncryptedSettingsCacheTests
                     }
 
                     // Assert that wrong password didn't give access to the secret data
-                    Assert.False(wrongPasswordWorked, "Wrong password should not provide access to encrypted data");
+                    Assert.That(wrongPasswordWorked, Is.False, "Wrong password should not provide access to encrypted data");
                 }
                 finally
                 {
