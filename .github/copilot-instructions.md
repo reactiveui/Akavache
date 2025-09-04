@@ -82,7 +82,7 @@ Always reference these instructions first and fallback to search or bash command
 - **Analyzer Configuration**: 
   - StyleCop settings in `src/stylecop.json`
   - EditorConfig rules in `.editorconfig` (root level)
-  - Analyzer packages in `src/Directory.build.props`
+  - Analyzer packages in `src/Directory.Build.props`
 
 ### Benchmarking
 - Performance testing available via BenchmarkDotNet:
