@@ -100,13 +100,13 @@ internal static class TestHelper
         {
             s = getViewSettings();
 
-            if (s == null)
+            if (s != null)
             {
-                Assert.Fail("Must have a valid setting");
-                return false;
+                return await action(s).ConfigureAwait(false);
             }
 
-            return await action(s).ConfigureAwait(false);
+            Assert.Fail("Must have a valid setting");
+            return false;
         }
         catch (ObjectDisposedException)
         {
@@ -162,18 +162,20 @@ internal static class TestHelper
     }
 
     /// <summary>
-    /// True if the exception message looks like SQLCipher/wrong-key open:
-    /// "file is not a database" or "file is encrypted or is not a database".
-    /// </summary>
-    public static bool IsSqliteNotADatabaseMessage(Exception ex) =>
-        ex.Message?.IndexOf("not a database", StringComparison.OrdinalIgnoreCase) >= 0
-        || ex.Message?.IndexOf("file is encrypted", StringComparison.OrdinalIgnoreCase) >= 0;
-
-    /// <summary>
     /// Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.
     /// </summary>
     /// <param name="ex">The exception to inspect.</param>
     /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
     public static bool IsDisposedMessage(this InvalidOperationException ex) =>
-        ex.Message.IndexOf("disposed", StringComparison.OrdinalIgnoreCase) >= 0;
+        ex.Message.Contains("disposed", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// True if the exception message looks like SQLCipher/wrong-key open:
+    /// "file is not a database" or "file is encrypted or is not a database".
+    /// </summary>
+    /// <param name="ex">The exception to inspect.</param>
+    /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
+    private static bool IsSqliteNotADatabaseMessage(Exception ex) =>
+        ex.Message.Contains("not a database", StringComparison.OrdinalIgnoreCase)
+        || ex.Message.Contains("file is encrypted", StringComparison.OrdinalIgnoreCase);
 }

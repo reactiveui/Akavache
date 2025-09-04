@@ -366,7 +366,7 @@ namespace Akavache.EncryptedSettings.Tests
                             .WithEncryptedSqliteProvider()
                             .WithSettingsCachePath(path);
                     },
-                    instance => { akavacheInstance = instance; })
+                    instance => akavacheInstance = instance)
                 .Build();
 
             await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
@@ -415,7 +415,7 @@ namespace Akavache.EncryptedSettings.Tests
                                     s.BoolTest = false;
 
                                     var ok = TestHelper.TryRead(() =>
-                                        s.StringTest is not null && s.IntTest == 999 && !s.BoolTest);
+                                        s.StringTest is not null && s is { IntTest: 999, BoolTest: false });
                                     await Task.Yield();
                                     return ok;
                                 }).ConfigureAwait(false);
