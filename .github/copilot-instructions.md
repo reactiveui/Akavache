@@ -56,6 +56,13 @@ Always reference these instructions first and fallback to search or bash command
 
 ## Validation and Quality Assurance
 
+### Code Style and Analysis Enforcement
+- **EditorConfig Compliance**: Repository uses comprehensive `.editorconfig` with 500+ rules for C# formatting, naming conventions, and code analysis
+- **StyleCop Analyzers**: Enforces consistent C# code style with `stylecop.analyzers` (v1.2.0-beta.556)
+- **Roslynator Analyzers**: Additional code quality rules with `Roslynator.Analyzers` (v4.14.0)
+- **Analysis Level**: Set to `latest` with enhanced .NET analyzers enabled
+- **CRITICAL**: All code must comply with **ReactiveUI contribution guidelines**: https://www.reactiveui.net/contribute/index.html
+
 ### Code Formatting (Fast - Always Run)
 - **ALWAYS** run formatting before committing:
   ```bash
@@ -64,6 +71,18 @@ Always reference these instructions first and fallback to search or bash command
   dotnet format style --verify-no-changes
   ```
   Time: **2-5 seconds per command**.
+
+### Code Analysis Validation
+- **Run analyzers** to check StyleCop and code quality compliance:
+  ```bash
+  cd src
+  dotnet build --configuration Release --verbosity normal
+  ```
+  This runs all analyzers (StyleCop SA*, Roslynator RCS*, .NET CA*) and treats warnings as errors.
+- **Analyzer Configuration**: 
+  - StyleCop settings in `src/stylecop.json`
+  - EditorConfig rules in `.editorconfig` (root level)
+  - Analyzer packages in `src/Directory.build.props`
 
 ### Benchmarking
 - Performance testing available via BenchmarkDotNet:
@@ -115,10 +134,12 @@ Always reference these instructions first and fallback to search or bash command
 3. **Test on Windows** for full validation when possible.
 
 ### Adding New Features
-1. Check `CONTRIBUTING.md` for coding standards and guidelines
-2. **Add unit tests** - all features require test coverage
-3. **Update documentation** - especially for public APIs
-4. **Run benchmarks** if performance-related changes
+1. **Follow coding standards** - see ReactiveUI guidelines: https://www.reactiveui.net/contribute/index.html
+2. **Ensure StyleCop compliance** - all code must pass StyleCop analyzers (SA* rules)
+3. **Run code analysis** - `dotnet build` must complete without analyzer warnings
+4. **Add unit tests** - all features require test coverage
+5. **Update documentation** - especially for public APIs with XML doc comments
+6. **Run benchmarks** if performance-related changes
 
 ### Working with Samples
 - **WPF Sample**: Windows only - demonstrates desktop patterns
@@ -187,6 +208,9 @@ Always reference these instructions first and fallback to search or bash command
 
 ### Quick Fixes
 - **Format issues**: Run `dotnet format whitespace` and `dotnet format style`
+- **StyleCop violations**: Check `.editorconfig` rules and `src/stylecop.json` configuration
+- **Analyzer warnings**: Build with `--verbosity normal` to see detailed analyzer messages
+- **Missing XML documentation**: All public APIs require XML doc comments per StyleCop rules
 - **Package restore issues**: Clear NuGet cache with `dotnet nuget locals all --clear`
 - **Build configuration errors**: Use single project builds with explicit targeting
 
