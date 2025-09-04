@@ -3,5 +3,5 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-[assembly: Parallelizable(ParallelScope.Fixtures)]
-[assembly: LevelOfParallelism(4)]
+[assembly: Parallelizable(ParallelScope.All)]
+[assembly: LevelOfParallelism(1)]
