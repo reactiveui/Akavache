@@ -222,6 +222,21 @@ Always reference these instructions first and fallback to search or bash command
 
 ## Resources
 
+### Akavache
+- **Main Repository**: https://github.com/reactiveui/Akavache
+- **Repository README**: https://github.com/reactiveui/Akavache#readme
+- **Issues & Bug Reports**: https://github.com/reactiveui/Akavache/issues
+- **Contributing Guidelines**: https://github.com/reactiveui/Akavache/blob/main/CONTRIBUTING.md
+- **Code of Conduct**: https://github.com/reactiveui/Akavache/blob/main/CODE_OF_CONDUCT.md
+- **NuGet Packages**: https://www.nuget.org/packages?q=akavache
+- **Main Package (Sqlite3)**: https://www.nuget.org/packages/akavache.sqlite3
+- **Code Coverage**: https://codecov.io/gh/reactiveui/akavache
+- **GitHub Actions (CI/CD)**: https://github.com/reactiveui/Akavache/actions
+- **Sample Applications**: See `src/Samples/` directory with WPF, MAUI examples
+- **Performance Reports**: `src/PERFORMANCE_SUMMARY.md` and `src/BENCHMARK_REPORT.md`
+- **Community Support**: [StackOverflow - Akavache tag](https://stackoverflow.com/questions/tagged/Akavache)
+- **Incubator Project**: [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase)
+
 ### Governance & Contributing
 - **Contribution Hub**: https://www.reactiveui.net/contribute/index.html
 - **ReactiveUI Repository README**: https://github.com/reactiveui/ReactiveUI#readme
