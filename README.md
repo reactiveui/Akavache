@@ -1423,7 +1423,7 @@ protected override void OnLaunched(LaunchActivatedEventArgs e)
 
 ### Benchmarks
 
-Akavache V11.0 delivers **architectural improvements with comparable performance** when using the recommended System.Text.Json serializer. **V11 with System.Text.Json outperforms V10 across all test scenarios**, while V11 with Newtonsoft.Json may be slower than V10 for very large datasets. The new features (multiple serializers, cross-compatibility, modern patterns) provide significant value with optimal performance when using the recommended serializer.
+Akavache V11.0 delivers **architectural improvements with optimal performance** when using the recommended System.Text.Json serializer. **V11 with System.Text.Json outperforms V10 across all test scenarios**, while V11 with the legacy Newtonsoft.Json may be slower than V10 for very large datasets. The new features (multiple serializers, cross-compatibility, modern patterns) provide significant value with excellent performance when using the recommended serializer.
 
 #### Key Performance Metrics
 
@@ -1450,22 +1450,22 @@ Based on comprehensive benchmarks across different operation types and data size
 - ✅ **Faster than V10** across all test scenarios
 - ✅ **Modern .NET optimization** with excellent memory efficiency
 
-**Newtonsoft.Json in V11**:
+**Newtonsoft.Json in V11 (Legacy Compatibility)**:
 - ⚠️ **Slower than V10 with large databases** - V10 Newtonsoft performs better for huge datasets
 - ✅ **Faster than V10** for smaller to medium datasets
 - ✅ **Compatible with existing V10 data** structures
 
 #### Known Limitations
 
-- **Large Databases with Newtonsoft.Json**: V10 outperforms V11 when using Newtonsoft serialization with very large datasets
-- **Sequential Read Performance**: Up to **8.6% slower** than V10 specifically when using Newtonsoft.Json serializer
+- **Large Databases with Newtonsoft.Json**: V10 outperforms V11 when using legacy Newtonsoft serialization with very large datasets
+- **Sequential Read Performance**: Up to **8.6% slower** than V10 specifically when using the legacy Newtonsoft.Json serializer (**System.Text.Json does not have this limitation and performs better than V10**)
 - **Linux/macOS Build**: Benchmark projects and compatibility tests require **Windows** due to platform-specific dependencies
 - **Package Dependencies**: More granular package structure may require careful workload management
 
 #### Serialization and Versioning Notes
 
-- **V11 + System.Text.Json**: **Best performance choice** - faster than V10 across all scenarios
-- **V11 + Newtonsoft.Json**: Maximum compatibility with existing V10 data, but slower for large datasets
+- **V11 + System.Text.Json**: **Best performance choice** - faster than V10 across all scenarios without any performance limitations
+- **V11 + Newtonsoft.Json (Legacy)**: Maximum compatibility with existing V10 data, but slower for large datasets compared to V10
 - **Cross-Version Compatibility**: V11 can read V10 databases; subsequent writes are stored in V11 format
 - **BSON Format**: When using Newtonsoft.Bson, reads and writes follow the V10 format for maximum compatibility and performance parity
 
