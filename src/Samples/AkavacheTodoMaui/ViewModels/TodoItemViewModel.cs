@@ -278,7 +278,7 @@ public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         };
 
         // Navigate to the edit page
-        Application.Current?.MainPage?.Navigation.PushAsync(editPage);
+        Application.Current?.Windows[0].Page?.Navigation.PushAsync(editPage);
         return Unit.Default;
     }
 
