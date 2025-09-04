@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.8" />
-    <PackageReference Include="Splat.Builder" Version="16.1.1" />
-    <PackageReference Include="System.Reactive" Version="6.0.2" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+    <PackageReference Include="Splat.Builder" />
+    <PackageReference Include="System.Reactive" />
+    <PackageReference Include="sqlite-net-pcl" />
   </ItemGroup>
 </Project>
