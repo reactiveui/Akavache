@@ -19,10 +19,12 @@ public partial class App : Application
     /// <summary>
     /// Initializes a new instance of the <see cref="App"/> class.
     /// </summary>
+#pragma warning disable IL3050 // AOT reflection warnings are expected for ReactiveUI in sample applications
     public App()
     {
         InitializeComponent();
     }
+#pragma warning restore IL3050
 
     /// <summary>
     /// Creates the main application window.
