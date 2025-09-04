@@ -27,7 +27,7 @@ Akavache V11.1 introduces a new **Builder Pattern** for initialization, improved
 - 🔄 **Multiple Serializer Support**: Choose between System.Text.Json, Newtonsoft.Json, each with a BSON variant
 - 🔗 **Cross-Serializer Compatibility**: Read data written by different serializers
 - 🧩 **Modular Design**: Install only the packages you need
-- 📱 **Enhanced .NET MAUI Support**: First-class support for modern cross-platform development
+- 📱 **Enhanced .NET MAUI Support**: First-class support for .NET 9 cross-platform development
 - 🔒 **Improved Security**: Better encrypted cache implementation
 
 ### Development History
@@ -1316,6 +1316,14 @@ else
 
 ### .NET MAUI
 
+> **Note:** MAUI targets in this repository are documented for **.NET 9** only. For older TFMs, please use a previous release/tag or consult historical docs. See [MAUI .NET 9 Support Documentation](https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/app-lifecycle?view=net-maui-9.0) for official guidance.
+
+**Supported Target Frameworks:**
+- `net9.0-android` - Android applications  
+- `net9.0-ios` - iOS applications
+- `net9.0-maccatalyst` - Mac Catalyst applications
+- `net9.0-windows` - Windows applications (WinUI)
+
 ```csharp
 // In MauiProgram.cs
 public static class MauiProgram
@@ -1336,6 +1344,18 @@ public static class MauiProgram
         return builder.Build();
     }
 }
+```
+
+**Example Project Configuration:**
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+    <UseMaui>true</UseMaui>
+    <!-- Other MAUI configuration -->
+  </PropertyGroup>
+</Project>
 ```
 
 ### WPF Applications

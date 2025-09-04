@@ -87,6 +87,8 @@ ViewModels/
 - **Mobile-optimized** touch interactions and layouts
 - **Offline-first** data synchronization patterns
 
+> **Note:** The MAUI sample requires **.NET 9** and targets `net9.0-android`, `net9.0-ios`, `net9.0-maccatalyst`, and `net9.0-windows` only.
+
 #### Blazor Application Features
 - **Server-side rendering** with real-time updates
 - **Bootstrap styling** with responsive design
@@ -119,6 +121,12 @@ dotnet run -f net9.0-windows10.0.19041.0
 
 # For Android (requires emulator or device)
 dotnet build -f net9.0-android
+
+# For iOS (requires macOS and Xcode)
+dotnet build -f net9.0-ios
+
+# For Mac Catalyst (requires macOS)
+dotnet build -f net9.0-maccatalyst
 ```
 
 #### Blazor Application
