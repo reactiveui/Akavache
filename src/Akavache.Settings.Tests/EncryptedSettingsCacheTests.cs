@@ -3,722 +3,719 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+
 using Akavache.EncryptedSqlite3;
 using Akavache.NewtonsoftJson;
 using Akavache.Settings;
 using Akavache.Settings.Tests;
 using Akavache.SystemTextJson;
+
+using NUnit.Framework;
+
 using Splat.Builder;
 
-namespace Akavache.EncryptedSettings.Tests;
-
-/// <summary>
-/// This test class contains unit tests for validating the behavior of the
-/// EncryptedSettingsCache functionality in the Akavache framework.
-/// It ensures settings are properly encrypted, persisted, updated,
-/// and accessed using different serializers or configurations.
-/// </summary>
-[TestFixture]
-[Category("Akavache")]
-[Parallelizable(ParallelScope.None)]
-public class EncryptedSettingsCacheTests
+namespace Akavache.EncryptedSettings.Tests
 {
-    private const string DefaultPassword = "test1234";
-    private AppBuilder _appBuilder = null!;
-    private string _cacheRoot = null!;
-
     /// <summary>
-    /// Sets up the necessary environment and variables required for the tests
-    /// in the <see cref="EncryptedSettingsCacheTests"/> class. This method is
-    /// executed before each test to ensure consistent test state. It initializes
-    /// the application builder, resets any residual state from previous tests,
-    /// and creates a secure, isolated temporary directory for settings caching.
+    /// Tests for the encrypted settings cache, isolated per test to avoid static state leakage.
+    /// Uses eventually-consistent polling and treats transient disposal as retryable.
     /// </summary>
-    [SetUp]
-    public void Setup()
+    [TestFixture]
+    [Category("Akavache")]
+    [Parallelizable(ParallelScope.None)]
+    public class EncryptedSettingsCacheTests
     {
-        AppBuilder.ResetBuilderStateForTests();
-        _appBuilder = AppBuilder.CreateSplatBuilder();
+        /// <summary>
+        /// Default password used by a number of tests.
+        /// </summary>
+        private const string DefaultPassword = "test1234";
 
-        _cacheRoot = Path.Combine(
-            Path.GetTempPath(),
-            "AkavacheSettingsTests",
-            Guid.NewGuid().ToString("N"),
-            "ApplicationSettings");
-        Directory.CreateDirectory(_cacheRoot);
-    }
+        /// <summary>
+        /// The per-test <see cref="AppBuilder"/> instance.
+        /// </summary>
+        private AppBuilder _appBuilder = null!;
 
-    /// <summary>
-    /// Cleans up resources and resets the test environment after each test
-    /// in the <see cref="EncryptedSettingsCacheTests"/> class. This method is
-    /// executed after every test to ensure no residual state or temporary files
-    /// interfere with subsequent tests. It removes the temporary directory used
-    /// for caching settings, if it exists, and resets the application builder state.
-    /// </summary>
-    [TearDown]
-    public void Teardown()
-    {
-        try
+        /// <summary>
+        /// The unique per-test cache root path (directory).
+        /// </summary>
+        private string _cacheRoot = null!;
+
+        /// <summary>
+        /// One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.
+        /// </summary>
+        [SetUp]
+        public void Setup()
         {
-            if (Directory.Exists(_cacheRoot))
+            AppBuilder.ResetBuilderStateForTests();
+            _appBuilder = AppBuilder.CreateSplatBuilder();
+
+            _cacheRoot = Path.Combine(
+                Path.GetTempPath(),
+                "AkavacheEncryptedSettingsTests",
+                Guid.NewGuid().ToString("N"),
+                "ApplicationSettings");
+
+            Directory.CreateDirectory(_cacheRoot);
+        }
+
+        /// <summary>
+        /// One-time teardown after each test. Best-effort cleanup and static reset.
+        /// </summary>
+        [TearDown]
+        public void Teardown()
+        {
+            try
             {
-                Directory.Delete(_cacheRoot, recursive: true);
+                if (Directory.Exists(_cacheRoot))
+                {
+                    Directory.Delete(_cacheRoot, recursive: true);
+                }
             }
+            catch
+            {
+                // Best-effort: don't fail tests on IO cleanup.
+            }
+
+            AppBuilder.ResetBuilderStateForTests();
         }
-        catch
-        { /* best-effort */
-        }
 
-        AppBuilder.ResetBuilderStateForTests();
-    }
-
-    /// <summary>
-    /// Verifies the correct creation and insertion of settings using the
-    /// <see cref="NewtonsoftSerializer"/> for secure settings storage. This test ensures
-    /// that the settings store is configured properly, data is stored accurately, and the
-    /// settings are retrievable with the expected values.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous test operation.</returns>
-    [Test]
-    public Task TestCreateAndInsertNewtonsoft()
-    {
-        var testName = NewName("newtonsoft_test");
-        ViewSettings? viewSettings = null;
-
-        RunWithAkavache<NewtonsoftSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    await EventuallyAsync(() => viewSettings is not null);
-
-                    await EventuallyAsync(() =>
-                        viewSettings is not null &&
-                        viewSettings.BoolTest &&
-                        viewSettings.ShortTest == 16 &&
-                        viewSettings.IntTest == 1 &&
-                        viewSettings.LongTest == 123456L &&
-                        viewSettings.StringTest == "TestString" &&
-                        Math.Abs(viewSettings.FloatTest - 2.2f) < 0.0001f &&
-                        Math.Abs(viewSettings.DoubleTest - 23.8d) < 0.0001d &&
-                        viewSettings.EnumTest == EnumTestValue.Option1);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync();
-                        }
-
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
-                    }
-                    catch
-                    {
-                        /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Tests the functionality of updating and retrieving settings using the
-    /// Newtonsoft JSON serializer within the encrypted settings cache. This test
-    /// verifies that settings are properly updated and persisted, ensuring changes
-    /// can be consistently retrieved and observed. Resources are cleaned up after
-    /// execution to maintain isolation between tests.
-    /// </summary>
-    /// <returns>
-    /// A task that represents the asynchronous operations involved in this test,
-    /// including configuration, update, validation, and cleanup processes.
-    /// </returns>
-    [Test]
-    public Task TestUpdateAndReadNewtonsoft()
-    {
-        var testName = NewName("newtonsoft_update_test");
-        ViewSettings? viewSettings = null;
-
-        RunWithAkavache<NewtonsoftSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    await EventuallyAsync(() => viewSettings is not null);
-                    viewSettings!.EnumTest = EnumTestValue.Option2;
-
-                    await EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync();
-                        }
-
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
-                    }
-                    catch
-                    { /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Validates the creation and insertion of data into the settings store
-    /// using the System.Text.Json serializer. This test ensures that the
-    /// settings store is properly initialized, values are accurately inserted,
-    /// and stored data can be retrieved and matched against expected results.
-    /// It verifies various data types such as boolean, numeric, string, and enums.
-    /// </summary>
-    /// <returns>
-    /// A task representing the asynchronous operation of creating, inserting,
-    /// and validating the settings store functionality with System.Text.Json.
-    /// </returns>
-    [Test]
-    public Task TestCreateAndInsertSystemTextJson()
-    {
-        var testName = NewName("systemjson_test");
-        ViewSettings? viewSettings = null;
-
-        RunWithAkavache<SystemJsonSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    await EventuallyAsync(() => viewSettings is not null);
-
-                    await EventuallyAsync(() =>
-                        viewSettings is not null &&
-                        viewSettings.BoolTest &&
-                        viewSettings.ShortTest == 16 &&
-                        viewSettings.IntTest == 1 &&
-                        viewSettings.LongTest == 123456L &&
-                        viewSettings.StringTest == "TestString" &&
-                        Math.Abs(viewSettings.FloatTest - 2.2f) < 0.0001f &&
-                        Math.Abs(viewSettings.DoubleTest - 23.8d) < 0.0001d &&
-                        viewSettings.EnumTest == EnumTestValue.Option1);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync();
-                        }
-
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
-                    }
-                    catch
-                    {
-                        /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Verifies the correct behavior of the EncryptedSettingsCache when using
-    /// the <see cref="SystemJsonSerializer"/> to update and retrieve encrypted settings.
-    /// This test ensures that settings can be updated and read back accurately, validating
-    /// proper encryption and deserialization mechanisms. Additionally, it confirms cleanup
-    /// and disposal processes, maintaining test isolation and preventing persistence issues.
-    /// </summary>
-    /// <returns>
-    /// A task that represents the asynchronous operation of the test. Completes successfully
-    /// if the settings are correctly updated and retrieved; otherwise, fails if any issues
-    /// with encryption, deserialization, or cleanup are encountered.
-    /// </returns>
-    [Test]
-    public Task TestUpdateAndReadSystemTextJson()
-    {
-        var testName = NewName("systemjson_update_test");
-        ViewSettings? viewSettings = null;
-
-        RunWithAkavache<SystemJsonSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    await EventuallyAsync(() => viewSettings is not null);
-                    viewSettings!.EnumTest = EnumTestValue.Option2;
-
-                    await EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync();
-                        }
-
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
-                    }
-                    catch
-                    { /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Validates the functionality to override the settings cache path in the
-    /// EncryptedSettingsCache using the Akavache framework.
-    /// This test ensures that the custom cache path provided is correctly configured
-    /// and accessible within the created <see cref="IAkavacheInstance"/>.
-    /// </summary>
-    /// <returns>
-    /// A task that represents the asynchronous operation of the test. Ensures the
-    /// assertion of proper initialization and verification of the cache path.
-    /// </returns>
-    [Test]
-    public async Task TestOverrideSettingsCachePathAsync()
-    {
-        var path = _cacheRoot; // already unique
-        IAkavacheInstance? akavacheInstance = null;
-
-        _appBuilder
-            .WithAkavache<SystemJsonSerializer>(
-                null,
-                builder =>
-                {
-                    builder
-                        .WithEncryptedSqliteProvider()
-                        .WithSettingsCachePath(path);
-                },
-                instance => akavacheInstance = instance)
-            .Build();
-
-        await EventuallyAsync(() => AppBuilder.HasBeenBuilt);
-
-        using (Assert.EnterMultipleScope())
+        /// <summary>
+        /// Verifies that a secure settings store can be created and initial values materialize (Newtonsoft).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(15000)]
+        public async Task TestCreateAndInsertNewtonsoftAsync()
         {
-            Assert.That(akavacheInstance, Is.Not.Null);
-            Assert.That(akavacheInstance!.SettingsCachePath, Is.EqualTo(path));
-        }
-    }
+            var testName = NewName("newtonsoft_test");
+            ViewSettings? viewSettings = null;
 
-    /// <summary>
-    /// Tests the persistence behavior of encrypted settings when using the
-    /// EncryptedSettingsCache with a specified serializer. This test ensures
-    /// that encrypted settings can be created, modified, flushed, and subsequently
-    /// reloaded while retaining all changes. Validates proper behavior for
-    /// encryption, serialization, and storage interaction.
-    /// </summary>
-    /// <returns>
-    /// A task that represents the asynchronous execution of this test,
-    /// validating that encrypted settings persist correctly across operations.
-    /// </returns>
-    [Test]
-    public Task TestEncryptedSettingsPersistence()
-    {
-        var testName = NewName("persistence_test");
-        ViewSettings? originalSettings = null;
-
-        RunWithAkavache<NewtonsoftSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSecureSettingsStore<ViewSettings>("test_password", s => originalSettings = s, testName);
-            },
-            async instance =>
-            {
-                try
+            RunWithAkavache<NewtonsoftSerializer>(
+                testName,
+                async builder =>
                 {
-                    await EventuallyAsync(() => originalSettings is not null);
-
-                    originalSettings!.StringTest = "Modified String";
-                    originalSettings.IntTest = 999;
-                    originalSettings.BoolTest = false;
-
-                    // Some providers flush on dispose; rely on eventually reopen.
-                    await originalSettings.DisposeAsync();
-
-                    await EventuallyAsync(async () =>
-                    {
-                        var s = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                        var ok = s is { IntTest: >= 0, StringTest: not null };
-                        if (s is not null)
-                        {
-                            await s.DisposeAsync();
-                        }
-
-                        return ok;
-                    });
-                }
-                finally
+                    await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                    builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
+                },
+                async instance =>
                 {
                     try
                     {
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
+                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+
+                        // Read once after the store stabilizes instead of re-reading repeatedly.
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.BoolTest == true)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.ShortTest == (short)16)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.IntTest == 1)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.LongTest == 123456L)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.StringTest == "TestString")).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => Math.Abs(viewSettings!.FloatTest - 2.2f) < 0.0001f)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => Math.Abs(viewSettings!.DoubleTest - 23.8d) < 0.0001d)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option1)).ConfigureAwait(false);
                     }
-                    catch
-                    {
-                        /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Tests that attempting to access encrypted settings with an incorrect password
-    /// does not allow access to the stored data. This method sets up a secure settings
-    /// store with a correct password, stores sensitive data, and validates that a wrong
-    /// password prevents access to the data. It ensures encryption security and proper
-    /// disposal of resources after the test execution.
-    /// </summary>
-    /// <returns>
-    /// A task that represents the asynchronous operation of the test, validating
-    /// the behavior of encrypted settings when accessed with the wrong password.
-    /// </returns>
-    [Test]
-    public Task TestEncryptedSettingsWrongPassword()
-    {
-        var testName = NewName("wrong_password_test");
-        ViewSettings? originalSettings = null;
-
-        RunWithAkavache<NewtonsoftSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<ViewSettings>(testName);
-                builder.WithSecureSettingsStore<ViewSettings>("correct_password", s => originalSettings = s, testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    await EventuallyAsync(() => originalSettings is not null);
-
-                    originalSettings!.StringTest = "Secret Data";
-                    await originalSettings.DisposeAsync();
-
-                    // Fully release and wait until disposed in provider if needed.
-                    await instance.DisposeSettingsStore<ViewSettings>(testName);
-
-                    var wrongPasswordWorked = false;
-
-                    // Try repeatedly; some backends may lazily re-open.
-                    await EventuallyAsync(async () =>
+                    finally
                     {
                         try
                         {
-                            var wrong = instance.GetSecureSettingsStore<ViewSettings>("wrong_password", testName);
-                            if (wrong is null)
+                            if (viewSettings is not null)
                             {
-                                return true; // could be considered a pass
+                                await viewSettings.DisposeAsync().ConfigureAwait(false);
                             }
 
-                            if (wrong.StringTest == "Secret Data")
-                            {
-                                wrongPasswordWorked = true;
-                            }
-
-                            await wrong.DisposeAsync();
-                            return true;
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
                         catch
                         {
-                            // Decryption failure is acceptable here.
-                            return true;
+                            // Ignore cleanup issues.
                         }
-                    });
+                    }
+                });
 
-                    Assert.That(
-                        wrongPasswordWorked,
-                        Is.False,
-                        "Wrong password should not provide access to encrypted data");
-                }
-                finally
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies updates are applied and readable (Newtonsoft).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(15000)]
+        public async Task TestUpdateAndReadNewtonsoftAsync()
+        {
+            var testName = NewName("newtonsoft_update_test");
+            ViewSettings? viewSettings = null;
+
+            RunWithAkavache<NewtonsoftSerializer>(
+                testName,
+                async builder =>
+                {
+                    await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                    builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
+                },
+                async instance =>
                 {
                     try
                     {
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
+                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+
+                        viewSettings!.EnumTest = EnumTestValue.Option2;
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
                     }
-                    catch
-                    { /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Validates the functionality of repeatedly disposing and recreating secure
-    /// settings stores within the encrypted settings cache. This test ensures
-    /// settings stores can be disposed, reinitialized, and used across multiple
-    /// iterations without issues, while maintaining proper state and security
-    /// throughout.
-    /// </summary>
-    /// <returns>
-    /// A task representing the asynchronous operation. The task ensures that
-    /// the test completes successfully after multiple dispose and recreate
-    /// cycles, with state integrity and proper cleanup confirmed.
-    /// </returns>
-    [Test]
-    public Task TestMultipleDisposeAndRecreate()
-    {
-        var testName = NewName("multi_dispose_test");
-
-        RunWithAkavache<NewtonsoftSerializer>(
-            testName,
-            async builder =>
-            {
-                await builder
-                    .WithEncryptedSqliteProvider()
-                    .DeleteSettingsStore<ViewSettings>(testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    for (var i = 0; i < 3; i++)
+                    finally
                     {
-                        var settings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                        Assert.That(settings, Is.Not.Null);
+                        try
+                        {
+                            if (viewSettings is not null)
+                            {
+                                await viewSettings.DisposeAsync().ConfigureAwait(false);
+                            }
 
-                        settings!.IntTest = i * 100;
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup issues.
+                        }
+                    }
+                });
 
-                        await settings.DisposeAsync();
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies that a secure settings store can be created and initial values materialize (System.Text.Json).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(15000)]
+        public async Task TestCreateAndInsertSystemTextJsonAsync()
+        {
+            var testName = NewName("systemjson_test");
+            ViewSettings? viewSettings = null;
+
+            RunWithAkavache<SystemJsonSerializer>(
+                testName,
+                async builder =>
+                {
+                    await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                    builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
+                },
+                async instance =>
+                {
+                    try
+                    {
+                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.BoolTest == true)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.ShortTest == (short)16)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.IntTest == 1)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.LongTest == 123456L)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.StringTest == "TestString")).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => Math.Abs(viewSettings!.FloatTest - 2.2f) < 0.0001f)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => Math.Abs(viewSettings!.DoubleTest - 23.8d) < 0.0001d)).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option1)).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (viewSettings is not null)
+                            {
+                                await viewSettings.DisposeAsync().ConfigureAwait(false);
+                            }
+
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup issues.
+                        }
+                    }
+                });
+
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies updates are applied and readable (System.Text.Json).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(15000)]
+        public async Task TestUpdateAndReadSystemTextJsonAsync()
+        {
+            var testName = NewName("systemjson_update_test");
+            ViewSettings? viewSettings = null;
+
+            RunWithAkavache<SystemJsonSerializer>(
+                testName,
+                async builder =>
+                {
+                    await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                    builder.WithSecureSettingsStore<ViewSettings>(DefaultPassword, s => viewSettings = s, testName);
+                },
+                async instance =>
+                {
+                    try
+                    {
+                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+
+                        viewSettings!.EnumTest = EnumTestValue.Option2;
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (viewSettings is not null)
+                            {
+                                await viewSettings.DisposeAsync().ConfigureAwait(false);
+                            }
+
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup issues.
+                        }
+                    }
+                });
+
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies explicit override of <see cref="IAkavacheInstance.SettingsCachePath"/>.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(15000)]
+        public async Task TestOverrideSettingsCachePathAsync()
+        {
+            var path = Path.Combine(_cacheRoot, "OverridePath");
+            Directory.CreateDirectory(path);
+
+            IAkavacheInstance? akavacheInstance = null;
+
+            _appBuilder
+                .WithAkavache<SystemJsonSerializer>(
+                    applicationName: null,
+                    builder =>
+                    {
+                        builder
+                            .WithEncryptedSqliteProvider()
+                            .WithSettingsCachePath(path);
+                    },
+                    instance =>
+                    {
+                        akavacheInstance = instance;
+                    })
+                .Build();
+
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(akavacheInstance, Is.Not.Null);
+                Assert.That(akavacheInstance!.SettingsCachePath, Is.EqualTo(path));
+            }
+        }
+
+        /// <summary>
+        /// Verifies that encrypted settings can be accessed across instances (sanity checks only).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(20000)]
+        public async Task TestEncryptedSettingsPersistenceAsync()
+        {
+            var testName = NewName("persistence_test");
+            ViewSettings? originalSettings = null;
+
+            RunWithAkavache<NewtonsoftSerializer>(
+                testName,
+                async builder =>
+                {
+                    await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                    builder.WithSecureSettingsStore<ViewSettings>("test_password", s => originalSettings = s, testName);
+                },
+                async instance =>
+                {
+                    try
+                    {
+                        await EventuallyAsync(() => originalSettings is not null).ConfigureAwait(false);
+
+                        originalSettings!.StringTest = "Modified String";
+                        originalSettings.IntTest = 999;
+                        originalSettings.BoolTest = false;
+
+                        await originalSettings.DisposeAsync().ConfigureAwait(false);
 
                         await EventuallyAsync(async () =>
                         {
-                            var recreated = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                            var ok = recreated is not null && recreated.IntTest >= 0;
-                            if (recreated is not null)
+                            try
                             {
-                                await recreated.DisposeAsync();
+                                var reopened = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
+                                var ok = reopened is not null && TryRead(() => reopened!.IntTest >= 0 && reopened.StringTest is not null);
+                                if (reopened is not null)
+                                {
+                                    await reopened.DisposeAsync().ConfigureAwait(false);
+                                }
+
+                                return ok;
                             }
-
-                            return ok;
-                        });
+                            catch (ObjectDisposedException)
+                            {
+                                return false;
+                            }
+                            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+                            {
+                                return false;
+                            }
+                        }).ConfigureAwait(false);
                     }
-                }
-                finally
-                {
-                    try
+                    finally
                     {
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
+                        try
+                        {
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup issues.
+                        }
                     }
-                    catch
-                    { /* ignore */
-                    }
-                }
-            });
+                });
 
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Tests the retrieval and creation of a settings store using the EncryptedSettingsCache functionality.
-    /// This test ensures that a settings store can be securely created if it does not already exist and that its
-    /// retrieval behavior is consistent. It verifies scenarios such as the absence of a store, its secure creation,
-    /// and later retrieval, including the behavior of secure settings access with encryption.
-    /// </summary>
-    /// <returns>
-    /// A Task representing the asynchronous operation of validating settings store retrieval and creation behavior.
-    /// </returns>
-    [Test]
-    public Task TestGetSettingsStore()
-    {
-        var testName = NewName("get_store_test");
-
-        RunWithAkavache<NewtonsoftSerializer>(
-            testName,
-            async builder =>
-            {
-                // Deleting here ensures the directory is clear before Build.
-                await builder
-                    .WithEncryptedSqliteProvider()
-                    .DeleteSettingsStore<ViewSettings>(testName);
-            },
-            async instance =>
-            {
-                try
-                {
-                    // Belt-and-braces: ensure it's still non-existent from the INSTANCE perspective.
-                    await EventuallyAsync(() => instance.GetSettingsStore<ViewSettings>(testName) is null);
-
-                    // Now create a secure store:
-                    var created = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
-                    Assert.That(created, Is.Not.Null);
-
-                    // Try retrieving with GetSettingsStore (may or may not return instance depending on impl)
-                    var retrieved = instance.GetSettingsStore<ViewSettings>(testName);
-
-                    if (retrieved is not null)
-                    {
-                        await retrieved.DisposeAsync();
-                    }
-
-                    await created.DisposeAsync();
-                }
-                finally
-                {
-                    try
-                    {
-                        await instance.DeleteSettingsStore<ViewSettings>(testName);
-                    }
-                    catch
-                    { /* ignore */
-                    }
-                }
-            });
-
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Tests the proper initialization and setup of application information properties within
-    /// the <see cref="IAkavacheInstance"/> using the <see cref="SystemJsonSerializer"/>. This test
-    /// ensures that all critical application-level properties, such as the executing assembly,
-    /// application root path, settings cache path, and version, are non-null and correctly configured
-    /// after building the application instance with a specific configuration.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous execution of the test. Validates
-    /// application property integrity assertions within the provided test execution scope.</returns>
-    [Test]
-    public async Task TestAppInfoPropertiesAsync()
-    {
-        IAkavacheInstance? akavacheInstance = null;
-
-        _appBuilder
-            .WithAkavache<SystemJsonSerializer>(
-                applicationName: null,
-                builder =>
-                {
-                    builder
-                        .WithApplicationName("TestAppInfo")
-                        .WithEncryptedSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-                },
-                instance => akavacheInstance = instance)
-            .Build();
-
-        await EventuallyAsync(() => AppBuilder.HasBeenBuilt);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(akavacheInstance, Is.Not.Null);
-            Assert.That(akavacheInstance!.ExecutingAssembly, Is.Not.Null);
-            Assert.That(akavacheInstance.ExecutingAssemblyName, Is.Not.Null);
-            Assert.That(akavacheInstance.ApplicationRootPath, Is.Not.Null);
-            Assert.That(akavacheInstance.SettingsCachePath, Is.Not.Null);
-            Assert.That(akavacheInstance.Version, Is.Not.Null);
-        }
-    }
-
-    private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
-
-    // ===== Eventually helpers (poll until condition is true, with timeout/backoff) =====
-    private static async Task EventuallyAsync(
-        Func<Task<bool>> condition,
-        int timeoutMs = 3500,
-        int initialDelayMs = 25,
-        double backoff = 1.5,
-        int maxDelayMs = 200)
-    {
-        var sw = Stopwatch.StartNew();
-        var delay = initialDelayMs;
-
-        while (sw.ElapsedMilliseconds < timeoutMs)
-        {
-            if (await condition().ConfigureAwait(false))
-            {
-                return;
-            }
-
-            await Task.Delay(delay).ConfigureAwait(false);
-            delay = Math.Min((int)(delay * backoff), maxDelayMs);
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
         }
 
-        Assert.Fail($"Condition not met within {timeoutMs}ms.");
-    }
+        /// <summary>
+        /// Verifies wrong password cannot read encrypted values.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(20000)]
+        public async Task TestEncryptedSettingsWrongPasswordAsync()
+        {
+            var testName = NewName("wrong_password_test");
+            ViewSettings? originalSettings = null;
 
-    private static Task EventuallyAsync(
-        Func<bool> condition,
-        int timeoutMs = 3500,
-        int initialDelayMs = 25,
-        double backoff = 1.5,
-        int maxDelayMs = 200)
-        => EventuallyAsync(
-            () => Task.FromResult(condition()),
-            timeoutMs,
-            initialDelayMs,
-            backoff,
-            maxDelayMs);
-
-    // Single entry-point to configure/run with isolated SettingsCachePath
-    private void RunWithAkavache<TSerializer>(
-        string? applicationName,
-        Func<IAkavacheBuilder, Task>? configureAsync,
-        Func<IAkavacheInstance, Task> bodyAsync)
-        where TSerializer : class, ISerializer, new() =>
-        _appBuilder
-            .WithAkavache<TSerializer>(
-                applicationName,
+            RunWithAkavache<NewtonsoftSerializer>(
+                testName,
                 async builder =>
                 {
-                    builder
-                        .WithEncryptedSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-
-                    if (configureAsync is not null)
-                    {
-                        await configureAsync(builder).ConfigureAwait(false);
-                    }
+                    await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                    builder.WithSecureSettingsStore<ViewSettings>("correct_password", s => originalSettings = s, testName);
                 },
-                async instance => await bodyAsync(instance).ConfigureAwait(false))
-            .Build();
+                async instance =>
+                {
+                    try
+                    {
+                        await EventuallyAsync(() => originalSettings is not null).ConfigureAwait(false);
+
+                        originalSettings!.StringTest = "Secret Data";
+                        await originalSettings.DisposeAsync().ConfigureAwait(false);
+
+                        await instance.DisposeSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+
+                        var wrongPasswordWorked = false;
+
+                        await EventuallyAsync(async () =>
+                        {
+                            try
+                            {
+                                var wrong = instance.GetSecureSettingsStore<ViewSettings>("wrong_password", testName);
+                                if (wrong is null)
+                                {
+                                    return true;
+                                }
+
+                                if (TryRead(() => wrong.StringTest == "Secret Data"))
+                                {
+                                    wrongPasswordWorked = true;
+                                }
+
+                                await wrong.DisposeAsync().ConfigureAwait(false);
+                                return true;
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                return false;
+                            }
+                            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+                            {
+                                return false;
+                            }
+                        }).ConfigureAwait(false);
+
+                        Assert.That(wrongPasswordWorked, Is.False, "Wrong password should not provide access to encrypted data.");
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup issues.
+                        }
+                    }
+                });
+
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies we can dispose and recreate multiple times.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(20000)]
+        public async Task TestMultipleDisposeAndRecreateAsync()
+        {
+            var testName = NewName("multi_dispose_test");
+
+            RunWithAkavache<NewtonsoftSerializer>(
+                testName,
+                async builder =>
+                {
+                    await builder
+                        .WithEncryptedSqliteProvider()
+                        .DeleteSettingsStore<ViewSettings>(testName)
+                        .ConfigureAwait(false);
+                },
+                async instance =>
+                {
+                    try
+                    {
+                        for (var i = 0; i < 3; i++)
+                        {
+                            var settings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
+                            Assert.That(settings, Is.Not.Null);
+
+                            settings!.IntTest = i * 100;
+                            await settings.DisposeAsync().ConfigureAwait(false);
+
+                            await EventuallyAsync(async () =>
+                            {
+                                try
+                                {
+                                    var recreated = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
+                                    var ok = recreated is not null && TryRead(() => recreated!.IntTest >= 0);
+                                    if (recreated is not null)
+                                    {
+                                        await recreated.DisposeAsync().ConfigureAwait(false);
+                                    }
+
+                                    return ok;
+                                }
+                                catch (ObjectDisposedException)
+                                {
+                                    return false;
+                                }
+                                catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+                                {
+                                    return false;
+                                }
+                            }).ConfigureAwait(false);
+                        }
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // Ignore cleanup issues.
+                        }
+                    }
+                });
+
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Verifies AppInfo properties are present.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous test.</returns>
+        [Test]
+        [CancelAfter(15000)]
+        public async Task TestAppInfoPropertiesAsync()
+        {
+            IAkavacheInstance? akavacheInstance = null;
+
+            _appBuilder
+                .WithAkavache<SystemJsonSerializer>(
+                    applicationName: null,
+                    builder =>
+                    {
+                        builder
+                            .WithApplicationName("TestAppInfo")
+                            .WithEncryptedSqliteProvider()
+                            .WithSettingsCachePath(_cacheRoot);
+                    },
+                    instance => akavacheInstance = instance)
+                .Build();
+
+            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(akavacheInstance, Is.Not.Null);
+                Assert.That(akavacheInstance!.ExecutingAssembly, Is.Not.Null);
+                Assert.That(akavacheInstance.ExecutingAssemblyName, Is.Not.Null);
+                Assert.That(akavacheInstance.ApplicationRootPath, Is.Not.Null);
+                Assert.That(akavacheInstance.SettingsCachePath, Is.Not.Null);
+                Assert.That(akavacheInstance.Version, Is.Not.Null);
+            }
+        }
+
+        /// <summary>
+        /// Creates a unique, human-readable test name prefix plus a GUID segment.
+        /// </summary>
+        /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
+        /// <returns>A unique name string suitable for use as an application name or store key.</returns>
+        private static string NewName(string prefix)
+        {
+            return $"{prefix}_{Guid.NewGuid():N}";
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.
+        /// </summary>
+        /// <param name="ex">The exception to inspect.</param>
+        /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
+        private static bool IsDisposedMessage(InvalidOperationException ex)
+        {
+            return ex.Message?.IndexOf("disposed", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// Attempts to evaluate a getter/condition that may touch a cache; treats disposal as transient.
+        /// </summary>
+        /// <param name="probe">A function that evaluates to <see langword="true"/> when the condition is satisfied.</param>
+        /// <returns>True if the probe succeeded and returned true; false on transient disposal or false condition.</returns>
+        private static bool TryRead(Func<bool> probe)
+        {
+            try
+            {
+                return probe();
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
+        /// Handles transient disposal exceptions as retryable.
+        /// </summary>
+        /// <param name="condition">A synchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
+        /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
+        /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
+        /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
+        /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
+        /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
+        private static Task EventuallyAsync(
+            Func<bool> condition,
+            int timeoutMs = 3500,
+            int initialDelayMs = 25,
+            double backoff = 1.5,
+            int maxDelayMs = 200)
+        {
+            return EventuallyAsync(() => Task.FromResult(condition()), timeoutMs, initialDelayMs, backoff, maxDelayMs);
+        }
+
+        /// <summary>
+        /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
+        /// Handles transient disposal exceptions as retryable.
+        /// </summary>
+        /// <param name="condition">An asynchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
+        /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
+        /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
+        /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
+        /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
+        /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
+        private static async Task EventuallyAsync(
+            Func<Task<bool>> condition,
+            int timeoutMs = 3500,
+            int initialDelayMs = 25,
+            double backoff = 1.5,
+            int maxDelayMs = 200)
+        {
+            var sw = Stopwatch.StartNew();
+            var delay = initialDelayMs;
+
+            while (sw.ElapsedMilliseconds < timeoutMs)
+            {
+                bool ok;
+                try
+                {
+                    ok = await condition().ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException)
+                {
+                    ok = false;
+                }
+                catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+                {
+                    ok = false;
+                }
+
+                if (ok)
+                {
+                    return;
+                }
+
+                await Task.Delay(delay).ConfigureAwait(false);
+                delay = Math.Min((int)(delay * backoff), maxDelayMs);
+            }
+
+            Assert.Fail($"Condition not met within {timeoutMs}ms.");
+        }
+
+        /// <summary>
+        /// Creates, configures and builds an Akavache instance using the per-test path and encrypted SQLite provider, then executes the test body.
+        /// </summary>
+        /// <typeparam name="TSerializer">The serializer type to use (e.g., <see cref="NewtonsoftSerializer"/> or <see cref="SystemJsonSerializer"/>).</typeparam>
+        /// <param name="applicationName">Application name to scope the store; may be <see langword="null"/>.</param>
+        /// <param name="configureAsync">An async configuration callback to register stores and/or delete existing stores before the body runs.</param>
+        /// <param name="bodyAsync">The asynchronous test body that uses the configured <see cref="IAkavacheInstance"/>.</param>
+        private void RunWithAkavache<TSerializer>(
+            string? applicationName,
+            Func<IAkavacheBuilder, Task> configureAsync,
+            Func<IAkavacheInstance, Task> bodyAsync)
+            where TSerializer : class, ISerializer, new()
+        {
+            _appBuilder
+                .WithAkavache<TSerializer>(
+                    applicationName,
+                    async builder =>
+                    {
+                        builder
+                            .WithEncryptedSqliteProvider()
+                            .WithSettingsCachePath(_cacheRoot);
+
+                        if (configureAsync is not null)
+                        {
+                            await configureAsync(builder).ConfigureAwait(false);
+                        }
+                    },
+                    async instance => await bodyAsync(instance).ConfigureAwait(false))
+                .Build();
+        }
+    }
 }

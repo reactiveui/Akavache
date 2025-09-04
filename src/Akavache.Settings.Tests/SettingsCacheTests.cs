@@ -1,18 +1,23 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for full license information.
+﻿// © 2025 .NET Foundation and Contributors. Licensed under the MIT License.
 
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+
 using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
+
+using NUnit.Framework;
+
 using Splat.Builder;
 
 namespace Akavache.Settings.Tests
 {
     /// <summary>
     /// Tests for the unencrypted settings cache, isolated per test to avoid static state leakage.
+    /// Uses eventually-consistent polling and treats transient disposal as retryable.
     /// </summary>
     [TestFixture]
     [Category("Akavache")]
@@ -35,13 +40,9 @@ namespace Akavache.Settings.Tests
         [SetUp]
         public void Setup()
         {
-            // Reset global static flags so Build() can run again.
             AppBuilder.ResetBuilderStateForTests();
-
-            // Fresh builder for this test.
             _appBuilder = AppBuilder.CreateSplatBuilder();
 
-            // Create an isolated, platform-agnostic cache path for this test.
             _cacheRoot = Path.Combine(
                 Path.GetTempPath(),
                 "AkavacheSettingsTests",
@@ -77,6 +78,7 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
+        [CancelAfter(15000)]
         public async Task TestCreateAndInsertNewtonsoftAsync()
         {
             var appName = NewName("newtonsoft_test");
@@ -134,6 +136,7 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
+        [CancelAfter(15000)]
         public async Task TestUpdateAndReadNewtonsoftAsync()
         {
             var appName = NewName("newtonsoft_update_test");
@@ -153,8 +156,7 @@ namespace Akavache.Settings.Tests
                         await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         viewSettings!.EnumTest = EnumTestValue.Option2;
-
-                        await EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -182,6 +184,7 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
+        [CancelAfter(15000)]
         public async Task TestCreateAndInsertSystemTextJsonAsync()
         {
             var appName = NewName("systemjson_test");
@@ -239,6 +242,7 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
+        [CancelAfter(15000)]
         public async Task TestUpdateAndReadSystemTextJsonAsync()
         {
             var appName = NewName("systemjson_update_test");
@@ -258,8 +262,7 @@ namespace Akavache.Settings.Tests
                         await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         viewSettings!.EnumTest = EnumTestValue.Option2;
-
-                        await EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2).ConfigureAwait(false);
+                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -287,9 +290,9 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
+        [CancelAfter(15000)]
         public async Task TestOverrideSettingsCachePathAsync()
         {
-            // Use a subfolder of the per-test root to prove override behavior explicitly.
             var path = Path.Combine(_cacheRoot, "OverridePath");
             Directory.CreateDirectory(path);
 
@@ -324,11 +327,65 @@ namespace Akavache.Settings.Tests
         /// </summary>
         /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
         /// <returns>A unique name string suitable for use as an application name or store key.</returns>
-        private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
+        private static string NewName(string prefix)
+        {
+            return $"{prefix}_{Guid.NewGuid():N}";
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.
+        /// </summary>
+        /// <param name="ex">The exception to inspect.</param>
+        /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
+        private static bool IsDisposedMessage(InvalidOperationException ex)
+        {
+            return ex.Message?.IndexOf("disposed", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// Attempts to evaluate a getter/condition that may touch a cache; treats disposal as transient.
+        /// </summary>
+        /// <param name="probe">A function that evaluates to <see langword="true"/> when the condition is satisfied.</param>
+        /// <returns>True if the probe succeeded and returned true; false on transient disposal or false condition.</returns>
+        private static bool TryRead(Func<bool> probe)
+        {
+            try
+            {
+                return probe();
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
-        /// Useful for eventually-consistent providers that complete work asynchronously.
+        /// Handles transient disposal exceptions as retryable.
+        /// </summary>
+        /// <param name="condition">A synchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
+        /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
+        /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
+        /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
+        /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
+        /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
+        private static Task EventuallyAsync(
+            Func<bool> condition,
+            int timeoutMs = 3500,
+            int initialDelayMs = 25,
+            double backoff = 1.5,
+            int maxDelayMs = 200)
+        {
+            return EventuallyAsync(() => Task.FromResult(condition()), timeoutMs, initialDelayMs, backoff, maxDelayMs);
+        }
+
+        /// <summary>
+        /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
+        /// Handles transient disposal exceptions as retryable.
         /// </summary>
         /// <param name="condition">An asynchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
         /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
@@ -348,7 +405,20 @@ namespace Akavache.Settings.Tests
 
             while (sw.ElapsedMilliseconds < timeoutMs)
             {
-                var ok = await condition().ConfigureAwait(false);
+                bool ok;
+                try
+                {
+                    ok = await condition().ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException)
+                {
+                    ok = false;
+                }
+                catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+                {
+                    ok = false;
+                }
+
                 if (ok)
                 {
                     return;
@@ -362,24 +432,6 @@ namespace Akavache.Settings.Tests
         }
 
         /// <summary>
-        /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
-        /// Convenience overload for synchronous predicates.
-        /// </summary>
-        /// <param name="condition">A function that returns <see langword="true"/> when the condition is satisfied.</param>
-        /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
-        /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
-        /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
-        /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
-        /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
-        private static Task EventuallyAsync(
-            Func<bool> condition,
-            int timeoutMs = 3500,
-            int initialDelayMs = 25,
-            double backoff = 1.5,
-            int maxDelayMs = 200) =>
-            EventuallyAsync(() => Task.FromResult(condition()), timeoutMs, initialDelayMs, backoff, maxDelayMs);
-
-        /// <summary>
         /// Creates, configures and builds an Akavache instance using the per-test path and SQLite provider, then executes the test body.
         /// </summary>
         /// <typeparam name="TSerializer">The serializer type to use (e.g., <see cref="NewtonsoftSerializer"/> or <see cref="SystemJsonSerializer"/>).</typeparam>
@@ -390,7 +442,8 @@ namespace Akavache.Settings.Tests
             string? applicationName,
             Func<IAkavacheBuilder, Task> configureAsync,
             Func<IAkavacheInstance, Task> bodyAsync)
-            where TSerializer : class, ISerializer, new() =>
+            where TSerializer : class, ISerializer, new()
+        {
             _appBuilder
                 .WithAkavache<TSerializer>(
                     applicationName,
@@ -400,12 +453,16 @@ namespace Akavache.Settings.Tests
                             .WithSqliteProvider()
                             .WithSettingsCachePath(_cacheRoot);
 
-                        await configureAsync(builder).ConfigureAwait(false);
+                        if (configureAsync is not null)
+                        {
+                            await configureAsync(builder).ConfigureAwait(false);
+                        }
                     },
                     async instance =>
                     {
                         await bodyAsync(instance).ConfigureAwait(false);
                     })
                 .Build();
+        }
     }
 }
