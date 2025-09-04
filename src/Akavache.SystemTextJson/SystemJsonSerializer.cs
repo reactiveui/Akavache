@@ -57,7 +57,7 @@ public class SystemJsonSerializer : ISerializer
 
             // Check if this looks like JSON instead
             var firstChar = data[4];
-            if (firstChar == '{' || firstChar == '[' || firstChar == '"')
+            if (firstChar is (byte)'{' or (byte)'[' or (byte)'"')
             {
                 // This looks more like JSON
                 return false;
@@ -141,7 +141,7 @@ public class SystemJsonSerializer : ISerializer
         // Pattern to match DateTime tick values like "Date":638725392000000000
         var dateTimeTickPattern = new Regex(@"""Date"":(\d{15,})");
 
-        return dateTimeTickPattern.Replace(jsonString, match =>
+        return dateTimeTickPattern.Replace(jsonString, static match =>
         {
             if (long.TryParse(match.Groups[1].Value, out var ticks))
             {
@@ -384,7 +384,7 @@ public class SystemJsonSerializer : ISerializer
             }
 
             // Special handling for DateTime compatibility with Newtonsoft.Json
-            if (jsonString.Contains("\"Date\":") && typeof(T).GetProperties().Any(p => p.PropertyType == typeof(DateTime)))
+            if (jsonString.Contains("\"Date\":") && typeof(T).GetProperties().Any(static p => p.PropertyType == typeof(DateTime)))
             {
                 try
                 {
@@ -416,7 +416,7 @@ public class SystemJsonSerializer : ISerializer
                 if (!string.IsNullOrWhiteSpace(jsonString))
                 {
                     // Try Newtonsoft.Json as fallback for cross-serializer compatibility
-                    var newtonsoftResult = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(jsonString);
+                    var newtonsoftResult = JsonConvert.DeserializeObject<T>(jsonString);
                     if (newtonsoftResult != null || (typeof(T).IsValueType && !Equals(newtonsoftResult, default(T))))
                     {
                         return newtonsoftResult;

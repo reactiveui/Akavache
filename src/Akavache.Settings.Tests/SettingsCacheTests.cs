@@ -5,8 +5,8 @@
 
 using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
+
 using Splat.Builder;
-using SQLitePCL;
 
 namespace Akavache.Settings.Tests;
 
@@ -42,14 +42,18 @@ public class SettingsCacheTests
                 // Initial delay to ensure settings are created
                 await Task.Delay(100);
                 Assert.That(viewSettings, Is.Not.Null);
-                Assert.That(viewSettings!.BoolTest, Is.True);
-                Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
-                Assert.That(viewSettings.IntTest, Is.EqualTo(1));
-                Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
-                Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
-                Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
-                Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
-                Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(viewSettings!.BoolTest, Is.True);
+                    Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                    Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                    Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                    Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                    Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                    Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                }
+
                 await viewSettings.DisposeAsync();
             }).Build();
 
@@ -110,14 +114,18 @@ public class SettingsCacheTests
                 // Initial delay to ensure settings are created
                 await Task.Delay(100);
                 Assert.That(viewSettings, Is.Not.Null);
-                Assert.That(viewSettings!.BoolTest, Is.True);
-                Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
-                Assert.That(viewSettings.IntTest, Is.EqualTo(1));
-                Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
-                Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
-                Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
-                Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
-                Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(viewSettings!.BoolTest, Is.True);
+                    Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                    Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                    Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                    Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                    Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                    Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                }
+
                 await viewSettings.DisposeAsync();
             }).Build();
 

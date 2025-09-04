@@ -20,14 +20,15 @@ public class AotCompatibilityTests
     /// Tests that null serializer throws appropriate exception.
     /// </summary>
     [Test]
-    public void NullSerializerShouldThrowException()
-    {
+    public void NullSerializerShouldThrowException() =>
+
         // Act & Assert - The exception should occur when creating the cache, not when using it
-        Assert.That(() =>
-        {
-            using var cache = new InMemoryBlobCache(default(ISerializer)!);
-        }, Throws.TypeOf<ArgumentNullException>());
-    }
+        Assert.That(
+            static () =>
+            {
+                using var cache = new InMemoryBlobCache(default(ISerializer)!);
+            },
+            Throws.TypeOf<ArgumentNullException>());
 
     /// <summary>
     /// Tests that SerializeWithContext handles null values correctly.
@@ -79,14 +80,15 @@ public class AotCompatibilityTests
                 problemObject["self"] = problemObject; // Create circular reference
 
                 // Act & Assert - this should handle serialization gracefully
-                var exception = await Assert.ThatAsync(async () => await cache.InsertObject("problem", problemObject).FirstAsync(), Throws.Exception);
+                var exception = Assert.ThrowsAsync<Exception>(
+                    async () => await cache.InsertObject("problem", problemObject).FirstAsync());
 
                 // Verify it's a serialization-related exception
                 Assert.That(
-                    exception is InvalidOperationException ||
-                    exception is System.Text.Json.JsonException ||
-                    exception is NotSupportedException,
-                    Is.True,
+                    exception,
+                    Is.TypeOf<InvalidOperationException>()
+                      .Or.TypeOf<System.Text.Json.JsonException>()
+                      .Or.TypeOf<NotSupportedException>(),
                     $"Expected serialization exception, got {exception.GetType().Name}: {exception.Message}");
             }
             finally
@@ -105,10 +107,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache(new SystemJsonSerializer())
-            {
-                ForcedDateTimeKind = DateTimeKind.Utc
-            };
+            var cache = new InMemoryBlobCache(new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
 
             var localDateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
 
@@ -124,16 +123,20 @@ public class AotCompatibilityTests
                 var retrievedUtc = retrieved.ToUniversalTime();
                 var timeDifference = Math.Abs((originalUtc - retrievedUtc).TotalSeconds);
 
-                Assert.That(timeDifference, Is.LessThan(2), $"DateTime values differ too much: {timeDifference} seconds");
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(
+                                    timeDifference,
+                                    Is.LessThan(2),
+                                    $"DateTime values differ too much: {timeDifference} seconds");
 
-                // If ForcedDateTimeKind is working, retrieved should be UTC or Unspecified
-                // But some serializers may preserve the original kind
-                Assert.That(
-                    retrieved.Kind == DateTimeKind.Utc ||
-                    retrieved.Kind == DateTimeKind.Unspecified ||
-                    retrieved.Kind == DateTimeKind.Local, // Allow local for compatibility
-                    Is.True,
-                    $"DateTime kind should be reasonable, got {retrieved.Kind}");
+                    // If ForcedDateTimeKind is working, retrieved should be UTC or Unspecified
+                    // But some serializers may preserve the original kind
+                    Assert.That(
+                        retrieved.Kind, // Allow local for compatibility
+                        Is.EqualTo(DateTimeKind.Utc).Or.EqualTo(DateTimeKind.Unspecified).Or.EqualTo(DateTimeKind.Local),
+                        $"DateTime kind should be reasonable, got {retrieved.Kind}");
+                }
             }
             finally
             {
@@ -155,9 +158,13 @@ public class AotCompatibilityTests
         {
             // Act & Assert - InMemoryBlobCache may not validate empty strings the same way
             // Try to test actual argument validation if it exists
-            Assert.ThatAsync(async () => await cache.InsertObject(null!, "value").FirstAsync(), Throws.TypeOf<ArgumentNullException>());
+            await Assert.ThatAsync(
+                async () => await cache.InsertObject(null!, "value").FirstAsync(),
+                Throws.TypeOf<ArgumentNullException>());
 
-            Assert.ThatAsync(async () => await cache.GetObject<string>(null!).FirstAsync(), Throws.TypeOf<ArgumentNullException>());
+            await Assert.ThatAsync(
+                async () => await cache.GetObject<string>(null!).FirstAsync(),
+                Throws.TypeOf<ArgumentNullException>());
 
             // Test that actual empty strings work (they may be valid keys)
             await cache.InsertObject(string.Empty, "empty_key_value").FirstAsync();
@@ -189,10 +196,7 @@ public class AotCompatibilityTests
                 // Store a complex object
                 var originalData = new
                 {
-                    message = "Hello World",
-                    number = 42,
-                    timestamp = DateTime.UtcNow,
-                    isValid = true
+                    message = "Hello World", number = 42, timestamp = DateTime.UtcNow, isValid = true
                 };
 
                 await cache.InsertObject("test_key", originalData).FirstAsync();
@@ -210,12 +214,15 @@ public class AotCompatibilityTests
                 await cache.InsertObject("user_key", userObject).FirstAsync();
                 var retrievedUser = await cache.GetObject<Mocks.UserObject>("user_key").FirstAsync();
 
-                Assert.That(retrievedUser.Name, Is.EqualTo(userObject.Name));
-                Assert.That(retrievedUser.Bio, Is.EqualTo(userObject.Bio));
-                Assert.That(retrievedUser.Blog, Is.EqualTo(userObject.Blog));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(retrievedUser.Name, Is.EqualTo(userObject.Name));
+                    Assert.That(retrievedUser.Bio, Is.EqualTo(userObject.Bio));
+                    Assert.That(retrievedUser.Blog, Is.EqualTo(userObject.Blog));
 
-                // Test that serialization is working correctly - this is the real type safety test
-                Assert.That(true, Is.True, "Type safety is maintained through proper serialization/deserialization");
+                    // Test that serialization is working correctly - this is the real type safety test
+                    Assert.Warn("Type safety is maintained through proper serialization/deserialization");
+                }
             }
             finally
             {
@@ -328,7 +335,7 @@ public class AotCompatibilityTests
 
                 // Assert
                 Assert.That(retrieved, Is.EqualTo(largeString));
-                Assert.That(retrieved!.Length, Is.EqualTo(100000));
+                Assert.That(retrieved!, Has.Length.EqualTo(100000));
             }
             finally
             {
@@ -403,23 +410,26 @@ public class AotCompatibilityTests
         try
         {
             // Test bulk insert
-            var data = new[]
-            {
-                    new KeyValuePair<string, string>("key1", "value1"),
-                    new KeyValuePair<string, string>("key2", "value2"),
-                    new KeyValuePair<string, string>("key3", "value3")
-            };
+            KeyValuePair<string, string>[] data =
+            [
+                new KeyValuePair<string, string>("key1", "value1"),
+                new KeyValuePair<string, string>("key2", "value2"),
+                new KeyValuePair<string, string>("key3", "value3")
+            ];
 
             await cache.InsertObjects(data).FirstAsync();
 
             // Test bulk get
-            var keys = new[] { "key1", "key2", "key3" };
+            string[] keys = ["key1", "key2", "key3"];
             var results = await cache.GetObjects<string>(keys).ToList().FirstAsync();
 
-            Assert.That(results.Count, Is.EqualTo(3));
-            Assert.That(results.Any(r => r.Key == "key1" && r.Value == "value1"), Is.True);
-            Assert.That(results.Any(r => r.Key == "key2" && r.Value == "value2"), Is.True);
-            Assert.That(results.Any(r => r.Key == "key3" && r.Value == "value3"), Is.True);
+            Assert.That(results, Has.Count.EqualTo(3));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(results.Any(static r => r.Key == "key1" && r.Value == "value1"), Is.True);
+                Assert.That(results.Any(static r => r.Key == "key2" && r.Value == "value2"), Is.True);
+                Assert.That(results.Any(static r => r.Key == "key3" && r.Value == "value3"), Is.True);
+            }
 
             // Test bulk invalidate
             await cache.InvalidateObjects<string>(keys).FirstAsync();

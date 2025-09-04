@@ -7,6 +7,7 @@ using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
+
 using NUnit.Framework;
 
 namespace Akavache.Tests;
@@ -43,12 +44,12 @@ public class SerializationCompatibilityTests
         var deserializedObj = serializer.Deserialize<TestObject>(serializedData);
 
         // Assert
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deserializedObj, Is.Not.Null);
-            Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
-            Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
-        });
+            Assert.That(deserializedObj!.Name, Is.EqualTo(testObj.Name));
+            Assert.That(deserializedObj!.Value, Is.EqualTo(testObj.Value));
+        }
 
         // Allow for some DateTime precision loss
         Assert.That(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds), Is.LessThan(1));
@@ -67,13 +68,13 @@ public class SerializationCompatibilityTests
             Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) // Use precise datetime
         };
 
-        var serializers = new ISerializer[]
-        {
+        ISerializer[] serializers =
+        [
             new SystemJsonSerializer(),
             new SystemJsonBsonSerializer(),
             new NewtonsoftSerializer(),
             new NewtonsoftBsonSerializer()
-        };
+        ];
 
         // Test all combinations
         foreach (var writeSerializer in serializers)
@@ -95,20 +96,21 @@ public class SerializationCompatibilityTests
                             $"Data preview: {dataPreview.Substring(0, Math.Min(200, dataPreview.Length))}...");
                     }
 
-                    Assert.Multiple(() =>
+                    using (Assert.EnterMultipleScope())
                     {
                         Assert.That(deserializedObj, Is.Not.Null);
                         Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
                         Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
-                    });
+                    }
 
                     // Allow for DateTime precision differences between serializers
                     // BSON serializers may have different precision than JSON serializers
                     var timeDifference = Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds);
                     var expectedMessage = $"DateTime precision issue: expected {testObj.Date}, got {deserializedObj.Date} (diff: {timeDifference}s) " +
                         $"when writing with {writeSerializer.GetType().Name} and reading with {readSerializer.GetType().Name}";
-                    Assert.True(
-                        timeDifference < 60, // Allow up to 1 minute difference for cross-serializer compatibility
+                    Assert.That(
+                        timeDifference,
+                        Is.LessThan(60),
                         expectedMessage);
                 }
                 catch (Exception ex)
@@ -134,13 +136,13 @@ public class SerializationCompatibilityTests
             Date = new DateTime(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
         };
 
-        var serializers = new ISerializer[]
-        {
+        ISerializer[] serializers =
+        [
             new SystemJsonSerializer(),
             new SystemJsonBsonSerializer(),
             new NewtonsoftSerializer(),
             new NewtonsoftBsonSerializer()
-        };
+        ];
 
         var combinations = new List<(string WriteName, string ReadName, bool Success)>();
 
@@ -159,12 +161,15 @@ public class SerializationCompatibilityTests
 
                     if (deserializedObj != null)
                     {
-                        Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
-                        Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
+                        using (Assert.EnterMultipleScope())
+                        {
+                            Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+                            Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
+                        }
 
                         // Allow for DateTime precision differences
                         var timeDiff = Math.Abs((testObj.Date - deserializedObj.Date).TotalMinutes);
-                        Assert.True(timeDiff < 1440, $"DateTime difference too large: {timeDiff} minutes for {writeName} -> {readName}");
+                        Assert.That(timeDiff, Is.LessThan(1440), $"DateTime difference too large: {timeDiff} minutes for {writeName} -> {readName}");
 
                         combinations.Add((writeName, readName, true));
                     }
@@ -185,26 +190,28 @@ public class SerializationCompatibilityTests
 
         // Report results
         var totalCombinations = combinations.Count;
-        var successfulCombinations = combinations.Count(c => c.Success);
-        var failedCombinations = combinations.Where(c => !c.Success).ToList();
+        var successfulCombinations = combinations.Count(static c => c.Success);
+        var failedCombinations = combinations.Where(static c => !c.Success).ToList();
 
         // We expect at least the self-combinations to work (each serializer reading its own data)
-        var selfCombinations = combinations.Where(c => c.WriteName == c.ReadName).ToList();
-        var successfulSelfCombinations = selfCombinations.Count(c => c.Success);
+        var selfCombinations = combinations.Where(static c => c.WriteName == c.ReadName).ToList();
+        var successfulSelfCombinations = selfCombinations.Count(static c => c.Success);
 
-        var failedSelfMessage = $"All self-combinations should work. Failed: {string.Join(", ", selfCombinations.Where(c => !c.Success).Select(c => c.WriteName))}";
-        Assert.True(
-            successfulSelfCombinations == selfCombinations.Count,
+        var failedSelfMessage = $"All self-combinations should work. Failed: {string.Join(", ", selfCombinations.Where(static c => !c.Success).Select(static c => c.WriteName))}";
+        Assert.That(
+            successfulSelfCombinations,
+            Is.EqualTo(selfCombinations.Count),
             failedSelfMessage);
 
         // Report cross-serializer compatibility
-        var crossCombinations = combinations.Where(c => c.WriteName != c.ReadName).ToList();
-        var successfulCrossCombinations = crossCombinations.Count(c => c.Success);
+        var crossCombinations = combinations.Where(static c => c.WriteName != c.ReadName).ToList();
+        var successfulCrossCombinations = crossCombinations.Count(static c => c.Success);
 
         var crossCompatibilityMessage = $"At least 75% of cross-combinations should work. Success rate: {successfulCrossCombinations}/{crossCombinations.Count}. " +
-            $"Failed: {string.Join(", ", failedCombinations.Select(c => $"{c.WriteName}->{c.ReadName}"))}";
-        Assert.True(
-            successfulCrossCombinations >= crossCombinations.Count * 0.75,
+            $"Failed: {string.Join(", ", failedCombinations.Select(static c => $"{c.WriteName}->{c.ReadName}"))}";
+        Assert.That(
+            successfulCrossCombinations,
+            Is.GreaterThanOrEqualTo(crossCombinations.Count * 0.75),
             crossCompatibilityMessage);
     }
 
@@ -252,12 +259,15 @@ public class SerializationCompatibilityTests
                 var retrievedObject = await cache.GetObject<TestObject>("test_key").FirstAsync();
 
                 Assert.That(retrievedObject, Is.Not.Null);
-                Assert.That(retrievedObject.Name, Is.EqualTo(testObject.Name));
-                Assert.That(retrievedObject.Value, Is.EqualTo(testObject.Value));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(retrievedObject.Name, Is.EqualTo(testObject.Name));
+                    Assert.That(retrievedObject.Value, Is.EqualTo(testObject.Value));
+                }
 
                 // Allow for DateTime precision differences
                 var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalSeconds);
-                Assert.True(timeDiff < 60, $"DateTime difference too large: {timeDiff} seconds with {serializerType.Name}");
+                Assert.That(timeDiff, Is.LessThan(60), $"DateTime difference too large: {timeDiff} seconds with {serializerType.Name}");
             }
         }
     }
@@ -318,12 +328,15 @@ public class SerializationCompatibilityTests
                     var retrievedObject = await readCache.GetObject<TestObject>("cross_test").FirstAsync();
 
                     Assert.That(retrievedObject, Is.Not.Null);
-                    Assert.That(retrievedObject.Name, Is.EqualTo(testObject.Name));
-                    Assert.That(retrievedObject.Value, Is.EqualTo(testObject.Value));
+                    using (Assert.EnterMultipleScope())
+                    {
+                        Assert.That(retrievedObject.Name, Is.EqualTo(testObject.Name));
+                        Assert.That(retrievedObject.Value, Is.EqualTo(testObject.Value));
+                    }
 
                     // Allow for DateTime precision differences
                     var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalMinutes);
-                    Assert.True(timeDiff < 1440, $"DateTime difference too large: {timeDiff} minutes with {writeSerializerType.Name} -> {readSerializerType.Name}");
+                    Assert.That(timeDiff, Is.LessThan(1440), $"DateTime difference too large: {timeDiff} minutes with {writeSerializerType.Name} -> {readSerializerType.Name}");
                 }
                 catch (KeyNotFoundException ex)
                 {
@@ -376,15 +389,21 @@ public class SerializationCompatibilityTests
                 var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
                 var typedKeys = await cache.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
 
-                Assert.True(allKeys.Count > 0, "No keys found at all. Expected at least 1 key.");
-                Assert.True(typedKeys.Count > 0, "No typed keys found. All keys: [" + string.Join(", ", allKeys) + "], Typed keys: [" + string.Join(", ", typedKeys) + "]");
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(allKeys, Is.Not.Empty, "No keys found at all. Expected at least 1 key.");
+                    Assert.That(typedKeys, Is.Not.Empty, "No typed keys found. All keys: [" + string.Join(", ", allKeys) + "], Typed keys: [" + string.Join(", ", typedKeys) + "]");
+                }
 
                 // Get
                 var retrieved = await cache.GetObject<TestObject>("simple_key").FirstAsync();
 
                 Assert.That(retrieved, Is.Not.Null);
-                Assert.That(retrieved.Name, Is.EqualTo(testObject.Name));
-                Assert.That(retrieved.Value, Is.EqualTo(testObject.Value));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(retrieved.Name, Is.EqualTo(testObject.Name));
+                    Assert.That(retrieved.Value, Is.EqualTo(testObject.Value));
+                }
             }
         }
     }
@@ -428,7 +447,7 @@ public class SerializationCompatibilityTests
 
                 // Verify the data exists before disposal
                 var keysBeforeDisposal = await cache1.GetAllKeys().ToList().FirstAsync();
-                Assert.True(keysBeforeDisposal.Count > 0, "No keys found in cache1 before disposal");
+                Assert.That(keysBeforeDisposal, Is.Not.Empty, "No keys found in cache1 before disposal");
 
                 // Explicit async disposal with proper wait
                 await cache1.DisposeAsync();
@@ -461,14 +480,17 @@ public class SerializationCompatibilityTests
                     $"All keys: [{string.Join(", ", allKeys)}]. " +
                     $"Typed keys: [{string.Join(", ", typedKeys)}]";
 
-                Assert.True(allKeys.Count > 0, $"No keys found in cache2. {diagnosticInfo}");
+                Assert.That(allKeys, Is.Not.Empty, $"No keys found in cache2. {diagnosticInfo}");
 
                 // Try to retrieve
                 var retrieved = await cache2.GetObject<TestObject>("debug_key").FirstAsync();
 
                 Assert.That(retrieved, Is.Not.Null);
-                Assert.That(retrieved.Name, Is.EqualTo(testObject.Name));
-                Assert.That(retrieved.Value, Is.EqualTo(testObject.Value));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(retrieved.Name, Is.EqualTo(testObject.Name));
+                    Assert.That(retrieved.Value, Is.EqualTo(testObject.Value));
+                }
 
                 await cache2.DisposeAsync();
             }
@@ -481,7 +503,8 @@ public class SerializationCompatibilityTests
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
-    [Test, Ignore("Skipping due to unreliable DateTime serialization issues across different serializers in CI environment")]
+    [Test]
+    [Ignore("Skipping due to unreliable DateTime serialization issues across different serializers in CI environment")]
     [TestCase(typeof(SystemJsonSerializer))]
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
@@ -594,8 +617,9 @@ public class SerializationCompatibilityTests
                                     serializerType.Name.Contains("Newtonsoft") ? 0.6 : 0.8;
             var actualSuccessRate = successCount / (double)actualTests;
 
-            Assert.True(
-                actualSuccessRate >= minimumSuccessRate,
+            Assert.That(
+                actualSuccessRate,
+                Is.GreaterThanOrEqualTo(minimumSuccessRate),
                 $"DateTime serialization success rate too low for {serializerType.Name}: {successCount}/{actualTests} = {actualSuccessRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}, Total: {totalTests}");
         }
     }
@@ -628,13 +652,12 @@ public class SerializationCompatibilityTests
         // For BSON serializers, avoid extreme dates that are known to cause issues
         if (!serializerType.Name.Contains("Bson"))
         {
-            dates.AddRange(new[]
-            {
+            dates.AddRange([
                 DateTime.MinValue,
                 DateTime.MaxValue,
                 new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc), // Early 20th century
-                new DateTime(2050, 12, 31, 23, 59, 59, DateTimeKind.Utc), // Mid 21st century
-            });
+                new DateTime(2050, 12, 31, 23, 59, 59, DateTimeKind.Utc) // Mid 21st century
+            ]);
         }
 
         return dates.ToArray();

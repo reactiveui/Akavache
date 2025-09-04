@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using System.Text;
 
 namespace Akavache.Tests.Helpers;
 
@@ -27,13 +26,13 @@ public sealed class TestHttpServer : IDisposable
     {
         _listener = new HttpListener();
         _cancellationTokenSource = new CancellationTokenSource();
-        _responses = new Dictionary<string, TestResponse>();
-        
+        _responses = [];
+
         // Try to find an available port starting from 8999
         BaseUrl = FindAvailablePort();
         _listener.Prefixes.Add(BaseUrl);
         _listener.Start();
-        
+
         _serverTask = Task.Run(async () => await ProcessRequestsAsync(_cancellationTokenSource.Token));
     }
 
@@ -42,9 +41,62 @@ public sealed class TestHttpServer : IDisposable
     /// </summary>
     public string BaseUrl { get; }
 
-    private string FindAvailablePort()
+    /// <summary>
+    /// Sets up a response for a specific path.
+    /// </summary>
+    /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
+    /// <param name="content">The content to return.</param>
+    /// <param name="statusCode">The HTTP status code to return.</param>
+    /// <param name="contentType">The content type header.</param>
+    public void SetupResponse(string path, string content, HttpStatusCode statusCode = HttpStatusCode.OK, string contentType = "text/html") => _responses[path] = new TestResponse(content, statusCode, contentType);
+
+    /// <summary>
+    /// Sets up default responses that mimic httpbin.org behavior.
+    /// </summary>
+    public void SetupDefaultResponses()
     {
-        for (int port = 8999; port <= 9099; port++)
+        SetupResponse("/html", "<html><head><title>Test HTML</title></head><body><h1>Test Content</h1></body></html>", HttpStatusCode.OK, "text/html");
+        SetupResponse("/json", "{\"key\": \"value\", \"test\": true}", HttpStatusCode.OK, "application/json");
+        SetupResponse("/user-agent", "{\"user-agent\": \"test-client\"}", HttpStatusCode.OK, "application/json");
+        SetupResponse("/status/200", "OK", HttpStatusCode.OK, "text/plain");
+        SetupResponse("/status/404", "Not Found", HttpStatusCode.NotFound, "text/plain");
+        SetupResponse("/status/500", "Internal Server Error", HttpStatusCode.InternalServerError, "text/plain");
+    }
+
+    /// <summary>
+    /// Disposes the test server.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _cancellationTokenSource.Cancel();
+        _listener.Stop();
+        _listener.Close();
+
+        try
+        {
+            _serverTask.Wait(TimeSpan.FromSeconds(5));
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected when cancelling
+        }
+        catch (AggregateException)
+        {
+            // Expected when cancelling
+        }
+
+        _cancellationTokenSource.Dispose();
+        _disposed = true;
+    }
+
+    private static string FindAvailablePort()
+    {
+        for (var port = 8999; port <= 9099; port++)
         {
             try
             {
@@ -62,34 +114,9 @@ public sealed class TestHttpServer : IDisposable
                 continue;
             }
         }
-        
+
         // Fallback to original port if nothing else works
         return "http://localhost:8999/";
-    }
-
-    /// <summary>
-    /// Sets up a response for a specific path.
-    /// </summary>
-    /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
-    /// <param name="content">The content to return.</param>
-    /// <param name="statusCode">The HTTP status code to return.</param>
-    /// <param name="contentType">The content type header.</param>
-    public void SetupResponse(string path, string content, HttpStatusCode statusCode = HttpStatusCode.OK, string contentType = "text/html")
-    {
-        _responses[path] = new TestResponse(content, statusCode, contentType);
-    }
-
-    /// <summary>
-    /// Sets up default responses that mimic httpbin.org behavior.
-    /// </summary>
-    public void SetupDefaultResponses()
-    {
-        SetupResponse("/html", "<html><head><title>Test HTML</title></head><body><h1>Test Content</h1></body></html>", HttpStatusCode.OK, "text/html");
-        SetupResponse("/json", "{\"key\": \"value\", \"test\": true}", HttpStatusCode.OK, "application/json");
-        SetupResponse("/user-agent", "{\"user-agent\": \"test-client\"}", HttpStatusCode.OK, "application/json");
-        SetupResponse("/status/200", "OK", HttpStatusCode.OK, "text/plain");
-        SetupResponse("/status/404", "Not Found", HttpStatusCode.NotFound, "text/plain");
-        SetupResponse("/status/500", "Internal Server Error", HttpStatusCode.InternalServerError, "text/plain");
     }
 
     private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
@@ -114,6 +141,7 @@ public sealed class TestHttpServer : IDisposable
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1075:Avoid empty catch clause that catches System.Exception", Justification = "Deliberate")]
     private void ProcessRequest(HttpListenerContext context)
     {
         try
@@ -126,7 +154,7 @@ public sealed class TestHttpServer : IDisposable
             {
                 response.StatusCode = (int)testResponse.StatusCode;
                 response.ContentType = testResponse.ContentType;
-                
+
                 var buffer = Encoding.UTF8.GetBytes(testResponse.Content);
                 response.ContentLength64 = buffer.Length;
                 response.OutputStream.Write(buffer, 0, buffer.Length);
@@ -146,37 +174,6 @@ public sealed class TestHttpServer : IDisposable
         {
             // Ignore errors during request processing
         }
-    }
-
-    /// <summary>
-    /// Disposes the test server.
-    /// </summary>
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _cancellationTokenSource.Cancel();
-        _listener.Stop();
-        _listener.Close();
-        
-        try
-        {
-            _serverTask.Wait(TimeSpan.FromSeconds(5));
-        }
-        catch (TaskCanceledException)
-        {
-            // Expected when cancelling
-        }
-        catch (AggregateException)
-        {
-            // Expected when cancelling
-        }
-
-        _cancellationTokenSource.Dispose();
-        _disposed = true;
     }
 
     private record TestResponse(string Content, HttpStatusCode StatusCode, string ContentType);

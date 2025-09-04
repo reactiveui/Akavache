@@ -85,7 +85,7 @@ public class HttpService : IHttpService
         IObservable<byte[]> ret;
         if (!fetchAlways)
         {
-            ret = blobCache.Get(key).Catch(fetchAndCache).Select(x => x ?? Array.Empty<byte>());
+            ret = blobCache.Get(key).Catch(fetchAndCache).Select(x => x ?? []);
         }
         else
         {
@@ -195,10 +195,9 @@ public class HttpService : IHttpService
             IEnumerable<KeyValuePair<string, string>>? headers = null,
             string? content = null,
             int retries = 3,
-            TimeSpan? timeout = null)
-        {
+            TimeSpan? timeout = null) =>
+
             // Force the configured fast retries/timeout
-            return base.MakeWebRequest(uri, method, headers, content, _retries, _timeout);
-        }
+            base.MakeWebRequest(uri, method, headers, content, _retries, _timeout);
     }
 }

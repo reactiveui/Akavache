@@ -4,11 +4,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
-using Splat;
+
 using NUnit.Framework;
+
+using Splat;
 
 namespace Akavache.Tests;
 
@@ -30,7 +32,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         IBlobCache? cache = null;
-        var keys = new[] { "key1", "key2" };
+        string[] keys = ["key1", "key2"];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => cache!.LoadImages(keys));
@@ -44,7 +46,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         IBlobCache? cache = null;
-        var urls = new[] { "http://example.com/image1.png", "http://example.com/image2.png" };
+        string[] urls = ["http://example.com/image1.png", "http://example.com/image2.png"];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => cache!.PreloadImagesFromUrls(urls));
@@ -58,7 +60,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         IBlobCache? cache = null;
-        var fallbackBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+        byte[] fallbackBytes = [0x89, 0x50, 0x4E, 0x47];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => cache!.LoadImageWithFallback("key", fallbackBytes));
@@ -87,7 +89,7 @@ public class ImageCacheExtensionsTests
     {
         // Arrange
         IBlobCache? cache = null;
-        var fallbackBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+        byte[] fallbackBytes = [0x89, 0x50, 0x4E, 0x47];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => cache!.LoadImageFromUrlWithFallback("http://example.com/image.png", fallbackBytes));
@@ -210,7 +212,7 @@ public class ImageCacheExtensionsTests
         // Arrange
         var serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache(serializer);
-        var keys = new[] { "missing_key1", "missing_key2" };
+        string[] keys = ["missing_key1", "missing_key2"];
 
         // Act
         var results = await cache.LoadImages(keys).ToList().FirstAsync();
@@ -231,7 +233,7 @@ public class ImageCacheExtensionsTests
         await using var cache = new InMemoryBlobCache(serializer);
 
         // Use URLs that will cause UriFormatException to test error handling
-        var invalidUrls = new[] { "not-a-url", "also/invalid" };
+        string[] invalidUrls = ["not-a-url", "also/invalid"];
 
         // Act & Assert - Should complete gracefully despite invalid URLs
         try
@@ -277,7 +279,7 @@ public class ImageCacheExtensionsTests
 
             // Assert
             Assert.That(bitmap, Is.Not.Null);
-            Assert.IsType<MockBitmap>(bitmap);
+            Assert.That(bitmap, Is.TypeOf<MockBitmap>()); // Corrected line
         }
         catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
         {
@@ -323,7 +325,7 @@ public class ImageCacheExtensionsTests
 
             // Assert
             Assert.That(bitmap, Is.Not.Null);
-            Assert.IsType<MockBitmap>(bitmap);
+            Assert.That(bitmap, Is.TypeOf<MockBitmap>()); // Corrected line
         }
         catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
         {
@@ -348,7 +350,7 @@ public class ImageCacheExtensionsTests
         await using var cache = new InMemoryBlobCache(serializer);
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetImageSize("nonexistent_image")
+        Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetImageSize("nonexistent_image")
                 .Timeout(TestTimeout)
                 .FirstAsync());
     }
@@ -387,10 +389,12 @@ public class ImageCacheExtensionsTests
                 .Timeout(TestTimeout)
                 .FirstAsync();
 
-            // Assert
-            Assert.That(size, Is.Not.Null);
-            Assert.That(size.Width, Is.EqualTo(100f));
-            Assert.That(size.Height, Is.EqualTo(200f));
+            using (Assert.EnterMultipleScope())
+            {
+                // Assert
+                Assert.That(size.Width, Is.EqualTo(100f));
+                Assert.That(size.Height, Is.EqualTo(200f));
+            }
         }
         catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
         {
@@ -426,7 +430,7 @@ public class ImageCacheExtensionsTests
             .FirstAsync();
 
         // Act - Clear only keys starting with "image_"
-        await cache.ClearImageCache(key => key.StartsWith("image_"))
+        await cache.ClearImageCache(static key => key.StartsWith("image_"))
             .Timeout(TestTimeout)
             .FirstAsync();
 
@@ -455,7 +459,7 @@ public class ImageCacheExtensionsTests
             .FirstAsync();
 
         // Act - Use pattern that matches nothing
-        await cache.ClearImageCache(key => key.StartsWith("nonexistent_"))
+        await cache.ClearImageCache(static key => key.StartsWith("nonexistent_"))
             .Timeout(TestTimeout)
             .FirstAsync();
 
@@ -477,7 +481,7 @@ public class ImageCacheExtensionsTests
         // Arrange
         var serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache(serializer);
-        var keys = new[] { "missing1", "missing2" }; // Use missing keys to test error handling
+        string[] keys = ["missing1", "missing2"]; // Use missing keys to test error handling
 
         // Act
         var results = await cache.LoadImages(keys, 100f, 200f).ToList()
@@ -498,7 +502,7 @@ public class ImageCacheExtensionsTests
         // Arrange
         var serializer = new SystemJsonSerializer();
         await using var cache = new InMemoryBlobCache(serializer);
-        var urls = new[] { "http://invalid1.com", "http://invalid2.com" }; // Use invalid URLs to test error handling
+        string[] urls = ["http://invalid1.com", "http://invalid2.com"]; // Use invalid URLs to test error handling
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         // Act
@@ -571,7 +575,7 @@ public class ImageCacheExtensionsTests
 
         public Task Save(CompressedBitmapFormat format, float quality, Stream target)
         {
-            var mockPngData = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            byte[] mockPngData = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
             return target.WriteAsync(mockPngData, 0, mockPngData.Length);
         }
 

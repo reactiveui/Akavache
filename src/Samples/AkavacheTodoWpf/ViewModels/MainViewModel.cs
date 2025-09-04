@@ -65,28 +65,29 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         ExitCommand = ReactiveCommand.CreateFromObservable(ExecuteExit);
 
         // Initialize observable properties in constructor
-        var loadingCommands = new[] { AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand, CleanupCacheCommand, LoadSampleDataCommand };
+        ReactiveCommand<Unit, Unit>[] loadingCommands = [AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand, CleanupCacheCommand, LoadSampleDataCommand
+        ];
         _isLoading = loadingCommands
-            .Select(cmd => cmd.IsExecuting)
-            .CombineLatest(executing => executing.Any(x => x))
-            .ToProperty(this, x => x.IsLoading);
+            .Select(static cmd => cmd.IsExecuting)
+            .CombineLatest(static executing => executing.Any(static x => x))
+            .ToProperty(this, static x => x.IsLoading);
 
         // Enhanced statistics calculation that responds to individual todo property changes
         _todoStats = Observable.Merge(
-            this.WhenAnyValue(x => x.Todos.Count).Select(_ => Unit.Default),
-            Todos.ObserveCollectionChanges().Select(_ => Unit.Default),
-            this.WhenAnyValue(x => x.TodoStats).Select(_ => Unit.Default).Skip(1))
+            this.WhenAnyValue(static x => x.Todos.Count).Select(static _ => Unit.Default),
+            Todos.ObserveCollectionChanges().Select(static _ => Unit.Default),
+            this.WhenAnyValue(static x => x.TodoStats).Select(static _ => Unit.Default).Skip(1))
         .Throttle(TimeSpan.FromMilliseconds(500))
-        .SelectMany(_ => TodoCacheService.GetTodoStats())
+        .SelectMany(static _ => TodoCacheService.GetTodoStats())
         .Catch(Observable.Return(new TodoStats()))
         .ObserveOn(RxApp.MainThreadScheduler)
-        .ToProperty(this, x => x.TodoStats);
+        .ToProperty(this, static x => x.TodoStats);
 
         // Setup cache info with reduced frequency and better error handling
         _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(5)) // Reduced to 5 minutes instead of 30 seconds
-            .SelectMany(_ => TodoCacheService.GetCacheInfo()) // Remove unnecessary cache_test insertion
+            .SelectMany(static _ => TodoCacheService.GetCacheInfo()) // Remove unnecessary cache_test insertion
             .Retry(3)
-            .Catch((Exception ex) =>
+            .Catch(static (Exception ex) =>
             {
                 System.Diagnostics.Debug.WriteLine($"Cache info failed: {ex}");
                 return Observable.Return(new CacheInfo
@@ -99,7 +100,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 });
             })
             .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, x => x.CacheInfo);
+            .ToProperty(this, static x => x.CacheInfo);
 
         // Setup activator for proper lifecycle management
         Activator = new ViewModelActivator();
@@ -508,7 +509,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
     private IObservable<Unit> ExecuteExit() => SaveApplicationState()
     .ObserveOn(RxApp.MainThreadScheduler)
-    .Do(_ => Application.Current?.Shutdown());
+    .Do(static _ => Application.Current?.Shutdown());
 
     private object GetSortKey(TodoItem todo) => Settings?.SortOrder switch
     {

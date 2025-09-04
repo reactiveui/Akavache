@@ -280,8 +280,8 @@ public class NotificationService : ReactiveObject, IDisposable
         // Check for reminders in background
         CheckImmediateReminders()
             .Subscribe(
-                _ => { /* Success */ },
-                ex => System.Diagnostics.Debug.WriteLine($"Reminder check failed: {ex}"));
+                static _ => { /* Success */ },
+                static ex => System.Diagnostics.Debug.WriteLine($"Reminder check failed: {ex}"));
     }
 
     private bool ShouldNotify(TodoItem todo)

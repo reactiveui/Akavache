@@ -5,6 +5,7 @@
 
 using Akavache.Core;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 
@@ -30,12 +31,12 @@ public class CoreUtilityTests
         var oneWeekAgo = baseTime.AddDays(-7);
 
         // Assert - These should all be in the past relative to baseTime
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(oneHourAgo, Is.LessThan(baseTime));
             Assert.That(oneDayAgo, Is.LessThan(baseTime));
             Assert.That(oneWeekAgo, Is.LessThan(baseTime));
-        });
+        }
     }
 
     /// <summary>
@@ -53,12 +54,12 @@ public class CoreUtilityTests
         var oneWeekFromNow = baseTime.AddDays(7);
 
         // Assert - These should all be in the future relative to baseTime
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(oneHourFromNow, Is.GreaterThan(baseTime));
             Assert.That(oneDayFromNow, Is.GreaterThan(baseTime));
             Assert.That(oneWeekFromNow, Is.GreaterThan(baseTime));
-        });
+        }
     }
 
     /// <summary>
@@ -75,10 +76,13 @@ public class CoreUtilityTests
         var dateTimeOffset = new DateTimeOffset(utcTime, TimeSpan.Zero);
         var offsetTime = dateTimeOffset.ToOffset(offset);
 
-        // Assert
-        Assert.That(utcTime.Kind, Is.EqualTo(DateTimeKind.Utc));
-        Assert.That(dateTimeOffset.Offset, Is.EqualTo(TimeSpan.Zero));
-        Assert.That(offsetTime.Offset, Is.EqualTo(offset));
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert
+            Assert.That(utcTime.Kind, Is.EqualTo(DateTimeKind.Utc));
+            Assert.That(dateTimeOffset.Offset, Is.EqualTo(TimeSpan.Zero));
+            Assert.That(offsetTime.Offset, Is.EqualTo(offset));
+        }
     }
 
     /// <summary>
@@ -91,16 +95,22 @@ public class CoreUtilityTests
         var minDateTime = DateTime.MinValue;
         var maxDateTime = DateTime.MaxValue;
 
-        // These should not throw
-        Assert.That(minDateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
-        Assert.That(maxDateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+        using (Assert.EnterMultipleScope())
+        {
+            // These should not throw
+            Assert.That(minDateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+            Assert.That(maxDateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+        }
 
         // Test with UTC variants
         var minUtc = DateTime.SpecifyKind(minDateTime, DateTimeKind.Utc);
         var maxUtc = DateTime.SpecifyKind(maxDateTime, DateTimeKind.Utc);
 
-        Assert.That(minUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
-        Assert.That(maxUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(minUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
+            Assert.That(maxUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
+        }
     }
 
     /// <summary>
@@ -114,10 +124,13 @@ public class CoreUtilityTests
         var thirtyMinutes = TimeSpan.FromMinutes(30);
         var ninetyMinutes = TimeSpan.FromMinutes(90);
 
-        // Act & Assert
-        Assert.That(oneHour.TotalMinutes, Is.EqualTo(60));
-        Assert.That(thirtyMinutes.TotalMinutes, Is.EqualTo(30));
-        Assert.That(ninetyMinutes.TotalMinutes, Is.EqualTo(90));
+        using (Assert.EnterMultipleScope())
+        {
+            // Act & Assert
+            Assert.That(oneHour.TotalMinutes, Is.EqualTo(60));
+            Assert.That(thirtyMinutes.TotalMinutes, Is.EqualTo(30));
+            Assert.That(ninetyMinutes.TotalMinutes, Is.EqualTo(90));
+        }
 
         // Test arithmetic
         var combined = oneHour + thirtyMinutes;
@@ -152,18 +165,24 @@ public class CoreUtilityTests
         var result1 = await request1.FirstAsync();
         var result2 = await request2.FirstAsync();
 
-        // Assert - Should use cached result, so factory called only once
-        Assert.That(result2, Is.EqualTo(result1));
-        Assert.That(result1, Is.EqualTo("result_1"));
-        Assert.That(callCount, Is.EqualTo(1)); // Should only be called once due to caching
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert - Should use cached result, so factory called only once
+            Assert.That(result2, Is.EqualTo(result1));
+            Assert.That(result1, Is.EqualTo("result_1"));
+            Assert.That(callCount, Is.EqualTo(1)); // Should only be called once due to caching
+        }
 
         // Clear and test again
         RequestCache.Clear();
         var request3 = RequestCache.GetOrCreateRequest(testKey, factory);
         var result3 = await request3.FirstAsync();
 
-        Assert.That(result3, Is.EqualTo("result_2")); // Should be called again after clear
-        Assert.That(callCount, Is.EqualTo(2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result3, Is.EqualTo("result_2")); // Should be called again after clear
+            Assert.That(callCount, Is.EqualTo(2));
+        }
     }
 
     /// <summary>
@@ -196,26 +215,28 @@ public class CoreUtilityTests
         var result2 = await request2.FirstAsync();
         var result3 = await request3.FirstAsync();
 
-        // Assert
-        Assert.That(result1, Is.EqualTo("result_key1_1"));
-        Assert.That(result2, Is.EqualTo("result_key2_1"));
-        Assert.That(result3, Is.EqualTo("result_key1_1")); // Should be cached, same as result1
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert
+            Assert.That(result1, Is.EqualTo("result_key1_1"));
+            Assert.That(result2, Is.EqualTo("result_key2_1"));
+            Assert.That(result3, Is.EqualTo("result_key1_1")); // Should be cached, same as result1
 
-        Assert.That(callCounts["key1"], Is.EqualTo(1)); // Only called once due to caching
-        Assert.That(callCounts["key2"], Is.EqualTo(1)); // Only called once
+            Assert.That(callCounts["key1"], Is.EqualTo(1)); // Only called once due to caching
+            Assert.That(callCounts["key2"], Is.EqualTo(1)); // Only called once
+        }
     }
 
     /// <summary>
     /// Tests that IBlobCache.ExceptionHelpers work correctly.
     /// </summary>
-    /// <returns>A task representing the test completion.</returns>
     [Test]
-    public async Task ExceptionHelpersShouldWorkCorrectly()
+    public void ExceptionHelpersShouldWorkCorrectly()
     {
         // Test KeyNotFoundException helper
         var keyNotFoundObs = IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<string>("test_key");
 
-        var keyNotFoundEx = await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+        var keyNotFoundEx = Assert.ThrowsAsync<KeyNotFoundException>(async () =>
         {
             await keyNotFoundObs.FirstAsync();
         });
@@ -226,7 +247,7 @@ public class CoreUtilityTests
         // Test ObjectDisposedException helper
         var objectDisposedObs = IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>("test_cache");
 
-        var objectDisposedEx = await Assert.ThrowsAsync<ObjectDisposedException>(async () =>
+        var objectDisposedEx = Assert.ThrowsAsync<ObjectDisposedException>(async () =>
         {
             await objectDisposedObs.FirstAsync();
         });
@@ -245,10 +266,14 @@ public class CoreUtilityTests
         var taskpoolScheduler = CacheDatabase.TaskpoolScheduler;
         var immediateScheduler = ImmediateScheduler.Instance;
 
-        // Assert
-        Assert.That(taskpoolScheduler, Is.Not.Null);
-        Assert.That(immediateScheduler, Is.Not.Null);
-        Assert.NotSame(taskpoolScheduler, immediateScheduler);
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert
+            Assert.That(taskpoolScheduler, Is.Not.Null);
+            Assert.That(immediateScheduler, Is.Not.Null);
+        }
+
+        Assert.That(immediateScheduler, Is.Not.SameAs(taskpoolScheduler));
     }
 
     /// <summary>
@@ -261,10 +286,17 @@ public class CoreUtilityTests
         var unit1 = Unit.Default;
         var unit2 = default(Unit);
 
-        // Assert
-        Assert.That(unit2, Is.EqualTo(unit1));
-        Assert.That(unit1.Equals(unit2), Is.True);
-        Assert.That(unit2.GetHashCode(), Is.EqualTo(unit1.GetHashCode()));
-        Assert.That(unit1.ToString(), Is.EqualTo("()"));
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert
+            Assert.That(unit2, Is.EqualTo(unit1));
+            Assert.That(unit1, Is.EqualTo(unit2));
+        }
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(unit2.GetHashCode(), Is.EqualTo(unit1.GetHashCode()));
+            Assert.That(unit1.ToString(), Is.EqualTo("()"));
+        }
     }
 }

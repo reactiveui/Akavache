@@ -17,10 +17,7 @@ public partial class App : MauiWinUIApplication
     /// <summary>
     /// Initializes a new instance of the <see cref="App"/> class.
     /// </summary>
-    public App()
-    {
-        InitializeComponent();
-    }
+    public App() => InitializeComponent();
 
     /// <summary>
     /// Creates the maui application.

@@ -5,6 +5,7 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
+
 using NUnit.Framework;
 
 namespace Akavache.Tests;
@@ -33,10 +34,8 @@ public class HttpServiceTests
     /// Cleans up the test fixture.
     /// </summary>
     [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        _testServer?.Dispose();
-    }
+    public void OneTimeTearDown() => _testServer?.Dispose();
+
     /// <summary>
     /// Tests that HttpService can be instantiated correctly.
     /// </summary>
@@ -64,11 +63,11 @@ public class HttpServiceTests
         var httpService = new HttpService();
 
         // Assert - HttpClient should be configured properly
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(httpService.HttpClient, Is.Not.Null);
             Assert.That(httpService.HttpClient.DefaultRequestHeaders, Is.Not.Null);
-        });
+        }
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -129,17 +128,23 @@ public class HttpServiceTests
     [Test]
     public void MultipleHttpServiceInstancesShouldBeCreatable()
     {
-        // Act
+        // Arrange & Act
+        // Use 'using' to ensure services (and their HttpClients) are always disposed
         var service1 = new HttpService();
         var service2 = new HttpService();
 
         // Assert
-        Assert.That(service1, Is.Not.Null);
-        Assert.That(service2, Is.Not.Null);
-        Assert.NotSame(service1.HttpClient, service2.HttpClient);
+        // 'Assert.Multiple' ensures all assertions run before the test fails
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(service1, Is.Not.Null);
+            Assert.That(service2, Is.Not.Null);
+            Assert.That(service1.HttpClient, Is.Not.SameAs(service2.HttpClient));
+        }
 
         // Cleanup
         service1.HttpClient.Dispose();
+
         service2.HttpClient.Dispose();
     }
 
@@ -216,12 +221,12 @@ public class HttpServiceTests
             var postObservable = httpService.DownloadUrl(cache, "post_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Post);
             var putObservable = httpService.DownloadUrl(cache, "put_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Put);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(getObservable, Is.Not.Null);
                 Assert.That(postObservable, Is.Not.Null);
                 Assert.That(putObservable, Is.Not.Null);
-            });
+            }
         }
         finally
         {
@@ -261,11 +266,11 @@ public class HttpServiceTests
                 true);
 
             // Assert
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(cachedObservable, Is.Not.Null);
                 Assert.That(alwaysFetchObservable, Is.Not.Null);
-            });
+            }
         }
         finally
         {

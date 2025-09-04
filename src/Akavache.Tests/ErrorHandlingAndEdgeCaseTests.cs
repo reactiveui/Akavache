@@ -6,6 +6,7 @@
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 
@@ -35,11 +36,11 @@ public class ErrorHandlingAndEdgeCaseTests
         await cache.DisposeAsync();
 
         // Act & Assert - operations on disposed cache should throw ObjectDisposedException
-        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.GetObject<string>("test").FirstAsync());
+        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.GetObject<string>("test").FirstAsync());
 
-        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InsertObject("new", "value").FirstAsync());
+        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InsertObject("new", "value").FirstAsync());
 
-        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InvalidateObject<string>("test").FirstAsync());
+        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InvalidateObject<string>("test").FirstAsync());
     }
 
     /// <summary>
@@ -64,11 +65,11 @@ public class ErrorHandlingAndEdgeCaseTests
             var retrieved = await cache.GetObject<string>("large_data").FirstAsync();
 
             // Assert
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(retrieved, Is.EqualTo(largeData));
-                Assert.That(retrieved!.Length, Is.EqualTo(10_000_000));
-            });
+                Assert.That(retrieved!, Has.Length.EqualTo(10_000_000));
+            }
         }
         finally
         {
@@ -124,19 +125,19 @@ public class ErrorHandlingAndEdgeCaseTests
         try
         {
             // Test null key validation - this should always throw ArgumentNullException
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InsertObject(null!, "value").FirstAsync());
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObject<string>(null!).FirstAsync());
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObject<string>(null!).FirstAsync());
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InsertObject(null!, "value").FirstAsync());
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObject<string>(null!).FirstAsync());
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObject<string>(null!).FirstAsync());
 
             // Test various edge case keys - InMemoryBlobCache may allow these
-            var edgeCaseKeys = new[]
-            {
-                    string.Empty,
+            string[] edgeCaseKeys =
+            [
+                string.Empty,
                     "   ",
                     "\t",
                     "\n",
                     "\r\n"
-            };
+            ];
 
             foreach (var edgeCaseKey in edgeCaseKeys)
             {
@@ -162,9 +163,9 @@ public class ErrorHandlingAndEdgeCaseTests
             Assert.That(longKeyRetrieved, Is.EqualTo("long_key_value"));
 
             // Test keys with special characters - should work
-            var specialCharKeys = new[]
-            {
-                    "key-with-dash",
+            string[] specialCharKeys =
+            [
+                "key-with-dash",
                     "key_with_underscore",
                     "key.with.dots",
                     "key with spaces",
@@ -190,7 +191,7 @@ public class ErrorHandlingAndEdgeCaseTests
                     "key$with$dollar",
                     "key!with!exclamation",
                     "key*with*asterisk"
-            };
+            ];
 
             foreach (var specialKey in specialCharKeys)
             {
@@ -200,9 +201,9 @@ public class ErrorHandlingAndEdgeCaseTests
             }
 
             // Test Unicode keys
-            var unicodeKeys = new[]
-            {
-                    "key_中文",
+            string[] unicodeKeys =
+            [
+                "key_中文",
                     "key_русский",
                     "key_العربية",
                     "key_日本語",
@@ -211,7 +212,7 @@ public class ErrorHandlingAndEdgeCaseTests
                     "key_עברית",
                     "key_हिन्दी",
                     "key_emoji_😀_🎉_🚀"
-            };
+            ];
 
             foreach (var unicodeKey in unicodeKeys)
             {
@@ -280,7 +281,7 @@ public class ErrorHandlingAndEdgeCaseTests
                         await cache.InvalidateObject<string>(key).FirstAsync();
 
                         // Verify invalidation
-                        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>(key).FirstAsync());
+                        Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>(key).FirstAsync());
                     }
                 }));
             }
@@ -315,7 +316,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await cache.InsertObject("expired_key", "expired_value", pastExpiration).FirstAsync();
 
             // Should be expired immediately
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("expired_key").FirstAsync());
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("expired_key").FirstAsync());
 
             // Test far future expiration
             var farFutureExpiration = DateTimeOffset.Now.AddYears(100);
@@ -330,7 +331,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
             // MinValue expiration (should be expired)
             await cache.InsertObject("min_expiration", "min_value", minExpiration).FirstAsync();
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("min_expiration").FirstAsync());
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("min_expiration").FirstAsync());
 
             // MaxValue expiration (should be valid)
             await cache.InsertObject("max_expiration", "max_value", maxExpiration).FirstAsync();
@@ -349,7 +350,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await Task.Delay(200);
 
             // Should now be expired
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("short_expiration").FirstAsync());
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("short_expiration").FirstAsync());
         }
         finally
         {
@@ -377,15 +378,14 @@ public class ErrorHandlingAndEdgeCaseTests
                 Id = Guid.NewGuid(),
                 Name = "Complex Object",
                 Timestamp = DateTimeOffset.Now,
-                Users = new[]
-                {
-                        new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" },
-                        new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" }
-                },
+                Users = (UserObject[])[
+                    new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" },
+                    new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" }
+                ],
                 Metadata = new Dictionary<string, object>
                 {
                     ["version"] = "1.0.0",
-                    ["features"] = new[] { "feature1", "feature2", "feature3" },
+                    ["features"] = (string[])["feature1", "feature2", "feature3"],
                     ["config"] = new
                     {
                         enabled = true,
@@ -393,12 +393,11 @@ public class ErrorHandlingAndEdgeCaseTests
                         retries = 3
                     }
                 },
-                NestedArrays = new[]
-                {
-                        new[] { 1, 2, 3 },
-                        new[] { 4, 5, 6 },
-                        new[] { 7, 8, 9 }
-                }
+                NestedArrays = (int[][])[
+                    [1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8, 9]
+                ]
             };
 
             // Act
@@ -471,7 +470,7 @@ public class ErrorHandlingAndEdgeCaseTests
             // Verify all objects were invalidated
             for (var i = 0; i < objectCount; i++)
             {
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>($"user_{i}").FirstAsync());
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>($"user_{i}").FirstAsync());
             }
         }
         finally
@@ -522,14 +521,14 @@ public class ErrorHandlingAndEdgeCaseTests
             }
 
             // Test Unicode in keys
-            var unicodeKeys = new[]
-            {
-                    "?_??",
+            string[] unicodeKeys =
+            [
+                "?_??",
                     "??_???",
                     "????_???????",
                     "????_?????",
                     "?????_????"
-            };
+            ];
 
             foreach (var unicodeKey in unicodeKeys)
             {
@@ -584,7 +583,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
                     // Assert - Allow for some tolerance due to serialization precision
                     var timeDifference = Math.Abs((dateTimeCase.Value - retrieved).TotalMilliseconds);
-                    Assert.True(timeDifference < 1000, $"DateTime case '{dateTimeCase.Key}' failed: expected {dateTimeCase.Value}, got {retrieved}, difference: {timeDifference}ms");
+                    Assert.That(timeDifference, Is.LessThan(1000), $"DateTime case '{dateTimeCase.Key}' failed: expected {dateTimeCase.Value}, got {retrieved}, difference: {timeDifference}ms");
                 }
                 catch (Exception ex)
                 {
@@ -620,7 +619,7 @@ public class ErrorHandlingAndEdgeCaseTests
                     var retrieved = await cache.GetObject<DateTimeOffset>(offsetCase.Key).FirstAsync();
 
                     var timeDifference = Math.Abs((offsetCase.Value - retrieved).TotalMilliseconds);
-                    Assert.True(timeDifference < 1000, $"DateTimeOffset case '{offsetCase.Key}' failed: expected {offsetCase.Value}, got {retrieved}");
+                    Assert.That(timeDifference, Is.LessThan(1000), $"DateTimeOffset case '{offsetCase.Key}' failed: expected {offsetCase.Value}, got {retrieved}");
                 }
                 catch (Exception ex)
                 {

@@ -7,6 +7,7 @@ using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 
@@ -37,44 +38,44 @@ public class ISerializerInterfaceTests
 
         // Act & Assert - String
         var stringBytes = serializer.Serialize(testString);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(stringBytes, Is.Not.Null);
-            Assert.That(stringBytes.Length, Is.GreaterThan(0));
-        });
+            Assert.That(stringBytes, Is.Not.Empty);
+        }
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
         Assert.That(deserializedString, Is.EqualTo(testString));
 
         // Act & Assert - Int
         var intBytes = serializer.Serialize(testInt);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(intBytes, Is.Not.Null);
-            Assert.That(intBytes.Length, Is.GreaterThan(0));
-        });
+            Assert.That(intBytes, Is.Not.Empty);
+        }
 
         var deserializedInt = serializer.Deserialize<int>(intBytes);
         Assert.That(deserializedInt, Is.EqualTo(testInt));
 
         // Act & Assert - Bool
         var boolBytes = serializer.Serialize(testBool);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(boolBytes, Is.Not.Null);
-            Assert.That(boolBytes.Length, Is.GreaterThan(0));
-        });
+            Assert.That(boolBytes, Is.Not.Empty);
+        }
 
         var deserializedBool = serializer.Deserialize<bool>(boolBytes);
         Assert.That(deserializedBool, Is.EqualTo(testBool));
 
         // Act & Assert - Double
         var doubleBytes = serializer.Serialize(testDouble);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(doubleBytes, Is.Not.Null);
-            Assert.That(doubleBytes.Length, Is.GreaterThan(0));
-        });
+            Assert.That(doubleBytes, Is.Not.Empty);
+        }
 
         var deserializedDouble = serializer.Deserialize<double>(doubleBytes);
         Assert.That(deserializedDouble, Is.EqualTo(testDouble).Within(0.0001)); // Allow for floating point precision
@@ -105,13 +106,13 @@ public class ISerializerInterfaceTests
         var deserializedUser = serializer.Deserialize<UserObject>(serializedBytes);
 
         // Assert
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(deserializedUser, Is.Not.Null);
             Assert.That(deserializedUser!.Name, Is.EqualTo(testUser.Name));
             Assert.That(deserializedUser.Bio, Is.EqualTo(testUser.Bio));
             Assert.That(deserializedUser.Blog, Is.EqualTo(testUser.Blog));
-        });
+        }
     }
 
     /// <summary>
@@ -156,35 +157,46 @@ public class ISerializerInterfaceTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testList = new List<int> { 1, 2, 3, 4, 5 };
-        var testArray = new[] { "one", "two", "three" };
-        var testDict = new Dictionary<string, string>
+        var testList = new List<int>
         {
-            ["key1"] = "value1",
-            ["key2"] = "value2",
-            ["key3"] = "value3"
+            1,
+            2,
+            3,
+            4,
+            5
         };
+        string[] testArray = ["one", "two", "three"];
+        var testDict = new Dictionary<string, string> { ["key1"] = "value1", ["key2"] = "value2", ["key3"] = "value3" };
 
         // Act & Assert - List
         var listBytes = serializer.Serialize(testList);
         var deserializedList = serializer.Deserialize<List<int>>(listBytes);
         Assert.That(deserializedList, Is.Not.Null);
-        Assert.That(deserializedList!.Count, Is.EqualTo(testList.Count));
-        Assert.That(deserializedList, Is.EqualTo(testList));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedList!, Has.Count.EqualTo(testList.Count));
+            Assert.That(deserializedList, Is.EqualTo(testList));
+        }
 
         // Act & Assert - Array
         var arrayBytes = serializer.Serialize(testArray);
         var deserializedArray = serializer.Deserialize<string[]>(arrayBytes);
         Assert.That(deserializedArray, Is.Not.Null);
-        Assert.That(deserializedArray!.Length, Is.EqualTo(testArray.Length));
-        Assert.That(deserializedArray, Is.EqualTo(testArray));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedArray!, Has.Length.EqualTo(testArray.Length));
+            Assert.That(deserializedArray, Is.EqualTo(testArray));
+        }
 
         // Act & Assert - Dictionary
         var dictBytes = serializer.Serialize(testDict);
         var deserializedDict = serializer.Deserialize<Dictionary<string, string>>(dictBytes);
         Assert.That(deserializedDict, Is.Not.Null);
-        Assert.That(deserializedDict!.Count, Is.EqualTo(testDict.Count));
-        Assert.That(deserializedDict, Is.EqualTo(testDict));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedDict!, Has.Count.EqualTo(testDict.Count));
+            Assert.That(deserializedDict, Is.EqualTo(testDict));
+        }
     }
 
     /// <summary>
@@ -222,7 +234,7 @@ public class ISerializerInterfaceTests
             {
                 // BSON serializers might have limitations with DateTime handling
                 // Just verify that setting the property doesn't throw an exception
-                Assert.True(true, "BSON serializer property access completed without exception");
+                Assert.Warn("BSON serializer property access completed without exception");
                 return;
             }
 
@@ -245,7 +257,7 @@ public class ISerializerInterfaceTests
         {
             // BSON serializers might not support ForcedDateTimeKind property properly
             // This is a known limitation, so we'll pass the test
-            Assert.True(true, $"BSON serializer property limitation acknowledged: {ex.Message}");
+            Assert.Warn($"BSON serializer property limitation acknowledged: {ex.Message}");
         }
 
         // This test is purely about the property behavior, not DateTime serialization
@@ -287,20 +299,26 @@ public class ISerializerInterfaceTests
             {
                 // BSON serializers are known to have DateTime edge cases
                 // Just verify basic operation succeeded and time is reasonable
-                Assert.That(deserializedDate, Is.Not.EqualTo(default));
+                Assert.That(deserializedDate, Is.Not.Default);
 
                 // Very generous time difference tolerance for BSON (allow up to 1 day difference)
                 var bsonTimeDiff = Math.Abs((testDate - deserializedDate).TotalDays);
-                Assert.True(bsonTimeDiff < 1, $"BSON DateTime difference acceptable but large: {bsonTimeDiff} days for {serializerType.Name}");
+                Assert.That(
+                    bsonTimeDiff,
+                    Is.LessThan(1),
+                    $"BSON DateTime difference acceptable but large: {bsonTimeDiff} days for {serializerType.Name}");
 
                 return; // Skip further validation for BSON
             }
 
             // For non-BSON serializers, use stricter validation
-            Assert.That(deserializedDate, Is.Not.EqualTo(default));
+            Assert.That(deserializedDate, Is.Not.Default);
 
             var regularTimeDiff = Math.Abs((testDate - deserializedDate).TotalMinutes);
-            Assert.True(regularTimeDiff < 1440, $"DateTime difference too large: {regularTimeDiff} minutes for {serializerType.Name}");
+            Assert.That(
+                regularTimeDiff,
+                Is.LessThan(1440),
+                $"DateTime difference too large: {regularTimeDiff} minutes for {serializerType.Name}");
         }
         catch (Exception ex) when (serializerType.Name.Contains("Bson"))
         {
@@ -310,7 +328,7 @@ public class ISerializerInterfaceTests
 
             // Test passes for BSON serializers even if DateTime serialization has issues
             // This acknowledges the known limitation without failing the test
-            Assert.True(true, $"BSON serializer DateTime limitation acknowledged: {ex.Message}");
+            Assert.Warn($"BSON serializer DateTime limitation acknowledged: {ex.Message}");
         }
         finally
         {
@@ -345,11 +363,13 @@ public class ISerializerInterfaceTests
         catch (Exception ex)
         {
             // Some serializers may throw for empty bytes, which is also acceptable
-            Assert.That(ex, Is.TypeOf<ArgumentException>()
-                .Or.TypeOf<InvalidOperationException>()
-                .Or.TypeOf<FormatException>()
-                .Or.TypeOf<Newtonsoft.Json.JsonException>()
-                .Or.TypeOf<System.Text.Json.JsonException>(),
+            Assert.That(
+                ex,
+                Is.TypeOf<ArgumentException>()
+                    .Or.TypeOf<InvalidOperationException>()
+                    .Or.TypeOf<FormatException>()
+                    .Or.TypeOf<Newtonsoft.Json.JsonException>()
+                    .Or.TypeOf<System.Text.Json.JsonException>(),
                 $"Unexpected exception type: {ex.GetType().Name}");
         }
     }
@@ -377,7 +397,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - Large string
         var stringBytes = serializer.Serialize(largeString);
         Assert.That(stringBytes, Is.Not.Null);
-        Assert.That(stringBytes.Length, Is.GreaterThan(500_000)); // Should be at least 500KB
+        Assert.That(stringBytes, Has.Length.GreaterThan(500_000)); // Should be at least 500KB
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
         Assert.That(deserializedString, Is.EqualTo(largeString));
@@ -385,12 +405,15 @@ public class ISerializerInterfaceTests
         // Act & Assert - Large collection
         var listBytes = serializer.Serialize(largeList);
         Assert.That(listBytes, Is.Not.Null);
-        Assert.That(listBytes.Length, Is.GreaterThan(1000)); // Should be reasonably sized
+        Assert.That(listBytes, Has.Length.GreaterThan(1000)); // Should be reasonably sized
 
         var deserializedList = serializer.Deserialize<List<int>>(listBytes);
         Assert.That(deserializedList, Is.Not.Null);
-        Assert.That(deserializedList!.Count, Is.EqualTo(largeList.Count));
-        Assert.That(deserializedList, Is.EqualTo(largeList));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedList!, Has.Count.EqualTo(largeList.Count));
+            Assert.That(deserializedList, Is.EqualTo(largeList));
+        }
     }
 
     /// <summary>
@@ -416,12 +439,17 @@ public class ISerializerInterfaceTests
                     Level3 = new
                     {
                         Value = "Deeply nested value",
-                        Numbers = new[] { 1, 2, 3, 4, 5 },
-                        Users = new[]
-                        {
-                            new UserObject { Name = "Nested User 1", Bio = "Bio 1", Blog = "Blog 1" },
-                            new UserObject { Name = "Nested User 2", Bio = "Bio 2", Blog = "Blog 2" }
-                        }
+                        Numbers = (int[])[1, 2, 3, 4, 5],
+                        Users = (UserObject[])[
+                            new UserObject
+                            {
+                                Name = "Nested User 1", Bio = "Bio 1", Blog = "Blog 1"
+                            },
+                            new UserObject
+                            {
+                                Name = "Nested User 2", Bio = "Bio 2", Blog = "Blog 2"
+                            }
+                        ]
                     }
                 }
             }
@@ -432,7 +460,7 @@ public class ISerializerInterfaceTests
 
         // Assert - We can't easily deserialize anonymous types, but we can verify serialization works
         Assert.That(serializedBytes, Is.Not.Null);
-        Assert.That(serializedBytes.Length, Is.GreaterThan(0));
+        Assert.That(serializedBytes, Is.Not.Empty);
 
         // Verify the serialized data contains expected content
         var serializedString = Encoding.UTF8.GetString(serializedBytes);

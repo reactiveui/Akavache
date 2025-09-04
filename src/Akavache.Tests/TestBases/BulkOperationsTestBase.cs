@@ -20,42 +20,6 @@ public abstract class BulkOperationsTestBase : IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
-    /// <param name="serializerType">The type of serializer to use for this test.</param>
-    /// <returns>The configured serializer instance.</returns>
-    public static ISerializer SetupTestSerializer(Type? serializerType)
-    {
-        // Clear any existing in-flight requests to ensure clean test state
-        RequestCache.Clear();
-
-        if (serializerType == typeof(NewtonsoftBsonSerializer))
-        {
-            // Register the Newtonsoft BSON serializer specifically
-            return new NewtonsoftBsonSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
-        {
-            // Register the System.Text.Json BSON serializer specifically
-            return new SystemJsonBsonSerializer();
-        }
-        else if (serializerType == typeof(NewtonsoftSerializer))
-        {
-            // Register the Newtonsoft JSON serializer
-            return new NewtonsoftSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-        else
-        {
-            return null!;
-        }
-    }
-
-    /// <summary>
     /// Tests if Get with multiple keys work correctly.
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
@@ -73,16 +37,16 @@ public abstract class BulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.That(allData.Count, Is.EqualTo(keys.Length));
+            Assert.That(allData, Has.Count.EqualTo(keys.Length));
             Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
         }
     }
@@ -105,14 +69,17 @@ public abstract class BulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
-            Assert.That(allData.Count, Is.EqualTo(0));
-            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(0));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(allData, Is.Empty);
+                Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Is.Empty);
+            }
         }
     }
 
@@ -134,16 +101,16 @@ public abstract class BulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await fixture.Insert(keys.ToDictionary(k => k, v => data)).FirstAsync();
 
-            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.That(allData.Count, Is.EqualTo(keys.Length));
+            Assert.That(allData, Has.Count.EqualTo(keys.Length));
             Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
         }
     }
@@ -166,16 +133,16 @@ public abstract class BulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = new byte[] { 0x10, 0x20, 0x30, };
-            var keys = new[] { "Foo", "Bar", "Baz", };
+            byte[] data = [0x10, 0x20, 0x30];
+            string[] keys = ["Foo", "Bar", "Baz"];
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
 
             await fixture.Invalidate(keys).FirstAsync();
 
-            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(0));
+            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Is.Empty);
         }
     }
 
@@ -211,6 +178,42 @@ public abstract class BulkOperationsTestBase : IDisposable
             }
 
             _disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Sets up the test with the specified serializer type.
+    /// </summary>
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    private static ISerializer SetupTestSerializer(Type? serializerType)
+    {
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
+
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
+        {
+            // Register the Newtonsoft BSON serializer specifically
+            return new NewtonsoftBsonSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
+        {
+            // Register the System.Text.Json BSON serializer specifically
+            return new SystemJsonBsonSerializer();
+        }
+        else if (serializerType == typeof(NewtonsoftSerializer))
+        {
+            // Register the Newtonsoft JSON serializer
+            return new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            return new SystemJsonSerializer();
+        }
+        else
+        {
+            return null!;
         }
     }
 }

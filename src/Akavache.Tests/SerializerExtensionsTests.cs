@@ -6,7 +6,9 @@
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
+
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace Akavache.Tests;
 
@@ -45,19 +47,19 @@ public class SerializerExtensionsTests
                 var user1 = await cache.GetObject<UserObject>("user1").FirstAsync();
                 var user2 = await cache.GetObject<UserObject>("user2").FirstAsync();
 
-                Assert.Multiple(() =>
+                using (Assert.EnterMultipleScope())
                 {
                     Assert.That(user1, Is.Not.Null);
                     Assert.That(user1!.Name, Is.EqualTo("User1"));
                     Assert.That(user1.Bio, Is.EqualTo("Bio1"));
-                });
+                }
 
-                Assert.Multiple(() =>
+                using (Assert.EnterMultipleScope())
                 {
                     Assert.That(user2, Is.Not.Null);
                     Assert.That(user2!.Name, Is.EqualTo("User2"));
                     Assert.That(user2.Bio, Is.EqualTo("Bio2"));
-                });
+                }
             }
             finally
             {
@@ -89,24 +91,24 @@ public class SerializerExtensionsTests
                 await cache.InsertObject("user2", user2).FirstAsync();
 
                 // Act
-                var results = await cache.GetObjects<UserObject>(new[] { "user1", "user2" }).ToList().FirstAsync();
+                var results = await cache.GetObjects<UserObject>(["user1", "user2"]).ToList().FirstAsync();
 
                 // Assert
-                Assert.That(results.Count, Is.EqualTo(2));
+                Assert.That(results, Has.Count.EqualTo(2));
 
-                var user1Result = results.First(r => r.Key == "user1").Value;
-                Assert.Multiple(() =>
+                var user1Result = results.First(static r => r.Key == "user1").Value;
+                using (Assert.EnterMultipleScope())
                 {
                     Assert.That(user1Result.Name, Is.EqualTo("User1"));
                     Assert.That(user1Result.Bio, Is.EqualTo("Bio1"));
-                });
+                }
 
-                var user2Result = results.First(r => r.Key == "user2").Value;
-                Assert.Multiple(() =>
+                var user2Result = results.First(static r => r.Key == "user2").Value;
+                using (Assert.EnterMultipleScope())
                 {
                     Assert.That(user2Result.Name, Is.EqualTo("User2"));
                     Assert.That(user2Result.Bio, Is.EqualTo("Bio2"));
-                });
+                }
             }
             finally
             {
@@ -118,7 +120,7 @@ public class SerializerExtensionsTests
     /// <summary>
     /// Tests that GetAllObjects returns all objects of a specific type.
     /// </summary>
-    /// <returns>A task representing the test.</returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task GetAllObjectsShouldReturnAllObjectsOfType()
     {
@@ -127,30 +129,26 @@ public class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            // C# 8's 'await using' simplifies async disposal
+            await using var cache = new InMemoryBlobCache(serializer);
+
             var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
             var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
 
-            try
+            // Insert test data
+            await cache.InsertObject("user1", user1).FirstAsync();
+            await cache.InsertObject("user2", user2).FirstAsync();
+
+            // Act
+            var allObjects = await cache.GetAllObjects<UserObject>().FirstAsync();
+            var results = allObjects.ToList();
+
+            // Assert
+            using (Assert.EnterMultipleScope())
             {
-                // Insert test data using extension methods to ensure proper type association
-                await cache.InsertObject("user1", user1).FirstAsync();
-                await cache.InsertObject("user2", user2).FirstAsync();
-
-                // Act - GetAllObjects returns IObservable<IEnumerable<T>>
-                var allObjects = await cache.GetAllObjects<UserObject>().FirstAsync();
-
-                // Assert - Convert to list and check count
-                var results = allObjects.ToList();
-                Assert.That(results.Count, Is.EqualTo(2));
-
-                // Verify the objects are correct
-                Assert.That(u => u.Name == "User1", Does.Contain(results));
-                Assert.That(u => u.Name == "User2", Does.Contain(results));
-            }
-            finally
-            {
-                await cache.DisposeAsync();
+                Assert.That(results, Has.Count.EqualTo(2), "Should retrieve two objects.");
+                Assert.That(results, Has.Some.Property("Name").EqualTo("User1"), "Should contain User1.");
+                Assert.That(results, Has.Some.Property("Name").EqualTo("User2"), "Should contain User2.");
             }
         }
     }
@@ -183,7 +181,7 @@ public class SerializerExtensionsTests
                 await cache.InvalidateObject<UserObject>("user1").FirstAsync();
 
                 // Assert
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user1").FirstAsync());
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user1").FirstAsync());
             }
             finally
             {
@@ -215,12 +213,12 @@ public class SerializerExtensionsTests
                 await cache.InsertObject("user2", user2).FirstAsync();
 
                 // Act
-                await cache.InvalidateObjects<UserObject>(new[] { "user1", "user2" }).FirstAsync();
+                await cache.InvalidateObjects<UserObject>(["user1", "user2"]).FirstAsync();
 
                 // Assert
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user1").FirstAsync());
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user1").FirstAsync());
 
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user2").FirstAsync());
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user2").FirstAsync());
             }
             finally
             {
@@ -259,9 +257,9 @@ public class SerializerExtensionsTests
                 await cache.InvalidateAllObjects<UserObject>().FirstAsync();
 
                 // Assert - The primary verification is that individual objects can't be retrieved
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user1").FirstAsync());
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user1").FirstAsync());
 
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user2").FirstAsync());
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>("user2").FirstAsync());
 
                 // Additional check - GetAllObjects should return empty result
                 var results = await cache.GetAllObjects<UserObject>().FirstAsync();
@@ -321,11 +319,11 @@ public class SerializerExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new InMemoryBlobCache(serializer);
-            var keyValuePairs = new[]
-            {
-                    new KeyValuePair<string, UserObject>("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
+            KeyValuePair<string, UserObject>[] keyValuePairs =
+            [
+                new KeyValuePair<string, UserObject>("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
                     new KeyValuePair<string, UserObject>("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
-            };
+            ];
 
             try
             {
@@ -337,9 +335,13 @@ public class SerializerExtensionsTests
                 var user2 = await cache.GetObject<UserObject>("user2").FirstAsync();
 
                 Assert.That(user1, Is.Not.Null);
-                Assert.That(user1!.Name, Is.EqualTo("User1"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(user1!.Name, Is.EqualTo("User1"));
 
-                Assert.That(user2, Is.Not.Null);
+                    Assert.That(user2, Is.Not.Null);
+                }
+
                 Assert.That(user2!.Name, Is.EqualTo("User2"));
             }
             finally
@@ -411,8 +413,11 @@ public class SerializerExtensionsTests
 
                 // Assert - should return existing user, not create new one
                 Assert.That(result, Is.Not.Null);
-                Assert.That(result!.Name, Is.EqualTo("Existing User"));
-                Assert.That(result.Bio, Is.EqualTo("Existing Bio"));
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result!.Name, Is.EqualTo("Existing User"));
+                    Assert.That(result.Bio, Is.EqualTo("Existing Bio"));
+                }
             }
             finally
             {
@@ -446,8 +451,11 @@ public class SerializerExtensionsTests
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result!.Name, Is.EqualTo("Fetched User"));
-            Assert.That(fetchCount, Is.EqualTo(1));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result!.Name, Is.EqualTo("Fetched User"));
+                Assert.That(fetchCount, Is.EqualTo(1));
+            }
 
             // Verify it was stored in cache
             var cachedUser = await cache.GetObject<UserObject>("fetch_user").FirstAsync();
@@ -489,8 +497,11 @@ public class SerializerExtensionsTests
 
             // Assert - should return cached value, not fetch
             Assert.That(result, Is.Not.Null);
-            Assert.That(result!.Name, Is.EqualTo("Cached User"));
-            Assert.That(fetchCount, Is.EqualTo(0)); // Fetch should not have been called
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result!.Name, Is.EqualTo("Cached User"));
+                Assert.That(fetchCount, Is.Zero); // Fetch should not have been called
+            }
         }
         finally
         {
@@ -553,7 +564,7 @@ public class SerializerExtensionsTests
                 .ForEachAsync(user => results.Add(user));
 
             // Assert
-            Assert.That(results.Count, Is.GreaterThanOrEqualTo(1)); // Should have at least cached value
+            Assert.That(results, Is.Not.Empty); // Should have at least cached value
             Assert.That(results[0], Is.Not.Null);
             Assert.That(results[0]!.Name, Is.EqualTo("Cached User"));
 
@@ -640,8 +651,11 @@ public class SerializerExtensionsTests
             // Assert
             Assert.That(results, Has.Count.EqualTo(1));
             Assert.That(results[0], Is.Not.Null);
-            Assert.That(results[0]!.Name, Is.EqualTo("Cached User"));
-            Assert.That(fetchCount, Is.EqualTo(0)); // Fetch should not have been called
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(results[0]!.Name, Is.EqualTo("Cached User"));
+                Assert.That(fetchCount, Is.Zero); // Fetch should not have been called
+            }
         }
         finally
         {
@@ -729,8 +743,10 @@ public class SerializerExtensionsTests
 
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var testDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc); // Use specific date instead of DateTime.Now
+            // Use 'await using' for cleaner async resource management
+            await using var cache = new InMemoryBlobCache(serializer);
+
+            var testDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
             var mixedObjects = new Dictionary<string, object>
             {
                 ["string"] = "test string",
@@ -739,43 +755,27 @@ public class SerializerExtensionsTests
                 ["date"] = testDate
             };
 
-            try
+            // Act
+            await cache.InsertObjects(mixedObjects).FirstAsync();
+
+            // Assert
+            var stringValue = await cache.GetObject<string>("string").FirstAsync();
+            var intValue = await cache.GetObject<int>("int").FirstAsync();
+            var userValue = await cache.GetObject<UserObject>("user").FirstAsync();
+            var dateValue = await cache.GetObject<DateTime>("date").FirstAsync();
+
+            using (Assert.EnterMultipleScope())
             {
-                // Act
-                await cache.InsertObjects(mixedObjects).FirstAsync();
-
-                // Assert
-                var stringValue = await cache.GetObject<string>("string").FirstAsync();
-                var intValue = await cache.GetObject<int>("int").FirstAsync();
-                var userValue = await cache.GetObject<UserObject>("user").FirstAsync();
-                var dateValue = await cache.GetObject<DateTime>("date").FirstAsync();
-
                 Assert.That(stringValue, Is.EqualTo("test string"));
                 Assert.That(intValue, Is.EqualTo(42));
                 Assert.That(userValue, Is.Not.Null);
-                Assert.That(userValue!.Name, Is.EqualTo("Test User"));
+                Assert.That(userValue.Name, Is.EqualTo("Test User"));
 
-                // For DateTime, be more tolerant due to potential serialization differences
-                // Accept either the correct value or verify it's not the absolute default
-                if (dateValue == default)
-                {
-                    // Some serializers may have issues with DateTime - log this but don't fail
-                    System.Diagnostics.Debug.WriteLine($"DateTime serialization returned default value for input {testDate}");
-
-                    // For mixed object serialization, DateTime serialization issues are acceptable
-                    // since the core functionality (string, int, complex objects) works
-                    Assert.True(true, "DateTime serialization limitation acknowledged in mixed object scenario");
-                }
-                else
-                {
-                    // Verify the date is reasonable (within a day of expected)
-                    var timeDifference = Math.Abs((testDate - dateValue).TotalDays);
-                    Assert.True(timeDifference < 1, $"DateTime value differs significantly: expected {testDate}, got {dateValue}");
-                }
-            }
-            finally
-            {
-                await cache.DisposeAsync();
+                // This single constraint handles the complex date logic elegantly
+                Assert.That(
+                    dateValue,
+                    Is.Default.Or.EqualTo(testDate).Within(TimeSpan.FromDays(1)),
+                    "Date should either be default (due to serializer limits) or close to the original value.");
             }
         }
     }
@@ -795,12 +795,12 @@ public class SerializerExtensionsTests
         try
         {
             // Test null key validation
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObjectCreatedAt<string>(null!).FirstAsync());
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObjectCreatedAt<string>(null!).FirstAsync());
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObject<string>(null!).FirstAsync());
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObject<string>(null!).FirstAsync());
 
             // Test null collection validation
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObjects<string>(null!).FirstAsync());
+            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObjects<string>(null!).FirstAsync());
 
             // Note: Extension methods may allow empty strings as valid keys in some implementations
             // This is different from the core methods which validate empty strings

@@ -41,11 +41,11 @@ public class RelativeTimeExtensionsTests
 
             // Verify expiration was set (we can't easily test exact expiration without waiting)
             var createdAt = await cache.GetCreatedAt("test_key").FirstAsync();
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(createdAt, Is.Not.Null);
                 Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
-            });
+            }
 
             await cache.DisposeAsync();
         }

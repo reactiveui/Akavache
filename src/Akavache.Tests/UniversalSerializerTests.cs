@@ -7,6 +7,7 @@ using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
+
 using NUnit.Framework;
 
 namespace Akavache.Tests;
@@ -34,9 +35,12 @@ public class UniversalSerializerTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result!.Name, Is.EqualTo("Test User"));
-        Assert.That(result.Bio, Is.EqualTo("Test Bio"));
-        Assert.That(result.Blog, Is.EqualTo("Test Blog"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result!.Name, Is.EqualTo("Test User"));
+            Assert.That(result.Bio, Is.EqualTo("Test Bio"));
+            Assert.That(result.Blog, Is.EqualTo("Test Blog"));
+        }
     }
 
     /// <summary>
@@ -71,7 +75,7 @@ public class UniversalSerializerTests
 
         // Assert
         Assert.That(serializedData, Is.Not.Null);
-        Assert.That(serializedData.Length > 0, Is.True);
+        Assert.That(serializedData, Is.Not.Empty);
 
         // Verify it can be deserialized back
         var deserializedObject = targetSerializer.Deserialize<UserObject>(serializedData);
@@ -93,7 +97,7 @@ public class UniversalSerializerTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Length == 0, Is.True); // Null values should return empty array
+        Assert.That(result, Is.Empty); // Null values should return empty array
     }
 
     /// <summary>
@@ -129,12 +133,9 @@ public class UniversalSerializerTests
         // Act - Serialize with one, deserialize with UniversalSerializer using another
         var systemJsonData = systemJsonSerializer.Serialize(testObject);
 
-        // This tests the fallback mechanism when primary serializer fails
-        var result = UniversalSerializer.Deserialize<UserObject>(systemJsonData, newtonsoftSerializer);
-
-        // Assert - Result may be null due to cross-serializer incompatibility, which is expected
-        // The test should not throw an exception
-        Assert.That(true, Is.True); // Test passes if no exception is thrown
+        // Assert
+        // This explicitly verifies that the fallback mechanism does not throw an exception.
+        Assert.DoesNotThrow(() => UniversalSerializer.Deserialize<UserObject>(systemJsonData, newtonsoftSerializer), "Cross-serializer deserialization should be handled gracefully without throwing.");
     }
 
     /// <summary>
@@ -144,10 +145,10 @@ public class UniversalSerializerTests
     public void UniversalSerializerShouldThrowForInvalidInput()
     {
         // Arrange & Act & Assert - Test null serializer
-        Assert.Throws<ArgumentNullException>(() =>
-            UniversalSerializer.Deserialize<string>(new byte[] { 1, 2, 3 }, null!));
+        Assert.Throws<ArgumentNullException>(static () =>
+            UniversalSerializer.Deserialize<string>([1, 2, 3], null!));
 
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(static () =>
             UniversalSerializer.Serialize("test", null!));
 
         // Test null data - should return null rather than throw for empty/null data
@@ -166,13 +167,13 @@ public class UniversalSerializerTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        var edgeCases = new[]
-        {
+        DateTime[] edgeCases =
+        [
             DateTime.MinValue,
             DateTime.MaxValue,
             new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             new DateTime(2025, 12, 31, 23, 59, 59, DateTimeKind.Local)
-        };
+        ];
 
         foreach (var testDate in edgeCases)
         {
@@ -184,13 +185,13 @@ public class UniversalSerializerTests
 
                 // Assert - Allow for some tolerance in extreme cases
                 var timeDifference = Math.Abs((testDate - deserializedDate).TotalMinutes);
-                Assert.True(timeDifference < 1440, $"DateTime edge case failed: {testDate} -> {deserializedDate}"); // 24 hours tolerance
+                Assert.That(timeDifference, Is.LessThan(1440), $"DateTime edge case failed: {testDate} -> {deserializedDate}"); // 24 hours tolerance
             }
             catch (Exception ex)
             {
                 // Some edge cases may fail due to serializer limitations - this is acceptable
                 // Just ensure the exception is handled gracefully
-                Assert.IsType<InvalidOperationException>(ex);
+                Assert.That(ex, Is.TypeOf<InvalidOperationException>());
             }
         }
     }
@@ -211,7 +212,9 @@ public class UniversalSerializerTests
 
         // Assert - Should either succeed with fallback or fail gracefully
         // The main goal is no unhandled exceptions
-        Assert.That(true, Is.True); // Test passes if no unhandled exception is thrown
+        // Act & Assert
+        // This clearly states that the enclosed code should not throw an exception.
+        Assert.DoesNotThrow(() => UniversalSerializer.Deserialize<UserObject>(bsonData, new SystemJsonSerializer()), "Deserializing mismatched data format should be handled gracefully without exceptions.");
     }
 
     /// <summary>
@@ -225,11 +228,9 @@ public class UniversalSerializerTests
         var testObject = new UserObject { Name = "JSON Test", Bio = "JSON Bio", Blog = "JSON Blog" };
         var jsonData = jsonSerializer.Serialize(testObject);
 
-        // Act - Try to deserialize JSON data with BSON serializer
-        var result = UniversalSerializer.Deserialize<UserObject>(jsonData, new NewtonsoftBsonSerializer());
-
-        // Assert - Should either succeed with fallback or fail gracefully
-        Assert.That(true, Is.True); // Test passes if no unhandled exception is thrown
+        // Act & Assert
+        // This explicitly states the test's goal: the code should run without throwing.
+        Assert.DoesNotThrow(() => UniversalSerializer.Deserialize<UserObject>(jsonData, new NewtonsoftBsonSerializer()), "Deserializing JSON with a BSON serializer should be handled gracefully.");
     }
 
     /// <summary>
@@ -311,7 +312,7 @@ public class UniversalSerializerTests
         {
             User = new UserObject { Name = "Complex User", Bio = "Complex Bio", Blog = "Complex Blog" },
             Date = DateTime.UtcNow,
-            Numbers = new[] { 1, 2, 3, 4, 5 },
+            Numbers = (int[])[1, 2, 3, 4, 5],
             Metadata = new Dictionary<string, object>
             {
                 ["version"] = "1.0",
@@ -325,7 +326,7 @@ public class UniversalSerializerTests
 
         // We can't easily deserialize anonymous types, so just verify serialization succeeds
         Assert.That(serializedData, Is.Not.Null);
-        Assert.That(serializedData.Length > 0, Is.True);
+        Assert.That(serializedData, Is.Not.Empty);
     }
 
     /// <summary>
@@ -338,12 +339,12 @@ public class UniversalSerializerTests
         var newtonsoftSerializer = new NewtonsoftSerializer();
 
         // Test edge cases that might be problematic for certain serializers
-        var edgeDates = new[]
-        {
+        DateTime[] edgeDates =
+        [
             DateTime.MinValue,
             DateTime.MaxValue,
             new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-        };
+        ];
 
         foreach (var testDate in edgeDates)
         {
@@ -354,7 +355,7 @@ public class UniversalSerializerTests
 
                 // Assert
                 Assert.That(serializedData, Is.Not.Null);
-                Assert.That(serializedData.Length > 0, Is.True);
+                Assert.That(serializedData, Is.Not.Empty);
             }
             catch (InvalidOperationException)
             {

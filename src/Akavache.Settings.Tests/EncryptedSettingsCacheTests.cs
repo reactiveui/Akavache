@@ -45,7 +45,7 @@ public class EncryptedSettingsCacheTests
                 {
                     // Initial delay to ensure settings are created
                     await Task.Delay(500);
-                    Assert.Multiple(() =>
+                    using (Assert.EnterMultipleScope())
                     {
                         Assert.That(viewSettings, Is.Not.Null);
                         Assert.That(viewSettings!.BoolTest, Is.True);
@@ -56,7 +56,7 @@ public class EncryptedSettingsCacheTests
                         Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
                         Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
                         Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
-                    });
+                    }
                 }
                 finally
                 {
@@ -144,14 +144,18 @@ public class EncryptedSettingsCacheTests
                 try
                 {
                     Assert.That(viewSettings, Is.Not.Null);
-                    Assert.That(viewSettings!.BoolTest, Is.True);
-                    Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
-                    Assert.That(viewSettings.IntTest, Is.EqualTo(1));
-                    Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
-                    Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
-                    Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
-                    Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
-                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                    using (Assert.EnterMultipleScope())
+                    {
+                        Assert.That(viewSettings!.BoolTest, Is.True);
+                        Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                        Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                        Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                        Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                        Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                        Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                        Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                    }
+
                     await viewSettings.DisposeAsync();
                 }
                 finally
@@ -235,9 +239,12 @@ public class EncryptedSettingsCacheTests
             .Build();
 
         await Task.Delay(100);
-        Assert.That(AppBuilder.HasBeenBuilt, Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(AppBuilder.HasBeenBuilt, Is.True);
 
-        Assert.That(akavacheBuilder!.SettingsCachePath, Is.EqualTo(path));
+            Assert.That(akavacheBuilder!.SettingsCachePath, Is.EqualTo(path));
+        }
     }
 
     /// <summary>
@@ -284,11 +291,14 @@ public class EncryptedSettingsCacheTests
                     var retrievedSettings = instance.GetSecureSettingsStore<ViewSettings>("test_password", testName);
                     Assert.That(retrievedSettings, Is.Not.Null);
 
-                    // For encrypted settings, the persistence might not work the same way as regular settings
-                    // The test should verify that encrypted settings can be created and accessed, but persistence
-                    // across instances might depend on the encryption implementation
-                    Assert.That(retrievedSettings!.StringTest, Is.Not.Null);
-                    Assert.That(retrievedSettings.IntTest, Is.GreaterThanOrEqualTo(0)); // Just verify it's a valid value
+                    using (Assert.EnterMultipleScope())
+                    {
+                        // For encrypted settings, the persistence might not work the same way as regular settings
+                        // The test should verify that encrypted settings can be created and accessed, but persistence
+                        // across instances might depend on the encryption implementation
+                        Assert.That(retrievedSettings!.StringTest, Is.Not.Null);
+                        Assert.That(retrievedSettings.IntTest, Is.GreaterThanOrEqualTo(0)); // Just verify it's a valid value
+                    }
 
                     await retrievedSettings.DisposeAsync();
                 }
@@ -502,14 +512,17 @@ public class EncryptedSettingsCacheTests
     {
         GetBuilder().WithAkavache<SystemJsonSerializer>(
             null,
-            builder => builder.WithApplicationName("TestAppInfo"),
-            instance =>
+            static builder => builder.WithApplicationName("TestAppInfo"),
+            static instance =>
             {
-                Assert.That(instance.ExecutingAssembly, Is.Not.Null);
-                Assert.That(instance.ExecutingAssemblyName, Is.Not.Null);
-                Assert.That(instance.ApplicationRootPath, Is.Not.Null);
-                Assert.That(instance.SettingsCachePath, Is.Not.Null);
-                Assert.That(instance.Version, Is.Not.Null);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(instance.ExecutingAssembly, Is.Not.Null);
+                    Assert.That(instance.ExecutingAssemblyName, Is.Not.Null);
+                    Assert.That(instance.ApplicationRootPath, Is.Not.Null);
+                    Assert.That(instance.SettingsCachePath, Is.Not.Null);
+                    Assert.That(instance.Version, Is.Not.Null);
+                }
             }).Build();
         await Task.Delay(100);
         Assert.That(AppBuilder.HasBeenBuilt, Is.True);

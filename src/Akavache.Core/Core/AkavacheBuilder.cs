@@ -178,7 +178,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
             // Register the serializer if not already registered, we only want one instance of each serializer type
             if (!AppLocator.CurrentMutable.HasRegistration(typeof(ISerializer), contract: SerializerTypeName))
             {
-                AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(() => new T(), contract: SerializerTypeName);
+                AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(static () => new T(), contract: SerializerTypeName);
             }
         }
 

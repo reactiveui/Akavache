@@ -5,6 +5,7 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
+
 using NUnit.Framework;
 
 namespace Akavache.Tests;
@@ -23,7 +24,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldIdentifyPngCorrectly()
     {
         // Arrange - PNG header: 89 50 4E 47
-        var pngHeader = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+        byte[] pngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
         // Act
         var isValid = pngHeader.IsValidImageFormat();
@@ -39,7 +40,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldIdentifyJpegCorrectly()
     {
         // Arrange - JPEG header: FF D8 FF
-        var jpegHeader = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+        byte[] jpegHeader = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10];
 
         // Act
         var isValid = jpegHeader.IsValidImageFormat();
@@ -55,7 +56,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldIdentifyGifCorrectly()
     {
         // Arrange - GIF header: 47 49 46
-        var gifHeader = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }; // GIF89a
+        byte[] gifHeader = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]; // GIF89a
 
         // Act
         var isValid = gifHeader.IsValidImageFormat();
@@ -71,7 +72,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldIdentifyBmpCorrectly()
     {
         // Arrange - BMP header: 42 4D
-        var bmpHeader = new byte[] { 0x42, 0x4D, 0x36, 0x84, 0x03, 0x00 };
+        byte[] bmpHeader = [0x42, 0x4D, 0x36, 0x84, 0x03, 0x00];
 
         // Act
         var isValid = bmpHeader.IsValidImageFormat();
@@ -87,7 +88,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldIdentifyWebPCorrectly()
     {
         // Arrange - WebP header: 52 49 46 46 ... 57 45 42 50
-        var webpHeader = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50 };
+        byte[] webpHeader = [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50];
 
         // Act
         var isValid = webpHeader.IsValidImageFormat();
@@ -103,7 +104,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldReturnFalseForInvalidData()
     {
         // Arrange
-        var invalidData = new byte[] { 0x00, 0x01, 0x02, 0x03 };
+        byte[] invalidData = [0x00, 0x01, 0x02, 0x03];
 
         // Act
         var isValid = invalidData.IsValidImageFormat();
@@ -135,7 +136,7 @@ public class ImageExtensionsTests
     public void IsValidImageFormatShouldReturnFalseForTooShortData()
     {
         // Arrange
-        var shortData = new byte[] { 0x89, 0x50 }; // Too short for PNG
+        byte[] shortData = [0x89, 0x50]; // Too short for PNG
 
         // Act
         var isValid = shortData.IsValidImageFormat();
@@ -261,7 +262,7 @@ public class ImageExtensionsTests
 
                 // Act & Assert - LoadImageBytes should throw when the key doesn't exist
                 // This could be either KeyNotFoundException or InvalidOperationException depending on implementation
-                await Assert.ThrowsAnyAsync<Exception>(async () => await cache.LoadImageBytes("nonexistent_key").FirstAsync());
+                Assert.ThrowsAsync<Exception>(async () => await cache.LoadImageBytes("nonexistent_key").FirstAsync());
             }
             finally
             {
@@ -333,22 +334,22 @@ public class ImageExtensionsTests
         // Arrange & Act & Assert
         var testCases = new[]
         {
-            new { Name = "PNG", Data = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, Expected = true },
-            new { Name = "JPEG_FF_D8_FF_E0", Data = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }, Expected = true },
-            new { Name = "JPEG_FF_D8_FF_E1", Data = new byte[] { 0xFF, 0xD8, 0xFF, 0xE1 }, Expected = true },
-            new { Name = "JPEG_FF_D8_FF_DB", Data = new byte[] { 0xFF, 0xD8, 0xFF, 0xDB }, Expected = true },
-            new { Name = "GIF87a", Data = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 }, Expected = true },
-            new { Name = "GIF89a", Data = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }, Expected = true },
-            new { Name = "BMP", Data = new byte[] { 0x42, 0x4D, 0x36, 0x84, 0x03, 0x00 }, Expected = true },
-            new { Name = "WebP", Data = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50 }, Expected = true },
-            new { Name = "TIFF_MM", Data = new byte[] { 0x4D, 0x4D, 0x00, 0x2A }, Expected = true },
-            new { Name = "TIFF_II", Data = new byte[] { 0x49, 0x49, 0x2A, 0x00 }, Expected = true },
-            new { Name = "ICO", Data = new byte[] { 0x00, 0x00, 0x01, 0x00 }, Expected = true },
-            new { Name = "Invalid", Data = new byte[] { 0x00, 0x01, 0x02, 0x03 }, Expected = false },
+            new { Name = "PNG", Data = (byte[])[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], Expected = true },
+            new { Name = "JPEG_FF_D8_FF_E0", Data = (byte[])[0xFF, 0xD8, 0xFF, 0xE0], Expected = true },
+            new { Name = "JPEG_FF_D8_FF_E1", Data = (byte[])[0xFF, 0xD8, 0xFF, 0xE1], Expected = true },
+            new { Name = "JPEG_FF_D8_FF_DB", Data = (byte[])[0xFF, 0xD8, 0xFF, 0xDB], Expected = true },
+            new { Name = "GIF87a", Data = (byte[])[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], Expected = true },
+            new { Name = "GIF89a", Data = (byte[])[0x47, 0x49, 0x46, 0x38, 0x39, 0x61], Expected = true },
+            new { Name = "BMP", Data = (byte[])[0x42, 0x4D, 0x36, 0x84, 0x03, 0x00], Expected = true },
+            new { Name = "WebP", Data = (byte[])[0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50], Expected = true },
+            new { Name = "TIFF_MM", Data = (byte[])[0x4D, 0x4D, 0x00, 0x2A], Expected = true },
+            new { Name = "TIFF_II", Data = (byte[])[0x49, 0x49, 0x2A, 0x00], Expected = true },
+            new { Name = "ICO", Data = (byte[])[0x00, 0x00, 0x01, 0x00], Expected = true },
+            new { Name = "Invalid", Data = (byte[])[0x00, 0x01, 0x02, 0x03], Expected = false },
             new { Name = "Empty", Data = Array.Empty<byte>(), Expected = false },
-            new { Name = "Short", Data = new byte[] { 0x89 }, Expected = false },
-            new { Name = "Almost_PNG", Data = new byte[] { 0x89, 0x50, 0x4E }, Expected = false },
-            new { Name = "Almost_JPEG", Data = new byte[] { 0xFF, 0xD8 }, Expected = false },
+            new { Name = "Short", Data = (byte[])[0x89], Expected = false },
+            new { Name = "Almost_PNG", Data = (byte[])[0x89, 0x50, 0x4E], Expected = false },
+            new { Name = "Almost_JPEG", Data = (byte[])[0xFF, 0xD8], Expected = false },
         };
 
         var passedTests = 0;
@@ -385,8 +386,9 @@ public class ImageExtensionsTests
 
         // Require at least 80% of tests to pass for real-world compatibility
         var successRate = (double)passedTests / totalTests;
-        Assert.True(
-            successRate >= 0.8,
+        Assert.That(
+            successRate,
+            Is.GreaterThanOrEqualTo(0.8),
             $"Image format detection success rate too low: {passedTests}/{totalTests} = {successRate:P1}. Expected at least 80%.");
     }
 
@@ -423,7 +425,7 @@ public class ImageExtensionsTests
         else
         {
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await buffer.ThrowOnBadImageBuffer().FirstAsync());
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await buffer.ThrowOnBadImageBuffer().FirstAsync());
         }
     }
 }

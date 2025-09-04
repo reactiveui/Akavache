@@ -113,8 +113,8 @@ public partial class EditTodoViewModel : ReactiveObject
             if (!string.IsNullOrWhiteSpace(TagsString))
             {
                 tags = TagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                .Select(tag => tag.Trim())
-                                .Where(tag => !string.IsNullOrEmpty(tag))
+                                .Select(static tag => tag.Trim())
+                                .Where(static tag => !string.IsNullOrEmpty(tag))
                                 .ToList();
             }
 
