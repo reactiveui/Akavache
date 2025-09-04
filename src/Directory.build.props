@@ -28,7 +28,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>IDE1006;SA1313;SA1010;CA1510;</NoWarn>
-    <AkavacheTargetFrameworks>netstandard2.0;net8.0;net9.0</AkavacheTargetFrameworks>
+    <AkavacheTargetFrameworks>netstandard2.0;net8.0;net9.0</AkavacheTargetFrameworks>    
+    <MobileTargetFrameworks>net9.0-android;net9.0-ios;net9.0-macos;net9.0-maccatalyst</MobileTargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')))">
     <IsAotCompatible>true</IsAotCompatible>

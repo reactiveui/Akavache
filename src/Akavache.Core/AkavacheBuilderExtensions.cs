@@ -314,6 +314,22 @@ public static class AkavacheBuilderExtensions
         return builder.WithInMemory(new InMemoryBlobCache(builder.SerializerTypeName));
     }
 
+#if AKAVACHE_MOBILE || AKAVACHE_MOBILE_IOS
+    /// <summary>
+    /// Gets the isolated cache directory.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="cacheName">Name of the cache.
+    /// Any value will use User Store For Assembly.
+    /// </param>
+    /// <returns>The Isolated cache path.</returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <exception cref="System.ArgumentException">
+    /// Cache name cannot be null or empty. - cacheName
+    /// or
+    /// Application name cannot be null or empty. - ApplicationName.
+    /// </exception>
+#else
     /// <summary>
     /// Gets the isolated cache directory.
     /// </summary>
@@ -324,7 +340,7 @@ public static class AkavacheBuilderExtensions
     /// UserAccount will use User Store For Assembly.
     /// Secure will use User Store For Assembly.
     /// SettingsCache will use User Store For Assembly.
-    /// Any other value will use User Store For Domain.
+    /// Any other value will use Machine Store For Assembly.
     /// </param>
     /// <returns>The Isolated cache path.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
@@ -333,6 +349,7 @@ public static class AkavacheBuilderExtensions
     /// or
     /// Application name cannot be null or empty. - ApplicationName.
     /// </exception>
+#endif
     public static string? GetIsolatedCacheDirectory(this IAkavacheInstance builder, string cacheName)
     {
         // Ensure the builder is not null
@@ -354,11 +371,14 @@ public static class AkavacheBuilderExtensions
         string? cachePath = null;
         var store = cacheName switch
         {
-            "LocalMachine" => IsolatedStorageFile.GetMachineStoreForAssembly(),
             "UserAccount" => IsolatedStorageFile.GetUserStoreForAssembly(),
             "Secure" => IsolatedStorageFile.GetUserStoreForAssembly(),
             "SettingsCache" => IsolatedStorageFile.GetUserStoreForAssembly(),
-            _ => IsolatedStorageFile.GetUserStoreForDomain(),
+#if AKAVACHE_MOBILE || AKAVACHE_MOBILE_IOS
+            _ => IsolatedStorageFile.GetUserStoreForAssembly(),
+#else
+            _ => IsolatedStorageFile.GetMachineStoreForAssembly(),
+#endif
         };
 
         // Compute CachePath under a writable location (fix iOS bundle write attempt)
