@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <DefineConstants>$(DefineConstants);ENCRYPTED</DefineConstants>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
   <ItemGroup>

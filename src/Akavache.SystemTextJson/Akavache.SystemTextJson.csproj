@@ -6,6 +6,7 @@
     <LangVersion>preview</LangVersion>
     <Description>System.Text.Json serialization support for Akavache with optional BSON compatibility</Description>
     <NoWarn>$(NoWarn);CA1510</NoWarn>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
   <ItemGroup>

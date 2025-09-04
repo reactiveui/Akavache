@@ -4,6 +4,7 @@
     <TargetFrameworks>$(AkavacheTargetFrameworks);$(MobileTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
   <ItemGroup>
