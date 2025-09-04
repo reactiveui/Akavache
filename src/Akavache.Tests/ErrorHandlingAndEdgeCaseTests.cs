@@ -285,7 +285,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await Task.WhenAll(tasks);
 
             // Assert - All operations should have completed without errors
-            Assert.That(tasks.All(t => t.IsCompletedSuccessfully, Is.True));
+            Assert.That(tasks.All(t => t.IsCompletedSuccessfully), Is.True);
         }
         finally
         {

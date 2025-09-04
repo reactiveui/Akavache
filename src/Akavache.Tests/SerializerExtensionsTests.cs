@@ -286,8 +286,8 @@ public class SerializerExtensionsTests
 
                 // Assert
                 Assert.That(createdAt, Is.Not.Null);
-                Assert.That(createdAt >= beforeInsert, Is.True);
-                Assert.That(createdAt <= DateTimeOffset.Now, Is.True);
+                Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
+                Assert.That(createdAt, Is.LessThanOrEqualTo(DateTimeOffset.Now));
             }
             finally
             {
@@ -541,7 +541,7 @@ public class SerializerExtensionsTests
                 .ForEachAsync(user => results.Add(user));
 
             // Assert
-            Assert.That(results.Count >= 1, Is.True); // Should have at least cached value
+            Assert.That(results.Count, Is.GreaterThanOrEqualTo(1)); // Should have at least cached value
             Assert.That(results[0], Is.Not.Null);
             Assert.That(results[0]!.Name, Is.EqualTo("Cached User"));
 

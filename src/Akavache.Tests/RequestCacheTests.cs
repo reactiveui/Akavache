@@ -45,8 +45,8 @@ public class RequestCacheTests
         var results = await Task.WhenAll(tasks);
 
         // Assert - All should return the same result, factory called at most twice
-        Assert.That(results.All(r => r == results[0], Is.True), $"Not all results are the same: {string.Join(", ", results)}");
-        Assert.True(callCount <= 2, $"Factory called {callCount} times, expected at most 2");
+        Assert.That(results.All(r => r == results[0]), Is.True, $"Not all results are the same: {string.Join(", ", results)}");
+        Assert.That(callCount, Is.LessThanOrEqualTo(2), $"Factory called {callCount} times, expected at most 2");
     }
 
     /// <summary>

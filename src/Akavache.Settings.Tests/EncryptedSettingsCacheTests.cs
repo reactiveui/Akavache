@@ -285,7 +285,7 @@ public class EncryptedSettingsCacheTests
                     // The test should verify that encrypted settings can be created and accessed, but persistence
                     // across instances might depend on the encryption implementation
                     Assert.That(retrievedSettings!.StringTest, Is.Not.Null);
-                    Assert.That(retrievedSettings.IntTest >= 0, Is.True); // Just verify it's a valid value
+                    Assert.That(retrievedSettings.IntTest, Is.GreaterThanOrEqualTo(0)); // Just verify it's a valid value
 
                     await retrievedSettings.DisposeAsync();
                 }
@@ -411,7 +411,7 @@ public class EncryptedSettingsCacheTests
                         Assert.That(recreatedSettings, Is.Not.Null);
 
                         // For encrypted settings, just verify we can create and access them
-                        Assert.That(recreatedSettings!.IntTest >= 0, Is.True);
+                        Assert.That(recreatedSettings!.IntTest, Is.GreaterThanOrEqualTo(0));
 
                         await recreatedSettings.DisposeAsync();
                         await Task.Delay(50);

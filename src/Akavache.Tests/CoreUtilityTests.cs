@@ -30,9 +30,9 @@ public class CoreUtilityTests
         var oneWeekAgo = baseTime.AddDays(-7);
 
         // Assert - These should all be in the past relative to baseTime
-        Assert.That(oneHourAgo < baseTime, Is.True);
-        Assert.That(oneDayAgo < baseTime, Is.True);
-        Assert.That(oneWeekAgo < baseTime, Is.True);
+        Assert.That(oneHourAgo, Is.LessThan(baseTime));
+        Assert.That(oneDayAgo, Is.LessThan(baseTime));
+        Assert.That(oneWeekAgo, Is.LessThan(baseTime));
     }
 
     /// <summary>
@@ -50,9 +50,9 @@ public class CoreUtilityTests
         var oneWeekFromNow = baseTime.AddDays(7);
 
         // Assert - These should all be in the future relative to baseTime
-        Assert.That(oneHourFromNow > baseTime, Is.True);
-        Assert.That(oneDayFromNow > baseTime, Is.True);
-        Assert.That(oneWeekFromNow > baseTime, Is.True);
+        Assert.That(oneHourFromNow, Is.GreaterThan(baseTime));
+        Assert.That(oneDayFromNow, Is.GreaterThan(baseTime));
+        Assert.That(oneWeekFromNow, Is.GreaterThan(baseTime));
     }
 
     /// <summary>

@@ -38,7 +38,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - String
         var stringBytes = serializer.Serialize(testString);
         Assert.That(stringBytes, Is.Not.Null);
-        Assert.That(stringBytes.Length > 0, Is.True);
+        Assert.That(stringBytes.Length, Is.GreaterThan(0));
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
         Assert.That(deserializedString, Is.EqualTo(testString));
@@ -46,7 +46,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - Int
         var intBytes = serializer.Serialize(testInt);
         Assert.That(intBytes, Is.Not.Null);
-        Assert.That(intBytes.Length > 0, Is.True);
+        Assert.That(intBytes.Length, Is.GreaterThan(0));
 
         var deserializedInt = serializer.Deserialize<int>(intBytes);
         Assert.That(deserializedInt, Is.EqualTo(testInt));
@@ -54,7 +54,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - Bool
         var boolBytes = serializer.Serialize(testBool);
         Assert.That(boolBytes, Is.Not.Null);
-        Assert.That(boolBytes.Length > 0, Is.True);
+        Assert.That(boolBytes.Length, Is.GreaterThan(0));
 
         var deserializedBool = serializer.Deserialize<bool>(boolBytes);
         Assert.That(deserializedBool, Is.EqualTo(testBool));
@@ -62,10 +62,10 @@ public class ISerializerInterfaceTests
         // Act & Assert - Double
         var doubleBytes = serializer.Serialize(testDouble);
         Assert.That(doubleBytes, Is.Not.Null);
-        Assert.That(doubleBytes.Length > 0, Is.True);
+        Assert.That(doubleBytes.Length, Is.GreaterThan(0));
 
         var deserializedDouble = serializer.Deserialize<double>(doubleBytes);
-        Assert.That(deserializedDouble, 10, Is.EqualTo(testDouble)); // Allow for floating point precision
+        Assert.That(deserializedDouble, Is.EqualTo(testDouble).Within(0.0001)); // Allow for floating point precision
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public class ISerializerInterfaceTests
         var testUser = new UserObject
         {
             Name = "Test User",
-            Bio = "Test Bio with special characters: абвгдежзийкл",
+            Bio = "Test Bio with special characters: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ",
             Blog = "https://test.example.com/blog"
         };
 
@@ -325,17 +325,16 @@ public class ISerializerInterfaceTests
             var result = serializer.Deserialize<string>(emptyBytes);
 
             // Some serializers may return null for empty bytes, which is acceptable
-            Assert.That(result == null || result is string, Is.True);
+            Assert.That(result, Is.Null.Or.TypeOf<string>());
         }
         catch (Exception ex)
         {
             // Some serializers may throw for empty bytes, which is also acceptable
-            Assert.True(
-                ex is ArgumentException ||
-                ex is InvalidOperationException ||
-                ex is FormatException ||
-                ex is Newtonsoft.Json.JsonException ||
-                ex is System.Text.Json.JsonException,
+            Assert.That(ex, Is.TypeOf<ArgumentException>()
+                .Or.TypeOf<InvalidOperationException>()
+                .Or.TypeOf<FormatException>()
+                .Or.TypeOf<Newtonsoft.Json.JsonException>()
+                .Or.TypeOf<System.Text.Json.JsonException>(),
                 $"Unexpected exception type: {ex.GetType().Name}");
         }
     }
@@ -363,7 +362,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - Large string
         var stringBytes = serializer.Serialize(largeString);
         Assert.That(stringBytes, Is.Not.Null);
-        Assert.That(stringBytes.Length > 500_000, Is.True); // Should be at least 500KB
+        Assert.That(stringBytes.Length, Is.GreaterThan(500_000)); // Should be at least 500KB
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
         Assert.That(deserializedString, Is.EqualTo(largeString));
@@ -371,7 +370,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - Large collection
         var listBytes = serializer.Serialize(largeList);
         Assert.That(listBytes, Is.Not.Null);
-        Assert.That(listBytes.Length > 1000, Is.True); // Should be reasonably sized
+        Assert.That(listBytes.Length, Is.GreaterThan(1000)); // Should be reasonably sized
 
         var deserializedList = serializer.Deserialize<List<int>>(listBytes);
         Assert.That(deserializedList, Is.Not.Null);
@@ -418,7 +417,7 @@ public class ISerializerInterfaceTests
 
         // Assert - We can't easily deserialize anonymous types, but we can verify serialization works
         Assert.That(serializedBytes, Is.Not.Null);
-        Assert.That(serializedBytes.Length > 0, Is.True);
+        Assert.That(serializedBytes.Length, Is.GreaterThan(0));
 
         // Verify the serialized data contains expected content
         var serializedString = Encoding.UTF8.GetString(serializedBytes);

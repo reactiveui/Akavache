@@ -124,7 +124,7 @@ public class AotCompatibilityTests
                 var retrievedUtc = retrieved.ToUniversalTime();
                 var timeDifference = Math.Abs((originalUtc - retrievedUtc).TotalSeconds);
 
-                Assert.That(timeDifference < 2, Is.True, $"DateTime values differ too much: {timeDifference} seconds");
+                Assert.That(timeDifference, Is.LessThan(2), $"DateTime values differ too much: {timeDifference} seconds");
 
                 // If ForcedDateTimeKind is working, retrieved should be UTC or Unspecified
                 // But some serializers may preserve the original kind

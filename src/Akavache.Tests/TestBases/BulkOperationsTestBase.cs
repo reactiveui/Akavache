@@ -78,12 +78,12 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
             Assert.That(allData.Count, Is.EqualTo(keys.Length));
-            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1], Is.True));
+            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
         }
     }
 
@@ -139,12 +139,12 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await fixture.Insert(keys.ToDictionary(k => k, v => data)).FirstAsync();
 
-            Assert.That((await fixture.GetAllKeys(, Is.EqualTo(keys.Length)).ToList().FirstAsync()).Count);
+            Assert.That((await fixture.GetAllKeys().ToList().FirstAsync()).Count, Is.EqualTo(keys.Length));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
             Assert.That(allData.Count, Is.EqualTo(keys.Length));
-            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1], Is.True));
+            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
         }
     }
 

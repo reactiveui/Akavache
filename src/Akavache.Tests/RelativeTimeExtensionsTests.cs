@@ -42,7 +42,7 @@ public class RelativeTimeExtensionsTests
             // Verify expiration was set (we can't easily test exact expiration without waiting)
             var createdAt = await cache.GetCreatedAt("test_key").FirstAsync();
             Assert.That(createdAt, Is.Not.Null);
-            Assert.That(createdAt >= beforeInsert, Is.True);
+            Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
 
             await cache.DisposeAsync();
         }
@@ -74,7 +74,7 @@ public class RelativeTimeExtensionsTests
             // Verify expiration was set
             var createdAt = await cache.GetCreatedAt("test_object").FirstAsync();
             Assert.That(createdAt, Is.Not.Null);
-            Assert.That(createdAt >= beforeInsert, Is.True);
+            Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
 
             await cache.DisposeAsync();
         }
@@ -183,7 +183,7 @@ public class RelativeTimeExtensionsTests
 
             var createdAt = await cache.GetCreatedAt($"test_key_{seconds}").FirstAsync();
             Assert.That(createdAt, Is.Not.Null);
-            Assert.That(createdAt >= beforeInsert, Is.True);
+            Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
 
             await cache.DisposeAsync();
         }

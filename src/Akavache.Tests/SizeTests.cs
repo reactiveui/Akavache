@@ -103,14 +103,14 @@ public class SizeTests
         var size4 = new Size(100f, 250f);
 
         // Act & Assert - Equality
-        Assert.That(size1 == size2, Is.True);
-        Assert.That(size1 == size3, Is.False);
-        Assert.That(size1 == size4, Is.False);
+        Assert.That(size1, Is.EqualTo(size2));
+        Assert.That(size1, Is.Not.EqualTo(size3));
+        Assert.That(size1, Is.Not.EqualTo(size4));
 
         // Act & Assert - Inequality
-        Assert.That(size1 != size2, Is.False);
-        Assert.That(size1 != size3, Is.True);
-        Assert.That(size1 != size4, Is.True);
+        Assert.That(size1, Is.EqualTo(size2));
+        Assert.That(size1, Is.Not.EqualTo(size3));
+        Assert.That(size1, Is.Not.EqualTo(size4));
     }
 
     /// <summary>
@@ -125,15 +125,15 @@ public class SizeTests
         var size3 = new Size(150f, 200f);
 
         // Act & Assert - Equals with Size
-        Assert.That(size1.Equals(size2, Is.True));
-        Assert.That(size1.Equals(size3, Is.False));
+        Assert.That(size1.Equals(size2), Is.True);
+        Assert.That(size1.Equals(size3), Is.False);
 
         // Act & Assert - Equals with object
-        Assert.That(size1.Equals((object, Is.True)size2));
-        Assert.That(size1.Equals((object, Is.False)size3));
-        Assert.That(size1.Equals(null, Is.False));
-        Assert.That(size1.Equals("not a size", Is.False));
-        Assert.That(size1.Equals(42, Is.False));
+        Assert.That(size1.Equals((object)size2), Is.True);
+        Assert.That(size1.Equals((object)size3), Is.False);
+        Assert.That(size1.Equals(null), Is.False);
+        Assert.That(size1.Equals("not a size"), Is.False);
+        Assert.That(size1.Equals(42), Is.False);
     }
 
     /// <summary>
@@ -253,11 +253,11 @@ public class SizeTests
         // Assert
         Assert.That(infiniteSize.Width, Is.EqualTo(float.PositiveInfinity));
         Assert.That(infiniteSize.Height, Is.EqualTo(float.PositiveInfinity));
-        Assert.That(float.IsNaN(infiniteSize.AspectRatio, Is.True)); // Infinity / Infinity = NaN
+        Assert.That(infiniteSize.AspectRatio, Is.NaN); // Infinity / Infinity = NaN
 
-        Assert.That(float.IsNaN(nanSize.Width, Is.True));
-        Assert.That(float.IsNaN(nanSize.Height, Is.True));
-        Assert.That(float.IsNaN(nanSize.AspectRatio, Is.True));
+        Assert.That(nanSize.Width, Is.NaN);
+        Assert.That(nanSize.Height, Is.NaN);
+        Assert.That(nanSize.AspectRatio, Is.NaN);
 
         Assert.That(mixedSpecialSize.Width, Is.EqualTo(float.PositiveInfinity));
         Assert.That(mixedSpecialSize.Height, Is.EqualTo(100f));
@@ -285,15 +285,15 @@ public class SizeTests
 
         // Assert
         Assert.That(uniqueSizes.Length, Is.EqualTo(3)); // Should remove one duplicate
-        Assert.That(200f, Does.Contain(new Size(100f)), uniqueSizes);
-        Assert.That(300f, Does.Contain(new Size(150f)), uniqueSizes);
-        Assert.That(400f, Does.Contain(new Size(200f)), uniqueSizes);
+        Assert.That(uniqueSizes, Does.Contain(new Size(100f, 200f)));
+        Assert.That(uniqueSizes, Does.Contain(new Size(150f, 300f)));
+        Assert.That(uniqueSizes, Does.Contain(new Size(200f, 400f)));
 
         // Check sorting
-        Assert.That(200f, Is.EqualTo(new Size(100f)), sortedSizes[0]);
-        Assert.That(200f, Is.EqualTo(new Size(100f)), sortedSizes[1]); // Duplicate
-        Assert.That(300f, Is.EqualTo(new Size(150f)), sortedSizes[2]);
-        Assert.That(400f, Is.EqualTo(new Size(200f)), sortedSizes[3]);
+        Assert.That(sortedSizes[0], Is.EqualTo(new Size(100f, 200f)));
+        Assert.That(sortedSizes[1], Is.EqualTo(new Size(100f, 200f))); // Duplicate
+        Assert.That(sortedSizes[2], Is.EqualTo(new Size(150f, 300f)));
+        Assert.That(sortedSizes[3], Is.EqualTo(new Size(200f, 400f)));
     }
 
     /// <summary>
@@ -340,7 +340,7 @@ public class SizeTests
         // Assert
         Assert.That(size.Width, Is.EqualTo(width));
         Assert.That(size.Height, Is.EqualTo(height));
-        Assert.That(size.AspectRatio > 0, Is.True);
-        Assert.That(size.ToString(, Does.Contain("x")));
+        Assert.That(size.AspectRatio, Is.GreaterThan(0));
+        Assert.That(size.ToString(), Does.Contain("x"));
     }
 }

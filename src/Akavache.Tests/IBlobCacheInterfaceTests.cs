@@ -66,7 +66,7 @@ public class IBlobCacheInterfaceTests
             // GetCreatedAt
             var createdAt = await cache.GetCreatedAt("byte_key").FirstAsync();
             Assert.That(createdAt, Is.Not.Null);
-            Assert.That(createdAt <= DateTimeOffset.Now, Is.True);
+            Assert.That(createdAt, Is.LessThanOrEqualTo(DateTimeOffset.Now));
 
             // GetAllKeys
             var keys = await cache.GetAllKeys().ToList().FirstAsync();
@@ -498,7 +498,7 @@ public class IBlobCacheInterfaceTests
 
             // GetAll with Type
             var allTypedData = await cache.GetAll(userType).ToList().FirstAsync();
-            Assert.That(allTypedData.Count > 0, Is.True);
+            Assert.That(allTypedData.Count, Is.GreaterThan(0));
             Assert.That(kvp => kvp.Key == "typed_key", Does.Contain(allTypedData));
 
             // Bulk Insert with Type
@@ -575,12 +575,12 @@ public class IBlobCacheInterfaceTests
                 if (createdAtResults.Count > 0)
                 {
                     // If we get results, validate them
-                    Assert.That(createdAtResults.Count <= testKeys.Length, Is.True);
+                    Assert.That(createdAtResults.Count, Is.LessThanOrEqualTo(testKeys.Length));
                     foreach (var result in createdAtResults)
                     {
                         Assert.That(testKeys, Does.Contain(result.Key));
                         Assert.That(result.Time, Is.Not.Null);
-                        Assert.That(result.Time <= DateTimeOffset.Now, Is.True);
+                        Assert.That(result.Time, Is.LessThanOrEqualTo(DateTimeOffset.Now));
                     }
                 }
                 else
@@ -601,7 +601,7 @@ public class IBlobCacheInterfaceTests
             {
                 var individualCreatedAt = await cache.GetCreatedAt(key).FirstAsync();
                 Assert.That(individualCreatedAt, Is.Not.Null);
-                Assert.That(individualCreatedAt <= DateTimeOffset.Now, Is.True);
+                Assert.That(individualCreatedAt, Is.LessThanOrEqualTo(DateTimeOffset.Now));
             }
 
             // Test empty collection handling

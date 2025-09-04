@@ -41,7 +41,7 @@ public class DownloadUrlExtensionsTests
                     var bytes = await cache.DownloadUrl("https://httpbin.org/html").FirstAsync();
 
                     // Assert
-                    Assert.That(bytes.Length > 0, Is.True);
+                    Assert.That(bytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -90,7 +90,7 @@ public class DownloadUrlExtensionsTests
                     var bytes = await cache.DownloadUrl(uri).FirstAsync();
 
                     // Assert
-                    Assert.That(bytes.Length > 0, Is.True);
+                    Assert.That(bytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -140,7 +140,7 @@ public class DownloadUrlExtensionsTests
 
                     // Assert - verify data was stored
                     var storedBytes = await cache.Get(key);
-                    Assert.That(storedBytes.Length > 0, Is.True);
+                    Assert.That(storedBytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -191,7 +191,7 @@ public class DownloadUrlExtensionsTests
 
                     // Assert - verify data was stored
                     var storedBytes = await cache.Get(key);
-                    Assert.That(storedBytes.Length > 0, Is.True);
+                    Assert.That(storedBytes.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {
@@ -371,9 +371,9 @@ public class DownloadUrlExtensionsTests
                     var content2 = await cache.Get("content2");
                     var content3 = await cache.Get("content3");
 
-                    Assert.That(content1.Length > 0, Is.True);
-                    Assert.That(content2.Length > 0, Is.True);
-                    Assert.That(content3.Length > 0, Is.True);
+                    Assert.That(content1.Length, Is.GreaterThan(0));
+                    Assert.That(content2.Length, Is.GreaterThan(0));
+                    Assert.That(content3.Length, Is.GreaterThan(0));
                 }
                 catch (TimeoutException)
                 {

@@ -122,7 +122,7 @@ public class LoginExtensionsTests
                 // Verify the expiration was set (we can check creation time)
                 var createdAt = await cache.GetCreatedAt("login:" + host).FirstAsync();
                 Assert.That(createdAt, Is.Not.Null);
-                Assert.That(createdAt <= DateTimeOffset.Now, Is.True);
+                Assert.That(createdAt, Is.LessThanOrEqualTo(DateTimeOffset.Now));
             }
             finally
             {
