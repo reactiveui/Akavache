@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>$(NoWarn);CA1510</NoWarn>
-    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
   <ItemGroup>

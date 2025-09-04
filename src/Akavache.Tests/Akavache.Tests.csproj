@@ -5,12 +5,11 @@
     <LangVersion>preview</LangVersion>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);CA1510</NoWarn>
-    <UseRidGraph>true</UseRidGraph>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" Version="2.1.11" />
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.11" />
   </ItemGroup>
 
   <ItemGroup>
