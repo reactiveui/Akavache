@@ -17,6 +17,7 @@ namespace Akavache.EncryptedSettings.Tests;
 /// </summary>
 [TestFixture]
 [Category("Akavache")]
+[Parallelizable(ParallelScope.None)]
 public class EncryptedSettingsCacheTests
 {
     private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
