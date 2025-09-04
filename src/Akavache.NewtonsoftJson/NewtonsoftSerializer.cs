@@ -61,7 +61,7 @@ public class NewtonsoftSerializer : ISerializer
 
             // Check if this looks like JSON instead
             var firstChar = data[4];
-            if (firstChar == '{' || firstChar == '[' || firstChar == '"')
+            if (firstChar is (byte)'{' or (byte)'[' or (byte)'"')
             {
                 // This looks more like JSON
                 return false;

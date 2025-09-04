@@ -6,16 +6,18 @@
 using System.Reflection;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
+using NUnit.Framework;
 using Splat;
-using Xunit;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for Akavache.Drawing BitmapImageExtensions functionality.
 /// </summary>
-[Collection("Non-Parallel Bitmap Tests")]
-public class BitmapImageExtensionsTests : IAsyncLifetime
+[NonParallelizable]
+[TestFixture]
+[Category("Akavache")]
+public class BitmapImageExtensionsTests
 {
     private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
     private IBitmapLoader? _originalLoader;
@@ -23,8 +25,8 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Performs per-test-class initialization.
     /// </summary>
-    /// <returns>A completed task.</returns>
-    public Task InitializeAsync()
+    [OneTimeSetUp]
+    public void Initialize()
     {
         // Ensure a fast, deterministic bitmap loader for all tests in this class
         try
@@ -37,14 +39,13 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
         }
 
         BitmapLoader.Current = new MockBitmapLoader();
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Performs per-test-class cleanup.
     /// </summary>
-    /// <returns>A completed task.</returns>
-    public Task DisposeAsync()
+    [OneTimeTearDown]
+    public void TearDown()
     {
         try
         {
@@ -57,14 +58,12 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
         {
             // Ignore restore failures
         }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Tests that LoadImage throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -77,7 +76,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that LoadImage with dimensions throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageWithDimensionsShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -90,7 +89,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that LoadImageFromUrl throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageFromUrlShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -103,7 +102,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that LoadImageFromUrl with Uri throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageFromUrlWithUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -117,7 +116,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that LoadImageFromUrl with key throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageFromUrlWithKeyShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -130,7 +129,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that LoadImageFromUrl with key and Uri throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void LoadImageFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -144,7 +143,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that SaveImage throws ArgumentNullException when cache is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void SaveImageShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
@@ -158,7 +157,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that SaveImage throws ArgumentNullException when image is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
@@ -172,7 +171,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that ImageToBytes throws ArgumentNullException when image is null.
     /// </summary>
-    [Fact]
+    [Test]
     public void ImageToBytesShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
@@ -186,7 +185,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// Tests that ThrowOnBadImageBuffer works correctly with valid data.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ThrowOnBadImageBufferShouldReturnValidDataForGoodBuffer()
     {
         // Arrange
@@ -202,21 +201,20 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
             .FirstAsync();
 
         // Assert
-        Assert.Equal(validImageData, result);
+        Assert.That(result, Is.EqualTo(validImageData));
     }
 
     /// <summary>
     /// Tests that ThrowOnBadImageBuffer throws for null data.
     /// </summary>
-    /// <returns>A task representing the test.</returns>
-    [Fact]
-    public async Task ThrowOnBadImageBufferShouldThrowForNullData()
+    [Test]
+    public void ThrowOnBadImageBufferShouldThrowForNullData()
     {
         // Arrange
         byte[]? nullData = null;
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!)
+        Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!)
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -224,15 +222,14 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <summary>
     /// Tests that ThrowOnBadImageBuffer throws for too small data.
     /// </summary>
-    /// <returns>A task representing the test.</returns>
-    [Fact]
-    public async Task ThrowOnBadImageBufferShouldThrowForTooSmallData()
+    [Test]
+    public void ThrowOnBadImageBufferShouldThrowForTooSmallData()
     {
         // Arrange
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(tooSmallData)
+        Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(tooSmallData)
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -241,14 +238,14 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// Tests that LoadImage handles missing keys correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LoadImageShouldHandleMissingKeysCorrectly()
     {
         // Arrange
         await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key")
+        Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key")
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -257,7 +254,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// Tests that SaveImage and LoadImage work together for basic functionality.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task SaveImageAndLoadImageShouldWorkTogether()
     {
         // Arrange
@@ -276,11 +273,14 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
             .FirstAsync();
 
         // Assert
-        Assert.NotNull(loadedBitmap);
+        Assert.That(loadedBitmap, Is.Not.Null);
 
-        // For the mock implementation, we can verify basic properties
-        Assert.Equal(mockBitmap.Width, loadedBitmap.Width);
-        Assert.Equal(mockBitmap.Height, loadedBitmap.Height);
+        using (Assert.EnterMultipleScope())
+        {
+            // For the mock implementation, we can verify basic properties
+            Assert.That(loadedBitmap.Width, Is.EqualTo(mockBitmap.Width));
+            Assert.That(loadedBitmap.Height, Is.EqualTo(mockBitmap.Height));
+        }
 
         await cache.DisposeAsync();
     }
@@ -289,7 +289,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// Tests that ImageToBytes works correctly with mock bitmap.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task ImageToBytesShouldWorkWithMockBitmap()
     {
         // Arrange
@@ -301,8 +301,8 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
             .FirstAsync();
 
         // Assert
-        Assert.NotNull(bytes);
-        Assert.True(bytes.Length > 0);
+        Assert.That(bytes, Is.Not.Null);
+        Assert.That(bytes, Is.Not.Empty);
     }
 
     /// <summary>
@@ -311,13 +311,13 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// <param name="bufferSize">The size of the buffer to test.</param>
     /// <param name="shouldSucceed">Whether the validation should succeed.</param>
     /// <returns>A task representing the test.</returns>
-    [Theory]
-    [InlineData(0, false)] // Empty buffer
-    [InlineData(32, false)] // Too small buffer
-    [InlineData(63, false)] // Just under threshold
-    [InlineData(64, true)] // At threshold
-    [InlineData(128, true)] // Above threshold
-    [InlineData(1024, true)] // Much larger buffer
+    [TestCase(0, false)] // Empty buffer
+    [TestCase(32, false)] // Too small buffer
+    [TestCase(63, false)] // Just under threshold
+    [TestCase(64, true)] // At threshold
+    [TestCase(128, true)] // Above threshold
+    [TestCase(1024, true)] // Much larger buffer
+    [Test]
     public async Task ThrowOnBadImageBufferShouldHandleVariousBufferSizes(int bufferSize, bool shouldSucceed)
     {
         // Arrange
@@ -335,12 +335,12 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
                 .FirstAsync();
 
             // Assert
-            Assert.Equal(buffer, result);
+            Assert.That(result, Is.EqualTo(buffer));
         }
         else
         {
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
                 .Timeout(TestTimeout)
                 .FirstAsync());
         }
@@ -350,7 +350,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     /// Tests that LoadImage with dimensions parameters work correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LoadImageWithDimensionsShouldAcceptParameters()
     {
         // Arrange
@@ -374,14 +374,14 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
             .FirstAsync();
 
         // Assert
-        Assert.NotNull(loadedBitmap);
+        Assert.That(loadedBitmap, Is.Not.Null);
     }
 
     /// <summary>
     /// Tests that SaveImage with expiration works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task SaveImageWithExpirationShouldWork()
     {
         // Arrange
@@ -394,9 +394,6 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
         await cache.SaveImage(key, mockBitmap, expiration)
             .Timeout(TestTimeout)
             .FirstAsync();
-
-        // Verify it was saved (just check that no exception was thrown)
-        Assert.True(true);
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ namespace Akavache.Benchmarks
                         BlobCache = new SqliteBlobCache(Path.Combine(_tempDirectory, "benchmarks-comprehensive-v11.db"), instance.Serializer);
 
                         // Pre-generate test objects
-                        _testObjects = new List<TestDataV11>();
+                        _testObjects = [];
                         for (int i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
                         {
                             _testObjects.Add(new TestDataV11
@@ -252,12 +252,12 @@ namespace Akavache.Benchmarks
         [BenchmarkCategory("Mixed")]
         public async Task MixedOperations()
         {
-            var caches = new IBlobCache[]
-            {
+            IBlobCache[] caches =
+            [
                 CacheDatabase.UserAccount,
                 CacheDatabase.LocalMachine,
                 CacheDatabase.InMemory
-            };
+            ];
 
             for (int i = 0; i < BenchmarkSize; i++)
             {

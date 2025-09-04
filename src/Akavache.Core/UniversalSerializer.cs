@@ -403,7 +403,7 @@ public static class UniversalSerializer
                                 var baseDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                                 var candidateDateTime = baseDateTime.AddMilliseconds(ticks);
 
-                                if (candidateDateTime.Year >= 2000 && candidateDateTime.Year <= 2100)
+                                if (candidateDateTime.Year is >= 2000 and <= 2100)
                                 {
                                     return candidateDateTime;
                                 }
@@ -450,13 +450,13 @@ public static class UniversalSerializer
         var alternatives = new List<ISerializer>();
         var excludeTypeName = excludeSerializer.GetType().Name;
 
-        var knownSerializerTypes = new[]
-        {
+        string[] knownSerializerTypes =
+        [
             "Akavache.SystemTextJson.SystemJsonSerializer",
             "Akavache.SystemTextJson.SystemJsonBsonSerializer",
             "Akavache.NewtonsoftJson.NewtonsoftSerializer",
             "Akavache.NewtonsoftJson.NewtonsoftBsonSerializer"
-        };
+        ];
 
         foreach (var typeName in knownSerializerTypes)
         {
@@ -500,11 +500,11 @@ public static class UniversalSerializer
     {
         try
         {
-            var bsonSerializerTypes = new[]
-            {
+            string[] bsonSerializerTypes =
+            [
                 "Akavache.NewtonsoftJson.NewtonsoftBsonSerializer",
                 "Akavache.SystemTextJson.SystemJsonBsonSerializer"
-            };
+            ];
 
             foreach (var typeName in bsonSerializerTypes)
             {
@@ -600,11 +600,11 @@ public static class UniversalSerializer
         try
         {
             // Try JSON-capable serializers
-            var jsonSerializerTypes = new[]
-            {
+            string[] jsonSerializerTypes =
+            [
                 "Akavache.SystemTextJson.SystemJsonSerializer",
                 "Akavache.NewtonsoftJson.NewtonsoftSerializer"
-            };
+            ];
 
             foreach (var typeName in jsonSerializerTypes)
             {
@@ -907,7 +907,7 @@ public static class UniversalSerializer
         {
             // This suggests a deserialization issue - try to recover
             // Use the original value if it seems reasonable
-            if (originalValue.Value.Year >= 1900 && originalValue.Value.Year <= 2100)
+            if (originalValue.Value.Year is >= 1900 and <= 2100)
             {
                 return originalValue.Value;
             }

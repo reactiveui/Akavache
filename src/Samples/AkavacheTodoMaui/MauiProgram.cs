@@ -32,7 +32,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .ConfigureFonts(fonts =>
+            .ConfigureFonts(static fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
@@ -61,7 +61,7 @@ public static class MauiProgram
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     private static IAppBuilder ConfigureAkavache() =>
         AppBuilder.CreateSplatBuilder()
-            .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+            .WithAkavacheCacheDatabase<SystemJsonSerializer>(static builder =>
                 builder.WithApplicationName("AkavacheTodoMaui")
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
                     .WithSqliteProvider()

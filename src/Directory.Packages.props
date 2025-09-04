@@ -1,0 +1,91 @@
+﻿<Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+	</PropertyGroup>
+
+	<!-- Version groups for packages that share the same version -->
+	<PropertyGroup>
+		<MicrosoftExtensionsVersion>9.0.8</MicrosoftExtensionsVersion>
+		<SqlitePclRawVersion>2.1.11</SqlitePclRawVersion>
+		<SqliteNetVersion>1.9.172</SqliteNetVersion>
+		<SplatVersion>16.1.1</SplatVersion>
+		<ReactiveUIVersion>20.4.1</ReactiveUIVersion>
+	</PropertyGroup>
+
+	<!-- All projects -->
+	<ItemGroup>
+		<PackageVersion Include="Nerdbank.GitVersioning" Version="3.7.115" />
+		<PackageVersion Include="stylecop.analyzers" Version="1.2.0-beta.556" />
+		<PackageVersion Include="Roslynator.Analyzers" Version="4.14.0" />
+	</ItemGroup>
+
+	<!-- Non-test projects only -->
+	<ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
+		<PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+	</ItemGroup>
+
+	<!-- Test projects only -->
+	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageVersion Include="NUnit" Version="4.4.0" />
+		<PackageVersion Include="NUnit3TestAdapter" Version="5.1.0" />
+		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
+		<PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
+		<PackageVersion Include="NUnit.Analyzers" Version="4.10.0" />
+	</ItemGroup>
+
+	<!-- Core library packages -->
+	<ItemGroup>
+		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftExtensionsVersion)" />
+		<PackageVersion Include="Splat.Builder" Version="$(SplatVersion)" />
+		<PackageVersion Include="System.Reactive" Version="6.0.2" />
+		<PackageVersion Include="sqlite-net-pcl" Version="$(SqliteNetVersion)" />
+		<PackageVersion Include="SQLitePCLRaw.bundle_green" Version="$(SqlitePclRawVersion)" />
+		<PackageVersion Include="System.Text.Json" Version="$(MicrosoftExtensionsVersion)" />
+		<PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageVersion Include="Newtonsoft.Json.Bson" Version="1.0.3" />
+		<PackageVersion Include="sqlite-net-sqlcipher" Version="$(SqliteNetVersion)" />
+		<PackageVersion Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="$(SqlitePclRawVersion)" />
+		<PackageVersion Include="Splat.Drawing" Version="$(SplatVersion)" />
+	</ItemGroup>
+
+	<!-- Test-specific packages -->
+	<ItemGroup>
+		<PackageVersion Include="SQLitePCLRaw.lib.e_sqlcipher" Version="$(SqlitePclRawVersion)" />
+		<PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="$(SqlitePclRawVersion)" />
+	</ItemGroup>
+
+	<!-- Benchmark packages -->
+	<ItemGroup>
+		<PackageVersion Include="BenchmarkDotNet" Version="0.15.2" />
+		<PackageVersion Include="Akavache.Sqlite3" Version="10.2.41" />
+		<PackageVersion Include="Akavache" Version="10.2.41" />
+	</ItemGroup>
+
+	<!-- Sample application packages -->
+	<ItemGroup>
+		<PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.3.1" />
+		<PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
+		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
+		<PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="$(MicrosoftExtensionsVersion)" />
+		<PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageVersion Include="ReactiveUI.Maui" Version="$(ReactiveUIVersion)" />
+	</ItemGroup>
+
+	<!-- MAUI-specific package -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' 
+		OR $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' 
+		OR $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst' 
+		OR $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+	</ItemGroup>
+
+	<!-- Windows-specific packages for MAUI -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
+		<PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4948" />
+	</ItemGroup>
+</Project>

@@ -20,10 +20,7 @@ public class StringToBoolConverter : IValueConverter
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>True if string is not null or empty.</returns>
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        return !string.IsNullOrWhiteSpace(value?.ToString());
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => !string.IsNullOrWhiteSpace(value?.ToString());
 
     /// <summary>
     /// Not implemented for one-way binding.
@@ -34,8 +31,5 @@ public class StringToBoolConverter : IValueConverter
     /// <param name="culture">The culture.</param>
     /// <returns>Not supported.</returns>
     /// <exception cref="NotImplementedException">Always thrown.</exception>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
 }

@@ -12,7 +12,16 @@ Always reference these instructions first and fallback to search or bash command
   ```
 - **Platform Support**: This project **builds fully only on Windows**. Linux/macOS have partial support.
 - **Development Tools**: Visual Studio 2022 or VS Code with C# extension.
-
+- Note on Cloning the Repository
+  When cloning the Akavache repository, use a full clone instead of a shallow one (e.g., avoid --depth=1). This project uses Nerdbank.GitVersioning for automatic version calculation based on Git history. Shallow clones lack the necessary commit history, which can cause build errors or force the tool to perform an extra fetch step to deepen the repository. To ensure smooth builds:
+   ```bash
+   git clone https://github.com/reactiveui/Akavache.git
+   ```
+   If you've already done a shallow clone, deepen it with:
+   ```bash
+   bashgit fetch --unshallow
+   ```
+   This prevents exceptions like "Shallow clone lacks the objects required to calculate version height."
 ### Windows Development (Full Support)
 - Install .NET workloads for cross-platform development:
   ```bash
@@ -82,7 +91,7 @@ Always reference these instructions first and fallback to search or bash command
 - **Analyzer Configuration**: 
   - StyleCop settings in `src/stylecop.json`
   - EditorConfig rules in `.editorconfig` (root level)
-  - Analyzer packages in `src/Directory.build.props`
+  - Analyzer packages in `src/Directory.Build.props`
 
 ### Benchmarking
 - Performance testing available via BenchmarkDotNet:

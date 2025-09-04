@@ -91,7 +91,7 @@ public partial class EditTodoViewModel : ReactiveObject
     {
         if (string.IsNullOrWhiteSpace(Title))
         {
-            await Application.Current!.MainPage!.DisplayAlert("Validation Error", "Title is required.", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlert("Validation Error", "Title is required.", "OK");
             return;
         }
 
@@ -113,8 +113,8 @@ public partial class EditTodoViewModel : ReactiveObject
             if (!string.IsNullOrWhiteSpace(TagsString))
             {
                 tags = TagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                .Select(tag => tag.Trim())
-                                .Where(tag => !string.IsNullOrEmpty(tag))
+                                .Select(static tag => tag.Trim())
+                                .Where(static tag => !string.IsNullOrEmpty(tag))
                                 .ToList();
             }
 
@@ -136,7 +136,7 @@ public partial class EditTodoViewModel : ReactiveObject
         }
         catch (Exception ex)
         {
-            await Application.Current!.MainPage!.DisplayAlert("Error", $"Failed to save todo: {ex.Message}", "OK");
+            await Application.Current!.Windows[0].Page!.DisplayAlert("Error", $"Failed to save todo: {ex.Message}", "OK");
         }
     }
 

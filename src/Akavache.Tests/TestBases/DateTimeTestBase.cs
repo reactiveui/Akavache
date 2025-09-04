@@ -8,14 +8,15 @@ using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
-using Xunit;
+
+using NUnit.Framework;
 
 namespace Akavache.Tests.TestBases;
 
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
-[Collection("DateTime Tests")]
+[NonParallelizable]
 public abstract class DateTimeTestBase : IDisposable
 {
     private bool _disposed;
@@ -66,53 +67,17 @@ public abstract class DateTimeTestBase : IDisposable
     private static DateTimeOffset TestNowOffset { get; } = new DateTimeOffset(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(5));
 
     /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
-    /// <param name="serializerType">The type of serializer to use for this test.</param>
-    /// <returns>The configured serializer instance.</returns>
-    public static ISerializer SetupTestSerializer(Type? serializerType)
-    {
-        // Clear any existing in-flight requests to ensure clean test state
-        RequestCache.Clear();
-
-        if (serializerType == typeof(NewtonsoftBsonSerializer))
-        {
-            // Register the Newtonsoft BSON serializer specifically
-            return new NewtonsoftBsonSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
-        {
-            // Register the System.Text.Json BSON serializer specifically
-            return new SystemJsonBsonSerializer();
-        }
-        else if (serializerType == typeof(NewtonsoftSerializer))
-        {
-            // Register the Newtonsoft JSON serializer
-            return new NewtonsoftSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-        else
-        {
-            return null!;
-        }
-    }
-
-    /// <summary>
     /// Tests to make sure that we can force the DateTime kind.
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DateTimeKindCanBeForced(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -125,7 +90,7 @@ public abstract class DateTimeTestBase : IDisposable
             var value = DateTime.UtcNow;
             await fixture.InsertObject("key", value).FirstAsync();
             var result = await fixture.GetObject<DateTime>("key").FirstAsync();
-            Assert.Equal(DateTimeKind.Utc, result.Kind);
+            Assert.That(result.Kind, Is.EqualTo(DateTimeKind.Utc));
         }
     }
 
@@ -137,11 +102,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="InvalidOperationException">$"DateTime edge case {i} failed for value {testCase} ({testCase.Kind}), ex.</exception>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -149,8 +114,8 @@ public abstract class DateTimeTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         await using (var blobCache = CreateBlobCache(path, serializer))
         {
-            var edgeCases = new[]
-            {
+            DateTime[] edgeCases =
+            [
                 DateTime.MinValue,
                 DateTime.MaxValue,
                 new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
@@ -159,7 +124,7 @@ public abstract class DateTimeTestBase : IDisposable
                 DateTime.Now,
                 DateTime.UtcNow,
                 DateTime.Today
-            };
+            ];
 
             var successCount = 0;
             var skipCount = 0;
@@ -239,8 +204,9 @@ public abstract class DateTimeTestBase : IDisposable
             var successRate = totalAttempts > 0 ? (double)successCount / totalAttempts : 0;
             var minSuccessRate = IsUsingBsonSerializer(serializer) || blobCache.GetType().Name.Contains("Encrypted") ? 0.3 : 0.6;
 
-            Assert.True(
-                successRate >= minSuccessRate,
+            Assert.That(
+                successRate,
+                Is.GreaterThanOrEqualTo(minSuccessRate),
                 $"DateTime edge case success rate too low: {successCount}/{totalAttempts} = {successRate:P1}. Expected at least {minSuccessRate:P1}. Skipped: {skipCount}");
         }
     }
@@ -254,11 +220,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="InvalidOperationException">$"DateTimeOffset edge case {i} failed for value {testCase}, ex.</exception>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -326,7 +292,7 @@ public abstract class DateTimeTestBase : IDisposable
             var minimumSuccessRate = blobCache.GetType().Name.Contains("Encrypted") ? 0.4 :
                                    IsUsingBsonSerializer(serializer) ? 0.5 : 0.7;
 
-            Assert.True(successRate >= minimumSuccessRate, $"DateTimeOffset edge case success rate too low: {successCount}/{actualTests} = {successRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}");
+            Assert.That(successRate, Is.GreaterThanOrEqualTo(minimumSuccessRate), $"DateTimeOffset edge case success rate too low: {successCount}/{actualTests} = {successRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}");
         }
     }
 
@@ -436,7 +402,7 @@ public abstract class DateTimeTestBase : IDisposable
             var secondUtc = ConvertToComparableUtc(second!.Value);
 
             var difference = Math.Abs((firstUtc - secondUtc).TotalMilliseconds);
-            Assert.True(difference < tolerance, $"Nullable DateTime UTC values differ by {difference}ms: {firstUtc} vs {secondUtc}");
+            Assert.That(difference, Is.LessThan(tolerance), $"Nullable DateTime UTC values differ by {difference}ms: {firstUtc} vs {secondUtc}");
         }
         else if (!firstHasValue && !secondHasValue)
         {
@@ -455,15 +421,13 @@ public abstract class DateTimeTestBase : IDisposable
     /// <param name="caseIndex">The edge case index.</param>
     /// <param name="testCase">The DateTime being tested.</param>
     /// <returns>The tolerance in milliseconds.</returns>
-    private static double GetDateTimeToleranceForEdgeCase(int caseIndex, DateTime testCase)
-    {
-        return caseIndex switch
+    private static double GetDateTimeToleranceForEdgeCase(int caseIndex, DateTime testCase) =>
+        caseIndex switch
         {
             0 or 1 => 5000, // DateTime.MinValue and MaxValue - very generous
             5 or 7 => 3_700_000, // DateTime.Now and DateTime.Today - over 1 hour for timezone issues
             _ => 1000 // Other cases - 1 second
         };
-    }
 
     /// <summary>
     /// Determines if an exception for a DateTime edge case is acceptable and the test should be skipped.
@@ -472,13 +436,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// <param name="testCase">The DateTime being tested.</param>
     /// <param name="exception">The exception that occurred.</param>
     /// <returns>True if the exception is acceptable and the test should be skipped.</returns>
-    private static bool IsAcceptableEdgeCaseException(int caseIndex, DateTime testCase, Exception exception)
-    {
-        return (caseIndex == 0 || caseIndex == 1) &&
-            (exception.Message.Contains("out of range") ||
-             exception.Message.Contains("overflow") ||
-             exception.Message.Contains("underflow"));
-    }
+    private static bool IsAcceptableEdgeCaseException(int caseIndex, DateTime testCase, Exception exception) =>
+        (caseIndex == 0 || caseIndex == 1) &&
+        (exception.Message.Contains("out of range") ||
+         exception.Message.Contains("overflow") ||
+         exception.Message.Contains("underflow"));
 
     /// <summary>
     /// Determines if an exception for a DateTimeOffset edge case is acceptable and the test should be skipped.
@@ -487,13 +449,11 @@ public abstract class DateTimeTestBase : IDisposable
     /// <param name="testCase">The DateTimeOffset being tested.</param>
     /// <param name="exception">The exception that occurred.</param>
     /// <returns>True if the exception is acceptable and the test should be skipped.</returns>
-    private static bool IsAcceptableDateTimeOffsetEdgeCaseException(int caseIndex, DateTimeOffset testCase, Exception exception)
-    {
-        return (caseIndex == 0 || caseIndex == 1) &&
-            (exception.Message.Contains("out of range") ||
-             exception.Message.Contains("overflow") ||
-             exception.Message.Contains("underflow"));
-    }
+    private static bool IsAcceptableDateTimeOffsetEdgeCaseException(int caseIndex, DateTimeOffset testCase, Exception exception) =>
+        (caseIndex == 0 || caseIndex == 1) &&
+        (exception.Message.Contains("out of range") ||
+         exception.Message.Contains("overflow") ||
+         exception.Message.Contains("underflow"));
 
     /// <summary>
     /// Determines if the current serializer is a BSON-based serializer.
@@ -545,11 +505,10 @@ public abstract class DateTimeTestBase : IDisposable
         // Only add extreme edge cases for non-BSON serializers
         if (!IsUsingBsonSerializer(serializer))
         {
-            cases.AddRange(new[]
-            {
+            cases.AddRange([
                 DateTimeOffset.MinValue,
-                DateTimeOffset.MaxValue,
-            });
+                DateTimeOffset.MaxValue
+            ]);
         }
 
         return cases.ToArray();
@@ -593,5 +552,41 @@ public abstract class DateTimeTestBase : IDisposable
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Sets up the test with the specified serializer type.
+    /// </summary>
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    private static ISerializer SetupTestSerializer(Type? serializerType)
+    {
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
+
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
+        {
+            // Register the Newtonsoft BSON serializer specifically
+            return new NewtonsoftBsonSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
+        {
+            // Register the System.Text.Json BSON serializer specifically
+            return new SystemJsonBsonSerializer();
+        }
+        else if (serializerType == typeof(NewtonsoftSerializer))
+        {
+            // Register the Newtonsoft JSON serializer
+            return new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            return new SystemJsonSerializer();
+        }
+        else
+        {
+            return null!;
+        }
     }
 }

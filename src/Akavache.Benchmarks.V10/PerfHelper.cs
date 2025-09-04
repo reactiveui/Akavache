@@ -43,13 +43,11 @@ namespace Akavache.Benchmarks.V10
         /// </summary>
         /// <param name="toWriteSize">The size of the database to write.</param>
         /// <returns>A dictionary of the contents.</returns>
-        public static Dictionary<string, byte[]> GenerateRandomDatabaseContents(int toWriteSize)
-        {
-            return Enumerable.Range(0, toWriteSize)
-                .Select(_ => GenerateRandomKey())
+        public static Dictionary<string, byte[]> GenerateRandomDatabaseContents(int toWriteSize) =>
+            Enumerable.Range(0, toWriteSize)
+                .Select(static _ => GenerateRandomKey())
                 .Distinct()
-                .ToDictionary(k => k, _ => GenerateRandomBytes());
-        }
+                .ToDictionary(static k => k, static _ => GenerateRandomBytes());
 
         /// <summary>
         /// Generate random bytes for a value.
@@ -85,9 +83,6 @@ namespace Akavache.Benchmarks.V10
         /// Gets a series of size values to use in generating performance tests.
         /// </summary>
         /// <returns>The range of sizes.</returns>
-        public static int[] GetPerfRanges()
-        {
-            return [1, 10, 100, 1000, 10000, 100000,];
-        }
+        public static int[] GetPerfRanges() => [1, 10, 100, 1000, 10000, 100000,];
     }
 }

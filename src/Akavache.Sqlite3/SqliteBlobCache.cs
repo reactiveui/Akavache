@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 using SQLite;
 
@@ -996,18 +995,18 @@ public class SqliteBlobCache : IBlobCache
             {
                 sqls.Add((
                     $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
-                    new object[] { key, nowTicks, type.AssemblyQualifiedName! }));
+                    [key, nowTicks, type.AssemblyQualifiedName!]));
             }
 
             sqls.Add((
                 $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
-                new object[] { key, nowTicks, type.FullName! }));
+                [key, nowTicks, type.FullName!]));
         }
 
         // Without type name filter (handles raw bytes or missing type info)
         sqls.Add((
             $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate}",
-            new object[] { key, nowTicks }));
+            [key, nowTicks]));
 
         foreach (var (sql, args) in sqls)
         {

@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
-    <PackageReference Include="Akavache.Sqlite3" Version="10.2.41" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Akavache.Sqlite3" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" />
   </ItemGroup>
 
 </Project>

@@ -6,24 +6,27 @@
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
-using Xunit;
+
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for ISerializer interface implementations and functionality.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class ISerializerInterfaceTests
 {
     /// <summary>
     /// Tests that all serializers implement basic serialization correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void AllSerializersShouldImplementBasicSerialization(Type serializerType)
     {
         // Arrange
@@ -35,46 +38,58 @@ public class ISerializerInterfaceTests
 
         // Act & Assert - String
         var stringBytes = serializer.Serialize(testString);
-        Assert.NotNull(stringBytes);
-        Assert.True(stringBytes.Length > 0);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stringBytes, Is.Not.Null);
+            Assert.That(stringBytes, Is.Not.Empty);
+        }
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
-        Assert.Equal(testString, deserializedString);
+        Assert.That(deserializedString, Is.EqualTo(testString));
 
         // Act & Assert - Int
         var intBytes = serializer.Serialize(testInt);
-        Assert.NotNull(intBytes);
-        Assert.True(intBytes.Length > 0);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(intBytes, Is.Not.Null);
+            Assert.That(intBytes, Is.Not.Empty);
+        }
 
         var deserializedInt = serializer.Deserialize<int>(intBytes);
-        Assert.Equal(testInt, deserializedInt);
+        Assert.That(deserializedInt, Is.EqualTo(testInt));
 
         // Act & Assert - Bool
         var boolBytes = serializer.Serialize(testBool);
-        Assert.NotNull(boolBytes);
-        Assert.True(boolBytes.Length > 0);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(boolBytes, Is.Not.Null);
+            Assert.That(boolBytes, Is.Not.Empty);
+        }
 
         var deserializedBool = serializer.Deserialize<bool>(boolBytes);
-        Assert.Equal(testBool, deserializedBool);
+        Assert.That(deserializedBool, Is.EqualTo(testBool));
 
         // Act & Assert - Double
         var doubleBytes = serializer.Serialize(testDouble);
-        Assert.NotNull(doubleBytes);
-        Assert.True(doubleBytes.Length > 0);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(doubleBytes, Is.Not.Null);
+            Assert.That(doubleBytes, Is.Not.Empty);
+        }
 
         var deserializedDouble = serializer.Deserialize<double>(doubleBytes);
-        Assert.Equal(testDouble, deserializedDouble, 10); // Allow for floating point precision
+        Assert.That(deserializedDouble, Is.EqualTo(testDouble).Within(0.0001)); // Allow for floating point precision
     }
 
     /// <summary>
     /// Tests that all serializers handle complex objects correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void AllSerializersShouldHandleComplexObjects(Type serializerType)
     {
         // Arrange
@@ -82,7 +97,7 @@ public class ISerializerInterfaceTests
         var testUser = new UserObject
         {
             Name = "Test User",
-            Bio = "Test Bio with special characters: àáâãäåæçèéêë",
+            Bio = "Test Bio with special characters: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
             Blog = "https://test.example.com/blog"
         };
 
@@ -91,21 +106,24 @@ public class ISerializerInterfaceTests
         var deserializedUser = serializer.Deserialize<UserObject>(serializedBytes);
 
         // Assert
-        Assert.NotNull(deserializedUser);
-        Assert.Equal(testUser.Name, deserializedUser!.Name);
-        Assert.Equal(testUser.Bio, deserializedUser.Bio);
-        Assert.Equal(testUser.Blog, deserializedUser.Blog);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedUser, Is.Not.Null);
+            Assert.That(deserializedUser!.Name, Is.EqualTo(testUser.Name));
+            Assert.That(deserializedUser.Bio, Is.EqualTo(testUser.Bio));
+            Assert.That(deserializedUser.Blog, Is.EqualTo(testUser.Blog));
+        }
     }
 
     /// <summary>
     /// Tests that all serializers handle null values correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void AllSerializersShouldHandleNullValues(Type serializerType)
     {
         // Arrange
@@ -116,69 +134,80 @@ public class ISerializerInterfaceTests
         var deserializedNullString = serializer.Deserialize<string?>(nullStringBytes);
 
         // Assert
-        Assert.Null(deserializedNullString);
+        Assert.That(deserializedNullString, Is.Null);
 
         // Act - Serialize null object
         var nullObjectBytes = serializer.Serialize<UserObject?>(null);
         var deserializedNullObject = serializer.Deserialize<UserObject?>(nullObjectBytes);
 
         // Assert
-        Assert.Null(deserializedNullObject);
+        Assert.That(deserializedNullObject, Is.Null);
     }
 
     /// <summary>
     /// Tests that all serializers handle collections correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void AllSerializersShouldHandleCollections(Type serializerType)
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testList = new List<int> { 1, 2, 3, 4, 5 };
-        var testArray = new[] { "one", "two", "three" };
-        var testDict = new Dictionary<string, string>
+        var testList = new List<int>
         {
-            ["key1"] = "value1",
-            ["key2"] = "value2",
-            ["key3"] = "value3"
+            1,
+            2,
+            3,
+            4,
+            5
         };
+        string[] testArray = ["one", "two", "three"];
+        var testDict = new Dictionary<string, string> { ["key1"] = "value1", ["key2"] = "value2", ["key3"] = "value3" };
 
         // Act & Assert - List
         var listBytes = serializer.Serialize(testList);
         var deserializedList = serializer.Deserialize<List<int>>(listBytes);
-        Assert.NotNull(deserializedList);
-        Assert.Equal(testList.Count, deserializedList!.Count);
-        Assert.Equal(testList, deserializedList);
+        Assert.That(deserializedList, Is.Not.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedList!, Has.Count.EqualTo(testList.Count));
+            Assert.That(deserializedList, Is.EqualTo(testList));
+        }
 
         // Act & Assert - Array
         var arrayBytes = serializer.Serialize(testArray);
         var deserializedArray = serializer.Deserialize<string[]>(arrayBytes);
-        Assert.NotNull(deserializedArray);
-        Assert.Equal(testArray.Length, deserializedArray!.Length);
-        Assert.Equal(testArray, deserializedArray);
+        Assert.That(deserializedArray, Is.Not.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedArray!, Has.Length.EqualTo(testArray.Length));
+            Assert.That(deserializedArray, Is.EqualTo(testArray));
+        }
 
         // Act & Assert - Dictionary
         var dictBytes = serializer.Serialize(testDict);
         var deserializedDict = serializer.Deserialize<Dictionary<string, string>>(dictBytes);
-        Assert.NotNull(deserializedDict);
-        Assert.Equal(testDict.Count, deserializedDict!.Count);
-        Assert.Equal(testDict, deserializedDict);
+        Assert.That(deserializedDict, Is.Not.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedDict!, Has.Count.EqualTo(testDict.Count));
+            Assert.That(deserializedDict, Is.EqualTo(testDict));
+        }
     }
 
     /// <summary>
     /// Tests that ForcedDateTimeKind property works correctly for all serializers.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void ForcedDateTimeKindShouldWorkCorrectly(Type serializerType)
     {
         // Arrange
@@ -205,30 +234,30 @@ public class ISerializerInterfaceTests
             {
                 // BSON serializers might have limitations with DateTime handling
                 // Just verify that setting the property doesn't throw an exception
-                Assert.True(true, "BSON serializer property access completed without exception");
+                Assert.Warn("BSON serializer property access completed without exception");
                 return;
             }
 
             // For non-BSON serializers, test full property behavior
-            Assert.Equal(DateTimeKind.Utc, utcValue);
+            Assert.That(utcValue, Is.EqualTo(DateTimeKind.Utc));
 
             // Test setting to Local
             serializer.ForcedDateTimeKind = DateTimeKind.Local;
-            Assert.Equal(DateTimeKind.Local, serializer.ForcedDateTimeKind);
+            Assert.That(serializer.ForcedDateTimeKind, Is.EqualTo(DateTimeKind.Local));
 
             // Test setting to Unspecified
             serializer.ForcedDateTimeKind = DateTimeKind.Unspecified;
-            Assert.Equal(DateTimeKind.Unspecified, serializer.ForcedDateTimeKind);
+            Assert.That(serializer.ForcedDateTimeKind, Is.EqualTo(DateTimeKind.Unspecified));
 
             // Test setting back to null
             serializer.ForcedDateTimeKind = null;
-            Assert.Null(serializer.ForcedDateTimeKind);
+            Assert.That(serializer.ForcedDateTimeKind, Is.Null);
         }
         catch (Exception ex) when (serializerType.Name.Contains("Bson"))
         {
             // BSON serializers might not support ForcedDateTimeKind property properly
             // This is a known limitation, so we'll pass the test
-            Assert.True(true, $"BSON serializer property limitation acknowledged: {ex.Message}");
+            Assert.Warn($"BSON serializer property limitation acknowledged: {ex.Message}");
         }
 
         // This test is purely about the property behavior, not DateTime serialization
@@ -239,11 +268,11 @@ public class ISerializerInterfaceTests
     /// Tests that DateTime serialization respects ForcedDateTimeKind.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void DateTimeSerializationShouldRespectForcedDateTimeKind(Type serializerType)
     {
         // Arrange
@@ -270,20 +299,26 @@ public class ISerializerInterfaceTests
             {
                 // BSON serializers are known to have DateTime edge cases
                 // Just verify basic operation succeeded and time is reasonable
-                Assert.NotEqual(default, deserializedDate);
+                Assert.That(deserializedDate, Is.Not.Default);
 
                 // Very generous time difference tolerance for BSON (allow up to 1 day difference)
                 var bsonTimeDiff = Math.Abs((testDate - deserializedDate).TotalDays);
-                Assert.True(bsonTimeDiff < 1, $"BSON DateTime difference acceptable but large: {bsonTimeDiff} days for {serializerType.Name}");
+                Assert.That(
+                    bsonTimeDiff,
+                    Is.LessThan(1),
+                    $"BSON DateTime difference acceptable but large: {bsonTimeDiff} days for {serializerType.Name}");
 
                 return; // Skip further validation for BSON
             }
 
             // For non-BSON serializers, use stricter validation
-            Assert.NotEqual(default, deserializedDate);
+            Assert.That(deserializedDate, Is.Not.Default);
 
             var regularTimeDiff = Math.Abs((testDate - deserializedDate).TotalMinutes);
-            Assert.True(regularTimeDiff < 1440, $"DateTime difference too large: {regularTimeDiff} minutes for {serializerType.Name}");
+            Assert.That(
+                regularTimeDiff,
+                Is.LessThan(1440),
+                $"DateTime difference too large: {regularTimeDiff} minutes for {serializerType.Name}");
         }
         catch (Exception ex) when (serializerType.Name.Contains("Bson"))
         {
@@ -293,7 +328,7 @@ public class ISerializerInterfaceTests
 
             // Test passes for BSON serializers even if DateTime serialization has issues
             // This acknowledges the known limitation without failing the test
-            Assert.True(true, $"BSON serializer DateTime limitation acknowledged: {ex.Message}");
+            Assert.Warn($"BSON serializer DateTime limitation acknowledged: {ex.Message}");
         }
         finally
         {
@@ -306,11 +341,11 @@ public class ISerializerInterfaceTests
     /// Tests that serializers handle empty byte arrays correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void SerializersShouldHandleEmptyByteArrays(Type serializerType)
     {
         // Arrange
@@ -323,17 +358,18 @@ public class ISerializerInterfaceTests
             var result = serializer.Deserialize<string>(emptyBytes);
 
             // Some serializers may return null for empty bytes, which is acceptable
-            Assert.True(result == null || result is string);
+            Assert.That(result, Is.Null.Or.TypeOf<string>());
         }
         catch (Exception ex)
         {
             // Some serializers may throw for empty bytes, which is also acceptable
-            Assert.True(
-                ex is ArgumentException ||
-                ex is InvalidOperationException ||
-                ex is FormatException ||
-                ex is Newtonsoft.Json.JsonException ||
-                ex is System.Text.Json.JsonException,
+            Assert.That(
+                ex,
+                Is.TypeOf<ArgumentException>()
+                    .Or.TypeOf<InvalidOperationException>()
+                    .Or.TypeOf<FormatException>()
+                    .Or.TypeOf<Newtonsoft.Json.JsonException>()
+                    .Or.TypeOf<System.Text.Json.JsonException>(),
                 $"Unexpected exception type: {ex.GetType().Name}");
         }
     }
@@ -342,11 +378,11 @@ public class ISerializerInterfaceTests
     /// Tests that serializers handle large objects correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void SerializersShouldHandleLargeObjects(Type serializerType)
     {
         // Arrange
@@ -360,32 +396,35 @@ public class ISerializerInterfaceTests
 
         // Act & Assert - Large string
         var stringBytes = serializer.Serialize(largeString);
-        Assert.NotNull(stringBytes);
-        Assert.True(stringBytes.Length > 500_000); // Should be at least 500KB
+        Assert.That(stringBytes, Is.Not.Null);
+        Assert.That(stringBytes, Has.Length.GreaterThan(500_000)); // Should be at least 500KB
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
-        Assert.Equal(largeString, deserializedString);
+        Assert.That(deserializedString, Is.EqualTo(largeString));
 
         // Act & Assert - Large collection
         var listBytes = serializer.Serialize(largeList);
-        Assert.NotNull(listBytes);
-        Assert.True(listBytes.Length > 1000); // Should be reasonably sized
+        Assert.That(listBytes, Is.Not.Null);
+        Assert.That(listBytes, Has.Length.GreaterThan(1000)); // Should be reasonably sized
 
         var deserializedList = serializer.Deserialize<List<int>>(listBytes);
-        Assert.NotNull(deserializedList);
-        Assert.Equal(largeList.Count, deserializedList!.Count);
-        Assert.Equal(largeList, deserializedList);
+        Assert.That(deserializedList, Is.Not.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(deserializedList!, Has.Count.EqualTo(largeList.Count));
+            Assert.That(deserializedList, Is.EqualTo(largeList));
+        }
     }
 
     /// <summary>
     /// Tests that serializers handle nested objects correctly.
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public void SerializersShouldHandleNestedObjects(Type serializerType)
     {
         // Arrange
@@ -400,12 +439,17 @@ public class ISerializerInterfaceTests
                     Level3 = new
                     {
                         Value = "Deeply nested value",
-                        Numbers = new[] { 1, 2, 3, 4, 5 },
-                        Users = new[]
-                        {
-                            new UserObject { Name = "Nested User 1", Bio = "Bio 1", Blog = "Blog 1" },
-                            new UserObject { Name = "Nested User 2", Bio = "Bio 2", Blog = "Blog 2" }
-                        }
+                        Numbers = (int[])[1, 2, 3, 4, 5],
+                        Users = (UserObject[])[
+                            new UserObject
+                            {
+                                Name = "Nested User 1", Bio = "Bio 1", Blog = "Blog 1"
+                            },
+                            new UserObject
+                            {
+                                Name = "Nested User 2", Bio = "Bio 2", Blog = "Blog 2"
+                            }
+                        ]
                     }
                 }
             }
@@ -415,13 +459,13 @@ public class ISerializerInterfaceTests
         var serializedBytes = serializer.Serialize(nestedObject);
 
         // Assert - We can't easily deserialize anonymous types, but we can verify serialization works
-        Assert.NotNull(serializedBytes);
-        Assert.True(serializedBytes.Length > 0);
+        Assert.That(serializedBytes, Is.Not.Null);
+        Assert.That(serializedBytes, Is.Not.Empty);
 
         // Verify the serialized data contains expected content
         var serializedString = Encoding.UTF8.GetString(serializedBytes);
-        Assert.Contains("Deeply nested value", serializedString);
-        Assert.Contains("Nested User 1", serializedString);
+        Assert.That(serializedString, Does.Contain("Deeply nested value"));
+        Assert.That(serializedString, Does.Contain("Nested User 1"));
     }
 
     /// <summary>
@@ -429,11 +473,11 @@ public class ISerializerInterfaceTests
     /// </summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the asynchronous test.</returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task SerializersShouldBeThreadSafe(Type serializerType)
     {
         // Arrange
@@ -463,7 +507,7 @@ public class ISerializerInterfaceTests
                         var result = serializer.Deserialize<string>(bytes);
 
                         // Verify
-                        Assert.Equal(data, result);
+                        Assert.That(result, Is.EqualTo(data));
 
                         // Test property access
                         var currentKind = serializer.ForcedDateTimeKind;
@@ -484,6 +528,6 @@ public class ISerializerInterfaceTests
         await Task.WhenAll(tasks);
 
         // Assert
-        Assert.Empty(exceptions);
+        Assert.That(exceptions, Is.Empty);
     }
 }

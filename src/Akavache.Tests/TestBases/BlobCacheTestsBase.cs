@@ -5,18 +5,17 @@
 
 using Akavache.Core;
 using Akavache.NewtonsoftJson;
-using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Akavache.Tests.Mocks;
-using Xunit;
+
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[Collection("Blob Cache Tests")]
+[NonParallelizable]
 public abstract class BlobCacheTestsBase : IDisposable
 {
     private bool _disposed;
@@ -33,71 +32,17 @@ public abstract class BlobCacheTestsBase : IDisposable
     ];
 
     /// <summary>
-    /// Gets all combinations of serializers for cross-compatibility testing.
-    /// </summary>
-    /// <returns>All serializer combinations.</returns>
-    public static IEnumerable<object[]> GetCrossSerializerCombinations()
-    {
-        var serializerTypes = Serializers.Select(s => s[0]).Cast<Type>().ToList();
-
-        foreach (var writeSerializer in serializerTypes)
-        {
-            foreach (var readSerializer in serializerTypes)
-            {
-                // Test all combinations, including same-serializer (baseline)
-                yield return new object[] { writeSerializer, readSerializer };
-            }
-        }
-    }
-
-    /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
-    /// <param name="serializerType">The type of serializer to use for this test.</param>
-    /// <returns>The configured serializer instance.</returns>
-    public static ISerializer SetupTestSerializer(Type? serializerType)
-    {
-        // Clear any existing in-flight requests to ensure clean test state
-        RequestCache.Clear();
-
-        if (serializerType == typeof(NewtonsoftBsonSerializer))
-        {
-            // Register the Newtonsoft BSON serializer specifically
-            return new NewtonsoftBsonSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
-        {
-            // Register the System.Text.Json BSON serializer specifically
-            return new SystemJsonBsonSerializer();
-        }
-        else if (serializerType == typeof(NewtonsoftSerializer))
-        {
-            // Register the Newtonsoft JSON serializer
-            return new NewtonsoftSerializer();
-        }
-        else if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-        else
-        {
-            return null!;
-        }
-    }
-
-    /// <summary>
     /// Tests to make sure the download url extension methods download correctly.
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DownloadUrlTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -116,7 +61,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.DownloadUrl("https://httpbin.org/html").Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes, Is.Not.Empty);
                 }
                 catch (TimeoutException)
                 {
@@ -135,7 +80,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value (environment/network quirk) – skip
+                    // Observable completed without a value (environment/network quirk) ï¿½ skip
                     return;
                 }
             }
@@ -153,11 +98,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DownloadUriTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -177,7 +122,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.DownloadUrl(uri).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes, Is.Not.Empty);
                 }
                 catch (TimeoutException)
                 {
@@ -196,7 +141,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value – skip
+                    // Observable completed without a value ï¿½ skip
                     return;
                 }
             }
@@ -214,11 +159,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DownloadUrlWithKeyTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -239,7 +184,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.Get(key);
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes, Is.Not.Empty);
                 }
                 catch (TimeoutException)
                 {
@@ -258,7 +203,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value – skip
+                    // Observable completed without a value ï¿½ skip
                     return;
                 }
             }
@@ -276,11 +221,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task DownloadUriWithKeyTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -301,7 +246,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     var bytes = await fixture.Get(key);
 
                     // Assert
-                    Assert.True(bytes.Length > 0);
+                    Assert.That(bytes, Is.Not.Empty);
                 }
                 catch (TimeoutException)
                 {
@@ -317,7 +262,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value – skip
+                    // Observable completed without a value ï¿½ skip
                     return;
                 }
             }
@@ -336,11 +281,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="ArgumentNullException">nameof(serializerType).</exception>
-    [Theory]
-    [InlineData(typeof(SystemJsonSerializer))]
-    [InlineData(typeof(SystemJsonBsonSerializer))]
-    [InlineData(typeof(NewtonsoftSerializer))]
-    [InlineData(typeof(NewtonsoftBsonSerializer))]
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
     public async Task FetchFunctionShouldBeCalledOnceForGetOrFetchObject(Type serializerType)
     {
         if (serializerType == null)
@@ -371,19 +316,25 @@ public abstract class BlobCacheTestsBase : IDisposable
             {
                 var result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
-                Assert.NotNull(result);
-                Assert.Equal("Foo", result.Item1);
-                Assert.Equal("Bar", result.Item2);
+                Assert.That(result, Is.Not.Null);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.Item1, Is.EqualTo("Foo"));
+                    Assert.That(result.Item2, Is.EqualTo("Bar"));
+                }
 
-                Assert.True(fetchCount >= 1, $"Expected fetch to be called at least once, but was {fetchCount}");
+                Assert.That(fetchCount, Is.GreaterThanOrEqualTo(1), $"Expected fetch to be called at least once, but was {fetchCount}");
 
                 var initialFetchCount = fetchCount;
                 result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
-                Assert.NotNull(result);
-                Assert.Equal("Foo", result.Item1);
-                Assert.Equal("Bar", result.Item2);
+                Assert.That(result, Is.Not.Null);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(result.Item1, Is.EqualTo("Foo"));
+                    Assert.That(result.Item2, Is.EqualTo("Bar"));
+                }
 
-                Assert.True(fetchCount <= initialFetchCount + 1, $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
+                Assert.That(fetchCount, Is.LessThanOrEqualTo(initialFetchCount + 1), $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
             }
             catch (Exception ex)
             {
@@ -420,12 +371,11 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <returns>
     /// The cache instance.
     /// </returns>
-    protected virtual IBlobCache CreateBlobCacheForPath(string path, ISerializer serializer)
-    {
+    protected virtual IBlobCache CreateBlobCacheForPath(string path, ISerializer serializer) =>
+
         // For roundtrip tests, use the same database file creation strategy as the main CreateBlobCache
         // but ensure the path is respected for proper isolation
-        return CreateBlobCache(path, serializer);
-    }
+        CreateBlobCache(path, serializer);
 
     /// <summary>
     /// Checks if a serializer type is compatible with the current cache implementation.
@@ -460,6 +410,60 @@ public abstract class BlobCacheTestsBase : IDisposable
             }
 
             _disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Gets all combinations of serializers for cross-compatibility testing.
+    /// </summary>
+    /// <returns>All serializer combinations.</returns>
+    private static IEnumerable<object[]> GetCrossSerializerCombinations()
+    {
+        var serializerTypes = Serializers.Select(static s => s[0]).Cast<Type>().ToList();
+
+        foreach (var writeSerializer in serializerTypes)
+        {
+            foreach (var readSerializer in serializerTypes)
+            {
+                // Test all combinations, including same-serializer (baseline)
+                yield return [writeSerializer, readSerializer];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets up the test with the specified serializer type.
+    /// </summary>
+    /// <param name="serializerType">The type of serializer to use for this test.</param>
+    /// <returns>The configured serializer instance.</returns>
+    private static ISerializer SetupTestSerializer(Type? serializerType)
+    {
+        // Clear any existing in-flight requests to ensure clean test state
+        RequestCache.Clear();
+
+        if (serializerType == typeof(NewtonsoftBsonSerializer))
+        {
+            // Register the Newtonsoft BSON serializer specifically
+            return new NewtonsoftBsonSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonBsonSerializer))
+        {
+            // Register the System.Text.Json BSON serializer specifically
+            return new SystemJsonBsonSerializer();
+        }
+        else if (serializerType == typeof(NewtonsoftSerializer))
+        {
+            // Register the Newtonsoft JSON serializer
+            return new NewtonsoftSerializer();
+        }
+        else if (serializerType == typeof(SystemJsonSerializer))
+        {
+            // Register the System.Text.Json serializer
+            return new SystemJsonSerializer();
+        }
+        else
+        {
+            return null!;
         }
     }
 }

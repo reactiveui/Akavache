@@ -6,20 +6,22 @@
 using Akavache.EncryptedSqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for login extension methods.
 /// </summary>
+[TestFixture]
+[Category("Akavache")]
 public class LoginExtensionsTests
 {
     /// <summary>
     /// Tests that SaveLogin and GetLogin work correctly with default host.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task SaveLoginAndGetLoginShouldWorkWithDefaultHost()
     {
         // Arrange
@@ -39,9 +41,12 @@ public class LoginExtensionsTests
                 var loginInfo = await cache.GetLogin().FirstAsync();
 
                 // Assert
-                Assert.NotNull(loginInfo);
-                Assert.Equal(username, loginInfo.UserName);
-                Assert.Equal(password, loginInfo.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(loginInfo, Is.Not.Null);
+                    Assert.That(loginInfo.UserName, Is.EqualTo(username));
+                    Assert.That(loginInfo.Password, Is.EqualTo(password));
+                }
             }
             finally
             {
@@ -54,7 +59,7 @@ public class LoginExtensionsTests
     /// Tests that SaveLogin and GetLogin work correctly with custom host.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task SaveLoginAndGetLoginShouldWorkWithCustomHost()
     {
         // Arrange
@@ -75,9 +80,12 @@ public class LoginExtensionsTests
                 var loginInfo = await cache.GetLogin(host).FirstAsync();
 
                 // Assert
-                Assert.NotNull(loginInfo);
-                Assert.Equal(username, loginInfo.UserName);
-                Assert.Equal(password, loginInfo.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(loginInfo, Is.Not.Null);
+                    Assert.That(loginInfo.UserName, Is.EqualTo(username));
+                    Assert.That(loginInfo.Password, Is.EqualTo(password));
+                }
             }
             finally
             {
@@ -90,7 +98,7 @@ public class LoginExtensionsTests
     /// Tests that SaveLogin with expiration works correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task SaveLoginWithExpirationShouldWork()
     {
         // Use a single serializer instance to avoid issues
@@ -113,14 +121,17 @@ public class LoginExtensionsTests
                 var loginInfo = await cache.GetLogin(host).FirstAsync();
 
                 // Assert
-                Assert.NotNull(loginInfo);
-                Assert.Equal(username, loginInfo.UserName);
-                Assert.Equal(password, loginInfo.Password);
+                Assert.That(loginInfo, Is.Not.Null);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(loginInfo.UserName, Is.EqualTo(username));
+                    Assert.That(loginInfo.Password, Is.EqualTo(password));
+                }
 
                 // Verify the expiration was set (we can check creation time)
                 var createdAt = await cache.GetCreatedAt("login:" + host).FirstAsync();
-                Assert.NotNull(createdAt);
-                Assert.True(createdAt <= DateTimeOffset.Now);
+                Assert.That(createdAt, Is.Not.Null);
+                Assert.That(createdAt, Is.LessThanOrEqualTo(DateTimeOffset.Now));
             }
             finally
             {
@@ -133,7 +144,7 @@ public class LoginExtensionsTests
     /// Tests that EraseLogin removes login correctly.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task EraseLoginShouldRemoveLoginCorrectly()
     {
         // Arrange
@@ -152,14 +163,14 @@ public class LoginExtensionsTests
 
                 // Verify login exists
                 var loginInfo = await cache.GetLogin(host).FirstAsync();
-                Assert.NotNull(loginInfo);
-                Assert.Equal(username, loginInfo.UserName);
+                Assert.That(loginInfo, Is.Not.Null);
+                Assert.That(loginInfo.UserName, Is.EqualTo(username));
 
                 // Act - Erase login
                 await cache.EraseLogin(host).FirstAsync();
 
                 // Assert - Login should no longer exist
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                Assert.ThrowsAsync<KeyNotFoundException>(async () =>
                 {
                     await cache.GetLogin(host).FirstAsync();
                 });
@@ -175,7 +186,7 @@ public class LoginExtensionsTests
     /// Tests that GetLogin throws KeyNotFoundException when no login exists.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task GetLoginShouldThrowKeyNotFoundExceptionWhenNoLoginExists()
     {
         // Arrange
@@ -188,7 +199,7 @@ public class LoginExtensionsTests
             try
             {
                 // Act & Assert
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                Assert.ThrowsAsync<KeyNotFoundException>(async () =>
                 {
                     await cache.GetLogin(host).FirstAsync();
                 });
@@ -204,7 +215,7 @@ public class LoginExtensionsTests
     /// Tests that multiple hosts can have different login credentials.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task MultipleHostsShouldHaveDifferentCredentials()
     {
         // Arrange
@@ -232,17 +243,27 @@ public class LoginExtensionsTests
                 var login2 = await cache.GetLogin(host2).FirstAsync();
 
                 // Assert - Each host should have its own credentials
-                Assert.NotNull(login1);
-                Assert.Equal(user1, login1.UserName);
-                Assert.Equal(pass1, login1.Password);
+                Assert.That(login1, Is.Not.Null);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(login1.UserName, Is.EqualTo(user1));
+                    Assert.That(login1.Password, Is.EqualTo(pass1));
 
-                Assert.NotNull(login2);
-                Assert.Equal(user2, login2.UserName);
-                Assert.Equal(pass2, login2.Password);
+                    Assert.That(login2, Is.Not.Null);
+                }
 
-                // Verify they are different
-                Assert.NotEqual(login1.UserName, login2.UserName);
-                Assert.NotEqual(login1.Password, login2.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(login2.UserName, Is.EqualTo(user2));
+                    Assert.That(login2.Password, Is.EqualTo(pass2));
+                }
+
+                using (Assert.EnterMultipleScope())
+                {
+                    // Verify they are different
+                    Assert.That(login2.UserName, Is.Not.EqualTo(login1.UserName));
+                    Assert.That(login2.Password, Is.Not.EqualTo(login1.Password));
+                }
             }
             finally
             {
@@ -255,7 +276,7 @@ public class LoginExtensionsTests
     /// Tests that SaveLogin overwrites previous credentials for the same host.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task SaveLoginShouldOverwritePreviousCredentials()
     {
         // Arrange
@@ -278,21 +299,30 @@ public class LoginExtensionsTests
 
                 // Verify original credentials
                 var originalLogin = await cache.GetLogin(host).FirstAsync();
-                Assert.Equal(originalUser, originalLogin.UserName);
-                Assert.Equal(originalPass, originalLogin.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(originalLogin.UserName, Is.EqualTo(originalUser));
+                    Assert.That(originalLogin.Password, Is.EqualTo(originalPass));
+                }
 
                 // Act - Overwrite with new credentials
                 await cache.SaveLogin(newUser, newPass, host).FirstAsync();
 
                 // Assert - Should get new credentials, not original
                 var newLogin = await cache.GetLogin(host).FirstAsync();
-                Assert.NotNull(newLogin);
-                Assert.Equal(newUser, newLogin.UserName);
-                Assert.Equal(newPass, newLogin.Password);
+                Assert.That(newLogin, Is.Not.Null);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(newLogin.UserName, Is.EqualTo(newUser));
+                    Assert.That(newLogin.Password, Is.EqualTo(newPass));
+                }
 
-                // Verify old credentials are gone
-                Assert.NotEqual(originalUser, newLogin.UserName);
-                Assert.NotEqual(originalPass, newLogin.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    // Verify old credentials are gone
+                    Assert.That(newLogin.UserName, Is.Not.EqualTo(originalUser));
+                    Assert.That(newLogin.Password, Is.Not.EqualTo(originalPass));
+                }
             }
             finally
             {
@@ -305,7 +335,7 @@ public class LoginExtensionsTests
     /// Tests that login credentials persist across cache instances.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LoginCredentialsShouldPersistAcrossCacheInstances()
     {
         // Arrange
@@ -340,9 +370,12 @@ public class LoginExtensionsTests
                     var loginInfo = await cache2.GetLogin(host).FirstAsync();
 
                     // Assert
-                    Assert.NotNull(loginInfo);
-                    Assert.Equal(username, loginInfo.UserName);
-                    Assert.Equal(password, loginInfo.Password);
+                    Assert.That(loginInfo, Is.Not.Null);
+                    using (Assert.EnterMultipleScope())
+                    {
+                        Assert.That(loginInfo.UserName, Is.EqualTo(username));
+                        Assert.That(loginInfo.Password, Is.EqualTo(password));
+                    }
                 }
                 finally
                 {
@@ -356,7 +389,7 @@ public class LoginExtensionsTests
     /// Tests that login methods handle null and empty values appropriately.
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task LoginMethodsShouldHandleEdgeCases()
     {
         // Arrange
@@ -370,22 +403,31 @@ public class LoginExtensionsTests
                 // Test with empty strings (should be allowed)
                 await cache.SaveLogin(string.Empty, string.Empty, "empty.example.com").FirstAsync();
                 var emptyLogin = await cache.GetLogin("empty.example.com").FirstAsync();
-                Assert.Equal(string.Empty, emptyLogin.UserName);
-                Assert.Equal(string.Empty, emptyLogin.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(emptyLogin.UserName, Is.EqualTo(string.Empty));
+                    Assert.That(emptyLogin.Password, Is.EqualTo(string.Empty));
+                }
 
                 // Test with whitespace
                 await cache.SaveLogin("  ", "  ", "whitespace.example.com").FirstAsync();
                 var whitespaceLogin = await cache.GetLogin("whitespace.example.com").FirstAsync();
-                Assert.Equal("  ", whitespaceLogin.UserName);
-                Assert.Equal("  ", whitespaceLogin.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(whitespaceLogin.UserName, Is.EqualTo("  "));
+                    Assert.That(whitespaceLogin.Password, Is.EqualTo("  "));
+                }
 
                 // Test with special characters
                 var specialUser = "user@domain.com";
                 var specialPass = "p@ssw0rd!#$%";
                 await cache.SaveLogin(specialUser, specialPass, "special.example.com").FirstAsync();
                 var specialLogin = await cache.GetLogin("special.example.com").FirstAsync();
-                Assert.Equal(specialUser, specialLogin.UserName);
-                Assert.Equal(specialPass, specialLogin.Password);
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(specialLogin.UserName, Is.EqualTo(specialUser));
+                    Assert.That(specialLogin.Password, Is.EqualTo(specialPass));
+                }
             }
             finally
             {
@@ -398,7 +440,7 @@ public class LoginExtensionsTests
     /// Tests that EraseLogin is idempotent (can be called multiple times safely).
     /// </summary>
     /// <returns>A task representing the test.</returns>
-    [Fact]
+    [Test]
     public async Task EraseLoginShouldBeIdempotent()
     {
         // Arrange
@@ -423,7 +465,7 @@ public class LoginExtensionsTests
                 await cache.EraseLogin("nonexistent.example.com").FirstAsync();
 
                 // Verify the login is still gone
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                Assert.ThrowsAsync<KeyNotFoundException>(async () =>
                 {
                     await cache.GetLogin(host).FirstAsync();
                 });

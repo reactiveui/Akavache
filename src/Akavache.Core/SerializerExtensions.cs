@@ -5,8 +5,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
+
 using Akavache.Core;
-using Splat;
 
 namespace Akavache;
 
