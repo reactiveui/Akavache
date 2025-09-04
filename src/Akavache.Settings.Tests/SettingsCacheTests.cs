@@ -3,16 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
-
 using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
-
-using NUnit.Framework;
 
 using Splat.Builder;
 
@@ -98,7 +91,7 @@ namespace Akavache.Settings.Tests
                 {
                     try
                     {
-                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         using (Assert.EnterMultipleScope())
                         {
@@ -131,7 +124,7 @@ namespace Akavache.Settings.Tests
                     }
                 });
 
-            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+            await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -156,10 +149,10 @@ namespace Akavache.Settings.Tests
                 {
                     try
                     {
-                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         viewSettings!.EnumTest = EnumTestValue.Option2;
-                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -179,7 +172,7 @@ namespace Akavache.Settings.Tests
                     }
                 });
 
-            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+            await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -204,7 +197,7 @@ namespace Akavache.Settings.Tests
                 {
                     try
                     {
-                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         using (Assert.EnterMultipleScope())
                         {
@@ -237,7 +230,7 @@ namespace Akavache.Settings.Tests
                     }
                 });
 
-            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+            await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -262,10 +255,10 @@ namespace Akavache.Settings.Tests
                 {
                     try
                     {
-                        await EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                         viewSettings!.EnumTest = EnumTestValue.Option2;
-                        await EventuallyAsync(() => TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
+                        await TestHelper.EventuallyAsync(() => TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2)).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -285,7 +278,7 @@ namespace Akavache.Settings.Tests
                     }
                 });
 
-            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+            await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -316,7 +309,7 @@ namespace Akavache.Settings.Tests
                     })
                 .Build();
 
-            await EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+            await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
             using (Assert.EnterMultipleScope())
             {
@@ -333,105 +326,6 @@ namespace Akavache.Settings.Tests
         private static string NewName(string prefix)
         {
             return $"{prefix}_{Guid.NewGuid():N}";
-        }
-
-        /// <summary>
-        /// Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.
-        /// </summary>
-        /// <param name="ex">The exception to inspect.</param>
-        /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
-        private static bool IsDisposedMessage(InvalidOperationException ex)
-        {
-            return ex.Message?.IndexOf("disposed", StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
-        /// <summary>
-        /// Attempts to evaluate a getter/condition that may touch a cache; treats disposal as transient.
-        /// </summary>
-        /// <param name="probe">A function that evaluates to <see langword="true"/> when the condition is satisfied.</param>
-        /// <returns>True if the probe succeeded and returned true; false on transient disposal or false condition.</returns>
-        private static bool TryRead(Func<bool> probe)
-        {
-            try
-            {
-                return probe();
-            }
-            catch (ObjectDisposedException)
-            {
-                return false;
-            }
-            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
-        /// Handles transient disposal exceptions as retryable.
-        /// </summary>
-        /// <param name="condition">A synchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
-        /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
-        /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
-        /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
-        /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
-        /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
-        private static Task EventuallyAsync(
-            Func<bool> condition,
-            int timeoutMs = 3500,
-            int initialDelayMs = 25,
-            double backoff = 1.5,
-            int maxDelayMs = 200)
-        {
-            return EventuallyAsync(() => Task.FromResult(condition()), timeoutMs, initialDelayMs, backoff, maxDelayMs);
-        }
-
-        /// <summary>
-        /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
-        /// Handles transient disposal exceptions as retryable.
-        /// </summary>
-        /// <param name="condition">An asynchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
-        /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
-        /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
-        /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
-        /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
-        /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
-        private static async Task EventuallyAsync(
-            Func<Task<bool>> condition,
-            int timeoutMs = 3500,
-            int initialDelayMs = 25,
-            double backoff = 1.5,
-            int maxDelayMs = 200)
-        {
-            var sw = Stopwatch.StartNew();
-            var delay = initialDelayMs;
-
-            while (sw.ElapsedMilliseconds < timeoutMs)
-            {
-                bool ok;
-                try
-                {
-                    ok = await condition().ConfigureAwait(false);
-                }
-                catch (ObjectDisposedException)
-                {
-                    ok = false;
-                }
-                catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
-                {
-                    ok = false;
-                }
-
-                if (ok)
-                {
-                    return;
-                }
-
-                await Task.Delay(delay).ConfigureAwait(false);
-                delay = Math.Min((int)(delay * backoff), maxDelayMs);
-            }
-
-            Assert.Fail($"Condition not met within {timeoutMs}ms.");
         }
 
         /// <summary>
@@ -452,6 +346,7 @@ namespace Akavache.Settings.Tests
                     applicationName,
                     async builder =>
                     {
+
                         builder
                             .WithSqliteProvider()
                             .WithSettingsCachePath(_cacheRoot);
@@ -461,10 +356,7 @@ namespace Akavache.Settings.Tests
                             await configureAsync(builder).ConfigureAwait(false);
                         }
                     },
-                    async instance =>
-                    {
-                        await bodyAsync(instance).ConfigureAwait(false);
-                    })
+                    async instance => await bodyAsync(instance).ConfigureAwait(false))
                 .Build();
         }
     }
