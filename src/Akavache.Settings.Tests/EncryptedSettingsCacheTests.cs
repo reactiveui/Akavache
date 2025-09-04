@@ -403,28 +403,53 @@ namespace Akavache.EncryptedSettings.Tests
         public async Task TestEncryptedSettingsWrongPasswordAsync()
         {
             var testName = NewName("wrong_password_test");
-            ViewSettings? originalSettings = null;
+            ViewSettings? initialSettings = null;
 
             RunWithAkavache<NewtonsoftSerializer>(
                 testName,
                 async builder =>
                 {
                     await builder.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
-                    builder.WithSecureSettingsStore<ViewSettings>("correct_password", s => originalSettings = s, testName);
+                    builder.WithSecureSettingsStore<ViewSettings>("correct_password", s => initialSettings = s, testName);
                 },
                 async instance =>
                 {
                     try
                     {
-                        await EventuallyAsync(() => originalSettings is not null).ConfigureAwait(false);
+                        // Wait until the initial store is created.
+                        await EventuallyAsync(() => initialSettings is not null).ConfigureAwait(false);
 
-                        originalSettings!.StringTest = "Secret Data";
-                        await originalSettings.DisposeAsync().ConfigureAwait(false);
+                        // IMPORTANT: Do NOT write using the captured 'initialSettings'.
+                        // Instead, open a *fresh* store, perform the write, and dispose it — retrying on transient disposal.
+                        await EventuallyAsync(async () =>
+                        {
+                            return await WithFreshStoreAsync(
+                                instance,
+                                "correct_password",
+                                testName,
+                                async s =>
+                                {
+                                    s.StringTest = "Secret Data";
 
+                                    // Optionally verify the value round-trips in the same fresh store.
+                                    var ok = TryRead(() => s.StringTest == "Secret Data");
+                                    await Task.Yield();
+                                    return ok;
+                                }).ConfigureAwait(false);
+                        }).ConfigureAwait(false);
+
+                        // Release the initial settings instance after we've successfully written using a fresh store.
+                        if (initialSettings is not null)
+                        {
+                            await initialSettings.DisposeAsync().ConfigureAwait(false);
+                        }
+
+                        // Fully release file handles to avoid race on Windows paths.
                         await instance.DisposeSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
 
                         var wrongPasswordWorked = false;
 
+                        // Now attempt to read with the *wrong* password. This should never surface the secret.
                         await EventuallyAsync(async () =>
                         {
                             try
@@ -432,7 +457,7 @@ namespace Akavache.EncryptedSettings.Tests
                                 var wrong = instance.GetSecureSettingsStore<ViewSettings>("wrong_password", testName);
                                 if (wrong is null)
                                 {
-                                    return true;
+                                    return true; // acceptable outcome
                                 }
 
                                 if (TryRead(() => wrong.StringTest == "Secret Data"))
@@ -453,7 +478,10 @@ namespace Akavache.EncryptedSettings.Tests
                             }
                         }).ConfigureAwait(false);
 
-                        Assert.That(wrongPasswordWorked, Is.False, "Wrong password should not provide access to encrypted data.");
+                        Assert.That(
+                            wrongPasswordWorked,
+                            Is.False,
+                            "Wrong password should not provide access to encrypted data.");
                     }
                     finally
                     {
@@ -685,6 +713,53 @@ namespace Akavache.EncryptedSettings.Tests
             }
 
             Assert.Fail($"Condition not met within {timeoutMs}ms.");
+        }
+
+        /// <summary>
+        /// Opens a fresh secure settings store, runs an async action, disposes the store,
+        /// and treats transient disposal as retryable (returns false).
+        /// </summary>
+        /// <param name="instance">The Akavache instance.</param>
+        /// <param name="password">The password for the secure store.</param>
+        /// <param name="name">The store name.</param>
+        /// <param name="action">The action to execute against the fresh store.</param>
+        /// <returns>
+        /// True if the action completes successfully; false if a transient disposal occurred and the caller should retry.
+        /// </returns>
+        private static async Task<bool> WithFreshStoreAsync(
+            IAkavacheInstance instance,
+            string password,
+            string name,
+            Func<ViewSettings, Task<bool>> action)
+        {
+            ViewSettings? s = null;
+            try
+            {
+                s = instance.GetSecureSettingsStore<ViewSettings>(password, name);
+                return await action(s).ConfigureAwait(false);
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+            {
+                return false;
+            }
+            finally
+            {
+                if (s is not null)
+                {
+                    try
+                    {
+                        await s.DisposeAsync().ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // Best-effort dispose.
+                    }
+                }
+            }
         }
 
         /// <summary>
