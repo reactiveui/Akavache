@@ -340,7 +340,7 @@ public static class AkavacheBuilderExtensions
     /// UserAccount will use User Store For Assembly.
     /// Secure will use User Store For Assembly.
     /// SettingsCache will use User Store For Assembly.
-    /// Any other value will use Machine Store For Assembly
+    /// Any other value will use Machine Store For Assembly.
     /// </param>
     /// <returns>The Isolated cache path.</returns>
     /// <exception cref="System.ArgumentNullException">builder.</exception>
