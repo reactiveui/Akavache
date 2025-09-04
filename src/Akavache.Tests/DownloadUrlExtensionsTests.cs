@@ -13,11 +13,33 @@ namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for download URL extension methods and HTTP functionality.
+/// Uses a local test server instead of external dependencies for reliable offline testing.
 /// </summary>
 [TestFixture]
 [Category("Akavache")]
 public class DownloadUrlExtensionsTests
 {
+    private TestHttpServer? _testServer;
+
+    /// <summary>
+    /// Sets up the test fixture with a local HTTP server.
+    /// </summary>
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        _testServer = new TestHttpServer();
+        _testServer.SetupDefaultResponses();
+    }
+
+    /// <summary>
+    /// Cleans up the test fixture.
+    /// </summary>
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        _testServer?.Dispose();
+    }
+
     /// <summary>
     /// Tests that DownloadUrl extension method works correctly.
     /// </summary>
@@ -35,29 +57,17 @@ public class DownloadUrlExtensionsTests
 
             try
             {
-                // Act - Skip if httpbin is unavailable (CI/test environments)
-                try
-                {
-                    var bytes = await cache.DownloadUrl("https://httpbin.org/html").FirstAsync();
+                // Act - Use local test server instead of external service
+                var testUrl = $"{_testServer!.BaseUrl}html";
+                var bytes = await cache.DownloadUrl(testUrl).FirstAsync();
 
-                    // Assert
-                    Assert.That(bytes.Length, Is.GreaterThan(0));
-                }
-                catch (TimeoutException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
-                catch (HttpRequestException)
-                {
-                    // Skip test if httpbin.org is unavailable
-                    return;
-                }
-                catch (TaskCanceledException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
+                // Assert
+                Assert.That(bytes.Length, Is.GreaterThan(0));
+                
+                // Verify content is HTML as expected
+                var content = System.Text.Encoding.UTF8.GetString(bytes);
+                Assert.That(content, Does.Contain("<html>"));
+                Assert.That(content, Does.Contain("Test Content"));
             }
             finally
             {
@@ -83,30 +93,19 @@ public class DownloadUrlExtensionsTests
 
             try
             {
-                // Act - Skip if httpbin is unavailable
-                try
-                {
-                    var uri = new Uri("https://httpbin.org/html");
-                    var bytes = await cache.DownloadUrl(uri).FirstAsync();
+                // Act - Use local test server
+                var uri = new Uri($"{_testServer!.BaseUrl}html");
+                var bytes = await cache.DownloadUrl(uri).FirstAsync();
 
-                    // Assert
+                // Assert
+                Assert.Multiple(() =>
+                {
                     Assert.That(bytes.Length, Is.GreaterThan(0));
-                }
-                catch (TimeoutException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
-                catch (HttpRequestException)
-                {
-                    // Skip test if httpbin.org is unavailable
-                    return;
-                }
-                catch (TaskCanceledException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
+                    
+                    var content = System.Text.Encoding.UTF8.GetString(bytes);
+                    Assert.That(content, Does.Contain("<html>"));
+                    Assert.That(content, Does.Contain("Test Content"));
+                });
             }
             finally
             {
@@ -132,31 +131,21 @@ public class DownloadUrlExtensionsTests
 
             try
             {
-                // Act - Skip if httpbin is unavailable
-                try
-                {
-                    const string key = "downloaded_content";
-                    await cache.DownloadUrl(key, "https://httpbin.org/html").FirstAsync();
+                // Act - Use local test server
+                const string key = "downloaded_content";
+                var testUrl = $"{_testServer!.BaseUrl}html";
+                await cache.DownloadUrl(key, testUrl).FirstAsync();
 
-                    // Assert - verify data was stored
-                    var storedBytes = await cache.Get(key);
+                // Assert - verify data was stored
+                var storedBytes = await cache.Get(key);
+                Assert.Multiple(() =>
+                {
                     Assert.That(storedBytes.Length, Is.GreaterThan(0));
-                }
-                catch (TimeoutException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
-                catch (HttpRequestException)
-                {
-                    // Skip test if httpbin.org is unavailable
-                    return;
-                }
-                catch (TaskCanceledException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
+                    
+                    var content = System.Text.Encoding.UTF8.GetString(storedBytes);
+                    Assert.That(content, Does.Contain("<html>"));
+                    Assert.That(content, Does.Contain("Test Content"));
+                });
             }
             finally
             {
@@ -182,32 +171,21 @@ public class DownloadUrlExtensionsTests
 
             try
             {
-                // Act - Skip if httpbin is unavailable
-                try
-                {
-                    const string key = "downloaded_uri_content";
-                    var uri = new Uri("https://httpbin.org/html");
-                    await cache.DownloadUrl(key, uri).FirstAsync();
+                // Act - Use local test server
+                const string key = "downloaded_uri_content";
+                var uri = new Uri($"{_testServer!.BaseUrl}html");
+                await cache.DownloadUrl(key, uri).FirstAsync();
 
-                    // Assert - verify data was stored
-                    var storedBytes = await cache.Get(key);
+                // Assert - verify data was stored
+                var storedBytes = await cache.Get(key);
+                Assert.Multiple(() =>
+                {
                     Assert.That(storedBytes.Length, Is.GreaterThan(0));
-                }
-                catch (TimeoutException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
-                catch (HttpRequestException)
-                {
-                    // Skip test if httpbin.org is unavailable
-                    return;
-                }
-                catch (TaskCanceledException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
+                    
+                    var content = System.Text.Encoding.UTF8.GetString(storedBytes);
+                    Assert.That(content, Does.Contain("<html>"));
+                    Assert.That(content, Does.Contain("Test Content"));
+                });
             }
             finally
             {
@@ -267,63 +245,36 @@ public class DownloadUrlExtensionsTests
         {
             // Test null cache argument validation
             IBlobCache? nullCache = null;
-            Assert.Throws<ArgumentNullException>(() => nullCache!.DownloadUrl("http://example.com"));
-
-            // Test null Uri argument validation
-            Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((Uri)null!));
-
-            // Test null URL string argument validation
-            Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((string)null!));
-
-            // Test null key argument validation
-            Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((string)null!, "http://example.com"));
-
-            // For empty/whitespace strings, different implementations may handle differently
-            // Some might throw ArgumentException, others might throw UriFormatException
-            try
+            
+            Assert.Multiple(() =>
             {
-                var exception = await Assert.ThrowsAnyAsync<Exception>(async () => await cache.DownloadUrl(string.Empty).FirstAsync());
+                // Test null argument validations
+                Assert.Throws<ArgumentNullException>(() => nullCache!.DownloadUrl("http://example.com"));
+                Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((Uri)null!));
+                Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((string)null!));
+                Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((string)null!, "http://example.com"));
+            });
 
-                // Accept either ArgumentException or UriFormatException for empty URL
-                Assert.True(
-                    exception is ArgumentException ||
-                    exception is UriFormatException ||
-                    exception is InvalidOperationException,
-                    $"Expected ArgumentException or UriFormatException for empty URL, got {exception.GetType().Name}");
-            }
-            catch (ArgumentException)
-            {
-                // This is the expected behavior
-            }
-            catch (UriFormatException)
-            {
-                // This is also acceptable - URL parsing failure
-            }
+            // Test empty/whitespace strings
+            var emptyUrlException = await Assert.ThrowsAnyAsync<Exception>(async () => await cache.DownloadUrl(string.Empty).FirstAsync());
+            var whitespaceUrlException = await Assert.ThrowsAnyAsync<Exception>(async () => await cache.DownloadUrl("   ").FirstAsync());
 
-            try
+            Assert.Multiple(() =>
             {
-                var exception = await Assert.ThrowsAnyAsync<Exception>(async () => await cache.DownloadUrl("   ").FirstAsync());
+                // Accept various exception types for empty URL
+                Assert.That(
+                    emptyUrlException is ArgumentException ||
+                    emptyUrlException is UriFormatException ||
+                    emptyUrlException is InvalidOperationException,
+                    $"Expected ArgumentException or UriFormatException for empty URL, got {emptyUrlException.GetType().Name}");
 
-                // Accept either ArgumentException or UriFormatException for whitespace URL
-                Assert.True(
-                    exception is ArgumentException ||
-                    exception is UriFormatException ||
-                    exception is InvalidOperationException,
-                    $"Expected ArgumentException or UriFormatException for whitespace URL, got {exception.GetType().Name}");
-            }
-            catch (ArgumentException)
-            {
-                // This is the expected behavior
-            }
-            catch (UriFormatException)
-            {
-                // This is also acceptable - URL parsing failure
-            }
-        }
-        catch (TimeoutException)
-        {
-            // Skip test if request times out
-            return;
+                // Accept various exception types for whitespace URL
+                Assert.That(
+                    whitespaceUrlException is ArgumentException ||
+                    whitespaceUrlException is UriFormatException ||
+                    whitespaceUrlException is InvalidOperationException,
+                    $"Expected ArgumentException or UriFormatException for whitespace URL, got {whitespaceUrlException.GetType().Name}");
+            });
         }
         finally
         {
@@ -348,48 +299,45 @@ public class DownloadUrlExtensionsTests
 
             try
             {
-                // Act - Skip if httpbin is unavailable
-                try
+                // Act - Use local test server for all concurrent downloads
+                var tasks = new[]
                 {
-                    var tasks = new[]
-                    {
-                            cache.DownloadUrl("content1", "https://httpbin.org/html").FirstAsync().ToTask(),
-                            cache.DownloadUrl("content2", "https://httpbin.org/json").FirstAsync().ToTask(),
-                            cache.DownloadUrl("content3", "https://httpbin.org/user-agent").FirstAsync().ToTask()
-                    };
+                        cache.DownloadUrl("content1", $"{_testServer!.BaseUrl}html").FirstAsync().ToTask(),
+                        cache.DownloadUrl("content2", $"{_testServer!.BaseUrl}json").FirstAsync().ToTask(),
+                        cache.DownloadUrl("content3", $"{_testServer!.BaseUrl}user-agent").FirstAsync().ToTask()
+                };
 
-                    await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks);
 
-                    // Assert - verify all downloads completed
+                // Assert - verify all downloads completed and data was stored
+                Assert.Multiple(() =>
+                {
                     foreach (var task in tasks)
                     {
                         Assert.That(task.IsCompletedSuccessfully, Is.True);
                     }
+                });
 
-                    // Verify data was stored
-                    var content1 = await cache.Get("content1");
-                    var content2 = await cache.Get("content2");
-                    var content3 = await cache.Get("content3");
+                // Verify data was stored with expected content
+                var content1 = await cache.Get("content1");
+                var content2 = await cache.Get("content2");
+                var content3 = await cache.Get("content3");
 
+                Assert.Multiple(() =>
+                {
                     Assert.That(content1.Length, Is.GreaterThan(0));
                     Assert.That(content2.Length, Is.GreaterThan(0));
                     Assert.That(content3.Length, Is.GreaterThan(0));
-                }
-                catch (TimeoutException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
-                catch (HttpRequestException)
-                {
-                    // Skip test if httpbin.org is unavailable
-                    return;
-                }
-                catch (TaskCanceledException)
-                {
-                    // Skip test if request times out
-                    return;
-                }
+                    
+                    // Verify content types
+                    var content1Text = System.Text.Encoding.UTF8.GetString(content1);
+                    var content2Text = System.Text.Encoding.UTF8.GetString(content2);
+                    var content3Text = System.Text.Encoding.UTF8.GetString(content3);
+                    
+                    Assert.That(content1Text, Does.Contain("<html>"));
+                    Assert.That(content2Text, Does.Contain("\"key\""));
+                    Assert.That(content3Text, Does.Contain("user-agent"));
+                });
             }
             finally
             {

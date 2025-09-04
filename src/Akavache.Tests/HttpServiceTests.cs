@@ -4,17 +4,39 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.SystemTextJson;
+using Akavache.Tests.Helpers;
 using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for HttpService functionality.
+/// Uses a local test server instead of external dependencies for reliable offline testing.
 /// </summary>
 [TestFixture]
 [Category("Akavache")]
 public class HttpServiceTests
 {
+    private TestHttpServer? _testServer;
+
+    /// <summary>
+    /// Sets up the test fixture with a local HTTP server.
+    /// </summary>
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        _testServer = new TestHttpServer();
+        _testServer.SetupDefaultResponses();
+    }
+
+    /// <summary>
+    /// Cleans up the test fixture.
+    /// </summary>
+    [OneTimeTearDown]
+    public void OneTimeTearDown()
+    {
+        _testServer?.Dispose();
+    }
     /// <summary>
     /// Tests that HttpService can be instantiated correctly.
     /// </summary>
@@ -42,8 +64,11 @@ public class HttpServiceTests
         var httpService = new HttpService();
 
         // Assert - HttpClient should be configured properly
-        Assert.That(httpService.HttpClient, Is.Not.Null);
-        Assert.That(httpService.HttpClient.DefaultRequestHeaders, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(httpService.HttpClient, Is.Not.Null);
+            Assert.That(httpService.HttpClient.DefaultRequestHeaders, Is.Not.Null);
+        });
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -156,7 +181,7 @@ public class HttpServiceTests
             var observable = httpService.DownloadUrl(
                 cache,
                 "test_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 false,
@@ -187,13 +212,16 @@ public class HttpServiceTests
         try
         {
             // Act & Assert - Should create observables for different methods without error
-            var getObservable = httpService.DownloadUrl(cache, "get_key", "https://httpbin.org/status/200", HttpMethod.Get);
-            var postObservable = httpService.DownloadUrl(cache, "post_key", "https://httpbin.org/status/200", HttpMethod.Post);
-            var putObservable = httpService.DownloadUrl(cache, "put_key", "https://httpbin.org/status/200", HttpMethod.Put);
+            var getObservable = httpService.DownloadUrl(cache, "get_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Get);
+            var postObservable = httpService.DownloadUrl(cache, "post_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Post);
+            var putObservable = httpService.DownloadUrl(cache, "put_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Put);
 
-            Assert.That(getObservable, Is.Not.Null);
-            Assert.That(postObservable, Is.Not.Null);
-            Assert.That(putObservable, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(getObservable, Is.Not.Null);
+                Assert.That(postObservable, Is.Not.Null);
+                Assert.That(putObservable, Is.Not.Null);
+            });
         }
         finally
         {
@@ -220,21 +248,24 @@ public class HttpServiceTests
             var cachedObservable = httpService.DownloadUrl(
                 cache,
                 "cached_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 false);
             var alwaysFetchObservable = httpService.DownloadUrl(
                 cache,
                 "always_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 true);
 
             // Assert
-            Assert.That(cachedObservable, Is.Not.Null);
-            Assert.That(alwaysFetchObservable, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(cachedObservable, Is.Not.Null);
+                Assert.That(alwaysFetchObservable, Is.Not.Null);
+            });
         }
         finally
         {
@@ -262,7 +293,7 @@ public class HttpServiceTests
             var observable = httpService.DownloadUrl(
                 cache,
                 "expiry_key",
-                "https://httpbin.org/status/200",
+                $"{_testServer!.BaseUrl}status/200",
                 HttpMethod.Get,
                 null,
                 false,

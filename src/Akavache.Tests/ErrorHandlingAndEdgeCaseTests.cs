@@ -64,8 +64,11 @@ public class ErrorHandlingAndEdgeCaseTests
             var retrieved = await cache.GetObject<string>("large_data").FirstAsync();
 
             // Assert
-            Assert.That(retrieved, Is.EqualTo(largeData));
-            Assert.That(retrieved!.Length, Is.EqualTo(10_000_000));
+            Assert.Multiple(() =>
+            {
+                Assert.That(retrieved, Is.EqualTo(largeData));
+                Assert.That(retrieved!.Length, Is.EqualTo(10_000_000));
+            });
         }
         finally
         {
