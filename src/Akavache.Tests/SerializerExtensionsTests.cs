@@ -45,13 +45,19 @@ public class SerializerExtensionsTests
                 var user1 = await cache.GetObject<UserObject>("user1").FirstAsync();
                 var user2 = await cache.GetObject<UserObject>("user2").FirstAsync();
 
-                Assert.That(user1, Is.Not.Null);
-                Assert.That(user1!.Name, Is.EqualTo("User1"));
-                Assert.That(user1.Bio, Is.EqualTo("Bio1"));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(user1, Is.Not.Null);
+                    Assert.That(user1!.Name, Is.EqualTo("User1"));
+                    Assert.That(user1.Bio, Is.EqualTo("Bio1"));
+                });
 
-                Assert.That(user2, Is.Not.Null);
-                Assert.That(user2!.Name, Is.EqualTo("User2"));
-                Assert.That(user2.Bio, Is.EqualTo("Bio2"));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(user2, Is.Not.Null);
+                    Assert.That(user2!.Name, Is.EqualTo("User2"));
+                    Assert.That(user2.Bio, Is.EqualTo("Bio2"));
+                });
             }
             finally
             {
@@ -89,12 +95,18 @@ public class SerializerExtensionsTests
                 Assert.That(results.Count, Is.EqualTo(2));
 
                 var user1Result = results.First(r => r.Key == "user1").Value;
-                Assert.That(user1Result.Name, Is.EqualTo("User1"));
-                Assert.That(user1Result.Bio, Is.EqualTo("Bio1"));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(user1Result.Name, Is.EqualTo("User1"));
+                    Assert.That(user1Result.Bio, Is.EqualTo("Bio1"));
+                });
 
                 var user2Result = results.First(r => r.Key == "user2").Value;
-                Assert.That(user2Result.Name, Is.EqualTo("User2"));
-                Assert.That(user2Result.Bio, Is.EqualTo("Bio2"));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(user2Result.Name, Is.EqualTo("User2"));
+                    Assert.That(user2Result.Bio, Is.EqualTo("Bio2"));
+                });
             }
             finally
             {

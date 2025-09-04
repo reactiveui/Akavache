@@ -319,7 +319,7 @@ public class BitmapImageExtensionsTests : IAsyncLifetime
     [TestCase(64, true)] // At threshold
     [TestCase(128, true)] // Above threshold
     [TestCase(1024, true)] // Much larger buffer
-[Test]
+    [Test]
     public async Task ThrowOnBadImageBufferShouldHandleVariousBufferSizes(int bufferSize, bool shouldSucceed)
     {
         // Arrange

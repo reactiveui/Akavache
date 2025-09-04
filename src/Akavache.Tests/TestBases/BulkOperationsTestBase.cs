@@ -66,7 +66,7 @@ public abstract class BulkOperationsTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task GetShouldWorkWithMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -98,7 +98,7 @@ public abstract class BulkOperationsTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task GetShouldInvalidateOldKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -127,7 +127,7 @@ public abstract class BulkOperationsTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task InsertShouldWorkWithMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -159,7 +159,7 @@ public abstract class BulkOperationsTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task InvalidateShouldTrashMultipleKeys(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);

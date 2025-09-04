@@ -112,7 +112,7 @@ public abstract class DateTimeTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DateTimeKindCanBeForced(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -141,7 +141,7 @@ public abstract class DateTimeTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -258,7 +258,7 @@ public abstract class DateTimeTestBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);

@@ -45,15 +45,18 @@ public class EncryptedSettingsCacheTests
                 {
                     // Initial delay to ensure settings are created
                     await Task.Delay(500);
-                    Assert.That(viewSettings, Is.Not.Null);
-                    Assert.That(viewSettings!.BoolTest, Is.True);
-                    Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
-                    Assert.That(viewSettings.IntTest, Is.EqualTo(1));
-                    Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
-                    Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
-                    Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
-                    Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
-                    Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(viewSettings, Is.Not.Null);
+                        Assert.That(viewSettings!.BoolTest, Is.True);
+                        Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
+                        Assert.That(viewSettings.IntTest, Is.EqualTo(1));
+                        Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
+                        Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
+                        Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f));
+                        Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d));
+                        Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
+                    });
                 }
                 finally
                 {

@@ -75,7 +75,7 @@ namespace Akavache.Benchmarks
                     Value = _randomNumberGenerator.Next(1, 1000),
                     Created = DateTimeOffset.Now.AddDays(-_randomNumberGenerator.Next(0, 30))
                 };
-                
+
                 await BlobCache.InsertObject($"object_{i}", testData);
             }
         }

@@ -45,8 +45,11 @@ public class RequestCacheTests
         var results = await Task.WhenAll(tasks);
 
         // Assert - All should return the same result, factory called at most twice
-        Assert.That(results.All(r => r == results[0]), Is.True, $"Not all results are the same: {string.Join(", ", results)}");
-        Assert.That(callCount, Is.LessThanOrEqualTo(2), $"Factory called {callCount} times, expected at most 2");
+        Assert.Multiple(() =>
+        {
+            Assert.That(results.All(r => r == results[0]), Is.True, $"Not all results are the same: {string.Join(", ", results)}");
+            Assert.That(callCount, Is.LessThanOrEqualTo(2), $"Factory called {callCount} times, expected at most 2");
+        });
     }
 
     /// <summary>
@@ -80,14 +83,20 @@ public class RequestCacheTests
         var result3 = await RequestCache.GetOrCreateRequest("key1", () => Factory("key1")).FirstAsync();
 
         // Assert - Different keys should get different results
-        Assert.That(result1, Is.EqualTo("result_key1_1"));
-        Assert.That(result2, Is.EqualTo("result_key2_1"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result1, Is.EqualTo("result_key1_1"));
+            Assert.That(result2, Is.EqualTo("result_key2_1"));
+        });
 
         // result3 will be "result_key1_2" because RequestCache doesn't persist completed results
         Assert.That(result3, Is.EqualTo("result_key1_2"));
 
-        Assert.That(callCounts["key1"], Is.EqualTo(2)); // Called twice for key1
-        Assert.That(callCounts["key2"], Is.EqualTo(1)); // Called once for key2
+        Assert.Multiple(() =>
+        {
+            Assert.That(callCounts["key1"], Is.EqualTo(2)); // Called twice for key1
+            Assert.That(callCounts["key2"], Is.EqualTo(1)); // Called once for key2
+        });
     }
 
     /// <summary>
@@ -329,45 +338,45 @@ public class RequestCacheTests
     /// </summary>
     /// <returns>A task representing the test.</returns>
     [Test]
-    public async Task RequestCacheShouldNotGrowUnbounded()
+public async Task RequestCacheShouldNotGrowUnbounded()
+{
+    // Arrange
+    RequestCache.Clear();
+
+    // Act - Create many requests with different keys
+    for (var i = 0; i < 1000; i++)
     {
-        // Arrange
-        RequestCache.Clear();
-
-        // Act - Create many requests with different keys
-        for (var i = 0; i < 1000; i++)
-        {
-            var key = $"memory_test_{i}";
-            await RequestCache.GetOrCreateRequest(key, () => Observable.Return(i)).FirstAsync();
-        }
-
-        // Clear to free memory
-        RequestCache.Clear();
-
-        // Assert - Test passes if no OutOfMemoryException is thrown
-        // This is mainly a regression test to ensure the cache doesn't leak memory
-        Assert.Pass("Memory stress test completed without OutOfMemoryException");
+        var key = $"memory_test_{i}";
+        await RequestCache.GetOrCreateRequest(key, () => Observable.Return(i)).FirstAsync();
     }
 
-    /// <summary>
-    /// Tests that RequestCache works correctly with null factory results.
-    /// </summary>
-    /// <returns>A task representing the test.</returns>
-    [Test]
-    public async Task RequestCacheShouldHandleNullFactoryResults()
-    {
-        // Arrange
-        RequestCache.Clear();
-        const string key = "null_result_test";
+    // Clear to free memory
+    RequestCache.Clear();
 
-        static IObservable<string?> Factory() => Observable.Return<string?>(null);
+    // Assert - Test passes if no OutOfMemoryException is thrown
+    // This is mainly a regression test to ensure the cache doesn't leak memory
+    Assert.Pass("Memory stress test completed without OutOfMemoryException");
+}
 
-        // Act
-        var result1 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
-        var result2 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
+/// <summary>
+/// Tests that RequestCache works correctly with null factory results.
+/// </summary>
+/// <returns>A task representing the test.</returns>
+[Test]
+public async Task RequestCacheShouldHandleNullFactoryResults()
+{
+    // Arrange
+    RequestCache.Clear();
+    const string key = "null_result_test";
 
-        // Assert
-        Assert.That(result1, Is.Null);
-        Assert.That(result2, Is.Null);
-    }
+    static IObservable<string?> Factory() => Observable.Return<string?>(null);
+
+    // Act
+    var result1 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
+    var result2 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
+
+    // Assert
+    Assert.That(result1, Is.Null);
+    Assert.That(result2, Is.Null);
+}
 }

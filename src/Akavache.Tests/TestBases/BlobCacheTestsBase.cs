@@ -97,7 +97,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DownloadUrlTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -135,7 +135,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value (environment/network quirk) – skip
+                    // Observable completed without a value (environment/network quirk) ï¿½ skip
                     return;
                 }
             }
@@ -157,7 +157,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DownloadUriTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -196,7 +196,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value – skip
+                    // Observable completed without a value ï¿½ skip
                     return;
                 }
             }
@@ -218,7 +218,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DownloadUrlWithKeyTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -258,7 +258,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value – skip
+                    // Observable completed without a value ï¿½ skip
                     return;
                 }
             }
@@ -280,7 +280,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DownloadUriWithKeyTest(Type serializerType)
     {
         var serializer = SetupTestSerializer(serializerType);
@@ -317,7 +317,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 }
                 catch (InvalidOperationException)
                 {
-                    // Observable completed without a value – skip
+                    // Observable completed without a value ï¿½ skip
                     return;
                 }
             }
@@ -340,7 +340,7 @@ public abstract class BlobCacheTestsBase : IDisposable
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task FetchFunctionShouldBeCalledOnceForGetOrFetchObject(Type serializerType)
     {
         if (serializerType == null)

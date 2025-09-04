@@ -402,7 +402,7 @@ public class ImageExtensionsTests
     [TestCase(64, true)] // At threshold
     [TestCase(128, true)] // Above threshold
     [TestCase(1024, true)] // Much larger buffer
-[Test]
+    [Test]
     public async Task ImageBufferValidationShouldWorkWithVariousSizes(int bufferSize, bool shouldSucceed)
     {
         // Arrange

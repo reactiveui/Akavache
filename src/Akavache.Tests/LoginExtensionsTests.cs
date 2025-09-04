@@ -41,9 +41,12 @@ public class LoginExtensionsTests
                 var loginInfo = await cache.GetLogin().FirstAsync();
 
                 // Assert
-                Assert.That(loginInfo, Is.Not.Null);
-                Assert.That(loginInfo.UserName, Is.EqualTo(username));
-                Assert.That(loginInfo.Password, Is.EqualTo(password));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(loginInfo, Is.Not.Null);
+                    Assert.That(loginInfo.UserName, Is.EqualTo(username));
+                    Assert.That(loginInfo.Password, Is.EqualTo(password));
+                });
             }
             finally
             {
@@ -77,9 +80,12 @@ public class LoginExtensionsTests
                 var loginInfo = await cache.GetLogin(host).FirstAsync();
 
                 // Assert
-                Assert.That(loginInfo, Is.Not.Null);
-                Assert.That(loginInfo.UserName, Is.EqualTo(username));
-                Assert.That(loginInfo.Password, Is.EqualTo(password));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(loginInfo, Is.Not.Null);
+                    Assert.That(loginInfo.UserName, Is.EqualTo(username));
+                    Assert.That(loginInfo.Password, Is.EqualTo(password));
+                });
             }
             finally
             {

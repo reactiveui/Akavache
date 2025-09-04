@@ -25,8 +25,11 @@ public class SizeTests
         var size = new Size(100.5f, 200.75f);
 
         // Assert
-        Assert.That(size.Width, Is.EqualTo(100.5f));
-        Assert.That(size.Height, Is.EqualTo(200.75f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(size.Width, Is.EqualTo(100.5f));
+            Assert.That(size.Height, Is.EqualTo(200.75f));
+        });
     }
 
     /// <summary>
@@ -41,12 +44,15 @@ public class SizeTests
         var zeroHeight = new Size(100, 0);
 
         // Assert
-        Assert.That(zeroSize.Width, Is.EqualTo(0f));
-        Assert.That(zeroSize.Height, Is.EqualTo(0f));
-        Assert.That(zeroWidth.Width, Is.EqualTo(0f));
-        Assert.That(zeroWidth.Height, Is.EqualTo(100f));
-        Assert.That(zeroHeight.Width, Is.EqualTo(100f));
-        Assert.That(zeroHeight.Height, Is.EqualTo(0f));
+        Assert.Multiple(() =>
+        {
+            Assert.That(zeroSize.Width, Is.EqualTo(0f));
+            Assert.That(zeroSize.Height, Is.EqualTo(0f));
+            Assert.That(zeroWidth.Width, Is.EqualTo(0f));
+            Assert.That(zeroWidth.Height, Is.EqualTo(100f));
+            Assert.That(zeroHeight.Width, Is.EqualTo(100f));
+            Assert.That(zeroHeight.Height, Is.EqualTo(0f));
+        });
     }
 
     /// <summary>
@@ -61,7 +67,7 @@ public class SizeTests
     [TestCase(16f, 9f, 1.777778f)] // 16:9 widescreen (approximately)
     [TestCase(4f, 3f, 1.333333f)] // 4:3 standard (approximately)
     [TestCase(100f, 0f, 0f)] // Zero height
-[Test]
+    [Test]
     public void AspectRatioShouldBeCalculatedCorrectly(float width, float height, float expectedRatio)
     {
         // Arrange
@@ -331,7 +337,7 @@ public class SizeTests
     [TestCase(800f, 600f)] // SVGA
     [TestCase(640f, 480f)] // VGA
     [TestCase(320f, 240f)] // QVGA
-[Test]
+    [Test]
     public void SizeWithRealisticImageDimensionsShouldWork(float width, float height)
     {
         // Arrange & Act

@@ -26,7 +26,7 @@ public class SerializationCompatibilityTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void SerializerShouldRoundTripOwnData(Type serializerType)
     {
         // Arrange
@@ -43,9 +43,12 @@ public class SerializationCompatibilityTests
         var deserializedObj = serializer.Deserialize<TestObject>(serializedData);
 
         // Assert
-        Assert.That(deserializedObj, Is.Not.Null);
-        Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
-        Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
+        Assert.Multiple(() =>
+        {
+            Assert.That(deserializedObj, Is.Not.Null);
+            Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+            Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
+        });
 
         // Allow for some DateTime precision loss
         Assert.That(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds), Is.LessThan(1));
@@ -92,9 +95,12 @@ public class SerializationCompatibilityTests
                             $"Data preview: {dataPreview.Substring(0, Math.Min(200, dataPreview.Length))}...");
                     }
 
-                    Assert.That(deserializedObj, Is.Not.Null);
-                    Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
-                    Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(deserializedObj, Is.Not.Null);
+                        Assert.That(deserializedObj.Name, Is.EqualTo(testObj.Name));
+                        Assert.That(deserializedObj.Value, Is.EqualTo(testObj.Value));
+                    });
 
                     // Allow for DateTime precision differences between serializers
                     // BSON serializers may have different precision than JSON serializers
@@ -211,7 +217,7 @@ public class SerializationCompatibilityTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task SqliteCacheShouldPersistDataCorrectlyWithAllSerializers(Type serializerType)
     {
         if (serializerType is null)
@@ -268,7 +274,7 @@ public class SerializationCompatibilityTests
     [TestCase(typeof(NewtonsoftBsonSerializer), typeof(NewtonsoftBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer), typeof(NewtonsoftBsonSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer), typeof(NewtonsoftSerializer))]
-[Test]
+    [Test]
     public async Task SqliteCacheShouldSupportCrossSerializerCompatibility(Type writeSerializerType, Type readSerializerType)
     {
         if (writeSerializerType is null)
@@ -338,7 +344,7 @@ public class SerializationCompatibilityTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task SimpleSqliteTest(Type serializerType)
     {
         if (serializerType is null)
@@ -392,7 +398,7 @@ public class SerializationCompatibilityTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task DebuggingMultiInstancePersistence(Type serializerType)
     {
         if (serializerType is null)

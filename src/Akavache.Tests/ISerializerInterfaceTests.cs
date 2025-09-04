@@ -25,7 +25,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void AllSerializersShouldImplementBasicSerialization(Type serializerType)
     {
         // Arrange
@@ -37,32 +37,44 @@ public class ISerializerInterfaceTests
 
         // Act & Assert - String
         var stringBytes = serializer.Serialize(testString);
-        Assert.That(stringBytes, Is.Not.Null);
-        Assert.That(stringBytes.Length, Is.GreaterThan(0));
+        Assert.Multiple(() =>
+        {
+            Assert.That(stringBytes, Is.Not.Null);
+            Assert.That(stringBytes.Length, Is.GreaterThan(0));
+        });
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
         Assert.That(deserializedString, Is.EqualTo(testString));
 
         // Act & Assert - Int
         var intBytes = serializer.Serialize(testInt);
-        Assert.That(intBytes, Is.Not.Null);
-        Assert.That(intBytes.Length, Is.GreaterThan(0));
+        Assert.Multiple(() =>
+        {
+            Assert.That(intBytes, Is.Not.Null);
+            Assert.That(intBytes.Length, Is.GreaterThan(0));
+        });
 
         var deserializedInt = serializer.Deserialize<int>(intBytes);
         Assert.That(deserializedInt, Is.EqualTo(testInt));
 
         // Act & Assert - Bool
         var boolBytes = serializer.Serialize(testBool);
-        Assert.That(boolBytes, Is.Not.Null);
-        Assert.That(boolBytes.Length, Is.GreaterThan(0));
+        Assert.Multiple(() =>
+        {
+            Assert.That(boolBytes, Is.Not.Null);
+            Assert.That(boolBytes.Length, Is.GreaterThan(0));
+        });
 
         var deserializedBool = serializer.Deserialize<bool>(boolBytes);
         Assert.That(deserializedBool, Is.EqualTo(testBool));
 
         // Act & Assert - Double
         var doubleBytes = serializer.Serialize(testDouble);
-        Assert.That(doubleBytes, Is.Not.Null);
-        Assert.That(doubleBytes.Length, Is.GreaterThan(0));
+        Assert.Multiple(() =>
+        {
+            Assert.That(doubleBytes, Is.Not.Null);
+            Assert.That(doubleBytes.Length, Is.GreaterThan(0));
+        });
 
         var deserializedDouble = serializer.Deserialize<double>(doubleBytes);
         Assert.That(deserializedDouble, Is.EqualTo(testDouble).Within(0.0001)); // Allow for floating point precision
@@ -76,7 +88,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void AllSerializersShouldHandleComplexObjects(Type serializerType)
     {
         // Arrange
@@ -93,10 +105,13 @@ public class ISerializerInterfaceTests
         var deserializedUser = serializer.Deserialize<UserObject>(serializedBytes);
 
         // Assert
-        Assert.That(deserializedUser, Is.Not.Null);
-        Assert.That(deserializedUser!.Name, Is.EqualTo(testUser.Name));
-        Assert.That(deserializedUser.Bio, Is.EqualTo(testUser.Bio));
-        Assert.That(deserializedUser.Blog, Is.EqualTo(testUser.Blog));
+        Assert.Multiple(() =>
+        {
+            Assert.That(deserializedUser, Is.Not.Null);
+            Assert.That(deserializedUser!.Name, Is.EqualTo(testUser.Name));
+            Assert.That(deserializedUser.Bio, Is.EqualTo(testUser.Bio));
+            Assert.That(deserializedUser.Blog, Is.EqualTo(testUser.Blog));
+        });
     }
 
     /// <summary>
@@ -107,7 +122,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void AllSerializersShouldHandleNullValues(Type serializerType)
     {
         // Arrange
@@ -136,7 +151,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void AllSerializersShouldHandleCollections(Type serializerType)
     {
         // Arrange
@@ -180,7 +195,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void ForcedDateTimeKindShouldWorkCorrectly(Type serializerType)
     {
         // Arrange
@@ -245,7 +260,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void DateTimeSerializationShouldRespectForcedDateTimeKind(Type serializerType)
     {
         // Arrange
@@ -312,7 +327,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void SerializersShouldHandleEmptyByteArrays(Type serializerType)
     {
         // Arrange
@@ -347,7 +362,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void SerializersShouldHandleLargeObjects(Type serializerType)
     {
         // Arrange
@@ -386,7 +401,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public void SerializersShouldHandleNestedObjects(Type serializerType)
     {
         // Arrange
@@ -434,7 +449,7 @@ public class ISerializerInterfaceTests
     [TestCase(typeof(SystemJsonBsonSerializer))]
     [TestCase(typeof(NewtonsoftSerializer))]
     [TestCase(typeof(NewtonsoftBsonSerializer))]
-[Test]
+    [Test]
     public async Task SerializersShouldBeThreadSafe(Type serializerType)
     {
         // Arrange
