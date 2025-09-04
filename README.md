@@ -1443,14 +1443,51 @@ protected override void OnLaunched(LaunchActivatedEventArgs e)
 
 ### Benchmarks
 
-Performance comparison of different serializers (operations per second):
+Akavache V11.0 delivers **architectural improvements with optimal performance** when using the recommended System.Text.Json serializer. **V11 with System.Text.Json outperforms V10 across all test scenarios**, while V11 with the legacy Newtonsoft.Json may be slower than V10 for very large datasets. The new features (multiple serializers, cross-compatibility, modern patterns) provide significant value with excellent performance when using the recommended serializer.
 
-| Operation | System.Text.Json | Newtonsoft.Json | BSON |
-|-----------|------------------|-----------------|------|
-| Serialize small object | 50,000 | 25,000 | 20,000 |
-| Deserialize small object | 45,000 | 22,000 | 18,000 |
-| Serialize large object | 5,000 | 2,500 | 2,000 |
-| Deserialize large object | 4,500 | 2,200 | 1,800 |
+#### Key Performance Metrics
+
+Based on comprehensive benchmarks across different operation types and data sizes:
+
+| Operation | Small (10 items) | Medium (100 items) | Large (1000 items) | Notes |
+|-----------|-------------------|--------------------|--------------------|-------|
+| **GetOrFetch** | 1.5ms | 15ms | 45ms | Sub-linear scaling, excellent for cache-miss scenarios |
+| **Bulk Operations** | 3.3ms | 4.5ms | 18ms | **10x+ faster** than individual operations |
+| **In-Memory** | 2.4ms | 19ms | 123ms | Ideal for session data and frequently accessed objects |
+| **Cache Types** | ~27ms | ~255ms | ~2,600ms | Consistent performance across UserAccount/LocalMachine/Secure |
+
+#### V11 vs V10 Performance Comparison
+
+- **Read Performance**: V11 shows **1.8-3.4% faster** performance for smaller datasets with more consistent results
+- **Write Performance**: Comparable sequential writes, with **significant bulk write advantages** in V11
+- **Memory Usage**: Generally equivalent or better memory efficiency with more predictable allocation patterns
+- **Serialization**: **System.Text.Json in V11 significantly outperforms** both V10 and V11 Newtonsoft serialization
+
+#### Serializer Performance Comparison
+
+**System.Text.Json (Recommended for V11)**:
+- ✅ **Best overall performance** for both small and large datasets
+- ✅ **Faster than V10** across all test scenarios
+- ✅ **Modern .NET optimization** with excellent memory efficiency
+
+**Newtonsoft.Json in V11 (Legacy Compatibility)**:
+- ⚠️ **Slower than V10 with large databases** - V10 Newtonsoft performs better for huge datasets
+- ✅ **Faster than V10** for smaller to medium datasets
+- ✅ **Compatible with existing V10 data** structures
+
+#### Known Limitations
+
+- **Large Databases with Newtonsoft.Json**: V10 outperforms V11 when using legacy Newtonsoft serialization with very large datasets
+- **Sequential Read Performance**: Up to **8.6% slower** than V10 specifically when using the legacy Newtonsoft.Json serializer (**System.Text.Json does not have this limitation and performs better than V10**)
+- **Linux/macOS Build**: Benchmark projects and compatibility tests require **Windows** due to platform-specific dependencies
+- **Package Dependencies**: More granular package structure may require careful workload management
+
+#### Serialization and Versioning Notes
+
+- **V11 + System.Text.Json**: **Best performance choice** - faster than V10 across all scenarios without any performance limitations
+- **V11 + Newtonsoft.Json (Legacy)**: Maximum compatibility with existing V10 data, but slower for large datasets compared to V10
+- **Cross-Version Compatibility**: V11 can read V10 databases; subsequent writes are stored in V11 format
+- **BSON Format**: When using Newtonsoft.Bson, reads and writes follow the V10 format for maximum compatibility and performance parity
 
 ### Performance Reports
 
@@ -1459,19 +1496,65 @@ For comprehensive performance analysis and V10 vs V11 comparison:
 - 📊 **[Performance Summary](src/PERFORMANCE_SUMMARY.md)** - Quick comparison and migration decision matrix
 - 📈 **[Comprehensive Benchmark Report](src/BENCHMARK_REPORT.md)** - Detailed performance analysis, architectural differences, and recommendations
 
+#### Reproducing the Benchmarks
+
+**Platform Requirements**: Benchmark reproduction requires **Windows hosts**. Linux/macOS are not supported due to Windows-specific projects and dependencies used in the benchmark harnesses.
+
+**Prerequisites**:
+- .NET 9.0 SDK 
+- Windows operating system
+- PowerShell 5.0+ (for automation script)
+
+**Test Applications**:
+- **[AkavacheV10Writer](src/src/AkavacheV10Writer/)** - Writes deterministic test data using Akavache V10 with Newtonsoft.Json serialization
+- **[AkavacheV11Reader](src/src/AkavacheV11Reader/)** - Reads the same data using Akavache V11 with System.Text.Json, demonstrating cross-version compatibility
+
+**Running Compatibility Tests**:
+```powershell
+# From the solution root directory
+.\src\RunCompatTest.ps1
+```
+
+This PowerShell script:
+1. Builds both test applications in Release configuration
+2. Runs AkavacheV10Writer to create a test database
+3. Runs AkavacheV11Reader to verify cross-compatibility
+4. Reports success/failure of the compatibility verification
+
+**Running Performance Benchmarks**:
+```bash
+# V11 benchmarks (current)
+cd src
+dotnet run -c Release -p Akavache.Benchmarks/Akavache.Benchmarks.csproj
+
+# V10 comparison benchmarks  
+dotnet run -c Release -p Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj
+```
+
+**Important Notes**:
+- Results vary by hardware configuration and system load
+- Benchmarks are indicative, not absolute measurements
+- Large benchmark runs can take 10-30 minutes to complete
+- Some benchmark projects use BenchmarkDotNet which requires Windows-specific optimizations
+
 ### Performance Tips
 
 ```csharp
-// 1. Use System.Text.Json for best performance
+// 1. ALWAYS use System.Text.Json for optimal V11 performance
+// This is faster than V10 across all scenarios and significantly faster than V11 Newtonsoft
 .WithSerializer<SystemJsonSerializer>();
 
-// 2. Use batch operations for multiple items
+// 2. For V10 compatibility with large datasets, consider Newtonsoft BSON
+// (Only if you need V10 format compatibility - otherwise use System.Text.Json)
+.WithSerializer<NewtonsoftBsonSerializer>();
+
+// 3. Use batch operations for multiple items
 await CacheDatabase.UserAccount.InsertObjects(manyItems);
 
-// 3. Set appropriate expiration times
+// 4. Set appropriate expiration times
 await CacheDatabase.LocalMachine.InsertObject("temp", data, 30.Minutes().FromNow());
 
-// 4. Use InMemory cache for frequently accessed data
+// 5. Use InMemory cache for frequently accessed data
 await CacheDatabase.InMemory.InsertObject("hot_data", frequentData);
 
 // 5. Avoid storing very large objects
