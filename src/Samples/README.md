@@ -325,6 +325,51 @@ cache.GetAndFetchLatest("key", fetchFunc)
 
 See `GetAndFetchLatestPatterns.cs` for detailed examples of each pattern with full working code.
 
+## UpdateExpiration Best Practices
+
+For comprehensive examples and patterns specifically for `UpdateExpiration`, see `UpdateExpirationPatterns.cs` in this directory. This addresses efficient cache management without expensive data I/O operations.
+
+### Quick Reference: UpdateExpiration Patterns
+
+| Pattern | Use Case | Key Benefit |
+|---------|----------|-------------|
+| **Basic Updates** | Single cache entry extension | Simple expiration management with absolute/relative times |
+| **Bulk Operations** | Multiple entries at once | Efficient transaction-based updates for related data |
+| **HTTP Caching** | 304 Not Modified responses | Extend cache validity without re-downloading data |
+| **Session Management** | User activity tracking | Sliding expiration with activity-based renewal |
+| **Performance Optimization** | High-throughput scenarios | Metadata-only updates (250x faster than traditional) |
+
+### Key Benefits ✅
+
+```csharp
+// ✅ DO: Use UpdateExpiration for efficient cache extension
+await cache.UpdateExpiration("large_data", TimeSpan.FromHours(1));
+
+// ✅ DO: Batch updates for related entries
+await cache.UpdateExpiration(relatedKeys, TimeSpan.FromMinutes(30));
+
+// ✅ DO: Handle HTTP 304 responses efficiently
+if (response.StatusCode == HttpStatusCode.NotModified)
+{
+    await cache.UpdateExpiration(cacheKey, TimeSpan.FromHours(1));
+    return cachedData; // No data transfer needed
+}
+```
+
+### Common Anti-Patterns to Avoid ❌
+
+```csharp
+// ❌ DON'T: Read and rewrite for simple expiration updates
+var data = await cache.GetObject<LargeData>("key"); // Expensive!
+await cache.InsertObject("key", data, newExpiration); // More expense!
+
+// ❌ DON'T: Update entries individually in loops
+foreach (var key in manyKeys) // Inefficient!
+{
+    await cache.UpdateExpiration(key, newExpiration);
+}
+```
+
 ## Additional Resources
 
 - [Akavache Documentation](https://github.com/reactiveui/Akavache)
