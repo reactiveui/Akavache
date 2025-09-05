@@ -291,8 +291,8 @@ public class DownloadUrlExtensionsTests
                 Task<byte[]>[] tasks =
                 [
                     cache.DownloadUrl("content1", $"{_testServer!.BaseUrl}html").FirstAsync().ToTask(),
-                        cache.DownloadUrl("content2", $"{_testServer!.BaseUrl}json").FirstAsync().ToTask(),
-                        cache.DownloadUrl("content3", $"{_testServer!.BaseUrl}user-agent").FirstAsync().ToTask()
+                    cache.DownloadUrl("content2", $"{_testServer!.BaseUrl}json").FirstAsync().ToTask(),
+                    cache.DownloadUrl("content3", $"{_testServer!.BaseUrl}user-agent").FirstAsync().ToTask()
                 ];
 
                 await Task.WhenAll(tasks);

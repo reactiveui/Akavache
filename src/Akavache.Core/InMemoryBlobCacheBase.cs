@@ -53,8 +53,11 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
-            var serialzer = AppLocator.Current.GetService<ISerializer>();
-            serializer?.ForcedDateTimeKind = value;
+            var serializer = AppLocator.Current.GetService<ISerializer>();
+            if (serializer != null)
+            {
+                serializer.ForcedDateTimeKind = value;
+            }
         }
     }
 
@@ -552,6 +555,138 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
             return Unit.Default;
         },
+            Scheduler);
+    }
+
+    /// <inheritdoc />
+    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                lock (_lock)
+                {
+                    if (_cache.TryGetValue(key, out var entry))
+                    {
+                        entry.ExpiresAt = absoluteExpiration;
+                    }
+                }
+
+                return Unit.Default;
+            },
+            Scheduler);
+    }
+
+    /// <inheritdoc />
+    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+        }
+
+        if (type is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                lock (_lock)
+                {
+                    if (_cache.TryGetValue(key, out var entry) && entry.TypeName == type.FullName)
+                    {
+                        entry.ExpiresAt = absoluteExpiration;
+                    }
+                }
+
+                return Unit.Default;
+            },
+            Scheduler);
+    }
+
+    /// <inheritdoc />
+    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration)
+    {
+        if (keys is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                lock (_lock)
+                {
+                    foreach (var key in keys)
+                    {
+                        if (_cache.TryGetValue(key, out var entry))
+                        {
+                            entry.ExpiresAt = absoluteExpiration;
+                        }
+                    }
+                }
+
+                return Unit.Default;
+            },
+            Scheduler);
+    }
+
+    /// <inheritdoc />
+    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration)
+    {
+        if (keys is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+        }
+
+        if (type is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                lock (_lock)
+                {
+                    foreach (var key in keys)
+                    {
+                        if (_cache.TryGetValue(key, out var entry) && entry.TypeName == type.FullName)
+                        {
+                            entry.ExpiresAt = absoluteExpiration;
+                        }
+                    }
+                }
+
+                return Unit.Default;
+            },
             Scheduler);
     }
 

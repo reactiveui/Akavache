@@ -443,11 +443,15 @@ public class ISerializerInterfaceTests
                         Users = (UserObject[])[
                             new UserObject
                             {
-                                Name = "Nested User 1", Bio = "Bio 1", Blog = "Blog 1"
+                                Name = "Nested User 1",
+                                Bio = "Bio 1",
+                                Blog = "Blog 1"
                             },
                             new UserObject
                             {
-                                Name = "Nested User 2", Bio = "Bio 2", Blog = "Blog 2"
+                                Name = "Nested User 2",
+                                Bio = "Bio 2",
+                                Blog = "Blog 2"
                             }
                         ]
                     }
