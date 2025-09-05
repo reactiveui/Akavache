@@ -538,10 +538,14 @@ var liveData = await CacheDatabase.LocalMachine.GetOrFetchObject("live_data",
 
 ### Get and Fetch Latest
 
-Returns cached data immediately, then fetches fresh data:
+Returns cached data immediately, then fetches fresh data. This is one of the most powerful patterns in Akavache but requires careful handling of the dual subscription behavior.
+
+> **⚠️ Important:** Always use `Subscribe()` with GetAndFetchLatest - never `await` it directly. The method is designed to call your subscriber twice: once with cached data (if available) and once with fresh data.
+
+#### Basic Pattern
 
 ```csharp
-// Subscribe to get both cached and fresh data
+// Basic usage - subscriber called twice
 CacheDatabase.LocalMachine.GetAndFetchLatest("news_feed",
     () => newsApi.GetLatestNews())
     .Subscribe(news => 
@@ -552,6 +556,224 @@ CacheDatabase.LocalMachine.GetAndFetchLatest("news_feed",
         UpdateUI(news);
     });
 ```
+
+#### Pattern 1: Simple Replacement (Most Common)
+
+Best for data where you want to completely replace the UI content:
+
+```csharp
+// Simple replacement - just update the UI each time
+CacheDatabase.LocalMachine.GetAndFetchLatest("user_profile",
+    () => userApi.GetProfile(userId))
+    .Subscribe(userProfile => 
+    {
+        // Replace entire UI content - works for both cached and fresh data
+        DisplayUserProfile(userProfile);
+        
+        // Optional: Show loading indicator only on fresh data
+        if (IsLoadingFreshData())
+        {
+            HideLoadingIndicator();
+        }
+    });
+```
+
+#### Pattern 2: Merge Strategy for Collections
+
+Best for lists where you want to merge new items with existing ones:
+
+```csharp
+public class MessageService 
+{
+    private readonly List<Message> _currentMessages = new();
+    private bool _isFirstLoad = true;
+
+    public IObservable<List<Message>> GetMessages(int ticketId)
+    {
+        return CacheDatabase.LocalMachine.GetAndFetchLatest($"messages_{ticketId}",
+            () => messageApi.GetMessages(ticketId))
+            .Do(messages => 
+            {
+                if (_isFirstLoad)
+                {
+                    // First call: load cached data or initial fresh data
+                    _currentMessages.Clear();
+                    _currentMessages.AddRange(messages);
+                    _isFirstLoad = false;
+                }
+                else
+                {
+                    // Second call: merge fresh data with existing
+                    var newMessages = messages.Except(_currentMessages, new MessageComparer()).ToList();
+                    _currentMessages.AddRange(newMessages);
+                    
+                    // Optional: Sort by timestamp
+                    _currentMessages.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+                }
+            })
+            .Select(_ => _currentMessages.ToList()); // Return defensive copy
+    }
+}
+```
+
+#### Pattern 3: Differential Updates with State Tracking
+
+Best for complex scenarios where you need fine-grained control:
+
+```csharp
+public class NewsService 
+{
+    private readonly Subject<List<NewsItem>> _newsSubject = new();
+    private List<NewsItem> _cachedNews = new();
+    private bool _hasCachedData = false;
+
+    public IObservable<List<NewsItem>> GetNews()
+    {
+        CacheDatabase.LocalMachine.GetAndFetchLatest("news_feed",
+            () => newsApi.GetLatestNews())
+            .Subscribe(freshNews => 
+            {
+                if (!_hasCachedData)
+                {
+                    // First emission: cached data (or first fresh data if no cache)
+                    _cachedNews = freshNews.ToList();
+                    _hasCachedData = true;
+                    _newsSubject.OnNext(_cachedNews);
+                }
+                else
+                {
+                    // Second emission: fresh data - perform smart merge
+                    var updatedItems = new List<NewsItem>();
+                    var newItems = new List<NewsItem>();
+                    
+                    foreach (var freshItem in freshNews)
+                    {
+                        var existingItem = _cachedNews.FirstOrDefault(c => c.Id == freshItem.Id);
+                        if (existingItem != null)
+                        {
+                            // Update existing item if content changed
+                            if (existingItem.LastModified < freshItem.LastModified)
+                            {
+                                updatedItems.Add(freshItem);
+                                var index = _cachedNews.IndexOf(existingItem);
+                                _cachedNews[index] = freshItem;
+                            }
+                        }
+                        else
+                        {
+                            // New item
+                            newItems.Add(freshItem);
+                            _cachedNews.Add(freshItem);
+                        }
+                    }
+                    
+                    // Remove items that no longer exist
+                    _cachedNews.RemoveAll(cached => !freshNews.Any(fresh => fresh.Id == cached.Id));
+                    
+                    // Notify subscribers with current state
+                    _newsSubject.OnNext(_cachedNews.ToList());
+                    
+                    // Optional: Emit specific change notifications
+                    if (newItems.Any()) OnNewItemsAdded?.Invoke(newItems);
+                    if (updatedItems.Any()) OnItemsUpdated?.Invoke(updatedItems);
+                }
+            });
+            
+        return _newsSubject.AsObservable();
+    }
+}
+```
+
+#### Pattern 4: UI Loading States
+
+Best for providing responsive UI feedback:
+
+```csharp
+public class DataService 
+{
+    public IObservable<DataState<List<Product>>> GetProducts()
+    {
+        var loadingState = Observable.Return(DataState<List<Product>>.Loading());
+        
+        var dataStream = CacheDatabase.LocalMachine.GetAndFetchLatest("products",
+            () => productApi.GetProducts())
+            .Select(products => DataState<List<Product>>.Success(products))
+            .Catch<DataState<List<Product>>, Exception>(ex => 
+                Observable.Return(DataState<List<Product>>.Error(ex)));
+        
+        return loadingState.Concat(dataStream);
+    }
+}
+
+// Usage in ViewModel
+public class ProductViewModel 
+{
+    public ProductViewModel()
+    {
+        _dataService.GetProducts()
+            .Subscribe(state => 
+            {
+                switch (state.Status)
+                {
+                    case DataStatus.Loading:
+                        IsLoading = true;
+                        break;
+                    case DataStatus.Success:
+                        IsLoading = false;
+                        Products = state.Data;
+                        break;
+                    case DataStatus.Error:
+                        IsLoading = false;
+                        ErrorMessage = state.Error?.Message;
+                        break;
+                }
+            });
+    }
+}
+```
+
+#### Pattern 5: Conditional Fetching
+
+Control when fresh data should be fetched:
+
+```csharp
+// Only fetch fresh data if cached data is older than 5 minutes
+CacheDatabase.LocalMachine.GetAndFetchLatest("weather_data",
+    () => weatherApi.GetCurrentWeather(),
+    fetchPredicate: cachedDate => DateTimeOffset.Now - cachedDate > TimeSpan.FromMinutes(5))
+    .Subscribe(weather => UpdateWeatherDisplay(weather));
+
+// Fetch fresh data based on user preference
+CacheDatabase.LocalMachine.GetAndFetchLatest("user_settings",
+    () => settingsApi.GetUserSettings(),
+    fetchPredicate: _ => userPreferences.AllowBackgroundRefresh)
+    .Subscribe(settings => ApplySettings(settings));
+```
+
+#### Common Anti-Patterns ❌
+
+```csharp
+// ❌ DON'T: Await GetAndFetchLatest - you'll only get first result
+var data = await CacheDatabase.LocalMachine.GetAndFetchLatest("key", fetchFunc).FirstAsync();
+
+// ❌ DON'T: Mix cached retrieval with GetAndFetchLatest
+var cached = await cache.GetObject<T>("key").FirstOrDefaultAsync();
+cache.GetAndFetchLatest("key", fetchFunc).Subscribe(fresh => /* handle fresh */);
+
+// ❌ DON'T: Ignore the dual nature in UI updates
+cache.GetAndFetchLatest("key", fetchFunc)
+    .Subscribe(data => items.Clear()); // This will clear twice!
+```
+
+#### Best Practices ✅
+
+1. **Always use Subscribe(), never await** - GetAndFetchLatest is designed for reactive scenarios
+2. **Handle both cached and fresh data appropriately** - Design your subscriber to work correctly when called twice
+3. **Use state tracking for complex merges** - Keep track of whether you're handling cached or fresh data
+4. **Provide loading indicators** - Show users when fresh data is being fetched
+5. **Handle errors gracefully** - Network calls can fail, always have fallback logic
+6. **Consider using fetchPredicate** - Avoid unnecessary network calls when cached data is still fresh
+
 
 ### HTTP/URL Operations
 

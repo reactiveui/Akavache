@@ -287,6 +287,44 @@ When extending these samples:
 4. Include comprehensive null checking and validation
 5. Document any new Akavache features demonstrated
 
+## GetAndFetchLatest Best Practices
+
+For comprehensive examples and patterns specifically for `GetAndFetchLatest`, see `GetAndFetchLatestPatterns.cs` in this directory. This addresses the common question: **"What's the right way to handle GetAndFetchLatest?"**
+
+### Quick Reference: GetAndFetchLatest Patterns
+
+| Pattern | Use Case | Key Benefit |
+|---------|----------|-------------|
+| **Simple Replacement** | Most UI scenarios | Easy to implement, works perfectly for displaying data |
+| **Merge Strategy** | Collections/lists | Preserves existing items while adding new ones |
+| **Differential Updates** | Complex data structures | Maximum control over what changes |
+| **Loading States** | Responsive UIs | Provides user feedback during operations |
+| **Conditional Fetching** | Performance optimization | Reduces unnecessary network calls |
+
+### Common Anti-Patterns to Avoid ❌
+
+```csharp
+// ❌ DON'T: Await GetAndFetchLatest - you'll miss fresh data
+var data = await cache.GetAndFetchLatest("key", fetchFunc).FirstAsync();
+
+// ❌ DON'T: Clear collections in subscriber - will clear twice!
+cache.GetAndFetchLatest("key", fetchFunc)
+    .Subscribe(data => { items.Clear(); items.AddRange(data); });
+```
+
+### Recommended Pattern ✅
+
+```csharp
+// ✅ DO: Use Subscribe and handle both cached and fresh data appropriately
+cache.GetAndFetchLatest("key", fetchFunc)
+    .Subscribe(data => { 
+        // This works correctly for both cached and fresh data
+        DisplayData(data); 
+    });
+```
+
+See `GetAndFetchLatestPatterns.cs` for detailed examples of each pattern with full working code.
+
 ## Additional Resources
 
 - [Akavache Documentation](https://github.com/reactiveui/Akavache)
