@@ -191,7 +191,10 @@ public class AotCompatibilityTests
                 // Store a complex object
                 var originalData = new
                 {
-                    message = "Hello World", number = 42, timestamp = DateTime.UtcNow, isValid = true
+                    message = "Hello World",
+                    number = 42,
+                    timestamp = DateTime.UtcNow,
+                    isValid = true
                 };
 
                 await cache.InsertObject("test_key", originalData).FirstAsync();
