@@ -133,10 +133,10 @@ public class ErrorHandlingAndEdgeCaseTests
             string[] edgeCaseKeys =
             [
                 string.Empty,
-                    "   ",
-                    "\t",
-                    "\n",
-                    "\r\n"
+                "   ",
+                "\t",
+                "\n",
+                "\r\n"
             ];
 
             foreach (var edgeCaseKey in edgeCaseKeys)
@@ -166,31 +166,31 @@ public class ErrorHandlingAndEdgeCaseTests
             string[] specialCharKeys =
             [
                 "key-with-dash",
-                    "key_with_underscore",
-                    "key.with.dots",
-                    "key with spaces",
-                    "key/with/slashes",
-                    "key\\with\\backslashes",
-                    "key:with:colons",
-                    "key;with;semicolons",
-                    "key=with=equals",
-                    "key&with&ampersands",
-                    "key?with?questions",
-                    "key#with#hash",
-                    "key%with%percent",
-                    "key+with+plus",
-                    "key[with]brackets",
-                    "key{with}braces",
-                    "key(with)parentheses",
-                    "key<with>angles",
-                    "key|with|pipes",
-                    "key^with^carets",
-                    "key~with~tildes",
-                    "key`with`backticks",
-                    "key@with@at",
-                    "key$with$dollar",
-                    "key!with!exclamation",
-                    "key*with*asterisk"
+                "key_with_underscore",
+                "key.with.dots",
+                "key with spaces",
+                "key/with/slashes",
+                "key\\with\\backslashes",
+                "key:with:colons",
+                "key;with;semicolons",
+                "key=with=equals",
+                "key&with&ampersands",
+                "key?with?questions",
+                "key#with#hash",
+                "key%with%percent",
+                "key+with+plus",
+                "key[with]brackets",
+                "key{with}braces",
+                "key(with)parentheses",
+                "key<with>angles",
+                "key|with|pipes",
+                "key^with^carets",
+                "key~with~tildes",
+                "key`with`backticks",
+                "key@with@at",
+                "key$with$dollar",
+                "key!with!exclamation",
+                "key*with*asterisk"
             ];
 
             foreach (var specialKey in specialCharKeys)
@@ -204,14 +204,14 @@ public class ErrorHandlingAndEdgeCaseTests
             string[] unicodeKeys =
             [
                 "key_中文",
-                    "key_русский",
-                    "key_العربية",
-                    "key_日本語",
-                    "key_한국어",
-                    "key_ελληνικά",
-                    "key_עברית",
-                    "key_हिन्दी",
-                    "key_emoji_😀_🎉_🚀"
+                "key_русский",
+                "key_العربية",
+                "key_日本語",
+                "key_한국어",
+                "key_ελληνικά",
+                "key_עברית",
+                "key_हिन्दी",
+                "key_emoji_😀_🎉_🚀"
             ];
 
             foreach (var unicodeKey in unicodeKeys)
@@ -524,10 +524,10 @@ public class ErrorHandlingAndEdgeCaseTests
             string[] unicodeKeys =
             [
                 "?_??",
-                    "??_???",
-                    "????_???????",
-                    "????_?????",
-                    "?????_????"
+                "??_???",
+                "????_???????",
+                "????_?????",
+                "?????_????"
             ];
 
             foreach (var unicodeKey in unicodeKeys)

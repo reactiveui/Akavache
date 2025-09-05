@@ -439,7 +439,9 @@ public class IBlobCacheInterfaceTests
         // Test multiple concurrent dispose calls
         Task[] disposeTasks =
         [
-            cache.DisposeAsync().AsTask(), cache.DisposeAsync().AsTask(), cache.DisposeAsync().AsTask()
+            cache.DisposeAsync().AsTask(),
+            cache.DisposeAsync().AsTask(),
+            cache.DisposeAsync().AsTask()
         ];
 
         // Should complete without exception
