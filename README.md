@@ -1988,17 +1988,34 @@ CacheDatabase.Initialize<NewtonsoftBsonSerializer>(/* ... */); // Most compatibl
 ```
 
 #### 4. SQLite errors on mobile
+
+**Android DllNotFoundException with SQLitePCLRaw.lib.e_sqlite3:**
+
+If you're getting `System.DllNotFoundException: 'e_sqlite3'` when using `SQLitePCLRaw.lib.e_sqlite3` on Android, use the appropriate bundle instead:
+
 ```xml
-// Fix: Ensure SQLitePCL.raw bundle is installed
-// Add to your project:
+<!-- For Android (recommended): Use bundle_e_sqlite3 instead of lib.e_sqlite3 -->
 <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
-    
-// If using Encrypted SQLite, also add:
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
 </ItemGroup>
 
+<!-- Alternative: Use bundle_green for cross-platform compatibility -->
+<ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+</ItemGroup>
+
+<!-- If using Encrypted SQLite, also add: -->
+<ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+</ItemGroup>
 ```
+
+**Platform-specific bundle recommendations:**
+- **Android**: `SQLitePCLRaw.bundle_e_sqlite3` or `SQLitePCLRaw.bundle_green`
+- **iOS**: `SQLitePCLRaw.bundle_e_sqlite3` or `SQLitePCLRaw.bundle_green`
+- **Desktop/Server**: `SQLitePCLRaw.bundle_e_sqlite3` works fine
+
+**Note**: `SQLitePCLRaw.lib.e_sqlite3` is a low-level library that requires additional platform-specific setup. The bundles include the necessary native libraries and initialization code for each platform.
 
 #### 5. Linker removing types IL2104
 
