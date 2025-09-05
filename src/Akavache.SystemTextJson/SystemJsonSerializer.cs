@@ -18,7 +18,7 @@ namespace Akavache.SystemTextJson;
 public class SystemJsonSerializer : ISerializer
 {
     /// <summary>
-    /// Gets or sets the optional options.
+    /// Gets or sets the JSON serializer options for customizing serialization behavior.
     /// </summary>
     public JsonSerializerOptions? Options { get; set; }
 

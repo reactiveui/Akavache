@@ -15,22 +15,19 @@ using Splat.Builder;
 namespace Akavache;
 
 /// <summary>
-/// AkavacheBuilderExtensions.
+/// Provides extension methods for configuring Akavache cache database with Splat application builders.
 /// </summary>
 public static class AkavacheBuilderExtensions
 {
     /// <summary>
-    /// Initializes CacheDatabase with a custom builder configuration.
+    /// Initializes the CacheDatabase with a custom builder configuration for the specified application.
     /// </summary>
-    /// <typeparam name="T">The type of Serializer.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configure">An action to configure the CacheDatabase builder.</param>
-    /// <param name="applicationName">Name of the application.</param>
-    /// <returns>
-    /// The configured builder.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">builder.</exception>
-    /// <exception cref="ArgumentNullException">configure.</exception>
+    /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
+    /// <param name="builder">The Splat application builder to configure.</param>
+    /// <param name="configure">An action to configure the Akavache builder settings.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths.</param>
+    /// <returns>The configured Splat application builder for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
@@ -48,17 +45,15 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with a custom builder configuration.
+    /// Initializes the CacheDatabase with a custom serializer configuration and builder settings.
     /// </summary>
-    /// <typeparam name="T">The type of Serializer.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configureSerializer">The serializer configuration.</param>
-    /// <param name="configure">An action to configure the CacheDatabase builder.</param>
-    /// <param name="applicationName">Name of the application.</param>
-    /// <returns>
-    /// The configured builder.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
+    /// <param name="builder">The Splat application builder to configure.</param>
+    /// <param name="configureSerializer">A function that creates and configures the serializer instance.</param>
+    /// <param name="configure">An action to configure the Akavache builder settings.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths.</param>
+    /// <returns>The configured Splat application builder for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
@@ -76,16 +71,14 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with default in-memory caches.
-    /// This is the safest default as it doesn't require any additional packages.
+    /// Initializes the CacheDatabase with default in-memory caches.
+    /// This is the safest default configuration as it does not require any additional packages.
     /// </summary>
-    /// <typeparam name="T">The type of Serializer.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <returns>
-    /// A BlobCache builder for further configuration.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
+    /// <param name="builder">The Splat application builder to configure.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths. If null, uses the current ApplicationName.</param>
+    /// <returns>The configured Splat application builder for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
@@ -103,17 +96,15 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with default in-memory caches.
-    /// This is the safest default as it doesn't require any additional packages.
+    /// Initializes the CacheDatabase with default in-memory caches and a custom serializer configuration.
+    /// This is a safe default configuration that does not require any additional packages.
     /// </summary>
-    /// <typeparam name="T">The type of Serializer.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="configureSerializer">The serializer configuration.</param>
-    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <returns>
-    /// A BlobCache builder for further configuration.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
+    /// <param name="builder">The Splat application builder to configure.</param>
+    /// <param name="configureSerializer">A function that creates and configures the serializer instance.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths. If null, uses the current ApplicationName.</param>
+    /// <returns>The configured Splat application builder for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif

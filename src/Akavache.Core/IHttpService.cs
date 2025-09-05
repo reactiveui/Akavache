@@ -6,57 +6,57 @@
 namespace Akavache;
 
 /// <summary>
-/// A interface that represents a service for providing HTTP functionality.
+/// Represents a service that provides HTTP functionality for downloading and caching web resources.
 /// </summary>
 public interface IHttpService
 {
     /// <summary>
-    /// Gets a observable for a download.
+    /// Downloads data from a URL and caches it, using the URL as the cache key.
     /// </summary>
-    /// <param name="blobCache">The blob cache where to get the value from if available.</param>
-    /// <param name="url">The url where to get the resource if not available in the cache.</param>
-    /// <param name="method">The http method.</param>
-    /// <param name="headers">The headers to use in the HTTP action.</param>
-    /// <param name="fetchAlways">If we should just fetch and not bother checking the cache first.</param>
-    /// <param name="absoluteExpiration">A optional expiration date time.</param>
-    /// <returns>A observable that signals when there is byte data.</returns>
+    /// <param name="blobCache">The blob cache to store the downloaded data.</param>
+    /// <param name="url">The URL to download from.</param>
+    /// <param name="method">The HTTP method to use for the request.</param>
+    /// <param name="headers">Optional HTTP headers to include in the request.</param>
+    /// <param name="fetchAlways">A value indicating whether to always fetch from the web, bypassing the cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that emits the downloaded byte data.</returns>
     IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null);
 
     /// <summary>
-    /// Gets a observable for a download.
+    /// Downloads data from a URL and caches it, using the URL as the cache key.
     /// </summary>
-    /// <param name="blobCache">The blob cache where to get the value from if available.</param>
-    /// <param name="url">The url where to get the resource if not available in the cache.</param>
-    /// <param name="method">The http method.</param>
-    /// <param name="headers">The headers to use in the HTTP action.</param>
-    /// <param name="fetchAlways">If we should just fetch and not bother checking the cache first.</param>
-    /// <param name="absoluteExpiration">A optional expiration date time.</param>
-    /// <returns>A observable that signals when there is byte data.</returns>
+    /// <param name="blobCache">The blob cache to store the downloaded data.</param>
+    /// <param name="url">The URL to download from.</param>
+    /// <param name="method">The HTTP method to use for the request.</param>
+    /// <param name="headers">Optional HTTP headers to include in the request.</param>
+    /// <param name="fetchAlways">A value indicating whether to always fetch from the web, bypassing the cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that emits the downloaded byte data.</returns>
     IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null);
 
     /// <summary>
-    /// Gets a observable for a download.
+    /// Downloads data from a URL and caches it using a custom cache key.
     /// </summary>
-    /// <param name="blobCache">The blob cache where to get the value from if available.</param>
-    /// <param name="key">The key to use for the download cache entry.</param>
-    /// <param name="url">The url where to get the resource if not available in the cache.</param>
-    /// <param name="method">The http method.</param>
-    /// <param name="headers">The headers to use in the HTTP action.</param>
-    /// <param name="fetchAlways">If we should just fetch and not bother checking the cache first.</param>
-    /// <param name="absoluteExpiration">A optional expiration date time.</param>
-    /// <returns>A observable that signals when there is byte data.</returns>
+    /// <param name="blobCache">The blob cache to store the downloaded data.</param>
+    /// <param name="key">The custom key to use for the cache entry.</param>
+    /// <param name="url">The URL to download from.</param>
+    /// <param name="method">The HTTP method to use for the request.</param>
+    /// <param name="headers">Optional HTTP headers to include in the request.</param>
+    /// <param name="fetchAlways">A value indicating whether to always fetch from the web, bypassing the cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that emits the downloaded byte data.</returns>
     IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null);
 
     /// <summary>
-    /// Gets a observable for a download.
+    /// Downloads data from a URL and caches it using a custom cache key.
     /// </summary>
-    /// <param name="blobCache">The blob cache where to get the value from if available.</param>
-    /// <param name="key">The key to use for the download cache entry.</param>
-    /// <param name="url">The url where to get the resource if not available in the cache.</param>
-    /// <param name="method">The http method.</param>
-    /// <param name="headers">The headers to use in the HTTP action.</param>
-    /// <param name="fetchAlways">If we should just fetch and not bother checking the cache first.</param>
-    /// <param name="absoluteExpiration">A optional expiration date time.</param>
-    /// <returns>A observable that signals when there is byte data.</returns>
+    /// <param name="blobCache">The blob cache to store the downloaded data.</param>
+    /// <param name="key">The custom key to use for the cache entry.</param>
+    /// <param name="url">The URL to download from.</param>
+    /// <param name="method">The HTTP method to use for the request.</param>
+    /// <param name="headers">Optional HTTP headers to include in the request.</param>
+    /// <param name="fetchAlways">A value indicating whether to always fetch from the web, bypassing the cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that emits the downloaded byte data.</returns>
     IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null);
 }

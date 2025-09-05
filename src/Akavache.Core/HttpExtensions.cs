@@ -6,17 +6,17 @@
 namespace Akavache;
 
 /// <summary>
-/// Extension methods for handling http operations.
+/// Provides extension methods for handling HTTP operations and stream operations.
 /// </summary>
 public static class HttpExtensions
 {
     /// <summary>
-    /// Writes to a stream and returns a observable.
+    /// Writes data to a stream asynchronously and returns an observable.
     /// </summary>
     /// <param name="blobCache">The stream to write to.</param>
-    /// <param name="data">The data to write.</param>
-    /// <param name="start">The start location where to write from.</param>
-    /// <param name="length">The length in bytes to read.</param>
+    /// <param name="data">The data to write to the stream.</param>
+    /// <param name="start">The starting index in the data array.</param>
+    /// <param name="length">The number of bytes to write.</param>
     /// <returns>An observable that signals when the write operation has completed.</returns>
     public static IObservable<Unit> WriteAsyncRx(this Stream blobCache, byte[] data, int start, int length)
     {
@@ -57,18 +57,17 @@ public static class HttpExtensions
     }
 
     /// <summary>
-    /// Download data from an HTTP URL and insert the result into the
-    /// cache. If the data is already in the cache, this returns
-    /// a cached value. The URL itself is used as the key.
+    /// Downloads data from an HTTP URL and inserts the result into the cache.
+    /// If the data is already in the cache, this returns a cached value.
+    /// The URL itself is used as the cache key.
     /// </summary>
     /// <param name="blobCache">The blob cache to perform the operation on.</param>
     /// <param name="url">The URL to download.</param>
-    /// <param name="method">The method.</param>
-    /// <param name="headers">An optional Dictionary containing the HTTP
-    /// request headers.</param>
-    /// <param name="fetchAlways">Force a web request to always be issued, skipping the cache.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>The data downloaded from the URL.</returns>
+    /// <param name="method">The HTTP method to use for the request.</param>
+    /// <param name="headers">An optional collection containing HTTP request headers.</param>
+    /// <param name="fetchAlways">A value indicating whether to force a web request to always be issued, skipping the cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that emits the data downloaded from the URL.</returns>
     public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)

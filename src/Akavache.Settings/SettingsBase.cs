@@ -9,7 +9,8 @@ using Akavache.Settings.Core;
 namespace Akavache.Settings;
 
 /// <summary>
-/// Empty Base.
+/// Provides a base class for implementing application settings storage using Akavache.
+/// This class automatically manages settings persistence and provides a foundation for typed settings classes.
 /// </summary>
 public abstract class SettingsBase : SettingsStorage
 {

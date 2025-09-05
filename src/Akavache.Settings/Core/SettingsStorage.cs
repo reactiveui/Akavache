@@ -11,7 +11,8 @@ using System.Runtime.CompilerServices;
 namespace Akavache.Settings.Core;
 
 /// <summary>
-/// Settings Storage.
+/// Provides a base class for implementing type-safe application settings storage using Akavache.
+/// This abstract class manages settings persistence, caching, and property change notifications.
 /// </summary>
 public abstract class SettingsStorage : ISettingsStorage
 {
@@ -22,12 +23,11 @@ public abstract class SettingsStorage : ISettingsStorage
     private bool _disposedValue;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsStorage" /> class.
+    /// Initializes a new instance of the <see cref="SettingsStorage"/> class.
     /// </summary>
-    /// <param name="keyPrefix">This value will be used as prefix for all settings keys. It should be reasonably unique,
-    /// so that it doesn't collide with other keys in the same <see cref="IBlobCache" />.</param>
-    /// <param name="cache">An <see cref="IBlobCache" /> implementation where you want your settings to be stored.</param>
-    /// <exception cref="System.ArgumentException">Invalid key prefix - keyPrefix.</exception>
+    /// <param name="keyPrefix">The prefix used for all settings keys in the blob cache. Should be unique to avoid key collisions.</param>
+    /// <param name="cache">The blob cache implementation where settings will be stored and retrieved.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="keyPrefix"/> is null, empty, or whitespace.</exception>
     protected SettingsStorage(string keyPrefix, IBlobCache cache)
     {
         if (string.IsNullOrWhiteSpace(keyPrefix))
@@ -48,12 +48,10 @@ public abstract class SettingsStorage : ISettingsStorage
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
-    /// Loads every setting in this storage into the internal cache, or, if the value doesn't
-    /// exist in the storage, initializes it with its default value. You dont HAVE to call this
-    /// method, but it's handy for applications with a high number of settings where you want to
-    /// load all settings on startup at once into the internal cache and not one-by-one at each request.
+    /// Initializes all settings properties by loading them from storage or setting them to their default values.
+    /// This method uses reflection to enumerate properties and is useful for preloading settings at startup.
     /// </summary>
-    /// <returns>A Task.</returns>
+    /// <returns>A task representing the asynchronous initialization operation.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
@@ -90,13 +88,14 @@ public abstract class SettingsStorage : ISettingsStorage
     }
 
     /// <summary>
-    /// Gets the value for the specified key, or, if the value doesn't exist, saves the <paramref name="defaultValue" /> and returns it.
+    /// Gets the value for the specified key from cache or storage, or creates and stores the default value if not found.
+    /// This method provides efficient property access with automatic caching and storage persistence.
     /// </summary>
-    /// <typeparam name="T">The type of the value to get or create.</typeparam>
-    /// <param name="defaultValue">The default value, if no value is saved yet.</param>
-    /// <param name="key">The key of the setting. Automatically set through the <see cref="CallerMemberNameAttribute" />.</param>
-    /// <returns>The Type.</returns>
-    /// <exception cref="ArgumentNullException">A ArgumentNullException.</exception>
+    /// <typeparam name="T">The type of the setting value.</typeparam>
+    /// <param name="defaultValue">The default value to use if no stored value exists.</param>
+    /// <param name="key">The property name, automatically inferred from the calling member.</param>
+    /// <returns>The setting value from cache, storage, or the provided default value.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("GetOrCreate requires types to be preserved for serialization.")]
     [RequiresDynamicCode("GetOrCreate requires types to be preserved for serialization.")]
@@ -127,18 +126,18 @@ public abstract class SettingsStorage : ISettingsStorage
     }
 
     /// <summary>
-    /// Called when [property changed].
+    /// Raises the <see cref="PropertyChanged"/> event for the specified property name.
     /// </summary>
-    /// <param name="propertyName">Name of the property.</param>
+    /// <param name="propertyName">The name of the property that changed, automatically inferred from the calling member.</param>
     protected void OnPropertyChanged(string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
-    /// Overwrites the existing value or creates a new settings entry. The value is serialized
-    /// via the Json.Net serializer.
+    /// Sets or creates a setting value, updating both the in-memory cache and persistent storage.
+    /// This method provides efficient property setting with automatic persistence and change notification.
     /// </summary>
-    /// <typeparam name="T">The type of the value to set or create.</typeparam>
-    /// <param name="value">The value to be set or created.</param>
-    /// <param name="key">The key of the setting. Automatically set through the <see cref="CallerMemberNameAttribute"/>.</param>
+    /// <typeparam name="T">The type of the setting value.</typeparam>
+    /// <param name="value">The value to store for this setting.</param>
+    /// <param name="key">The property name, automatically inferred from the calling member.</param>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("SetOrCreate requires types to be preserved for serialization.")]
     [RequiresDynamicCode("SetOrCreate requires types to be preserved for serialization.")]

@@ -8,7 +8,7 @@ using System.Net;
 namespace Akavache;
 
 /// <summary>
-/// A default http service.
+/// Provides a default implementation of HTTP service functionality for Akavache.
 /// </summary>
 public class HttpService : IHttpService
 {
@@ -28,7 +28,7 @@ public class HttpService : IHttpService
     }
 
     /// <summary>
-    /// Gets or sets the client.
+    /// Gets or sets the HTTP client used for making web requests.
     /// </summary>
     public HttpClient HttpClient { get; set; }
 
@@ -98,15 +98,15 @@ public class HttpService : IHttpService
     }
 
     /// <summary>
-    /// Makes a web request.
+    /// Makes a web request to the specified URI.
     /// </summary>
-    /// <param name="uri">The URI.</param>
-    /// <param name="method">The type of method.</param>
-    /// <param name="headers">The headers.</param>
-    /// <param name="content">The contents.</param>
-    /// <param name="retries">The number of retries.</param>
-    /// <param name="timeout">A timeout time span.</param>
-    /// <returns>The web response.</returns>
+    /// <param name="uri">The URI to make the request to.</param>
+    /// <param name="method">The HTTP method to use for the request.</param>
+    /// <param name="headers">Optional HTTP headers to include in the request.</param>
+    /// <param name="content">Optional content to send with the request.</param>
+    /// <param name="retries">The number of retry attempts for failed requests.</param>
+    /// <param name="timeout">The timeout duration for the request.</param>
+    /// <returns>An observable that emits the HTTP response message.</returns>
     protected virtual IObservable<HttpResponseMessage> MakeWebRequest(
         Uri uri,
         HttpMethod method,
@@ -160,7 +160,7 @@ public class HttpService : IHttpService
     private static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
 
     /// <summary>
-    /// A fast-failing HTTP service that reduces retries and timeouts to speed up tests.
+    /// Provides a fast-failing HTTP service that reduces retries and timeouts to speed up tests.
     /// </summary>
     public class FastHttpService : HttpService
     {
@@ -170,8 +170,8 @@ public class HttpService : IHttpService
         /// <summary>
         /// Initializes a new instance of the <see cref="FastHttpService"/> class.
         /// </summary>
-        /// <param name="retries">Number of retries to use (default 0).</param>
-        /// <param name="timeout">Timeout to use (default 2 seconds).</param>
+        /// <param name="retries">The number of retry attempts to use (default is 0).</param>
+        /// <param name="timeout">The timeout duration to use (default is 2 seconds).</param>
         public FastHttpService(int retries = 0, TimeSpan? timeout = null)
         {
             _retries = retries;

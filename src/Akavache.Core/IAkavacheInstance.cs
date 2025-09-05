@@ -8,89 +8,68 @@ using System.Reflection;
 namespace Akavache;
 
 /// <summary>
-/// A builder interface that represents a built Akavache instance.
+/// Represents a configured Akavache instance with access to all cache types and configuration.
 /// </summary>
 public interface IAkavacheInstance
 {
     /// <summary>
     /// Gets the executing assembly.
     /// </summary>
-    /// <value>
-    /// The executing assembly.
-    /// </value>
     Assembly ExecutingAssembly { get; }
 
     /// <summary>
-    /// Gets the name of the application.
+    /// Gets the application name used for cache directory paths.
     /// </summary>
-    /// <value>
-    /// The name of the application.
-    /// </value>
     string ApplicationName { get; }
 
     /// <summary>
     /// Gets the application root path.
     /// </summary>
-    /// <value>
-    /// The application root path.
-    /// </value>
     string? ApplicationRootPath { get; }
 
     /// <summary>
     /// Gets or sets the settings cache path.
     /// </summary>
-    /// <value>
-    /// The settings cache path.
-    /// </value>
     string? SettingsCachePath { get; internal set; }
 
     /// <summary>
     /// Gets the name of the executing assembly.
     /// </summary>
-    /// <value>
-    /// The name of the executing assembly.
-    /// </value>
     string? ExecutingAssemblyName { get; }
 
     /// <summary>
-    /// Gets the version.
+    /// Gets the version of the executing assembly.
     /// </summary>
-    /// <value>
-    /// The version.
-    /// </value>
     Version? Version { get; }
 
     /// <summary>
-    /// Gets the InMemory cache instance.
+    /// Gets the InMemory cache instance for temporary data storage.
     /// </summary>
     IBlobCache? InMemory { get; }
 
     /// <summary>
-    /// Gets the LocalMachine cache instance.
+    /// Gets the LocalMachine cache instance for persistent but temporary data.
     /// </summary>
     IBlobCache? LocalMachine { get; }
 
     /// <summary>
-    /// Gets the Secure cache instance.
+    /// Gets the Secure cache instance for encrypted data storage.
     /// </summary>
     ISecureBlobCache? Secure { get; }
 
     /// <summary>
-    /// Gets the UserAccount cache instance.
+    /// Gets the UserAccount cache instance for user-specific persistent data.
     /// </summary>
     IBlobCache? UserAccount { get; }
 
     /// <summary>
-    /// Gets or sets the http service.
+    /// Gets or sets the HTTP service for web-based cache operations.
     /// </summary>
     IHttpService? HttpService { get; set; }
 
     /// <summary>
-    /// Gets the serializer.
+    /// Gets the serializer used for object serialization and deserialization.
     /// </summary>
-    /// <value>
-    /// The serializer.
-    /// </value>
     ISerializer? Serializer { get; }
 
     /// <summary>
@@ -102,8 +81,5 @@ public interface IAkavacheInstance
     /// <summary>
     /// Gets the name of the serializer type.
     /// </summary>
-    /// <value>
-    /// The name of the serializer type.
-    /// </value>
     string? SerializerTypeName { get; }
 }
