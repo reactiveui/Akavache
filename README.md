@@ -2044,6 +2044,9 @@ Ensure your UWP project targets a specific platform (x86, x64, ARM) rather than 
 - 💬 **Chat**: [ReactiveUI Slack](https://reactiveui.net/slack)
 - 📦 **NuGet**: [Akavache Packages](https://www.nuget.org/packages?q=akavache)
 
+## Thanks 
+This project is tested with BrowserStack
+
 ## License
 
 Akavache is licensed under the [MIT License](LICENSE).
