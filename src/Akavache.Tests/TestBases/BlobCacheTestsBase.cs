@@ -388,9 +388,12 @@ public abstract class BlobCacheTestsBase : IDisposable
                 .Timeout(TimeSpan.FromSeconds(5))
                 .FirstAsync();
 
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Item1, Is.EqualTo("Foo"));
-            Assert.That(result.Item2, Is.EqualTo(1));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result.Item1, Is.EqualTo("Foo"));
+                Assert.That(result.Item2, Is.EqualTo(1));
+            }
 
             Assert.That(fetchCount, Is.EqualTo(1), $"Expected fetch to be called exactly once, but was {fetchCount}");
 
@@ -405,14 +408,20 @@ public abstract class BlobCacheTestsBase : IDisposable
             Assert.That(results.Count, Is.EqualTo(2));
 
             // Cached value
-            Assert.That(results[0], Is.Not.Null);
-            Assert.That(results[0]?.Item1, Is.EqualTo("Foo"));
-            Assert.That(results[0]?.Item2, Is.EqualTo(1));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(results[0], Is.Not.Null);
+                Assert.That(results[0]?.Item1, Is.EqualTo("Foo"));
+                Assert.That(results[0]?.Item2, Is.EqualTo(1));
+            }
 
             // Latest value
-            Assert.That(results[1], Is.Not.Null);
-            Assert.That(results[1]?.Item1, Is.EqualTo("Foo"));
-            Assert.That(results[1]?.Item2, Is.EqualTo(2));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(results[1], Is.Not.Null);
+                Assert.That(results[1]?.Item1, Is.EqualTo("Foo"));
+                Assert.That(results[1]?.Item2, Is.EqualTo(2));
+            }
 
             Assert.That(fetchCount, Is.EqualTo(initialFetchCount + 1), $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
         }
