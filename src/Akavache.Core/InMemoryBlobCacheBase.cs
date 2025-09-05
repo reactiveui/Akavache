@@ -220,7 +220,9 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     _cache.Remove(key);
 
                     // Also remove from type indexes
-                    foreach (var typeKeys in _typeIndex.Values)
+                    // Create a defensive copy to avoid enumeration issues during concurrent modifications
+                    var typeIndexValues = _typeIndex.Values.ToArray();
+                    foreach (var typeKeys in typeIndexValues)
                     {
                         typeKeys.Remove(key);
                     }
@@ -460,7 +462,9 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 _cache.Remove(key);
 
                 // Remove from type indexes
-                foreach (var typeKeys in _typeIndex.Values)
+                // Create a defensive copy to avoid enumeration issues during concurrent modifications
+                var typeIndexValues = _typeIndex.Values.ToArray();
+                foreach (var typeKeys in typeIndexValues)
                 {
                     typeKeys.Remove(key);
                 }
@@ -492,7 +496,9 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     _cache.Remove(key);
 
                     // Remove from type indexes
-                    foreach (var typeKeys in _typeIndex.Values)
+                    // Create a defensive copy to avoid enumeration issues during concurrent modifications
+                    var typeIndexValues = _typeIndex.Values.ToArray();
+                    foreach (var typeKeys in typeIndexValues)
                     {
                         typeKeys.Remove(key);
                     }
@@ -719,7 +725,9 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     _cache.Remove(expiredKey);
 
                     // Remove from type indexes
-                    foreach (var typeKeys in _typeIndex.Values)
+                    // Create a defensive copy to avoid enumeration issues during concurrent modifications
+                    var typeIndexValues = _typeIndex.Values.ToArray();
+                    foreach (var typeKeys in typeIndexValues)
                     {
                         typeKeys.Remove(expiredKey);
                     }
