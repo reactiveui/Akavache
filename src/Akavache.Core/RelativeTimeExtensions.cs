@@ -44,7 +44,6 @@ public static class RelativeTimeExtensions
             : blobCache.InsertObject(key, value, blobCache.Scheduler.Now + expiration);
 
     /// <summary>
-    /// <summary>
     /// Downloads data from the specified URL if it is not already in the cache, with expiration based on a relative time span.
     /// </summary>
     /// <param name="blobCache">The blob cache to store the downloaded data.</param>
