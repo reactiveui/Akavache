@@ -611,11 +611,10 @@ public static class SerializerExtensions
             .Select(kvp => blobCache.Insert(kvp.Key, blobCache.Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
             .ToList();
 
-        // Wait for all insert operations to complete by using Take to ensure we get exactly the expected count
-        // then count the results to confirm completion
+        // Wait for all insert operations to complete by merging and taking the count
         return insertOperations.Merge()
-            .Take(insertOperations.Count)
-            .Count()
+            .TakeLast(insertOperations.Count)
+            .LastOrDefaultAsync()
             .Select(_ => Unit.Default);
     }
 
