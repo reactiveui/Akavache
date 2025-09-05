@@ -11,11 +11,11 @@ namespace Akavache;
 public static class ImageExtensions
 {
     /// <summary>
-    /// Load an image from the blob cache as raw bytes.
+    /// Loads image data from the blob cache as raw bytes.
     /// </summary>
     /// <param name="blobCache">The blob cache to load the image from.</param>
-    /// <param name="key">The key to look up in the cache.</param>
-    /// <returns>A Future result representing the image bytes.</returns>
+    /// <param name="key">The cache key to look up.</param>
+    /// <returns>An observable that emits the image bytes.</returns>
     public static IObservable<byte[]> LoadImageBytes(this IBlobCache blobCache, string key)
     {
         if (blobCache is null)
@@ -30,15 +30,15 @@ public static class ImageExtensions
     }
 
     /// <summary>
-    /// A combination of DownloadUrl and LoadImageBytes, this method fetches an
-    /// image from a remote URL (using the cached value if possible) and
-    /// returns the image bytes.
+    /// Downloads an image from a remote URL and returns the image bytes.
+    /// This method combines DownloadUrl and LoadImageBytes functionality,
+    /// using cached values when possible.
     /// </summary>
-    /// <param name="blobCache">The blob cache to load the image from if available.</param>
-    /// <param name="url">The URL to download.</param>
-    /// <param name="fetchAlways">If we should always fetch the image from the URL even if we have one in the blob.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>A Future result representing the image bytes.</returns>
+    /// <param name="blobCache">The blob cache to store and retrieve the image data.</param>
+    /// <param name="url">The URL to download the image from.</param>
+    /// <param name="fetchAlways">A value indicating whether to always fetch the image from the URL, bypassing the cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached image data.</param>
+    /// <returns>An observable that emits the image bytes.</returns>
     public static IObservable<byte[]> LoadImageBytesFromUrl(this IBlobCache blobCache, string url, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
         if (blobCache is null)
@@ -116,21 +116,20 @@ public static class ImageExtensions
     }
 
     /// <summary>
-    /// Converts bad image buffers into an exception.
+    /// Validates image buffer data and throws an exception if the buffer is invalid.
     /// </summary>
-    /// <param name="compressedImage">The compressed image buffer to check.</param>
-    /// <returns>The byte[], or OnError if the buffer is corrupt (empty or
-    /// too small).</returns>
+    /// <param name="compressedImage">The compressed image buffer to validate.</param>
+    /// <returns>An observable that emits the byte array if valid, or signals an error if the buffer is corrupt.</returns>
     public static IObservable<byte[]> ThrowOnBadImageBuffer(this byte[] compressedImage) =>
         compressedImage is null || compressedImage.Length < 64 ?
             Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image")) :
             Observable.Return(compressedImage);
 
     /// <summary>
-    /// Validates that the provided bytes represent a valid image format.
+    /// Validates that the provided bytes represent a valid image format by checking file headers.
     /// </summary>
     /// <param name="imageBytes">The image bytes to validate.</param>
-    /// <returns>True if the bytes appear to be a valid image format.</returns>
+    /// <returns><c>true</c> if the bytes appear to be a valid image format; otherwise, <c>false</c>.</returns>
     public static bool IsValidImageFormat(this byte[] imageBytes)
     {
         if (imageBytes == null || imageBytes.Length < 4)

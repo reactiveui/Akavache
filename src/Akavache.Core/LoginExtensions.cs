@@ -8,21 +8,21 @@ using System.Diagnostics.CodeAnalysis;
 namespace Akavache;
 
 /// <summary>
-/// Extension methods handling login use cases.
+/// Provides extension methods for handling user login credentials in secure blob caches.
 /// </summary>
 public static class LoginExtensions
 {
     /// <summary>
-    /// Save a user/password combination in a secure blob cache. Note that
-    /// this method only allows exactly *one* user/pass combo to be saved,
-    /// calling this more than once will overwrite the previous entry.
+    /// Saves a username and password combination in a secure blob cache.
+    /// Note that this method allows exactly one username/password combination to be saved per host.
+    /// Calling this method multiple times for the same host will overwrite the previous entry.
     /// </summary>
-    /// <param name="blobCache">The blob cache where to store the data.</param>
-    /// <param name="user">The user name to save.</param>
-    /// <param name="password">The associated password.</param>
-    /// <param name="host">The host to associate with the data.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>A observable which signals when the insert is completed.</returns>
+    /// <param name="blobCache">The secure blob cache to store the login data.</param>
+    /// <param name="user">The username to save.</param>
+    /// <param name="password">The password associated with the username.</param>
+    /// <param name="host">The host identifier to associate with the login data.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached login data.</param>
+    /// <returns>An observable that signals when the login data is saved.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
@@ -31,13 +31,13 @@ public static class LoginExtensions
         blobCache.InsertObject("login:" + host, new LoginInfo(user, password), absoluteExpiration);
 
     /// <summary>
-    /// Returns the currently cached user/password. If the cache does not
-    /// contain a user/password, this returns an Observable which
-    /// OnError's with KeyNotFoundException.
+    /// Retrieves the currently cached username and password for the specified host.
+    /// If the cache does not contain login data for the host, this method returns an observable
+    /// that signals an error with <see cref="KeyNotFoundException"/>.
     /// </summary>
-    /// <param name="blobCache">The blob cache where to get the data.</param>
-    /// <param name="host">The host associated with the data.</param>
-    /// <returns>A Future result representing the user/password Tuple.</returns>
+    /// <param name="blobCache">The secure blob cache to retrieve the login data from.</param>
+    /// <param name="host">The host identifier associated with the login data.</param>
+    /// <returns>An observable that emits the cached login information.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
