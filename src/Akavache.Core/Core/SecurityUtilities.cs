@@ -28,7 +28,7 @@ internal static class SecurityUtilities
         }
 
         // Check for problematic prefixes/suffixes BEFORE trimming (but allow leading spaces in cache names for now)
-        if (cacheName.StartsWith('.') || cacheName.EndsWith('.') || cacheName.EndsWith(' '))
+        if (cacheName.StartsWith(".") || cacheName.EndsWith(".") || cacheName.EndsWith(" "))
         {
             throw new ArgumentException($"Cache name '{cacheName}' cannot start or end with '.' or space characters.", parameterName);
         }
@@ -78,7 +78,7 @@ internal static class SecurityUtilities
         }
 
         // Check for problematic prefixes/suffixes BEFORE trimming
-        if (applicationName.StartsWith('.') || applicationName.EndsWith('.') || applicationName.EndsWith(' '))
+        if (applicationName.StartsWith(".") || applicationName.EndsWith(".") || applicationName.EndsWith(" "))
         {
             throw new ArgumentException($"Application name '{applicationName}' cannot start or end with '.' or space characters.", parameterName);
         }
