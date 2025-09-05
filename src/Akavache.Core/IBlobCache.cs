@@ -248,6 +248,44 @@ public interface IBlobCache : IDisposable, IAsyncDisposable
     IObservable<Unit> Vacuum();
 
     /// <summary>
+    /// Updates the expiration date for an existing cache entry without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="key">The key of the cache entry to update.</param>
+    /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration);
+
+    /// <summary>
+    /// Updates the expiration date for an existing cache entry without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="key">The key of the cache entry to update.</param>
+    /// <param name="type">The type of the cached object.</param>
+    /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration);
+
+    /// <summary>
+    /// Updates the expiration date for multiple existing cache entries without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="keys">The keys of the cache entries to update.</param>
+    /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration);
+
+    /// <summary>
+    /// Updates the expiration date for multiple existing cache entries without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="keys">The keys of the cache entries to update.</param>
+    /// <param name="type">The type of the cached objects.</param>
+    /// <param name="absoluteExpiration">The new expiration date. Pass null for no expiration.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration);
+
+    /// <summary>
     /// Exception helpers for implementers of the class.
     /// </summary>
     public static class ExceptionHelpers

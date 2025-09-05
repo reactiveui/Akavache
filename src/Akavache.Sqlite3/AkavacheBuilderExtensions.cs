@@ -242,6 +242,14 @@ public static class AkavacheBuilderExtensions
 
         public IObservable<Unit> Vacuum() => _inner.Vacuum();
 
+        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(key, absoluteExpiration);
+
+        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(key, type, absoluteExpiration);
+
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(keys, absoluteExpiration);
+
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(keys, type, absoluteExpiration);
+
         public void Dispose()
         {
             Dispose(true);
