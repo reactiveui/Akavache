@@ -53,7 +53,10 @@ public static class AkavacheBuilderExtensions
             // Ensure the directory exists before attempting to delete the file
             if (!string.IsNullOrEmpty(builder.SettingsCachePath) && Directory.Exists(builder.SettingsCachePath))
             {
-                var filePath = Path.Combine(builder.SettingsCachePath, $"{overrideDatabaseName ?? typeof(T).Name}.db");
+                // Validate database name to prevent path traversal attacks
+                var databaseName = overrideDatabaseName ?? typeof(T).Name;
+                var validatedDatabaseName = SecurityUtilities.ValidateDatabaseName(databaseName, nameof(overrideDatabaseName));
+                var filePath = Path.Combine(builder.SettingsCachePath, $"{validatedDatabaseName}.db");
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
@@ -176,11 +179,15 @@ public static class AkavacheBuilderExtensions
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
+
+        // Validate database name to prevent path traversal attacks
+        var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        AkavacheBuilder.BlobCaches[key] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), password, builder.Serializer);
+        AkavacheBuilder.BlobCaches[validatedKey] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db"), password, builder.Serializer);
 
         var viewSettings = new T();
-        AkavacheBuilder.SettingsStores[key] = viewSettings;
+        AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }
 
@@ -234,11 +241,15 @@ public static class AkavacheBuilderExtensions
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
+
+        // Validate database name to prevent path traversal attacks
+        var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        AkavacheBuilder.BlobCaches[key] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{key}.db"), builder.Serializer);
+        AkavacheBuilder.BlobCaches[validatedKey] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db"), builder.Serializer);
 
         var viewSettings = new T();
-        AkavacheBuilder.SettingsStores[key] = viewSettings;
+        AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }
 }

@@ -344,6 +344,14 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
         public IObservable<Unit> InvalidateAll() => inner.InvalidateAll();
 
+        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(key, absoluteExpiration);
+
+        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(key, type, absoluteExpiration);
+
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(keys, absoluteExpiration);
+
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(keys, type, absoluteExpiration);
+
         public IObservable<Unit> Vacuum() => inner.Vacuum();
     }
 }

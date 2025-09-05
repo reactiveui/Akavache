@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 #endif
 using System.IO.IsolatedStorage;
 using System.Reflection;
+using Akavache.Core;
 using Splat;
 using Splat.Builder;
 
@@ -359,8 +360,12 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
         }
 
+        // Validate input to prevent path traversal attacks
+        var validatedCacheName = SecurityUtilities.ValidateCacheName(cacheName, nameof(cacheName));
+        var validatedApplicationName = SecurityUtilities.ValidateApplicationName(builder.ApplicationName, nameof(builder.ApplicationName));
+
         string? cachePath = null;
-        var store = cacheName switch
+        var store = validatedCacheName switch
         {
             "UserAccount" => IsolatedStorageFile.GetUserStoreForAssembly(),
             "Secure" => IsolatedStorageFile.GetUserStoreForAssembly(),
@@ -380,7 +385,7 @@ public static class AkavacheBuilderExtensions
             {
                 if (isoStore != null)
                 {
-                    var isoPath = Path.Combine(builder.ApplicationName, cacheName);
+                    var isoPath = Path.Combine(validatedApplicationName, validatedCacheName);
 
                     // Ensure the directory exists
                     if (!isoStore.DirectoryExists(isoPath))

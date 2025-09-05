@@ -67,7 +67,13 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         TestDateCommand = ReactiveCommand.CreateFromObservable(ExecuteTestDate);
 
         // Initialize observable properties in constructor
-        ReactiveCommand<Unit, Unit>[] loadingCommands = [AddTodoCommand, RefreshCommand, ClearCompletedCommand, SaveSettingsCommand, CleanupCacheCommand, LoadSampleDataCommand, TestDateCommand
+        ReactiveCommand<Unit, Unit>[] loadingCommands = [AddTodoCommand,
+            RefreshCommand,
+            ClearCompletedCommand,
+            SaveSettingsCommand,
+            CleanupCacheCommand,
+            LoadSampleDataCommand,
+            TestDateCommand
         ];
         _isLoading = loadingCommands
             .Select(static cmd => cmd.IsExecuting)

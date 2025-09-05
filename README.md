@@ -514,6 +514,22 @@ await CacheDatabase.UserAccount.InvalidateAllObjects<MyData>();
 await CacheDatabase.UserAccount.InvalidateAll();
 ```
 
+### Updating Expiration
+
+```csharp
+// Extend expiration for a single cache entry
+await CacheDatabase.LocalMachine.UpdateExpiration("api_data", DateTimeOffset.Now.AddHours(2));
+
+// Extend expiration using relative time
+await CacheDatabase.LocalMachine.UpdateExpiration("user_session", TimeSpan.FromMinutes(30));
+
+// Update expiration for multiple entries
+var keys = new[] { "cache_key1", "cache_key2", "cache_key3" };
+await CacheDatabase.LocalMachine.UpdateExpiration(keys, DateTimeOffset.Now.AddDays(1));
+```
+
+> 💡 **For comprehensive UpdateExpiration patterns and use cases**, see [`UpdateExpirationPatterns.cs`](src/Samples/UpdateExpirationPatterns.cs) in the samples directory.
+
 ## Extension Methods
 
 ### Get or Fetch Pattern
@@ -812,6 +828,45 @@ await CacheDatabase.Secure.SaveLogin("user2", "pass2", "api.service2.com");
 ```
 
 ## Advanced Features
+
+### Efficient Expiration Updates
+
+Akavache provides `UpdateExpiration` methods that efficiently update cache entry expiration dates without reading or writing the cached data. This is particularly useful for HTTP caching scenarios and session management.
+
+#### Key Benefits
+
+- **High Performance**: Only updates metadata, leaving cached data untouched
+- **SQL Efficiency**: Uses targeted UPDATE statements rather than full record replacement  
+- **Bulk Operations**: Update multiple entries in a single transaction
+- **No Data Transfer**: Avoids expensive serialization/deserialization cycles (up to 250x faster)
+
+#### Quick Examples
+
+```csharp
+// Single entry with absolute expiration
+await cache.UpdateExpiration("api_response", DateTimeOffset.Now.AddHours(6));
+
+// Single entry with relative time
+await cache.UpdateExpiration("user_session", TimeSpan.FromMinutes(30));
+
+// Bulk update multiple entries
+var keys = new[] { "weather_seattle", "weather_portland", "weather_vancouver" };
+await cache.UpdateExpiration(keys, TimeSpan.FromHours(2));
+
+// HTTP 304 Not Modified response handling
+if (response.StatusCode == HttpStatusCode.NotModified)
+{
+    await cache.UpdateExpiration(cacheKey, TimeSpan.FromHours(1));
+    return cachedData; // Serve existing data with extended lifetime
+}
+```
+
+> 📖 **For comprehensive patterns and real-world examples**, see [`UpdateExpirationPatterns.cs`](src/Samples/UpdateExpirationPatterns.cs), which includes:
+> - HTTP caching with 304 Not Modified handling
+> - Session management with sliding expiration 
+> - Bulk operations and performance optimization
+> - Error handling and best practices
+> - Performance comparisons and method overload reference
 
 ### Relative Time Extensions
 

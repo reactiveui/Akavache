@@ -73,23 +73,23 @@ public class CacheDatabaseTests
         object[] testCases =
         [
             "string test",
-                42,
-                3.14d,
-                true,
-                DateTime.UtcNow,
-                DateTimeOffset.Now,
-                Guid.NewGuid(),
-                new { Name = "Test", Value = 123 },
-                (int[])[1, 2, 3, 4, 5],
-                new Dictionary<string, object> { ["key1"] = "value1", ["key2"] = 42 }
+            42,
+            3.14d,
+            true,
+            DateTime.UtcNow,
+            DateTimeOffset.Now,
+            Guid.NewGuid(),
+            new { Name = "Test", Value = 123 },
+            (int[])[1, 2, 3, 4, 5],
+            new Dictionary<string, object> { ["key1"] = "value1", ["key2"] = 42 }
         ];
 
         ISerializer[] serializers =
         [
             new SystemJsonSerializer(),
-                new SystemJsonBsonSerializer(),
-                new NewtonsoftSerializer(),
-                new NewtonsoftBsonSerializer()
+            new SystemJsonBsonSerializer(),
+            new NewtonsoftSerializer(),
+            new NewtonsoftBsonSerializer()
         ];
 
         foreach (var serializer in serializers)

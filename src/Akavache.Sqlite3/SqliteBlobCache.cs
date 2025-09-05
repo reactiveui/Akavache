@@ -825,6 +825,142 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
+    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+        }
+
+        if (Connection is null)
+        {
+            return Observable.Throw<Unit>(new InvalidOperationException("The Connection is null and therefore no database operations can happen."));
+        }
+
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            await Connection.RunInTransactionAsync(sql =>
+            {
+                var expiryValue = absoluteExpiration?.UtcDateTime;
+                sql.Execute("UPDATE CacheEntry SET ExpiresAt = ? WHERE Id = ?", expiryValue, key);
+            }).ConfigureAwait(false);
+
+            return Unit.Default;
+        });
+    }
+
+    /// <inheritdoc/>
+    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
+        }
+
+        if (type is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+        }
+
+        if (Connection is null)
+        {
+            return Observable.Throw<Unit>(new InvalidOperationException("The Connection is null and therefore no database operations can happen."));
+        }
+
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            await Connection.RunInTransactionAsync(sql =>
+            {
+                var expiryValue = absoluteExpiration?.UtcDateTime;
+                sql.Execute("UPDATE CacheEntry SET ExpiresAt = ? WHERE Id = ? AND TypeName = ?", expiryValue, key, type.FullName);
+            }).ConfigureAwait(false);
+
+            return Unit.Default;
+        });
+    }
+
+    /// <inheritdoc/>
+    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration)
+    {
+        if (keys is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+        }
+
+        if (Connection is null)
+        {
+            return Observable.Throw<Unit>(new InvalidOperationException("The Connection is null and therefore no database operations can happen."));
+        }
+
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            await Connection.RunInTransactionAsync(sql =>
+            {
+                var expiryValue = absoluteExpiration?.UtcDateTime;
+                foreach (var key in keys)
+                {
+                    sql.Execute("UPDATE CacheEntry SET ExpiresAt = ? WHERE Id = ?", expiryValue, key);
+                }
+            }).ConfigureAwait(false);
+
+            return Unit.Default;
+        });
+    }
+
+    /// <inheritdoc/>
+    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration)
+    {
+        if (keys is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
+        }
+
+        if (type is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+        }
+
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+        }
+
+        if (Connection is null)
+        {
+            return Observable.Throw<Unit>(new InvalidOperationException("The Connection is null and therefore no database operations can happen."));
+        }
+
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            await Connection.RunInTransactionAsync(sql =>
+            {
+                var expiryValue = absoluteExpiration?.UtcDateTime;
+                foreach (var key in keys)
+                {
+                    sql.Execute("UPDATE CacheEntry SET ExpiresAt = ? WHERE Id = ? AND TypeName = ?", expiryValue, key, type.FullName);
+                }
+            }).ConfigureAwait(false);
+
+            return Unit.Default;
+        });
+    }
+
+    /// <inheritdoc/>
     public void Dispose()
     {
         Dispose(true);

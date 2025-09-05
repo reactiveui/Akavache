@@ -91,4 +91,58 @@ public static class RelativeTimeExtensions
         blobCache is null
             ? throw new ArgumentNullException(nameof(blobCache))
             : blobCache.SaveLogin(user, password, host, blobCache.Scheduler.Now + expiration);
+
+    /// <summary>
+    /// Updates the expiration date for an existing cache entry without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="blobCache">The blob cache containing the item.</param>
+    /// <param name="key">The key of the cache entry to update.</param>
+    /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    public static IObservable<Unit> UpdateExpiration(this IBlobCache blobCache, string key, TimeSpan expiration) =>
+        blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.UpdateExpiration(key, blobCache.Scheduler.Now + expiration);
+
+    /// <summary>
+    /// Updates the expiration date for an existing cache entry without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="blobCache">The blob cache containing the item.</param>
+    /// <param name="key">The key of the cache entry to update.</param>
+    /// <param name="type">The type of the cached object.</param>
+    /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    public static IObservable<Unit> UpdateExpiration(this IBlobCache blobCache, string key, Type type, TimeSpan expiration) =>
+        blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.UpdateExpiration(key, type, blobCache.Scheduler.Now + expiration);
+
+    /// <summary>
+    /// Updates the expiration date for multiple existing cache entries without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="blobCache">The blob cache containing the items.</param>
+    /// <param name="keys">The keys of the cache entries to update.</param>
+    /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    public static IObservable<Unit> UpdateExpiration(this IBlobCache blobCache, IEnumerable<string> keys, TimeSpan expiration) =>
+        blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.UpdateExpiration(keys, blobCache.Scheduler.Now + expiration);
+
+    /// <summary>
+    /// Updates the expiration date for multiple existing cache entries without reading or writing the cached data.
+    /// This is useful when a server returns a NotModified response and you want to extend the cache expiration.
+    /// </summary>
+    /// <param name="blobCache">The blob cache containing the items.</param>
+    /// <param name="keys">The keys of the cache entries to update.</param>
+    /// <param name="type">The type of the cached objects.</param>
+    /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
+    /// <returns>A signal indicating when the operation is complete.</returns>
+    public static IObservable<Unit> UpdateExpiration(this IBlobCache blobCache, IEnumerable<string> keys, Type type, TimeSpan expiration) =>
+        blobCache is null
+            ? throw new ArgumentNullException(nameof(blobCache))
+            : blobCache.UpdateExpiration(keys, type, blobCache.Scheduler.Now + expiration);
 }

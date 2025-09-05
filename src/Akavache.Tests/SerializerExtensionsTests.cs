@@ -321,7 +321,7 @@ public class SerializerExtensionsTests
             KeyValuePair<string, UserObject>[] keyValuePairs =
             [
                 new KeyValuePair<string, UserObject>("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
-                    new KeyValuePair<string, UserObject>("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
+                new KeyValuePair<string, UserObject>("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
             ];
 
             try
