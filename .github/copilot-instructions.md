@@ -72,141 +72,83 @@ Always reference these instructions first and fallback to search or bash command
 - **Analysis Level**: Set to `latest` with enhanced .NET analyzers enabled
 - **CRITICAL**: All code must comply with **ReactiveUI contribution guidelines**: https://www.reactiveui.net/contribute/index.html
 
-### C# Style Guide
+## Validation and Quality Assurance
+
+### Code Style and Analysis Enforcement
+- **EditorConfig Compliance**: Repository uses a comprehensive `.editorconfig` with detailed rules for C# formatting, naming conventions, and code analysis.
+- **StyleCop Analyzers**: Enforces consistent C# code style with `stylecop.analyzers`.
+- **Roslynator Analyzers**: Additional code quality rules with `Roslynator.Analyzers`.
+- **Analysis Level**: Set to `latest` with enhanced .NET analyzers enabled.
+- **CRITICAL**: All code must comply with ReactiveUI contribution guidelines: [https://www.reactiveui.net/contribute/index.html](https://www.reactiveui.net/contribute/index.html).
+
+## C# Style Guide
 **General Rule**: Follow "Visual Studio defaults" with the following specific requirements:
 
-#### **Brace Style**
-- **Allman style braces**: Each brace begins on a new line
-- **Single line statement blocks**: Can go without braces but must be properly indented on its own line
-- **Exception**: A `using` statement is permitted to be nested within another `using` statement by starting on the following line at the same indentation level
+### Brace Style
+- **Allman style braces**: Each brace begins on a new line.
+- **Single line statement blocks**: Can go without braces but must be properly indented on its own line and not nested in other statement blocks that use braces.
+- **Exception**: A `using` statement is permitted to be nested within another `using` statement by starting on the following line at the same indentation level, even if the nested `using` contains a controlled block.
 
-#### **Indentation and Spacing**
-- **Four spaces** of indentation (no tabs)
-- **Avoid spurious free spaces**: For example, avoid `if (someVar == 0)...` where dots mark spurious spaces
-- **Avoid more than one empty line** at any time between members of a type
-- **Labels**: Indent one less than the current indentation (for `goto` statements)
+### Indentation and Spacing
+- **Indentation**: Four spaces (no tabs).
+- **Spurious free spaces**: Avoid, e.g., `if (someVar == 0)...` where dots mark spurious spaces.
+- **Empty lines**: Avoid more than one empty line at any time between members of a type.
+- **Labels**: Indent one less than the current indentation (for `goto` statements).
 
-#### **Field and Property Naming**
-- **Internal and private fields**: Use `_camelCase` prefix with `readonly` where possible
-- **Static fields**: `readonly` should come after `static` (e.g., `static readonly` not `readonly static`)
-- **Public fields**: Use PascalCasing with no prefix (use sparingly)
-- **Constants**: Use PascalCasing for all constant local variables and fields (except interop code)
-- **Fields placement**: Specify fields at the top within type declarations
+### Field and Property Naming
+- **Internal and private fields**: Use `_camelCase` prefix with `readonly` where possible.
+- **Static fields**: `readonly` should come after `static` (e.g., `static readonly` not `readonly static`).
+- **Public fields**: Use PascalCasing with no prefix (use sparingly).
+- **Constants**: Use PascalCasing for all constant local variables and fields (except interop code, where names and values must match the interop code exactly).
+- **Fields placement**: Specify fields at the top within type declarations.
 
-#### **Visibility and Modifiers**
-- **Always specify visibility**: Even if it's the default (e.g., `private string _foo` not `string _foo`)
-- **Visibility first**: Should be the first modifier (e.g., `public abstract` not `abstract public`)
-- **Modifier order**: `public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async`
+### Visibility and Modifiers
+- **Always specify visibility**: Even if it's the default (e.g., `private string _foo` not `string _foo`).
+- **Visibility first**: Should be the first modifier (e.g., `public abstract` not `abstract public`).
+- **Modifier order**: `public`, `private`, `protected`, `internal`, `static`, `extern`, `new`, `virtual`, `abstract`, `sealed`, `override`, `readonly`, `unsafe`, `volatile`, `async`.
 
-#### **Namespace and Using Statements**
-- **Namespace imports**: At the top of the file, outside of namespace declarations
-- **Sorting**: System namespaces alphabetically first, then third-party namespaces alphabetically
-- **Placement**: Use `using` directives outside namespace declarations
+### Namespace and Using Statements
+- **Namespace imports**: At the top of the file, outside of `namespace` declarations.
+- **Sorting**: System namespaces alphabetically first, then third-party namespaces alphabetically.
+- **Global using directives**: Use where appropriate to reduce repetition across files.
+- **Placement**: Use `using` directives outside `namespace` declarations.
 
-#### **Type Usage and Variables**
-- **Language keywords**: Use instead of BCL types (`int, string, float` instead of `Int32, String, Single`)
-- **var usage**: Encouraged when it makes sense (large return types, refactoring scenarios)
-- **this. avoidance**: Avoid `this.` unless absolutely necessary
-- **nameof(...)**: Use instead of string literals whenever possible and relevant
+### Type Usage and Variables
+- **Language keywords**: Use instead of BCL types (e.g., `int`, `string`, `float` instead of `Int32`, `String`, `Single`) for type references and method calls (e.g., `int.Parse` instead of `Int32.Parse`).
+- **var usage**: Encouraged for large return types or refactoring scenarios; use full type names for clarity when needed.
+- **this. avoidance**: Avoid `this.` unless absolutely necessary.
+- **nameof(...)**: Use instead of string literals whenever possible and relevant.
 
-#### **Code Patterns and Features**
-- **Method groups**: Use where appropriate
-- **C# 7 pattern matching**: Use when possible
-- **Inline out variables**: Use C# 7 inline variable feature with `out` parameters
-- **Non-ASCII characters**: Use Unicode escape sequences (`\uXXXX`) instead of literal characters
+### Code Patterns and Features
+- **Method groups**: Use where appropriate.
+- **Pattern matching**: Use C# 7+ pattern matching, including recursive, tuple, positional, type, relational, and list patterns for expressive conditional logic.
+- **Inline out variables**: Use C# 7 inline variable feature with `out` parameters.
+- **Non-ASCII characters**: Use Unicode escape sequences (`\uXXXX`) instead of literal characters to avoid garbling by tools or editors.
+- **Modern C# features (C# 8–12)**:
+  - Enable nullable reference types to reduce null-related errors.
+  - Use ranges (`..`) and indices (`^`) for concise collection slicing.
+  - Employ `using` declarations for automatic resource disposal.
+  - Declare static local functions to avoid state capture.
+  - Prefer switch expressions over statements for concise control flow.
+  - Use records and record structs for data-centric types with value semantics.
+  - Apply init-only setters for immutable properties.
+  - Utilize target-typed `new` expressions to reduce verbosity.
+  - Declare static anonymous functions or lambdas to prevent state capture.
+  - Use file-scoped namespace declarations for concise syntax.
+  - Apply `with` expressions for nondestructive mutation.
+  - Use raw string literals (`"""`) for multi-line or complex strings.
+  - Mark required members with the `required` modifier.
+  - Use primary constructors to centralize initialization logic.
+  - Employ collection expressions (`[...]`) for concise array/list/span initialization.
+  - Add default parameters to lambda expressions to reduce overloads.
 
-#### **Documentation Requirements**
-- **XML comments**: All publicly exposed methods and properties must have .NET XML comments
-- **Protected methods**: Include XML comments for protected methods of public classes
-- **Documentation culture**: en-US as specified in `src/stylecop.json`
+### Documentation Requirements
+- **XML comments**: All publicly exposed methods and properties must have .NET XML comments, including protected methods of public classes.
+- **Documentation culture**: Use `en-US` as specified in `src/stylecop.json`.
 
-#### **File Style Precedence**
-- **Existing style**: If a file differs from these guidelines, the existing style in that file takes precedence
-- **Consistency**: Maintain consistency within individual files
-
-#### **Example Code Structure**
-```csharp
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics;
-using Microsoft.Win32;
-
-namespace System.Collections.Generic
-{
-    /// <summary>
-    /// Observable implementation of LinkedList.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the list.</typeparam>
-    public partial class ObservableLinkedList<T> : INotifyCollectionChanged, INotifyPropertyChanged
-    {
-        private ObservableLinkedListNode<T> _head;
-        private int _count;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableLinkedList{T}"/> class.
-        /// </summary>
-        /// <param name="items">The items to initialize the list with.</param>
-        public ObservableLinkedList(IEnumerable<T> items)
-        {
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            foreach (T item in items)
-            {
-                AddLast(item);
-            }
-        }
-
-        /// <summary>
-        /// Occurs when the collection changes.
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <summary>
-        /// Gets the number of elements in the list.
-        /// </summary>
-        public int Count
-        {
-            get { return _count; }
-        }
-
-        /// <summary>
-        /// Adds a new node containing the specified value at the end of the list.
-        /// </summary>
-        /// <param name="value">The value to add.</param>
-        /// <returns>The new node that was added.</returns>
-        public ObservableLinkedListNode AddLast(T value) 
-        {
-            var newNode = new LinkedListNode<T>(this, value);
-            InsertNodeBefore(_head, newNode);
-            return newNode;
-        }
-
-        /// <summary>
-        /// Raises the CollectionChanged event.
-        /// </summary>
-        /// <param name="e">The event arguments.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            NotifyCollectionChangedEventHandler handler = CollectionChanged;
-            if (handler != null)
-            {
-                handler(this, e);
-            }
-        }
-
-        private void InsertNodeBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
-        {
-            // Implementation details...
-        }
-    }
-}
-```
+### File Style Precedence
+- **Existing style**: If a file differs from these guidelines (e.g., private members named `m_member` instead of `_member`), the existing style in that file takes precedence.
+- **Consistency**: Maintain consistency within individual files.
 
 ### Code Formatting (Fast - Always Run)
 - **ALWAYS** run formatting before committing:
