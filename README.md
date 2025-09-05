@@ -17,7 +17,7 @@
 
 # Akavache V11.1: An Asynchronous Key-Value Store for Native Applications
 
-Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires.
+Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires. This project is tested with BrowserStack.
 
 ## What's New in V11.1
 
