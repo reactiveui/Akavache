@@ -78,6 +78,36 @@ internal static class RequestCache
     }
 
     /// <summary>
+    /// Removes all requests for a specific cache key, regardless of type.
+    /// This is used when the cache key is invalidated to ensure that
+    /// subsequent GetOrFetchObject calls don't return stale RequestCache results.
+    /// </summary>
+    /// <param name="key">The cache key.</param>
+    public static void RemoveRequestsForKey(string key)
+    {
+        if (string.IsNullOrEmpty(key))
+        {
+            return;
+        }
+
+        var keySuffix = $":{key}";
+        var keysToRemove = new List<string>();
+
+        foreach (var requestKey in _inflightRequests.Keys)
+        {
+            if (requestKey.EndsWith(keySuffix, StringComparison.Ordinal))
+            {
+                keysToRemove.Add(requestKey);
+            }
+        }
+
+        foreach (var requestKey in keysToRemove)
+        {
+            RemoveRequestInternal(requestKey);
+        }
+    }
+
+    /// <summary>
     /// Checks if a request is currently in flight for the specified key and type.
     /// </summary>
     /// <param name="key">The cache key.</param>

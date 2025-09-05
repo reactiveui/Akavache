@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using Akavache.Core;
 using Splat;
 
 namespace Akavache;
@@ -466,6 +467,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 }
             }
 
+            // Clear any pending requests for this key to ensure GetOrFetchObject
+            // will actually fetch fresh data instead of returning cached request results
+            RequestCache.RemoveRequestsForKey(key);
+
             return Unit.Default;
         },
             Scheduler);
@@ -485,9 +490,11 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
         return Observable.Start(
             () =>
         {
+            var keysToInvalidate = keys.ToList(); // Materialize the enumerable
+
             lock (_lock)
             {
-                foreach (var key in keys)
+                foreach (var key in keysToInvalidate)
                 {
                     _cache.Remove(key);
 
@@ -497,6 +504,13 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         typeKeys.Remove(key);
                     }
                 }
+            }
+
+            // Clear any pending requests for these keys to ensure GetOrFetchObject
+            // will actually fetch fresh data instead of returning cached request results
+            foreach (var key in keysToInvalidate)
+            {
+                RequestCache.RemoveRequestsForKey(key);
             }
 
             return Unit.Default;
@@ -515,10 +529,14 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
         return Observable.Start(
             () =>
         {
+            var keysToInvalidate = new List<string>();
+
             lock (_lock)
             {
                 if (_typeIndex.TryGetValue(type, out var keys))
                 {
+                    keysToInvalidate.AddRange(keys); // Capture keys before clearing
+
                     foreach (var key in keys)
                     {
                         _cache.Remove(key);
@@ -526,6 +544,13 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
                     keys.Clear();
                 }
+            }
+
+            // Clear any pending requests for these keys and type to ensure GetOrFetchObject
+            // will actually fetch fresh data instead of returning cached request results
+            foreach (var key in keysToInvalidate)
+            {
+                RequestCache.RemoveRequest(key, type);
             }
 
             return Unit.Default;
@@ -552,6 +577,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 _cache.Clear();
                 _typeIndex.Clear();
             }
+
+            // Clear all pending requests to ensure GetOrFetchObject
+            // will actually fetch fresh data instead of returning cached request results
+            RequestCache.Clear();
 
             return Unit.Default;
         },
