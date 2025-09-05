@@ -345,6 +345,80 @@ public abstract class BlobCacheTestsBase : IDisposable
     }
 
     /// <summary>
+    /// Fetches the function should be called at least once for get and fetch latest when no cached value exists.
+    /// </summary>
+    /// <param name="serializerType">Type of the serializer.</param>
+    /// <returns>
+    /// A task to monitor the progress.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">nameof(serializerType).</exception>
+    [TestCase(typeof(SystemJsonSerializer))]
+    [TestCase(typeof(SystemJsonBsonSerializer))]
+    [TestCase(typeof(NewtonsoftSerializer))]
+    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Test]
+    public async Task FetchFunctionShouldBeCalledAtLeastOnceForGetAndFetchLatest(Type serializerType)
+    {
+        if (serializerType == null)
+        {
+            throw new ArgumentNullException(nameof(serializerType));
+        }
+
+        var serializer = SetupTestSerializer(serializerType);
+
+        using (Utility.WithEmptyDirectory(out var path))
+        await using (var fixture = CreateBlobCache(path, serializer))
+        {
+            if (fixture.GetType().Name.Contains("Encrypted"))
+            {
+                return;
+            }
+
+            SetupTestSerializer(serializerType);
+
+            var fetchCount = 0;
+            var fetcher = () =>
+            {
+                fetchCount++;
+                return Observable.Return(new Tuple<string, int>("Foo", fetchCount));
+            };
+
+            var result = await fixture.GetAndFetchLatest("Test", fetcher)
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Timeout(TimeSpan.FromSeconds(5))
+                .FirstAsync();
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Item1, Is.EqualTo("Foo"));
+            Assert.That(result.Item2, Is.EqualTo(1));
+
+            Assert.That(fetchCount, Is.EqualTo(1), $"Expected fetch to be called exactly once, but was {fetchCount}");
+
+            var results = new List<Tuple<string, int>?>();
+            var initialFetchCount = fetchCount;
+            await fixture.GetAndFetchLatest("Test", fetcher)
+                .ObserveOn(ImmediateScheduler.Instance)
+                .Timeout(TimeSpan.FromSeconds(5))
+                .Take(2) // Take at most 2 values (cached + latest)
+                .ForEachAsync(tuple => results.Add(tuple));
+
+            Assert.That(results.Count, Is.EqualTo(2));
+
+            // Cached value
+            Assert.That(results[0], Is.Not.Null);
+            Assert.That(results[0]?.Item1, Is.EqualTo("Foo"));
+            Assert.That(results[0]?.Item2, Is.EqualTo(1));
+
+            // Latest value
+            Assert.That(results[1], Is.Not.Null);
+            Assert.That(results[1]?.Item1, Is.EqualTo("Foo"));
+            Assert.That(results[1]?.Item2, Is.EqualTo(2));
+
+            Assert.That(fetchCount, Is.EqualTo(initialFetchCount + 1), $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
+        }
+    }
+
+    /// <summary>
     /// Releases unmanaged and - optionally - managed resources.
     /// </summary>
     public void Dispose()
