@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
 using Splat;
 
 using SQLitePCL;
@@ -141,13 +142,16 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
         }
 
-        var directory = builder.GetIsolatedCacheDirectory(name);
+        // Validate cache name to prevent path traversal attacks
+        var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
+
+        var directory = builder.GetIsolatedCacheDirectory(validatedName);
         if (string.IsNullOrWhiteSpace(directory))
         {
             throw new InvalidOperationException("Failed to determine a valid cache directory.");
         }
 
-        var filePath = Path.Combine(directory, $"{name}.db");
+        var filePath = Path.Combine(directory, $"{validatedName}.db");
 
         // Resolve the serializer from the service locator to ensure proper lifecycle management
         var serializer = AppLocator.Current.GetService<ISerializer>(builder.SerializerTypeName) ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
