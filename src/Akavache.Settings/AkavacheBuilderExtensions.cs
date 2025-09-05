@@ -10,17 +10,17 @@ using Akavache.Sqlite3;
 namespace Akavache.Settings;
 
 /// <summary>
-/// AkavacheBuilderExtensions.
+/// Provides extension methods for configuring Akavache settings storage.
 /// </summary>
 public static class AkavacheBuilderExtensions
 {
     /// <summary>
-    /// Withes the settings cache path.
+    /// Configures the cache path for settings storage.
     /// </summary>
-    /// <param name="builder">The builder.</param>
-    /// <param name="path">The path.</param>
-    /// <returns>IAkavacheBuilder.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <param name="builder">The Akavache builder to configure.</param>
+    /// <param name="path">The file system path where settings cache files will be stored.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSettingsCachePath(this IAkavacheBuilder builder, string path)
     {
         if (builder == null)
@@ -33,14 +33,12 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Deletes the settings store.
+    /// Deletes the settings store for the specified type, including both in-memory cache and persistent storage.
     /// </summary>
-    /// <typeparam name="T">The type of store to delete.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>
-    /// A Task.
-    /// </returns>
+    /// <typeparam name="T">The settings type whose store should be deleted.</typeparam>
+    /// <param name="builder">The Akavache builder instance.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>A task representing the asynchronous deletion operation.</returns>
     public static async Task DeleteSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
         if (builder == null)
@@ -71,14 +69,12 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Gets a settings store that has already been loaded.
+    /// Gets a settings store that has already been loaded into memory.
     /// </summary>
-    /// <typeparam name="T">The store to get.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>
-    /// A Settings Store.
-    /// </returns>
+    /// <typeparam name="T">The settings type to retrieve.</typeparam>
+    /// <param name="builder">The Akavache builder instance.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The loaded settings store instance, or <c>null</c> if not found.</returns>
     public static ISettingsStorage? GetLoadedSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
         if (AkavacheBuilder.SettingsStores == null)
@@ -96,14 +92,12 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Disposes the settings store.
+    /// Disposes the settings store for the specified type, cleaning up both in-memory and persistent resources.
     /// </summary>
-    /// <typeparam name="T">The type of store.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>
-    /// A Task.
-    /// </returns>
+    /// <typeparam name="T">The settings type whose store should be disposed.</typeparam>
+    /// <param name="builder">The Akavache builder instance.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>A task representing the asynchronous disposal operation.</returns>
     public static async Task DisposeSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
         if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
@@ -131,17 +125,15 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Setups the settings store.
+    /// Configures a secure settings store with password protection and initializes it using the provided configuration action.
     /// </summary>
-    /// <typeparam name="T">The settings type.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="password">The password.</param>
-    /// <param name="settings">The new settings.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>
-    /// IAkavacheBuilder for chaining.
-    /// </returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
+    /// <param name="builder">The Akavache builder to configure.</param>
+    /// <param name="password">The password for encrypting the settings database.</param>
+    /// <param name="settings">Action to configure the settings instance once created.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSecureSettingsStore<T>(this IAkavacheBuilder builder, string password, Action<T?> settings, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
@@ -156,15 +148,15 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Gets the secure settings store.
+    /// Gets or creates a secure encrypted settings store with password protection.
     /// </summary>
-    /// /// <typeparam name="T">The settings type.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="password">The password.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>The new settings.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
-    /// <exception cref="System.InvalidOperationException">AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.</exception>
+    /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
+    /// <param name="builder">The Akavache builder instance.</param>
+    /// <param name="password">The password for encrypting the settings database.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The settings store instance configured for secure storage.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
     public static T? GetSecureSettingsStore<T>(this IAkavacheInstance builder, string password, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
@@ -193,14 +185,14 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Setups the settings store.
+    /// Configures a standard settings store and initializes it using the provided configuration action.
     /// </summary>
-    /// <typeparam name="T">The settings type.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="settings">The new settings.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>IAkavacheBuilder for chaining.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
+    /// <param name="builder">The Akavache builder to configure.</param>
+    /// <param name="settings">Action to configure the settings instance once created.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSettingsStore<T>(this IAkavacheBuilder builder, Action<T?> settings, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
@@ -215,14 +207,14 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Gets the settings store.
+    /// Gets or creates a standard settings store using SQLite for persistence.
     /// </summary>
-    /// <typeparam name="T">The settings type.</typeparam>
-    /// <param name="builder">The builder.</param>
-    /// <param name="overrideDatabaseName">Name of the override database.</param>
-    /// <returns>The new settings.</returns>
-    /// <exception cref="ArgumentNullException">nameof(builder).</exception>
-    /// <exception cref="InvalidOperationException">AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.</exception>
+    /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
+    /// <param name="builder">The Akavache builder instance.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The settings store instance configured for standard storage.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
     public static T? GetSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
         where T : ISettingsStorage?, new()
     {
