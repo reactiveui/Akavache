@@ -53,7 +53,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
-            var serialzer = AppLocator.Current.GetService<ISerializer>();
+            var serializer = AppLocator.Current.GetService<ISerializer>();
             serializer?.ForcedDateTimeKind = value;
         }
     }
