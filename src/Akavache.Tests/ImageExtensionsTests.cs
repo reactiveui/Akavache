@@ -328,6 +328,90 @@ public class ImageExtensionsTests
     }
 
     /// <summary>
+    /// Tests that LoadImageBytesFromUrl throws ArgumentNullException when URL is null.
+    /// </summary>
+    [Test]
+    public void LoadImageBytesFromUrlShouldThrowArgumentNullExceptionWhenUrlIsNull()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+        var cache = new InMemoryBlobCache(serializer);
+
+        try
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => cache.LoadImageBytesFromUrl((string)null!));
+        }
+        finally
+        {
+            cache.DisposeAsync().AsTask().Wait();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl (Uri) throws ArgumentNullException when URL is null.
+    /// </summary>
+    [Test]
+    public void LoadImageBytesFromUrlUriShouldThrowArgumentNullExceptionWhenUrlIsNull()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+        var cache = new InMemoryBlobCache(serializer);
+
+        try
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => cache.LoadImageBytesFromUrl((Uri)null!));
+        }
+        finally
+        {
+            cache.DisposeAsync().AsTask().Wait();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl with key throws ArgumentNullException when URL is null.
+    /// </summary>
+    [Test]
+    public void LoadImageBytesFromUrlWithKeyShouldThrowArgumentNullExceptionWhenUrlIsNull()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+        var cache = new InMemoryBlobCache(serializer);
+
+        try
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => cache.LoadImageBytesFromUrl("key", (string)null!));
+        }
+        finally
+        {
+            cache.DisposeAsync().AsTask().Wait();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl with key and Uri throws ArgumentNullException when URL is null.
+    /// </summary>
+    [Test]
+    public void LoadImageBytesFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenUrlIsNull()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+        var cache = new InMemoryBlobCache(serializer);
+
+        try
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => cache.LoadImageBytesFromUrl("key", (Uri)null!));
+        }
+        finally
+        {
+            cache.DisposeAsync().AsTask().Wait();
+        }
+    }
+
+    /// <summary>
     /// Tests image format detection with real-world-like headers.
     /// </summary>
     [Test]
