@@ -526,10 +526,9 @@ await CacheDatabase.LocalMachine.UpdateExpiration("user_session", TimeSpan.FromM
 // Update expiration for multiple entries
 var keys = new[] { "cache_key1", "cache_key2", "cache_key3" };
 await CacheDatabase.LocalMachine.UpdateExpiration(keys, DateTimeOffset.Now.AddDays(1));
-
-// Remove expiration (make permanent)
-await CacheDatabase.UserAccount.UpdateExpiration("permanent_data", null);
 ```
+
+> 💡 **For comprehensive UpdateExpiration patterns and use cases**, see [`UpdateExpirationPatterns.cs`](src/Samples/UpdateExpirationPatterns.cs) in the samples directory.
 
 ## Extension Methods
 
@@ -832,188 +831,42 @@ await CacheDatabase.Secure.SaveLogin("user2", "pass2", "api.service2.com");
 
 ### Efficient Expiration Updates
 
-Akavache provides `UpdateExpiration` methods that allow you to efficiently update cache entry expiration dates without reading or writing the cached data. This is particularly useful for HTTP caching scenarios where you receive `304 Not Modified` responses and want to extend cache validity.
+Akavache provides `UpdateExpiration` methods that efficiently update cache entry expiration dates without reading or writing the cached data. This is particularly useful for HTTP caching scenarios and session management.
 
 #### Key Benefits
 
 - **High Performance**: Only updates metadata, leaving cached data untouched
 - **SQL Efficiency**: Uses targeted UPDATE statements rather than full record replacement  
 - **Bulk Operations**: Update multiple entries in a single transaction
-- **No Data Transfer**: Avoids expensive serialization/deserialization cycles
+- **No Data Transfer**: Avoids expensive serialization/deserialization cycles (up to 250x faster)
 
-#### Basic Usage
-
-```csharp
-// Extend expiration for a single cache entry
-await CacheDatabase.LocalMachine.UpdateExpiration("api_response", DateTimeOffset.Now.AddHours(6));
-
-// Update using relative time (more convenient)
-await CacheDatabase.LocalMachine.UpdateExpiration("weather_data", TimeSpan.FromMinutes(30));
-
-// Remove expiration completely (make permanent)
-await CacheDatabase.UserAccount.UpdateExpiration("user_preferences", null);
-```
-
-#### Bulk Operations
+#### Quick Examples
 
 ```csharp
-// Update multiple cache entries efficiently
-var apiKeys = new[] { "weather_seattle", "weather_portland", "weather_vancouver" };
-await CacheDatabase.LocalMachine.UpdateExpiration(apiKeys, TimeSpan.FromHours(2));
+// Single entry with absolute expiration
+await cache.UpdateExpiration("api_response", DateTimeOffset.Now.AddHours(6));
 
-// Update all API cache entries with type filtering
-var allApiKeys = await CacheDatabase.LocalMachine.GetAllKeys()
-    .Where(key => key.StartsWith("api_"))
-    .ToList();
-await CacheDatabase.LocalMachine.UpdateExpiration(allApiKeys, DateTimeOffset.Now.AddDays(1));
-```
+// Single entry with relative time
+await cache.UpdateExpiration("user_session", TimeSpan.FromMinutes(30));
 
-#### HTTP Caching Pattern
+// Bulk update multiple entries
+var keys = new[] { "weather_seattle", "weather_portland", "weather_vancouver" };
+await cache.UpdateExpiration(keys, TimeSpan.FromHours(2));
 
-```csharp
-public class ApiClient
+// HTTP 304 Not Modified response handling
+if (response.StatusCode == HttpStatusCode.NotModified)
 {
-    private readonly IBlobCache _cache = CacheDatabase.LocalMachine;
-    private readonly HttpClient _httpClient;
-
-    public async Task<WeatherData> GetWeatherAsync(string city)
-    {
-        var cacheKey = $"weather_{city}";
-        
-        try
-        {
-            // Try to get cached data first
-            var cachedData = await _cache.GetObject<WeatherData>(cacheKey);
-            var cachedDate = await _cache.GetCreatedAt(cacheKey);
-            
-            // Check if we should refresh (older than 30 minutes)
-            if (cachedDate.HasValue && DateTime.Now - cachedDate.Value < TimeSpan.FromMinutes(30))
-            {
-                return cachedData;
-            }
-            
-            // Make conditional request with If-Modified-Since
-            var request = new HttpRequestMessage(HttpMethod.Get, $"/weather/{city}");
-            if (cachedDate.HasValue)
-            {
-                request.Headers.IfModifiedSince = cachedDate.Value;
-            }
-            
-            var response = await _httpClient.SendAsync(request);
-            
-            if (response.StatusCode == HttpStatusCode.NotModified)
-            {
-                // Data hasn't changed - just extend expiration efficiently
-                await _cache.UpdateExpiration(cacheKey, TimeSpan.FromHours(1));
-                return cachedData;
-            }
-            else if (response.IsSuccessStatusCode)
-            {
-                // Data has changed - update cache with new data
-                var newData = await response.Content.ReadFromJsonAsync<WeatherData>();
-                await _cache.InsertObject(cacheKey, newData, TimeSpan.FromHours(1));
-                return newData;
-            }
-            
-            // Fall back to cached data on error
-            return cachedData;
-        }
-        catch (KeyNotFoundException)
-        {
-            // No cached data - fetch fresh
-            var response = await _httpClient.GetAsync($"/weather/{city}");
-            var data = await response.Content.ReadFromJsonAsync<WeatherData>();
-            await _cache.InsertObject(cacheKey, data, TimeSpan.FromHours(1));
-            return data;
-        }
-    }
+    await cache.UpdateExpiration(cacheKey, TimeSpan.FromHours(1));
+    return cachedData; // Serve existing data with extended lifetime
 }
 ```
 
-#### Session Extension Pattern
-
-```csharp
-public class SessionManager
-{
-    private readonly IBlobCache _secureCache = CacheDatabase.Secure;
-    
-    public async Task ExtendSessionAsync(string sessionToken)
-    {
-        var sessionKey = $"session_{sessionToken}";
-        
-        try
-        {
-            // Verify session exists in cache
-            var session = await _secureCache.GetObject<UserSession>(sessionKey);
-            
-            // Extend session by 30 minutes efficiently
-            await _secureCache.UpdateExpiration(sessionKey, TimeSpan.FromMinutes(30));
-            
-            Console.WriteLine($"Extended session for user {session.UserId}");
-        }
-        catch (KeyNotFoundException)
-        {
-            throw new InvalidOperationException("Session not found or expired");
-        }
-    }
-    
-    public async Task ExtendAllUserSessionsAsync(string userId)
-    {
-        // Find all session keys for the user
-        var allKeys = await _secureCache.GetAllKeys().ToList();
-        var userSessionKeys = allKeys
-            .Where(key => key.StartsWith("session_"))
-            .ToList();
-        
-        // Extend all user sessions in bulk
-        if (userSessionKeys.Any())
-        {
-            await _secureCache.UpdateExpiration(userSessionKeys, TimeSpan.FromHours(2));
-            Console.WriteLine($"Extended {userSessionKeys.Count} sessions for user {userId}");
-        }
-    }
-}
-```
-
-#### Performance Comparison
-
-```csharp
-// ❌ Inefficient: Reads and rewrites entire cache entry
-var data = await cache.GetObject<LargeData>("key");
-await cache.InsertObject("key", data, newExpiration);
-
-// ✅ Efficient: Updates only expiration metadata  
-await cache.UpdateExpiration("key", newExpiration);
-
-// For 1000 entries with 1MB each:
-// Traditional approach: ~1GB data transfer + serialization overhead
-// UpdateExpiration: ~4KB metadata update (250x faster)
-```
-
-#### Method Overloads
-
-```csharp
-// Single key with absolute time
-await cache.UpdateExpiration("key", DateTimeOffset.Now.AddDays(7));
-
-// Single key with relative time  
-await cache.UpdateExpiration("key", TimeSpan.FromHours(24));
-
-// Single key with type filtering
-await cache.UpdateExpiration("key", typeof(MyClass), TimeSpan.FromMinutes(30));
-
-// Multiple keys with absolute time
-await cache.UpdateExpiration(keys, DateTimeOffset.Now.AddMonths(1));
-
-// Multiple keys with relative time
-await cache.UpdateExpiration(keys, TimeSpan.FromDays(30));
-
-// Multiple keys with type filtering
-await cache.UpdateExpiration(keys, typeof(MyClass), TimeSpan.FromHours(6));
-
-// Remove expiration (permanent storage)
-await cache.UpdateExpiration("permanent_key", null);
-```
+> 📖 **For comprehensive patterns and real-world examples**, see [`UpdateExpirationPatterns.cs`](src/Samples/UpdateExpirationPatterns.cs), which includes:
+> - HTTP caching with 304 Not Modified handling
+> - Session management with sliding expiration 
+> - Bulk operations and performance optimization
+> - Error handling and best practices
+> - Performance comparisons and method overload reference
 
 ### Relative Time Extensions
 
