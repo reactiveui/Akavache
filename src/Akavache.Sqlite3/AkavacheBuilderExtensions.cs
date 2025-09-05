@@ -14,7 +14,7 @@ namespace Akavache.Sqlite3;
 #endif
 
 /// <summary>
-/// Extension methods for IAkavacheBuilder to add SQLite support.
+/// Provides extension methods for configuring Akavache to use SQLite-based blob caches.
 /// </summary>
 public static class AkavacheBuilderExtensions
 {
@@ -25,19 +25,19 @@ public static class AkavacheBuilderExtensions
 
 #if ENCRYPTED
     /// <summary>
-    /// Uses the sqlite cypher provider.
+    /// Configures the builder to use the encrypted SQLite provider for secure data storage.
     /// </summary>
-    /// <param name="builder">The builder.</param>
+    /// <param name="builder">The Akavache builder to configure.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithEncryptedSqliteProvider(this IAkavacheBuilder builder)
 #else
     /// <summary>
-    /// Uses the sqlite provider.
+    /// Configures the builder to use the SQLite provider for persistent data storage.
     /// </summary>
-    /// <param name="builder">The builder.</param>
+    /// <param name="builder">The Akavache builder to configure.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSqliteProvider(this IAkavacheBuilder builder)
 #endif
     {

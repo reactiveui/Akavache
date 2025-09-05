@@ -14,7 +14,8 @@ namespace Akavache.Sqlite3;
 #endif
 
 /// <summary>
-/// The Sqlite blob cache.
+/// Provides a SQLite-based implementation of IBlobCache for persistent data storage.
+/// This cache stores data in a SQLite database file for reliable persistence across application restarts.
 /// </summary>
 [SQLite.Preserve(AllMembers = true)]
 #if ENCRYPTED
