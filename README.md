@@ -83,9 +83,11 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-               .WithSqliteProvider() // Use SQLite backend - new in V11.1.1 + (Required for Sqlite, this is to avoid confusion between Sqlite and EncryptedSqlite which both have `Batteries_V2.Init();` calls)
+               .WithSqliteProvider() // REQUIRED: Explicitly initialize SQLite provider
                .WithSqliteDefaults());
 ```
+
+> **Important:** Always call `WithSqliteProvider()` explicitly before `WithSqliteDefaults()`. While `WithSqliteDefaults()` will automatically call `WithSqliteProvider()` if not already initialized (for backward compatibility), this automatic behavior is **deprecated and may be removed in future versions**. Explicit provider initialization is the recommended pattern for forward compatibility with other DI containers.
 
 #### Dependency Injection Registration (for DI containers)
 
@@ -99,14 +101,15 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(
         "MyApp",
-        builder => builder.WithSqliteProvider().WithSqliteDefaults(),
+        builder => builder.WithSqliteProvider()    // REQUIRED: Explicit provider initialization
+                          .WithSqliteDefaults(),
         (splat, instance) => splat.RegisterLazySingleton(() => instance));
 
 // For in-memory cache (testing or lightweight scenarios):
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(
         "Akavache",
-        builder => builder.WithInMemoryDefaults(),
+        builder => builder.WithInMemoryDefaults(),  // No provider needed for in-memory
         (splat, instance) => splat.RegisterLazySingleton(() => instance));
 ```
 
@@ -119,7 +122,7 @@ using Akavache.Sqlite3;
 var akavacheInstance = CacheDatabase.CreateBuilder()
     .WithSerializer<SystemJsonSerializer>()
     .WithApplicationName("MyApp")
-    .WithSqliteProvider()
+    .WithSqliteProvider()    // REQUIRED: Explicit provider initialization
     .WithSqliteDefaults()
     .Build();
 
@@ -204,12 +207,12 @@ await BlobCache.LocalMachine.InsertObject("key", myData);
 
 #### New V11.1 Code:
 ```csharp
-// V11.1 initialization
+// V11.1 initialization (RECOMMENDED: Explicit provider pattern)
 
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")        
-           .WithSqliteProvider()
+           .WithSqliteProvider()    // REQUIRED: Explicit provider initialization
            .WithSqliteDefaults());
 
 // Usage (same API)
@@ -227,10 +230,11 @@ public static class AkavacheMigration
     public static void InitializeV11(string appName)
     {
         // Initialize with SQLite (most common V10.x setup)
+        // RECOMMENDED: Use explicit provider initialization
         CacheDatabase
             .Initialize<SystemJsonSerializer>(builder =>
                 builder
-                .WithSqliteProvider()
+                .WithSqliteProvider()    // Explicit provider initialization
                 .WithSqliteDefaults(),
                 appName);
     }
@@ -254,6 +258,36 @@ AppBuilder.CreateSplatBuilder()
                .WithSqliteDefaults());                 // SQLite persistence
 ```
 
+#### Provider Initialization Pattern
+
+**Explicit Provider Initialization (Recommended):**
+```csharp
+// ✅ RECOMMENDED: Explicit provider initialization
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()        // Explicit provider initialization
+               .WithSqliteDefaults());      // Configure defaults
+
+// ✅ For encrypted SQLite
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithEncryptedSqliteProvider()   // Explicit encrypted provider
+               .WithSqliteDefaults("password"));
+```
+
+**Automatic Provider Initialization (Backward Compatibility Only):**
+```csharp
+// ⚠️ DEPRECATED: Automatic fallback behavior
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteDefaults());      // Automatically calls WithSqliteProvider() internally
+```
+
+> **Important:** The automatic provider initialization in `WithSqliteDefaults()` is provided for **backward compatibility only** and may be removed in future versions for forward compatibility with other DI containers. Always use explicit provider initialization in new code.
+
 ### Configuration Options
 
 #### 1. In-Memory Only (for testing or non retensive applications)
@@ -269,7 +303,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-               .WithSqliteProvider()
+               .WithSqliteProvider()    // REQUIRED: Must be called before WithSqliteDefaults()
                .WithSqliteDefaults());
 ```
 
@@ -278,7 +312,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-               .WithEncryptedSqliteProvider()
+               .WithEncryptedSqliteProvider()    // REQUIRED: Must be called before WithSqliteDefaults()
                .WithSqliteDefaults("mySecretPassword"));
 ```
 
@@ -287,7 +321,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-           .WithEncryptedSqliteProvider()
+           .WithEncryptedSqliteProvider()    // Provider must be initialized for custom SQLite caches
            .WithUserAccount(new SqliteBlobCache("custom-user.db"))
            .WithLocalMachine(new SqliteBlobCache("custom-local.db"))
            .WithSecure(new EncryptedSqliteBlobCache("secure.db", "password"))
@@ -300,7 +334,7 @@ AppBuilder.CreateSplatBuilder()
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
-           .WithSqliteProvider()
+           .WithSqliteProvider()    // REQUIRED: Provider initialization
            .WithForcedDateTimeKind(DateTimeKind.Utc)
            .WithSqliteDefaults());
 ```
@@ -1150,7 +1184,7 @@ public class PhotoGalleryService
         // Initialize Akavache with drawing support
         AppBuilder.CreateSplatBuilder().WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("PhotoGallery")
-               .WithSqliteProvider()
+               .WithSqliteProvider()        // REQUIRED: Explicit provider
                .WithSqliteDefaults());
 
         _imageCache = CacheDatabase.LocalMachine;
@@ -1614,7 +1648,7 @@ public static class MauiProgram
         AppBuilder.CreateSplatBuilder()
             .WithAkavache<SystemJsonSerializer>(cacheBuilder =>
                 cacheBuilder.WithApplicationName("MyMauiApp")
-                        .WithSqliteProvider()
+                        .WithSqliteProvider()           // REQUIRED: Explicit provider
                         .WithForceDateTimeKind(DateTimeKind.Utc)
                         .WithSqliteDefaults());
 
@@ -1659,7 +1693,7 @@ public partial class App : Application
         AppBuilder.CreateSplatBuilder()
             .WithAkavache<SystemJsonSerializer>(builder =>
                 builder.WithApplicationName("MyWpfApp")
-                   .WithSqliteProvider()
+                   .WithSqliteProvider()            // REQUIRED: Explicit provider
                    .WithForceDateTimeKind(DateTimeKind.Utc)
                    .WithSqliteDefaults());
     }
@@ -1675,7 +1709,7 @@ public override bool FinishedLaunching(UIApplication application, NSDictionary l
     AppBuilder.CreateSplatBuilder()
         .WithAkavache<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("MyiOSApp")
-               .WithSqliteProvider()
+               .WithSqliteProvider()        // REQUIRED: Explicit provider
                .WithSqliteDefaults());
 
     return base.FinishedLaunching(application, launchOptions);
@@ -1693,7 +1727,7 @@ protected override void OnCreate(Bundle savedInstanceState)
     AppBuilder.CreateSplatBuilder()
         .WithAkavache<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("MyAndroidApp")
-               .WithSqliteProvider()
+               .WithSqliteProvider()        // REQUIRED: Explicit provider
                .WithSqliteDefaults());
 }
 ```
@@ -1707,7 +1741,7 @@ protected override void OnLaunched(LaunchActivatedEventArgs e)
     AppBuilder.CreateSplatBuilder()
         .WithAkavache<SystemJsonSerializer>(builder =>
             builder.WithApplicationName("MyUwpApp")
-               .WithSqliteProvider()
+               .WithSqliteProvider()        // REQUIRED: Explicit provider
                .WithSqliteDefaults());
 
     // Rest of initialization...
@@ -1855,7 +1889,7 @@ public class App
         AppBuilder.CreateSplatBuilder()
             .WithAkavache<SystemJsonSerializer>(builder =>
                 builder.WithApplicationName("MyApp")
-                   .WithSqliteProvider()
+                   .WithSqliteProvider()        // REQUIRED: Explicit provider
                    .WithSqliteDefaults());
     }
 }
