@@ -11,18 +11,18 @@ using Akavache.Core;
 namespace Akavache;
 
 /// <summary>
-/// Extension methods associated with the serializer.
+/// Provides extension methods for serializer operations on blob caches.
 /// </summary>
 public static class SerializerExtensions
 {
     /// <summary>
-    /// Inserts the specified key/value pairs into the blob.
+    /// Inserts multiple objects into the cache with their associated keys.
     /// </summary>
-    /// <typeparam name="T">The type of item to insert.</typeparam>
-    /// <param name="blobCache">The blob cache.</param>
-    /// <param name="keyValuePairs">The key/value to insert.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>A observable which signals when complete.</returns>
+    /// <typeparam name="T">The type of items to insert.</typeparam>
+    /// <param name="blobCache">The blob cache to insert into.</param>
+    /// <param name="keyValuePairs">The key-value pairs to insert.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that signals when the operation is complete.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using InsertObjects requires types to be preserved for serialization.")]
     [RequiresDynamicCode("Using InsertObjects requires types to be preserved for serialization.")]
@@ -40,12 +40,12 @@ public static class SerializerExtensions
     }
 
     /// <summary>
-    /// Gets a value pair filled with the specified keys with their corresponding values.
+    /// Retrieves objects from the cache for the specified keys.
     /// </summary>
-    /// <typeparam name="T">The type of item to get.</typeparam>
-    /// <param name="blobCache">The blob cache.</param>
-    /// <param name="keys">The keys to get the values for.</param>
-    /// <returns>A observable with the specified values.</returns>
+    /// <typeparam name="T">The type of items to retrieve.</typeparam>
+    /// <param name="blobCache">The blob cache to retrieve from.</param>
+    /// <param name="keys">The keys for the objects to retrieve.</param>
+    /// <returns>An observable that emits key-value pairs for the found objects.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using GetObjects requires types to be preserved for Deserialization.")]
     [RequiresDynamicCode("Using GetObjects requires types to be preserved for Deserialization.")]
@@ -64,14 +64,14 @@ public static class SerializerExtensions
     }
 
     /// <summary>
-    /// Insert an object into the cache, via the JSON serializer.
+    /// Inserts an object into the cache using the configured serializer.
     /// </summary>
-    /// <typeparam name="T">The type of object associated with the blob.</typeparam>
-    /// <param name="blobCache">The blob cache.</param>
+    /// <typeparam name="T">The type of object to insert.</typeparam>
+    /// <param name="blobCache">The blob cache to insert into.</param>
     /// <param name="key">The key to associate with the object.</param>
-    /// <param name="value">The object to serialize.</param>
-    /// <param name="absoluteExpiration">An optional expiration date.</param>
-    /// <returns>A Future result representing the completion of the insert.</returns>
+    /// <param name="value">The object to serialize and cache.</param>
+    /// <param name="absoluteExpiration">An optional expiration date for the cached data.</param>
+    /// <returns>An observable that signals when the insertion is complete.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization.")]
     [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization.")]

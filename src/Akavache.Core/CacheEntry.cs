@@ -8,42 +8,36 @@ using SQLite;
 namespace Akavache;
 
 /// <summary>
-/// A entry in a memory cache.
+/// Represents an entry in a memory cache.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="CacheEntry"/> class.
-/// </remarks>
 public class CacheEntry
 {
     /// <summary>
-    /// Gets or sets the identifier.
+    /// Gets or sets the unique identifier for the cache entry.
     /// </summary>
-    /// <value>
-    /// The identifier.
-    /// </value>
     [PrimaryKey]
     [Unique]
     public string? Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the date and time when the entry was created.
+    /// Gets or sets the date and time when the cache entry was created.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Gets or sets the date and time when the entry will expire.
+    /// Gets or sets the date and time when the cache entry will expire.
     /// </summary>
     [Indexed]
     public DateTimeOffset? ExpiresAt { get; set; }
 
     /// <summary>
-    /// Gets or sets the type name of the entry.
+    /// Gets or sets the type name associated with the cache entry.
     /// </summary>
     [Indexed]
     public string? TypeName { get; set; }
 
     /// <summary>
-    /// Gets or sets the value of the entry.
+    /// Gets or sets the serialized value stored in the cache entry.
     /// </summary>
     public byte[]? Value { get; set; }
 }

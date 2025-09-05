@@ -57,12 +57,10 @@ public interface IAkavacheBuilder : IAkavacheInstance
     IAkavacheBuilder WithUserAccount(IBlobCache cache);
 
     /// <summary>
-    /// Withes the serializser.
+    /// Configures the serializer to use for cache operations.
     /// </summary>
-    /// <typeparam name="T">The type of Serializer.</typeparam>
-    /// <returns>
-    /// The builder instance for fluent configuration.
-    /// </returns>
+    /// <typeparam name="T">The type of serializer to configure.</typeparam>
+    /// <returns>The builder instance for fluent configuration.</returns>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
@@ -70,13 +68,11 @@ public interface IAkavacheBuilder : IAkavacheInstance
         where T : ISerializer, new();
 
     /// <summary>
-    /// Withes the serializer.
+    /// Configures the serializer to use for cache operations with a custom factory function.
     /// </summary>
-    /// <typeparam name="T">The type of Serializer.</typeparam>
-    /// <param name="configure">The configure.</param>
-    /// <returns>
-    /// The builder instance for fluent configuration.
-    /// </returns>
+    /// <typeparam name="T">The type of serializer to configure.</typeparam>
+    /// <param name="configure">A function that creates and configures the serializer instance.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
@@ -85,15 +81,15 @@ public interface IAkavacheBuilder : IAkavacheInstance
         where T : ISerializer;
 
     /// <summary>
-    /// Uses the kind of the forced date time.
+    /// Sets the forced DateTime kind for serialization operations.
     /// </summary>
-    /// <param name="kind">The kind.</param>
+    /// <param name="kind">The DateTime kind to use for all DateTime serialization.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     IAkavacheBuilder UseForcedDateTimeKind(DateTimeKind kind);
 
     /// <summary>
-    /// Builds and applies the configuration to BlobCache.
+    /// Builds the configuration and returns the configured Akavache instance.
     /// </summary>
-    /// <returns>The builder instance.</returns>
+    /// <returns>The configured Akavache instance ready for use.</returns>
     IAkavacheInstance Build();
 }

@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Akavache.Settings;
 
 /// <summary>
-/// Interface for SettingsStorage.
+/// Represents a storage interface for application settings that supports property change notifications and asynchronous operations.
 /// </summary>
 /// <seealso cref="INotifyPropertyChanged" />
 /// <seealso cref="IDisposable" />
@@ -17,12 +17,11 @@ namespace Akavache.Settings;
 public interface ISettingsStorage : INotifyPropertyChanged, IDisposable, IAsyncDisposable
 {
     /// <summary>
-    /// Loads every setting in this storage into the internal cache, or, if the value doesn't
-    /// exist in the storage, initializes it with its default value. You dont HAVE to call this
-    /// method, but it's handy for applications with a high number of settings where you want to
-    /// load all settings on startup at once into the internal cache and not one-by-one at each request.
+    /// Loads all settings in this storage into the internal cache, initializing missing values with their defaults.
+    /// While calling this method is optional, it is useful for applications with many settings where you want to
+    /// load all settings at startup rather than loading them individually on first access.
     /// </summary>
-    /// <returns>A Task.</returns>
+    /// <returns>A task that represents the asynchronous initialization operation.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]

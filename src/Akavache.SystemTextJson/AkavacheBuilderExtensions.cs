@@ -9,16 +9,16 @@ using System.Text.Json;
 namespace Akavache.SystemTextJson
 {
     /// <summary>
-    /// AkavacheBuilderExtensions.
+    /// Provides extension methods for configuring Akavache to use System.Text.Json serialization.
     /// </summary>
     public static class AkavacheBuilderExtensions
     {
         /// <summary>
-        /// Uses the system text json.
+        /// Configures the builder to use System.Text.Json serialization with default options.
         /// </summary>
-        /// <param name="builder">The builder.</param>
+        /// <param name="builder">The Akavache builder to configure.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="System.ArgumentNullException">builder.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
 #if NET6_0_OR_GREATER
 
         [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
@@ -37,16 +37,12 @@ namespace Akavache.SystemTextJson
         }
 
         /// <summary>
-        /// Uses the system text json.
+        /// Configures the builder to use System.Text.Json serialization with custom options.
         /// </summary>
-        /// <param name="builder">The builder.</param>
-        /// <param name="settings">The settings.</param>
+        /// <param name="builder">The Akavache builder to configure.</param>
+        /// <param name="settings">The JSON serializer options to use for customizing serialization behavior.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// builder
-        /// or
-        /// settings.
-        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="settings"/> is null.</exception>
 #if NET6_0_OR_GREATER
 
         [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
@@ -70,16 +66,12 @@ namespace Akavache.SystemTextJson
         }
 
         /// <summary>
-        /// Uses the newtonsoft json.
+        /// Configures the builder to use System.Text.Json serialization with options configured through a delegate.
         /// </summary>
-        /// <param name="builder">The builder.</param>
-        /// <param name="configure">The configure.</param>
+        /// <param name="builder">The Akavache builder to configure.</param>
+        /// <param name="configure">Action to configure the JSON serializer options.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// builder
-        /// or
-        /// configure.
-        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="configure"/> is null.</exception>
 #if NET6_0_OR_GREATER
 
         [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
@@ -105,11 +97,11 @@ namespace Akavache.SystemTextJson
         }
 
         /// <summary>
-        /// Uses the newtonsoft bson.
+        /// Configures the builder to use System.Text.Json BSON serialization with default options.
         /// </summary>
-        /// <param name="builder">The builder.</param>
+        /// <param name="builder">The Akavache builder to configure.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="System.ArgumentNullException">builder.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
 #if NET6_0_OR_GREATER
 
         [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
@@ -128,16 +120,12 @@ namespace Akavache.SystemTextJson
         }
 
         /// <summary>
-        /// Uses the newtonsoft bson.
+        /// Configures the builder to use System.Text.Json BSON serialization with custom options.
         /// </summary>
-        /// <param name="builder">The builder.</param>
-        /// <param name="settings">The settings.</param>
+        /// <param name="builder">The Akavache builder to configure.</param>
+        /// <param name="settings">The JSON serializer options to use for customizing BSON serialization behavior.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// builder
-        /// or
-        /// settings.
-        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="settings"/> is null.</exception>
 #if NET6_0_OR_GREATER
 
         [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
@@ -161,16 +149,12 @@ namespace Akavache.SystemTextJson
         }
 
         /// <summary>
-        /// Uses the newtonsoft bson.
+        /// Configures the builder to use System.Text.Json BSON serialization with options configured through a delegate.
         /// </summary>
-        /// <param name="builder">The builder.</param>
-        /// <param name="configure">The configure.</param>
+        /// <param name="builder">The Akavache builder to configure.</param>
+        /// <param name="configure">Action to configure the JSON serializer options for BSON serialization.</param>
         /// <returns>The builder instance for fluent configuration.</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// builder
-        /// or
-        /// configure.
-        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="configure"/> is null.</exception>
 #if NET6_0_OR_GREATER
 
         [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]

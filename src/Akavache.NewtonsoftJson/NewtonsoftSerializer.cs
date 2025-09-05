@@ -18,7 +18,7 @@ public class NewtonsoftSerializer : ISerializer
     private readonly NewtonsoftDateTimeContractResolver _contractResolver = new();
 
     /// <summary>
-    /// Gets or sets the optional options.
+    /// Gets or sets the JSON serializer settings for customizing serialization behavior.
     /// </summary>
     public JsonSerializerSettings? Options { get; set; }
 
