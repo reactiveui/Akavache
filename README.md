@@ -2045,7 +2045,8 @@ Ensure your UWP project targets a specific platform (x86, x64, ARM) rather than 
 - 📦 **NuGet**: [Akavache Packages](https://www.nuget.org/packages?q=akavache)
 
 ## Thanks 
-This project is tested with BrowserStack
+
+This project is tested with BrowserStack.
 
 ## License
 
