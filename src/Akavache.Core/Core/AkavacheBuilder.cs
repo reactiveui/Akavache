@@ -12,7 +12,7 @@ using Splat;
 namespace Akavache.Core;
 
 /// <summary>
-/// Default implementation of IAkavacheBuilder.
+/// Provides the default implementation of the Akavache builder interface for configuring cache instances.
 /// </summary>
 internal class AkavacheBuilder : IAkavacheBuilder
 {
