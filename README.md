@@ -535,11 +535,11 @@ var data = await CacheDatabase.UserAccount.GetObject<MyData>("key")
 ### Removing Data
 
 ```csharp
-// Remove single object
-await CacheDatabase.UserAccount.InvalidateObject<MyData>("key");
-
-// Remove multiple objects
-await CacheDatabase.UserAccount.InvalidateObjects<MyData>(new[] { "key1", "key2" });
+// ✅ RECOMMENDED: Use existing invalidation methods
+await CacheDatabase.UserAccount.Invalidate("key");                    // Remove any key
+await CacheDatabase.UserAccount.InvalidateObject<MyData>("key");      // Remove typed key (recommended)
+await CacheDatabase.UserAccount.Invalidate(new[] { "key1", "key2" }); // Remove multiple keys
+await CacheDatabase.UserAccount.InvalidateObjects<MyData>(new[] { "key1", "key2" }); // Remove multiple typed keys
 
 // Remove all objects of a type
 await CacheDatabase.UserAccount.InvalidateAllObjects<MyData>();
@@ -547,6 +547,12 @@ await CacheDatabase.UserAccount.InvalidateAllObjects<MyData>();
 // Remove all data
 await CacheDatabase.UserAccount.InvalidateAll();
 ```
+
+**Best Practices:**
+- ✅ **Use** `InvalidateObject<T>()` methods for type-safe deletion
+- ✅ **Use** `GetAllKeysSafe()` for exception-safe key enumeration in reactive chains
+- ⚠️ **Avoid** complex `GetAllKeys().Subscribe()` patterns - use direct invalidation instead
+- See [Cache Deletion Guide](src/Samples/CacheDeletion-TheRightWay.md) for detailed examples
 
 ### Updating Expiration
 
@@ -933,6 +939,15 @@ CacheDatabase.TaskpoolScheduler = new EventLoopScheduler();
 // Get all keys (for debugging)
 var allKeys = await CacheDatabase.UserAccount.GetAllKeys().ToList();
 
+// Safe key enumeration with exception handling in observable chain
+var safeKeys = await CacheDatabase.UserAccount.GetAllKeysSafe().ToList();
+// GetAllKeysSafe catches exceptions and continues the observable chain
+// instead of throwing - useful for robust error handling
+
+// Get keys for specific types safely
+var typedKeys = await CacheDatabase.UserAccount.GetAllKeysSafe<MyDataType>().ToList();
+var specificTypeKeys = await CacheDatabase.UserAccount.GetAllKeysSafe(typeof(string)).ToList();
+
 // Check when item was created
 var createdAt = await CacheDatabase.UserAccount.GetCreatedAt("my_key");
 if (createdAt.HasValue)
@@ -944,6 +959,42 @@ if (createdAt.HasValue)
 var creationTimes = await CacheDatabase.UserAccount.GetCreatedAt(new[] { "key1", "key2" })
     .ToList();
 ```
+
+#### GetAllKeysSafe Methods
+
+The `GetAllKeysSafe` methods provide exception-safe alternatives to `GetAllKeys()` that handle errors within the observable chain:
+
+```csharp
+// Standard GetAllKeys() - exceptions break the observable chain
+try 
+{
+    var keys = await CacheDatabase.UserAccount.GetAllKeys().ToList();
+    // Process keys...
+}
+catch (Exception ex)
+{
+    // Handle exception outside observable chain
+}
+
+// GetAllKeysSafe() - exceptions are caught and logged, chain continues
+await CacheDatabase.UserAccount.GetAllKeysSafe()
+    .Do(key => Console.WriteLine($"Found key: {key}"))
+    .Where(key => ShouldProcess(key))
+    .ForEach(key => ProcessKey(key));
+    // If GetAllKeys() would throw, this continues with empty sequence instead
+```
+
+**Key differences:**
+- **Exception handling**: Catches exceptions and returns empty sequence instead of throwing
+- **Null safety**: Filters out null or empty keys automatically  
+- **Observable chain friendly**: Allows reactive code to continue executing even when underlying storage has issues
+- **Logging**: Logs exceptions for debugging while keeping the application stable
+
+**Use GetAllKeysSafe when:**
+- Building reactive pipelines that should be resilient to storage exceptions
+- You want exceptions handled within the observable chain rather than breaking it
+- Working with unreliable storage scenarios or during development/testing
+- You prefer continuation over immediate failure when key enumeration fails
 
 ### Cache Maintenance
 
