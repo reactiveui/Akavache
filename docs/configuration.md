@@ -1,0 +1,360 @@
+# Configuration Guide
+
+Akavache V11.1 uses a flexible builder pattern for initialization and configuration. This guide shows you how to set up Akavache for different scenarios.
+
+## Builder Pattern Overview
+
+The new builder pattern provides a fluent API for configuring cache instances:
+
+```csharp
+using Akavache.Core;
+using Akavache.SystemTextJson;
+using Akavache.Sqlite3;
+using Splat.Builder;
+
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
+```
+
+## Provider Initialization Pattern
+
+**Important:** Always explicitly initialize providers before using defaults:
+
+```csharp
+// ✅ CORRECT - Explicit provider initialization
+builder.WithApplicationName("MyApp")
+       .WithSqliteProvider()      // Initialize provider first
+       .WithSqliteDefaults();     // Then apply defaults
+
+// ⚠️ DEPRECATED - While this works, it's not recommended
+builder.WithApplicationName("MyApp")
+       .WithSqliteDefaults();     // This will auto-call WithSqliteProvider()
+```
+
+The explicit pattern is recommended for:
+- Forward compatibility with other DI containers
+- Clearer code intent and better maintainability
+- Avoiding deprecated automatic behaviors
+
+## Configuration Options
+
+### 1. In-Memory Only (for testing or non-persistent applications)
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyTestApp")
+               .WithInMemoryProvider()
+               .WithInMemoryDefaults());
+```
+
+**Use when:**
+- Unit testing
+- Temporary caching without persistence
+- Development environments
+
+### 2. SQLite Persistence (Recommended)
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
+```
+
+**Use when:**
+- Most production applications
+- Need persistent data across app restarts
+- Want automatic cleanup of expired entries
+
+### 3. Encrypted SQLite
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MySecureApp")
+               .WithEncryptedSqliteProvider()
+               .WithSqliteDefaults());
+```
+
+**Use when:**
+- Storing sensitive data
+- Compliance requirements
+- User credentials or personal information
+
+### 4. Custom Cache Instances
+
+```csharp
+// Advanced: Custom cache directory and configuration
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithCacheDirectory("/custom/path")
+               .WithConnectionPooling(true)
+               .WithVacuumOnStartup(true));
+```
+
+### 5. DateTime Handling
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSqliteDefaults()
+               .WithDateTimeKind(DateTimeKind.Utc)); // Ensure UTC timestamps
+```
+
+## Dependency Injection Patterns
+
+### Static Initialization (Simple Applications)
+
+```csharp
+public class Program
+{
+    public static void Main()
+    {
+        // Initialize once at startup
+        AppBuilder.CreateSplatBuilder()
+            .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+                builder.WithApplicationName("MyApp")
+                       .WithSqliteProvider()
+                       .WithSqliteDefaults());
+        
+        // Use throughout the application
+        var cache = CacheDatabase.UserAccount;
+    }
+}
+```
+
+### Dependency Injection Registration (Web Applications)
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // Register Akavache with the DI container
+    services.AddSplat(builder =>
+        builder.WithAkavacheCacheDatabase<SystemJsonSerializer>(cacheBuilder =>
+            cacheBuilder.WithApplicationName("MyWebApp")
+                       .WithSqliteProvider()
+                       .WithSqliteDefaults()));
+    
+    // Register your services that depend on Akavache
+    services.AddScoped<IDataService, CachedDataService>();
+}
+```
+
+### Manual Instance Creation (Advanced)
+
+```csharp
+public class CustomCacheManager
+{
+    private readonly IBlobCache _primaryCache;
+    private readonly IBlobCache _secondaryCache;
+    
+    public CustomCacheManager()
+    {
+        // Create specific cache instances for different purposes
+        _primaryCache = new SqliteBlobCache(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "primary.db"),
+            new SystemJsonSerializer()
+        );
+        
+        _secondaryCache = new InMemoryBlobCache(new SystemJsonSerializer());
+    }
+}
+```
+
+## Advanced Configuration Options
+
+### Connection Pooling
+```csharp
+builder.WithSqliteProvider()
+       .WithConnectionPooling(true)
+       .WithMaxPoolSize(10);
+```
+
+### Custom Cache Directory
+```csharp
+builder.WithSqliteProvider()
+       .WithCacheDirectory("/custom/cache/path")
+       .WithSqliteDefaults();
+```
+
+### Vacuum and Maintenance
+```csharp
+builder.WithSqliteProvider()
+       .WithVacuumOnStartup(true)
+       .WithAutoVacuum(true)
+       .WithSqliteDefaults();
+```
+
+### Custom SQLite Flags
+```csharp
+builder.WithSqliteProvider()
+       .WithSqliteOpenFlags(SQLiteOpenFlags.ReadWriteCreate | SQLiteOpenFlags.FullMutex)
+       .WithSqliteDefaults();
+```
+
+## Serializer Configuration
+
+### System.Text.Json Configuration
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
+
+// Custom JsonSerializerOptions
+var options = new JsonSerializerOptions
+{
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    WriteIndented = false
+};
+
+var serializer = new SystemJsonSerializer(options);
+```
+
+### Newtonsoft.Json Configuration
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<NewtonsoftJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
+
+// Custom JsonSerializerSettings
+var settings = new JsonSerializerSettings
+{
+    DateFormatHandling = DateFormatHandling.IsoDateFormat,
+    NullValueHandling = NullValueHandling.Ignore
+};
+
+var serializer = new NewtonsoftJsonSerializer(settings);
+```
+
+## Platform-Specific Configuration
+
+### Mobile Applications (iOS/Android)
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyMobileApp")
+               .WithSqliteProvider()
+               .WithMobileDefaults()); // Mobile-optimized settings
+```
+
+### Desktop Applications
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyDesktopApp")
+               .WithSqliteProvider()
+               .WithDesktopDefaults()); // Desktop-optimized settings
+```
+
+### Web Applications
+```csharp
+// In ConfigureServices
+services.AddSplat(builder =>
+    builder.WithAkavacheCacheDatabase<SystemJsonSerializer>(cacheBuilder =>
+        cacheBuilder.WithApplicationName("MyWebApp")
+                   .WithSqliteProvider()
+                   .WithWebDefaults())); // Web-optimized settings
+```
+
+## Environment-Specific Configuration
+
+### Development Environment
+```csharp
+if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+{
+    builder.WithApplicationName("MyApp-Dev")
+           .WithInMemoryProvider()      // Faster for development
+           .WithInMemoryDefaults();
+}
+else
+{
+    builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
+           .WithSqliteDefaults();
+}
+```
+
+### Testing Configuration
+```csharp
+// Use a separate test database
+builder.WithApplicationName("MyApp-Test")
+       .WithSqliteProvider()
+       .WithCacheDirectory(Path.GetTempPath())
+       .WithSqliteDefaults();
+```
+
+### Production Configuration
+```csharp
+builder.WithApplicationName("MyApp")
+       .WithEncryptedSqliteProvider()   // Security for production
+       .WithConnectionPooling(true)     // Performance optimization
+       .WithVacuumOnStartup(true)      // Maintenance
+       .WithSqliteDefaults();
+```
+
+## Configuration Validation
+
+### Startup Validation
+```csharp
+public void ValidateCacheConfiguration()
+{
+    try
+    {
+        // Test cache accessibility
+        var testData = await CacheDatabase.UserAccount.GetObject<string>("test-key");
+        Console.WriteLine("Cache configuration is valid");
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException("Cache configuration failed", ex);
+    }
+}
+```
+
+### Health Checks
+```csharp
+public class CacheHealthCheck : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await CacheDatabase.UserAccount.GetAllKeys().FirstOrDefaultAsync();
+            return HealthCheckResult.Healthy("Cache is accessible");
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("Cache is not accessible", ex);
+        }
+    }
+}
+```
+
+## Best Practices
+
+1. **Initialize early** - Set up Akavache before using any cache operations
+2. **Use explicit providers** - Always call `WithSqliteProvider()` before `WithSqliteDefaults()`
+3. **One initialization per app** - Don't re-initialize unless absolutely necessary
+4. **Environment-specific config** - Use different settings for dev/test/prod
+5. **Validate configuration** - Test cache accessibility during startup
+6. **Handle initialization errors** - Gracefully handle configuration failures
+
+## Next Steps
+
+- [Learn about serializers](./serializers.md)
+- [Understand cache types](./cache-types.md)
+- [Master basic operations](./basic-operations.md)
+- [Review platform-specific notes](./platform-notes.md)
