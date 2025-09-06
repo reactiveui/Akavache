@@ -179,14 +179,26 @@ public void ConfigureServices(IServiceCollection services)
     services.AddSingleton<IBlobCache>(_ => BlobCache.LocalMachine);
 }
 
-// V11.1
+// V11.1 - Register Akavache with DI container
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddSplat(builder =>
-        builder.WithAkavacheCacheDatabase<SystemJsonSerializer>(cacheBuilder =>
-            cacheBuilder.WithApplicationName("MyWebApp")
-                       .WithSqliteProvider()
-                       .WithSqliteDefaults()));
+    // Register Akavache with Splat DI
+    AppBuilder.CreateSplatBuilder()
+        .WithAkavache<SystemJsonSerializer>(
+            "MyWebApp",
+            builder => builder.WithSqliteProvider()    // REQUIRED: Explicit provider initialization
+                              .WithSqliteDefaults(),
+            (splat, instance) => splat.RegisterLazySingleton(() => instance));
+    
+    // Or manually register with your DI container
+    var akavacheInstance = CacheDatabase.CreateBuilder()
+        .WithSerializer<SystemJsonSerializer>()
+        .WithApplicationName("MyWebApp")
+        .WithSqliteProvider()    // REQUIRED: Explicit provider initialization
+        .WithSqliteDefaults()
+        .Build();
+    
+    services.AddSingleton<IAkavacheInstance>(akavacheInstance);
 }
 ```
 

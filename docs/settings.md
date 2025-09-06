@@ -18,45 +18,79 @@ Akavache.Settings provides a powerful settings storage system that extends Akava
 ```csharp
 using Akavache.Settings;
 
-public class AppSettings : ISettingsStorage
+public class AppSettings : SettingsBase
 {
-    public string ApiEndpoint { get; set; } = "https://api.example.com";
-    public int TimeoutSeconds { get; set; } = 30;
-    public bool EnableLogging { get; set; } = true;
-    public List<string> RecentFiles { get; set; } = new();
-    
-    // Required by ISettingsStorage
-    public void Dispose() { }
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public AppSettings() : base(nameof(AppSettings))
+    {
+    }
+
+    // Boolean setting with default value
+    public bool EnableNotifications
+    {
+        get => GetOrCreate(true);
+        set => SetOrCreate(value);
+    }
+
+    // String setting with default value
+    public string UserName
+    {
+        get => GetOrCreate("DefaultUser");
+        set => SetOrCreate(value);
+    }
+
+    // Numeric settings
+    public int MaxRetries
+    {
+        get => GetOrCreate(3);
+        set => SetOrCreate(value);
+    }
+
+    public double CacheTimeout
+    {
+        get => GetOrCreate(30.0);
+        set => SetOrCreate(value);
+    }
+
+    // Enum setting
+    public LogLevel LoggingLevel
+    {
+        get => GetOrCreate(LogLevel.Information);
+        set => SetOrCreate(value);
+    }
+}
+
+public enum LogLevel
+{
+    Debug,
+    Information,
+    Warning,
+    Error
 }
 ```
 
 ### 3. Configure Settings Store
 
 ```csharp
-using Akavache;
+using Akavache.Core;
 using Akavache.SystemTextJson;
-using Splat.Builder;
+using Akavache.Settings;
 
-AppBuilder.CreateSplatBuilder()
-    .WithAkavache<SystemJsonSerializer>(
-        "MyApp",
-        builder => 
-        {
-            builder.WithSqliteProvider()
-                   .WithSettingsCachePath("/path/to/settings") // Optional custom path
-                   .WithSqliteDefaults();
-        },
-        instance =>
-        {
-            // Configure settings store
-            instance.WithSettingsStore<AppSettings>(settings =>
-            {
-                // Configure default values if needed
-                settings.ApiEndpoint = "https://api.example.com";
-                settings.EnableLogging = true;
-            });
-        });
+// Initialize Akavache with settings support
+var appSettings = default(AppSettings);
+
+AppBuilder.CreateSplatBuilder().WithAkavache<SystemJsonSerializer>(builder =>
+    builder.WithApplicationName("MyApp")
+           .WithSerializer(new SystemJsonSerializer())
+           .WithSqliteProvider()
+           .WithSettingsStore<AppSettings>(settings => appSettings = settings));
+
+// Now use the settings
+appSettings.EnableNotifications = false;
+appSettings.UserName = "John Doe";
+appSettings.MaxRetries = 5;
+
+Console.WriteLine($"User: {appSettings.UserName}");
+Console.WriteLine($"Notifications: {appSettings.EnableNotifications}");
 ```
 
 ### 4. Use Settings in Your Application
@@ -64,21 +98,27 @@ AppBuilder.CreateSplatBuilder()
 ```csharp
 public class MyService
 {
-    private readonly IAkavacheInstance _cache;
+    private readonly AppSettings _settings;
     
-    public MyService(IAkavacheInstance cache)
+    public MyService(AppSettings settings)
     {
-        _cache = cache;
+        _settings = settings;
     }
     
-    public async Task UpdateApiSettings(string newEndpoint)
+    public void UpdateUserSettings(string newUserName)
     {
-        var settings = _cache.GetLoadedSettingsStore<AppSettings>();
-        if (settings != null)
+        _settings.UserName = newUserName;
+        // Settings are automatically persisted
+    }
+    
+    public void ConfigureApp()
+    {
+        if (_settings.EnableNotifications)
         {
-            settings.ApiEndpoint = newEndpoint;
-            // Settings are automatically persisted
+            // Configure notifications
         }
+        
+        var retryPolicy = CreateRetryPolicy(_settings.MaxRetries);
     }
 }
 ```

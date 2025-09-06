@@ -16,7 +16,7 @@ Welcome to the Akavache documentation! This guide will help you get the most out
 - **[Settings](./settings.md)** - Akavache.Settings for application configuration and user preferences
 
 ### Advanced Topics
-- **[Platform Notes](./platform-notes.md)** - iOS, Android, MAUI, UWP, and Windows specifics
+- **[Platform Notes](./platform-notes.md)** - iOS, Android, MAUI, WinUI, and Windows specifics
 - **[Performance](./performance.md)** - Optimization tips and benchmarks
 - **[Best Practices](./best-practices.md)** - Recommended patterns and conventions
 
