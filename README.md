@@ -328,6 +328,25 @@ AppBuilder.CreateSplatBuilder()
            .WithInMemory(new InMemoryBlobCache()));
 ```
 
+### Application Name Configuration Order
+
+> **🔧 Important Fix in V11.1.1+**: Prior versions computed the settings cache path in the constructor before `WithApplicationName()` could be called, causing the settings cache to always use the default "Akavache" directory regardless of the custom application name. In V11.1.1+, the settings cache path is now computed lazily when first accessed, ensuring it respects the custom application name set via `WithApplicationName()`.
+
+**Best Practice:**
+```csharp
+// ✅ FIXED in V11.1.1+: Settings cache will correctly use "MyCustomApp" directory
+var akavacheInstance = CacheDatabase.CreateBuilder()
+    .WithSerializer<SystemJsonSerializer>()
+    .WithApplicationName("MyCustomApp")    // Settings cache respects this name
+    .WithSqliteProvider()
+    .WithSqliteDefaults()
+    .Build();
+
+// The SettingsCachePath will now correctly be based on "MyCustomApp" instead of "Akavache"
+```
+
+This fix ensures that mobile platforms (especially iOS) get the correct isolated storage directories based on the actual application name rather than the default value.
+
 #### 5. DateTime Handling
 ```csharp
 // Set global DateTime behavior
