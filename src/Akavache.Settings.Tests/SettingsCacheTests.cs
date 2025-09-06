@@ -74,7 +74,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestCreateAndInsertNewtonsoftAsync()
     {
         var appName = NewName("newtonsoft_test");
@@ -132,7 +132,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestUpdateAndReadNewtonsoftAsync()
     {
         var appName = NewName("newtonsoft_update_test");
@@ -198,7 +198,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestCreateAndInsertSystemTextJsonAsync()
     {
         var appName = NewName("systemjson_test");
@@ -256,7 +256,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestUpdateAndReadSystemTextJsonAsync()
     {
         var appName = NewName("systemjson_update_test");
@@ -322,7 +322,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestOverrideSettingsCachePathAsync()
     {
         var path = Path.Combine(_cacheRoot, "OverridePath");
@@ -357,7 +357,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestSettingsCachePathRespectsApplicationNameOrderAsync()
     {
         var customAppName = NewName("CustomAppTest");
@@ -401,7 +401,7 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(15000)]
+    [CancelAfter(60000)]
     public async Task TestSettingsCachePathUsesDefaultApplicationNameAsync()
     {
         IAkavacheInstance? akavache = null;

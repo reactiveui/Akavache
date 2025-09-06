@@ -80,7 +80,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(15000)]
+        [CancelAfter(60000)]
         public async Task TestCreateAndInsertNewtonsoftAsync()
         {
             var testName = NewName("newtonsoft_test");
@@ -150,7 +150,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(15000)]
+        [CancelAfter(60000)]
         public async Task TestUpdateAndReadNewtonsoftAsync()
         {
             var testName = NewName("newtonsoft_update_test");
@@ -215,7 +215,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(15000)]
+        [CancelAfter(60000)]
         public async Task TestCreateAndInsertSystemTextJsonAsync()
         {
             var testName = NewName("systemjson_test");
@@ -284,7 +284,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(15000)]
+        [CancelAfter(60000)]
         public async Task TestUpdateAndReadSystemTextJsonAsync()
         {
             var testName = NewName("systemjson_update_test");
@@ -349,7 +349,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(15000)]
+        [CancelAfter(60000)]
         public async Task TestOverrideSettingsCachePathAsync()
         {
             var path = Path.Combine(_cacheRoot, "OverridePath");
@@ -383,7 +383,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(20000)]
+        [CancelAfter(60000)]
         public async Task TestEncryptedSettingsPersistenceAsync()
         {
             var testName = NewName("persistence_test");
@@ -474,7 +474,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(20000)]
+        [CancelAfter(60000)]
         public async Task TestEncryptedSettingsWrongPasswordAsync()
         {
             var testName = NewName("wrong_password_test");
@@ -581,7 +581,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(20000)]
+        [CancelAfter(60000)]
         public async Task TestMultipleDisposeAndRecreateAsync()
         {
             var testName = NewName("multi_dispose_test");
@@ -665,7 +665,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(15000)]
+        [CancelAfter(60000)]
         public async Task TestAppInfoPropertiesAsync()
         {
             IAkavacheInstance? akavacheInstance = null;

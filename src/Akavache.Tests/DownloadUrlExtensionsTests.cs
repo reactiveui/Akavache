@@ -19,6 +19,7 @@ namespace Akavache.Tests;
 /// </summary>
 [TestFixture]
 [Category("Akavache")]
+[NonParallelizable]
 public class DownloadUrlExtensionsTests
 {
     private TestHttpServer? _testServer;
