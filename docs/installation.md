@@ -1,155 +1,212 @@
 # Installation Guide
 
-Akavache V11.1 uses a modular package structure. Choose the packages that match your needs:
+Akavache V11.1 uses a modular package structure. Choose the packages that match your needs.
 
-## Package Matrix
+## Package Overview
 
-### Core Package (In-Memory Only)
+### Core Package (Included with Serializers, In Memory only)
 ```xml
 <PackageReference Include="Akavache" Version="11.1.*" />
 ```
-**Use when:** Testing, temporary caching, or when persistence is not needed.
 
-### Storage Backends (Choose One)
-
-#### SQLite Persistence (Recommended)
+### SQLite Storage Backends (recommended)
 ```xml
+<!-- SQLite persistence -->
 <PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-```
-**Use when:** You need persistent caching for most applications.
 
-#### Encrypted SQLite Persistence
-```xml
+<!-- Encrypted SQLite persistence -->
 <PackageReference Include="Akavache.EncryptedSqlite3" Version="11.1.*" />
 ```
-**Use when:** You need to store sensitive data like credentials or personal information.
 
 ### Serializers (Choose One - Required!)
-
-#### System.Text.Json (Recommended)
 ```xml
+<!-- System.Text.Json (fastest, .NET native) -->
 <PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
-```
-**Best for:** 
-- New projects
-- .NET Framework 4.6.2+ applications
-- .NET 8.0+ applications  
-- .NET Standard 2.0+ applications
-- Performance-critical scenarios
-- AOT (Ahead-of-Time) compilation compatibility (.NET 8.0+ only)
 
-#### Newtonsoft.Json (Maximum Compatibility)
-```xml
+<!-- Newtonsoft.Json (most compatible) -->
 <PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.*" />
 ```
-**Best for:**
-- Legacy projects already using Newtonsoft.Json
-- Complex serialization requirements
-- Migrating from V10.x
-- Custom converters and advanced JSON features
 
 ### Optional Extensions
-
-#### Image/Bitmap Support
 ```xml
+<!-- Image/Bitmap support -->
 <PackageReference Include="Akavache.Drawing" Version="11.1.*" />
-```
-**Use when:** Caching images, thumbnails, or other bitmap data.
 
-#### Settings Helpers
-```xml
-<PackageReference Include="Akavache.Settings" Version="11.1.*" />
-```
-**Use when:** Managing application settings and user preferences.
-
-## Common Package Combinations
-
-### Basic Web API Caching
-```xml
-<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
-```
-
-### Mobile App with Images
-```xml
-<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
-<PackageReference Include="Akavache.Drawing" Version="11.1.*" />
-```
-
-### Desktop App with Settings
-```xml
-<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<!-- Settings helpers -->
 <PackageReference Include="Akavache.Settings" Version="11.1.*" />
 ```
 
-### Secure Application
+## Supported Target Frameworks
+
+Akavache V11.1 supports the following target frameworks:
+
+- **.NET Framework 4.6.2, 4.7.2** - Full support
+- **.NET Standard 2.0** - Cross-platform compatibility  
+- **.NET 8.0, .NET 9.0** - Modern .NET support
+- **Mobile Targets**:
+  - `net9.0-android` - Android applications
+  - `net9.0-ios` - iOS applications
+  - `net9.0-maccatalyst` - Mac Catalyst applications
+  - `net9.0-windows` - Windows applications (WinUI)
+
+## Installation Scenarios
+
+### Scenario 1: New Application (Recommended)
+
+For most new applications, use SQLite with System.Text.Json:
+
+```xml
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+```
+
+### Scenario 2: Migrating from V10.x
+
+For maximum compatibility when migrating:
+
+```xml
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.*" />
+```
+
+### Scenario 3: Encrypted Storage
+
+For applications handling sensitive data:
+
 ```xml
 <PackageReference Include="Akavache.EncryptedSqlite3" Version="11.1.*" />
 <PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
 ```
 
-### Legacy Application Migration
+### Scenario 4: Image/Media Applications
+
+For applications caching images or media:
+
 ```xml
 <PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-<PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<PackageReference Include="Akavache.Drawing" Version="11.1.*" />
 ```
 
-## Platform Requirements
+### Scenario 5: Complete Setup
 
-| Platform | SQLite | Encrypted SQLite | Drawing | Settings |
-|----------|--------|------------------|---------|----------|
-| **iOS** | ✅ | ✅ | ✅ | ✅ |
-| **Android** | ✅ | ✅ | ✅ | ✅ |
-| **Windows** | ✅ | ✅ | ✅ | ✅ |
-| **macOS** | ✅ | ✅ | ✅ | ✅ |
-| **Linux** | ✅ | ✅ | ⚠️* | ✅ |
-| **WASM/Blazor** | ⚠️** | ❌ | ❌ | ✅ |
+For applications using all features:
 
-\* Drawing support on Linux requires additional native dependencies  
-\** SQLite in WASM has limitations; consider in-memory cache instead
-
-## BSON Variants
-
-Both serializers offer BSON (Binary JSON) variants for better performance with binary data:
-
-### System.Text.Json BSON
 ```xml
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.EncryptedSqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<PackageReference Include="Akavache.Drawing" Version="11.1.*" />
+<PackageReference Include="Akavache.Settings" Version="11.1.*" />
+```
+
+## Platform-Specific Dependencies
+
+### Mobile Applications (iOS/Android)
+
+**Android DllNotFoundException with SQLitePCLRaw.lib.e_sqlite3:**
+
+If you're getting `System.DllNotFoundException: 'e_sqlite3'` when using `SQLitePCLRaw.lib.e_sqlite3` on Android, use the appropriate bundle instead:
+
+```xml
+<!-- For Android (recommended): Use bundle_e_sqlite3 instead of lib.e_sqlite3 -->
+<ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
+</ItemGroup>
+
+<!-- Alternative: Use bundle_green for cross-platform compatibility -->
+<ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+</ItemGroup>
+
+<!-- If using Encrypted SQLite, also add: -->
+<ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+</ItemGroup>
+```
+
+**Platform-specific bundle recommendations:**
+- **Android**: `SQLitePCLRaw.bundle_e_sqlite3` or `SQLitePCLRaw.bundle_green`
+- **iOS**: `SQLitePCLRaw.bundle_e_sqlite3` or `SQLitePCLRaw.bundle_green`
+- **Desktop/Server**: `SQLitePCLRaw.bundle_e_sqlite3` works fine
+
+### .NET MAUI Applications
+
+```xml
+<!-- Core Akavache packages -->
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+
+<!-- SQLite support for all platforms -->
+<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
+```
+
+### WPF/WinUI Applications
+
+```xml
+<!-- Standard setup works out of the box -->
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
 <PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
 ```
-Use `SystemJsonBsonSerializer` instead of `SystemJsonSerializer`.
 
-### Newtonsoft.Json BSON
+### Linker Considerations
+
+#### iOS Linker Issues
+You may need to preserve certain types to prevent the linker from stripping them out in release builds:
+
 ```xml
-<PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.*" />
+<!-- Add to your .csproj file: -->
+<ItemGroup>
+  <TrimmerRootAssembly Include="SQLitePCLRaw.lib.e_sqlite3.## YOUR-PLATFORM ##" RootMode="All" />
+</ItemGroup>
 ```
-Use `NewtonsoftBsonSerializer` instead of `NewtonsoftJsonSerializer`.
 
-**When to use BSON:**
-- Storing large amounts of binary data
-- Performance-critical scenarios with complex objects
-- When JSON text overhead is significant
+Or add LinkerPreserve.cs to your iOS project:
+```csharp
+public static class LinkerPreserve
+{
+    static LinkerPreserve()
+    {
+        var sqliteBlobCacheName = typeof(SqliteBlobCache).FullName;
+        var encryptedSqliteBlobCacheName = typeof(EncryptedSqliteBlobCache).FullName;
+    }
+}
+```
 
-## Version Compatibility
+#### UWP Considerations
 
-### Cross-Serializer Data Reading
-Akavache V11.1 can read data written by different serializers:
-- Data written with Newtonsoft.Json can be read with System.Text.Json
-- Data written with JSON can be read with BSON variants
-- Data written with V10.x can be read in V11.1
+Ensure your UWP project targets a specific platform (x86, x64, ARM) rather than "Any CPU".
 
-### Migration Path
-1. **Install V11.1 packages** alongside existing V10.x references
-2. **Initialize V11.1 system** using migration helper (see [migration guide](./migration-v10-to-v11.md))
-3. **Test compatibility** with existing data
-4. **Remove V10.x packages** once migration is complete
+## Package Version Compatibility
+
+| Component | V11.0 | V11.1 | Notes |
+|-----------|-------|-------|-------|
+| **Core Framework** | ✅ | ✅ | Backward compatible |
+| **Data Format** | ✅ | ✅ | V11.1 reads V11.0 and V10.x data |
+| **API** | ✅ | ✅ | Additive changes only |
+| **Serializers** | ✅ | ✅ | Cross-compatible |
+
+## Serializer Decision Matrix
+
+| Framework Target | System.Text.Json | Newtonsoft.Json | Recommended |
+|------------------|-------------------|-----------------|-------------|
+| .NET Framework 4.6.2+ | ✅ (via NuGet) | ✅ | Either ✅ |
+| .NET Framework 4.7.2+ | ✅ (via NuGet) | ✅ | System.Text.Json ⭐ |
+| .NET Standard 2.0 | ✅ | ✅ | System.Text.Json ⭐ |
+| .NET 8.0+ | ✅ (built-in) | ✅ | System.Text.Json ⭐ |
+| .NET 9.0+ | ✅ (built-in) | ✅ | System.Text.Json ⭐ |
+| Mobile (iOS/Android) | ✅ | ✅ | System.Text.Json ⭐ |
+| V10.x Migration | ✅ | ✅ (easier) | Newtonsoft.Json (compatibility) |
+
+**Key:**
+- ✅ = Supported
+- ⭐ = Recommended choice
+- System.Text.Json = Better performance, smaller size
+- Newtonsoft.Json = Maximum compatibility, easier V10.x migration
 
 ## Next Steps
 
-After installing packages:
-
-1. **Configure your application** - see [Configuration Guide](./configuration.md)
-2. **Choose your serializer** - see [Serializers Guide](./serializers.md)
-3. **Learn basic operations** - see [Basic Operations](./basic-operations.md)
-4. **Review platform-specific notes** - see [Platform Notes](./platform-notes.md)
+After installation, proceed to:
+1. **[Configuration](configuration.md)** - Set up the builder pattern
+2. **[Basic Operations](basic-operations.md)** - Learn the core API
+3. **[Platform Notes](platform-notes.md)** - Platform-specific setup if needed

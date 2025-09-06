@@ -1,28 +1,42 @@
 # Migration from V10.x to V11.1
 
-This guide will help you migrate your existing Akavache V10.x application to the new V11.1 architecture.
+This guide helps you migrate from Akavache V10.x to V11.1 while preserving your existing data and functionality.
 
-## Breaking Changes
+## Overview of Changes
+
+Akavache V11.1 introduces significant architectural improvements while maintaining backward compatibility with your data. The main changes are in how you initialize and configure Akavache, not in the core API you use daily.
+
+### Breaking Changes
 
 1. **Initialization Method**: The `BlobCache.ApplicationName` and `Registrations.Start()` methods are replaced with the builder pattern
 2. **Package Structure**: Akavache is now split into multiple packages
 3. **Serializer Registration**: Must explicitly register a serializer before use
 
+### What Stays the Same
+
+- ✅ **Core API**: `GetObject`, `InsertObject`, `GetOrFetchObject` work identically
+- ✅ **Data Compatibility**: V11.1 reads all V10.x data without conversion
+- ✅ **Cache Types**: UserAccount, LocalMachine, Secure, InMemory work the same
+- ✅ **Extension Methods**: All your existing extension method calls work
+
 ## Migration Steps
 
 ### Step 1: Update Package References
 
-**Remove V10.x packages:**
+#### Old V10.x packages:
 ```xml
-<!-- Remove these -->
 <PackageReference Include="Akavache" Version="10.*" />
 ```
 
-**Add V11.1 packages:**
+#### New V11.1 packages:
 ```xml
-<!-- Add these -->
+<!-- Choose storage backend -->
 <PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+
+<!-- Choose serializer -->
 <PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<!-- OR for maximum compatibility: -->
+<PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.*" />
 ```
 
 ### Step 2: Update Initialization Code
@@ -50,48 +64,15 @@ using Splat.Builder;
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")        
-           .WithSqliteProvider()    // REQUIRED: Explicit provider initialization
-           .WithSqliteDefaults());
+               .WithSqliteProvider()    // REQUIRED: Explicit provider initialization
+               .WithSqliteDefaults());
 
 // Usage (same API)
 var data = await CacheDatabase.UserAccount.GetObject<MyData>("key");
 await CacheDatabase.LocalMachine.InsertObject("key", myData);
 ```
 
-### Step 3: Update Using Statements
-
-**Old:**
-```csharp
-using Akavache;
-```
-
-**New:**
-```csharp
-using Akavache.Core;
-using Akavache.SystemTextJson;
-using Akavache.Sqlite3;
-using Splat.Builder;
-```
-
-### Step 4: Update Cache Access
-
-**Old:**
-```csharp
-BlobCache.UserAccount
-BlobCache.LocalMachine
-BlobCache.Secure
-BlobCache.InMemory
-```
-
-**New:**
-```csharp
-CacheDatabase.UserAccount
-CacheDatabase.LocalMachine
-CacheDatabase.Secure
-CacheDatabase.InMemory
-```
-
-## Migration Helper
+### Step 3: Migration Helper
 
 Create this helper method to ease migration:
 
@@ -115,200 +96,311 @@ public static class AkavacheMigration
 AkavacheMigration.InitializeV11("MyApp");
 ```
 
-## Data Compatibility
+## Detailed Migration Scenarios
 
-### Existing Data
-- **✅ V11.1 can read V10.x data** - Your existing cache files are compatible
-- **✅ No data migration required** - Existing SQLite files work as-is
-- **✅ Cross-serializer compatibility** - Can read data written with different serializers
+### Scenario 1: Basic V10.x App
 
-### Cache File Locations
-Cache files remain in the same locations as V10.x:
-- **Windows**: `%LocalAppData%\YourApp\BlobCache`
-- **macOS**: `~/Library/Caches/YourApp`
-- **iOS**: `Library/Caches`
-- **Android**: `{PackageInfo.ApplicationInfo.DataDir}/cache`
-
-## Common Migration Scenarios
-
-### Basic Desktop Application
+**Before (V10.x):**
 ```csharp
-// V10.x
-public void InitializeCache()
+public partial class App : Application
 {
-    BlobCache.ApplicationName = "MyDesktopApp";
-}
-
-// V11.1
-public void InitializeCache()
-{
-    AppBuilder.CreateSplatBuilder()
-        .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-            builder.WithApplicationName("MyDesktopApp")
-                   .WithSqliteProvider()
-                   .WithSqliteDefaults());
-}
-```
-
-### Mobile Application with Encryption
-```csharp
-// V10.x
-public void InitializeCache()
-{
-    BlobCache.ApplicationName = "MyMobileApp";
-    // Encryption was configured separately
-}
-
-// V11.1
-public void InitializeCache()
-{
-    AppBuilder.CreateSplatBuilder()
-        .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-            builder.WithApplicationName("MyMobileApp")
-                   .WithEncryptedSqliteProvider() // Built-in encryption
-                   .WithSqliteDefaults());
-}
-```
-
-### Dependency Injection Application
-```csharp
-// V10.x
-public void ConfigureServices(IServiceCollection services)
-{
-    BlobCache.ApplicationName = "MyWebApp";
-    services.AddSingleton<IBlobCache>(_ => BlobCache.LocalMachine);
-}
-
-// V11.1 - Register Akavache with DI container
-public void ConfigureServices(IServiceCollection services)
-{
-    // Register Akavache with Splat DI
-    AppBuilder.CreateSplatBuilder()
-        .WithAkavache<SystemJsonSerializer>(
-            "MyWebApp",
-            builder => builder.WithSqliteProvider()    // REQUIRED: Explicit provider initialization
-                              .WithSqliteDefaults(),
-            (splat, instance) => splat.RegisterLazySingleton(() => instance));
-    
-    // Or manually register with your DI container
-    var akavacheInstance = CacheDatabase.CreateBuilder()
-        .WithSerializer<SystemJsonSerializer>()
-        .WithApplicationName("MyWebApp")
-        .WithSqliteProvider()    // REQUIRED: Explicit provider initialization
-        .WithSqliteDefaults()
-        .Build();
-    
-    services.AddSingleton<IAkavacheInstance>(akavacheInstance);
-}
-```
-
-## Testing Your Migration
-
-### Unit Tests
-```csharp
-[Test]
-public async Task Migration_Should_Read_V10_Data()
-{
-    // Arrange - Initialize V11.1 cache pointing to V10.x data
-    var tempPath = Path.GetTempPath();
-    CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
-        builder.WithSqliteProvider()
-               .WithSqliteDefaults()
-               .WithCacheDirectory(tempPath),
-        "TestApp");
-
-    // Act - Try to read existing data
-    var data = await CacheDatabase.UserAccount.GetObject<TestData>("existing_key");
-
-    // Assert
-    Assert.That(data, Is.Not.Null);
-}
-```
-
-### Gradual Migration
-You can run both versions side-by-side during migration:
-
-```csharp
-public class HybridCacheService
-{
-    private readonly IBlobCache _v10Cache;
-    private readonly IBlobCache _v11Cache;
-
-    public async Task<T> GetObject<T>(string key)
+    protected override void OnStartup(StartupEventArgs e)
     {
-        try
-        {
-            // Try V11.1 first
-            return await _v11Cache.GetObject<T>(key);
-        }
-        catch (KeyNotFoundException)
-        {
-            // Fallback to V10.x and migrate data
-            var data = await _v10Cache.GetObject<T>(key);
-            await _v11Cache.InsertObject(key, data);
-            return data;
-        }
+        BlobCache.ApplicationName = "MyWpfApp";
+        base.OnStartup(e);
+    }
+}
+
+public class DataService
+{
+    public async Task<User> GetUser(int userId)
+    {
+        return await BlobCache.UserAccount.GetOrFetchObject($"user_{userId}",
+            () => apiClient.GetUser(userId),
+            TimeSpan.FromMinutes(30));
     }
 }
 ```
 
-## Troubleshooting Migration Issues
-
-### "No serializer has been registered"
-**Problem:** Forgot to specify serializer in initialization.
-
-**Solution:**
+**After (V11.1):**
 ```csharp
-// Ensure you specify the serializer type
+using Akavache.Core;
+using Akavache.SystemTextJson;
+using Akavache.Sqlite3;
+using Splat.Builder;
+
+public partial class App : Application
+{
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        AppBuilder.CreateSplatBuilder()
+            .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+                builder.WithApplicationName("MyWpfApp")
+                       .WithSqliteProvider()
+                       .WithSqliteDefaults());
+        base.OnStartup(e);
+    }
+}
+
+public class DataService
+{
+    public async Task<User> GetUser(int userId)
+    {
+        // Same API!
+        return await CacheDatabase.UserAccount.GetOrFetchObject($"user_{userId}",
+            () => apiClient.GetUser(userId),
+            TimeSpan.FromMinutes(30));
+    }
+}
+```
+
+### Scenario 2: Encrypted Cache
+
+**Before (V10.x):**
+```csharp
+BlobCache.ApplicationName = "MySecureApp";
+BlobCache.SecureFileStorage = new EncryptedBlobStorage("password");
+```
+
+**After (V11.1):**
+```csharp
 AppBuilder.CreateSplatBuilder()
-    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder => // <-- Specify serializer here
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MySecureApp")
+               .WithEncryptedSqliteProvider()
+               .WithSqliteDefaults("password"));
+```
+
+### Scenario 3: Custom Storage Locations
+
+**Before (V10.x):**
+```csharp
+BlobCache.ApplicationName = "MyApp";
+BlobCache.LocalMachine = new SqliteBlobCache(@"C:\MyApp\cache.db");
+```
+
+**After (V11.1):**
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithLocalMachine(new SqliteBlobCache(@"C:\MyApp\cache.db"))
+               .WithSqliteDefaults());
+```
+
+### Scenario 4: Dependency Injection
+
+**Before (V10.x):**
+```csharp
+// V10.x didn't have good DI support
+BlobCache.ApplicationName = "MyApp";
+container.RegisterInstance(BlobCache.UserAccount);
+```
+
+**After (V11.1):**
+```csharp
+// V11.1 has first-class DI support
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(
+        "MyApp",
+        builder => builder.WithSqliteProvider().WithSqliteDefaults(),
+        (splat, instance) => container.RegisterInstance(instance));
+```
+
+## Serializer Migration
+
+### For Maximum Compatibility (Recommended for Migration)
+
+Use Newtonsoft.Json serializer to maintain 100% compatibility:
+
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<NewtonsoftBsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
                .WithSqliteProvider()
                .WithSqliteDefaults());
 ```
 
-### "CacheDatabase has not been initialized"
-**Problem:** Accessing cache before initialization or initialization failed.
+### For Best Performance (Recommended for New Code)
 
-**Solution:** 
-1. Ensure initialization happens before any cache access
-2. Check for exceptions during initialization
-3. Verify all required packages are installed
+Use System.Text.Json for better performance:
 
-### Data Compatibility Issues
-**Problem:** Cannot read existing data after migration.
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
+```
 
-**Solutions:**
-1. Use the same serializer as V10.x initially (Newtonsoft.Json)
-2. Gradually migrate to System.Text.Json if needed
-3. Check cache file permissions and locations
+## Data Migration
+
+### Cross-Serializer Compatibility
+
+V11.1 can read data written by V10.x and different serializers:
+
+```csharp
+// This works! V11.1 can read V10.x data regardless of serializer choice
+var oldData = await CacheDatabase.UserAccount.GetObject<MyData>("key_from_v10");
+```
+
+### Gradual Migration
+
+You can migrate serializers gradually:
+
+```csharp
+// 1. Start with Newtonsoft for compatibility
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<NewtonsoftBsonSerializer>(/* ... */);
+
+// 2. Later, change to System.Text.Json for performance
+// Old data will still be readable!
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(/* ... */);
+```
+
+## Platform-Specific Migration
+
+### .NET MAUI Migration
+
+**Before (V10.x):**
+```csharp
+public partial class App : Application
+{
+    public App()
+    {
+        InitializeComponent();
+        BlobCache.ApplicationName = "MyMauiApp";
+        MainPage = new AppShell();
+    }
+}
+```
+
+**After (V11.1):**
+```csharp
+// In MauiProgram.cs
+public static class MauiProgram
+{
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder.UseMauiApp<App>();
+
+        // Initialize Akavache
+        AppBuilder.CreateSplatBuilder()
+            .WithAkavacheCacheDatabase<SystemJsonSerializer>(cacheBuilder =>
+                cacheBuilder.WithApplicationName("MyMauiApp")
+                        .WithSqliteProvider()
+                        .WithSqliteDefaults());
+
+        return builder.Build();
+    }
+}
+```
+
+### Mobile Platform Packages
+
+Add platform-specific SQLite support:
+
+```xml
+<!-- For iOS/Android -->
+<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.11" />
+```
+
+## Testing Your Migration
+
+### 1. Verify Data Access
+
+```csharp
+// Test that old data is still accessible
+try
+{
+    var oldData = await CacheDatabase.UserAccount.GetObject<MyOldDataType>("existing_key");
+    Console.WriteLine("✅ Migration successful - old data accessible");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"❌ Migration issue: {ex.Message}");
+}
+```
+
+### 2. Test New Data Storage
+
+```csharp
+// Test that new data can be stored and retrieved
+var testData = new MyDataType { Value = "test" };
+await CacheDatabase.UserAccount.InsertObject("migration_test", testData);
+var retrieved = await CacheDatabase.UserAccount.GetObject<MyDataType>("migration_test");
+Console.WriteLine(retrieved.Value == "test" ? "✅ New storage working" : "❌ Storage issue");
+```
+
+### 3. Performance Comparison
+
+```csharp
+// Compare V10 vs V11 performance
+var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+for (int i = 0; i < 1000; i++)
+{
+    await CacheDatabase.UserAccount.InsertObject($"perf_test_{i}", new MyData { Value = i });
+}
+stopwatch.Stop();
+Console.WriteLine($"1000 inserts: {stopwatch.ElapsedMilliseconds}ms");
+```
+
+## Troubleshooting Migration Issues
+
+### Common Issues
+
+#### 1. "No serializer has been registered"
+```csharp
+// Fix: Ensure you register a serializer
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<SystemJsonSerializer>(/* ... */);
+```
+
+#### 2. "Provider not found"
+```csharp
+// Fix: Call WithSqliteProvider() before WithSqliteDefaults()
+.WithSqliteProvider()
+.WithSqliteDefaults()
+```
+
+#### 3. Data not found after migration
+```csharp
+// Check if application name changed
+builder.WithApplicationName("SameAsV10App") // Must match V10 app name
+```
+
+### Migration Checklist
+
+- [ ] Updated package references
+- [ ] Replaced initialization code
+- [ ] Added explicit provider initialization
+- [ ] Tested existing data access
+- [ ] Verified new data storage
+- [ ] Updated DI container registration (if applicable)
+- [ ] Added platform-specific packages (mobile)
+- [ ] Updated application shutdown code
 
 ## Performance Considerations
 
-### V11.1 Performance Benefits
-- **Faster initialization** with builder pattern
-- **Better memory usage** with modular packages
-- **Improved serialization** with System.Text.Json
-- **Enhanced async patterns** throughout
+V11.1 generally performs better than V10.x, especially with System.Text.Json:
 
-### Migration Performance
-- **No data copying required** - V11.1 reads V10.x files directly
-- **Gradual migration possible** - Can migrate usage patterns incrementally
-- **Background optimization** - Consider rebuilding caches for optimal performance
+- **System.Text.Json**: Faster than V10 across all scenarios
+- **Newtonsoft.Json**: Comparable to V10 for small/medium data, may be slower for very large datasets
 
-## Next Steps
+For best migration experience:
+1. Start with Newtonsoft.Json for compatibility
+2. Migrate to System.Text.Json when ready for optimal performance
 
-After completing migration:
+## Getting Help
 
-1. **Test thoroughly** - Verify all cache operations work as expected
-2. **Update documentation** - Update team documentation and README files
-3. **Consider new features** - Explore V11.1-specific features like better DI support
-4. **Optimize configuration** - Fine-tune cache settings for your use case
-5. **Plan for V12** - Stay updated with future releases and migration paths
+If you encounter issues during migration:
 
-## Additional Resources
+1. Check the [Troubleshooting Guide](troubleshooting.md)
+2. Review the [Configuration Documentation](configuration.md)
+3. Ask on [ReactiveUI Slack](https://reactiveui.net/slack)
+4. File an issue on [GitHub](https://github.com/reactiveui/Akavache/issues)
 
-- [Configuration Guide](./configuration.md) - Learn about new configuration options
-- [Serializers Guide](./serializers.md) - Choose the right serializer for your needs
-- [Best Practices](./best-practices.md) - Updated patterns for V11.1
-- [Troubleshooting Guide](./troubleshooting/troubleshooting-guide.md) - Common issues and solutions
+Remember: V11.1 is designed to be a drop-in replacement for V10.x with better performance and more features. Your existing data and most of your code will work without changes!

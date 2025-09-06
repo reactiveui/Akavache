@@ -1,19 +1,24 @@
-# Akavache.Settings Guide
+# Akavache.Settings
 
-Akavache.Settings provides a powerful settings storage system that extends Akavache's caching capabilities to handle application configuration, user preferences, and persistent settings with type safety and encryption support.
+Akavache.Settings provides a specialized settings database for installable applications. It creates persistent settings that are stored one level down from the application folder, making application updates less painful as the settings survive reinstalls.
 
-## Quick Start
+## Features
 
-### 1. Install the Package
+- **Type-Safe Settings**: Strongly-typed properties with default values
+- **Automatic Persistence**: Settings are automatically saved when changed
+- **Application Update Friendly**: Settings survive application reinstalls
+- **Encrypted Storage**: Optional secure settings with password protection
+- **Multiple Settings Classes**: Support for multiple settings categories
+
+## Installation
 
 ```xml
 <PackageReference Include="Akavache.Settings" Version="11.1.*" />
-<!-- Also need one of the core packages -->
-<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
 ```
 
-### 2. Define Your Settings Class
+## Basic Usage
+
+### 1. Create a Settings Class
 
 ```csharp
 using Akavache.Settings;
@@ -68,7 +73,7 @@ public enum LogLevel
 }
 ```
 
-### 3. Configure Settings Store
+### 2. Initialize Settings Store
 
 ```csharp
 using Akavache.Core;
@@ -93,517 +98,410 @@ Console.WriteLine($"User: {appSettings.UserName}");
 Console.WriteLine($"Notifications: {appSettings.EnableNotifications}");
 ```
 
-### 4. Use Settings in Your Application
+## Advanced Configuration
+
+### Custom Settings Cache Path
+
+By default, settings are stored in a subfolder of your application directory. You can customize this path:
 
 ```csharp
-public class MyService
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+               .WithSqliteProvider()
+               .WithSettingsCachePath(@"C:\MyApp\Settings")  // Custom path
+               .WithSettingsStore<AppSettings>(settings => appSettings = settings));
+```
+
+### Multiple Settings Classes
+
+You can create multiple settings classes for different categories:
+
+```csharp
+public class UserSettings : SettingsBase
 {
-    private readonly AppSettings _settings;
+    public UserSettings() : base(nameof(UserSettings)) { }
     
-    public MyService(AppSettings settings)
+    public string Theme
     {
-        _settings = settings;
+        get => GetOrCreate("Light");
+        set => SetOrCreate(value);
     }
+}
+
+public class NetworkSettings : SettingsBase
+{
+    public NetworkSettings() : base(nameof(NetworkSettings)) { }
     
-    public void UpdateUserSettings(string newUserName)
+    public int TimeoutSeconds
     {
-        _settings.UserName = newUserName;
-        // Settings are automatically persisted
-    }
-    
-    public void ConfigureApp()
-    {
-        if (_settings.EnableNotifications)
-        {
-            // Configure notifications
-        }
-        
-        var retryPolicy = CreateRetryPolicy(_settings.MaxRetries);
+        get => GetOrCreate(30);
+        set => SetOrCreate(value);
     }
 }
+
+// Initialize multiple settings
+var userSettings = default(UserSettings);
+var networkSettings = default(NetworkSettings);
+
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
+           .WithSettingsStore<UserSettings>(settings => userSettings = settings)
+           .WithSettingsStore<NetworkSettings>(settings => networkSettings = settings));
 ```
-
-## Core Concepts
-
-### ISettingsStorage Interface
-
-All settings classes must implement `ISettingsStorage`:
-
-```csharp
-public interface ISettingsStorage : IDisposable, IAsyncDisposable
-{
-    // No additional members required - just the disposal methods
-}
-```
-
-### Settings Store Lifecycle
-
-1. **Creation** - Settings stores are created per type
-2. **Persistence** - Changes are automatically saved to SQLite
-3. **Loading** - Settings are loaded from storage on first access
-4. **Disposal** - Proper cleanup when settings are no longer needed
-
-## Configuration Methods
-
-### WithSettingsStore<T> - Standard Settings
-
-```csharp
-builder.WithSettingsStore<AppSettings>(settings =>
-{
-    // Configure initial values
-    settings.DatabaseConnectionString = "Server=localhost;Database=MyApp";
-    settings.MaxRetryCount = 3;
-});
-```
-
-### WithSecureSettingsStore<T> - Encrypted Settings
-
-```csharp
-builder.WithSecureSettingsStore<SecureSettings>("mySecretPassword", settings =>
-{
-    // Configure encrypted settings
-    settings.ApiKey = "sensitive-api-key";
-    settings.DatabasePassword = "secret-password";
-});
-```
-
-### WithSettingsCachePath - Custom Storage Location
-
-```csharp
-builder.WithSettingsCachePath("/custom/settings/path")
-       .WithSettingsStore<AppSettings>(settings => { });
-```
-
-## Working with Settings
-
-### Reading Settings
-
-```csharp
-// Get loaded settings store
-var settings = akavacheInstance.GetLoadedSettingsStore<AppSettings>();
-if (settings != null)
-{
-    var apiEndpoint = settings.ApiEndpoint;
-    var timeout = settings.TimeoutSeconds;
-}
-
-// Or get/create settings store
-var settings = akavacheInstance.GetSettingsStore<AppSettings>();
-```
-
-### Updating Settings
-
-```csharp
-var settings = akavacheInstance.GetSettingsStore<AppSettings>();
-if (settings != null)
-{
-    settings.EnableLogging = false;
-    settings.RecentFiles.Add("/path/to/new/file");
-    // Changes are automatically persisted
-}
-```
-
-### Settings with Custom Database Names
-
-```csharp
-// Use custom database name instead of type name
-builder.WithSettingsStore<AppSettings>(
-    settings => { /* configure */ }, 
-    overrideDatabaseName: "MyCustomSettingsDb");
-
-// Access with custom name
-var settings = akavacheInstance.GetSettingsStore<AppSettings>("MyCustomSettingsDb");
-```
-
-## Advanced Scenarios
-
-### Multiple Settings Types
-
-```csharp
-public class UserPreferences : ISettingsStorage
-{
-    public string Theme { get; set; } = "Dark";
-    public string Language { get; set; } = "en-US";
-    public int FontSize { get; set; } = 12;
-    
-    public void Dispose() { }
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-}
-
-public class ConnectionSettings : ISettingsStorage  
-{
-    public string ServerUrl { get; set; } = "";
-    public int Port { get; set; } = 443;
-    public bool UseSsl { get; set; } = true;
-    
-    public void Dispose() { }
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-}
-
-// Configure multiple settings types
-instance.WithSettingsStore<UserPreferences>(prefs => prefs.Theme = "Light");
-instance.WithSecureSettingsStore<ConnectionSettings>("password", conn => conn.UseSsl = true);
-```
-
-### Settings Factory Pattern
-
-```csharp
-public class SettingsFactory
-{
-    private readonly IAkavacheInstance _cache;
-    
-    public SettingsFactory(IAkavacheInstance cache)
-    {
-        _cache = cache;
-    }
-    
-    public T GetSettings<T>() where T : ISettingsStorage, new()
-    {
-        return _cache.GetSettingsStore<T>() ?? throw new InvalidOperationException($"Settings {typeof(T).Name} not configured");
-    }
-    
-    public T GetSecureSettings<T>(string password) where T : ISettingsStorage, new()
-    {
-        return _cache.GetSecureSettingsStore<T>(password) ?? throw new InvalidOperationException($"Secure settings {typeof(T).Name} not configured");
-    }
-}
-```
-
-### Settings Validation
-
-```csharp
-public class ValidatedSettings : ISettingsStorage
-{
-    private string _apiEndpoint = "";
-    
-    public string ApiEndpoint 
-    { 
-        get => _apiEndpoint;
-        set 
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("API endpoint cannot be empty");
-            if (!Uri.TryCreate(value, UriKind.Absolute, out _))
-                throw new ArgumentException("API endpoint must be a valid URL");
-            _apiEndpoint = value;
-        }
-    }
-    
-    public void Dispose() { }
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-}
-```
-
-## Settings Store Management
-
-### Checking if Settings Exist
-
-```csharp
-var settings = akavacheInstance.GetLoadedSettingsStore<AppSettings>();
-if (settings == null)
-{
-    // Settings not loaded yet - create new store
-    settings = akavacheInstance.GetSettingsStore<AppSettings>();
-}
-```
-
-### Deleting Settings
-
-```csharp
-// Delete settings store (removes from memory and deletes file)
-await akavacheInstance.DeleteSettingsStore<AppSettings>();
-
-// Delete with custom database name
-await akavacheInstance.DeleteSettingsStore<AppSettings>("CustomDbName");
-```
-
-### Disposing Settings
-
-```csharp
-// Dispose settings store (cleanup memory, keep file)
-await akavacheInstance.DisposeSettingsStore<AppSettings>();
-```
-
-## Security Considerations
 
 ### Encrypted Settings
 
-Use `WithSecureSettingsStore` for sensitive data:
+For sensitive settings, use encrypted storage:
 
 ```csharp
-public class SecuritySettings : ISettingsStorage
+public class SecureSettings : SettingsBase
 {
-    public string EncryptionKey { get; set; } = "";
-    public string DatabasePassword { get; set; } = "";
-    public string ApiSecret { get; set; } = "";
+    public SecureSettings() : base(nameof(SecureSettings)) { }
     
-    public void Dispose() { }
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public string ApiKey
+    {
+        get => GetOrCreate(string.Empty);
+        set => SetOrCreate(value);
+    }
+    
+    public string DatabasePassword
+    {
+        get => GetOrCreate(string.Empty);
+        set => SetOrCreate(value);
+    }
 }
 
-// Configure with encryption
-builder.WithSecureSettingsStore<SecuritySettings>("strongPassword123!", settings =>
-{
-    // Set encrypted defaults
-});
+// Initialize with encryption
+var secureSettings = default(SecureSettings);
+
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+           .WithEncryptedSqliteProvider()
+           .WithSecureSettingsStore<SecureSettings>("mySecurePassword", 
+               settings => secureSettings = settings));
+
+// Use encrypted settings
+secureSettings.ApiKey = "sk-1234567890abcdef";
+secureSettings.DatabasePassword = "super-secret-password";
 ```
 
-### Password Management
+### Override Database Names
+
+You can specify custom database names for settings:
 
 ```csharp
-public class PasswordManager
+var appSettings = default(AppSettings);
+
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
+           .WithSettingsStore<AppSettings>(
+               settings => appSettings = settings, 
+               "CustomAppConfig"));  // Custom database name
+```
+
+## Complete Example
+
+Here's a comprehensive example showing all data types and features:
+
+```csharp
+public class ComprehensiveSettings : SettingsBase
 {
-    private readonly IAkavacheInstance _cache;
-    private readonly string _masterPassword;
-    
-    public PasswordManager(IAkavacheInstance cache, string masterPassword)
+    public ComprehensiveSettings() : base(nameof(ComprehensiveSettings))
     {
-        _cache = cache;
-        _masterPassword = masterPassword;
     }
-    
-    public SecuritySettings GetSecuritySettings()
+
+    // Basic types with defaults
+    public bool BoolSetting
     {
-        return _cache.GetSecureSettingsStore<SecuritySettings>(_masterPassword)
-            ?? throw new UnauthorizedAccessException("Cannot access security settings");
+        get => GetOrCreate(true);
+        set => SetOrCreate(value);
+    }
+
+    public byte ByteSetting
+    {
+        get => GetOrCreate((byte)123);
+        set => SetOrCreate(value);
+    }
+
+    public short ShortSetting
+    {
+        get => GetOrCreate((short)16);
+        set => SetOrCreate(value);
+    }
+
+    public int IntSetting
+    {
+        get => GetOrCreate(42);
+        set => SetOrCreate(value);
+    }
+
+    public long LongSetting
+    {
+        get => GetOrCreate(123456L);
+        set => SetOrCreate(value);
+    }
+
+    public float FloatSetting
+    {
+        get => GetOrCreate(2.5f);
+        set => SetOrCreate(value);
+    }
+
+    public double DoubleSetting
+    {
+        get => GetOrCreate(3.14159);
+        set => SetOrCreate(value);
+    }
+
+    public string StringSetting
+    {
+        get => GetOrCreate("Default Value");
+        set => SetOrCreate(value);
+    }
+
+    // Nullable types
+    public string? NullableStringSetting
+    {
+        get => GetOrCreate<string?>(null);
+        set => SetOrCreate(value);
+    }
+
+    // Complex types (automatically serialized)
+    public List<string> StringListSetting
+    {
+        get => GetOrCreate(new List<string> { "Item1", "Item2" });
+        set => SetOrCreate(value);
+    }
+
+    public Dictionary<string, int> DictionarySetting
+    {
+        get => GetOrCreate(new Dictionary<string, int> { ["Key1"] = 1, ["Key2"] = 2 });
+        set => SetOrCreate(value);
+    }
+
+    // Custom objects
+    public WindowPosition WindowPosition
+    {
+        get => GetOrCreate(new WindowPosition { X = 100, Y = 100, Width = 800, Height = 600 });
+        set => SetOrCreate(value);
     }
 }
+
+public class WindowPosition
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+}
+
+// Usage
+var settings = default(ComprehensiveSettings);
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(builder =>
+        builder.WithApplicationName("MyApp")
+           .WithSqliteProvider()
+           .WithSettingsStore<ComprehensiveSettings>(s => settings = s));
+
+// Use the settings
+settings.StringListSetting.Add("Item3");
+settings.WindowPosition = new WindowPosition { X = 200, Y = 150, Width = 1024, Height = 768 };
+settings.DictionarySetting["NewKey"] = 999;
 ```
+
+## Settings Lifecycle Management
+
+### Cleanup on Application Exit
+
+```csharp
+// In your application shutdown code
+public async Task OnApplicationExit()
+{
+    var builder = CacheDatabase.Builder;
+    
+    // Dispose settings stores to ensure data is flushed
+    await builder.DisposeSettingsStore<AppSettings>();
+    await builder.DisposeSettingsStore<UserSettings>();
+    
+    // Regular Akavache shutdown
+    await CacheDatabase.Shutdown();
+}
+```
+
+### Delete Settings (Reset to Defaults)
+
+```csharp
+// Delete a specific settings store
+var builder = CacheDatabase.Builder;
+await builder.DeleteSettingsStore<AppSettings>();
+
+// Settings will be recreated with default values on next access
+```
+
+### Check if Settings Exist
+
+```csharp
+var builder = CacheDatabase.Builder;
+var existingSettings = builder.GetSettingsStore<AppSettings>();
+
+if (existingSettings != null)
+{
+    Console.WriteLine("Settings already exist");
+}
+else
+{
+    Console.WriteLine("First run - settings will be created with defaults");
+}
+```
+
+## Framework Support
+
+Akavache.Settings supports all the same target frameworks as Akavache:
+
+- **.NET Framework 4.6.2, 4.7.2** - Full support
+- **.NET Standard 2.0** - Cross-platform compatibility
+- **.NET 8.0, .NET 9.0** - Modern .NET support
+- **Mobile platforms** - iOS, Android, MAUI
 
 ## Best Practices
 
-### 1. Design Settings Classes Carefully
+### 1. Use Meaningful Setting Names
 
 ```csharp
-// ✅ Good - Simple, focused settings class
-public class DatabaseSettings : ISettingsStorage
+// ✅ Good - descriptive names
+public bool EnablePushNotifications { get; set; }
+public string DefaultLanguageCode { get; set; }
+
+// ❌ Avoid - unclear names
+public bool Flag1 { get; set; }
+public string Str { get; set; }
+```
+
+### 2. Provide Sensible Defaults
+
+```csharp
+// ✅ Good - sensible defaults
+public int NetworkTimeoutSeconds
 {
-    public string ConnectionString { get; set; } = "";
-    public int CommandTimeout { get; set; } = 30;
-    public bool EnableRetry { get; set; } = true;
-    
-    public void Dispose() { }
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    get => GetOrCreate(30); // 30 seconds is reasonable
+    set => SetOrCreate(value);
 }
 
-// ❌ Avoid - Too many responsibilities
-public class EverythingSettings : ISettingsStorage
+// ❌ Avoid - no defaults or poor defaults
+public int TimeoutMs
 {
-    public string DatabaseConnection { get; set; } = "";
-    public string ApiKey { get; set; } = "";
-    public List<UserProfile> Users { get; set; } = new();
-    public Dictionary<string, object> Configuration { get; set; } = new();
-    // ... too much stuff
+    get => GetOrCreate(0); // 0 timeout makes no sense
+    set => SetOrCreate(value);
 }
 ```
 
-### 2. Use Appropriate Security Levels
+### 3. Group Related Settings
 
 ```csharp
-// Standard settings for non-sensitive data
-builder.WithSettingsStore<AppSettings>(settings => { });
-
-// Secure settings for sensitive data
-builder.WithSecureSettingsStore<ApiKeys>("password", settings => { });
-```
-
-### 3. Initialize Settings Early
-
-```csharp
-// Initialize settings during application startup
-public async Task InitializeAsync()
+// ✅ Good - related settings in same class
+public class NetworkSettings : SettingsBase
 {
-    // Configure Akavache with settings
-    AppBuilder.CreateSplatBuilder()
-        .WithAkavache<SystemJsonSerializer>("MyApp",
-            builder => builder.WithSqliteProvider().WithSqliteDefaults(),
-            instance => ConfigureSettings(instance));
+    public int TimeoutSeconds { get; set; }
+    public int MaxRetries { get; set; }
+    public bool EnableCaching { get; set; }
 }
 
-private void ConfigureSettings(IAkavacheInstance instance)
+// ✅ Good - separate concerns
+public class UISettings : SettingsBase
 {
-    instance.WithSettingsStore<AppSettings>(settings =>
+    public string Theme { get; set; }
+    public double FontSize { get; set; }
+}
+```
+
+### 4. Use Encryption for Sensitive Data
+
+```csharp
+// ✅ Good - encrypt sensitive settings
+public class SecuritySettings : SettingsBase
+{
+    public string ApiKey
     {
-        // Set reasonable defaults
-        settings.ApiEndpoint = "https://api.production.com";
-        settings.TimeoutSeconds = 30;
-    });
-}
-```
-
-### 4. Handle Settings Disposal
-
-```csharp
-public class SettingsService : IDisposable
-{
-    private readonly IAkavacheInstance _cache;
-    
-    public SettingsService(IAkavacheInstance cache)
-    {
-        _cache = cache;
+        get => GetOrCreate(string.Empty);
+        set => SetOrCreate(value);
     }
+}
+
+// Initialize with encryption
+.WithEncryptedSqliteProvider()
+.WithSecureSettingsStore<SecuritySettings>("password", settings => securitySettings = settings)
+```
+
+## Common Patterns
+
+### 1. Validation in Setters
+
+```csharp
+public class ValidatedSettings : SettingsBase
+{
+    public ValidatedSettings() : base(nameof(ValidatedSettings)) { }
     
-    public void Dispose()
+    private int _maxConnections;
+    public int MaxConnections
     {
-        // Clean disposal of settings when service is disposed
-        Task.Run(async () =>
+        get => GetOrCreate(10);
+        set 
         {
-            await _cache.DisposeSettingsStore<AppSettings>();
-            await _cache.DisposeSettingsStore<UserPreferences>();
-        });
+            if (value < 1 || value > 100)
+                throw new ArgumentOutOfRangeException(nameof(value), "Must be between 1 and 100");
+            SetOrCreate(value);
+        }
     }
 }
 ```
 
-## Framework-Specific Examples
-
-### ASP.NET Core
+### 2. Settings Change Notifications
 
 ```csharp
-// Program.cs or Startup.cs
-builder.Services.AddSingleton<IAkavacheInstance>(sp =>
+public class NotifyingSettings : SettingsBase, INotifyPropertyChanged
 {
-    IAkavacheInstance? instance = null;
+    public NotifyingSettings() : base(nameof(NotifyingSettings)) { }
     
-    AppBuilder.CreateSplatBuilder()
-        .WithAkavache<SystemJsonSerializer>("MyWebApp",
-            cacheBuilder => cacheBuilder.WithSqliteProvider().WithSqliteDefaults(),
-            akavacheInstance => 
+    public event PropertyChangedEventHandler? PropertyChanged;
+    
+    public string Theme
+    {
+        get => GetOrCreate("Light");
+        set 
+        {
+            if (SetOrCreate(value))
             {
-                instance = akavacheInstance;
-                instance.WithSettingsStore<AppSettings>(settings => { });
-            });
-    
-    return instance!;
-});
-
-// Controller
-[ApiController]
-public class SettingsController : ControllerBase
-{
-    private readonly IAkavacheInstance _cache;
-    
-    public SettingsController(IAkavacheInstance cache)
-    {
-        _cache = cache;
-    }
-    
-    [HttpGet("settings")]
-    public ActionResult<AppSettings> GetSettings()
-    {
-        var settings = _cache.GetLoadedSettingsStore<AppSettings>();
-        return settings != null ? Ok(settings) : NotFound();
-    }
-}
-```
-
-### MAUI / Xamarin
-
-```csharp
-// MauiProgram.cs
-public static class MauiProgram
-{
-    public static MauiApp CreateMauiApp()
-    {
-        var builder = MauiApp.CreateBuilder();
-        builder.UseMauiApp<App>();
-        
-        // Configure Akavache settings
-        builder.Services.AddSingleton<IAkavacheInstance>(sp =>
-        {
-            IAkavacheInstance? instance = null;
-            
-            AppBuilder.CreateSplatBuilder()
-                .WithAkavache<SystemJsonSerializer>("MyMauiApp",
-                    cacheBuilder => cacheBuilder.WithSqliteProvider().WithSqliteDefaults(),
-                    akavacheInstance => 
-                    {
-                        instance = akavacheInstance;
-                        instance.WithSettingsStore<UserPreferences>(prefs => prefs.Theme = "System");
-                    });
-            
-            return instance!;
-        });
-        
-        return builder.Build();
-    }
-}
-```
-
-### WPF / Desktop
-
-```csharp
-// App.xaml.cs
-public partial class App : Application
-{
-    public IAkavacheInstance Cache { get; private set; }
-    
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        base.OnStartup(e);
-        
-        // Initialize settings
-        AppBuilder.CreateSplatBuilder()
-            .WithAkavache<SystemJsonSerializer>("MyWpfApp",
-                builder => builder.WithSqliteProvider().WithSqliteDefaults(),
-                instance =>
-                {
-                    Cache = instance;
-                    instance.WithSettingsStore<AppSettings>(settings => 
-                    {
-                        settings.WindowWidth = 800;
-                        settings.WindowHeight = 600;
-                    });
-                });
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Theme)));
+            }
+        }
     }
 }
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### Settings Not Persisting
 
-**Settings not persisting:**
-```csharp
-// Ensure settings store is properly configured
-var settings = instance.GetLoadedSettingsStore<AppSettings>();
-if (settings == null)
-{
-    // Store not initialized - create it
-    settings = instance.GetSettingsStore<AppSettings>();
-}
-```
+1. **Check initialization**: Ensure settings store is properly registered
+2. **Verify paths**: Check that the application has write access to the settings directory
+3. **Call SetOrCreate**: Settings are only saved when `SetOrCreate` is called
 
-**Cannot access settings after restart:**
-```csharp
-// Check if custom database name is consistent
-instance.WithSettingsStore<AppSettings>(settings => { }, "MySettings");
-// Must use same name when accessing
-var settings = instance.GetSettingsStore<AppSettings>("MySettings");
-```
+### Performance Issues
 
-**Encryption/decryption errors:**
-```csharp
-// Ensure password is consistent across app sessions
-const string SETTINGS_PASSWORD = "consistent-password-123";
-instance.WithSecureSettingsStore<SecureSettings>(SETTINGS_PASSWORD, settings => { });
-```
+1. **Don't overuse complex types**: Simple types are faster to serialize/deserialize
+2. **Avoid frequent writes**: Settings are saved on every `SetOrCreate` call
+3. **Use appropriate data types**: Prefer enums over strings for fixed options
 
-## Performance Considerations
+### Encryption Problems
 
-1. **Initialize once** - Don't recreate settings stores repeatedly
-2. **Use appropriate caching** - Settings are automatically cached in memory
-3. **Batch updates** - Multiple property changes are efficient
-4. **Consider store size** - Don't store large objects in settings stores
-5. **Dispose properly** - Clean up settings stores when done
+1. **Password storage**: Ensure the encryption password is stored securely
+2. **Key changes**: Changing encryption passwords requires data migration
+3. **Performance impact**: Encrypted settings have additional overhead
 
-## Migration from V10
-
-If you're upgrading from Akavache V10.x, see the [migration guide](./migration-v10-to-v11.md) for complete migration instructions. The settings system in V11 provides much better type safety and configuration options.
-
-## Next Steps
-
-- [Learn about basic cache operations](./basic-operations.md)
-- [Understand dependency injection patterns](./configuration.md#dependency-injection-pattern)
-- [Review security best practices](./best-practices.md)
-- [Explore platform-specific considerations](./platform-notes.md)
+For more help, see the main [Troubleshooting Guide](troubleshooting.md).
