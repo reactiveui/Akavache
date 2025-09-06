@@ -408,7 +408,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             // Results validation
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(results.Count, Is.EqualTo(2));
+                Assert.That(results, Has.Count.EqualTo(2));
 
                 // Cached value
                 Assert.That(results[0], Is.Not.Null);
