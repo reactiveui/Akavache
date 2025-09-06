@@ -33,11 +33,11 @@ namespace Akavache.Samples
                     () => FetchUserProfileFromApi())
                     .Subscribe(userProfile => 
                     {
-                        // This subscriber will be called twice:
-                        // 1. Immediately with cached data (if available)
-                        // 2. When fresh data arrives from the API
+                        // This subscriber will be called:
+                        // - Once with fresh data (if no cached data exists)
+                        // - Twice: cached data immediately + fresh data (if cached data exists)
                         
-                        // Simply update the UI each time - works perfectly for both calls
+                        // Simply update the UI each time - works perfectly for both scenarios
                         DisplayUserProfile(userProfile);
                         
                         Console.WriteLine($"User profile updated: {userProfile.Name}");
@@ -588,6 +588,125 @@ namespace Akavache.Samples
         public List<NewsItem> NewItems { get; set; } = new();
         public List<NewsItem> UpdatedItems { get; set; } = new();
         public List<NewsItem> RemovedItems { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Empty Cache Scenarios - Handling first app run and cache clear situations.
+    /// This demonstrates the reliable behavior of GetAndFetchLatest even when no cached data exists.
+    /// </summary>
+    public static class EmptyCachePattern
+    {
+        /// <summary>
+        /// Demonstrates GetAndFetchLatest behavior when no cached data exists.
+        /// This is common on first app run or after cache clears.
+        /// </summary>
+        public static void EmptyCacheExample()
+        {
+            // This works perfectly even on first app run when cache is empty
+            CacheDatabase.LocalMachine.GetAndFetchLatest("app_data",
+                () => FetchInitialAppData())
+                .Subscribe(appData => 
+                {
+                    // On first run: Called ONCE with fresh data from API
+                    // After cache exists: Called TWICE (cached + fresh)
+                    // Your code doesn't need to change - same logic works for both!
+                    
+                    UpdateAppWithData(appData);
+                    
+                    Console.WriteLine($"App data loaded: {appData.Items.Count} items");
+                    Console.WriteLine($"Last updated: {appData.LastUpdated}");
+                });
+        }
+
+        /// <summary>
+        /// Example showing that empty cache scenarios are handled transparently.
+        /// </summary>
+        public static void FirstRunScenarioExample()
+        {
+            // This pattern works reliably in all scenarios:
+            // ✅ First app run (empty database)
+            // ✅ After cache clear 
+            // ✅ After data expiration
+            // ✅ Normal cached data flow
+            
+            CacheDatabase.LocalMachine.GetAndFetchLatest("user_settings",
+                () => FetchUserSettingsFromServer())
+                .Subscribe(settings => 
+                {
+                    // This subscriber handles all cases without special logic:
+                    ApplyUserSettings(settings);
+                    
+                    // Optional: Log the scenario for debugging
+                    LogSettingsUpdate(settings);
+                });
+        }
+
+        private static IObservable<AppData> FetchInitialAppData()
+        {
+            return Observable.FromAsync(async () => 
+            {
+                // Simulate API call for initial app data
+                await Task.Delay(1500);
+                return new AppData
+                {
+                    Items = Enumerable.Range(1, 10).Select(i => $"Item {i}").ToList(),
+                    LastUpdated = DateTimeOffset.Now,
+                    Version = "1.0"
+                };
+            });
+        }
+
+        private static IObservable<UserSettings> FetchUserSettingsFromServer()
+        {
+            return Observable.FromAsync(async () => 
+            {
+                // Simulate settings API call
+                await Task.Delay(800);
+                return new UserSettings
+                {
+                    Theme = "Dark",
+                    Language = "en-US",
+                    NotificationsEnabled = true,
+                    LastModified = DateTimeOffset.Now
+                };
+            });
+        }
+
+        private static void UpdateAppWithData(AppData data)
+        {
+            Console.WriteLine($"Updating app with {data.Items.Count} items");
+            // Update UI, populate collections, etc.
+        }
+
+        private static void ApplyUserSettings(UserSettings settings)
+        {
+            Console.WriteLine($"Applying settings: Theme={settings.Theme}, Language={settings.Language}");
+            // Apply theme, language, notifications, etc.
+        }
+
+        private static void LogSettingsUpdate(UserSettings settings)
+        {
+            Console.WriteLine($"Settings updated at {DateTimeOffset.Now}: {settings.LastModified}");
+        }
+    }
+
+    #endregion
+
+    #region Data Models
+
+    public class AppData
+    {
+        public List<string> Items { get; set; } = new();
+        public DateTimeOffset LastUpdated { get; set; }
+        public string Version { get; set; } = string.Empty;
+    }
+
+    public class UserSettings
+    {
+        public string Theme { get; set; } = string.Empty;
+        public string Language { get; set; } = string.Empty;
+        public bool NotificationsEnabled { get; set; }
+        public DateTimeOffset LastModified { get; set; }
     }
 
     #endregion

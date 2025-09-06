@@ -142,6 +142,34 @@ public IObservable<GetMessagesResponse> GetMessages(int ticketId)
 
 The issue was in how you consumed it, not how you created it.
 
+## Empty Cache Scenarios
+
+One important scenario to understand is when no cached data exists (first app run, after cache clear, or expired data):
+
+```csharp
+// When cache is empty, GetAndFetchLatest still works perfectly
+private void LoadMessagesFirstTime()
+{
+    // On first app run or after cache clear
+    _ticketService.GetMessages(_selectedTicketId)
+        .Subscribe(response => 
+        {
+            // This will be called ONCE with fresh data from the API
+            // No cached data exists, so only fresh data is delivered
+            _messages.Clear();
+            _messages.AddRange(response.data.Reverse());
+        });
+}
+```
+
+### Key Points for Empty Cache:
+- ✅ **GetAndFetchLatest works reliably** - Always fetches fresh data even when cache is empty
+- ✅ **Subscriber called once** - Only fresh data is delivered (no cached data to deliver first)
+- ✅ **No special handling needed** - Your existing subscriber logic works for both scenarios
+- ✅ **Consistent behavior** - Same reactive pattern whether cache exists or not
+
+This was a bug that was fixed in Akavache V11.1 - earlier versions might not call the fetch function when the cache was completely empty.
+
 ## Bottom Line
 
 **The right way is usually the simple way.** GetAndFetchLatest is designed to make caching easy - don't overcomplicate it. Start with the Simple Replacement Pattern and only add complexity if you have a specific requirement that demands it.
