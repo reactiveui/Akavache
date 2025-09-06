@@ -83,98 +83,83 @@ private void ReplaceAllMessages(List<LatestMessageDto> messages)
 
 ## When You Need Merging
 
-If you specifically need to merge new messages with existing ones (like a chat app where you don't want to lose messages the user is reading), use the **Merge Strategy Pattern**:
+If you really need to merge new data with existing data (rare), use this pattern:
 
 ```csharp
-private readonly List<LatestMessageDto> _currentMessages = new();
-private bool _isFirstLoad = true;
-
-private void LoadMessages()
+private void LoadMessagesWithMerging()
 {
+    bool isFirstUpdate = true;
+    
     _ticketService.GetMessages(_selectedTicketId)
         .Subscribe(response => 
         {
-            if (_isFirstLoad)
+            var newMessages = response.data.ToList();
+            
+            if (isFirstUpdate)
             {
-                // First call: replace all content
-                _currentMessages.Clear();
-                _currentMessages.AddRange(response.data);
-                _isFirstLoad = false;
+                // First call (cached data) - replace everything
+                ReplaceAllMessages(newMessages);
+                isFirstUpdate = false;
             }
             else
             {
-                // Second call: merge new items only
-                var newMessages = response.data
-                    .Where(msg => !_currentMessages.Any(existing => existing.Id == msg.Id))
-                    .ToList();
-                    
-                _currentMessages.AddRange(newMessages);
-                _currentMessages = _currentMessages.OrderBy(m => m.Timestamp).ToList();
+                // Second call (fresh data) - smart merge
+                MergeNewMessages(newMessages);
             }
-            
-            // Update UI with current state
-            UpdateMessagesDisplay(_currentMessages);
         });
+}
+
+private void MergeNewMessages(List<LatestMessageDto> newMessages)
+{
+    // Add only truly new messages
+    var existingIds = Messages.Select(m => m.Id).ToHashSet();
+    var trulyNewMessages = newMessages.Where(m => !existingIds.Contains(m.Id));
+    
+    Messages.AddRange(trulyNewMessages);
+    Messages = Messages.OrderBy(m => m.Timestamp).ToList();
 }
 ```
 
 ## Key Takeaways
 
-1. **Always use Subscribe(), never await** with GetAndFetchLatest
-2. **Design your UI update method to handle being called twice**
-3. **Simple replacement works for 90% of scenarios**
-4. **Only use complex merging when you specifically need it**
-5. **Trust the pattern** - don't try to manually manage cached vs fresh data
+1. **Start simple** - Use the Simple Replacement Pattern first
+2. **GetAndFetchLatest calls your subscriber twice** - once for cached data, once for fresh
+3. **Don't overthink it** - Replacing UI content twice is usually fine and often preferred
+4. **Avoid manual state tracking** - Let the pattern handle complexity
+5. **Only add merging logic if you have a specific requirement** for it
 
 ## Your Service Layer
 
-Your service layer implementation is actually correct:
+Make sure your service method is properly implemented:
 
 ```csharp
 public IObservable<GetMessagesResponse> GetMessages(int ticketId)
 {
-    var cache = BlobCache.LocalMachine;
-    return cache.GetAndFetchLatest(ticketId.ToString(), 
-        () => GetMessagesRemote(ticketId),
-        offset => true); // Always fetch fresh data
+    var cacheKey = $"messages_{ticketId}";
+    var expiry = TimeSpan.FromMinutes(10);
+    
+    return CacheDatabase.UserAccount.GetAndFetchLatest(
+        cacheKey,
+        () => _apiClient.GetMessagesAsync(ticketId), // Your HTTP call
+        expiry
+    );
 }
 ```
-
-The issue was in how you consumed it, not how you created it.
 
 ## Empty Cache Scenarios
 
-One important scenario to understand is when no cached data exists (first app run, after cache clear, or expired data):
+**Important:** GetAndFetchLatest handles empty cache gracefully. If there's no cached data:
+- Your subscriber is called once (not twice)
+- You get fresh data from the fetch function
+- The fresh data is automatically cached for next time
 
-```csharp
-// When cache is empty, GetAndFetchLatest still works perfectly
-private void LoadMessagesFirstTime()
-{
-    // On first app run or after cache clear
-    _ticketService.GetMessages(_selectedTicketId)
-        .Subscribe(response => 
-        {
-            // This will be called ONCE with fresh data from the API
-            // No cached data exists, so only fresh data is delivered
-            _messages.Clear();
-            _messages.AddRange(response.data.Reverse());
-        });
-}
-```
-
-### Key Points for Empty Cache:
-- ✅ **GetAndFetchLatest works reliably** - Always fetches fresh data even when cache is empty
-- ✅ **Subscriber called once** - Only fresh data is delivered (no cached data to deliver first)
-- ✅ **No special handling needed** - Your existing subscriber logic works for both scenarios
-- ✅ **Consistent behavior** - Same reactive pattern whether cache exists or not
-
-This was a bug that was fixed in Akavache V11.1 - earlier versions might not call the fetch function when the cache was completely empty.
+This means your UI code doesn't need to handle "empty cache" as a special case.
 
 ## Bottom Line
 
 **The right way is usually the simple way.** GetAndFetchLatest is designed to make caching easy - don't overcomplicate it. Start with the Simple Replacement Pattern and only add complexity if you have a specific requirement that demands it.
 
 For comprehensive examples and additional patterns, see:
-- `GetAndFetchLatestPatterns.cs` in the Samples directory
+- [`GetAndFetchLatestPatterns.cs`](../../src/Samples/GetAndFetchLatestPatterns.cs) in the Samples directory
 - Updated README.md GetAndFetchLatest section
 - Samples README.md for quick reference
