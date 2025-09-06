@@ -46,6 +46,11 @@ public static class ImageExtensions
             throw new ArgumentNullException(nameof(blobCache));
         }
 
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
+        }
+
         return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
             .SelectMany(ThrowOnBadImageBuffer);
     }
@@ -65,6 +70,11 @@ public static class ImageExtensions
         if (blobCache is null)
         {
             throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
         }
 
         return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
@@ -89,6 +99,11 @@ public static class ImageExtensions
             throw new ArgumentNullException(nameof(blobCache));
         }
 
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
+        }
+
         return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
             .SelectMany(ThrowOnBadImageBuffer);
     }
@@ -109,6 +124,11 @@ public static class ImageExtensions
         if (blobCache is null)
         {
             throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (url is null)
+        {
+            throw new ArgumentNullException(nameof(url));
         }
 
         return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)

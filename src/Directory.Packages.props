@@ -9,7 +9,7 @@
 		<MicrosoftExtensionsVersion>9.0.8</MicrosoftExtensionsVersion>
 		<SqlitePclRawVersion>2.1.11</SqlitePclRawVersion>
 		<SqliteNetVersion>1.9.172</SqliteNetVersion>
-		<SplatVersion>16.1.1</SplatVersion>
+		<SplatVersion>16.2.1</SplatVersion>
 		<ReactiveUIVersion>20.4.1</ReactiveUIVersion>
 	</PropertyGroup>
 
@@ -60,7 +60,7 @@
 	<ItemGroup>
 		<PackageVersion Include="BenchmarkDotNet" Version="0.15.2" />
 		<PackageVersion Include="Akavache.Sqlite3" Version="10.2.41" />
-		<PackageVersion Include="Akavache" Version="10.2.41" />
+		<PackageVersion Include="Akavache" Version="11.0.1" />
 	</ItemGroup>
 
 	<!-- Sample application packages -->
