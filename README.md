@@ -558,17 +558,19 @@ Returns cached data immediately, then fetches fresh data. This is one of the mos
 
 > **⚠️ Important:** Always use `Subscribe()` with GetAndFetchLatest - never `await` it directly. The method is designed to call your subscriber twice: once with cached data (if available) and once with fresh data.
 
+> **💡 Empty Cache Behavior:** When no cached data exists (first app run, after cache clear, or expired data), GetAndFetchLatest will call your subscriber once with fresh data from the fetch function. This ensures reliable data delivery even in empty cache scenarios.
+
 #### Basic Pattern
 
 ```csharp
-// Basic usage - subscriber called twice
+// Basic usage - subscriber called 1-2 times
 CacheDatabase.LocalMachine.GetAndFetchLatest("news_feed",
     () => newsApi.GetLatestNews())
     .Subscribe(news => 
     {
-        // This will be called twice:
-        // 1. Immediately with cached data (if available)
-        // 2. When fresh data arrives from the API
+        // This will be called:
+        // - Once with fresh data (if no cached data exists)
+        // - Twice: cached data immediately + fresh data (if cached data exists)
         UpdateUI(news);
     });
 ```
@@ -784,11 +786,12 @@ cache.GetAndFetchLatest("key", fetchFunc)
 #### Best Practices ✅
 
 1. **Always use Subscribe(), never await** - GetAndFetchLatest is designed for reactive scenarios
-2. **Handle both cached and fresh data appropriately** - Design your subscriber to work correctly when called twice
+2. **Handle both cached and fresh data appropriately** - Design your subscriber to work correctly when called 1-2 times (once if no cache, twice if cached data exists)
 3. **Use state tracking for complex merges** - Keep track of whether you're handling cached or fresh data
 4. **Provide loading indicators** - Show users when fresh data is being fetched
 5. **Handle errors gracefully** - Network calls can fail, always have fallback logic
 6. **Consider using fetchPredicate** - Avoid unnecessary network calls when cached data is still fresh
+7. **Test empty cache scenarios** - Ensure your app works correctly on first run or after cache clears
 
 
 ### HTTP/URL Operations
