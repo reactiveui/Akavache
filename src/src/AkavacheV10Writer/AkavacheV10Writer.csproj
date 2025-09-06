@@ -12,6 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="Akavache" VersionOverride="10.2.41" />
-    <PackageReference Include="Akavache.Sqlite3"  VersionOverride="10.2.41" />
+    <PackageReference Include="Akavache.Sqlite3"  VersionOverride="11.0.1" />
   </ItemGroup>
 </Project>
