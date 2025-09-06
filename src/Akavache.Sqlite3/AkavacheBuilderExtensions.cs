@@ -88,9 +88,14 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(builder));
         }
 
+        // For backward compatibility, automatically initialize the SQLite provider if not already done
         if (_sqliteProvider == null)
         {
-            throw new InvalidOperationException("SQLite provider has not been initialized. Call WithSqliteProvider() or WithEncryptedSqliteProvider() before using SQLite defaults.");
+#if ENCRYPTED
+            builder.WithEncryptedSqliteProvider();
+#else
+            builder.WithSqliteProvider();
+#endif
         }
 
         if (builder.Serializer == null)
