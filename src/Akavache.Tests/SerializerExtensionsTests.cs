@@ -828,6 +828,257 @@ public class SerializerExtensionsTests
     }
 
     /// <summary>
+    /// Tests that InsertObjects handles empty sequence completion robustly.
+    /// This test validates the fix for issue #635 where LastOrDefaultAsync()
+    /// would throw "Sequence contains no elements" exception.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InsertObjectsShouldHandleEmptySequenceRobustly()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var cache = new InMemoryBlobCache(serializer);
+
+            try
+            {
+                // Test 1: Empty dictionary should complete without exception
+                var emptyDict = new Dictionary<string, object>();
+                await cache.InsertObjects(emptyDict).FirstAsync();
+
+                // Test 2: Single item should work
+                var singleDict = new Dictionary<string, object> { ["key1"] = "value1" };
+                await cache.InsertObjects(singleDict).FirstAsync();
+
+                // Test 3: Multiple items should work
+                var multiDict = new Dictionary<string, object>
+                {
+                    ["key2"] = "value2",
+                    ["key3"] = 42,
+                    ["key4"] = new UserObject { Name = "Test", Bio = "Bio", Blog = "Blog" }
+                };
+                await cache.InsertObjects(multiDict).FirstAsync();
+
+                // Verify all items were inserted correctly
+                var value1 = await cache.GetObject<string>("key1").FirstAsync();
+                var value2 = await cache.GetObject<string>("key2").FirstAsync();
+                var value3 = await cache.GetObject<int>("key3").FirstAsync();
+                var value4 = await cache.GetObject<UserObject>("key4").FirstAsync();
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(value1, Is.EqualTo("value1"));
+                    Assert.That(value2, Is.EqualTo("value2"));
+                    Assert.That(value3, Is.EqualTo(42));
+                    Assert.That(value4, Is.Not.Null);
+                    Assert.That(value4!.Name, Is.EqualTo("Test"));
+                }
+            }
+            finally
+            {
+                await cache.DisposeAsync();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that InsertObjects with IEnumerable&lt;KeyValuePair&gt; handles completion properly.
+    /// This specifically tests the fix where Count() is used instead of LastOrDefaultAsync()
+    /// to avoid "Sequence contains no elements" exceptions.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InsertObjectsGenericShouldHandleSequenceCompletionRobustly()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var cache = new InMemoryBlobCache(serializer);
+
+            try
+            {
+                // Test 1: Empty collection
+                var emptyPairs = new List<KeyValuePair<string, UserObject>>();
+                await cache.InsertObjects(emptyPairs).FirstAsync();
+
+                // Test 2: Single item
+                var singlePair = new List<KeyValuePair<string, UserObject>>
+                {
+                    new("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" })
+                };
+                await cache.InsertObjects(singlePair).FirstAsync();
+
+                // Test 3: Multiple items
+                var multiPairs = new List<KeyValuePair<string, UserObject>>
+                {
+                    new("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" }),
+                    new("user3", new UserObject { Name = "User3", Bio = "Bio3", Blog = "Blog3" }),
+                    new("user4", new UserObject { Name = "User4", Bio = "Bio4", Blog = "Blog4" })
+                };
+                await cache.InsertObjects(multiPairs).FirstAsync();
+
+                // Test 4: Large collection to stress test the Count() approach
+                var largePairs = Enumerable.Range(1, 100)
+                    .Select(i => new KeyValuePair<string, UserObject>(
+                        $"large_user_{i}",
+                        new UserObject { Name = $"LargeUser{i}", Bio = $"Bio{i}", Blog = $"Blog{i}" }))
+                    .ToList();
+                await cache.InsertObjects(largePairs).FirstAsync();
+
+                // Verify some items were inserted correctly
+                var user1 = await cache.GetObject<UserObject>("user1").FirstAsync();
+                var user2 = await cache.GetObject<UserObject>("user2").FirstAsync();
+                var largeUser50 = await cache.GetObject<UserObject>("large_user_50").FirstAsync();
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(user1, Is.Not.Null);
+                    Assert.That(user1!.Name, Is.EqualTo("User1"));
+                    Assert.That(user2, Is.Not.Null);
+                    Assert.That(user2!.Name, Is.EqualTo("User2"));
+                    Assert.That(largeUser50, Is.Not.Null);
+                    Assert.That(largeUser50!.Name, Is.EqualTo("LargeUser50"));
+                }
+            }
+            finally
+            {
+                await cache.DisposeAsync();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that InsertObjects completion logic is robust and doesn't throw exceptions.
+    /// This test verifies the implementation handles various edge cases correctly,
+    /// including empty sequences, without throwing "Sequence contains no elements" exceptions.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InsertObjectsCompletionLogicShouldBeRobust()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var cache = new InMemoryBlobCache(serializer);
+
+            try
+            {
+                // Test 1: Empty dictionary - should complete without exception
+                var emptyDict = new Dictionary<string, object>();
+                await cache.InsertObjects(emptyDict).FirstAsync();
+
+                // Test 2: Single item - should complete normally
+                var singleDict = new Dictionary<string, object> { ["single"] = "value" };
+                await cache.InsertObjects(singleDict).FirstAsync();
+
+                // Test 3: Multiple items including edge cases
+                var multiDict = new Dictionary<string, object>
+                {
+                    ["string_val"] = "test",
+                    ["int_val"] = 42,
+                    ["null_val"] = null,
+                    ["empty_string"] = string.Empty,
+                    ["complex_obj"] = new { Prop1 = "value1", Prop2 = 123 }
+                };
+                await cache.InsertObjects(multiDict!).FirstAsync();
+
+                // Test 4: Large number of operations to stress test completion logic
+                var largeDict = Enumerable.Range(1, 1000)
+                    .ToDictionary(i => $"key_{i}", i => (object)$"value_{i}");
+                await cache.InsertObjects(largeDict).FirstAsync();
+
+                // Test 5: Verify data was actually stored correctly
+                var retrievedSingle = await cache.GetObject<string>("single").FirstAsync();
+                var retrievedString = await cache.GetObject<string>("string_val").FirstAsync();
+                var retrievedInt = await cache.GetObject<int>("int_val").FirstAsync();
+                var retrievedLarge = await cache.GetObject<string>("key_500").FirstAsync();
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(retrievedSingle, Is.EqualTo("value"));
+                    Assert.That(retrievedString, Is.EqualTo("test"));
+                    Assert.That(retrievedInt, Is.EqualTo(42));
+                    Assert.That(retrievedLarge, Is.EqualTo("value_500"));
+                }
+
+                // All tests pass - the completion logic is robust
+                Assert.Pass("InsertObjects completion logic handled all test cases successfully");
+            }
+            finally
+            {
+                await cache.DisposeAsync();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that InsertObjects handles problematic scenarios that could cause
+    /// incomplete observable sequences without throwing exceptions.
+    /// This validates the robustness of the LastOrDefaultAsync() approach.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InsertObjectsShouldHandleProblematicScenariosRobustly()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var cache = new InMemoryBlobCache(serializer);
+
+            try
+            {
+                // Test with null values that might cause serialization edge cases
+                var problematicDict = new Dictionary<string, object?>
+                {
+                    ["null_value"] = null,
+                    ["empty_string"] = string.Empty,
+                    ["whitespace"] = "   ",
+                    ["normal_value"] = "normal"
+                };
+
+                // This should complete without throwing "Sequence contains no elements"
+                await cache.InsertObjects(problematicDict!).FirstAsync();
+
+                // Test with very large number of items to stress the completion logic
+                var massiveDict = Enumerable.Range(1, 1000)
+                    .ToDictionary(
+                        i => $"stress_key_{i}",
+                        i => (object)$"stress_value_{i}");
+
+                // This should also complete without exception
+                await cache.InsertObjects(massiveDict).FirstAsync();
+
+                // Verify some values were stored correctly
+                var nullValue = await cache.GetObject<object>("null_value").FirstAsync();
+                var emptyString = await cache.GetObject<string>("empty_string").FirstAsync();
+                var normalValue = await cache.GetObject<string>("normal_value").FirstAsync();
+                var stressValue500 = await cache.GetObject<string>("stress_key_500").FirstAsync();
+
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(nullValue, Is.Null);
+                    Assert.That(emptyString, Is.EqualTo(string.Empty));
+                    Assert.That(normalValue, Is.EqualTo("normal"));
+                    Assert.That(stressValue500, Is.EqualTo("stress_value_500"));
+                }
+            }
+            finally
+            {
+                await cache.DisposeAsync();
+            }
+        }
+    }
+
+    /// <summary>
     /// Tests that Invalidate properly clears RequestCache entries for InMemory cache.
     /// This reproduces the bug where GetOrFetchObject returns stale data after Invalidate.
     /// </summary>
