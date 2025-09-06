@@ -28,10 +28,13 @@
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     
-    <!-- Core TFMs that build on any OS -->
-    <AkavacheCoreTargets>netstandard2.0;net8.0;net9.0</AkavacheCoreTargets>
+    <!-- Base TFMs that build on any OS (but excluding net9.0 for Windows to avoid conflicts) -->
+    <AkavacheBaseTargets>netstandard2.0;net8.0</AkavacheBaseTargets>
 
-    <!-- Windows-specific desktop TFMs -->
+    <!-- Cross-platform .NET 9 target (non-Windows only) -->
+    <AkavacheCrossPlatformNet9>net9.0</AkavacheCrossPlatformNet9>
+
+    <!-- Windows-specific desktop TFMs (includes Windows-specific .NET 9) -->
     <AkavacheWindowsDesktopTargets>net462;net472;net9.0-windows10.0.17763.0</AkavacheWindowsDesktopTargets>
 
     <!-- Mobile TFMs separated by platform -->
@@ -40,13 +43,16 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <!-- Start with TFMs that are always included -->
-    <AkavacheFinalTargetFrameworks>$(AkavacheCoreTargets)</AkavacheFinalTargetFrameworks>
+    <!-- Start with base TFMs that are always included -->
+    <AkavacheFinalTargetFrameworks>$(AkavacheBaseTargets)</AkavacheFinalTargetFrameworks>
+
+    <!-- Add cross-platform .NET 9 only when NOT building on Windows -->
+    <AkavacheFinalTargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheCrossPlatformNet9)</AkavacheFinalTargetFrameworks>
 
     <!-- Add Android, which can be built on any OS with the right SDKs -->
     <AkavacheFinalTargetFrameworks>$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAndroidTargets)</AkavacheFinalTargetFrameworks>
 
-    <!-- Add Windows Desktop TFMs only when building on Windows -->
+    <!-- Add Windows Desktop TFMs only when building on Windows (includes net9.0-windows) -->
     <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheWindowsDesktopTargets)</AkavacheFinalTargetFrameworks>
 
     <!-- Add Apple Mobile TFMs only when building on macOS -->
