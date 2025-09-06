@@ -1077,3 +1077,4 @@ public class SerializerExtensionsTests
             }
         }
     }
+}
