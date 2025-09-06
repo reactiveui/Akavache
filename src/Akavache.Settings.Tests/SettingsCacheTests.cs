@@ -352,6 +352,88 @@ public class SettingsCacheTests
     }
 
     /// <summary>
+    /// Verifies that <see cref="IAkavacheInstance.SettingsCachePath"/> is computed lazily and respects <see cref="IAkavacheBuilder.WithApplicationName(string)"/> order.
+    /// This test validates the fix for the constructor ordering issue where SettingsCachePath was computed before WithApplicationName() could be called.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Test]
+    [CancelAfter(15000)]
+    public async Task TestSettingsCachePathRespectsApplicationNameOrderAsync()
+    {
+        var customAppName = NewName("CustomAppTest");
+        IAkavacheInstance? akavache = null;
+
+        _appBuilder
+            .WithAkavache<NewtonsoftSerializer>(
+                applicationName: null, // Don't set via parameter
+                builder =>
+                {
+                    builder
+                        .WithSqliteProvider()
+                        .WithApplicationName(customAppName); // Set via fluent API after builder creation
+                },
+                instance => akavache = instance)
+            .Build();
+
+        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(akavache, Is.Not.Null);
+            Assert.That(akavache!.SettingsCachePath, Is.Not.Null);
+
+            // The settings cache path should contain the custom application name, not the default "Akavache"
+            Assert.That(
+                akavache.SettingsCachePath,
+                Does.Contain(customAppName),
+                "SettingsCachePath should contain the custom application name when WithApplicationName() is called before accessing the path");
+
+            // Additional validation: ensure it doesn't contain the default name when a custom name is set
+            Assert.That(
+                akavache.SettingsCachePath,
+                Does.Not.Contain("Akavache"),
+                "SettingsCachePath should not contain the default 'Akavache' directory when a custom application name is specified");
+        }
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="IAkavacheInstance.SettingsCachePath"/> uses the default application name when no custom name is provided.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Test]
+    [CancelAfter(15000)]
+    public async Task TestSettingsCachePathUsesDefaultApplicationNameAsync()
+    {
+        IAkavacheInstance? akavache = null;
+
+        _appBuilder
+            .WithAkavache<NewtonsoftSerializer>(
+                applicationName: null, // No custom application name
+                builder =>
+                {
+                    builder.WithSqliteProvider();
+
+                    // Don't call WithApplicationName() - should use default
+                },
+                instance => akavache = instance)
+            .Build();
+
+        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(akavache, Is.Not.Null);
+            Assert.That(akavache!.SettingsCachePath, Is.Not.Null);
+
+            // Should contain the default application name when no custom name is provided
+            Assert.That(
+                akavache.SettingsCachePath,
+                Does.Contain("Akavache"),
+                "SettingsCachePath should contain the default 'Akavache' directory when no custom application name is specified");
+        }
+    }
+
+    /// <summary>
     /// Creates a unique, human-readable test name prefix plus a GUID segment.
     /// </summary>
     /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
