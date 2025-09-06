@@ -1,17 +1,18 @@
-﻿# Tutorial: Mastering HTTP Operations and Credentials with Akavache
+﻿# Tutorial: Mastering HTTP Caching with Akavache
 
-Welcome to the comprehensive guide for HTTP operations and credential management with Akavache! This tutorial will take you from simple URL caching to building robust, production-ready services that handle API calls, authentication, and secure credential storage.
+Welcome to the comprehensive guide for HTTP caching operations with Akavache! This tutorial will take you from simple URL caching to building robust, production-ready services that handle API calls and offline data.
 
-Akavache's HTTP extensions provide powerful tools for caching web content and managing user credentials securely across platforms. Whether you're building a mobile app that needs to cache API responses or a desktop application that manages multiple user accounts, this guide has you covered.
+Akavache's HTTP extensions provide powerful, reactive tools for caching web content across platforms. Whether you're building a mobile app that needs to cache API responses or a desktop application that manages web content, this guide has you covered.
 
 ## Core Features
 
-* **URL Content Caching**: Automatically cache HTTP responses with intelligent cache-aside patterns
-* **Custom Header Support**: Full support for authentication tokens, API keys, and custom headers
-* **Intelligent Fetching**: Built-in support for cache invalidation and fresh data fetching
-* **Secure Credential Storage**: Encrypted storage for passwords, tokens, and sensitive data
-* **Multi-Service Support**: Manage credentials for multiple APIs and services
-* **Cross-Platform**: Works seamlessly on iOS, Android, Windows, and other .NET platforms
+* **URL Content Caching**: Automatically cache HTTP responses with intelligent cache-aside patterns.
+* **Reactive API**: A fully `IObservable`-based API for composing complex, asynchronous caching logic.
+* **Custom Header Support**: Full support for authentication tokens, API keys, and custom headers.
+* **Intelligent Fetching**: Built-in support for cache invalidation and fresh data fetching.
+* **Cross-Platform**: Works seamlessly on iOS, Android, Windows, and other .NET platforms.
+
+-----
 
 ## Chapter 1: Getting Started - Your First HTTP Cache
 
@@ -22,42 +23,70 @@ Let's start with the fundamentals. In just a few lines of code, you can set up p
 Before diving into HTTP operations, ensure you have Akavache properly initialized. For HTTP caching, you'll typically want persistent storage:
 
 ```csharp
+using Akavache;
 using Akavache.Core;
 using Akavache.SystemTextJson;
-using Akavache.Sqlite3;
 
-// Initialize Akavache for HTTP caching
-AppBuilder.CreateSplatBuilder()
-    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-        builder.WithApplicationName("MyHttpApp")
-               .WithSqliteProvider()
-               .WithSqliteDefaults());
+// Correct initialization using the builder pattern
+CacheDatabase.Initialize<SystemTextJsonSerializer>(builder =>
+    builder.WithApplicationName("MyHttpApp")
+           .WithSqliteProvider()
+           .WithSqliteDefaults());
 ```
 
-### 2. Your First Cached HTTP Request
+### 2. Your First Cached HTTP Request (The Reactive Way)
 
-Now for the magic. With a single method call, you can download and cache any URL. Subsequent requests will be served instantly from the local cache:
+Akavache's APIs return an `IObservable<T>`, which is a stream of data. You can "subscribe" to this stream to get the result. This is the classic, powerful way to use Akavache.
 
 ```csharp
-// This downloads the content, caches it, and returns the raw bytes
-// If you call this again, it loads instantly from cache
-var imageData = await CacheDatabase.LocalMachine.DownloadUrl("https://example.com/image.jpg");
+// DownloadUrl returns an IObservable<byte[]>
+// We subscribe to it to receive the data when it arrives.
+IDisposable subscription = CacheDatabase.LocalMachine.DownloadUrl("https://example.com/image.jpg")
+    .Subscribe(
+        imageData => Console.WriteLine($"Downloaded {imageData.Length} bytes and cached for future use"),
+        ex => Console.WriteLine($"An error occurred: {ex.Message}")
+    );
 
-// You now have the raw bytes - perfect for images, JSON, or any web content
-Console.WriteLine($"Downloaded {imageData.Length} bytes and cached for future use");
+// In a real application, you would manage the 'subscription' lifetime,
+// often by adding it to a CompositeDisposable that is cleared when a view is deactivated.
+```
+
+### 3. A Simpler Alternative: Directly Awaiting Observables
+
+For simple cases where you only need one value, you can directly `await` the observable. This simplifies the code and makes it look like a standard `async/await` operation.
+
+```csharp
+using System.Reactive.Linq; // IMPORTANT - this makes await work!
+
+try
+{
+    // You can now directly await the IObservable without .ToTask()
+    var imageData = await CacheDatabase.LocalMachine.DownloadUrl("https://example.com/image.jpg");
+
+    // You now have the raw bytes - perfect for images, JSON, or any web content
+    Console.WriteLine($"Downloaded {imageData.Length} bytes and cached for future use");
+}
+catch (HttpRequestException ex)
+{
+    Console.WriteLine($"Failed to download image: {ex.Message}");
+}
 ```
 
 Congratulations! You've just implemented intelligent HTTP caching that will make your app faster and more resilient.
 
+-----
+
 ## Chapter 2: The HTTP Lifecycle - Core Operations
 
-Understanding the three fundamental patterns for HTTP caching will help you choose the right approach for each scenario in your application.
+Understanding the fundamental patterns for HTTP caching will help you choose the right approach for each scenario in your application. We will use the direct `await` style here for simplicity.
 
 ### 1. Simple Download and Cache
 
-The most straightforward pattern - perfect for resources that don't change frequently:
+The most straightforward pattern—perfect for resources that don't change frequently:
 
 ```csharp
+using System.Reactive.Linq;
+
 // Download and cache - uses URL as the cache key
 var cssData = await CacheDatabase.LocalMachine.DownloadUrl("https://cdn.example.com/styles.css");
 
@@ -70,13 +99,15 @@ var cssData = await CacheDatabase.LocalMachine.DownloadUrl("https://cdn.example.
 For dynamic content or when you need more control over caching behavior:
 
 ```csharp
+using System.Reactive.Linq;
+
 // Use a custom cache key instead of the URL
 var apiData = await CacheDatabase.LocalMachine.DownloadUrl(
-    key: "user_profile_data", 
+    key: "user_profile_data",
     url: "https://api.example.com/users/123/profile",
     absoluteExpiration: DateTimeOffset.Now.AddHours(6));
 
-// This data will be cached for 6 hours, then automatically refreshed
+// This data will be cached for 6 hours
 ```
 
 ### 3. Authenticated Requests with Headers
@@ -84,6 +115,8 @@ var apiData = await CacheDatabase.LocalMachine.DownloadUrl(
 Real-world APIs often require authentication tokens or custom headers:
 
 ```csharp
+using System.Reactive.Linq;
+
 // Prepare headers for authenticated API calls
 var headers = new Dictionary<string, string>
 {
@@ -101,13 +134,18 @@ var userData = await CacheDatabase.LocalMachine.DownloadUrl(
     absoluteExpiration: DateTimeOffset.Now.AddMinutes(30));
 ```
 
-## Chapter 3: Practical Application - Building a Weather Service
+-----
 
-Let's build something real-world: a weather service that caches API responses intelligently, handles authentication, and provides offline functionality.
+## Chapter 3: Practical Application - Building a Reactive Weather Service
+
+Let's build something real-world: a weather service that caches API responses intelligently and provides offline functionality, all using a reactive approach.
 
 ### WeatherCacheService.cs
 
+This version of the service returns `IObservable<WeatherData>`, allowing the UI layer to subscribe to weather updates reactively.
+
 ```csharp
+using System.Reactive.Linq;
 using System.Text.Json;
 using Akavache;
 
@@ -123,89 +161,49 @@ public class WeatherCacheService
     }
 
     /// <summary>
-    /// Gets weather data with intelligent caching. Fresh data every 10 minutes,
-    /// but serves cached data instantly while fetching updates in background.
+    /// Gets weather data with intelligent caching. This method returns a stream
+    /// that will provide the data when available.
     /// </summary>
-    public async Task<WeatherData> GetWeatherAsync(string cityName)
+    public IObservable<WeatherData> GetWeather(string cityName)
     {
         var cacheKey = $"weather_{cityName.ToLowerInvariant()}";
         var apiUrl = $"https://api.openweathermap.org/data/2.5/weather?q={cityName}&appid={_apiKey}";
-        
-        // Prepare headers for the API request
-        var headers = new Dictionary<string, string>
-        {
-            ["User-Agent"] = "WeatherApp/1.0",
-            ["Accept"] = "application/json"
-        };
+        var headers = new Dictionary<string, string> { ["User-Agent"] = "WeatherApp/1.0" };
 
-        try
-        {
-            // Download with 10-minute cache expiration
-            var jsonBytes = await _cache.DownloadUrl(
-                key: cacheKey,
-                url: apiUrl,
-                method: HttpMethod.Get,
-                headers: headers,
-                fetchAlways: false,
-                absoluteExpiration: DateTimeOffset.Now.AddMinutes(10));
-
-            // Deserialize the cached JSON
-            var jsonString = System.Text.Encoding.UTF8.GetString(jsonBytes);
-            var weatherData = JsonSerializer.Deserialize<WeatherData>(jsonString);
-            
-            return weatherData;
-        }
-        catch (HttpRequestException ex)
-        {
-            // Network error - try to serve stale cached data
-            Console.WriteLine($"Network error, attempting to serve cached data: {ex.Message}");
-            
-            try
+        return _cache.DownloadUrl(cacheKey, apiUrl, headers: headers, absoluteExpiration: DateTimeOffset.Now.AddMinutes(10))
+            .Select(jsonBytes =>
             {
-                // Attempt to get any cached version, even if expired
-                var staleData = await GetStaleWeatherData(cacheKey);
-                return staleData;
-            }
-            catch
+                var jsonString = System.Text.Encoding.UTF8.GetString(jsonBytes);
+                return JsonSerializer.Deserialize<WeatherData>(jsonString);
+            })
+            .Catch<WeatherData, HttpRequestException>(ex =>
             {
-                throw new Exception($"Unable to fetch weather for {cityName}. Check your internet connection.", ex);
-            }
-        }
+                Console.WriteLine($"Network error, attempting to serve cached data: {ex.Message}");
+                // Fallback to stale data from the cache using GetObject
+                return _cache.GetObject<byte[]>(cacheKey).Select(staleBytes =>
+                {
+                    var jsonString = System.Text.Encoding.UTF8.GetString(staleBytes);
+                    return JsonSerializer.Deserialize<WeatherData>(jsonString);
+                });
+            });
     }
 
     /// <summary>
-    /// Force refresh weather data, bypassing cache completely
+    /// Force refresh weather data, bypassing the cache completely.
     /// </summary>
-    public async Task<WeatherData> RefreshWeatherAsync(string cityName)
+    public IObservable<WeatherData> RefreshWeather(string cityName)
     {
         var cacheKey = $"weather_{cityName.ToLowerInvariant()}";
         var apiUrl = $"https://api.openweathermap.org/data/2.5/weather?q={cityName}&appid={_apiKey}";
-        
-        var headers = new Dictionary<string, string>
-        {
-            ["User-Agent"] = "WeatherApp/1.0",
-            ["Accept"] = "application/json"
-        };
+        var headers = new Dictionary<string, string> { ["User-Agent"] = "WeatherApp/1.0" };
 
-        // Force fresh download, ignoring any cached version
-        var jsonBytes = await _cache.DownloadUrl(
-            key: cacheKey,
-            url: apiUrl,
-            method: HttpMethod.Get,
-            headers: headers,
-            fetchAlways: true, // Always fetch fresh data
-            absoluteExpiration: DateTimeOffset.Now.AddMinutes(10));
-
-        var jsonString = System.Text.Encoding.UTF8.GetString(jsonBytes);
-        return JsonSerializer.Deserialize<WeatherData>(jsonString);
-    }
-
-    private async Task<WeatherData> GetStaleWeatherData(string cacheKey)
-    {
-        // Try to get expired data directly from cache
-        var cachedBytes = await _cache.GetObject<byte[]>(cacheKey);
-        var jsonString = System.Text.Encoding.UTF8.GetString(cachedBytes);
-        return JsonSerializer.Deserialize<WeatherData>(jsonString);
+        // fetchAlways: true forces a fresh download
+        return _cache.DownloadUrl(cacheKey, apiUrl, headers: headers, fetchAlways: true, absoluteExpiration: DateTimeOffset.Now.AddMinutes(10))
+            .Select(jsonBytes =>
+            {
+                var jsonString = System.Text.Encoding.UTF8.GetString(jsonBytes);
+                return JsonSerializer.Deserialize<WeatherData>(jsonString);
+            });
     }
 }
 
@@ -229,227 +227,121 @@ public class WeatherCondition
 }
 ```
 
-This service demonstrates several advanced concepts:
-- **Intelligent caching** with 10-minute expiration
-- **Authentication** using API keys in headers
-- **Error handling** with fallback to stale data
-- **Forced refresh** for when users want the latest data
-- **Proper resource management** and offline support
+This service demonstrates several advanced reactive concepts:
 
-## Chapter 4: Credential Management - Secure Storage Made Simple
+- **Declarative Pipelines**: Using `.Select()` to transform data and `.Catch()` to handle errors.
+- **Error Handling**: Gracefully falling back to stale data during network failures.
+- **Forced Refresh**: Providing a way for users to get the latest data on demand.
+- **Immutable Results**: The `IObservable` stream delivers data without side effects.
 
-Modern applications need to manage multiple user accounts, API tokens, and sensitive data. Akavache's credential management makes this secure and straightforward.
+-----
 
-### 1. Basic Credential Storage
+## Chapter 4: Advanced Techniques - Production-Ready Patterns
 
-All credential operations automatically use the secure, encrypted cache:
+### 1. Batch Operations for Performance
 
-```csharp
-// Save user login credentials (automatically encrypted)
-await CacheDatabase.Secure.SaveLogin("john.doe@example.com", "user_password", "myapp.com");
-
-// The credentials are now safely stored and encrypted
-// They'll persist across app restarts and device reboots
-Console.WriteLine("Login credentials saved securely");
-```
-
-### 2. Multi-Service Authentication
-
-Modern apps often integrate with multiple services. Manage them all easily:
+When you need to download multiple resources efficiently, you can use reactive operators to merge the results into a single stream.
 
 ```csharp
-// Save credentials for different services
-await CacheDatabase.Secure.SaveLogin("user123", "github_token", "github.com");
-await CacheDatabase.Secure.SaveLogin("user123", "slack_token", "slack.com");  
-await CacheDatabase.Secure.SaveLogin("user123", "api_key", "weather_service");
+using System.Reactive.Linq;
 
-// Each service has isolated, secure storage
-```
-
-### 3. Retrieving and Using Credentials
-
-```csharp
-public async Task<string> AuthenticatedApiCall(string endpoint)
-{
-    try
-    {
-        // Retrieve stored credentials
-        var loginInfo = await CacheDatabase.Secure.GetLogin("weather_service");
-        
-        // Use the credentials in your API call
-        var headers = new Dictionary<string, string>
-        {
-            ["Authorization"] = $"Bearer {loginInfo.Password}", // API token
-            ["X-User-ID"] = loginInfo.UserName
-        };
-        
-        var response = await CacheDatabase.LocalMachine.DownloadUrl(
-            endpoint, 
-            HttpMethod.Get, 
-            headers);
-            
-        return System.Text.Encoding.UTF8.GetString(response);
-    }
-    catch (KeyNotFoundException)
-    {
-        // No credentials found - redirect to login
-        throw new UnauthorizedAccessException("Please log in first");
-    }
-}
-```
-
-### 4. Credential Lifecycle Management
-
-Handle token expiration, logout, and credential updates:
-
-```csharp
-// Save temporary tokens with expiration
-await CacheDatabase.Secure.SaveLogin(
-    username: "api_access",
-    password: temporaryToken,
-    host: "api.example.com",
-    absoluteExpiration: DateTimeOffset.Now.AddHours(2)); // Token expires in 2 hours
-
-// Clear credentials on logout
-await CacheDatabase.Secure.EraseLogin("myapp.com");
-
-// Update existing credentials
-await CacheDatabase.Secure.SaveLogin("user@example.com", newPassword, "myapp.com");
-```
-
-## Chapter 5: Advanced Techniques - Production-Ready Patterns
-
-### 1. Handling HTTP Status Codes
-
-```csharp
-public async Task<ApiResponse<T>> SafeApiCall<T>(string url, Dictionary<string, string> headers = null)
-{
-    try
-    {
-        var data = await CacheDatabase.LocalMachine.DownloadUrl(url, HttpMethod.Get, headers);
-        var json = System.Text.Encoding.UTF8.GetString(data);
-        var result = JsonSerializer.Deserialize<T>(json);
-        
-        return new ApiResponse<T>
-        {
-            Success = true,
-            Data = result,
-            FromCache = false // DownloadUrl doesn't indicate cache source
-        };
-    }
-    catch (HttpRequestException ex) when (ex.Message.Contains("404"))
-    {
-        return new ApiResponse<T>
-        {
-            Success = false,
-            ErrorMessage = "Resource not found",
-            HttpStatusCode = 404
-        };
-    }
-    catch (HttpRequestException ex) when (ex.Message.Contains("401"))
-    {
-        // Handle authentication errors
-        await CacheDatabase.Secure.EraseLogin("api_service"); // Clear bad credentials
-        
-        return new ApiResponse<T>
-        {
-            Success = false,
-            ErrorMessage = "Authentication required",
-            HttpStatusCode = 401
-        };
-    }
-    catch (Exception ex)
-    {
-        return new ApiResponse<T>
-        {
-            Success = false,
-            ErrorMessage = ex.Message
-        };
-    }
-}
-```
-
-### 2. Batch Operations for Performance
-
-```csharp
-// Download multiple resources efficiently
 var urls = new[]
 {
     "https://api.example.com/users/1",
-    "https://api.example.com/users/2", 
+    "https://api.example.com/users/2",
     "https://api.example.com/users/3"
 };
 
-var downloadTasks = urls.Select(async url =>
+// Create an observable for each download
+var downloadObservables = urls.Select(url =>
 {
     var cacheKey = $"user_{url.Split('/').Last()}";
-    return await CacheDatabase.LocalMachine.DownloadUrl(
-        cacheKey, 
-        url,
-        absoluteExpiration: DateTimeOffset.Now.AddMinutes(30));
+    return CacheDatabase.LocalMachine.DownloadUrl(cacheKey, url, absoluteExpiration: DateTimeOffset.Now.AddMinutes(30));
 });
 
-var results = await Task.WhenAll(downloadTasks);
-Console.WriteLine($"Downloaded and cached {results.Length} user profiles");
+// Merge the observables to run them in parallel and get a notification when all are complete
+Observable.Merge(downloadObservables)
+    .Subscribe(
+        _ => Console.WriteLine("A user profile was downloaded and cached."),
+        ex => Console.WriteLine($"An error occurred during batch download: {ex.Message}"),
+        () => Console.WriteLine("All user profiles downloaded and cached successfully.")
+    );
 ```
 
-### 3. Cache Warming and Preloading
+### 2. Cache Warming and Preloading
+
+You can preload critical data when your application starts to ensure it's available instantly when the user needs it.
 
 ```csharp
-public async Task PreloadCriticalData()
+using System.Reactive.Linq;
+
+public IObservable<Unit> PreloadCriticalData()
 {
     var criticalEndpoints = new[]
     {
         "https://api.example.com/config",
-        "https://api.example.com/user/preferences", 
+        "https://api.example.com/user/preferences",
         "https://api.example.com/notifications"
     };
-    
-    // Start all downloads in parallel
-    var warmupTasks = criticalEndpoints.Select(async endpoint =>
-    {
-        try
+
+    var warmupObservables = criticalEndpoints.Select(endpoint =>
+        CacheDatabase.LocalMachine.DownloadUrl(
+            key: $"preload_{endpoint.GetHashCode()}",
+            url: endpoint,
+            absoluteExpiration: DateTimeOffset.Now.AddHours(1))
+        .Catch<byte[], Exception>(ex =>
         {
-            await CacheDatabase.LocalMachine.DownloadUrl(
-                key: $"preload_{endpoint.GetHashCode()}",
-                url: endpoint,
-                absoluteExpiration: DateTimeOffset.Now.AddHours(1));
-        }
-        catch (Exception ex)
-        {
+            // If one download fails, we don't want to stop the others.
+            // We catch the exception and return an empty observable.
             Console.WriteLine($"Preload failed for {endpoint}: {ex.Message}");
-        }
-    });
-    
-    await Task.WhenAll(warmupTasks);
-    Console.WriteLine("Critical data preloaded and cached");
+            return Observable.Empty<byte[]>();
+        })
+    );
+
+    // ForkJoin waits for all observables to complete
+    return Observable.ForkJoin(warmupObservables).Select(_ => Unit.Default);
 }
+
+// Usage:
+// await PreloadCriticalData();
+// Console.WriteLine("Critical data preloaded and cached");
 ```
+
+-----
 
 ## Best Practices and Troubleshooting
 
+### Choosing Your Pattern: `IObservable` vs. `async/await`
+
+Akavache gives you two powerful ways to handle asynchronous operations. Knowing when to use each is key.
+
+* **Use `async/await`** for simplicity, especially in UI event handlers (`async void Button_Click`). It's perfect when you only need the **single, final value** from an operation, like a simple data fetch.
+* **Use the `IObservable` pattern** (`.Select()`, `.Catch()`, `.Subscribe()`) for more complex scenarios. This is the ideal choice when you need to:
+    * **Compose** multiple asynchronous steps into a declarative chain.
+    * **Handle streams** of data, not just a single value.
+    * Use advanced Akavache methods like `GetAndFetchLatest`, which can emit **multiple values** (first the cached data, then the fresh data from the network). `await` can only ever receive the *first* item from such a stream, which is often not what you want.
+
 ### Cache Key Strategy
-- Use descriptive, consistent cache keys
-- Include user context when needed: `$"user_{userId}_profile"`
-- Consider data versioning: `$"api_v2_users_{userId}"`
+
+* Use descriptive, consistent cache keys.
+* Include user context when needed: `$"user_{userId}_profile"`
+* Consider data versioning: `$"api_v2_users_{userId}"`
 
 ### Error Handling
-- Always handle `HttpRequestException` for network issues
-- Use `KeyNotFoundException` to detect missing credentials
-- Implement fallback strategies for offline scenarios
+
+* Always handle `HttpRequestException` for network issues when using `await`.
+* Use the `.Catch()` operator for robust error handling in reactive chains.
+* Implement fallback strategies (like reading from a stale cache) for offline scenarios.
 
 ### Performance Tips
-- Use appropriate expiration times based on data freshness needs
-- Consider cache warming for critical data
-- Use batch operations when downloading multiple resources
-- Monitor cache size and implement cleanup strategies
 
-### Security Considerations
-- Always use `CacheDatabase.Secure` for sensitive data
-- Never log passwords or tokens
-- Implement proper token refresh mechanisms
-- Clear credentials on user logout
+* Use appropriate expiration times based on data freshness needs.
+* Consider cache warming for critical data.
+* Use `Observable.Merge` or `Observable.ForkJoin` for batch operations.
+* Monitor cache size and implement cleanup strategies if necessary.
 
-## Conclusion & API Quick Reference
+-----
 
-You now have comprehensive knowledge of HTTP operations and credential management with Akavache. You've learned to build robust, secure, and performant applications that handle network requests intelligently.
+## Conclusion
+
+You now have a comprehensive knowledge of modern HTTP caching operations with Akavache. You've learned to build robust and performant applications by choosing between the simplicity of `async/await` and the power of fully reactive `IObservable` pipelines.
