@@ -954,7 +954,7 @@ public class SerializerExtensionsTests
 
     /// <summary>
     /// Tests that InsertObjects completion logic is robust and doesn't throw exceptions.
-    /// This test verifies the implementation handles various edge cases correctly, 
+    /// This test verifies the implementation handles various edge cases correctly,
     /// including empty sequences, without throwing "Sequence contains no elements" exceptions.
     /// </summary>
     /// <returns>A task representing the test.</returns>
@@ -974,7 +974,7 @@ public class SerializerExtensionsTests
                 var emptyDict = new Dictionary<string, object>();
                 await cache.InsertObjects(emptyDict).FirstAsync();
 
-                // Test 2: Single item - should complete normally  
+                // Test 2: Single item - should complete normally
                 var singleDict = new Dictionary<string, object> { ["single"] = "value" };
                 await cache.InsertObjects(singleDict).FirstAsync();
 
