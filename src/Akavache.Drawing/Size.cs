@@ -58,7 +58,7 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET462_OR_GREATER
         // .NET Standard 2.0 compatible hash code generation
         unchecked
         {
