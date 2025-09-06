@@ -450,6 +450,7 @@ public async Task Invalidate_Should_Clear_RequestCache()
 }
 ```
 
+
 ## UWP x64 Issues
 
 **Problem:** UWP applications targeting "Any CPU" fail with SQLite errors.

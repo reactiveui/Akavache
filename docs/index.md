@@ -9,11 +9,14 @@ Welcome to the Akavache documentation! This guide will help you get the most out
 - **[Configuration](./configuration.md)** - Builder pattern, DI, and providers
 - **[Migration from V10.x](./migration-v10-to-v11.md)** - Upgrade your existing applications
 
-### Core Concepts
-- **[Serializers](./serializers.md)** - System.Text.Json vs Newtonsoft.Json, BSON options
-- **[Cache Types](./cache-types.md)** - UserAccount, LocalMachine, Secure, and InMemory
-- **[Basic Operations](./basic-operations.md)** - Store, retrieve, update, and delete data
-- **[Settings](./settings.md)** - Akavache.Settings for application configuration and user preferences
+### Core Concepts  
+- **[Serializers](./serializers.md)** - System.Text.Json vs Newtonsoft.Json, BSON options  
+- **[Cache Types](./cache-types.md)** - UserAccount, LocalMachine, Secure, and InMemory  
+- **[Basic Operations](./basic-operations.md)** - Store, retrieve, update, and delete data  
+- **[HTTP Operations](./http-operations.md)** - Caching URLs and managing logins  
+- **[Drawing](./drawing.md)** - Storing and manipulating bitmaps  
+- **[Settings](./settings.md)** - Akavache.Settings for application configuration and user preferences  
+- **[Advanced Features](./advanced-features.md)** - Expiration updates, schedulers, and cache inspection
 
 ### Advanced Topics
 - **[Platform Notes](./platform-notes.md)** - iOS, Android, MAUI, WinUI, and Windows specifics

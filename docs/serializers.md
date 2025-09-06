@@ -128,6 +128,10 @@ await cache.InsertObject("key", largeObject, TimeSpan.FromHours(1));
 await cache.InsertObject("key", largeObject, TimeSpan.FromHours(1));
 ```
 
+### BSON Variants
+
+For maximum backward compatibility with existing Akavache data: use `UseBsonFormat = true` in either serializer.
+
 ## Custom Serializer Configuration
 
 ### System.Text.Json Configuration

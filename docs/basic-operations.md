@@ -234,6 +234,20 @@ The `UpdateExpiration` method is highly optimized:
 - **Bulk Operations**: Update multiple entries in a single transaction
 - **No Data Transfer**: Avoids expensive serialization/deserialization cycles (up to 250x faster)
 
+### Updating Expiration
+
+```csharp
+// Extend expiration for a single cache entry
+await CacheDatabase.LocalMachine.UpdateExpiration("api_data", DateTimeOffset.Now.AddHours(2));
+
+// Extend expiration using relative time
+await CacheDatabase.LocalMachine.UpdateExpiration("user_session", TimeSpan.FromMinutes(30));
+
+// Update expiration for multiple entries
+var keys = new[] { "cache_key1", "cache_key2", "cache_key3" };
+await CacheDatabase.LocalMachine.UpdateExpiration(keys, DateTimeOffset.Now.AddDays(1));
+```
+
 ## Advanced Operations
 
 ### Conditional Storage
