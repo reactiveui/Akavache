@@ -159,6 +159,65 @@ await CacheDatabase.Secure.InsertObject("auth_token", token);
 await CacheDatabase.InMemory.InsertObject("session_data", sessionData);
 ```
 
+## Settings Management (Akavache.Settings)
+
+Akavache.Settings provides persistent, type-safe settings storage that's critical for most applications:
+
+### Install Settings Package
+```xml
+<PackageReference Include="Akavache.Settings" Version="11.1.*" />
+```
+
+### Define Settings Class
+```csharp
+using Akavache.Settings;
+
+public class AppSettings : ISettingsStorage
+{
+    public string ApiEndpoint { get; set; } = "https://api.example.com";
+    public int TimeoutSeconds { get; set; } = 30;
+    public bool EnableLogging { get; set; } = true;
+    
+    public void Dispose() { }
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}
+```
+
+### Configure Settings Store
+```csharp
+AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>("MyApp",
+        builder => builder.WithSqliteProvider().WithSqliteDefaults(),
+        instance =>
+        {
+            // Add settings store
+            instance.WithSettingsStore<AppSettings>(settings =>
+            {
+                settings.ApiEndpoint = "https://api.production.com";
+                settings.EnableLogging = true;
+            });
+        });
+```
+
+### Use Settings in Your App
+```csharp
+// Read settings
+var settings = akavacheInstance.GetLoadedSettingsStore<AppSettings>();
+var apiUrl = settings.ApiEndpoint;
+
+// Update settings (automatically persisted)
+settings.TimeoutSeconds = 60;
+settings.EnableLogging = false;
+
+// Encrypted settings for sensitive data
+instance.WithSecureSettingsStore<SecureSettings>("password", secureSettings =>
+{
+    secureSettings.ApiKey = "secret-key";
+});
+```
+
+> **See the complete [Settings Guide](./docs/settings.md)** for advanced scenarios, encrypted settings, dependency injection patterns, and framework-specific examples.
+
 ## Further Reading
 
 The complete documentation is available in the [docs folder](./docs/):
