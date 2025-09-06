@@ -1,6 +1,6 @@
-# Cache Deletion: The Right Way
+# Cache Deletion and Safe Key Access: The Right Way
 
-This guide shows you how to safely delete cache entries in Akavache, addressing common issues that can cause crashes on mobile platforms.
+This guide shows you how to safely delete cache entries and access keys in Akavache, addressing common issues that can cause crashes on mobile platforms.
 
 ## The Problem
 
@@ -30,7 +30,7 @@ catch (Exception ex)
 - Mixing `async/await` with `Subscribe()` creates complex async scenarios
 - Unnecessarily complex - you don't need to check if a key exists before deleting it
 
-## The Simple Solution
+## The Simple Solution for Deletion
 
 Just delete the key directly! Akavache's `Invalidate()` methods are designed to be safe:
 
@@ -38,12 +38,12 @@ Just delete the key directly! Akavache's `Invalidate()` methods are designed to 
 // ✅ CORRECT - Simple and safe
 await cache.Invalidate(cacheKey);
 
-// Or for typed objects (recommended):
+// Or for typed objects (recommended for better performance):
 await cache.InvalidateObject<MyDataType>(cacheKey);
 
-// New in V11.1 - even simpler:
-await cache.Remove(cacheKey);
-await cache.Remove<MyDataType>(cacheKey);
+// Bulk deletion:
+await cache.Invalidate(new[] { "key1", "key2", "key3" });
+await cache.InvalidateObjects<MyDataType>(new[] { "key1", "key2", "key3" });
 ```
 
 **Why this works:**
@@ -62,7 +62,7 @@ public async Task DeleteUserProfile(string userId)
     try
     {
         // Simple deletion - works even if key doesn't exist
-        await CacheDatabase.UserAccount.Remove<UserProfile>(userId);
+        await CacheDatabase.UserAccount.InvalidateObject<UserProfile>(userId);
         Console.WriteLine($"Successfully removed user profile: {userId}");
     }
     catch (Exception ex)
@@ -80,7 +80,7 @@ public async Task DeleteMultipleProfiles(IEnumerable<string> userIds)
     try
     {
         // Delete multiple keys at once - more efficient
-        await CacheDatabase.UserAccount.Remove<UserProfile>(userIds);
+        await CacheDatabase.UserAccount.InvalidateObjects<UserProfile>(userIds);
         Console.WriteLine($"Successfully removed {userIds.Count()} user profiles");
     }
     catch (Exception ex)
@@ -90,35 +90,7 @@ public async Task DeleteMultipleProfiles(IEnumerable<string> userIds)
 }
 ```
 
-### Conditional Deletion (Advanced)
-
-If you really need to check if a key exists before deleting it:
-
-```csharp
-public async Task DeleteIfExists(string cacheKey)
-{
-    try
-    {
-        // Safe way to check and delete
-        bool wasDeleted = await CacheDatabase.UserAccount.TryRemove<UserProfile>(cacheKey);
-        
-        if (wasDeleted)
-        {
-            Console.WriteLine($"Key {cacheKey} was found and deleted");
-        }
-        else
-        {
-            Console.WriteLine($"Key {cacheKey} was not found");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error during conditional deletion: {ex.Message}");
-    }
-}
-```
-
-### Safe Key Enumeration (Advanced)
+## Safe Key Enumeration (When You Need It)
 
 If you need to list keys for some reason, use the safe version:
 
@@ -136,7 +108,7 @@ public async Task CleanupOldUserProfiles()
         
         if (keysToDelete.Any())
         {
-            await CacheDatabase.UserAccount.Remove<UserProfile>(keysToDelete);
+            await CacheDatabase.UserAccount.InvalidateObjects<UserProfile>(keysToDelete);
             Console.WriteLine($"Cleaned up {keysToDelete.Count} old profiles");
         }
     }
@@ -149,39 +121,30 @@ public async Task CleanupOldUserProfiles()
 
 ## Method Reference
 
-### Simple Deletion (Recommended)
-
-| Method | Use Case |
-|--------|----------|
-| `cache.Remove(key)` | Delete any cache entry by key |
-| `cache.Remove<T>(key)` | Delete typed cache entry (faster) |
-| `cache.Remove(keys)` | Delete multiple entries |
-| `cache.Remove<T>(keys)` | Delete multiple typed entries |
-
-### Traditional Methods (Still Supported)
+### Recommended Deletion Methods
 
 | Method | Use Case |
 |--------|----------|
 | `cache.Invalidate(key)` | Delete any cache entry |
-| `cache.InvalidateObject<T>(key)` | Delete typed cache entry |
+| `cache.InvalidateObject<T>(key)` | Delete typed cache entry (recommended) |
+| `cache.Invalidate(keys)` | Delete multiple entries |  
 | `cache.InvalidateObjects<T>(keys)` | Delete multiple typed entries |
 | `cache.InvalidateAll()` | Delete all entries |
 | `cache.InvalidateAllObjects<T>()` | Delete all entries of type T |
 
-### Safe Utilities (For Advanced Scenarios)
+### Safe Key Access (For Advanced Scenarios)
 
 | Method | Use Case |
 |--------|----------|
-| `cache.TryRemove(key)` | Delete and check if key existed |
-| `cache.TryRemove<T>(key)` | Delete typed entry and check if existed |
-| `cache.GetAllKeysSafe()` | List keys without crashes |
+| `cache.GetAllKeysSafe()` | List all keys without crashes |
 | `cache.GetAllKeysSafe<T>()` | List typed keys safely |
+| `cache.GetAllKeysSafe(Type)` | List keys for specific type |
 
 ## Platform Considerations
 
 ### iOS Specifics
 - Never use `GetAllKeys().Subscribe()` - can cause mono trampoline crashes
-- Use `Remove()` or `TryRemove()` methods instead
+- Use `GetAllKeysSafe()` methods for safe key enumeration
 - Consider using `InvalidateAllObjects<T>()` for type-based cleanup
 
 ### Android Specifics  
@@ -190,10 +153,11 @@ public async Task CleanupOldUserProfiles()
 - Use `GetAllKeysSafe()` if you must enumerate keys
 
 ### General Best Practices
-- Always use typed deletion when possible (`Remove<T>()`)
-- Use bulk operations for multiple deletions
+- Always use typed deletion when possible (`InvalidateObject<T>()`)
+- Use bulk operations for multiple deletions (`InvalidateObjects<T>()`)
 - Don't check for key existence before deletion - just delete
 - Handle exceptions gracefully with try-catch blocks
+- Use `GetAllKeysSafe()` methods instead of `GetAllKeys()` for mobile safety
 
 ## Migration Guide
 
@@ -208,13 +172,18 @@ Cache?.GetAllKeys()?.Subscribe(async keys =>
 });
 
 // Replace with:
-await Cache.Remove(CacheKey);
-// or
-await Cache.Remove<MyType>(CacheKey);
+await Cache.Invalidate(CacheKey);
+// or for better performance:
+await Cache.InvalidateObject<MyType>(CacheKey);
+
+// If you need to enumerate keys safely:
+await Cache.GetAllKeysSafe<MyType>()
+    .Where(key => key == CacheKey)
+    .ForEach(async key => await Cache.InvalidateObject<MyType>(key));
 ```
 
 This change will:
 - ✅ Eliminate crashes on mobile platforms
 - ✅ Reduce code complexity
-- ✅ Improve performance
+- ✅ Improve performance  
 - ✅ Make your code more maintainable
