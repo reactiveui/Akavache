@@ -447,7 +447,8 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
-            .Select(x => x?.CreatedAt);
+            .Select(x => x?.CreatedAt)
+            .DefaultIfEmpty();
     }
 
     /// <inheritdoc/>
@@ -507,7 +508,8 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
-            .Select(x => x?.CreatedAt);
+            .Select(x => x?.CreatedAt)
+            .DefaultIfEmpty();
     }
 
     /// <inheritdoc/>
