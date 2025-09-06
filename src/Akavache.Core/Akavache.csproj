@@ -13,4 +13,8 @@
     <PackageReference Include="System.Reactive" />
     <PackageReference Include="sqlite-net-pcl" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Net.Http" />
+  </ItemGroup>
 </Project>
