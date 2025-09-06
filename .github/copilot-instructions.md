@@ -10,7 +10,7 @@ Always reference these instructions first and fallback to search or bash command
   curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 9.0
   export PATH="$HOME/.dotnet:$PATH"
   ```
-- **Platform Support**: This project **builds fully only on Windows**. Linux/macOS have partial support.
+- **Platform Support**: This project now has **excellent cross-platform support** with proper setup. Windows has full support; Linux/macOS have comprehensive support for core libraries, Android, and MAUI development.
 - **Development Tools**: Visual Studio 2022 or VS Code with C# extension.
 - Note on Cloning the Repository
   When cloning the Akavache repository, use a full clone instead of a shallow one (e.g., avoid --depth=1). This project uses Nerdbank.GitVersioning for automatic version calculation based on Git history. Shallow clones lack the necessary commit history, which can cause build errors or force the tool to perform an extra fetch step to deepen the repository. To ensure smooth builds:
@@ -35,33 +35,47 @@ Always reference these instructions first and fallback to search or bash command
   ```
   Build time: **15-25 minutes**. NEVER CANCEL - set timeout to 45+ minutes.
 
-### Linux/macOS Development (Limited Support)
-- Install available workloads:
+### Linux/macOS Development (Comprehensive Support)
+- **CRITICAL**: Install .NET 9.0 SDK first, then install required workloads:
   ```bash
+  # Install Android and MAUI workloads (recommended for cross-platform development)
   dotnet workload install android maui-android
+  
+  # Optional: Install additional workloads as needed
+  # dotnet workload install maui  # For full MAUI support
   ```
-- **IMPORTANT**: Full solution build will fail due to Windows-specific dependencies (WPF samples, Windows APIs).
-- **Workaround**: Build individual projects with explicit targeting:
+- **What works on Linux/macOS**:
+  - ✅ All core libraries (Akavache.Core, Akavache.SystemTextJson, etc.)
+  - ✅ Android projects (net9.0-android) - requires Android workloads
+  - ✅ MAUI applications - samples build successfully (~85 seconds)
+  - ✅ Cross-platform .NET 9 projects (net9.0)
+  - ✅ Standard library projects (netstandard2.0, net8.0)
+  - ✅ Tests with explicit targeting: `-p:TargetFramework=net9.0`
+- **What fails on Linux/macOS**:
+  - ❌ Windows-specific projects (WPF samples, net9.0-windows)
+  - ❌ .NET Framework projects (net462, net472)
+- **Building individual projects**: Always use explicit targeting when needed:
   ```bash
   cd src
-  dotnet restore Akavache.SystemTextJson/Akavache.SystemTextJson.csproj -p:TargetFramework=net9.0
-  dotnet build Akavache.SystemTextJson/Akavache.SystemTextJson.csproj -p:TargetFramework=net9.0 --no-restore
+  dotnet build Akavache.Core/Akavache.csproj -p:TargetFramework=net9.0
+  dotnet build Samples/AkavacheTodoMaui/AkavacheTodoMaui.csproj  # Works fully
   ```
-- **NEVER** attempt to build the full solution on Linux - it will fail with framework targeting errors.
+- **Important**: **DO NOT** attempt to build Windows-specific projects or the full solution on Linux - it will fail with clear framework targeting errors.
 
 ### Testing
-- **CRITICAL**: Test execution requires platform-specific configuration.
-- Windows: Full test suite runs successfully:
+- **CRITICAL**: Test execution requires platform-specific configuration and .NET 9.0 SDK.
+- **Windows**: Full test suite runs successfully:
   ```bash
   cd src
   dotnet test --configuration Release
   ```
   Test time: **5-15 minutes**. NEVER CANCEL - set timeout to 30+ minutes.
-- Linux: Limited test execution with explicit targeting:
+- **Linux/macOS**: Test execution with explicit .NET 9 targeting:
   ```bash
   cd src
-  dotnet test Akavache.Tests/Akavache.Tests.csproj -p:TargetFramework=net9.0 --list-tests
+  dotnet test Akavache.Tests/Akavache.Tests.csproj -p:TargetFramework=net9.0
   ```
+  Test time: **3-10 minutes**. Works reliably with proper setup.
 
 ## Validation and Quality Assurance
 
@@ -210,15 +224,22 @@ Always reference these instructions first and fallback to search or bash command
 ## Common Development Tasks
 
 ### Making Changes to Core Libraries
-1. **Always** work with single-project targeting on Linux:
+1. **Always** start with .NET 9.0 SDK installation and required workloads:
+   ```bash
+   # Essential first steps for any platform
+   curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 9.0
+   export PATH="$HOME/.dotnet:$PATH"
+   dotnet workload install android maui-android  # For cross-platform development
+   ```
+2. **Linux/macOS**: Work with single-project targeting:
    ```bash
    dotnet build Akavache.Core/Akavache.csproj -p:TargetFramework=net9.0
    ```
-2. **Always** run formatting validation:
+3. **Always** run formatting validation:
    ```bash
    dotnet format whitespace --verify-no-changes
    ```
-3. **Test on Windows** for full validation when possible.
+4. **Test on Windows** for full validation when possible.
 
 ### Adding New Features
 1. **Follow coding standards** - see ReactiveUI guidelines: https://www.reactiveui.net/contribute/index.html
@@ -230,8 +251,9 @@ Always reference these instructions first and fallback to search or bash command
 
 ### Working with Samples
 - **WPF Sample**: Windows only - demonstrates desktop patterns
-- **MAUI Sample**: Cross-platform - demonstrates mobile/desktop patterns
+- **MAUI Sample**: Cross-platform - demonstrates mobile/desktop patterns and **builds successfully on Linux/macOS**
 - **Always** test samples when making core library changes
+- **Linux/macOS tip**: MAUI samples often build faster than on Windows (~85s vs 5-10 minutes)
 
 ## Build Timing and Expectations
 
@@ -239,9 +261,12 @@ Always reference these instructions first and fallback to search or bash command
 |-----------|---------|-------------|-------|
 | **Single Project Restore** | 1-2 minutes | 1-2 minutes | Fast operation |
 | **Single Project Build** | 2-5 minutes | 2-5 minutes | Usually works |
+| **Core Library Build** | 2-15 seconds | 2-15 seconds | Very fast with .NET 9 |
+| **MAUI Sample Build** | 5-10 minutes | ~85 seconds | Linux/macOS often faster |
+| **WPF Sample Build** | 2-5 minutes | FAILS | Windows-only (net9.0-windows) |
 | **Full Solution Restore** | 5-10 minutes | FAILS | Windows-specific deps |
 | **Full Solution Build** | 15-25 minutes | FAILS | Windows-specific deps |
-| **Test Suite** | 5-15 minutes | LIMITED | Platform limitations |
+| **Test Suite** | 5-15 minutes | 3-10 minutes | Requires explicit .NET 9 targeting |
 | **Benchmarks** | 10-30 minutes | N/A | Windows recommended |
 | **Code Formatting** | 2-5 seconds | 2-5 seconds | Always works |
 
@@ -254,7 +279,8 @@ Always reference these instructions first and fallback to search or bash command
 - **Cache Types**: ~27ms (small) to ~2,600ms (large datasets)
 
 ### Known Limitations
-- **Linux Build**: Cannot build Windows-specific projects (WPF, Windows APIs)
+- **Windows-only projects**: WPF samples and .NET Framework targets cannot build on Linux/macOS
+- **Full solution builds**: Cannot build on Linux/macOS due to Windows-specific projects
 - **Large Sequential Reads**: Up to 8.6% slower than V10 in some cases
 - **Package Dependencies**: More granular structure requires careful workload management
 
@@ -280,26 +306,31 @@ Always reference these instructions first and fallback to search or bash command
 - Runs comprehensive test suite and uploads coverage
 
 ### Local Development
-- **Always** use Windows for release builds and comprehensive testing
-- **Use** Linux/macOS for quick iteration on core libraries only
+- **Windows**: Use for full builds, comprehensive testing, and release validation
+- **Linux/macOS**: Excellent for cross-platform development, core libraries, MAUI apps, and Android development
 - **Format code** before every commit
 - **Test sample applications** when changing core functionality
+- **Cross-platform workflow**: Develop on Linux/macOS, validate on Windows for releases
 
 ## Troubleshooting
 
 ### Common Issues
-1. **"Invalid framework identifier" errors**: Use explicit `-p:TargetFramework=net9.0`
-2. **"Workload not supported" errors**: Platform limitation - use Windows
-3. **Build hangs**: Normal for large builds - wait up to 45 minutes
-4. **Test failures**: May be platform-specific - verify on Windows
+1. **"The current .NET SDK does not support targeting .NET 9.0"**: Install .NET 9.0 SDK first
+2. **"Invalid framework identifier" errors**: Use explicit `-p:TargetFramework=net9.0`
+3. **"Workload not supported" errors**: Install required workloads with `dotnet workload install android maui-android`
+4. **"To build a project targeting Windows on this operating system, set the EnableWindowsTargeting property to true"**: Expected on Linux/macOS for Windows-specific projects
+5. **Build hangs**: Normal for large builds - wait up to 45 minutes
+6. **Test failures**: May be platform-specific - verify on Windows
 
 ### Quick Fixes
+- **Setup issues**: Ensure .NET 9.0 SDK is installed first, then install workloads
 - **Format issues**: Run `dotnet format whitespace` and `dotnet format style`
 - **StyleCop violations**: Check `.editorconfig` rules and `src/stylecop.json` configuration
 - **Analyzer warnings**: Build with `--verbosity normal` to see detailed analyzer messages
 - **Missing XML documentation**: All public APIs require XML doc comments per StyleCop rules
 - **Package restore issues**: Clear NuGet cache with `dotnet nuget locals all --clear`
 - **Build configuration errors**: Use single project builds with explicit targeting
+- **Workload issues**: Install Android/MAUI workloads for cross-platform development
 
 ### When to Escalate
 - **Cross-platform compatibility** issues affecting core libraries
