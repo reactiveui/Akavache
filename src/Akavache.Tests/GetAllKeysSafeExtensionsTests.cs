@@ -18,18 +18,29 @@ public class GetAllKeysSafeExtensionsTests
 {
     private InMemoryBlobCache _cache = null!;
 
+    /// <summary>
+    /// Sets up the test cache before each test.
+    /// </summary>
     [SetUp]
     public void SetUp()
     {
         _cache = new InMemoryBlobCache(new SystemJsonSerializer());
     }
 
+    /// <summary>
+    /// Cleans up the test cache after each test.
+    /// </summary>
+    /// <returns>A task representing the asynchronous cleanup operation.</returns>
     [TearDown]
     public async Task TearDown()
     {
         await _cache.DisposeAsync();
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe returns an empty list for an empty cache.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetAllKeysSafe_ShouldReturnEmptyForEmptyCache()
     {
@@ -40,6 +51,10 @@ public class GetAllKeysSafeExtensionsTests
         Assert.That(keys, Is.Empty);
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe returns all keys when cache is populated.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetAllKeysSafe_ShouldReturnKeysForPopulatedCache()
     {
@@ -51,11 +66,15 @@ public class GetAllKeysSafeExtensionsTests
         var keys = await _cache.GetAllKeysSafe().ToList().FirstAsync();
 
         // Assert
-        Assert.That(keys.Count, Is.EqualTo(2));
+        Assert.That(keys, Has.Count.EqualTo(2));
         Assert.That(keys, Does.Contain("key1"));
         Assert.That(keys, Does.Contain("key2"));
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe with type returns an empty list for an empty cache.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetAllKeysSafe_WithType_ShouldReturnEmptyForEmptyCache()
     {
@@ -66,6 +85,10 @@ public class GetAllKeysSafeExtensionsTests
         Assert.That(keys, Is.Empty);
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe with type returns keys filtered by the specified type.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetAllKeysSafe_WithType_ShouldReturnKeysForSpecificType()
     {
@@ -78,12 +101,19 @@ public class GetAllKeysSafeExtensionsTests
         var intKeys = await _cache.GetAllKeysSafe(typeof(int)).ToList().FirstAsync();
 
         // Assert
-        Assert.That(stringKeys.Count, Is.EqualTo(1));
-        Assert.That(stringKeys.First(), Does.Contain("test_string"));
-        Assert.That(intKeys.Count, Is.EqualTo(1));
-        Assert.That(intKeys.First(), Does.Contain("test_int"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(stringKeys, Has.Count.EqualTo(1));
+            Assert.That(stringKeys.First(), Does.Contain("test_string"));
+            Assert.That(intKeys, Has.Count.EqualTo(1));
+            Assert.That(intKeys.First(), Does.Contain("test_int"));
+        }
     }
 
+    /// <summary>
+    /// Tests that generic GetAllKeysSafe returns an empty list for an empty cache.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetAllKeysSafe_Generic_ShouldReturnEmptyForEmptyCache()
     {
@@ -94,6 +124,10 @@ public class GetAllKeysSafeExtensionsTests
         Assert.That(keys, Is.Empty);
     }
 
+    /// <summary>
+    /// Tests that generic GetAllKeysSafe returns keys filtered by the specified generic type.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetAllKeysSafe_Generic_ShouldReturnKeysForSpecificType()
     {
@@ -105,10 +139,13 @@ public class GetAllKeysSafeExtensionsTests
         var stringKeys = await _cache.GetAllKeysSafe<string>().ToList().FirstAsync();
 
         // Assert
-        Assert.That(stringKeys.Count, Is.EqualTo(1));
+        Assert.That(stringKeys, Has.Count.EqualTo(1));
         Assert.That(stringKeys.First(), Does.Contain("test_string"));
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe throws ArgumentNullException for null cache.
+    /// </summary>
     [Test]
     public void GetAllKeysSafe_ShouldThrowForNullCache()
     {
@@ -116,9 +153,12 @@ public class GetAllKeysSafeExtensionsTests
         IBlobCache? nullCache = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => nullCache!.GetAllKeysSafe());
+        Assert.That(() => nullCache!.GetAllKeysSafe(), Throws.ArgumentNullException);
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe with type throws ArgumentNullException for null cache.
+    /// </summary>
     [Test]
     public void GetAllKeysSafe_WithType_ShouldThrowForNullCache()
     {
@@ -126,16 +166,22 @@ public class GetAllKeysSafeExtensionsTests
         IBlobCache? nullCache = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => nullCache!.GetAllKeysSafe(typeof(string)));
+        Assert.That(() => nullCache!.GetAllKeysSafe(typeof(string)), Throws.ArgumentNullException);
     }
 
+    /// <summary>
+    /// Tests that GetAllKeysSafe with type throws ArgumentNullException for null type.
+    /// </summary>
     [Test]
     public void GetAllKeysSafe_WithType_ShouldThrowForNullType()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _cache.GetAllKeysSafe(null!));
+        Assert.That(() => _cache.GetAllKeysSafe(null!), Throws.ArgumentNullException);
     }
 
+    /// <summary>
+    /// Tests that generic GetAllKeysSafe throws ArgumentNullException for null cache.
+    /// </summary>
     [Test]
     public void GetAllKeysSafe_Generic_ShouldThrowForNullCache()
     {
@@ -143,6 +189,6 @@ public class GetAllKeysSafeExtensionsTests
         IBlobCache? nullCache = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => nullCache!.GetAllKeysSafe<string>());
+        Assert.That(() => nullCache!.GetAllKeysSafe<string>(), Throws.ArgumentNullException);
     }
 }
