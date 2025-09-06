@@ -17,6 +17,7 @@ namespace Akavache.Core;
 internal class AkavacheBuilder : IAkavacheBuilder
 {
     private static readonly object _lock = new();
+    private string? _settingsCachePath;
 
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
     public AkavacheBuilder()
@@ -48,8 +49,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
             // Ignore exceptions and leave Version and ApplicationRootPath as null
         }
 
-        // Compute SettingsCachePath under a writable location (fix iOS bundle write attempt)
-        SettingsCachePath = this.GetIsolatedCacheDirectory("SettingsCache");
+        // SettingsCachePath will be computed lazily when first accessed to ensure ApplicationName is properly set
     }
 
     /// <inheritdoc />
@@ -62,7 +62,20 @@ internal class AkavacheBuilder : IAkavacheBuilder
     public string? ApplicationRootPath { get; }
 
     /// <inheritdoc />
-    public string? SettingsCachePath { get; set; }
+    public string? SettingsCachePath
+    {
+        get
+        {
+            // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
+            if (_settingsCachePath == null)
+            {
+                _settingsCachePath = this.GetIsolatedCacheDirectory("SettingsCache");
+            }
+
+            return _settingsCachePath;
+        }
+        set => _settingsCachePath = value;
+    }
 
     /// <inheritdoc />
     public string? ExecutingAssemblyName { get; }
