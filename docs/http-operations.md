@@ -1,8 +1,8 @@
 ﻿# HTTP and Credential Operations
 
-Akavache provides built-in extension methods for common tasks like caching content from URLs and managing user credentials securely.
+Akavache provides built-in extension methods for common tasks like caching content from URLs and managing user credentials securely. These helpers build upon the core caching patterns. For a complete understanding of fundamental caching, please review the **[Basic Operations](./basic-operations.md)** guide first.
 
-### HTTP/URL Operations
+## HTTP/URL Operations
 
 ```csharp
 // Download and cache URLs
