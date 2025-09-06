@@ -41,8 +41,12 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
             ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
 
-            var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
-            Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
+            // Additional validation before calling FileVersionInfo.GetVersionInfo to prevent Android crashes
+            if (!string.IsNullOrWhiteSpace(fileLocation) && File.Exists(fileLocation))
+            {
+                var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
+                Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
+            }
         }
         catch
         {
