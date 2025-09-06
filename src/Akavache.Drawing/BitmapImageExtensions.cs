@@ -184,7 +184,7 @@ public static class BitmapImageExtensions
 
         return Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET462_OR_GREATER
             using var stream = new MemoryStream();
 #else
             await using var stream = new MemoryStream();
@@ -197,7 +197,7 @@ public static class BitmapImageExtensions
     private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET462_OR_GREATER
             using var ms = new MemoryStream(compressedImage);
 #else
             await using var ms = new MemoryStream(compressedImage);

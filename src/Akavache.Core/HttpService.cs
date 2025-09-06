@@ -4,6 +4,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
+#if NET462_OR_GREATER
+using System.Net.Http;
+#endif
 
 namespace Akavache;
 

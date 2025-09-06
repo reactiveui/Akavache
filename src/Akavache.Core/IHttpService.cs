@@ -3,6 +3,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if NET462_OR_GREATER
+using System.Net.Http;
+#endif
+
 namespace Akavache;
 
 /// <summary>
