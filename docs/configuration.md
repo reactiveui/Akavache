@@ -269,6 +269,146 @@ services.AddSplat(builder =>
                    .WithWebDefaults())); // Web-optimized settings
 ```
 
+## Dependency Injection Pattern
+
+Akavache V11.1 supports dependency injection (DI) patterns through the `.WithAkavache<T>` extension method, which provides a non-static `IAkavacheInstance` that can be registered with your DI container.
+
+### Basic Dependency Injection Setup
+
+```csharp
+using Akavache;
+using Akavache.SystemTextJson;
+using Splat.Builder;
+
+// Create a non-static Akavache instance for DI
+var akavacheInstance = AppBuilder.CreateSplatBuilder()
+    .WithAkavache<SystemJsonSerializer>(
+        applicationName: "MyApp",
+        configure: builder => 
+        {
+            builder.WithSqliteProvider()
+                   .WithSqliteDefaults();
+        },
+        instance: akavacheInstance =>
+        {
+            // Configure the instance
+            akavacheInstance.ForcedDateTimeKind = DateTimeKind.Utc;
+        });
+```
+
+### DI Container Registration
+
+```csharp
+// ASP.NET Core / Microsoft.Extensions.DependencyInjection
+services.AddSingleton<IAkavacheInstance>(serviceProvider =>
+{
+    IAkavacheInstance? instance = null;
+    
+    AppBuilder.CreateSplatBuilder()
+        .WithAkavache<SystemJsonSerializer>(
+            "MyWebApp",
+            builder => builder.WithSqliteProvider().WithSqliteDefaults(),
+            akavacheInstance => instance = akavacheInstance);
+    
+    return instance!;
+});
+
+// Autofac
+builder.Register(c =>
+{
+    IAkavacheInstance? instance = null;
+    
+    AppBuilder.CreateSplatBuilder()
+        .WithAkavache<SystemJsonSerializer>(
+            "MyApp",
+            configBuilder => configBuilder.WithSqliteProvider().WithSqliteDefaults(),
+            akavacheInstance => instance = akavacheInstance);
+    
+    return instance!;
+}).As<IAkavacheInstance>().SingleInstance();
+```
+
+### Using IAkavacheInstance in Services
+
+```csharp
+public class MyService
+{
+    private readonly IAkavacheInstance _cache;
+    
+    public MyService(IAkavacheInstance cache)
+    {
+        _cache = cache;
+    }
+    
+    public async Task<T> GetCachedDataAsync<T>(string key)
+    {
+        // Access cache instances through the injected instance
+        return await _cache.UserAccount.GetObject<T>(key);
+    }
+    
+    public async Task SetCachedDataAsync<T>(string key, T value)
+    {
+        await _cache.UserAccount.InsertObject(key, value);
+    }
+}
+```
+
+### IAkavacheInstance Properties
+
+The `IAkavacheInstance` provides access to all standard cache types and configuration:
+
+```csharp
+public interface IAkavacheInstance
+{
+    // Cache instances
+    IBlobCache? InMemory { get; }           // Temporary cache
+    IBlobCache? LocalMachine { get; }       // Machine-wide persistent cache  
+    ISecureBlobCache? Secure { get; }       // Encrypted cache
+    IBlobCache? UserAccount { get; }        // User-specific persistent cache
+    
+    // Configuration
+    ISerializer? Serializer { get; }        // Configured serializer
+    string ApplicationName { get; }         // Application identifier
+    DateTimeKind? ForcedDateTimeKind { get; set; } // DateTime handling
+    
+    // Application info
+    string? ApplicationRootPath { get; }
+    string? ExecutingAssemblyName { get; }
+    Version? Version { get; }
+    
+    // Settings (for Akavache.Settings)
+    string? SettingsCachePath { get; }
+}
+```
+
+### Advanced DI Patterns
+
+```csharp
+// Multiple cache instances for different purposes
+services.AddSingleton<IAkavacheInstance>(sp => CreateCacheInstance("MainApp"));
+services.AddSingleton<IAkavacheInstance>("Analytics", sp => CreateCacheInstance("Analytics"));
+services.AddSingleton<IAkavacheInstance>("UserData", sp => CreateCacheInstance("UserData"));
+
+// Factory pattern for cache instances
+services.AddSingleton<ICacheFactory, CacheFactory>();
+
+public class CacheFactory : ICacheFactory
+{
+    public IAkavacheInstance CreateCache(string applicationName)
+    {
+        IAkavacheInstance? instance = null;
+        
+        AppBuilder.CreateSplatBuilder()
+            .WithAkavache<SystemJsonSerializer>(
+                applicationName,
+                builder => builder.WithSqliteProvider().WithSqliteDefaults(),
+                akavacheInstance => instance = akavacheInstance);
+        
+        return instance!;
+    }
+}
+```
+
 ## Environment-Specific Configuration
 
 ### Development Environment

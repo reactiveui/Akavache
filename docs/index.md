@@ -13,6 +13,7 @@ Welcome to the Akavache documentation! This guide will help you get the most out
 - **[Serializers](./serializers.md)** - System.Text.Json vs Newtonsoft.Json, BSON options
 - **[Cache Types](./cache-types.md)** - UserAccount, LocalMachine, Secure, and InMemory
 - **[Basic Operations](./basic-operations.md)** - Store, retrieve, update, and delete data
+- **[Settings](./settings.md)** - Akavache.Settings for application configuration and user preferences
 
 ### Advanced Topics
 - **[Platform Notes](./platform-notes.md)** - iOS, Android, MAUI, UWP, and Windows specifics
