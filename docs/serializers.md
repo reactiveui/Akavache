@@ -27,8 +27,8 @@ AppBuilder.CreateSplatBuilder()
 ```
 
 **Best for:**
-- ✅ New projects starting with .NET 5+
-- ✅ .NET Framework 4.6.2+ applications via NuGet package
+- ✅ New projects starting with .NET 8.0+
+- ✅ .NET Standard 2.0+ applications
 - ✅ Performance-critical applications
 - ✅ AOT (Ahead-of-Time) compilation scenarios
 - ✅ Blazor WebAssembly applications
@@ -68,10 +68,10 @@ AppBuilder.CreateSplatBuilder()
 - ✅ Complex serialization scenarios
 - ✅ Custom converters and advanced JSON features
 - ✅ Migration from V10.x (maintains compatibility)
-- ✅ .NET Framework applications
+- ✅ .NET Standard 2.0+ applications
 
 **Benefits:**
-- **Maximum compatibility** - Works with .NET Framework and .NET Core/5+
+- **Maximum compatibility** - Works with .NET Standard 2.0 and .NET 8.0+
 - **Rich feature set** - Extensive customization options
 - **Proven stability** - Battle-tested in countless applications
 - **Custom converters** - Extensive ecosystem of converters
@@ -88,20 +88,20 @@ AppBuilder.CreateSplatBuilder()
 | **AOT Support** | ⭐⭐⭐⭐⭐ | ❌ |
 | **Feature Richness** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Legacy Compatibility** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **.NET Framework** | ⭐⭐⭐ (.NET Framework 4.6.2+) | ⭐⭐⭐⭐⭐ |
+| **.NET Standard/Core** | ⭐⭐⭐⭐⭐ (.NET Standard 2.0+) | ⭐⭐⭐⭐⭐ |
 
 ### Use System.Text.Json when:
-- Starting a new project on .NET 5+ or .NET Framework 4.6.2+
+- Starting a new project on .NET 8.0+ or .NET Standard 2.0+
 - Performance is critical
 - Memory usage is a concern
-- Planning to use AOT compilation (.NET 5+ only)
+- Planning to use AOT compilation (.NET 8.0+ only)
 - Building microservices or cloud applications
 
 ### Use Newtonsoft.Json when:
 - Migrating from V10.x
 - Need maximum feature richness and customization
 - Using complex custom converters
-- Working with .NET Framework versions below 4.6.2
+- Working with .NET Standard 2.0 applications that require specific Newtonsoft features
 - Have existing Newtonsoft.Json configurations
 - Require specific Newtonsoft.Json features not available in System.Text.Json
 
