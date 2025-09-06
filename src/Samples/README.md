@@ -372,6 +372,46 @@ foreach (var key in manyKeys) // Inefficient!
 
 ## Additional Resources
 
+### Comprehensive Pattern Documentation
+
+- [`GetAndFetchLatestPatterns.cs`](GetAndFetchLatestPatterns.cs) - Detailed examples for the `GetAndFetchLatest` method
+- [`UpdateExpirationPatterns.cs`](UpdateExpirationPatterns.cs) - Efficient cache expiration management patterns  
+- [`CacheInvalidationPatterns.cs`](CacheInvalidationPatterns.cs) - **NEW in V11.1.1+** - Proper cache invalidation techniques and bug fix demonstration
+
+### Cache Invalidation Best Practices 🔧
+
+The `CacheInvalidationPatterns.cs` file addresses a **critical bug fixed in V11.1.1+** where calling `Invalidate()` on InMemory cache didn't properly clear RequestCache entries, causing `GetOrFetchObject` to return stale data.
+
+#### Quick Reference: Invalidation Patterns
+
+| Pattern | Use Case | Key Benefit |
+|---------|----------|-------------|
+| **Basic Invalidation** | Single cache entry removal | Ensures fresh data fetch after invalidation |
+| **Bulk Invalidation** | Multiple related entries | Atomic clearing of related data |
+| **Type-Based Invalidation** | Schema/model changes | Clear all objects of specific type |
+| **Cross-Cache Testing** | Verification across cache types | Consistent behavior validation |
+| **Production Patterns** | Real-world scenarios | Error handling and verification |
+
+#### Critical Bug Fix ⚠️
+
+```csharp
+// ❌ BROKEN in pre-V11.1.1: Returns stale data from RequestCache
+var data1 = await cache.GetOrFetchObject("key", fetchFunc); // "fresh_1"
+await cache.Invalidate("key");
+var data2 = await cache.GetOrFetchObject("key", fetchFunc); // Returns "fresh_1" (wrong!)
+
+// ✅ FIXED in V11.1.1+: Properly fetches fresh data
+var data1 = await cache.GetOrFetchObject("key", fetchFunc); // "fresh_1"  
+await cache.Invalidate("key");
+var data2 = await cache.GetOrFetchObject("key", fetchFunc); // Returns "fresh_2" (correct!)
+```
+
+**Impact**: This bug primarily affected InMemory cache usage where `GetOrFetchObject` was used in combination with `Invalidate`. The fix ensures that invalidation properly clears both the main cache and the RequestCache, preventing stale data returns.
+
+**Migration**: No code changes required - simply upgrade to V11.1.1+ to get the fix automatically.
+
+### External Documentation
+
 - [Akavache Documentation](https://github.com/reactiveui/Akavache)
 - [ReactiveUI Documentation](https://www.reactiveui.net/)
 - [System.Reactive Documentation](https://github.com/dotnet/reactive)
