@@ -32,6 +32,7 @@ Akavache V11.1 uses a modular package structure. Choose the packages that match 
 ```
 **Best for:** 
 - New projects
+- .NET Framework 4.6.2+ applications
 - .NET 8.0+ applications  
 - .NET Standard 2.0+ applications
 - Performance-critical scenarios

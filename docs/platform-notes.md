@@ -392,6 +392,58 @@ public class PlatformCacheDebugger
 7. **Handle platform-specific exceptions** gracefully
 8. **Use appropriate cache types** based on platform characteristics
 
+## .NET Framework
+
+### Supported Versions
+
+Akavache V11.1 supports **.NET Framework 4.6.2** and **.NET Framework 4.7.2**.
+
+### Configuration
+
+```csharp
+// In Application_Start or Main method
+public void ConfigureAkavache()
+{
+    AppBuilder.CreateSplatBuilder()
+        .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
+            builder.WithApplicationName("MyNetFrameworkApp")
+               .WithSqliteProvider()        // REQUIRED: Explicit provider
+               .WithSqliteDefaults());
+}
+```
+
+### .NET Framework Considerations
+
+#### System.Text.Json Support
+- **Package Installation**: System.Text.Json is available via NuGet package for .NET Framework 4.6.2+
+- **Performance**: Full performance benefits available on .NET Framework
+- **Compatibility**: All serialization features work identically to .NET Core/.NET 5+
+
+#### Package Dependencies
+```xml
+<!-- Required packages for .NET Framework -->
+<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<PackageReference Include="System.Text.Json" Version="9.0.0" />
+```
+
+#### Thread Safety and Synchronization Context
+```csharp
+// Ensure proper async context in .NET Framework applications
+public async Task CacheOperation()
+{
+    // Use ConfigureAwait(false) to avoid deadlocks
+    var data = await CacheDatabase.UserAccount
+        .GetObject<MyData>("key")
+        .ConfigureAwait(false);
+}
+```
+
+#### Application Lifecycle
+- **Proper shutdown**: Call `CacheDatabase.Shutdown()` during application exit
+- **App.config considerations**: No special configuration required
+- **File permissions**: Ensure appropriate file system permissions for cache directories
+
 ## Next Steps
 
 - [Review basic operations](./basic-operations.md)

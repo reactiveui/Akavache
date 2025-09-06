@@ -27,10 +27,10 @@ AppBuilder.CreateSplatBuilder()
 ```
 
 **Best for:**
-- ✅ New projects starting with .NET 8.0+
+- ✅ New projects starting with .NET Framework 4.6.2+, .NET 8.0+
 - ✅ .NET Standard 2.0+ applications
 - ✅ Performance-critical applications
-- ✅ AOT (Ahead-of-Time) compilation scenarios
+- ✅ AOT (Ahead-of-Time) compilation scenarios (.NET 8.0+ only)
 - ✅ Blazor WebAssembly applications
 - ✅ Microservices and cloud-native applications
 
@@ -71,7 +71,7 @@ AppBuilder.CreateSplatBuilder()
 - ✅ .NET Standard 2.0+ applications
 
 **Benefits:**
-- **Maximum compatibility** - Works with .NET Standard 2.0 and .NET 8.0+
+- **Maximum compatibility** - Works with .NET Framework 4.6.2+, .NET Standard 2.0, and .NET 8.0+
 - **Rich feature set** - Extensive customization options
 - **Proven stability** - Battle-tested in countless applications
 - **Custom converters** - Extensive ecosystem of converters
@@ -88,10 +88,10 @@ AppBuilder.CreateSplatBuilder()
 | **AOT Support** | ⭐⭐⭐⭐⭐ | ❌ |
 | **Feature Richness** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Legacy Compatibility** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **.NET Standard/Core** | ⭐⭐⭐⭐⭐ (.NET Standard 2.0+) | ⭐⭐⭐⭐⭐ |
+| **.NET Framework/Standard/Core** | ⭐⭐⭐⭐⭐ (.NET Framework 4.6.2+, .NET Standard 2.0+) | ⭐⭐⭐⭐⭐ |
 
 ### Use System.Text.Json when:
-- Starting a new project on .NET 8.0+ or .NET Standard 2.0+
+- Starting a new project on .NET Framework 4.6.2+, .NET 8.0+ or .NET Standard 2.0+
 - Performance is critical
 - Memory usage is a concern
 - Planning to use AOT compilation (.NET 8.0+ only)
@@ -101,7 +101,7 @@ AppBuilder.CreateSplatBuilder()
 - Migrating from V10.x
 - Need maximum feature richness and customization
 - Using complex custom converters
-- Working with .NET Standard 2.0 applications that require specific Newtonsoft features
+- Working with .NET Framework or .NET Standard 2.0 applications that require specific Newtonsoft features
 - Have existing Newtonsoft.Json configurations
 - Require specific Newtonsoft.Json features not available in System.Text.Json
 
