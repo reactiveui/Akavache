@@ -49,14 +49,14 @@
     <!-- Add cross-platform .NET 9 only when NOT building on Windows -->
     <AkavacheFinalTargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheCrossPlatformNet9)</AkavacheFinalTargetFrameworks>
 
-    <!-- Add Android, which can be built on any OS with the right SDKs -->
+    <!-- Add Android targets (Linux, macOS, Windows can all compile Android) -->
     <AkavacheFinalTargetFrameworks>$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAndroidTargets)</AkavacheFinalTargetFrameworks>
 
     <!-- Add Windows Desktop TFMs only when building on Windows (includes net9.0-windows) -->
     <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheWindowsDesktopTargets)</AkavacheFinalTargetFrameworks>
 
-    <!-- Add Apple Mobile TFMs only when building on macOS -->
-    <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAppleTargets)</AkavacheFinalTargetFrameworks>
+    <!-- Add Apple Mobile TFMs when building on macOS or Windows (both can compile Apple frameworks) -->
+    <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX')) OR $([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAppleTargets)</AkavacheFinalTargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')))">
     <IsAotCompatible>true</IsAotCompatible>
