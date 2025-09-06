@@ -501,18 +501,30 @@ var data = await CacheDatabase.UserAccount.GetObject<MyData>("key")
 ### Removing Data
 
 ```csharp
-// Remove single object
+// ✅ RECOMMENDED: Simple and safe deletion (New in V11.1)
+await CacheDatabase.UserAccount.Remove("key");                    // Remove any key
+await CacheDatabase.UserAccount.Remove<MyData>("key");            // Remove typed key (faster)
+await CacheDatabase.UserAccount.Remove(new[] { "key1", "key2" }); // Remove multiple keys
+await CacheDatabase.UserAccount.Remove<MyData>(new[] { "key1", "key2" }); // Remove multiple typed keys
+
+// Check if key exists and remove it
+bool wasRemoved = await CacheDatabase.UserAccount.TryRemove<MyData>("key");
+if (wasRemoved) {
+    Console.WriteLine("Key was found and removed");
+}
+
+// Traditional methods (still supported)
 await CacheDatabase.UserAccount.InvalidateObject<MyData>("key");
-
-// Remove multiple objects
 await CacheDatabase.UserAccount.InvalidateObjects<MyData>(new[] { "key1", "key2" });
-
-// Remove all objects of a type
 await CacheDatabase.UserAccount.InvalidateAllObjects<MyData>();
-
-// Remove all data
 await CacheDatabase.UserAccount.InvalidateAll();
 ```
+
+**Important for Mobile Developers:**
+- ⚠️ **Don't use** `GetAllKeys().Subscribe()` patterns - they can crash on iOS/Android
+- ✅ **Use** `Remove()` or `TryRemove()` methods instead
+- ✅ **Use** `GetAllKeysSafe()` if you need to enumerate keys
+- See [Cache Deletion Guide](src/Samples/CacheDeletion-TheRightWay.md) for detailed examples
 
 ### Updating Expiration
 

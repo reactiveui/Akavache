@@ -734,5 +734,223 @@ public static class SerializerExtensions
         }
     }
 
+    /// <summary>
+    /// Safely gets all keys from the cache with null-safety guards.
+    /// This method provides a safe alternative to GetAllKeys() that prevents crashes on mobile platforms.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <returns>An observable sequence of keys, guaranteed to not be null.</returns>
+    public static IObservable<string> GetAllKeysSafe(this IBlobCache blobCache)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        return blobCache.GetAllKeys()
+            .Where(key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
+            .Catch<string, Exception>(ex =>
+            {
+                // Log the exception and return empty sequence instead of crashing
+                System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
+                return Observable.Empty<string>();
+            });
+    }
+
+    /// <summary>
+    /// Safely gets all keys for a specific type from the cache with null-safety guards.
+    /// This method provides a safe alternative to GetAllKeys(Type) that prevents crashes on mobile platforms.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="type">The type to filter keys by.</param>
+    /// <returns>An observable sequence of keys for the specified type, guaranteed to not be null.</returns>
+    public static IObservable<string> GetAllKeysSafe(this IBlobCache blobCache, Type type)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (type is null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
+
+        return blobCache.GetAllKeys(type)
+            .Where(key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
+            .Catch<string, Exception>(ex =>
+            {
+                // Log the exception and return empty sequence instead of crashing
+                System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
+                return Observable.Empty<string>();
+            });
+    }
+
+    /// <summary>
+    /// Safely gets all keys for a specific type from the cache with null-safety guards.
+    /// This method provides a safe alternative to GetAllKeys() that prevents crashes on mobile platforms.
+    /// </summary>
+    /// <typeparam name="T">The type to filter keys by.</typeparam>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <returns>An observable sequence of keys for the specified type, guaranteed to not be null.</returns>
+    public static IObservable<string> GetAllKeysSafe<T>(this IBlobCache blobCache)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        return blobCache.GetAllKeysSafe(typeof(T));
+    }
+
+    /// <summary>
+    /// Safely removes a cache entry by key. This method does not throw if the key doesn't exist.
+    /// This is the recommended way to remove cache entries when you don't know the type.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="key">The key to remove from the cache.</param>
+    /// <returns>A Future result representing the completion of the invalidation.</returns>
+    public static IObservable<Unit> Remove(this IBlobCache blobCache, string key)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
+        }
+
+        return blobCache.Invalidate(key);
+    }
+
+    /// <summary>
+    /// Safely removes multiple cache entries by their keys. This method does not throw if any keys don't exist.
+    /// This is the recommended way to remove multiple cache entries when you don't know the types.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="keys">The keys to remove from the cache.</param>
+    /// <returns>A Future result representing the completion of the invalidation.</returns>
+    public static IObservable<Unit> Remove(this IBlobCache blobCache, IEnumerable<string> keys)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (keys is null)
+        {
+            throw new ArgumentNullException(nameof(keys));
+        }
+
+        return blobCache.Invalidate(keys);
+    }
+
+    /// <summary>
+    /// Safely removes a typed cache entry by key. This method does not throw if the key doesn't exist.
+    /// This is the recommended way to remove cache entries when you know the type.
+    /// </summary>
+    /// <typeparam name="T">The type of object associated with the blob.</typeparam>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="key">The key to remove from the cache.</param>
+    /// <returns>A Future result representing the completion of the invalidation.</returns>
+    public static IObservable<Unit> Remove<T>(this IBlobCache blobCache, string key)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
+        }
+
+        return blobCache.Invalidate(key, typeof(T));
+    }
+
+    /// <summary>
+    /// Safely removes multiple typed cache entries by their keys. This method does not throw if any keys don't exist.
+    /// This is the recommended way to remove multiple cache entries when you know the type.
+    /// </summary>
+    /// <typeparam name="T">The type of object associated with the blobs.</typeparam>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="keys">The keys to remove from the cache.</param>
+    /// <returns>A Future result representing the completion of the invalidation.</returns>
+    public static IObservable<Unit> Remove<T>(this IBlobCache blobCache, IEnumerable<string> keys)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (keys is null)
+        {
+            throw new ArgumentNullException(nameof(keys));
+        }
+
+        return blobCache.Invalidate(keys, typeof(T));
+    }
+
+    /// <summary>
+    /// Safely checks if a key exists in the cache and removes it if found.
+    /// This method provides a safe alternative to the GetAllKeys().Subscribe() pattern
+    /// that can cause crashes on mobile platforms.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="key">The key to check and remove.</param>
+    /// <returns>An observable that emits true if the key was found and removed, false if it wasn't found.</returns>
+    public static IObservable<bool> TryRemove(this IBlobCache blobCache, string key)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
+        }
+
+        // First try to get the key to see if it exists
+        return blobCache.Get(key)
+            .Select(_ => true) // If we got data, key exists
+            .Catch<bool, KeyNotFoundException>(_ => Observable.Return(false)) // Key doesn't exist
+            .SelectMany(keyExists => keyExists
+                ? blobCache.Invalidate(key).Select(_ => true) // Remove and return true
+                : Observable.Return(false)); // Return false if key didn't exist
+    }
+
+    /// <summary>
+    /// Safely checks if a typed key exists in the cache and removes it if found.
+    /// This method provides a safe alternative to the GetAllKeys().Subscribe() pattern
+    /// that can cause crashes on mobile platforms.
+    /// </summary>
+    /// <typeparam name="T">The type of object associated with the blob.</typeparam>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="key">The key to check and remove.</param>
+    /// <returns>An observable that emits true if the key was found and removed, false if it wasn't found.</returns>
+    public static IObservable<bool> TryRemove<T>(this IBlobCache blobCache, string key)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
+        }
+
+        // First try to get the typed object to see if it exists
+        return blobCache.GetObject<T>(key)
+            .Select(_ => true) // If we got data, key exists
+            .Catch<bool, KeyNotFoundException>(_ => Observable.Return(false)) // Key doesn't exist
+            .SelectMany(keyExists => keyExists
+                ? blobCache.Invalidate(key, typeof(T)).Select(_ => true) // Remove and return true
+                : Observable.Return(false)); // Return false if key didn't exist
+    }
+
     internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
 }
