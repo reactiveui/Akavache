@@ -300,6 +300,26 @@ For comprehensive examples and patterns specifically for `GetAndFetchLatest`, se
 | **Differential Updates** | Complex data structures | Maximum control over what changes |
 | **Loading States** | Responsive UIs | Provides user feedback during operations |
 | **Conditional Fetching** | Performance optimization | Reduces unnecessary network calls |
+| **Empty Cache** | First app run, cache clears | Reliable data delivery even when no cached data exists |
+
+### Empty Cache Scenarios ⚠️
+
+**Important:** `GetAndFetchLatest` works reliably in empty cache scenarios (first app run, after cache clears). In these cases:
+- Subscriber is called **once** with fresh data (no cached data to deliver first)
+- Fetch function is always called to get fresh data
+- No special handling needed in your subscriber logic
+
+```csharp
+// ✅ Works perfectly on first app run when cache is empty
+cache.GetAndFetchLatest("app_data", () => FetchFromApi())
+    .Subscribe(data => {
+        // Called once on empty cache, twice when cached data exists
+        // Same logic works for both scenarios!
+        UpdateUI(data);
+    });
+```
+
+See `GetAndFetchLatestPatterns.cs` → `EmptyCachePattern` for comprehensive examples.
 
 ### Common Anti-Patterns to Avoid ❌
 
