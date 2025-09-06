@@ -27,8 +27,30 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <AkavacheTargetFrameworks>netstandard2.0;net8.0;net9.0</AkavacheTargetFrameworks>    
-    <MobileTargetFrameworks>net9.0-android;net9.0-ios;net9.0-macos;net9.0-maccatalyst</MobileTargetFrameworks>
+    
+    <!-- Core TFMs that build on any OS -->
+    <AkavacheCoreTargets>netstandard2.0;net8.0;net9.0</AkavacheCoreTargets>
+
+    <!-- Windows-specific desktop TFMs -->
+    <AkavacheWindowsDesktopTargets>net462;net472;net9.0-windows10.0.17763.0</AkavacheWindowsDesktopTargets>
+
+    <!-- Mobile TFMs separated by platform -->
+    <AkavacheMobileAndroidTargets>net9.0-android</AkavacheMobileAndroidTargets>
+    <AkavacheMobileAppleTargets>net9.0-ios;net9.0-macos;net9.0-maccatalyst</AkavacheMobileAppleTargets>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <!-- Start with TFMs that are always included -->
+    <AkavacheFinalTargetFrameworks>$(AkavacheCoreTargets)</AkavacheFinalTargetFrameworks>
+
+    <!-- Add Android, which can be built on any OS with the right SDKs -->
+    <AkavacheFinalTargetFrameworks>$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAndroidTargets)</AkavacheFinalTargetFrameworks>
+
+    <!-- Add Windows Desktop TFMs only when building on Windows -->
+    <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheWindowsDesktopTargets)</AkavacheFinalTargetFrameworks>
+
+    <!-- Add Apple Mobile TFMs only when building on macOS -->
+    <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAppleTargets)</AkavacheFinalTargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')))">
     <IsAotCompatible>true</IsAotCompatible>

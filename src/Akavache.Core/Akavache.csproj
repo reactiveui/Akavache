@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(AkavacheTargetFrameworks);$(MobileTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>$(NoWarn);CA1510</NoWarn>
