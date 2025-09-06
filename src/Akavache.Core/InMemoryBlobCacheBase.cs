@@ -220,9 +220,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     _cache.Remove(key);
 
                     // Also remove from type indexes
-                    foreach (var typeKeys in _typeIndex.Values)
+                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                    foreach (var kvp in _typeIndex)
                     {
-                        typeKeys.Remove(key);
+                        kvp.Value.Remove(key);
                     }
 
                     throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
@@ -460,9 +461,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 _cache.Remove(key);
 
                 // Remove from type indexes
-                foreach (var typeKeys in _typeIndex.Values)
+                // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                foreach (var kvp in _typeIndex)
                 {
-                    typeKeys.Remove(key);
+                    kvp.Value.Remove(key);
                 }
             }
 
@@ -492,9 +494,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     _cache.Remove(key);
 
                     // Remove from type indexes
-                    foreach (var typeKeys in _typeIndex.Values)
+                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                    foreach (var kvp in _typeIndex)
                     {
-                        typeKeys.Remove(key);
+                        kvp.Value.Remove(key);
                     }
                 }
             }
@@ -719,9 +722,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     _cache.Remove(expiredKey);
 
                     // Remove from type indexes
-                    foreach (var typeKeys in _typeIndex.Values)
+                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                    foreach (var kvp in _typeIndex)
                     {
-                        typeKeys.Remove(expiredKey);
+                        kvp.Value.Remove(expiredKey);
                     }
                 }
             }
