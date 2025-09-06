@@ -15,6 +15,7 @@ namespace Akavache.Tests;
 /// </summary>
 [TestFixture]
 [Category("Akavache")]
+[NonParallelizable]
 public class CacheDatabaseTests
 {
     /// <summary>

@@ -3,8 +3,12 @@
   <RunConfiguration>
     <!-- Limit vstest to a two CPUs to avoid cross-assembly static state bugs -->
     <MaxCpuCount>4</MaxCpuCount>
+    <!-- Set global test timeout to 5 minutes (300000ms) to prevent forever testing scenarios -->
+    <TestSessionTimeout>300000</TestSessionTimeout>
   </RunConfiguration>
   <NUnit>
     <NumberOfTestWorkers>4</NumberOfTestWorkers>
+    <!-- Set default timeout for individual tests to 5 minutes -->
+    <DefaultTimeout>300000</DefaultTimeout>
   </NUnit>
 </RunSettings>
