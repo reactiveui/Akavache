@@ -889,11 +889,14 @@ public class SerializerExtensionsTests
         {
             Func<IObservable<string>> getOrFetchAsync = () =>
             {
-                return cache.GetOrFetchObject("a", () =>
-                {
-                    cnt++;
-                    return Observable.Return($"b{cnt}");
-                }, DateTime.UtcNow + TimeSpan.FromMilliseconds(1000));
+                return cache.GetOrFetchObject(
+                    "a",
+                    () =>
+                    {
+                        cnt++;
+                        return Observable.Return($"b{cnt}");
+                    },
+                    DateTime.UtcNow + TimeSpan.FromMilliseconds(1000));
             };
 
             // Act & Assert - Follow the exact pattern from the bug report
