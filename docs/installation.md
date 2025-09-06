@@ -32,9 +32,10 @@ Akavache V11.1 uses a modular package structure. Choose the packages that match 
 ```
 **Best for:** 
 - New projects
-- .NET 5+ applications
+- .NET 5+ applications  
+- .NET Framework 4.6.2+ applications
 - Performance-critical scenarios
-- AOT (Ahead-of-Time) compilation compatibility
+- AOT (Ahead-of-Time) compilation compatibility (.NET 5+ only)
 
 #### Newtonsoft.Json (Maximum Compatibility)
 ```xml

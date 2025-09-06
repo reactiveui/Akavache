@@ -28,6 +28,7 @@ AppBuilder.CreateSplatBuilder()
 
 **Best for:**
 - ✅ New projects starting with .NET 5+
+- ✅ .NET Framework 4.6.2+ applications via NuGet package
 - ✅ Performance-critical applications
 - ✅ AOT (Ahead-of-Time) compilation scenarios
 - ✅ Blazor WebAssembly applications
@@ -87,21 +88,22 @@ AppBuilder.CreateSplatBuilder()
 | **AOT Support** | ⭐⭐⭐⭐⭐ | ❌ |
 | **Feature Richness** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Legacy Compatibility** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **.NET Framework** | ❌ | ⭐⭐⭐⭐⭐ |
+| **.NET Framework** | ⭐⭐⭐ (.NET Framework 4.6.2+) | ⭐⭐⭐⭐⭐ |
 
 ### Use System.Text.Json when:
-- Starting a new project on .NET 5+
+- Starting a new project on .NET 5+ or .NET Framework 4.6.2+
 - Performance is critical
 - Memory usage is a concern
-- Planning to use AOT compilation
+- Planning to use AOT compilation (.NET 5+ only)
 - Building microservices or cloud applications
 
 ### Use Newtonsoft.Json when:
 - Migrating from V10.x
-- Need maximum compatibility
+- Need maximum feature richness and customization
 - Using complex custom converters
-- Working with .NET Framework
+- Working with .NET Framework versions below 4.6.2
 - Have existing Newtonsoft.Json configurations
+- Require specific Newtonsoft.Json features not available in System.Text.Json
 
 ## BSON Variants
 
