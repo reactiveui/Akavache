@@ -1077,4 +1077,94 @@ public class SerializerExtensionsTests
             }
         }
     }
+
+    /// <summary>
+    /// Tests that Invalidate properly clears RequestCache entries for InMemory cache.
+    /// This reproduces the bug where GetOrFetchObject returns stale data after Invalidate.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InvalidateShouldClearRequestCacheForGetOrFetchObject()
+    {
+        // Arrange
+        var serializer = new SystemJsonSerializer();
+        var cache = new InMemoryBlobCache(serializer);
+        var fetchCount = 0;
+
+        try
+        {
+            // Function that returns incrementing values to test if it's called
+            Func<IObservable<string>> fetchFunc = () =>
+            {
+                fetchCount++;
+                return Observable.Return($"value_{fetchCount}");
+            };
+
+            // Act 1: First call to GetOrFetchObject should fetch and cache
+            var result1 = await cache.GetOrFetchObject("test_key", fetchFunc).FirstAsync();
+
+            // Act 2: Invalidate the key
+            await cache.Invalidate("test_key").FirstAsync();
+
+            // Act 3: Second call to GetOrFetchObject should fetch again (not return cached RequestCache)
+            var result2 = await cache.GetOrFetchObject("test_key", fetchFunc).FirstAsync();
+
+            // Assert
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result1, Is.EqualTo("value_1"), "First fetch should return value_1");
+                Assert.That(result2, Is.EqualTo("value_2"), "Second fetch after invalidation should return value_2");
+                Assert.That(fetchCount, Is.EqualTo(2), "Fetch function should be called twice");
+            }
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests exact scenario from the original bug report (#524).
+    /// This verifies that GetOrFetchObject correctly fetches new data after Invalidate is called.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task BugReport524_InvalidateNotWorkingProperlyForInMemory()
+    {
+        // Arrange - Replicate the exact scenario from the bug report
+        var serializer = new SystemJsonSerializer();
+        var cache = new InMemoryBlobCache(serializer);
+        var cnt = 0;
+
+        try
+        {
+            Func<IObservable<string>> getOrFetchAsync = () =>
+            {
+                return cache.GetOrFetchObject(
+                    "a",
+                    () =>
+                    {
+                        cnt++;
+                        return Observable.Return($"b{cnt}");
+                    },
+                    DateTime.UtcNow + TimeSpan.FromMilliseconds(1000));
+            };
+
+            // Act & Assert - Follow the exact pattern from the bug report
+            var result1 = await getOrFetchAsync().FirstAsync();
+            await cache.Invalidate("a").FirstAsync();
+            var result2 = await getOrFetchAsync().FirstAsync();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result1, Is.EqualTo("b1"), "First call should return b1");
+                Assert.That(result2, Is.EqualTo("b2"), "Second call after invalidation should return b2 (not b1)");
+                Assert.That(cnt, Is.EqualTo(2), "Fetch function should be called twice");
+            }
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
 }

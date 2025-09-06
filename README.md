@@ -554,6 +554,8 @@ await CacheDatabase.UserAccount.InvalidateAll();
 - ⚠️ **Avoid** complex `GetAllKeys().Subscribe()` patterns - use direct invalidation instead
 - See [Cache Deletion Guide](src/Samples/CacheDeletion-TheRightWay.md) for detailed examples
 
+> 🔧 **Important Fix in V11.1.1+**: Prior to V11.1.1, calling `Invalidate()` on InMemory cache didn't properly clear the RequestCache, causing subsequent `GetOrFetchObject` calls to return stale data instead of fetching fresh data. This has been fixed to ensure proper cache invalidation behavior. For comprehensive invalidation patterns and examples, see [`CacheInvalidationPatterns.cs`](src/Samples/CacheInvalidationPatterns.cs).
+
 ### Updating Expiration
 
 ```csharp
@@ -2130,7 +2132,7 @@ public static class LinkerPreserve
 }
 ```
 
-### 6. Provider not found errors
+#### 6. Provider not found errors
 Ensure you have the appropriate SQLitePCLRaw bundle installed for your platform:
 ```csharp
 // For general use
@@ -2138,6 +2140,40 @@ Ensure you have the appropriate SQLitePCLRaw bundle installed for your platform:
 // For encrypted databases
 .WithEncryptedSqliteProvider()
 ```
+
+#### 7. GetOrFetchObject returns stale data after Invalidate (Fixed in V11.1.1+)
+
+**Problem**: Calling `Invalidate()` followed by `GetOrFetchObject()` returns old data instead of fetching fresh data.
+
+**Root Cause**: In versions prior to V11.1.1, `Invalidate()` on InMemory cache didn't clear the RequestCache, causing `GetOrFetchObject` to return cached request results.
+
+```csharp
+// ❌ This pattern failed in pre-V11.1.1 versions
+var data1 = await cache.GetOrFetchObject("key", () => FetchFromApi()); // Returns "value_1"
+await cache.Invalidate("key");
+var data2 = await cache.GetOrFetchObject("key", () => FetchFromApi()); // Should return "value_2" but returned "value_1"
+```
+
+**Solution**: 
+- **Upgrade to V11.1.1+** - The bug is completely fixed
+- **For older versions**: Use `GetObject` + `InsertObject` pattern instead of `GetOrFetchObject` after invalidation
+
+```csharp
+// ✅ Workaround for older versions
+try 
+{
+    var data = await cache.GetObject<MyData>("key");
+    // Data exists, use it
+}
+catch (KeyNotFoundException)
+{
+    // Data doesn't exist, fetch and store
+    var freshData = await FetchFromApi();
+    await cache.InsertObject("key", freshData);
+}
+```
+
+**Verification**: See [`CacheInvalidationPatterns.cs`](src/Samples/CacheInvalidationPatterns.cs) for comprehensive test patterns to verify this behavior.
 
 #### UWP x64 Issues
 Ensure your UWP project targets a specific platform (x86, x64, ARM) rather than "Any CPU".
