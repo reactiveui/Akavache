@@ -734,5 +734,74 @@ public static class SerializerExtensions
         }
     }
 
+    /// <summary>
+    /// Safely gets all keys from the cache with null-safety guards.
+    /// This method provides a safe alternative to GetAllKeys() that prevents crashes on mobile platforms.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <returns>An observable sequence of keys, guaranteed to not be null.</returns>
+    public static IObservable<string> GetAllKeysSafe(this IBlobCache blobCache)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        return blobCache.GetAllKeys()
+            .Where(key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
+            .Catch<string, Exception>(ex =>
+            {
+                // Log the exception and return empty sequence instead of crashing
+                System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
+                return Observable.Empty<string>();
+            });
+    }
+
+    /// <summary>
+    /// Safely gets all keys for a specific type from the cache with null-safety guards.
+    /// This method provides a safe alternative to GetAllKeys(Type) that prevents crashes on mobile platforms.
+    /// </summary>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <param name="type">The type to filter keys by.</param>
+    /// <returns>An observable sequence of keys for the specified type, guaranteed to not be null.</returns>
+    public static IObservable<string> GetAllKeysSafe(this IBlobCache blobCache, Type type)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        if (type is null)
+        {
+            throw new ArgumentNullException(nameof(type));
+        }
+
+        return blobCache.GetAllKeys(type)
+            .Where(key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
+            .Catch<string, Exception>(ex =>
+            {
+                // Log the exception and return empty sequence instead of crashing
+                System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
+                return Observable.Empty<string>();
+            });
+    }
+
+    /// <summary>
+    /// Safely gets all keys for a specific type from the cache with null-safety guards.
+    /// This method provides a safe alternative to GetAllKeys() that prevents crashes on mobile platforms.
+    /// </summary>
+    /// <typeparam name="T">The type to filter keys by.</typeparam>
+    /// <param name="blobCache">The blob cache.</param>
+    /// <returns>An observable sequence of keys for the specified type, guaranteed to not be null.</returns>
+    public static IObservable<string> GetAllKeysSafe<T>(this IBlobCache blobCache)
+    {
+        if (blobCache is null)
+        {
+            throw new ArgumentNullException(nameof(blobCache));
+        }
+
+        return blobCache.GetAllKeysSafe(typeof(T));
+    }
+
     internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
 }
