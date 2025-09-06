@@ -50,6 +50,11 @@
 		<PackageVersion Include="Splat.Drawing" Version="$(SplatVersion)" />
 	</ItemGroup>
 
+	<!-- .NET Framework-specific packages -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472'">
+		<PackageVersion Include="System.Net.Http" Version="4.3.4" />
+	</ItemGroup>
+
 	<!-- Test-specific packages -->
 	<ItemGroup>
 		<PackageVersion Include="SQLitePCLRaw.lib.e_sqlcipher" Version="$(SqlitePclRawVersion)" />

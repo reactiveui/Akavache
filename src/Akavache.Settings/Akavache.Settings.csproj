@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(AkavacheTargetFrameworks);$(MobileTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Akavache.Settings</RootNamespace>

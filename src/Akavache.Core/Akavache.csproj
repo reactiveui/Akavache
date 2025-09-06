@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(AkavacheTargetFrameworks);$(MobileTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <NoWarn>$(NoWarn);CA1510</NoWarn>
@@ -12,5 +12,9 @@
     <PackageReference Include="Splat.Builder" />
     <PackageReference Include="System.Reactive" />
     <PackageReference Include="sqlite-net-pcl" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Net.Http" />
   </ItemGroup>
 </Project>

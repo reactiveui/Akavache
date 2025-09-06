@@ -100,7 +100,7 @@ public class SqliteBlobCache : IBlobCache
     public SqliteBlobCache(SQLiteConnectionString connectionString, ISerializer serializer, IScheduler? scheduler = null)
 #endif
     {
-#if NETSTANDARD
+#if NETSTANDARD || NET462_OR_GREATER
         if (connectionString is null)
         {
             throw new ArgumentNullException(nameof(connectionString));
