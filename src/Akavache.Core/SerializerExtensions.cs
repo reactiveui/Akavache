@@ -803,7 +803,5 @@ public static class SerializerExtensions
         return blobCache.GetAllKeysSafe(typeof(T));
     }
 
-
-
     internal static string GetTypePrefixedKey(this string key, Type type) => type.FullName + "___" + key;
 }
