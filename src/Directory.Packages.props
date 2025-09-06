@@ -71,7 +71,6 @@
 		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
 		<PackageVersion Include="Microsoft.Extensions.Logging" Version="$(MicrosoftExtensionsVersion)" />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="$(MicrosoftExtensionsVersion)" />
-		<PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageVersion Include="ReactiveUI.Maui" Version="$(ReactiveUIVersion)" />
 	</ItemGroup>
 

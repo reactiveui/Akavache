@@ -983,7 +983,7 @@ public class SerializerExtensionsTests
                 {
                     ["string_val"] = "test",
                     ["int_val"] = 42,
-                    ["null_val"] = null,
+                    ["null_val"] = null!,
                     ["empty_string"] = string.Empty,
                     ["complex_obj"] = new { Prop1 = "value1", Prop2 = 123 }
                 };
@@ -1138,7 +1138,7 @@ public class SerializerExtensionsTests
 
         try
         {
-            Func<IObservable<string>> getOrFetchAsync = () =>
+            Func<IObservable<string?>> getOrFetchAsync = () =>
             {
                 return cache.GetOrFetchObject(
                     "a",
