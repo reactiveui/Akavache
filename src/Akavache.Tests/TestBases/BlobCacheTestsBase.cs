@@ -405,19 +405,17 @@ public abstract class BlobCacheTestsBase : IDisposable
                 .Take(2) // Take at most 2 values (cached + latest)
                 .ForEachAsync(tuple => results.Add(tuple));
 
-            Assert.That(results.Count, Is.EqualTo(2));
-
-            // Cached value
+            // Results validation
             using (Assert.EnterMultipleScope())
             {
+                Assert.That(results.Count, Is.EqualTo(2));
+
+                // Cached value
                 Assert.That(results[0], Is.Not.Null);
                 Assert.That(results[0]?.Item1, Is.EqualTo("Foo"));
                 Assert.That(results[0]?.Item2, Is.EqualTo(1));
-            }
 
-            // Latest value
-            using (Assert.EnterMultipleScope())
-            {
+                // Latest value
                 Assert.That(results[1], Is.Not.Null);
                 Assert.That(results[1]?.Item1, Is.EqualTo("Foo"));
                 Assert.That(results[1]?.Item2, Is.EqualTo(2));
