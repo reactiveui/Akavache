@@ -2,21 +2,21 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+    branches:
+      - main          # ✅ run on main
+  pull_request:        # (optional) run on PRs targeting any branch
+  
+# Needed so the reusable workflow can optionally delete the temp per-OS artifacts it creates.
 permissions:
   contents: read
-  id-token: write  # <-- enable OIDC for the called workflow
-
-env:
-  productNamespacePrefix: "Akavache"
+  actions: write
 
 jobs:
   build:
     uses: reactiveui/actions-common/.github/workflows/workflow-common-setup-and-build.yml@main
     with:
-      configuration: Release
-      productNamespacePrefix: "Akavache"
-      installWorkflows: true
+      productNamespacePrefix: Akavache
+      solutionFile: Akavache.sln
+      installWorkloads: true
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
