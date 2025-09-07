@@ -10,6 +10,7 @@
     <LangVersion>preview</LangVersion>
     <AssemblyTitle>Akavache Todo WPF</AssemblyTitle>
     <AssemblyDescription>Demonstrates Akavache features in a WPF application</AssemblyDescription>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
