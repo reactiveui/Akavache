@@ -31,8 +31,9 @@
 		<PackageVersion Include="NUnit" Version="4.4.0" />
 		<PackageVersion Include="NUnit3TestAdapter" Version="5.1.0" />
 		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
 		<PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
-		<PackageVersion Include="NUnit.Analyzers" Version="4.10.0" />
+		<PackageVersion Include="NUnit.Analyzers" Version="4.10.0" />   
 	</ItemGroup>
 
 	<!-- Core library packages -->
