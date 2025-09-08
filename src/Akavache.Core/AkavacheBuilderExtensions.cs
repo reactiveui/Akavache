@@ -373,7 +373,11 @@ public static class AkavacheBuilderExtensions
 #if AKAVACHE_MOBILE || AKAVACHE_MOBILE_IOS
             _ => IsolatedStorageFile.GetUserStoreForAssembly(),
 #else
-            _ => IsolatedStorageFile.GetMachineStoreForAssembly(),
+            // On Unix systems (macOS/Linux), machine store may fail due to read-only /usr/share/IsolatedStorage
+            // Fall back to user store to avoid permission issues in unit tests and restricted environments
+            _ => Environment.OSVersion.Platform == PlatformID.Unix
+                ? IsolatedStorageFile.GetUserStoreForAssembly()
+                : IsolatedStorageFile.GetMachineStoreForAssembly(),
 #endif
         };
 
