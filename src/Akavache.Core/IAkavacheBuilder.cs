@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
@@ -14,6 +15,14 @@ namespace Akavache;
 /// </summary>
 public interface IAkavacheBuilder : IAkavacheInstance
 {
+    /// <summary>
+    /// Gets the file location option.
+    /// </summary>
+    /// <value>
+    /// The file location option.
+    /// </value>
+    FileLocationOption FileLocationOption { get; }
+
     /// <summary>
     /// Sets the application name for cache directory paths.
     /// </summary>

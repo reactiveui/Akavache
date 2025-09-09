@@ -5,6 +5,8 @@
 
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+
 #endif
 using System.IO.IsolatedStorage;
 using System.Reflection;
@@ -412,4 +414,129 @@ public static class AkavacheBuilderExtensions
 
         return cachePath;
     }
+
+    /// <summary>
+    /// Gets the legacy cache directory.
+    /// </summary>
+    /// <param name="builder">The builder.</param>
+    /// <param name="cacheName">Name of the cache.</param>
+    /// <returns>The Legacy cache path.</returns>
+    /// <exception cref="System.ArgumentNullException">builder.</exception>
+    /// <exception cref="System.ArgumentException">
+    /// Cache name cannot be null or empty. - cacheName
+    /// or
+    /// Application name cannot be null or empty. - ApplicationName.
+    /// </exception>
+    public static string? GetLegacyCacheDirectory(this IAkavacheInstance builder, string cacheName)
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (string.IsNullOrWhiteSpace(cacheName))
+        {
+            throw new ArgumentException("Cache name cannot be null or empty.", nameof(cacheName));
+        }
+
+        if (string.IsNullOrWhiteSpace(builder.ApplicationName))
+        {
+            throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
+        }
+
+#if ANDROID
+        switch (cacheName)
+        {
+            case "LocalMachine":
+                return Application.Context.CacheDir?.AbsolutePath;
+            case "Secure":
+                var path = Application.Context.FilesDir?.AbsolutePath;
+
+                if (path is null)
+                {
+                    return null;
+                }
+
+                var di = new DirectoryInfo(Path.Combine(path, "Secret"));
+                if (!di.Exists)
+                {
+                    di.CreateRecursive();
+                }
+
+                return di.FullName;
+            default:
+                // Use the cache directory for UserAccount and SettingsCache caches
+                return Application.Context.FilesDir?.AbsolutePath;
+        }
+#elif IOS || MACCATALYST
+        return cacheName switch
+        {
+            "LocalMachine" => (string)CreateAppDirectory(NSSearchPathDirectory.CachesDirectory, builder.ApplicationName, "BlobCache"),
+            "Secure" => (string)CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "SecretCache"),
+            _ => (string)CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "BlobCache"),
+        };
+#else
+        return cacheName switch
+        {
+            "LocalMachine" => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), builder.ApplicationName, "BlobCache"),
+            "Secure" => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), builder.ApplicationName, "SecretCache"),
+            _ => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), builder.ApplicationName, "BlobCache"),
+        };
+#endif
+    }
+
+    internal static void CreateRecursive(this DirectoryInfo directoryInfo) =>
+        _ = directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
+        {
+            var path = Path.Combine(parent, dir);
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            return path;
+        });
+
+    internal static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
+    {
+        var root = Path.GetPathRoot(directoryInfo.FullName);
+        var components = new List<string>();
+        for (var path = directoryInfo.FullName; path != root && path is not null; path = Path.GetDirectoryName(path))
+        {
+            var filename = Path.GetFileName(path);
+            if (string.IsNullOrEmpty(filename))
+            {
+                continue;
+            }
+
+            components.Add(filename);
+        }
+
+        if (root is not null)
+        {
+            components.Add(root);
+        }
+
+        components.Reverse();
+        return components;
+    }
+
+#if IOS || MACCATALYST
+    private static string CreateAppDirectory(NSSearchPathDirectory targetDir, string applicationName, string subDir = "BlobCache")
+    {
+        using var fm = new NSFileManager();
+        var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();
+        var rp = url.RelativePath ?? throw new DirectoryNotFoundException();
+        var ret = Path.Combine(rp, applicationName, subDir);
+
+        var di = new DirectoryInfo(ret);
+        if (!di.Exists)
+        {
+            di.CreateRecursive();
+        }
+
+        return ret;
+    }
+#endif
 }
