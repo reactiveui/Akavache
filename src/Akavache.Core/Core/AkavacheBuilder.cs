@@ -18,10 +18,12 @@ internal class AkavacheBuilder : IAkavacheBuilder
 {
     private static readonly object _lock = new();
     private string? _settingsCachePath;
+    private FileLocationOption _fileLocationOption;
 
     [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
-    public AkavacheBuilder()
+    public AkavacheBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default)
     {
+        _fileLocationOption = fileLocationOption;
         try
         {
             ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
@@ -73,7 +75,11 @@ internal class AkavacheBuilder : IAkavacheBuilder
             // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
             if (_settingsCachePath == null)
             {
-                _settingsCachePath = this.GetIsolatedCacheDirectory("SettingsCache");
+                _settingsCachePath = _fileLocationOption switch
+                {
+                    FileLocationOption.Legacy => this.GetLegacyCacheDirectory("SettingsCache"),
+                    _ => this.GetIsolatedCacheDirectory("SettingsCache"),
+                };
             }
 
             return _settingsCachePath;
@@ -118,6 +124,14 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// The name of the serializer type.
     /// </value>
     public string? SerializerTypeName { get; internal set; }
+
+    /// <summary>
+    /// Gets the file location option.
+    /// </summary>
+    /// <value>
+    /// The file location option.
+    /// </value>
+    public FileLocationOption FileLocationOption => _fileLocationOption;
 
     internal static Dictionary<string, IBlobCache?>? BlobCaches { get; set; } = [];
 
