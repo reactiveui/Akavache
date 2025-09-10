@@ -150,7 +150,12 @@ public static class AkavacheBuilderExtensions
         // Validate cache name to prevent path traversal attacks
         var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
 
-        var directory = builder.GetIsolatedCacheDirectory(validatedName);
+        // Determine the cache directory
+        var directory = builder.FileLocationOption switch
+        {
+            FileLocationOption.Legacy => builder.GetLegacyCacheDirectory(validatedName),
+            _ => builder.GetIsolatedCacheDirectory(validatedName),
+        };
         if (string.IsNullOrWhiteSpace(directory))
         {
             throw new InvalidOperationException("Failed to determine a valid cache directory.");

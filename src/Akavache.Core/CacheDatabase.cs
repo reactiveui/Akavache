@@ -142,15 +142,14 @@ public static class CacheDatabase
     /// </summary>
     /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
+    /// <param name="fileLocationOption">The file location option.</param>
     /// <exception cref="InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static void Initialize<T>(string? applicationName = null)
-#else
-    public static void Initialize<T>(string? applicationName = null)
 #endif
-       where T : ISerializer, new() => SetBuilder(CreateBuilder()
+    public static void Initialize<T>(string? applicationName = null, FileLocationOption fileLocationOption = FileLocationOption.Default)
+
+       where T : ISerializer, new() => SetBuilder(CreateBuilder(fileLocationOption)
             .WithApplicationName(applicationName)
             .WithSerializer<T>()
             .WithInMemoryDefaults()
@@ -163,15 +162,12 @@ public static class CacheDatabase
     /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="configureSerializer">The Serializer configuration.</param>
     /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
-    /// <exception cref="InvalidOperationException">Failed to create AkavacheBuilder instance.</exception>
+    /// <param name="fileLocationOption">The file location option.</param>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static void Initialize<T>(Func<T> configureSerializer, string? applicationName = null)
-#else
-    public static void Initialize<T>(Func<T> configureSerializer, string? applicationName = null)
 #endif
-       where T : ISerializer, new() => SetBuilder(CreateBuilder()
+    public static void Initialize<T>(Func<T> configureSerializer, string? applicationName = null, FileLocationOption fileLocationOption = FileLocationOption.Default)
+       where T : ISerializer, new() => SetBuilder(CreateBuilder(fileLocationOption)
             .WithApplicationName(applicationName)
             .WithSerializer(configureSerializer)
             .WithInMemoryDefaults()
@@ -183,14 +179,11 @@ public static class CacheDatabase
     /// <typeparam name="T">The serializer.</typeparam>
     /// <param name="configure">An action to configure the Akavache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
-    /// <exception cref="ArgumentNullException">configure.</exception>
+    /// <param name="fileLocationOption">The file location option.</param>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static void Initialize<T>(Action<IAkavacheBuilder> configure, string? applicationName = null)
-#else
-    public static void Initialize<T>(Action<IAkavacheBuilder> configure, string? applicationName = null)
 #endif
+    public static void Initialize<T>(Action<IAkavacheBuilder> configure, string? applicationName = null, FileLocationOption fileLocationOption = FileLocationOption.Default)
         where T : ISerializer, new()
     {
         if (configure == null)
@@ -198,7 +191,7 @@ public static class CacheDatabase
             throw new ArgumentNullException(nameof(configure));
         }
 
-        var builder = CreateBuilder()
+        var builder = CreateBuilder(fileLocationOption)
             .WithApplicationName(applicationName)
             .WithSerializer<T>();
 
@@ -214,14 +207,11 @@ public static class CacheDatabase
     /// <param name="configureSerializer">The Serializer configuration.</param>
     /// <param name="configure">An action to configure the Akavache builder.</param>
     /// <param name="applicationName">Name of the application.</param>
-    /// <exception cref="ArgumentNullException">configure.</exception>
+    /// <param name="fileLocationOption">The file location option.</param>
 #if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-    public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
-#else
-    public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
 #endif
+    public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null, FileLocationOption fileLocationOption = FileLocationOption.Default)
         where T : ISerializer, new()
     {
         if (configure == null)
@@ -229,7 +219,7 @@ public static class CacheDatabase
             throw new ArgumentNullException(nameof(configure));
         }
 
-        var builder = CreateBuilder()
+        var builder = CreateBuilder(fileLocationOption)
             .WithApplicationName(applicationName)
             .WithSerializer(configureSerializer);
 
@@ -241,8 +231,11 @@ public static class CacheDatabase
     /// <summary>
     /// Creates a new Akavache builder for configuration.
     /// </summary>
-    /// <returns>A new Akavache builder instance.</returns>
-    public static IAkavacheBuilder CreateBuilder() => new AkavacheBuilder();
+    /// <param name="fileLocationOption">The file location option.</param>
+    /// <returns>
+    /// A new Akavache builder instance.
+    /// </returns>
+    public static IAkavacheBuilder CreateBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default) => new AkavacheBuilder(fileLocationOption);
 
     /// <summary>
     /// Internal method to set the builder instance. Used by the builder pattern.
