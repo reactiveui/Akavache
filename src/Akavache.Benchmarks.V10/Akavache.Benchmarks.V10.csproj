@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
-    <PackageReference Include="Akavache.Sqlite3" VersionOverride="10.2.41" />
+    <PackageReference Include="Akavache.Sqlite3" VersionOverride="11.4.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_green" />
   </ItemGroup>
 
