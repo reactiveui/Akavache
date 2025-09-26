@@ -44,7 +44,7 @@
 		<PackageVersion Include="sqlite-net-pcl" Version="$(SqliteNetVersion)" />
 		<PackageVersion Include="SQLitePCLRaw.bundle_green" Version="$(SqlitePclRawVersion)" />
 		<PackageVersion Include="System.Text.Json" Version="$(MicrosoftExtensionsVersion)" />
-		<PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageVersion Include="Newtonsoft.Json.Bson" Version="1.0.3" />
 		<PackageVersion Include="sqlite-net-sqlcipher" Version="$(SqliteNetVersion)" />
 		<PackageVersion Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="$(SqlitePclRawVersion)" />
