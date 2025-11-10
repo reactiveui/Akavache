@@ -29,11 +29,11 @@
 	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
 		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
 		<PackageVersion Include="NUnit" Version="4.4.0" />
-		<PackageVersion Include="NUnit3TestAdapter" Version="5.1.0" />
+		<PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
 		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
 		<PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
-		<PackageVersion Include="NUnit.Analyzers" Version="4.10.0" />   
+		<PackageVersion Include="NUnit.Analyzers" Version="4.11.2" />   
 	</ItemGroup>
 
 	<!-- Core library packages -->
