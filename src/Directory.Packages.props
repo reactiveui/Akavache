@@ -40,7 +40,7 @@
 	<ItemGroup>
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftExtensionsVersion)" />
 		<PackageVersion Include="Splat.Builder" Version="$(SplatVersion)" />
-		<PackageVersion Include="System.Reactive" Version="6.0.2" />
+		<PackageVersion Include="System.Reactive" Version="6.1.0" />
 		<PackageVersion Include="sqlite-net-pcl" Version="$(SqliteNetVersion)" />
 		<PackageVersion Include="SQLitePCLRaw.bundle_green" Version="$(SqlitePclRawVersion)" />
 		<PackageVersion Include="System.Text.Json" Version="$(MicrosoftExtensionsVersion)" />
