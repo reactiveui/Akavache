@@ -27,7 +27,7 @@
 
 	<!-- Test projects only -->
 	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageVersion Include="NUnit" Version="4.4.0" />
 		<PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
 		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
