@@ -71,7 +71,7 @@
 
 	<!-- Sample application packages -->
 	<ItemGroup>
-		<PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.4.1" />
+		<PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.5.1" />
 		<PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
 		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
