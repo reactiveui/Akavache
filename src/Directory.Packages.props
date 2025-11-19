@@ -6,11 +6,11 @@
 
 	<!-- Version groups for packages that share the same version -->
 	<PropertyGroup>
-		<MicrosoftExtensionsVersion>9.0.8</MicrosoftExtensionsVersion>
+		<MicrosoftExtensionsVersion>9.0.11</MicrosoftExtensionsVersion>
 		<SqlitePclRawVersion>2.1.11</SqlitePclRawVersion>
 		<SqliteNetVersion>1.9.172</SqliteNetVersion>
-		<SplatVersion>16.2.1</SplatVersion>
-		<ReactiveUIVersion>20.4.1</ReactiveUIVersion>
+		<SplatVersion>17.1.1</SplatVersion>
+		<ReactiveUIVersion>22.2.1</ReactiveUIVersion>
 	</PropertyGroup>
 
 	<!-- All projects -->
@@ -27,7 +27,7 @@
 
 	<!-- Test projects only -->
 	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageVersion Include="NUnit" Version="4.4.0" />
 		<PackageVersion Include="NUnit3TestAdapter" Version="5.2.0" />
 		<PackageVersion Include="coverlet.collector" Version="6.0.4" />
@@ -40,7 +40,7 @@
 	<ItemGroup>
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftExtensionsVersion)" />
 		<PackageVersion Include="Splat.Builder" Version="$(SplatVersion)" />
-		<PackageVersion Include="System.Reactive" Version="6.0.2" />
+		<PackageVersion Include="System.Reactive" Version="6.1.0" />
 		<PackageVersion Include="sqlite-net-pcl" Version="$(SqliteNetVersion)" />
 		<PackageVersion Include="SQLitePCLRaw.bundle_green" Version="$(SqlitePclRawVersion)" />
 		<PackageVersion Include="System.Text.Json" Version="$(MicrosoftExtensionsVersion)" />
@@ -65,13 +65,13 @@
 	<!-- Benchmark packages -->
 	<ItemGroup>
 		<PackageVersion Include="BenchmarkDotNet" Version="0.15.6" />
-		<PackageVersion Include="Akavache.Sqlite3" Version="11.1.1" />
-		<PackageVersion Include="Akavache" Version="11.1.1" />
+		<PackageVersion Include="Akavache.Sqlite3" Version="11.4.1" />
+		<PackageVersion Include="Akavache" Version="11.4.1" />
 	</ItemGroup>
 
 	<!-- Sample application packages -->
 	<ItemGroup>
-		<PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.4.1" />
+		<PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.5.1" />
 		<PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
 		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
@@ -90,7 +90,7 @@
 
 	<!-- Windows-specific packages for MAUI -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-		<PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
-		<PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4948" />
+		<PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
+		<PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
 	</ItemGroup>
 </Project>

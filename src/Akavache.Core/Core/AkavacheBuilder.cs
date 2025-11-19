@@ -73,14 +73,11 @@ internal class AkavacheBuilder : IAkavacheBuilder
         get
         {
             // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
-            if (_settingsCachePath == null)
-            {
-                _settingsCachePath = _fileLocationOption switch
+            _settingsCachePath ??= _fileLocationOption switch
                 {
                     FileLocationOption.Legacy => this.GetLegacyCacheDirectory("SettingsCache"),
                     _ => this.GetIsolatedCacheDirectory("SettingsCache"),
                 };
-            }
 
             return _settingsCachePath;
         }
