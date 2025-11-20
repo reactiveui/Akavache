@@ -5,6 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
 using ReactiveUI;

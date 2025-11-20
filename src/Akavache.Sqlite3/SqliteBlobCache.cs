@@ -795,8 +795,7 @@ public class SqliteBlobCache : IBlobCache
             {
                 await Connection.RunInTransactionAsync(sql =>
                 {
-                    var entries = sql.Table<CacheEntry>().Where(x => x.TypeName == null).ToList();
-                    foreach (var key in entries)
+                    foreach (var key in sql.Table<CacheEntry>().ToList())
                     {
                         sql.Delete<CacheEntry>(key.Id);
                     }

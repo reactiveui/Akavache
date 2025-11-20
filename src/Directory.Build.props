@@ -35,7 +35,7 @@
     <AkavacheCrossPlatformNet9>net9.0</AkavacheCrossPlatformNet9>
 
     <!-- Windows-specific desktop TFMs (includes Windows-specific .NET 9) -->
-    <AkavacheWindowsDesktopTargets>net462;net472;net9.0-windows10.0.17763.0</AkavacheWindowsDesktopTargets>
+    <AkavacheWindowsDesktopTargets>net462;net472;net9.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
 
     <!-- Mobile TFMs separated by platform -->
     <AkavacheMobileAndroidTargets>net9.0-android</AkavacheMobileAndroidTargets>
