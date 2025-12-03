@@ -58,7 +58,7 @@
   <ItemGroup>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.6" />
     <PackageVersion Include="Akavache.Sqlite3" Version="11.4.1" />
-    <PackageVersion Include="Akavache" Version="11.4.1" />
+    <PackageVersion Include="Akavache" Version="11.5.1" />
   </ItemGroup>
   <!-- Sample application packages -->
   <ItemGroup>
