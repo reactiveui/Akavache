@@ -36,13 +36,12 @@ public abstract class SettingsBase(string className) : SettingsStorage($"__{clas
             }
 
             // If not found, return the first available cache (supports override database names)
-            var firstCache = AkavacheBuilder.BlobCaches
-                .FirstOrDefault(kvp => kvp.Value != null)
-                .Value;
+            var firstPair = AkavacheBuilder.BlobCaches
+                .FirstOrDefault(kvp => kvp.Value != null);
 
-            if (firstCache is not null)
+            if (firstPair.Value is not null)
             {
-                return firstCache;
+                return firstPair.Value;
             }
         }
 
