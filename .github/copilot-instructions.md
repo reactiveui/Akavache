@@ -5,9 +5,11 @@ Always reference these instructions first and fallback to search or bash command
 ## Working Effectively
 
 ### Prerequisites and Environment Setup
-- **CRITICAL**: Requires .NET 9.0 SDK (not .NET 8.0). Install with:
+- **CRITICAL**: Requires .NET 10, 9, and 8 SDKs. Always install all versions fresh (don't check what's installed):
   ```bash
+  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 10.0
   curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 9.0
+  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 8.0
   export PATH="$HOME/.dotnet:$PATH"
   ```
 - **Platform Support**: This project now has **excellent cross-platform support** with proper setup. Windows has full support; Linux/macOS have comprehensive support for core libraries, Android, and MAUI development.
@@ -19,7 +21,7 @@ Always reference these instructions first and fallback to search or bash command
    ```
    If you've already done a shallow clone, deepen it with:
    ```bash
-   bashgit fetch --unshallow
+   git fetch --unshallow
    ```
    This prevents exceptions like "Shallow clone lacks the objects required to calculate version height."
 ### Windows Development (Full Support)
@@ -36,8 +38,14 @@ Always reference these instructions first and fallback to search or bash command
   Build time: **15-25 minutes**. NEVER CANCEL - set timeout to 45+ minutes.
 
 ### Linux/macOS Development (Comprehensive Support)
-- **CRITICAL**: Install .NET 9.0 SDK first, then install required workloads:
+- **CRITICAL**: Install .NET 10, 9, and 8 SDKs first, then install required workloads:
   ```bash
+  # Install .NET SDKs (all versions fresh)
+  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 10.0
+  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 9.0
+  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 8.0
+  export PATH="$HOME/.dotnet:$PATH"
+  
   # Install Android and MAUI workloads (recommended for cross-platform development)
   dotnet workload install android maui-android
   
@@ -63,7 +71,7 @@ Always reference these instructions first and fallback to search or bash command
 - **Important**: **DO NOT** attempt to build Windows-specific projects or the full solution on Linux - it will fail with clear framework targeting errors.
 
 ### Testing
-- **CRITICAL**: Test execution requires platform-specific configuration and .NET 9.0 SDK.
+- **CRITICAL**: Test execution requires platform-specific configuration and .NET SDKs (10, 9, and 8).
 - **Windows**: Full test suite runs successfully:
   ```bash
   cd src
@@ -76,15 +84,6 @@ Always reference these instructions first and fallback to search or bash command
   dotnet test Akavache.Tests/Akavache.Tests.csproj -p:TargetFramework=net9.0
   ```
   Test time: **3-10 minutes**. Works reliably with proper setup.
-
-## Validation and Quality Assurance
-
-### Code Style and Analysis Enforcement
-- **EditorConfig Compliance**: Repository uses comprehensive `.editorconfig` with detailed rules for C# formatting, naming conventions, and code analysis
-- **StyleCop Analyzers**: Enforces consistent C# code style with `stylecop.analyzers`
-- **Roslynator Analyzers**: Additional code quality rules with `Roslynator.Analyzers`
-- **Analysis Level**: Set to `latest` with enhanced .NET analyzers enabled
-- **CRITICAL**: All code must comply with **ReactiveUI contribution guidelines**: https://www.reactiveui.net/contribute/index.html
 
 ## Validation and Quality Assurance
 
@@ -224,10 +223,12 @@ Always reference these instructions first and fallback to search or bash command
 ## Common Development Tasks
 
 ### Making Changes to Core Libraries
-1. **Always** start with .NET 9.0 SDK installation and required workloads:
+1. **Always** start with .NET SDK installation (10, 9, and 8) and required workloads:
    ```bash
-   # Essential first steps for any platform
+   # Essential first steps for any platform - install all .NET versions fresh
+   curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 10.0
    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 9.0
+   curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version latest --channel 8.0
    export PATH="$HOME/.dotnet:$PATH"
    dotnet workload install android maui-android  # For cross-platform development
    ```
@@ -315,7 +316,7 @@ Always reference these instructions first and fallback to search or bash command
 ## Troubleshooting
 
 ### Common Issues
-1. **"The current .NET SDK does not support targeting .NET 9.0"**: Install .NET 9.0 SDK first
+1. **"The current .NET SDK does not support targeting .NET X.0"**: Install .NET 10, 9, and 8 SDKs
 2. **"Invalid framework identifier" errors**: Use explicit `-p:TargetFramework=net9.0`
 3. **"Workload not supported" errors**: Install required workloads with `dotnet workload install android maui-android`
 4. **"To build a project targeting Windows on this operating system, set the EnableWindowsTargeting property to true"**: Expected on Linux/macOS for Windows-specific projects
@@ -323,7 +324,7 @@ Always reference these instructions first and fallback to search or bash command
 6. **Test failures**: May be platform-specific - verify on Windows
 
 ### Quick Fixes
-- **Setup issues**: Ensure .NET 9.0 SDK is installed first, then install workloads
+- **Setup issues**: Install .NET 10, 9, and 8 SDKs fresh, then install workloads
 - **Format issues**: Run `dotnet format whitespace` and `dotnet format style`
 - **StyleCop violations**: Check `.editorconfig` rules and `src/stylecop.json` configuration
 - **Analyzer warnings**: Build with `--verbosity normal` to see detailed analyzer messages
