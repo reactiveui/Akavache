@@ -19,7 +19,7 @@ Always reference these instructions first and fallback to search or bash command
    ```
    If you've already done a shallow clone, deepen it with:
    ```bash
-   bashgit fetch --unshallow
+   git fetch --unshallow
    ```
    This prevents exceptions like "Shallow clone lacks the objects required to calculate version height."
 ### Windows Development (Full Support)
@@ -76,15 +76,6 @@ Always reference these instructions first and fallback to search or bash command
   dotnet test Akavache.Tests/Akavache.Tests.csproj -p:TargetFramework=net9.0
   ```
   Test time: **3-10 minutes**. Works reliably with proper setup.
-
-## Validation and Quality Assurance
-
-### Code Style and Analysis Enforcement
-- **EditorConfig Compliance**: Repository uses comprehensive `.editorconfig` with detailed rules for C# formatting, naming conventions, and code analysis
-- **StyleCop Analyzers**: Enforces consistent C# code style with `stylecop.analyzers`
-- **Roslynator Analyzers**: Additional code quality rules with `Roslynator.Analyzers`
-- **Analysis Level**: Set to `latest` with enhanced .NET analyzers enabled
-- **CRITICAL**: All code must comply with **ReactiveUI contribution guidelines**: https://www.reactiveui.net/contribute/index.html
 
 ## Validation and Quality Assurance
 
