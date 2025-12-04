@@ -40,7 +40,7 @@ public abstract class SettingsBase(string className) : SettingsStorage($"__{clas
                 .FirstOrDefault(kvp => kvp.Value != null)
                 .Value;
 
-            if (firstCache != null)
+            if (firstCache is not null)
             {
                 return firstCache;
             }
