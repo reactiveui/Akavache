@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Linq;
 using Akavache.Core;
 using Akavache.Settings.Core;
 using Splat; // AppLocator
@@ -35,12 +36,13 @@ public abstract class SettingsBase(string className) : SettingsStorage($"__{clas
             }
 
             // If not found, return the first available cache (supports override database names)
-            foreach (var kvp in AkavacheBuilder.BlobCaches)
+            var firstPair = AkavacheBuilder.BlobCaches
+                .FirstOrDefault(kvp => kvp.Value != null);
+
+            // Check if we found a valid cache (default KeyValuePair has null Key and Value)
+            if (!string.IsNullOrEmpty(firstPair.Key))
             {
-                if (kvp.Value != null)
-                {
-                    return kvp.Value;
-                }
+                return firstPair.Value!;
             }
         }
 
