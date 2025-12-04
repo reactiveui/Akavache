@@ -39,9 +39,10 @@ public abstract class SettingsBase(string className) : SettingsStorage($"__{clas
             var firstPair = AkavacheBuilder.BlobCaches
                 .FirstOrDefault(kvp => kvp.Value != null);
 
-            if (firstPair.Value is not null)
+            // Check if we found a valid cache (default KeyValuePair has null Key and Value)
+            if (!string.IsNullOrEmpty(firstPair.Key))
             {
-                return firstPair.Value;
+                return firstPair.Value!;
             }
         }
 
