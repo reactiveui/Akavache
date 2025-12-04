@@ -5,6 +5,7 @@
 
 using Akavache.Core;
 using Akavache.Settings.Core;
+using Splat; // AppLocator
 
 namespace Akavache.Settings;
 
@@ -12,17 +13,12 @@ namespace Akavache.Settings;
 /// Provides a base class for implementing application settings storage using Akavache.
 /// This class automatically manages settings persistence and provides a foundation for typed settings classes.
 /// </summary>
-public abstract class SettingsBase : SettingsStorage
+/// <remarks>
+/// Initializes a new instance of the <see cref="SettingsBase"/> class.
+/// </remarks>
+/// <param name="className">Name of the class.</param>
+public abstract class SettingsBase(string className) : SettingsStorage($"__{className}__", GetBlobCacheForClass(className))
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsBase"/> class.
-    /// </summary>
-    /// <param name="className">Name of the class.</param>
-    protected SettingsBase(string className)
-        : base($"__{className}__", GetBlobCacheForClass(className))
-    {
-    }
-
     /// <summary>
     /// Gets the blob cache for the specified class, handling override database names.
     /// </summary>
@@ -30,27 +26,61 @@ public abstract class SettingsBase : SettingsStorage
     /// <returns>The blob cache for the class.</returns>
     private static IBlobCache GetBlobCacheForClass(string className)
     {
-        if (AkavacheBuilder.BlobCaches == null)
+        // Prefer an explicitly created settings cache for the given class name
+        if (AkavacheBuilder.BlobCaches != null)
         {
-            throw new InvalidOperationException("BlobCache has not been initialized. Call BlobCache.Initialize() first.");
-        }
-
-        // First try to get the cache with the exact class name
-        if (AkavacheBuilder.BlobCaches.TryGetValue(className, out var cache) && cache != null)
-        {
-            return cache;
-        }
-
-        // If not found, look for any cache in the collection (for override database names)
-        foreach (var kvp in AkavacheBuilder.BlobCaches)
-        {
-            if (kvp.Value != null)
+            if (AkavacheBuilder.BlobCaches.TryGetValue(className, out var cache) && cache != null)
             {
-                return kvp.Value;
+                return cache;
+            }
+
+            // If not found, return the first available cache (supports override database names)
+            foreach (var kvp in AkavacheBuilder.BlobCaches)
+            {
+                if (kvp.Value != null)
+                {
+                    return kvp.Value;
+                }
             }
         }
 
+        // Fallbacks to any initialized CacheDatabase cache
+        try
+        {
+            if (CacheDatabase.IsInitialized)
+            {
+                if (CacheDatabase.UserAccount is IBlobCache user && user != null)
+                {
+                    return user;
+                }
+
+                if (CacheDatabase.LocalMachine is IBlobCache local && local != null)
+                {
+                    return local;
+                }
+
+                if (CacheDatabase.InMemory is IBlobCache mem && mem != null)
+                {
+                    return mem;
+                }
+            }
+        }
+        catch
+        {
+            // Ignore and proceed to last resort
+        }
+
+        // Last resort: create a transient in-memory cache if a serializer is registered
+        var serializer = AppLocator.Current.GetService<ISerializer>();
+        if (serializer != null)
+        {
+            return new InMemoryBlobCache(serializer);
+        }
+
         // If no cache is found, throw a descriptive exception
-        throw new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {string.Join(", ", AkavacheBuilder.BlobCaches.Keys)}");
+        var available = AkavacheBuilder.BlobCaches == null || AkavacheBuilder.BlobCaches.Count == 0
+            ? "<none>"
+            : string.Join(", ", AkavacheBuilder.BlobCaches.Keys);
+        throw new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {available}");
     }
 }
