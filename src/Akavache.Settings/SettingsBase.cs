@@ -49,17 +49,17 @@ public abstract class SettingsBase(string className) : SettingsStorage($"__{clas
         {
             if (CacheDatabase.IsInitialized)
             {
-                if (CacheDatabase.UserAccount is IBlobCache user && user != null)
+                if (CacheDatabase.UserAccount is IBlobCache user)
                 {
                     return user;
                 }
 
-                if (CacheDatabase.LocalMachine is IBlobCache local && local != null)
+                if (CacheDatabase.LocalMachine is IBlobCache local)
                 {
                     return local;
                 }
 
-                if (CacheDatabase.InMemory is IBlobCache mem && mem != null)
+                if (CacheDatabase.InMemory is IBlobCache mem)
                 {
                     return mem;
                 }
