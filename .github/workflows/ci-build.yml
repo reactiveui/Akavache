@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches:
-      - main          # ✅ run on main
-  pull_request:        # (optional) run on PRs targeting any branch
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   
 # Needed so the reusable workflow can optionally delete the temp per-OS artifacts it creates.
 permissions:
@@ -15,7 +15,8 @@ jobs:
   build:
     uses: reactiveui/actions-common/.github/workflows/workflow-common-setup-and-build.yml@main
     with:
-      productNamespacePrefix: Akavache
+      configuration: Release
+      productNamespacePrefix: "Akavache"
       solutionFile: Akavache.sln
       installWorkloads: true
     secrets:
