@@ -29,10 +29,10 @@
     <LangVersion>preview</LangVersion>
     
     <!-- Base TFMs that build on any OS (but excluding net9.0 for Windows to avoid conflicts) -->
-    <AkavacheBaseTargets>netstandard2.0;net8.0;net9.0;net10.0</AkavacheBaseTargets>
+    <AkavacheBaseTargets>net8.0;net9.0;net10.0</AkavacheBaseTargets>
 
     <!-- Windows-specific desktop TFMs (includes Windows-specific .NET 9) -->
-    <AkavacheWindowsDesktopTargets>net462;net472;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
+    <AkavacheWindowsDesktopTargets>net462;net472;net481;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
 
     <!-- Mobile TFMs separated by platform -->
     <AkavacheMobileAndroidTargets>net9.0-android;net10.0-android</AkavacheMobileAndroidTargets>
