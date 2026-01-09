@@ -15,13 +15,13 @@
 
 <img alt="Akavache" src="https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_akavache/main.png" width="150" />
 
-# Akavache V11.1: An Asynchronous Key-Value Store for Native Applications
+# Akavache: An Asynchronous Key-Value Store for Native Applications
 
 Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires.
 
-## What's New in V11.1
+## What's New
 
-Akavache V11.1 introduces a new **Builder Pattern** for initialization, improved serialization support, and enhanced cross-serializer compatibility:
+Akavache V11.1 introduced a new **Builder Pattern** for initialization, improved serialization support, and enhanced cross-serializer compatibility:
 
 - 🏗️ **Builder Pattern**: New fluent API for configuring cache instances
 - 🔄 **Multiple Serializer Support**: Choose between System.Text.Json, Newtonsoft.Json, each with a BSON variant
@@ -32,7 +32,7 @@ Akavache V11.1 introduces a new **Builder Pattern** for initialization, improved
 
 ### Development History
 
-Akavache V11.1 represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.1 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
+Akavache V11.1+ represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.1 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
 
 **Key Development Milestones:**
 
@@ -48,8 +48,8 @@ This careful incubation process ensured that V11.1 delivers not just new feature
 ### 1. Install Packages
 
 ```xml
-<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
-<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<PackageReference Include="Akavache.Sqlite3" Version="*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="*" />
 ```
 
 ### 2. Initialize Akavache
@@ -142,57 +142,58 @@ await CacheDatabase.InMemory.InsertObject("current_session", sessionData);
 
 ## Installation
 
-Akavache V11.1 uses a modular package structure. Choose the packages that match your needs:
+Akavache uses a modular package structure. Choose the packages that match your needs:
 
 ### Core Package (In Memory only)
 ```xml
-<PackageReference Include="Akavache" Version="11.1.*" />
+<PackageReference Include="Akavache" Version="*" />
 ```
 
 ### Storage Backends (Choose One - Recommended)
 ```xml
 <!-- SQLite persistence (most common) -->
-<PackageReference Include="Akavache.Sqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.Sqlite3" Version="*" />
 
 <!-- Encrypted SQLite persistence -->
-<PackageReference Include="Akavache.EncryptedSqlite3" Version="11.1.*" />
+<PackageReference Include="Akavache.EncryptedSqlite3" Version="*" />
 ```
 
 ### Serializers (Choose One - Required)
 ```xml
 <!-- System.Text.Json (fastest, .NET native) -->
-<PackageReference Include="Akavache.SystemTextJson" Version="11.1.*" />
+<PackageReference Include="Akavache.SystemTextJson" Version="*" />
 
 <!-- Newtonsoft.Json (most compatible) -->
-<PackageReference Include="Akavache.NewtonsoftJson" Version="11.1.*" />
+<PackageReference Include="Akavache.NewtonsoftJson" Version="*" />
 ```
 
 ### Optional Extensions
 ```xml
 <!-- Image/Bitmap support -->
-<PackageReference Include="Akavache.Drawing" Version="11.1.*" />
+<PackageReference Include="Akavache.Drawing" Version="*" />
 
 <!-- Settings helpers -->
-<PackageReference Include="Akavache.Settings" Version="11.1.*" />
+<PackageReference Include="Akavache.Settings" Version="*" />
 ```
 
 ## Framework Support
 
-Akavache V11.1 supports:
+Akavache supports:
 
 - ✅ **.NET Framework 4.6.2/4.7.2** - Windows desktop applications
 - ✅ **.NET Standard 2.0** - Cross-platform libraries
 - ✅ **.NET 8.0** - Modern .NET applications
 - ✅ **.NET 9.0** - Latest .NET applications
-- ✅ **Mobile Targets** - `net9.0-android`, `net9.0-ios`, `net9.0-maccatalyst`
-- ✅ **Desktop Targets** - `net9.0-windows` (WinUI), `net9.0` (cross-platform)
+- ✅ **.NET 10.0** - Latest .NET applications
+- ✅ **Mobile Targets** - `net9.0-android`, `net9.0-ios`, `net9.0-maccatalyst`, `net10.0-android`, `net10.0-ios`, `net10.0-maccatalyst`
+- ✅ **Desktop Targets** - `net9.0-windows10.0.19041.0`, `net10.0-windows10.0.19041.0` (WinUI), `net9.0`, `net10.0` (cross-platform)
 
 ### Serializer Compatibility
 
-| Serializer | .NET Framework 4.6.2+ | .NET Standard 2.0 | .NET 8.0+ | Mobile | Performance |
+| Serializer | .NET Framework 4.6.2+ | .NET 8.0+ | Mobile | Performance |
 |------------|------------------------|-------------------|------------|--------|-------------|
-| **System.Text.Json** | ✅ Via NuGet | ✅ | ✅ | ✅ | **Fastest** |
-| **Newtonsoft.Json** | ✅ Built-in | ✅ | ✅ | ✅ | Compatible |
+| **System.Text.Json** | ✅ Via NuGet | ✅ | ✅ | **Fastest** |
+| **Newtonsoft.Json** | ✅ Built-in | ✅ | ✅ | Compatible |
 
 **Recommendation**: Use **System.Text.Json** for new projects for best performance. Use **Newtonsoft.Json** when migrating from older Akavache versions or when you need maximum compatibility.
 

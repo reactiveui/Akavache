@@ -5,17 +5,17 @@
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.0</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsVersion>10.0.1</MicrosoftExtensionsVersion>
     <SqlitePclRawVersion>2.1.11</SqlitePclRawVersion>
     <SqliteNetVersion>1.9.172</SqliteNetVersion>
-    <SplatVersion>17.1.1</SplatVersion>
-    <ReactiveUIVersion>22.2.1</ReactiveUIVersion>
+    <SplatVersion>19.1.1</SplatVersion>
+    <ReactiveUIVersion>22.3.1</ReactiveUIVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <PackageVersion Include="stylecop.analyzers" Version="1.2.0-beta.556" />
-    <PackageVersion Include="Roslynator.Analyzers" Version="4.14.1" />
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
   </ItemGroup>
   <!-- Non-test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
@@ -46,7 +46,7 @@
     <PackageVersion Include="Splat.Drawing" Version="$(SplatVersion)" />
   </ItemGroup>
   <!-- .NET Framework-specific packages -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net481'">
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
   <!-- Test-specific packages -->
@@ -56,7 +56,7 @@
   </ItemGroup>
   <!-- Benchmark packages -->
   <ItemGroup>
-    <PackageVersion Include="BenchmarkDotNet" Version="0.15.6" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Akavache.Sqlite3" Version="11.4.1" />
     <PackageVersion Include="Akavache" Version="11.4.1" />
   </ItemGroup>
