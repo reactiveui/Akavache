@@ -77,7 +77,7 @@
   </ItemGroup>
   <!-- Windows-specific packages for MAUI -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
-    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
   </ItemGroup>
 </Project>
