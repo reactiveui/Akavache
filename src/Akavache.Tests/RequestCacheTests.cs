@@ -13,6 +13,7 @@ namespace Akavache.Tests;
 /// Tests for RequestCache functionality.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel]
 public class RequestCacheTests
 {
     /// <summary>
