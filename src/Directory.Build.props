@@ -55,6 +55,13 @@
     <!-- Add Apple Mobile TFMs when building on macOS or Windows (both can compile Apple frameworks) -->
     <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX')) OR $([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAppleTargets)</AkavacheFinalTargetFrameworks>
   </PropertyGroup>
+
+  <!-- Workaround for Android file locking issues during parallel builds in CI -->
+  <!-- See: https://github.com/xamarin/xamarin-android/issues/8074 -->
+  <PropertyGroup Condition="'$(CI)' == 'true' and $(TargetFramework.Contains('-android'))">
+    <BuildInParallel>false</BuildInParallel>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(IsTestProject)' != 'true' and ($(TargetFramework.StartsWith('net8.0')) or $(TargetFramework.StartsWith('net9.0')) or $(TargetFramework.StartsWith('net10.0')))">
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
