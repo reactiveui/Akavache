@@ -6,29 +6,27 @@
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for CacheDatabase functionality and global configuration.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
-[NonParallelizable]
+[NotInParallel]
 public class CacheDatabaseTests
 {
     /// <summary>
     /// Tests that CacheDatabase.TaskpoolScheduler is available and functional.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void TaskpoolSchedulerShouldBeAvailable()
+    public async Task TaskpoolSchedulerShouldBeAvailable()
     {
         // Act
         var scheduler = CacheDatabase.TaskpoolScheduler;
 
         // Assert
-        Assert.That(scheduler, Is.Not.Null);
+        await Assert.That(scheduler).IsNotNull();
 
         // Test that it can schedule work
         var workExecuted = false;
@@ -40,19 +38,20 @@ public class CacheDatabaseTests
             resetEvent.Set();
         });
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Wait for work to complete
-            Assert.That(resetEvent.Wait(5000), Is.True, "Scheduled work did not complete within timeout");
-            Assert.That(workExecuted, Is.True);
+            await Assert.That(resetEvent.Wait(5000)).IsTrue();
+            await Assert.That(workExecuted).IsTrue();
         }
     }
 
     /// <summary>
     /// Tests that CacheDatabase.HttpService is available and functional.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void HttpServiceShouldBeAvailable()
+    public async Task HttpServiceShouldBeAvailable()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>();
 
@@ -61,14 +60,15 @@ public class CacheDatabaseTests
 
         // Assert
         // You can combine multiple constraints for a more fluent assertion.
-        Assert.That(httpService, Is.Not.Null.And.TypeOf<HttpService>());
+        await Assert.That(httpService).IsNotNull().And.IsTypeOf<HttpService>();
     }
 
     /// <summary>
     /// Tests that CacheDatabase properly validates serializer functionality.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SerializerFunctionalityValidationShouldWork()
+    public async Task SerializerFunctionalityValidationShouldWork()
     {
         // Arrange
         object[] testCases =
@@ -101,8 +101,8 @@ public class CacheDatabaseTests
                 try
                 {
                     var serialized = serializer.Serialize(testCase);
-                    Assert.That(serialized, Is.Not.Null);
-                    Assert.That(serialized, Is.Not.Empty);
+                    await Assert.That(serialized).IsNotNull();
+                    await Assert.That(serialized).IsNotEmpty();
 
                     // For simple types, test round-trip
                     if (testCase is string or int or double or bool)
@@ -110,18 +110,16 @@ public class CacheDatabaseTests
                         var deserialized = serializer.Deserialize<object>(serialized);
 
                         // For basic equality comparison, convert both to string
-                        Assert.That(deserialized?.ToString(), Is.EqualTo(testCase.ToString()));
+                        await Assert.That(deserialized?.ToString()).IsEqualTo(testCase.ToString());
                     }
                 }
                 catch (Exception ex)
                 {
                     // Some serializers might not support all types - that's acceptable
                     // Just ensure we don't get unexpected exceptions
-                    Assert.That(
-                        ex,
-                        Is.TypeOf<NotSupportedException>()
-                            .Or.TypeOf<InvalidOperationException>(),
-                        $"Unexpected exception type {ex.GetType().Name} for serializer {serializer.GetType().Name} with data type {testCase.GetType().Name}: {ex.Message}");
+                    await Assert.That(ex)
+                        .IsTypeOf<NotSupportedException>()
+                        .Or.IsTypeOf<InvalidOperationException>();
                 }
             }
         }

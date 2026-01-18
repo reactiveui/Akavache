@@ -6,22 +6,20 @@
 using System; // System first
 using Akavache.Settings; // alphabetical Akavache.*
 using Akavache.SystemTextJson;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for SettingsBase behavior with builder initialization.
 /// </summary>
-[TestFixture]
 [Category("Settings")]
-[Ignore("Covered in Akavache.Settings.Tests; requires settings store initialization which is out of scope for this suite.")]
+[Skip("Covered in Akavache.Settings.Tests; requires settings store initialization which is out of scope for this suite.")]
 public class SettingsStorageTests
 {
     /// <summary>
     /// Reinitialize cache database per test to isolate in-memory state.
     /// </summary>
-    [SetUp]
+    [Before(Test)]
     public void Setup()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>(Guid.NewGuid().ToString());
@@ -30,38 +28,41 @@ public class SettingsStorageTests
     /// <summary>
     /// Verifies that settings persist changes in memory via cache and can be modified.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SettingsBase_PersistsValues()
+    public async Task SettingsBase_PersistsValues()
     {
         var settings = new AppSettings();
-        Assert.That(settings.UserName, Is.EqualTo("Guest"));
+        await Assert.That(settings.UserName).IsEqualTo("Guest");
         settings.UserName = "Alice";
-        Assert.That(settings.UserName, Is.EqualTo("Alice"));
+        await Assert.That(settings.UserName).IsEqualTo("Alice");
     }
 
     /// <summary>
     /// Verifies default values when not previously set.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SettingsBase_DefaultValues_WhenMissing()
+    public async Task SettingsBase_DefaultValues_WhenMissing()
     {
         var settings = new AppSettings();
-        Assert.That(settings.LaunchCount, Is.Zero);
+        await Assert.That(settings.LaunchCount).IsZero();
     }
 
     /// <summary>
     /// Changing multiple values succeeds.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SettingsBase_MultipleChanges()
+    public async Task SettingsBase_MultipleChanges()
     {
         var settings = new AppSettings();
         settings.LaunchCount = 5;
         settings.UserName = "Bob";
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(settings.LaunchCount, Is.EqualTo(5));
-            Assert.That(settings.UserName, Is.EqualTo("Bob"));
+            await Assert.That(settings.LaunchCount).IsEqualTo(5);
+            await Assert.That(settings.UserName).IsEqualTo("Bob");
         }
     }
 

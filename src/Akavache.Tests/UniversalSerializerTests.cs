@@ -9,22 +9,21 @@ using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for universal serializer compatibility functionality.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
 public class UniversalSerializerTests
 {
     /// <summary>
     /// Tests that UniversalSerializer can deserialize data from primary serializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldDeserializeFromPrimarySerializer()
+    public async Task UniversalSerializerShouldDeserializeFromPrimarySerializer()
     {
         // Arrange
         var primarySerializer = new SystemJsonSerializer();
@@ -35,37 +34,39 @@ public class UniversalSerializerTests
         var result = UniversalSerializer.Deserialize<UserObject>(serializedData, primarySerializer);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        using (Assert.EnterMultipleScope())
+        await Assert.That(result).IsNotNull();
+        using (Assert.Multiple())
         {
-            Assert.That(result!.Name, Is.EqualTo("Test User"));
-            Assert.That(result.Bio, Is.EqualTo("Test Bio"));
-            Assert.That(result.Blog, Is.EqualTo("Test Blog"));
+            await Assert.That(result!.Name).IsEqualTo("Test User");
+            await Assert.That(result.Bio).IsEqualTo("Test Bio");
+            await Assert.That(result.Blog).IsEqualTo("Test Blog");
         }
     }
 
     /// <summary>
     /// Tests that UniversalSerializer handles null/empty data correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleNullEmptyData()
+    public async Task UniversalSerializerShouldHandleNullEmptyData()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
 
         // Act & Assert
         var nullResult = UniversalSerializer.Deserialize<string>(null!, serializer);
-        Assert.That(nullResult, Is.Null);
+        await Assert.That(nullResult).IsNull();
 
         var emptyResult = UniversalSerializer.Deserialize<string>([], serializer);
-        Assert.That(emptyResult, Is.Null);
+        await Assert.That(emptyResult).IsNull();
     }
 
     /// <summary>
     /// Tests that UniversalSerializer can serialize data with target serializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldSerializeWithTargetSerializer()
+    public async Task UniversalSerializerShouldSerializeWithTargetSerializer()
     {
         // Arrange
         var targetSerializer = new SystemJsonSerializer();
@@ -75,20 +76,21 @@ public class UniversalSerializerTests
         var serializedData = UniversalSerializer.Serialize(testObject, targetSerializer);
 
         // Assert
-        Assert.That(serializedData, Is.Not.Null);
-        Assert.That(serializedData, Is.Not.Empty);
+        await Assert.That(serializedData).IsNotNull();
+        await Assert.That(serializedData).IsNotEmpty();
 
         // Verify it can be deserialized back
         var deserializedObject = targetSerializer.Deserialize<UserObject>(serializedData);
-        Assert.That(deserializedObject, Is.Not.Null);
-        Assert.That(deserializedObject!.Name, Is.EqualTo("Serialize Test"));
+        await Assert.That(deserializedObject).IsNotNull();
+        await Assert.That(deserializedObject!.Name).IsEqualTo("Serialize Test");
     }
 
     /// <summary>
     /// Tests that UniversalSerializer handles null values correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleNullValues()
+    public async Task UniversalSerializerShouldHandleNullValues()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -97,15 +99,16 @@ public class UniversalSerializerTests
         var result = UniversalSerializer.Serialize<string>(null!, serializer);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result, Is.Empty); // Null values should return empty array
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result).IsEmpty(); // Null values should return empty array
     }
 
     /// <summary>
     /// Tests that UniversalSerializer handles DateTime serialization correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleDateTimeSerialization()
+    public async Task UniversalSerializerShouldHandleDateTimeSerialization()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -116,15 +119,16 @@ public class UniversalSerializerTests
         var deserializedDateTime = UniversalSerializer.Deserialize<DateTime>(serializedData, serializer, DateTimeKind.Utc);
 
         // Assert
-        Assert.That(deserializedDateTime, Is.EqualTo(testDateTime));
-        Assert.That(deserializedDateTime.Kind, Is.EqualTo(DateTimeKind.Utc));
+        await Assert.That(deserializedDateTime).IsEqualTo(testDateTime);
+        await Assert.That(deserializedDateTime.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
     /// <summary>
     /// Tests that UniversalSerializer can handle cross-serializer scenarios.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleCrossSerializerScenarios()
+    public async Task UniversalSerializerShouldHandleCrossSerializerScenarios()
     {
         // Arrange
         var systemJsonSerializer = new SystemJsonSerializer();
@@ -136,14 +140,15 @@ public class UniversalSerializerTests
 
         // Assert
         // This explicitly verifies that the fallback mechanism does not throw an exception.
-        Assert.DoesNotThrow(() => UniversalSerializer.Deserialize<UserObject>(systemJsonData, newtonsoftSerializer), "Cross-serializer deserialization should be handled gracefully without throwing.");
+        await Assert.That(() => UniversalSerializer.Deserialize<UserObject>(systemJsonData, newtonsoftSerializer), "Cross-serializer deserialization should be handled gracefully without throwing.").ThrowsNothing();
     }
 
     /// <summary>
     /// Tests that UniversalSerializer throws appropriate exceptions for invalid input.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldThrowForInvalidInput()
+    public async Task UniversalSerializerShouldThrowForInvalidInput()
     {
         // Arrange & Act & Assert - Test null serializer
         Assert.Throws<ArgumentNullException>(static () =>
@@ -154,17 +159,18 @@ public class UniversalSerializerTests
 
         // Test null data - should return null rather than throw for empty/null data
         var nullDataResult = UniversalSerializer.Deserialize<string>(null!, new SystemJsonSerializer());
-        Assert.That(nullDataResult, Is.Null);
+        await Assert.That(nullDataResult).IsNull();
 
         var emptyDataResult = UniversalSerializer.Deserialize<string>([], new SystemJsonSerializer());
-        Assert.That(emptyDataResult, Is.Null);
+        await Assert.That(emptyDataResult).IsNull();
     }
 
     /// <summary>
     /// Tests that UniversalSerializer handles DateTime edge cases.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleDateTimeEdgeCases()
+    public async Task UniversalSerializerShouldHandleDateTimeEdgeCases()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -186,13 +192,13 @@ public class UniversalSerializerTests
 
                 // Assert - Allow for some tolerance in extreme cases
                 var timeDifference = Math.Abs((testDate - deserializedDate).TotalMinutes);
-                Assert.That(timeDifference, Is.LessThan(1440), $"DateTime edge case failed: {testDate} -> {deserializedDate}"); // 24 hours tolerance
+                await Assert.That(timeDifference).IsLessThan(1440, $"DateTime edge case failed: {testDate} -> {deserializedDate}"); // 24 hours tolerance
             }
             catch (Exception ex)
             {
                 // Some edge cases may fail due to serializer limitations - this is acceptable
                 // Just ensure the exception is handled gracefully
-                Assert.That(ex, Is.TypeOf<InvalidOperationException>());
+                await Assert.That(ex).IsTypeOf<InvalidOperationException>();
             }
         }
     }
@@ -200,8 +206,9 @@ public class UniversalSerializerTests
     /// <summary>
     /// Tests that UniversalSerializer can handle BSON data detection.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldDetectBsonData()
+    public async Task UniversalSerializerShouldDetectBsonData()
     {
         // Arrange
         var bsonSerializer = new NewtonsoftBsonSerializer();
@@ -215,14 +222,15 @@ public class UniversalSerializerTests
         // The main goal is no unhandled exceptions
         // Act & Assert
         // This clearly states that the enclosed code should not throw an exception.
-        Assert.DoesNotThrow(() => UniversalSerializer.Deserialize<UserObject>(bsonData, new SystemJsonSerializer()), "Deserializing mismatched data format should be handled gracefully without exceptions.");
+        await Assert.That(() => UniversalSerializer.Deserialize<UserObject>(bsonData, new SystemJsonSerializer()), "Deserializing mismatched data format should be handled gracefully without exceptions.").ThrowsNothing();
     }
 
     /// <summary>
     /// Tests that UniversalSerializer can handle JSON data detection.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldDetectJsonData()
+    public async Task UniversalSerializerShouldDetectJsonData()
     {
         // Arrange
         var jsonSerializer = new SystemJsonSerializer();
@@ -231,7 +239,7 @@ public class UniversalSerializerTests
 
         // Act & Assert
         // This explicitly states the test's goal: the code should run without throwing.
-        Assert.DoesNotThrow(() => UniversalSerializer.Deserialize<UserObject>(jsonData, new NewtonsoftBsonSerializer()), "Deserializing JSON with a BSON serializer should be handled gracefully.");
+        await Assert.That(() => UniversalSerializer.Deserialize<UserObject>(jsonData, new NewtonsoftBsonSerializer()), "Deserializing JSON with a BSON serializer should be handled gracefully.").ThrowsNothing();
     }
 
     /// <summary>
@@ -257,8 +265,8 @@ public class UniversalSerializerTests
                 cache, "test_key", serializer);
 
             // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result!.Name, Is.EqualTo("Alt Key Test"));
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result!.Name).IsEqualTo("Alt Key Test");
         }
         finally
         {
@@ -269,8 +277,9 @@ public class UniversalSerializerTests
     /// <summary>
     /// Tests that UniversalSerializer handles serialization failures gracefully.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleSerializationFailures()
+    public async Task UniversalSerializerShouldHandleSerializationFailures()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -286,8 +295,9 @@ public class UniversalSerializerTests
     /// <summary>
     /// Tests that UniversalSerializer properly validates DateTime after deserialization.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldValidateDeserializedDateTime()
+    public async Task UniversalSerializerShouldValidateDeserializedDateTime()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -298,14 +308,15 @@ public class UniversalSerializerTests
         var deserializedDateTime = UniversalSerializer.Deserialize<DateTime>(serializedData, serializer, DateTimeKind.Utc);
 
         // Assert - Should be converted to UTC
-        Assert.That(deserializedDateTime.Kind, Is.EqualTo(DateTimeKind.Utc));
+        await Assert.That(deserializedDateTime.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
     /// <summary>
     /// Tests that UniversalSerializer can handle complex object hierarchies.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldHandleComplexObjects()
+    public async Task UniversalSerializerShouldHandleComplexObjects()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -326,15 +337,16 @@ public class UniversalSerializerTests
         var serializedData = UniversalSerializer.Serialize(complexObject, serializer);
 
         // We can't easily deserialize anonymous types, so just verify serialization succeeds
-        Assert.That(serializedData, Is.Not.Null);
-        Assert.That(serializedData, Is.Not.Empty);
+        await Assert.That(serializedData).IsNotNull();
+        await Assert.That(serializedData).IsNotEmpty();
     }
 
     /// <summary>
     /// Tests that UniversalSerializer properly preprocesses DateTime for serialization.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UniversalSerializerShouldPreprocessDateTime()
+    public async Task UniversalSerializerShouldPreprocessDateTime()
     {
         // Arrange
         var newtonsoftSerializer = new NewtonsoftSerializer();
@@ -355,8 +367,8 @@ public class UniversalSerializerTests
                 var serializedData = UniversalSerializer.Serialize(testDate, newtonsoftSerializer);
 
                 // Assert
-                Assert.That(serializedData, Is.Not.Null);
-                Assert.That(serializedData, Is.Not.Empty);
+                await Assert.That(serializedData).IsNotNull();
+                await Assert.That(serializedData).IsNotEmpty();
             }
             catch (InvalidOperationException)
             {

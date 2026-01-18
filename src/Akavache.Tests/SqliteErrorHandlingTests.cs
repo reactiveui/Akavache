@@ -10,14 +10,12 @@ using Akavache.Core;
 using Akavache.EncryptedSqlite3;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Skeleton tests for error handling scenarios in Sqlite and Encrypted caches.
 /// </summary>
-[TestFixture]
 [Category("Sqlite")]
 public class SqliteErrorHandlingTests
 {
@@ -52,7 +50,7 @@ public class SqliteErrorHandlingTests
             ex = e;
         }
 
-        Assert.That(ex, Is.Not.Null);
+        await Assert.That(ex).IsNotNull();
     }
 
     /// <summary>
@@ -70,6 +68,6 @@ public class SqliteErrorHandlingTests
         var data = new byte[] { 10, 20, 30, 40 };
         await cache.Insert("bin", data);
         var fetched = await cache.Get("bin").ToTask();
-        Assert.That(fetched, Is.EqualTo(data));
+        await Assert.That(fetched).IsEquivalentTo(data);
     }
 }

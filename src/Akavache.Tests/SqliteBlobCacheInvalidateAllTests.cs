@@ -6,15 +6,13 @@
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests focused on SqliteBlobCache.InvalidateAll behavior.
 /// </summary>
-[NonParallelizable]
-[TestFixture]
+[NotInParallel]
 [Category("Akavache")]
 public class SqliteBlobCacheInvalidateAllTests
 {
@@ -37,14 +35,14 @@ public class SqliteBlobCacheInvalidateAllTests
             await cache.Insert("c", [3]).Timeout(Timeout).FirstAsync();
 
             var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            Assert.That(keysBefore, Has.Count.EqualTo(3));
+            await Assert.That(keysBefore).Count().IsEqualTo(3);
 
             // Act
             await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
 
             // Assert
             var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            Assert.That(keysAfter, Is.Empty);
+            await Assert.That(keysAfter).IsEmpty();
 
             Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("a").Timeout(Timeout).FirstAsync());
             Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("b").Timeout(Timeout).FirstAsync());
@@ -72,14 +70,14 @@ public class SqliteBlobCacheInvalidateAllTests
             await cache.Insert("t2", [20], userType).Timeout(Timeout).FirstAsync();
 
             var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            Assert.That(keysBefore, Has.Count.EqualTo(4));
+            await Assert.That(keysBefore).Count().IsEqualTo(4);
 
             // Act
             await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
 
             // Assert
             var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            Assert.That(keysAfter, Is.Empty);
+            await Assert.That(keysAfter).IsEmpty();
 
             // Both typed and untyped should be gone
             Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u1").Timeout(Timeout).FirstAsync());
@@ -109,18 +107,18 @@ public class SqliteBlobCacheInvalidateAllTests
 
             var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
 
-            // live remains, expired filtered out by GetAllKeys — keysBefore may be 1
-            Assert.That(keysBefore, Has.Count.LessThanOrEqualTo(1));
+            // live remains, expired filtered out by GetAllKeys ï¿½ keysBefore may be 1
+            await Assert.That(keysBefore).Count().IsLessThanOrEqualTo(1);
 
             // Act
             await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
 
             // Assert
             var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            Assert.That(keysAfter, Is.Empty);
+            await Assert.That(keysAfter).IsEmpty();
 
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("live").Timeout(Timeout).FirstAsync());
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expired").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("live").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expired").Timeout(Timeout).FirstAsync());
         }
     }
 }

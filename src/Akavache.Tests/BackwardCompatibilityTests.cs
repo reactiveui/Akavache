@@ -6,24 +6,23 @@
 using Akavache.Core;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for backward compatibility scenarios, especially for mobile platforms.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
-[NonParallelizable]
+[NotInParallel]
 public class BackwardCompatibilityTests
 {
     /// <summary>
     /// Verifies that WithSqliteDefaults() works automatically without requiring WithSqliteProvider() for backward compatibility.
     /// This test verifies the fix for the issue.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void WithSqliteDefaults_WithoutProvider_ShouldWorkAfterFix()
+    public async Task WithSqliteDefaults_WithoutProvider_ShouldWorkAfterFix()
     {
         // This test verifies that the fix enables backward compatibility
         var testAppName = "BackwardCompatibilityFixTest";
@@ -34,14 +33,14 @@ public class BackwardCompatibilityTests
         try
         {
             // This call should now work without explicitly calling WithSqliteProvider() first
-            Assert.DoesNotThrow(() =>
+            await Assert.That(() =>
             {
                 CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
                 {
                     builder.WithApplicationName(testAppName);
                     builder.WithSqliteDefaults(); // This should now work
                 });
-            });
+            }).ThrowsNothing();
         }
         finally
         {
@@ -53,8 +52,9 @@ public class BackwardCompatibilityTests
     /// <summary>
     /// Verifies that the new pattern with explicit WithSqliteProvider() works.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void WithSqliteProvider_ThenDefaults_ShouldWork()
+    public async Task WithSqliteProvider_ThenDefaults_ShouldWork()
     {
         var testAppName = "NewPatternTest";
 
@@ -64,7 +64,7 @@ public class BackwardCompatibilityTests
         try
         {
             // New pattern: explicit provider initialization
-            Assert.DoesNotThrow(() =>
+            await Assert.That(() =>
             {
                 CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
                 {
@@ -72,7 +72,7 @@ public class BackwardCompatibilityTests
                     builder.WithSqliteProvider();
                     builder.WithSqliteDefaults();
                 });
-            });
+            }).ThrowsNothing();
         }
         finally
         {

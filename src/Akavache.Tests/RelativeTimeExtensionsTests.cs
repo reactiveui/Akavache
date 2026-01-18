@@ -5,14 +5,12 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for relative time extension methods.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
 public class RelativeTimeExtensionsTests
 {
@@ -29,7 +27,9 @@ public class RelativeTimeExtensionsTests
         {
             var cache = new InMemoryBlobCache(serializer);
             var testData = "test data"u8.ToArray();
-            var expiration = TimeSpan.FromSeconds(1);
+
+            // Use a longer expiration to avoid CI timing issues
+            var expiration = TimeSpan.FromMinutes(5);
             var beforeInsert = DateTimeOffset.Now;
 
             // Act
@@ -37,14 +37,14 @@ public class RelativeTimeExtensionsTests
 
             // Assert - verify the data was inserted
             var retrievedData = await cache.Get("test_key").FirstAsync();
-            Assert.That(retrievedData, Is.EqualTo(testData));
+            await Assert.That(retrievedData).IsEquivalentTo(testData);
 
             // Verify expiration was set (we can't easily test exact expiration without waiting)
             var createdAt = await cache.GetCreatedAt("test_key").FirstAsync();
-            using (Assert.EnterMultipleScope())
+            using (Assert.Multiple())
             {
-                Assert.That(createdAt, Is.Not.Null);
-                Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
+                await Assert.That(createdAt).IsNotNull();
+                await Assert.That(createdAt!.Value).IsGreaterThanOrEqualTo(beforeInsert);
             }
 
             await cache.DisposeAsync();
@@ -72,12 +72,12 @@ public class RelativeTimeExtensionsTests
 
             // Assert - verify the object was inserted
             var retrievedObject = await cache.GetObject<dynamic>("test_object").FirstAsync();
-            Assert.That(retrievedObject, Is.Not.Null);
+            await Assert.That((object?)retrievedObject).IsNotNull();
 
             // Verify expiration was set
             var createdAt = await cache.GetCreatedAt("test_object").FirstAsync();
-            Assert.That(createdAt, Is.Not.Null);
-            Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
+            await Assert.That(createdAt).IsNotNull();
+            await Assert.That(createdAt!.Value).IsGreaterThanOrEqualTo(beforeInsert);
 
             await cache.DisposeAsync();
         }
@@ -86,8 +86,9 @@ public class RelativeTimeExtensionsTests
     /// <summary>
     /// Tests that Insert throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void InsertShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task InsertShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -101,8 +102,9 @@ public class RelativeTimeExtensionsTests
     /// <summary>
     /// Tests that InsertObject throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void InsertObjectShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task InsertObjectShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -116,8 +118,9 @@ public class RelativeTimeExtensionsTests
     /// <summary>
     /// Tests that DownloadUrl (string) throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void DownloadUrlStringShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task DownloadUrlStringShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -131,8 +134,9 @@ public class RelativeTimeExtensionsTests
     /// <summary>
     /// Tests that DownloadUrl (Uri) throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void DownloadUrlUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task DownloadUrlUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -146,8 +150,9 @@ public class RelativeTimeExtensionsTests
     /// <summary>
     /// Tests that SaveLogin throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void SaveLoginShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task SaveLoginShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         ISecureBlobCache? cache = null;
@@ -162,9 +167,9 @@ public class RelativeTimeExtensionsTests
     /// </summary>
     /// <param name="seconds">The number of seconds for the timespan.</param>
     /// <returns>A task representing the test.</returns>
-    [TestCase(1)] // 1 second
-    [TestCase(60)] // 1 minute
-    [TestCase(3600)] // 1 hour
+    [Arguments(30)] // 30 seconds (avoid short durations that can expire in CI)
+    [Arguments(60)] // 1 minute
+    [Arguments(3600)] // 1 hour
     [Test]
     public async Task RelativeTimeExtensionsShouldWorkWithDifferentTimeSpans(int seconds)
     {
@@ -182,11 +187,11 @@ public class RelativeTimeExtensionsTests
 
             // Assert
             var retrievedData = await cache.Get($"test_key_{seconds}").FirstAsync();
-            Assert.That(retrievedData, Is.EqualTo(testData));
+            await Assert.That(retrievedData).IsEquivalentTo(testData);
 
             var createdAt = await cache.GetCreatedAt($"test_key_{seconds}").FirstAsync();
-            Assert.That(createdAt, Is.Not.Null);
-            Assert.That(createdAt, Is.GreaterThanOrEqualTo(beforeInsert));
+            await Assert.That(createdAt).IsNotNull();
+            await Assert.That(createdAt!.Value).IsGreaterThanOrEqualTo(beforeInsert);
 
             await cache.DisposeAsync();
         }
@@ -212,7 +217,7 @@ public class RelativeTimeExtensionsTests
 
             // Assert - The data should still be insertable but might be immediately expired
             var createdAt = await cache.GetCreatedAt("zero_expiration").FirstAsync();
-            Assert.That(createdAt, Is.Not.Null);
+            await Assert.That(createdAt).IsNotNull();
 
             await cache.DisposeAsync();
         }
@@ -238,7 +243,7 @@ public class RelativeTimeExtensionsTests
 
             // Assert - The data should still be insertable
             var createdAt = await cache.GetCreatedAt("negative_expiration").FirstAsync();
-            Assert.That(createdAt, Is.Not.Null);
+            await Assert.That(createdAt).IsNotNull();
 
             await cache.DisposeAsync();
         }

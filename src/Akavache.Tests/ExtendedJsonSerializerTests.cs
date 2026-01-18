@@ -7,88 +7,92 @@ using System; // System first
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Extended serialization tests for System.Text.Json and Newtonsoft.Json serializers.
 /// </summary>
-[TestFixture]
 [Category("Serialization")]
 public class ExtendedJsonSerializerTests
 {
     /// <summary>
     /// Round trips a user object with SystemJsonSerializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SystemJsonSerializer_SerializesAndDeserializes_UserObject()
+    public async Task SystemJsonSerializer_SerializesAndDeserializes_UserObject()
     {
         var serializer = new SystemJsonSerializer();
         var user = new UserObject { Name = "System", Bio = "Bio", Blog = "Blog" };
         var bytes = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(bytes);
-        Assert.That(roundtrip, Is.Not.Null);
-        Assert.That(roundtrip!.Name, Is.EqualTo("System"));
+        await Assert.That(roundtrip).IsNotNull();
+        await Assert.That(roundtrip!.Name).IsEqualTo("System");
     }
 
     /// <summary>
     /// Round trips a user object with NewtonsoftSerializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void NewtonsoftSerializer_SerializesAndDeserializes_UserObject()
+    public async Task NewtonsoftSerializer_SerializesAndDeserializes_UserObject()
     {
         var serializer = new NewtonsoftSerializer();
         var user = new UserObject { Name = "Newton", Bio = "Bio", Blog = "Blog" };
         var bytes = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(bytes);
-        Assert.That(roundtrip, Is.Not.Null);
-        Assert.That(roundtrip!.Name, Is.EqualTo("Newton"));
+        await Assert.That(roundtrip).IsNotNull();
+        await Assert.That(roundtrip!.Name).IsEqualTo("Newton");
     }
 
     /// <summary>
     /// Serializes DateTime UTC kind with SystemJsonSerializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SystemJsonSerializer_SerializesDateTimeUtc()
+    public async Task SystemJsonSerializer_SerializesDateTimeUtc()
     {
         var serializer = new SystemJsonSerializer();
         var dt = DateTime.UtcNow;
         var bytes = serializer.Serialize(dt);
         var roundtrip = serializer.Deserialize<DateTime>(bytes);
-        Assert.That(roundtrip.Kind, Is.EqualTo(DateTimeKind.Utc));
+        await Assert.That(roundtrip.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
     /// <summary>
     /// Serializes DateTimeOffset with zero offset using NewtonsoftSerializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void NewtonsoftSerializer_SerializesDateTimeOffset()
+    public async Task NewtonsoftSerializer_SerializesDateTimeOffset()
     {
         var serializer = new NewtonsoftSerializer();
         var dto = DateTimeOffset.UtcNow;
         var bytes = serializer.Serialize(dto);
         var roundtrip = serializer.Deserialize<DateTimeOffset>(bytes);
-        Assert.That(roundtrip.Offset, Is.EqualTo(TimeSpan.Zero));
+        await Assert.That(roundtrip.Offset).IsEqualTo(TimeSpan.Zero);
     }
 
     /// <summary>
     /// Unsupported type serialization throws for SystemJsonSerializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SystemJsonSerializer_ThrowsOnUnsupportedType()
+    public async Task SystemJsonSerializer_ThrowsOnUnsupportedType()
     {
         var serializer = new SystemJsonSerializer();
-        Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests()), Is.Not.Null);
+        await Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests())).IsNotNull();
     }
 
     /// <summary>
     /// Unsupported type serialization throws for NewtonsoftSerializer.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void NewtonsoftSerializer_ThrowsOnUnsupportedType()
+    public async Task NewtonsoftSerializer_ThrowsOnUnsupportedType()
     {
         var serializer = new NewtonsoftSerializer();
-        Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests()), Is.Not.Null);
+        await Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests())).IsNotNull();
     }
 }

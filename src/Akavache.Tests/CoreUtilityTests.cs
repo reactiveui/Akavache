@@ -5,23 +5,21 @@
 
 using Akavache.Core;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for core utility functionality.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
-[NonParallelizable]
+[NotInParallel]
 public class CoreUtilityTests
 {
     /// <summary>
     /// Tests that RelativeTimeExtensions work correctly with past times.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void RelativeTimeExtensionsShouldWorkWithPastTimes()
+    public async Task RelativeTimeExtensionsShouldWorkWithPastTimes()
     {
         // Arrange
         var baseTime = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -32,19 +30,20 @@ public class CoreUtilityTests
         var oneWeekAgo = baseTime.AddDays(-7);
 
         // Assert - These should all be in the past relative to baseTime
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(oneHourAgo, Is.LessThan(baseTime));
-            Assert.That(oneDayAgo, Is.LessThan(baseTime));
-            Assert.That(oneWeekAgo, Is.LessThan(baseTime));
+            await Assert.That(oneHourAgo).IsLessThan(baseTime);
+            await Assert.That(oneDayAgo).IsLessThan(baseTime);
+            await Assert.That(oneWeekAgo).IsLessThan(baseTime);
         }
     }
 
     /// <summary>
     /// Tests that RelativeTimeExtensions work correctly with future times.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void RelativeTimeExtensionsShouldWorkWithFutureTimes()
+    public async Task RelativeTimeExtensionsShouldWorkWithFutureTimes()
     {
         // Arrange
         var baseTime = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -55,19 +54,20 @@ public class CoreUtilityTests
         var oneWeekFromNow = baseTime.AddDays(7);
 
         // Assert - These should all be in the future relative to baseTime
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(oneHourFromNow, Is.GreaterThan(baseTime));
-            Assert.That(oneDayFromNow, Is.GreaterThan(baseTime));
-            Assert.That(oneWeekFromNow, Is.GreaterThan(baseTime));
+            await Assert.That(oneHourFromNow).IsGreaterThan(baseTime);
+            await Assert.That(oneDayFromNow).IsGreaterThan(baseTime);
+            await Assert.That(oneWeekFromNow).IsGreaterThan(baseTime);
         }
     }
 
     /// <summary>
     /// Tests that DateTimeOffset conversions work correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void DateTimeOffsetConversionsShouldWorkCorrectly()
+    public async Task DateTimeOffsetConversionsShouldWorkCorrectly()
     {
         // Arrange
         var utcTime = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -77,68 +77,70 @@ public class CoreUtilityTests
         var dateTimeOffset = new DateTimeOffset(utcTime, TimeSpan.Zero);
         var offsetTime = dateTimeOffset.ToOffset(offset);
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert
-            Assert.That(utcTime.Kind, Is.EqualTo(DateTimeKind.Utc));
-            Assert.That(dateTimeOffset.Offset, Is.EqualTo(TimeSpan.Zero));
-            Assert.That(offsetTime.Offset, Is.EqualTo(offset));
+            await Assert.That(utcTime.Kind).IsEqualTo(DateTimeKind.Utc);
+            await Assert.That(dateTimeOffset.Offset).IsEqualTo(TimeSpan.Zero);
+            await Assert.That(offsetTime.Offset).IsEqualTo(offset);
         }
     }
 
     /// <summary>
     /// Tests that utility methods handle edge cases correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UtilityMethodsShouldHandleEdgeCases()
+    public async Task UtilityMethodsShouldHandleEdgeCases()
     {
         // Test minimum and maximum DateTime values
         var minDateTime = DateTime.MinValue;
         var maxDateTime = DateTime.MaxValue;
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // These should not throw
-            Assert.That(minDateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
-            Assert.That(maxDateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+            await Assert.That(minDateTime.Kind).IsEqualTo(DateTimeKind.Unspecified);
+            await Assert.That(maxDateTime.Kind).IsEqualTo(DateTimeKind.Unspecified);
         }
 
         // Test with UTC variants
         var minUtc = DateTime.SpecifyKind(minDateTime, DateTimeKind.Utc);
         var maxUtc = DateTime.SpecifyKind(maxDateTime, DateTimeKind.Utc);
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(minUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
-            Assert.That(maxUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
+            await Assert.That(minUtc.Kind).IsEqualTo(DateTimeKind.Utc);
+            await Assert.That(maxUtc.Kind).IsEqualTo(DateTimeKind.Utc);
         }
     }
 
     /// <summary>
     /// Tests that TimeSpan operations work correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void TimeSpanOperationsShouldWorkCorrectly()
+    public async Task TimeSpanOperationsShouldWorkCorrectly()
     {
         // Arrange
         var oneHour = TimeSpan.FromHours(1);
         var thirtyMinutes = TimeSpan.FromMinutes(30);
         var ninetyMinutes = TimeSpan.FromMinutes(90);
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Act & Assert
-            Assert.That(oneHour.TotalMinutes, Is.EqualTo(60));
-            Assert.That(thirtyMinutes.TotalMinutes, Is.EqualTo(30));
-            Assert.That(ninetyMinutes.TotalMinutes, Is.EqualTo(90));
+            await Assert.That(oneHour.TotalMinutes).IsEqualTo(60);
+            await Assert.That(thirtyMinutes.TotalMinutes).IsEqualTo(30);
+            await Assert.That(ninetyMinutes.TotalMinutes).IsEqualTo(90);
         }
 
         // Test arithmetic
         var combined = oneHour + thirtyMinutes;
-        Assert.That(combined, Is.EqualTo(ninetyMinutes));
+        await Assert.That(combined).IsEqualTo(ninetyMinutes);
 
         var difference = ninetyMinutes - oneHour;
-        Assert.That(difference, Is.EqualTo(thirtyMinutes));
+        await Assert.That(difference).IsEqualTo(thirtyMinutes);
     }
 
     /// <summary>
@@ -166,12 +168,12 @@ public class CoreUtilityTests
         var result1 = await request1.FirstAsync();
         var result2 = await request2.FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert - Should use cached result, so factory called only once
-            Assert.That(result2, Is.EqualTo(result1));
-            Assert.That(result1, Is.EqualTo("result_1"));
-            Assert.That(callCount, Is.EqualTo(1)); // Should only be called once due to caching
+            await Assert.That(result2).IsEqualTo(result1);
+            await Assert.That(result1).IsEqualTo("result_1");
+            await Assert.That(callCount).IsEqualTo(1); // Should only be called once due to caching
         }
 
         // Clear and test again
@@ -179,10 +181,10 @@ public class CoreUtilityTests
         var request3 = RequestCache.GetOrCreateRequest(testKey, factory);
         var result3 = await request3.FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(result3, Is.EqualTo("result_2")); // Should be called again after clear
-            Assert.That(callCount, Is.EqualTo(2));
+            await Assert.That(result3).IsEqualTo("result_2"); // Should be called again after clear
+            await Assert.That(callCount).IsEqualTo(2);
         }
     }
 
@@ -216,88 +218,91 @@ public class CoreUtilityTests
         var result2 = await request2.FirstAsync();
         var result3 = await request3.FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert
-            Assert.That(result1, Is.EqualTo("result_key1_1"));
-            Assert.That(result2, Is.EqualTo("result_key2_1"));
-            Assert.That(result3, Is.EqualTo("result_key1_1")); // Should be cached, same as result1
+            await Assert.That(result1).IsEqualTo("result_key1_1");
+            await Assert.That(result2).IsEqualTo("result_key2_1");
+            await Assert.That(result3).IsEqualTo("result_key1_1"); // Should be cached, same as result1
 
-            Assert.That(callCounts["key1"], Is.EqualTo(1)); // Only called once due to caching
-            Assert.That(callCounts["key2"], Is.EqualTo(1)); // Only called once
+            await Assert.That(callCounts["key1"]).IsEqualTo(1); // Only called once due to caching
+            await Assert.That(callCounts["key2"]).IsEqualTo(1); // Only called once
         }
     }
 
     /// <summary>
     /// Tests that IBlobCache.ExceptionHelpers work correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void ExceptionHelpersShouldWorkCorrectly()
+    public async Task ExceptionHelpersShouldWorkCorrectly()
     {
         // Test KeyNotFoundException helper
         var keyNotFoundObs = IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<string>("test_key");
 
-        var keyNotFoundEx = Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+        var keyNotFoundEx = await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
         {
             await keyNotFoundObs.FirstAsync();
         });
 
-        Assert.That(keyNotFoundEx.Message, Does.Contain("test_key"));
-        Assert.That(keyNotFoundEx.Message, Does.Contain("not present in the cache"));
+        await Assert.That(keyNotFoundEx.Message).Contains("test_key");
+        await Assert.That(keyNotFoundEx.Message).Contains("not present in the cache");
 
         // Test ObjectDisposedException helper
         var objectDisposedObs = IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>("test_cache");
 
-        var objectDisposedEx = Assert.ThrowsAsync<ObjectDisposedException>(async () =>
+        var objectDisposedEx = await Assert.ThrowsAsync<ObjectDisposedException>(async () =>
         {
             await objectDisposedObs.FirstAsync();
         });
 
-        Assert.That(objectDisposedEx.Message, Does.Contain("test_cache"));
-        Assert.That(objectDisposedEx.Message, Does.Contain("disposed"));
+        await Assert.That(objectDisposedEx.Message).Contains("test_cache");
+        await Assert.That(objectDisposedEx.Message).Contains("disposed");
     }
 
     /// <summary>
     /// Tests that scheduler registration works correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SchedulerRegistrationShouldWorkCorrectly()
+    public async Task SchedulerRegistrationShouldWorkCorrectly()
     {
         // Arrange & Act
         var taskpoolScheduler = CacheDatabase.TaskpoolScheduler;
         var immediateScheduler = ImmediateScheduler.Instance;
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert
-            Assert.That(taskpoolScheduler, Is.Not.Null);
-            Assert.That(immediateScheduler, Is.Not.Null);
+            await Assert.That(taskpoolScheduler).IsNotNull();
+            await Assert.That(immediateScheduler).IsNotNull();
         }
 
-        Assert.That(immediateScheduler, Is.Not.SameAs(taskpoolScheduler));
+        await Assert.That(immediateScheduler).IsNotEquivalentTo(taskpoolScheduler);
     }
 
     /// <summary>
     /// Tests that unit values work correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void UnitValuesShouldWorkCorrectly()
+    public async Task UnitValuesShouldWorkCorrectly()
     {
         // Arrange & Act
         var unit1 = Unit.Default;
         var unit2 = default(Unit);
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert
-            Assert.That(unit2, Is.EqualTo(unit1));
-            Assert.That(unit1, Is.EqualTo(unit2));
+            await Assert.That(unit2).IsEqualTo(unit1);
+            await Assert.That(unit1).IsEqualTo(unit2);
         }
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(unit2.GetHashCode(), Is.EqualTo(unit1.GetHashCode()));
-            Assert.That(unit1.ToString(), Is.EqualTo("()"));
+            await Assert.That(unit2.GetHashCode()).IsEqualTo(unit1.GetHashCode());
+            await Assert.That(unit1.ToString()).IsEqualTo("()");
         }
     }
 }

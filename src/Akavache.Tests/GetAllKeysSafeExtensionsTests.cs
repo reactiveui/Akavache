@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.SystemTextJson;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
@@ -12,8 +11,8 @@ namespace Akavache.Tests;
 /// Tests for the GetAllKeysSafe methods that provide safe alternatives to GetAllKeys()
 /// to prevent crashes on mobile platforms.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA1001:Types that own disposable fields should be disposable", Justification = "Cleanup is handled via test hooks")]
 public class GetAllKeysSafeExtensionsTests
 {
     private InMemoryBlobCache _cache = null!;
@@ -21,7 +20,7 @@ public class GetAllKeysSafeExtensionsTests
     /// <summary>
     /// Sets up the test cache before each test.
     /// </summary>
-    [SetUp]
+    [Before(Test)]
     public void SetUp()
     {
         _cache = new InMemoryBlobCache(new SystemJsonSerializer());
@@ -31,7 +30,7 @@ public class GetAllKeysSafeExtensionsTests
     /// Cleans up the test cache after each test.
     /// </summary>
     /// <returns>A task representing the asynchronous cleanup operation.</returns>
-    [TearDown]
+    [After(Test)]
     public async Task TearDown()
     {
         await _cache.DisposeAsync();
@@ -48,7 +47,7 @@ public class GetAllKeysSafeExtensionsTests
         var keys = await _cache.GetAllKeysSafe().ToList().FirstAsync();
 
         // Assert
-        Assert.That(keys, Is.Empty);
+        await Assert.That(keys).IsEmpty();
     }
 
     /// <summary>
@@ -66,9 +65,9 @@ public class GetAllKeysSafeExtensionsTests
         var keys = await _cache.GetAllKeysSafe().ToList().FirstAsync();
 
         // Assert
-        Assert.That(keys, Has.Count.EqualTo(2));
-        Assert.That(keys, Does.Contain("key1"));
-        Assert.That(keys, Does.Contain("key2"));
+        await Assert.That(keys).Count().IsEqualTo(2);
+        await Assert.That(keys).Contains("key1");
+        await Assert.That(keys).Contains("key2");
     }
 
     /// <summary>
@@ -82,7 +81,7 @@ public class GetAllKeysSafeExtensionsTests
         var keys = await _cache.GetAllKeysSafe(typeof(string)).ToList().FirstAsync();
 
         // Assert
-        Assert.That(keys, Is.Empty);
+        await Assert.That(keys).IsEmpty();
     }
 
     /// <summary>
@@ -101,12 +100,12 @@ public class GetAllKeysSafeExtensionsTests
         var intKeys = await _cache.GetAllKeysSafe(typeof(int)).ToList().FirstAsync();
 
         // Assert
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(stringKeys, Has.Count.EqualTo(1));
-            Assert.That(stringKeys.First(), Does.Contain("test_string"));
-            Assert.That(intKeys, Has.Count.EqualTo(1));
-            Assert.That(intKeys.First(), Does.Contain("test_int"));
+            await Assert.That(stringKeys).Count().IsEqualTo(1);
+            await Assert.That(stringKeys.First()).Contains("test_string");
+            await Assert.That(intKeys).Count().IsEqualTo(1);
+            await Assert.That(intKeys.First()).Contains("test_int");
         }
     }
 
@@ -121,7 +120,7 @@ public class GetAllKeysSafeExtensionsTests
         var keys = await _cache.GetAllKeysSafe<string>().ToList().FirstAsync();
 
         // Assert
-        Assert.That(keys, Is.Empty);
+        await Assert.That(keys).IsEmpty();
     }
 
     /// <summary>
@@ -139,56 +138,60 @@ public class GetAllKeysSafeExtensionsTests
         var stringKeys = await _cache.GetAllKeysSafe<string>().ToList().FirstAsync();
 
         // Assert
-        Assert.That(stringKeys, Has.Count.EqualTo(1));
-        Assert.That(stringKeys.First(), Does.Contain("test_string"));
+        await Assert.That(stringKeys).Count().IsEqualTo(1);
+        await Assert.That(stringKeys.First()).Contains("test_string");
     }
 
     /// <summary>
     /// Tests that GetAllKeysSafe throws ArgumentNullException for null cache.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void GetAllKeysSafe_ShouldThrowForNullCache()
+    public async Task GetAllKeysSafe_ShouldThrowForNullCache()
     {
         // Arrange
         IBlobCache? nullCache = null;
 
         // Act & Assert
-        Assert.That(() => nullCache!.GetAllKeysSafe(), Throws.ArgumentNullException);
+        await Assert.That(() => nullCache!.GetAllKeysSafe()).Throws<ArgumentNullException>();
     }
 
     /// <summary>
     /// Tests that GetAllKeysSafe with type throws ArgumentNullException for null cache.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void GetAllKeysSafe_WithType_ShouldThrowForNullCache()
+    public async Task GetAllKeysSafe_WithType_ShouldThrowForNullCache()
     {
         // Arrange
         IBlobCache? nullCache = null;
 
         // Act & Assert
-        Assert.That(() => nullCache!.GetAllKeysSafe(typeof(string)), Throws.ArgumentNullException);
+        await Assert.That(() => nullCache!.GetAllKeysSafe(typeof(string))).Throws<ArgumentNullException>();
     }
 
     /// <summary>
     /// Tests that GetAllKeysSafe with type throws ArgumentNullException for null type.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void GetAllKeysSafe_WithType_ShouldThrowForNullType()
+    public async Task GetAllKeysSafe_WithType_ShouldThrowForNullType()
     {
         // Act & Assert
-        Assert.That(() => _cache.GetAllKeysSafe(null!), Throws.ArgumentNullException);
+        await Assert.That(() => _cache.GetAllKeysSafe(null!)).Throws<ArgumentNullException>();
     }
 
     /// <summary>
     /// Tests that generic GetAllKeysSafe throws ArgumentNullException for null cache.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void GetAllKeysSafe_Generic_ShouldThrowForNullCache()
+    public async Task GetAllKeysSafe_Generic_ShouldThrowForNullCache()
     {
         // Arrange
         IBlobCache? nullCache = null;
 
         // Act & Assert
-        Assert.That(() => nullCache!.GetAllKeysSafe<string>(), Throws.ArgumentNullException);
+        await Assert.That(() => nullCache!.GetAllKeysSafe<string>()).Throws<ArgumentNullException>();
     }
 }

@@ -8,50 +8,51 @@ using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Skeleton tests for BSON serializers edge cases.
 /// </summary>
-[TestFixture]
 [Category("Serialization")]
 public class BsonSerializerEdgeCaseTests
 {
     /// <summary>
     /// Verifies the SystemTextJson BSON serializer round trips a simple object.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SystemTextJsonBsonSerializer_SerializesAndDeserializesSimpleObject()
+    public async Task SystemTextJsonBsonSerializer_SerializesAndDeserializesSimpleObject()
     {
         var serializer = new SystemJsonBsonSerializer();
         var user = new UserObject { Name = "BsonUser", Bio = "Bio", Blog = "Blog" };
         var data = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(data);
-        Assert.That(roundtrip, Is.Not.Null);
-        Assert.That(roundtrip!.Name, Is.EqualTo("BsonUser"));
+        await Assert.That(roundtrip).IsNotNull();
+        await Assert.That(roundtrip!.Name).IsEqualTo("BsonUser");
     }
 
     /// <summary>
     /// Verifies the Newtonsoft BSON serializer round trips a simple object.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void NewtonsoftBsonSerializer_SerializesAndDeserializesSimpleObject()
+    public async Task NewtonsoftBsonSerializer_SerializesAndDeserializesSimpleObject()
     {
         var serializer = new NewtonsoftBsonSerializer();
         var user = new UserObject { Name = "NewtonUser", Bio = "Bio", Blog = "Blog" };
         var data = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(data);
-        Assert.That(roundtrip, Is.Not.Null);
-        Assert.That(roundtrip!.Name, Is.EqualTo("NewtonUser"));
+        await Assert.That(roundtrip).IsNotNull();
+        await Assert.That(roundtrip!.Name).IsEqualTo("NewtonUser");
     }
 
     /// <summary>
     /// Ensures circular references throw when attempting serialization.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void BsonSerializer_ThrowsOnCircularReference()
+    public async Task BsonSerializer_ThrowsOnCircularReference()
     {
         var serializer = new NewtonsoftBsonSerializer();
         var list = new List<object>();
@@ -62,13 +63,14 @@ public class BsonSerializerEdgeCaseTests
     /// <summary>
     /// Ensures invalid BSON data causes a controlled failure during deserialization.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void BsonSerializer_GracefullyHandlesInvalidDataDuringDeserialize()
+    public async Task BsonSerializer_GracefullyHandlesInvalidDataDuringDeserialize()
     {
         var serializer = new SystemJsonBsonSerializer();
 
         // random invalid BSON-like bytes
         var invalid = new byte[] { 0x00, 0x01, 0x02, 0xFF, 0xFE };
-        Assert.That(serializer.Deserialize<UserObject>(invalid), Is.Null);
+        await Assert.That(serializer.Deserialize<UserObject>(invalid)).IsNull();
     }
 }
