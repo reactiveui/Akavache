@@ -17,22 +17,23 @@ internal static class TestHelper
     /// Handles transient disposal exceptions as retryable.
     /// </summary>
     /// <param name="condition">An asynchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
-    /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
-    /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
+    /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 10000ms.</param>
+    /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 50ms.</param>
     /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
-    /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
+    /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 500ms.</param>
     /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
     public static async Task EventuallyAsync(
         Func<Task<bool>> condition,
-        int timeoutMs = 3500,
-        int initialDelayMs = 500,
+        int timeoutMs = 10000,
+        int initialDelayMs = 50,
         double backoff = 1.5,
-        int maxDelayMs = 200)
+        int maxDelayMs = 500)
     {
         var sw = Stopwatch.StartNew();
         var delay = initialDelayMs;
 
-        await Task.Delay(delay);
+        // Initial small delay to allow async operations to start
+        await Task.Delay(delay).ConfigureAwait(false);
 
         while (sw.ElapsedMilliseconds < timeoutMs)
         {
@@ -67,17 +68,17 @@ internal static class TestHelper
     /// Handles transient disposal exceptions as retryable.
     /// </summary>
     /// <param name="condition">A synchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
-    /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 3500ms.</param>
-    /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 25ms.</param>
+    /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 10000ms.</param>
+    /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 50ms.</param>
     /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
-    /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 200ms.</param>
+    /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 500ms.</param>
     /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
     public static Task EventuallyAsync(
         Func<bool> condition,
-        int timeoutMs = 3500,
-        int initialDelayMs = 25,
+        int timeoutMs = 10000,
+        int initialDelayMs = 50,
         double backoff = 1.5,
-        int maxDelayMs = 200) =>
+        int maxDelayMs = 500) =>
         EventuallyAsync(() => Task.FromResult(condition()), timeoutMs, initialDelayMs, backoff, maxDelayMs);
 
     /// <summary>

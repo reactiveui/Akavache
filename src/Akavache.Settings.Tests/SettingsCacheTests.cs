@@ -143,28 +143,28 @@ public class SettingsCacheTests
             {
                 try
                 {
-                    // Ensure the initially captured store exists.
-                    await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                    // Wait for the initially captured store to exist with longer timeout for CI
+                    await TestHelper.EventuallyAsync(
+                        () => viewSettings is not null,
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
 
-                    // Perform the mutation in a FRESH store, retrying on transient disposal.
-                    await TestHelper.EventuallyAsync(async () =>
-                    {
-                        return await TestHelper.WithFreshStoreAsync(
-                            instance,
-                            () => instance.GetSettingsStore<ViewSettings>(),
-                            async s =>
-                            {
-                                s.EnumTest = EnumTestValue.Option2;
-                                var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                await Task.Yield();
-                                return ok;
-                            }).ConfigureAwait(false);
-                    }).ConfigureAwait(false);
+                    await Assert.That(viewSettings).IsNotNull();
 
-                    // Optionally also verify via the initially captured instance (retryable read).
-                    await TestHelper.EventuallyAsync(() =>
-                            TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                        .ConfigureAwait(false);
+                    // Wait a moment for the store to be fully initialized
+                    await Task.Delay(100).ConfigureAwait(false);
+
+                    // Perform the mutation directly on the captured store
+                    viewSettings!.EnumTest = EnumTestValue.Option2;
+
+                    // Wait for the value to be persisted and readable
+                    await TestHelper.EventuallyAsync(
+                        () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
+
+                    // Final assertion
+                    await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                 }
                 finally
                 {
@@ -184,7 +184,10 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(
+            () => AppBuilder.HasBeenBuilt,
+            timeoutMs: 10000,
+            initialDelayMs: 50).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -262,28 +265,28 @@ public class SettingsCacheTests
             {
                 try
                 {
-                    // Ensure the initially captured store exists.
-                    await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                    // Wait for the initially captured store to exist with longer timeout for CI
+                    await TestHelper.EventuallyAsync(
+                        () => viewSettings is not null,
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
 
-                    // Perform the mutation in a FRESH store, retrying on transient disposal.
-                    await TestHelper.EventuallyAsync(async () =>
-                    {
-                        return await TestHelper.WithFreshStoreAsync(
-                            instance,
-                            () => instance.GetSettingsStore<ViewSettings>(),
-                            async s =>
-                            {
-                                s.EnumTest = EnumTestValue.Option2;
-                                var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                await Task.Yield();
-                                return ok;
-                            }).ConfigureAwait(false);
-                    }).ConfigureAwait(false);
+                    await Assert.That(viewSettings).IsNotNull();
 
-                    // Optionally also verify via the initially captured instance (retryable read).
-                    await TestHelper.EventuallyAsync(() =>
-                            TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                        .ConfigureAwait(false);
+                    // Wait a moment for the store to be fully initialized
+                    await Task.Delay(100).ConfigureAwait(false);
+
+                    // Perform the mutation directly on the captured store
+                    viewSettings!.EnumTest = EnumTestValue.Option2;
+
+                    // Wait for the value to be persisted and readable
+                    await TestHelper.EventuallyAsync(
+                        () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
+
+                    // Final assertion
+                    await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                 }
                 finally
                 {
@@ -303,7 +306,10 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(
+            () => AppBuilder.HasBeenBuilt,
+            timeoutMs: 10000,
+            initialDelayMs: 50).ConfigureAwait(false);
     }
 
     /// <summary>

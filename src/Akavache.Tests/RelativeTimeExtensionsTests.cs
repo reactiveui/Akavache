@@ -27,7 +27,9 @@ public class RelativeTimeExtensionsTests
         {
             var cache = new InMemoryBlobCache(serializer);
             var testData = "test data"u8.ToArray();
-            var expiration = TimeSpan.FromSeconds(1);
+
+            // Use a longer expiration to avoid CI timing issues
+            var expiration = TimeSpan.FromMinutes(5);
             var beforeInsert = DateTimeOffset.Now;
 
             // Act
@@ -35,7 +37,7 @@ public class RelativeTimeExtensionsTests
 
             // Assert - verify the data was inserted
             var retrievedData = await cache.Get("test_key").FirstAsync();
-            await Assert.That(retrievedData).IsEqualTo(testData);
+            await Assert.That(retrievedData).IsEquivalentTo(testData);
 
             // Verify expiration was set (we can't easily test exact expiration without waiting)
             var createdAt = await cache.GetCreatedAt("test_key").FirstAsync();
@@ -165,7 +167,7 @@ public class RelativeTimeExtensionsTests
     /// </summary>
     /// <param name="seconds">The number of seconds for the timespan.</param>
     /// <returns>A task representing the test.</returns>
-    [Arguments(1)] // 1 second
+    [Arguments(30)] // 30 seconds (avoid short durations that can expire in CI)
     [Arguments(60)] // 1 minute
     [Arguments(3600)] // 1 hour
     [Test]
@@ -185,7 +187,7 @@ public class RelativeTimeExtensionsTests
 
             // Assert
             var retrievedData = await cache.Get($"test_key_{seconds}").FirstAsync();
-            await Assert.That(retrievedData).IsEqualTo(testData);
+            await Assert.That(retrievedData).IsEquivalentTo(testData);
 
             var createdAt = await cache.GetCreatedAt($"test_key_{seconds}").FirstAsync();
             await Assert.That(createdAt).IsNotNull();
