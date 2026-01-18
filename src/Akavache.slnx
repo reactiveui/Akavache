@@ -1,0 +1,44 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Compatability/">
+    <File Path="RunCompatTest.ps1" />
+    <Project Path="src/AkavacheV10Writer/AkavacheV10Writer.csproj" />
+    <Project Path="src/AkavacheV11Reader/AkavacheV11Reader.csproj" />
+  </Folder>
+  <Folder Name="/Examples/">
+    <Project Path="Samples/AkavacheTodoMaui/AkavacheTodoMaui.csproj">
+      <Deploy Solution="*|Any CPU" />
+    </Project>
+    <Project Path="Samples/AkavacheTodoWpf/AkavacheTodoWpf.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../.github/workflows/ci-build.yml" />
+    <File Path="../.github/workflows/release.yml" />
+    <File Path="../README.md" />
+    <File Path="../version.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Migration.md" />
+    <File Path="RunCompatTest.ps1" />
+    <File Path="stylecop.json" />
+    <File Path="tests.runsettings" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj" />
+    <Project Path="Akavache.Benchmarks/Akavache.Benchmarks.csproj" />
+    <Project Path="Akavache.Settings.Tests/Akavache.Settings.Tests.csproj" />
+    <Project Path="Akavache.Tests/Akavache.Tests.csproj" />
+  </Folder>
+  <Project Path="Akavache.Core/Akavache.csproj" />
+  <Project Path="Akavache.Drawing/Akavache.Drawing.csproj" />
+  <Project Path="Akavache.EncryptedSqlite3/Akavache.EncryptedSqlite3.csproj" />
+  <Project Path="Akavache.NewtonsoftJson/Akavache.NewtonsoftJson.csproj" />
+  <Project Path="Akavache.Settings/Akavache.Settings.csproj" />
+  <Project Path="Akavache.Sqlite3/Akavache.Sqlite3.csproj" />
+  <Project Path="Akavache.SystemTextJson/Akavache.SystemTextJson.csproj" />
+</Solution>

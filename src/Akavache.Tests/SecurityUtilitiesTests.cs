@@ -5,22 +5,20 @@
 
 using Akavache.Core;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for security utilities to prevent path traversal attacks.
 /// </summary>
-[TestFixture]
 [Category("Security")]
 public class SecurityUtilitiesTests
 {
     /// <summary>
     /// Tests that ValidateCacheName rejects path traversal attempts.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateCacheName_ShouldRejectPathTraversalAttempts()
+    public async Task ValidateCacheName_ShouldRejectPathTraversalAttempts()
     {
         var pathTraversalAttempts = new[]
         {
@@ -39,16 +37,17 @@ public class SecurityUtilitiesTests
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(maliciousName));
 
             // The validation should reject these for security reasons
-            Assert.That(ex, Is.Not.Null);
-            Assert.That(ex.Message, Does.Contain(maliciousName));
+            await Assert.That(ex).IsNotNull();
+            await Assert.That(ex.Message).Contains(maliciousName);
         }
     }
 
     /// <summary>
     /// Tests that ValidateCacheName rejects reserved system names.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateCacheName_ShouldRejectReservedSystemNames()
+    public async Task ValidateCacheName_ShouldRejectReservedSystemNames()
     {
         var reservedNames = new[]
         {
@@ -61,15 +60,16 @@ public class SecurityUtilitiesTests
         foreach (var reservedName in reservedNames)
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(reservedName));
-            Assert.That(ex.Message, Does.Contain("reserved system name"));
+            await Assert.That(ex.Message).Contains("reserved system name");
         }
     }
 
     /// <summary>
     /// Tests that ValidateCacheName rejects invalid filename characters.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateCacheName_ShouldRejectInvalidFilenameCharacters()
+    public async Task ValidateCacheName_ShouldRejectInvalidFilenameCharacters()
     {
         var invalidChars = Path.GetInvalidFileNameChars();
 
@@ -78,15 +78,16 @@ public class SecurityUtilitiesTests
         {
             var nameWithInvalidChar = $"test{invalidChar}cache";
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(nameWithInvalidChar));
-            Assert.That(ex.Message, Does.Contain("invalid filename characters"));
+            await Assert.That(ex.Message).Contains("invalid filename characters");
         }
     }
 
     /// <summary>
     /// Tests that ValidateCacheName rejects names with problematic prefixes/suffixes.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateCacheName_ShouldRejectProblematicPrefixesSuffixes()
+    public async Task ValidateCacheName_ShouldRejectProblematicPrefixesSuffixes()
     {
         var problematicNames = new[]
         {
@@ -99,7 +100,7 @@ public class SecurityUtilitiesTests
         foreach (var problematicName in problematicNames)
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(problematicName));
-            Assert.That(ex.Message, Does.Contain("cannot start or end with"));
+            await Assert.That(ex.Message).Contains("cannot start or end with");
         }
 
         // Test names that become empty after trimming
@@ -107,15 +108,16 @@ public class SecurityUtilitiesTests
         foreach (var emptyName in emptyAfterTrim)
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(emptyName));
-            Assert.That(ex.Message, Does.Contain("cannot be null or empty"));
+            await Assert.That(ex.Message).Contains("cannot be null or empty");
         }
     }
 
     /// <summary>
     /// Tests that ValidateCacheName accepts valid cache names.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateCacheName_ShouldAcceptValidNames()
+    public async Task ValidateCacheName_ShouldAcceptValidNames()
     {
         var validNames = new[]
         {
@@ -134,15 +136,16 @@ public class SecurityUtilitiesTests
         foreach (var validName in validNames)
         {
             var result = SecurityUtilities.ValidateCacheName(validName);
-            Assert.That(result, Is.EqualTo(validName.Trim()));
+            await Assert.That(result).IsEqualTo(validName.Trim());
         }
     }
 
     /// <summary>
     /// Tests that ValidateApplicationName rejects path traversal attempts.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateApplicationName_ShouldRejectPathTraversalAttempts()
+    public async Task ValidateApplicationName_ShouldRejectPathTraversalAttempts()
     {
         var pathTraversalAttempts = new[]
         {
@@ -154,15 +157,16 @@ public class SecurityUtilitiesTests
         foreach (var maliciousName in pathTraversalAttempts)
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(maliciousName));
-            Assert.That(ex, Is.Not.Null);
+            await Assert.That(ex).IsNotNull();
         }
     }
 
     /// <summary>
     /// Tests that ValidateApplicationName accepts valid application names.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateApplicationName_ShouldAcceptValidNames()
+    public async Task ValidateApplicationName_ShouldAcceptValidNames()
     {
         var validNames = new[]
         {
@@ -177,30 +181,32 @@ public class SecurityUtilitiesTests
         foreach (var validName in validNames)
         {
             var result = SecurityUtilities.ValidateApplicationName(validName);
-            Assert.That(result, Is.EqualTo(validName.Trim()));
+            await Assert.That(result).IsEqualTo(validName.Trim());
         }
     }
 
     /// <summary>
     /// Tests that ValidateDatabaseName works identically to ValidateCacheName.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void ValidateDatabaseName_ShouldWorkLikeValidateCacheName()
+    public async Task ValidateDatabaseName_ShouldWorkLikeValidateCacheName()
     {
         // Test that it rejects the same things as ValidateCacheName
         var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName("./malicious"));
-        Assert.That(ex.Message, Does.Contain("cannot"));
+        await Assert.That(ex.Message).Contains("cannot");
 
         // Test that it accepts valid names
         var result = SecurityUtilities.ValidateDatabaseName("ValidDatabase");
-        Assert.That(result, Is.EqualTo("ValidDatabase"));
+        await Assert.That(result).IsEqualTo("ValidDatabase");
     }
 
     /// <summary>
     /// Tests that SafePathCombine prevents directory traversal.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void SafePathCombine_ShouldPreventDirectoryTraversal()
+    public async Task SafePathCombine_ShouldPreventDirectoryTraversal()
     {
         var basePath = "/tmp/cache";
         var maliciousPaths = new[]
@@ -213,15 +219,16 @@ public class SecurityUtilitiesTests
         foreach (var maliciousPath in maliciousPaths)
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine(basePath, maliciousPath));
-            Assert.That(ex.Message, Does.Contain("outside the base directory"));
+            await Assert.That(ex.Message).Contains("outside the base directory");
         }
     }
 
     /// <summary>
     /// Tests that SafePathCombine allows safe relative paths.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void SafePathCombine_ShouldAllowSafeRelativePaths()
+    public async Task SafePathCombine_ShouldAllowSafeRelativePaths()
     {
         var basePath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar);
         var safePaths = new[]
@@ -234,16 +241,17 @@ public class SecurityUtilitiesTests
         foreach (var safePath in safePaths)
         {
             var result = SecurityUtilities.SafePathCombine(basePath, safePath);
-            Assert.That(result, Does.StartWith(basePath));
-            Assert.That(result, Does.Contain(safePath.Replace('/', Path.DirectorySeparatorChar)));
+            await Assert.That(result).StartsWith(basePath);
+            await Assert.That(result).Contains(safePath.Replace('/', Path.DirectorySeparatorChar));
         }
     }
 
     /// <summary>
     /// Tests error handling for null and empty inputs.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void SecurityUtilities_ShouldHandleNullAndEmptyInputs()
+    public async Task SecurityUtilities_ShouldHandleNullAndEmptyInputs()
     {
         // Test ValidateCacheName
         Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(null!));
@@ -269,8 +277,9 @@ public class SecurityUtilitiesTests
     /// <summary>
     /// Tests that validation handles whitespace strictly.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public void SecurityUtilities_ShouldRejectLeadingTrailingWhitespace()
+    public async Task SecurityUtilities_ShouldRejectLeadingTrailingWhitespace()
     {
         // For security reasons, we don't want to allow trailing whitespace
         var namesWithTrailingWhitespace = new[] { "ValidCache  " };
@@ -278,12 +287,12 @@ public class SecurityUtilitiesTests
         foreach (var nameWithWhitespace in namesWithTrailingWhitespace)
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(nameWithWhitespace));
-            Assert.That(ex.Message, Does.Contain("cannot start or end with"));
+            await Assert.That(ex.Message).Contains("cannot start or end with");
         }
 
         // But names without leading/trailing whitespace should work
         var validName = "ValidCache";
         var result = SecurityUtilities.ValidateCacheName(validName);
-        Assert.That(result, Is.EqualTo(validName));
+        await Assert.That(result).IsEqualTo(validName);
     }
 }

@@ -16,9 +16,8 @@ namespace Akavache.Settings.Tests;
 /// Tests for SettingsBase fallback logic when no explicit cache is configured.
 /// Validates the cache selection priority: explicit BlobCaches -> CacheDatabase -> InMemoryBlobCache.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
-[Parallelizable(ParallelScope.None)]
+[NotInParallel]
 public class SettingsBaseFallbackTests
 {
     /// <summary>
@@ -34,7 +33,7 @@ public class SettingsBaseFallbackTests
     /// <summary>
     /// One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.
     /// </summary>
-    [SetUp]
+    [Before(Test)]
     public void Setup()
     {
         AppBuilder.ResetBuilderStateForTests();
@@ -52,7 +51,7 @@ public class SettingsBaseFallbackTests
     /// <summary>
     /// One-time teardown after each test. Best-effort cleanup and static reset.
     /// </summary>
-    [TearDown]
+    [After(Test)]
     public void Teardown()
     {
         try
@@ -102,7 +101,6 @@ public class SettingsBaseFallbackTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestFallbackToCacheDatabaseUserAccount()
     {
         var appName = NewName("fallback_user_account");
@@ -126,11 +124,8 @@ public class SettingsBaseFallbackTests
             // Verify that the settings instance is created successfully
             await TestHelper.EventuallyAsync(() => settings is not null).ConfigureAwait(false);
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(settings, Is.Not.Null);
-                Assert.That(settings!.TestValue, Is.EqualTo(42));
-            }
+            await Assert.That(settings).IsNotNull();
+            await Assert.That(settings!.TestValue).IsEqualTo(42);
         }
         finally
         {
@@ -146,7 +141,6 @@ public class SettingsBaseFallbackTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestSettingsPersistenceAcrossInstances()
     {
         var appName = NewName("persistence_test");
@@ -189,11 +183,8 @@ public class SettingsBaseFallbackTests
                     await TestHelper.EventuallyAsync(() => settings2 is not null).ConfigureAwait(false);
 
                     // Verify the value persisted
-                    using (Assert.EnterMultipleScope())
-                    {
-                        Assert.That(settings2, Is.Not.Null);
-                        Assert.That(settings2!.TestValue, Is.EqualTo(expectedValue));
-                    }
+                    await Assert.That(settings2).IsNotNull();
+                    await Assert.That(settings2!.TestValue).IsEqualTo(expectedValue);
                 }
                 finally
                 {

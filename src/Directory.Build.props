@@ -1,4 +1,4 @@
-<Project>  
+<Project>
   <PropertyGroup>
     <Copyright>Copyright (c) ReactiveUI and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -27,7 +27,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    
+
     <!-- Base TFMs that build on any OS (but excluding net9.0 for Windows to avoid conflicts) -->
     <AkavacheBaseTargets>net8.0;net9.0;net10.0</AkavacheBaseTargets>
 
@@ -38,7 +38,7 @@
     <AkavacheMobileAndroidTargets>net9.0-android;net10.0-android</AkavacheMobileAndroidTargets>
     <AkavacheMobileAppleTargets>net9.0-ios;net9.0-macos;net9.0-maccatalyst;net10.0-ios;net10.0-macos;net10.0-maccatalyst</AkavacheMobileAppleTargets>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <!-- Start with base TFMs that are always included -->
     <AkavacheFinalTargetFrameworks>$(AkavacheBaseTargets)</AkavacheFinalTargetFrameworks>
@@ -75,23 +75,21 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" /> 
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <TUnitImplicitUsings>false</TUnitImplicitUsings>
+    <TUnitAssertionsImplicitUsings>false</TUnitAssertionsImplicitUsings>
+    <NoWarn>$(NoWarn);CS4014</NoWarn>
+  </PropertyGroup>
+  
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="NUnit" />
-    <PackageReference Include="NUnit3TestAdapter" />
-    <PackageReference Include="coverlet.collector">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.msbuild" />
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="ReactiveUI.Testing" />
-    <PackageReference Include="NUnit.Analyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -102,4 +100,4 @@
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
   </ItemGroup>
- </Project>
+</Project>

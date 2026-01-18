@@ -7,14 +7,13 @@ using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-using NUnit.Framework;
 
 namespace Akavache.Tests.TestBases;
 
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[NonParallelizable]
+[NotInParallel]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     private bool _disposed;
@@ -26,10 +25,10 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task GetShouldWorkWithMultipleKeys(Type serializerType)
     {
@@ -42,12 +41,12 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
+            await Assert.That(await fixture.GetAllKeys().ToList().FirstAsync()).Count().IsEqualTo(keys.Length);
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.That(allData, Has.Count.EqualTo(keys.Length));
-            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
+            await Assert.That(allData).Count().IsEqualTo(keys.Length);
+            await Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1])).IsTrue();
         }
     }
 
@@ -58,10 +57,10 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task GetShouldInvalidateOldKeys(Type serializerType)
     {
@@ -75,10 +74,10 @@ public abstract class BulkOperationsTestBase : IDisposable
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data, DateTimeOffset.MinValue).FirstAsync()));
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
-            using (Assert.EnterMultipleScope())
+            using (Assert.Multiple())
             {
-                Assert.That(allData, Is.Empty);
-                Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Is.Empty);
+                await Assert.That(allData).IsEmpty();
+                await Assert.That(await fixture.GetAllKeys().ToList().FirstAsync()).IsEmpty();
             }
         }
     }
@@ -90,10 +89,10 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task InsertShouldWorkWithMultipleKeys(Type serializerType)
     {
@@ -106,12 +105,12 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await fixture.Insert(keys.ToDictionary(k => k, v => data)).FirstAsync();
 
-            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
+            await Assert.That(await fixture.GetAllKeys().ToList().FirstAsync()).Count().IsEqualTo(keys.Length);
 
             var allData = await fixture.Get(keys).ToList().FirstAsync();
 
-            Assert.That(allData, Has.Count.EqualTo(keys.Length));
-            Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1]), Is.True);
+            await Assert.That(allData).Count().IsEqualTo(keys.Length);
+            await Assert.That(allData.All(x => x.Value[0] == data[0] && x.Value[1] == data[1])).IsTrue();
         }
     }
 
@@ -122,10 +121,10 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task InvalidateShouldTrashMultipleKeys(Type serializerType)
     {
@@ -138,11 +137,11 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             await Task.WhenAll(keys.Select(async v => await fixture.Insert(v, data).FirstAsync()));
 
-            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Has.Count.EqualTo(keys.Length));
+            await Assert.That(await fixture.GetAllKeys().ToList().FirstAsync()).Count().IsEqualTo(keys.Length);
 
             await fixture.Invalidate(keys).FirstAsync();
 
-            Assert.That(await fixture.GetAllKeys().ToList().FirstAsync(), Is.Empty);
+            await Assert.That(await fixture.GetAllKeys().ToList().FirstAsync()).IsEmpty();
         }
     }
 

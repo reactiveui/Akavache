@@ -3,7 +3,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using NUnit.Framework;
+using Akavache.Settings.Tests;
 
-[assembly: Parallelizable(ParallelScope.None)]
-[assembly: LevelOfParallelism(1)]
+using TUnit.Core;
+using TUnit.Core.Interfaces;
+
+[assembly: ParallelLimiter<SettingsTestsParallelLimit>]
+
+namespace Akavache.Settings.Tests;
+
+/// <summary>
+/// Limits parallel test execution to 1 concurrent test for settings tests.
+/// </summary>
+#pragma warning disable SA1649
+public sealed class SettingsTestsParallelLimit : IParallelLimit
+#pragma warning restore SA1649
+{
+    /// <inheritdoc/>
+    public int Limit => 1;
+}

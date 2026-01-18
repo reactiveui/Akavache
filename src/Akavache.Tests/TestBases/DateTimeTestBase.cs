@@ -9,14 +9,12 @@ using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests.TestBases;
 
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
-[NonParallelizable]
+[NotInParallel]
 public abstract class DateTimeTestBase : IDisposable
 {
     private bool _disposed;
@@ -73,10 +71,10 @@ public abstract class DateTimeTestBase : IDisposable
     /// <returns>
     /// A task to monitor the progress.
     /// </returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task DateTimeKindCanBeForced(Type serializerType)
     {
@@ -90,7 +88,7 @@ public abstract class DateTimeTestBase : IDisposable
             var value = DateTime.UtcNow;
             await fixture.InsertObject("key", value).FirstAsync();
             var result = await fixture.GetObject<DateTime>("key").FirstAsync();
-            Assert.That(result.Kind, Is.EqualTo(DateTimeKind.Utc));
+            await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
         }
     }
 
@@ -102,10 +100,10 @@ public abstract class DateTimeTestBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="InvalidOperationException">$"DateTime edge case {i} failed for value {testCase} ({testCase.Kind}), ex.</exception>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task DateTimeSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
@@ -204,10 +202,8 @@ public abstract class DateTimeTestBase : IDisposable
             var successRate = totalAttempts > 0 ? (double)successCount / totalAttempts : 0;
             var minSuccessRate = IsUsingBsonSerializer(serializer) || blobCache.GetType().Name.Contains("Encrypted") ? 0.3 : 0.6;
 
-            Assert.That(
-                successRate,
-                Is.GreaterThanOrEqualTo(minSuccessRate),
-                $"DateTime edge case success rate too low: {successCount}/{totalAttempts} = {successRate:P1}. Expected at least {minSuccessRate:P1}. Skipped: {skipCount}");
+            await Assert.That(successRate)
+                .IsGreaterThanOrEqualTo(minSuccessRate);
         }
     }
 
@@ -220,10 +216,10 @@ public abstract class DateTimeTestBase : IDisposable
     /// A task to monitor the progress.
     /// </returns>
     /// <exception cref="InvalidOperationException">$"DateTimeOffset edge case {i} failed for value {testCase}, ex.</exception>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task DateTimeOffsetSerializationEdgeCasesShouldBeHandledCorrectly(Type serializerType)
     {
@@ -292,7 +288,7 @@ public abstract class DateTimeTestBase : IDisposable
             var minimumSuccessRate = blobCache.GetType().Name.Contains("Encrypted") ? 0.4 :
                                    IsUsingBsonSerializer(serializer) ? 0.5 : 0.7;
 
-            Assert.That(successRate, Is.GreaterThanOrEqualTo(minimumSuccessRate), $"DateTimeOffset edge case success rate too low: {successCount}/{actualTests} = {successRate:P1}. Expected at least {minimumSuccessRate:P1}. Skipped: {skipCount}");
+            await Assert.That(successRate).IsGreaterThanOrEqualTo(minimumSuccessRate);
         }
     }
 
@@ -391,7 +387,7 @@ public abstract class DateTimeTestBase : IDisposable
     /// <param name="first">The first nullable DateTime.</param>
     /// <param name="second">The second nullable DateTime.</param>
     /// <param name="tolerance">The tolerance in milliseconds.</param>
-    private static void HandleNullableDateTimeComparison(DateTime? first, DateTime? second, double tolerance)
+    private static async Task HandleNullableDateTimeComparison(DateTime? first, DateTime? second, double tolerance)
     {
         var firstHasValue = first.HasValue;
         var secondHasValue = second.HasValue;
@@ -402,7 +398,7 @@ public abstract class DateTimeTestBase : IDisposable
             var secondUtc = ConvertToComparableUtc(second!.Value);
 
             var difference = Math.Abs((firstUtc - secondUtc).TotalMilliseconds);
-            Assert.That(difference, Is.LessThan(tolerance), $"Nullable DateTime UTC values differ by {difference}ms: {firstUtc} vs {secondUtc}");
+            await Assert.That(difference).IsLessThan(tolerance);
         }
         else if (!firstHasValue && !secondHasValue)
         {
