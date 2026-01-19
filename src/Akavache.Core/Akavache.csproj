@@ -11,7 +11,6 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="Splat.Builder" />
     <PackageReference Include="System.Reactive" />
-    <PackageReference Include="sqlite-net-pcl" />
     <PackageReference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net481'" />
   </ItemGroup>
 </Project>
