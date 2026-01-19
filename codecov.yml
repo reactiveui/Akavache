@@ -1,0 +1,8 @@
+### YamlMime:ManagedReference
+ignore:
+  - src/tests
+  - src/Samples
+  - src/Akavache.Benchmarks.V10
+  - src/Akavache.Benchmarks
+  - "**/Tests/"
+  - "**/*.Tests/"

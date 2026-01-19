@@ -6,16 +6,15 @@
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for HttpService functionality.
 /// Uses a local test server instead of external dependencies for reliable offline testing.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
+[NotInParallel]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA1001:Types that own disposable fields should be disposable", Justification = "Cleanup is handled via test hooks")]
 public class HttpServiceTests
 {
     private TestHttpServer? _testServer;
@@ -23,7 +22,7 @@ public class HttpServiceTests
     /// <summary>
     /// Sets up the test fixture with a local HTTP server.
     /// </summary>
-    [OneTimeSetUp]
+    [Before(Test)]
     public void OneTimeSetUp()
     {
         _testServer = new TestHttpServer();
@@ -33,21 +32,22 @@ public class HttpServiceTests
     /// <summary>
     /// Cleans up the test fixture.
     /// </summary>
-    [OneTimeTearDown]
+    [After(Test)]
     public void OneTimeTearDown() => _testServer?.Dispose();
 
     /// <summary>
     /// Tests that HttpService can be instantiated correctly.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void HttpServiceShouldInstantiateCorrectly()
+    public async Task HttpServiceShouldInstantiateCorrectly()
     {
         // Act
         var httpService = new HttpService();
 
         // Assert
-        Assert.That(httpService, Is.Not.Null);
-        Assert.That(httpService.HttpClient, Is.Not.Null);
+        await Assert.That(httpService).IsNotNull();
+        await Assert.That(httpService.HttpClient).IsNotNull();
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -56,17 +56,18 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that HttpService properly sets up compression.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void HttpServiceShouldSetupCompressionCorrectly()
+    public async Task HttpServiceShouldSetupCompressionCorrectly()
     {
         // Act
         var httpService = new HttpService();
 
         // Assert - HttpClient should be configured properly
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(httpService.HttpClient, Is.Not.Null);
-            Assert.That(httpService.HttpClient.DefaultRequestHeaders, Is.Not.Null);
+            await Assert.That(httpService.HttpClient).IsNotNull();
+            await Assert.That(httpService.HttpClient.DefaultRequestHeaders).IsNotNull();
         }
 
         // Cleanup
@@ -125,8 +126,9 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that multiple HttpService instances can be created.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void MultipleHttpServiceInstancesShouldBeCreatable()
+    public async Task MultipleHttpServiceInstancesShouldBeCreatable()
     {
         // Arrange & Act
         // Use 'using' to ensure services (and their HttpClients) are always disposed
@@ -135,11 +137,11 @@ public class HttpServiceTests
 
         // Assert
         // 'Assert.Multiple' ensures all assertions run before the test fails
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(service1, Is.Not.Null);
-            Assert.That(service2, Is.Not.Null);
-            Assert.That(service1.HttpClient, Is.Not.SameAs(service2.HttpClient));
+            await Assert.That(service1).IsNotNull();
+            await Assert.That(service2).IsNotNull();
+            await Assert.That(service1.HttpClient).IsNotSameReferenceAs(service2.HttpClient);
         }
 
         // Cleanup
@@ -151,8 +153,9 @@ public class HttpServiceTests
     /// <summary>
     /// Tests that HttpService supports custom HttpClient configuration.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void HttpServiceShouldSupportCustomConfiguration()
+    public async Task HttpServiceShouldSupportCustomConfiguration()
     {
         // Arrange
         var httpService = new HttpService();
@@ -162,7 +165,7 @@ public class HttpServiceTests
         httpService.HttpClient.Timeout = customTimeout;
 
         // Assert
-        Assert.That(httpService.HttpClient.Timeout, Is.EqualTo(customTimeout));
+        await Assert.That(httpService.HttpClient.Timeout).IsEqualTo(customTimeout);
 
         // Cleanup
         httpService.HttpClient.Dispose();
@@ -193,7 +196,7 @@ public class HttpServiceTests
                 null);
 
             // Assert - Observable should be created without error
-            Assert.That(observable, Is.Not.Null);
+            await Assert.That(observable).IsNotNull();
         }
         finally
         {
@@ -221,11 +224,11 @@ public class HttpServiceTests
             var postObservable = httpService.DownloadUrl(cache, "post_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Post);
             var putObservable = httpService.DownloadUrl(cache, "put_key", $"{_testServer!.BaseUrl}status/200", HttpMethod.Put);
 
-            using (Assert.EnterMultipleScope())
+            using (Assert.Multiple())
             {
-                Assert.That(getObservable, Is.Not.Null);
-                Assert.That(postObservable, Is.Not.Null);
-                Assert.That(putObservable, Is.Not.Null);
+                await Assert.That(getObservable).IsNotNull();
+                await Assert.That(postObservable).IsNotNull();
+                await Assert.That(putObservable).IsNotNull();
             }
         }
         finally
@@ -266,10 +269,10 @@ public class HttpServiceTests
                 true);
 
             // Assert
-            using (Assert.EnterMultipleScope())
+            using (Assert.Multiple())
             {
-                Assert.That(cachedObservable, Is.Not.Null);
-                Assert.That(alwaysFetchObservable, Is.Not.Null);
+                await Assert.That(cachedObservable).IsNotNull();
+                await Assert.That(alwaysFetchObservable).IsNotNull();
             }
         }
         finally
@@ -305,7 +308,7 @@ public class HttpServiceTests
                 expiration);
 
             // Assert
-            Assert.That(observable, Is.Not.Null);
+            await Assert.That(observable).IsNotNull();
         }
         finally
         {

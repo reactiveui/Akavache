@@ -8,8 +8,6 @@ using System.Reflection;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
 
-using NUnit.Framework;
-
 using Splat;
 
 namespace Akavache.Tests;
@@ -17,8 +15,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for Akavache.Drawing ImageCacheExtensions functionality.
 /// </summary>
-[NonParallelizable]
-[TestFixture]
+[NotInParallel]
 [Category("Akavache")]
 public class ImageCacheExtensionsTests
 {
@@ -27,8 +24,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that LoadImages throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImagesShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImagesShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -41,8 +39,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that PreloadImagesFromUrls throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void PreloadImagesFromUrlsShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task PreloadImagesFromUrlsShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -55,8 +54,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that LoadImageWithFallback throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -69,8 +69,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that LoadImageWithFallback throws ArgumentNullException when fallback bytes are null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
+    public async Task LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -84,8 +85,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that LoadImageFromUrlWithFallback throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -98,8 +100,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that LoadImageFromUrlWithFallback throws ArgumentNullException when fallback bytes are null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
+    public async Task LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -113,8 +116,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that CreateAndCacheThumbnail throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void CreateAndCacheThumbnailShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task CreateAndCacheThumbnailShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -126,8 +130,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that GetImageSize throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void GetImageSizeShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task GetImageSizeShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -139,8 +144,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that ClearImageCache throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void ClearImageCacheShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task ClearImageCacheShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -152,8 +158,9 @@ public class ImageCacheExtensionsTests
     /// <summary>
     /// Tests that ClearImageCache throws ArgumentNullException when pattern is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void ClearImageCacheShouldThrowArgumentNullExceptionWhenPatternIsNull()
+    public async Task ClearImageCacheShouldThrowArgumentNullExceptionWhenPatternIsNull()
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
@@ -180,7 +187,7 @@ public class ImageCacheExtensionsTests
         var results = await cache.LoadImages(emptyKeys).ToList().FirstAsync();
 
         // Assert
-        Assert.That(results, Is.Empty);
+        await Assert.That(results).IsEmpty();
     }
 
     /// <summary>
@@ -199,7 +206,7 @@ public class ImageCacheExtensionsTests
         var result = await cache.PreloadImagesFromUrls(emptyUrls).FirstAsync();
 
         // Assert
-        Assert.That(result, Is.EqualTo(Unit.Default));
+        await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
     /// <summary>
@@ -218,7 +225,7 @@ public class ImageCacheExtensionsTests
         var results = await cache.LoadImages(keys).ToList().FirstAsync();
 
         // Assert - Should be empty because missing keys are caught and filtered out
-        Assert.That(results, Is.Empty);
+        await Assert.That(results).IsEmpty();
     }
 
     /// <summary>
@@ -239,7 +246,7 @@ public class ImageCacheExtensionsTests
         try
         {
             var result = await cache.PreloadImagesFromUrls(invalidUrls).FirstAsync();
-            Assert.That(result, Is.EqualTo(Unit.Default));
+            await Assert.That(result).IsEqualTo(Unit.Default);
         }
         catch (Exception ex) when (ex is UriFormatException || ex.InnerException is UriFormatException)
         {
@@ -278,8 +285,8 @@ public class ImageCacheExtensionsTests
                 .FirstAsync();
 
             // Assert
-            Assert.That(bitmap, Is.Not.Null);
-            Assert.That(bitmap, Is.TypeOf<MockBitmap>()); // Corrected line
+            await Assert.That(bitmap).IsNotNull();
+            await Assert.That(bitmap).IsTypeOf<MockBitmap>(); // Corrected line
         }
         catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
         {
@@ -324,8 +331,8 @@ public class ImageCacheExtensionsTests
                 .FirstAsync();
 
             // Assert
-            Assert.That(bitmap, Is.Not.Null);
-            Assert.That(bitmap, Is.TypeOf<MockBitmap>()); // Corrected line
+            await Assert.That(bitmap).IsNotNull();
+            await Assert.That(bitmap).IsTypeOf<MockBitmap>(); // Corrected line
         }
         catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
         {
@@ -389,11 +396,11 @@ public class ImageCacheExtensionsTests
                 .Timeout(TestTimeout)
                 .FirstAsync();
 
-            using (Assert.EnterMultipleScope())
+            using (Assert.Multiple())
             {
                 // Assert
-                Assert.That(size.Width, Is.EqualTo(100f));
-                Assert.That(size.Height, Is.EqualTo(200f));
+                await Assert.That(size.Width).IsEqualTo(100f);
+                await Assert.That(size.Height).IsEqualTo(200f);
             }
         }
         catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
@@ -438,8 +445,8 @@ public class ImageCacheExtensionsTests
         var remainingKeys = await cache.GetAllKeys().ToList()
             .Timeout(TestTimeout)
             .FirstAsync();
-        Assert.That(remainingKeys, Has.Count.EqualTo(1));
-        Assert.That(remainingKeys, Does.Contain("other_data"));
+        await Assert.That(remainingKeys).Count().IsEqualTo(1);
+        await Assert.That(remainingKeys).Contains("other_data");
     }
 
     /// <summary>
@@ -467,8 +474,8 @@ public class ImageCacheExtensionsTests
         var remainingKeys = await cache.GetAllKeys().ToList()
             .Timeout(TestTimeout)
             .FirstAsync();
-        Assert.That(remainingKeys, Has.Count.EqualTo(1));
-        Assert.That(remainingKeys, Does.Contain("test_key"));
+        await Assert.That(remainingKeys).Count().IsEqualTo(1);
+        await Assert.That(remainingKeys).Contains("test_key");
     }
 
     /// <summary>
@@ -489,7 +496,7 @@ public class ImageCacheExtensionsTests
             .FirstAsync();
 
         // Assert - Should be empty due to missing keys being filtered out
-        Assert.That(results, Is.Empty);
+        await Assert.That(results).IsEmpty();
     }
 
     /// <summary>
@@ -511,7 +518,7 @@ public class ImageCacheExtensionsTests
             .FirstAsync();
 
         // Assert - Should complete gracefully
-        Assert.That(result, Is.EqualTo(Unit.Default));
+        await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
     /// <summary>

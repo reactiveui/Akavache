@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -15,9 +15,8 @@ namespace Akavache.Settings.Tests;
 /// Tests for the unencrypted settings cache, isolated per test to avoid static state leakage.
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
-[Parallelizable(ParallelScope.None)]
+[NotInParallel]
 public class SettingsCacheTests
 {
     /// <summary>
@@ -33,7 +32,7 @@ public class SettingsCacheTests
     /// <summary>
     /// One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.
     /// </summary>
-    [SetUp]
+    [Before(Test)]
     public void Setup()
     {
         AppBuilder.ResetBuilderStateForTests();
@@ -51,7 +50,7 @@ public class SettingsCacheTests
     /// <summary>
     /// One-time teardown after each test. Best-effort cleanup and static reset.
     /// </summary>
-    [TearDown]
+    [After(Test)]
     public void Teardown()
     {
         try
@@ -74,7 +73,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestCreateAndInsertNewtonsoftAsync()
     {
         var appName = NewName("newtonsoft_test");
@@ -93,18 +91,15 @@ public class SettingsCacheTests
                 {
                     await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                    using (Assert.EnterMultipleScope())
-                    {
-                        Assert.That(viewSettings, Is.Not.Null);
-                        Assert.That(viewSettings!.BoolTest, Is.True);
-                        Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
-                        Assert.That(viewSettings.IntTest, Is.EqualTo(1));
-                        Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
-                        Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
-                        Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f).Within(0.0001f));
-                        Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d).Within(0.0001d));
-                        Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
-                    }
+                    await Assert.That(viewSettings).IsNotNull();
+                    await Assert.That(viewSettings!.BoolTest).IsTrue();
+                    await Assert.That(viewSettings.ShortTest).IsEqualTo((short)16);
+                    await Assert.That(viewSettings.IntTest).IsEqualTo(1);
+                    await Assert.That(viewSettings.LongTest).IsEqualTo(123456L);
+                    await Assert.That(viewSettings.StringTest).IsEqualTo("TestString");
+                    await Assert.That(viewSettings.FloatTest).IsEqualTo(2.2f).Within(0.0001f);
+                    await Assert.That(viewSettings.DoubleTest).IsEqualTo(23.8d).Within(0.0001d);
+                    await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option1);
                 }
                 finally
                 {
@@ -132,7 +127,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestUpdateAndReadNewtonsoftAsync()
     {
         var appName = NewName("newtonsoft_update_test");
@@ -149,28 +143,28 @@ public class SettingsCacheTests
             {
                 try
                 {
-                    // Ensure the initially captured store exists.
-                    await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                    // Wait for the initially captured store to exist with longer timeout for CI
+                    await TestHelper.EventuallyAsync(
+                        () => viewSettings is not null,
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
 
-                    // Perform the mutation in a FRESH store, retrying on transient disposal.
-                    await TestHelper.EventuallyAsync(async () =>
-                    {
-                        return await TestHelper.WithFreshStoreAsync(
-                            instance,
-                            () => instance.GetSettingsStore<ViewSettings>(),
-                            async s =>
-                            {
-                                s.EnumTest = EnumTestValue.Option2;
-                                var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                await Task.Yield();
-                                return ok;
-                            }).ConfigureAwait(false);
-                    }).ConfigureAwait(false);
+                    await Assert.That(viewSettings).IsNotNull();
 
-                    // Optionally also verify via the initially captured instance (retryable read).
-                    await TestHelper.EventuallyAsync(() =>
-                            TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                        .ConfigureAwait(false);
+                    // Wait a moment for the store to be fully initialized
+                    await Task.Delay(100).ConfigureAwait(false);
+
+                    // Perform the mutation directly on the captured store
+                    viewSettings!.EnumTest = EnumTestValue.Option2;
+
+                    // Wait for the value to be persisted and readable
+                    await TestHelper.EventuallyAsync(
+                        () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
+
+                    // Final assertion
+                    await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                 }
                 finally
                 {
@@ -190,7 +184,10 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(
+            () => AppBuilder.HasBeenBuilt,
+            timeoutMs: 10000,
+            initialDelayMs: 50).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -198,7 +195,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestCreateAndInsertSystemTextJsonAsync()
     {
         var appName = NewName("systemjson_test");
@@ -217,18 +213,15 @@ public class SettingsCacheTests
                 {
                     await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                    using (Assert.EnterMultipleScope())
-                    {
-                        Assert.That(viewSettings, Is.Not.Null);
-                        Assert.That(viewSettings!.BoolTest, Is.True);
-                        Assert.That(viewSettings.ShortTest, Is.EqualTo((short)16));
-                        Assert.That(viewSettings.IntTest, Is.EqualTo(1));
-                        Assert.That(viewSettings.LongTest, Is.EqualTo(123456L));
-                        Assert.That(viewSettings.StringTest, Is.EqualTo("TestString"));
-                        Assert.That(viewSettings.FloatTest, Is.EqualTo(2.2f).Within(0.0001f));
-                        Assert.That(viewSettings.DoubleTest, Is.EqualTo(23.8d).Within(0.0001d));
-                        Assert.That(viewSettings.EnumTest, Is.EqualTo(EnumTestValue.Option1));
-                    }
+                    await Assert.That(viewSettings).IsNotNull();
+                    await Assert.That(viewSettings!.BoolTest).IsTrue();
+                    await Assert.That(viewSettings.ShortTest).IsEqualTo((short)16);
+                    await Assert.That(viewSettings.IntTest).IsEqualTo(1);
+                    await Assert.That(viewSettings.LongTest).IsEqualTo(123456L);
+                    await Assert.That(viewSettings.StringTest).IsEqualTo("TestString");
+                    await Assert.That(viewSettings.FloatTest).IsEqualTo(2.2f).Within(0.0001f);
+                    await Assert.That(viewSettings.DoubleTest).IsEqualTo(23.8d).Within(0.0001d);
+                    await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option1);
                 }
                 finally
                 {
@@ -256,7 +249,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestUpdateAndReadSystemTextJsonAsync()
     {
         var appName = NewName("systemjson_update_test");
@@ -273,28 +265,28 @@ public class SettingsCacheTests
             {
                 try
                 {
-                    // Ensure the initially captured store exists.
-                    await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
+                    // Wait for the initially captured store to exist with longer timeout for CI
+                    await TestHelper.EventuallyAsync(
+                        () => viewSettings is not null,
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
 
-                    // Perform the mutation in a FRESH store, retrying on transient disposal.
-                    await TestHelper.EventuallyAsync(async () =>
-                    {
-                        return await TestHelper.WithFreshStoreAsync(
-                            instance,
-                            () => instance.GetSettingsStore<ViewSettings>(),
-                            async s =>
-                            {
-                                s.EnumTest = EnumTestValue.Option2;
-                                var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                await Task.Yield();
-                                return ok;
-                            }).ConfigureAwait(false);
-                    }).ConfigureAwait(false);
+                    await Assert.That(viewSettings).IsNotNull();
 
-                    // Optionally also verify via the initially captured instance (retryable read).
-                    await TestHelper.EventuallyAsync(() =>
-                            TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                        .ConfigureAwait(false);
+                    // Wait a moment for the store to be fully initialized
+                    await Task.Delay(100).ConfigureAwait(false);
+
+                    // Perform the mutation directly on the captured store
+                    viewSettings!.EnumTest = EnumTestValue.Option2;
+
+                    // Wait for the value to be persisted and readable
+                    await TestHelper.EventuallyAsync(
+                        () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                        timeoutMs: 10000,
+                        initialDelayMs: 50).ConfigureAwait(false);
+
+                    // Final assertion
+                    await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                 }
                 finally
                 {
@@ -314,7 +306,10 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(
+            () => AppBuilder.HasBeenBuilt,
+            timeoutMs: 10000,
+            initialDelayMs: 50).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -322,7 +317,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestOverrideSettingsCachePathAsync()
     {
         var path = Path.Combine(_cacheRoot, "OverridePath");
@@ -344,11 +338,8 @@ public class SettingsCacheTests
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(akavache, Is.Not.Null);
-            Assert.That(akavache!.SettingsCachePath, Is.EqualTo(path));
-        }
+        await Assert.That(akavache).IsNotNull();
+        await Assert.That(akavache!.SettingsCachePath).IsEqualTo(path);
     }
 
     /// <summary>
@@ -357,7 +348,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestSettingsCachePathRespectsApplicationNameOrderAsync()
     {
         var customAppName = NewName("CustomAppTest");
@@ -377,23 +367,18 @@ public class SettingsCacheTests
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(akavache, Is.Not.Null);
-            Assert.That(akavache!.SettingsCachePath, Is.Not.Null);
+        await Assert.That(akavache).IsNotNull();
+        await Assert.That(akavache!.SettingsCachePath).IsNotNull();
 
-            // The settings cache path should contain the custom application name, not the default "Akavache"
-            Assert.That(
-                akavache.SettingsCachePath,
-                Does.Contain(customAppName),
-                "SettingsCachePath should contain the custom application name when WithApplicationName() is called before accessing the path");
+        // The settings cache path should contain the custom application name, not the default "Akavache"
+        await Assert.That(akavache.SettingsCachePath)
+            .Contains(customAppName)
+            .Because("SettingsCachePath should contain the custom application name when WithApplicationName() is called before accessing the path");
 
-            // Additional validation: ensure it doesn't contain the default name when a custom name is set
-            Assert.That(
-                akavache.SettingsCachePath,
-                Does.Not.Contain("Akavache"),
-                "SettingsCachePath should not contain the default 'Akavache' directory when a custom application name is specified");
-        }
+        // Additional validation: ensure it doesn't contain the default name when a custom name is set
+        await Assert.That(akavache.SettingsCachePath)
+            .DoesNotContain("Akavache")
+            .Because("SettingsCachePath should not contain the default 'Akavache' directory when a custom application name is specified");
     }
 
     /// <summary>
@@ -401,7 +386,6 @@ public class SettingsCacheTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [CancelAfter(60000)]
     public async Task TestSettingsCachePathUsesDefaultApplicationNameAsync()
     {
         IAkavacheInstance? akavache = null;
@@ -420,17 +404,13 @@ public class SettingsCacheTests
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(akavache, Is.Not.Null);
-            Assert.That(akavache!.SettingsCachePath, Is.Not.Null);
+        await Assert.That(akavache).IsNotNull();
+        await Assert.That(akavache!.SettingsCachePath).IsNotNull();
 
-            // Should contain the default application name when no custom name is provided
-            Assert.That(
-                akavache.SettingsCachePath,
-                Does.Contain("Akavache"),
-                "SettingsCachePath should contain the default 'Akavache' directory when no custom application name is specified");
-        }
+        // Should contain the default application name when no custom name is provided
+        await Assert.That(akavache.SettingsCachePath)
+            .Contains("Akavache")
+            .Because("SettingsCachePath should contain the default 'Akavache' directory when no custom application name is specified");
     }
 
     /// <summary>

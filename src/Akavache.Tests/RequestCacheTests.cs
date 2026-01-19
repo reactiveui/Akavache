@@ -7,15 +7,13 @@ using System.Reactive.Threading.Tasks;
 
 using Akavache.Core;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for RequestCache functionality.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
+[NotInParallel]
 public class RequestCacheTests
 {
     /// <summary>
@@ -47,10 +45,10 @@ public class RequestCacheTests
         var results = await Task.WhenAll(tasks);
 
         // Assert - All should return the same result, factory called at most twice
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(results.All(r => r == results[0]), Is.True, $"Not all results are the same: {string.Join(", ", results)}");
-            Assert.That(callCount, Is.LessThanOrEqualTo(2), $"Factory called {callCount} times, expected at most 2");
+            await Assert.That(results.All(r => r == results[0])).IsTrue();
+            await Assert.That(callCount).IsLessThanOrEqualTo(2);
         }
     }
 
@@ -85,19 +83,19 @@ public class RequestCacheTests
         var result3 = await RequestCache.GetOrCreateRequest("key1", () => Factory("key1")).FirstAsync();
 
         // Assert - Different keys should get different results
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(result1, Is.EqualTo("result_key1_1"));
-            Assert.That(result2, Is.EqualTo("result_key2_1"));
+            await Assert.That(result1).IsEqualTo("result_key1_1");
+            await Assert.That(result2).IsEqualTo("result_key2_1");
         }
 
         // result3 will be "result_key1_2" because RequestCache doesn't persist completed results
-        Assert.That(result3, Is.EqualTo("result_key1_2"));
+        await Assert.That(result3).IsEqualTo("result_key1_2");
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(callCounts["key1"], Is.EqualTo(2)); // Called twice for key1
-            Assert.That(callCounts["key2"], Is.EqualTo(1)); // Called once for key2
+            await Assert.That(callCounts["key1"]).IsEqualTo(2); // Called twice for key1
+            await Assert.That(callCounts["key2"]).IsEqualTo(1); // Called once for key2
         }
     }
 
@@ -126,12 +124,12 @@ public class RequestCacheTests
 
         var result2 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert - Factory should be called twice (once before clear, once after)
-            Assert.That(result1, Is.EqualTo("result_1"));
-            Assert.That(result2, Is.EqualTo("result_2"));
-            Assert.That(callCount, Is.EqualTo(2));
+            await Assert.That(result1).IsEqualTo("result_1");
+            await Assert.That(result2).IsEqualTo("result_2");
+            await Assert.That(callCount).IsEqualTo(2);
         }
     }
 
@@ -159,14 +157,14 @@ public class RequestCacheTests
         }
 
         // Act & Assert - First call should throw
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync());
 
         // Second call should succeed (assuming the cache doesn't cache failures)
         var result = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(result, Is.EqualTo("success_2"));
-            Assert.That(callCount, Is.EqualTo(2));
+            await Assert.That(result).IsEqualTo("success_2");
+            await Assert.That(callCount).IsEqualTo(2);
         }
     }
 
@@ -185,18 +183,18 @@ public class RequestCacheTests
         var intResult = await RequestCache.GetOrCreateRequest("int_key", static () => Observable.Return(42)).FirstAsync();
         var objectResult = await RequestCache.GetOrCreateRequest("object_key", static () => Observable.Return(new { Name = "Test", Value = 123 })).FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert
-            Assert.That(stringResult, Is.EqualTo("test_string"));
-            Assert.That(intResult, Is.EqualTo(42));
-            Assert.That(objectResult, Is.Not.Null);
+            await Assert.That(stringResult).IsEqualTo("test_string");
+            await Assert.That(intResult).IsEqualTo(42);
+            await Assert.That(objectResult).IsNotNull();
         }
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(objectResult.Name, Is.EqualTo("Test"));
-            Assert.That(objectResult.Value, Is.EqualTo(123));
+            await Assert.That(objectResult.Name).IsEqualTo("Test");
+            await Assert.That(objectResult.Value).IsEqualTo(123);
         }
     }
 
@@ -212,7 +210,7 @@ public class RequestCacheTests
 
         // Act & Assert - Should handle null key without throwing
         var result = await RequestCache.GetOrCreateRequest(null!, static () => Observable.Return("null_key_result")).FirstAsync();
-        Assert.That(result, Is.EqualTo("null_key_result"));
+        await Assert.That(result).IsEqualTo("null_key_result");
     }
 
     /// <summary>
@@ -236,12 +234,12 @@ public class RequestCacheTests
         var result1 = await RequestCache.GetOrCreateRequest(string.Empty, Factory).FirstAsync();
         var result2 = await RequestCache.GetOrCreateRequest(string.Empty, Factory).FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert - Since RequestCache doesn't persist completed results, each call creates a new request
-            Assert.That(result1, Is.EqualTo("empty_key_result_1"));
-            Assert.That(result2, Is.EqualTo("empty_key_result_2"));
-            Assert.That(callCount, Is.EqualTo(2));
+            await Assert.That(result1).IsEqualTo("empty_key_result_1");
+            await Assert.That(result2).IsEqualTo("empty_key_result_2");
+            await Assert.That(callCount).IsEqualTo(2);
         }
     }
 
@@ -279,10 +277,10 @@ public class RequestCacheTests
 
         // Assert - All should return the same result, factory called at most twice
         var uniqueResults = results.Distinct().ToList();
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(uniqueResults, Has.Count.LessThanOrEqualTo(2), $"Too many unique results: {string.Join(", ", uniqueResults)}");
-            Assert.That(callCount, Is.LessThanOrEqualTo(2), $"Factory called too many times: {callCount}");
+            await Assert.That(uniqueResults).Count().IsLessThanOrEqualTo(2);
+            await Assert.That(callCount).IsLessThanOrEqualTo(2);
         }
     }
 
@@ -314,10 +312,10 @@ public class RequestCacheTests
 
         // Assert - All should return same result, factory called minimal times
         var uniqueResults = results.Distinct().ToList();
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
-            Assert.That(uniqueResults, Has.Count.LessThanOrEqualTo(3), $"Too many unique results: {uniqueResults.Count}. Expected 1-3, got: [{string.Join(", ", uniqueResults)}]");
-            Assert.That(callCount, Is.LessThanOrEqualTo(3), $"Factory called too many times: {callCount}. Expected 1-3.");
+            await Assert.That(uniqueResults).Count().IsLessThanOrEqualTo(3);
+            await Assert.That(callCount).IsLessThanOrEqualTo(3);
         }
     }
 
@@ -349,14 +347,14 @@ public class RequestCacheTests
         var observable2 = RequestCache.GetOrCreateRequest(key, Factory);
         var list2 = await observable2.ToList().FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert - Both should return the same sequence values
-            Assert.That(list1, Is.EqualTo([1, 2, 3]));
-            Assert.That(list2, Is.EqualTo([1, 2, 3]));
+            await Assert.That(list1).IsEquivalentTo([1, 2, 3]);
+            await Assert.That(list2).IsEquivalentTo([1, 2, 3]);
 
             // Factory will be called twice since RequestCache doesn't persist completed observables
-            Assert.That(callCount, Is.EqualTo(2));
+            await Assert.That(callCount).IsEqualTo(2);
         }
     }
 
@@ -382,7 +380,7 @@ public class RequestCacheTests
 
         // Assert - Test passes if no OutOfMemoryException is thrown
         // This is mainly a regression test to ensure the cache doesn't leak memory
-        Assert.Pass("Memory stress test completed without OutOfMemoryException");
+        await Assert.That(true).IsTrue();
     }
 
     /// <summary>
@@ -402,11 +400,11 @@ public class RequestCacheTests
         var result1 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
         var result2 = await RequestCache.GetOrCreateRequest(key, Factory).FirstAsync();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // Assert
-            Assert.That(result1, Is.Null);
-            Assert.That(result2, Is.Null);
+            await Assert.That(result1).IsNull();
+            await Assert.That(result2).IsNull();
         }
     }
 }
