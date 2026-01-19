@@ -10,6 +10,7 @@
     <SqliteNetVersion>1.9.172</SqliteNetVersion>
     <SplatVersion>19.1.1</SplatVersion>
     <ReactiveUIVersion>22.3.1</ReactiveUIVersion>
+    <TUnitVersion>1.11.56</TUnitVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
@@ -24,12 +25,12 @@
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageVersion Include="NUnit" Version="4.4.0" />
-    <PackageVersion Include="NUnit3TestAdapter" Version="6.0.1" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
-    <PackageVersion Include="NUnit.Analyzers" Version="4.11.2" />
+    <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
+    <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
+    <PackageVersion Include="Verify.TUnit" Version="31.9.4" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
   </ItemGroup>
   <!-- Core library packages -->
   <ItemGroup>

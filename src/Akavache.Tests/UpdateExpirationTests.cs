@@ -8,14 +8,12 @@ using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
-using NUnit.Framework;
-
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for the UpdateExpiration functionality across all IBlobCache implementations.
 /// </summary>
-[NonParallelizable]
+[NotInParallel]
 public class UpdateExpirationTests : IDisposable
 {
     private bool _disposed;
@@ -25,10 +23,10 @@ public class UpdateExpirationTests : IDisposable
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task UpdateExpirationSingleKeyTest(Type serializerType)
     {
@@ -51,7 +49,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            Assert.That(retrievedData, Is.EqualTo(originalData), "Data should remain unchanged after UpdateExpiration");
+            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after UpdateExpiration");
         }
     }
 
@@ -60,10 +58,10 @@ public class UpdateExpirationTests : IDisposable
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task UpdateExpirationWithTypeTest(Type serializerType)
     {
@@ -86,7 +84,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            Assert.That(retrievedData, Is.EqualTo(originalData), "Data should remain unchanged after UpdateExpiration with type");
+            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after UpdateExpiration with type");
         }
     }
 
@@ -95,10 +93,10 @@ public class UpdateExpirationTests : IDisposable
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task UpdateExpirationMultipleKeysTest(Type serializerType)
     {
@@ -126,7 +124,7 @@ public class UpdateExpirationTests : IDisposable
             for (var i = 0; i < keys.Length; i++)
             {
                 var retrievedData = await fixture.GetObject<string>(keys[i]);
-                Assert.That(retrievedData, Is.EqualTo(originalData[i]), $"Data for key {keys[i]} should remain unchanged after UpdateExpiration");
+                await Assert.That(retrievedData).IsEqualTo(originalData[i], $"Data for key {keys[i]} should remain unchanged after UpdateExpiration");
             }
         }
     }
@@ -136,10 +134,10 @@ public class UpdateExpirationTests : IDisposable
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task UpdateExpirationRelativeTimeTest(Type serializerType)
     {
@@ -162,7 +160,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            Assert.That(retrievedData, Is.EqualTo(originalData), "Data should remain unchanged after UpdateExpiration with TimeSpan");
+            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after UpdateExpiration with TimeSpan");
         }
     }
 
@@ -171,10 +169,10 @@ public class UpdateExpirationTests : IDisposable
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task UpdateExpirationNonExistentKeyTest(Type serializerType)
     {
@@ -208,10 +206,10 @@ public class UpdateExpirationTests : IDisposable
     /// </summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
-    [TestCase(typeof(SystemJsonSerializer))]
-    [TestCase(typeof(SystemJsonBsonSerializer))]
-    [TestCase(typeof(NewtonsoftSerializer))]
-    [TestCase(typeof(NewtonsoftBsonSerializer))]
+    [Arguments(typeof(SystemJsonSerializer))]
+    [Arguments(typeof(SystemJsonBsonSerializer))]
+    [Arguments(typeof(NewtonsoftSerializer))]
+    [Arguments(typeof(NewtonsoftBsonSerializer))]
     [Test]
     public async Task UpdateExpirationRemoveExpirationTest(Type serializerType)
     {
@@ -233,7 +231,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            Assert.That(retrievedData, Is.EqualTo(originalData), "Data should remain unchanged after removing expiration");
+            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after removing expiration");
         }
     }
 

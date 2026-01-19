@@ -8,14 +8,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akavache.Core;
 using Akavache.SystemTextJson;
-using NUnit.Framework;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Additional concurrency stress tests.
 /// </summary>
-[TestFixture]
 [Category("Concurrency")]
 public class AdditionalConcurrencyTests
 {
@@ -34,6 +32,6 @@ public class AdditionalConcurrencyTests
         var readTasks = Enumerable.Range(0, 50)
             .Select(async i => await cache.GetObject<Mocks.UserObject>($"user_{i}").FirstAsync());
         var results = await Task.WhenAll(readTasks);
-        Assert.That(results.All(r => r.Name.StartsWith("User", StringComparison.Ordinal)), Is.True);
+        await Assert.That(results.All(r => r.Name!.StartsWith("User", StringComparison.Ordinal))).IsTrue();
     }
 }

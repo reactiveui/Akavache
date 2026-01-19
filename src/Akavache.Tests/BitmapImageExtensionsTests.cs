@@ -6,7 +6,6 @@
 using System.Reflection;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
-using NUnit.Framework;
 using Splat;
 
 namespace Akavache.Tests;
@@ -14,8 +13,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for Akavache.Drawing BitmapImageExtensions functionality.
 /// </summary>
-[NonParallelizable]
-[TestFixture]
+[NotInParallel]
 [Category("Akavache")]
 public class BitmapImageExtensionsTests
 {
@@ -25,7 +23,7 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Performs per-test-class initialization.
     /// </summary>
-    [OneTimeSetUp]
+    [Before(Test)]
     public void Initialize()
     {
         // Ensure a fast, deterministic bitmap loader for all tests in this class
@@ -44,7 +42,7 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Performs per-test-class cleanup.
     /// </summary>
-    [OneTimeTearDown]
+    [After(Test)]
     public void TearDown()
     {
         try
@@ -63,8 +61,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that LoadImage throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -76,8 +75,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that LoadImage with dimensions throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageWithDimensionsShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageWithDimensionsShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -89,8 +89,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageFromUrl throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageFromUrlShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageFromUrlShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -102,8 +103,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageFromUrl with Uri throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageFromUrlWithUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageFromUrlWithUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -116,8 +118,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageFromUrl with key throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageFromUrlWithKeyShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageFromUrlWithKeyShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -129,8 +132,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that LoadImageFromUrl with key and Uri throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void LoadImageFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task LoadImageFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -143,8 +147,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that SaveImage throws ArgumentNullException when cache is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SaveImageShouldThrowArgumentNullExceptionWhenCacheIsNull()
+    public async Task SaveImageShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         // Arrange
         IBlobCache? cache = null;
@@ -157,8 +162,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that SaveImage throws ArgumentNullException when image is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
+    public async Task SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
         using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
@@ -171,8 +177,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that ImageToBytes throws ArgumentNullException when image is null.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void ImageToBytesShouldThrowArgumentNullExceptionWhenImageIsNull()
+    public async Task ImageToBytesShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
         IBitmap? nullBitmap = null;
@@ -201,14 +208,15 @@ public class BitmapImageExtensionsTests
             .FirstAsync();
 
         // Assert
-        Assert.That(result, Is.EqualTo(validImageData));
+        await Assert.That(result).IsEqualTo(validImageData);
     }
 
     /// <summary>
     /// Tests that ThrowOnBadImageBuffer throws for null data.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void ThrowOnBadImageBufferShouldThrowForNullData()
+    public async Task ThrowOnBadImageBufferShouldThrowForNullData()
     {
         // Arrange
         byte[]? nullData = null;
@@ -222,8 +230,9 @@ public class BitmapImageExtensionsTests
     /// <summary>
     /// Tests that ThrowOnBadImageBuffer throws for too small data.
     /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public void ThrowOnBadImageBufferShouldThrowForTooSmallData()
+    public async Task ThrowOnBadImageBufferShouldThrowForTooSmallData()
     {
         // Arrange
         var tooSmallData = new byte[32]; // Less than 64 bytes
@@ -273,13 +282,13 @@ public class BitmapImageExtensionsTests
             .FirstAsync();
 
         // Assert
-        Assert.That(loadedBitmap, Is.Not.Null);
+        await Assert.That(loadedBitmap).IsNotNull();
 
-        using (Assert.EnterMultipleScope())
+        using (Assert.Multiple())
         {
             // For the mock implementation, we can verify basic properties
-            Assert.That(loadedBitmap.Width, Is.EqualTo(mockBitmap.Width));
-            Assert.That(loadedBitmap.Height, Is.EqualTo(mockBitmap.Height));
+            await Assert.That(loadedBitmap.Width).IsEqualTo(mockBitmap.Width);
+            await Assert.That(loadedBitmap.Height).IsEqualTo(mockBitmap.Height);
         }
 
         await cache.DisposeAsync();
@@ -301,8 +310,8 @@ public class BitmapImageExtensionsTests
             .FirstAsync();
 
         // Assert
-        Assert.That(bytes, Is.Not.Null);
-        Assert.That(bytes, Is.Not.Empty);
+        await Assert.That(bytes).IsNotNull();
+        await Assert.That(bytes).IsNotEmpty();
     }
 
     /// <summary>
@@ -311,12 +320,12 @@ public class BitmapImageExtensionsTests
     /// <param name="bufferSize">The size of the buffer to test.</param>
     /// <param name="shouldSucceed">Whether the validation should succeed.</param>
     /// <returns>A task representing the test.</returns>
-    [TestCase(0, false)] // Empty buffer
-    [TestCase(32, false)] // Too small buffer
-    [TestCase(63, false)] // Just under threshold
-    [TestCase(64, true)] // At threshold
-    [TestCase(128, true)] // Above threshold
-    [TestCase(1024, true)] // Much larger buffer
+    [Arguments(0, false)] // Empty buffer
+    [Arguments(32, false)] // Too small buffer
+    [Arguments(63, false)] // Just under threshold
+    [Arguments(64, true)] // At threshold
+    [Arguments(128, true)] // Above threshold
+    [Arguments(1024, true)] // Much larger buffer
     [Test]
     public async Task ThrowOnBadImageBufferShouldHandleVariousBufferSizes(int bufferSize, bool shouldSucceed)
     {
@@ -335,7 +344,7 @@ public class BitmapImageExtensionsTests
                 .FirstAsync();
 
             // Assert
-            Assert.That(result, Is.EqualTo(buffer));
+            await Assert.That(result).IsEqualTo(buffer);
         }
         else
         {
@@ -374,7 +383,7 @@ public class BitmapImageExtensionsTests
             .FirstAsync();
 
         // Assert
-        Assert.That(loadedBitmap, Is.Not.Null);
+        await Assert.That(loadedBitmap).IsNotNull();
     }
 
     /// <summary>

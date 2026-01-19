@@ -8,8 +8,7 @@ using System.Reactive.Threading.Tasks;
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
-
-using NUnit.Framework;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Akavache.Tests;
 
@@ -17,9 +16,9 @@ namespace Akavache.Tests;
 /// Tests for download URL extension methods and HTTP functionality.
 /// Uses a local test server instead of external dependencies for reliable offline testing.
 /// </summary>
-[TestFixture]
 [Category("Akavache")]
-[NonParallelizable]
+[NotInParallel]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA1001:Types that own disposable fields should be disposable", Justification = "Cleanup is handled via test hooks")]
 public class DownloadUrlExtensionsTests
 {
     private TestHttpServer? _testServer;
@@ -27,7 +26,7 @@ public class DownloadUrlExtensionsTests
     /// <summary>
     /// Sets up the test fixture with a local HTTP server.
     /// </summary>
-    [OneTimeSetUp]
+    [Before(Test)]
     public void OneTimeSetUp()
     {
         _testServer = new TestHttpServer();
@@ -37,7 +36,7 @@ public class DownloadUrlExtensionsTests
     /// <summary>
     /// Cleans up the test fixture.
     /// </summary>
-    [OneTimeTearDown]
+    [After(Test)]
     public void OneTimeTearDown() => _testServer?.Dispose();
 
     /// <summary>
@@ -62,12 +61,12 @@ public class DownloadUrlExtensionsTests
                 var bytes = await cache.DownloadUrl(testUrl).FirstAsync();
 
                 // Assert
-                Assert.That(bytes, Is.Not.Empty);
+                await Assert.That(bytes).IsNotEmpty();
 
                 // Verify content is HTML as expected
                 var content = Encoding.UTF8.GetString(bytes);
-                Assert.That(content, Does.Contain("<html>"));
-                Assert.That(content, Does.Contain("Test Content"));
+                await Assert.That(content).Contains("<html>");
+                await Assert.That(content).Contains("Test Content");
             }
             finally
             {
@@ -98,13 +97,13 @@ public class DownloadUrlExtensionsTests
                 var bytes = await cache.DownloadUrl(uri).FirstAsync();
 
                 // Assert
-                using (Assert.EnterMultipleScope())
+                using (Assert.Multiple())
                 {
-                    Assert.That(bytes, Is.Not.Empty);
+                    await Assert.That(bytes).IsNotEmpty();
 
                     var content = Encoding.UTF8.GetString(bytes);
-                    Assert.That(content, Does.Contain("<html>"));
-                    Assert.That(content, Does.Contain("Test Content"));
+                    await Assert.That(content).Contains("<html>");
+                    await Assert.That(content).Contains("Test Content");
                 }
             }
             finally
@@ -138,13 +137,13 @@ public class DownloadUrlExtensionsTests
 
                 // Assert - verify data was stored
                 var storedBytes = await cache.Get(key);
-                using (Assert.EnterMultipleScope())
+                using (Assert.Multiple())
                 {
-                    Assert.That(storedBytes, Is.Not.Empty);
+                    await Assert.That(storedBytes).IsNotEmpty();
 
                     var content = Encoding.UTF8.GetString(storedBytes);
-                    Assert.That(content, Does.Contain("<html>"));
-                    Assert.That(content, Does.Contain("Test Content"));
+                    await Assert.That(content).Contains("<html>");
+                    await Assert.That(content).Contains("Test Content");
                 }
             }
             finally
@@ -178,13 +177,13 @@ public class DownloadUrlExtensionsTests
 
                 // Assert - verify data was stored
                 var storedBytes = await cache.Get(key);
-                using (Assert.EnterMultipleScope())
+                using (Assert.Multiple())
                 {
-                    Assert.That(storedBytes, Is.Not.Empty);
+                    await Assert.That(storedBytes).IsNotEmpty();
 
                     var content = Encoding.UTF8.GetString(storedBytes);
-                    Assert.That(content, Does.Contain("<html>"));
-                    Assert.That(content, Does.Contain("Test Content"));
+                    await Assert.That(content).Contains("<html>");
+                    await Assert.That(content).Contains("Test Content");
                 }
             }
             finally
@@ -211,15 +210,26 @@ public class DownloadUrlExtensionsTests
         {
             // Act & Assert - Use a truly invalid URL that will definitely cause an exception
             // Using an invalid scheme or malformed URL that HttpClient will reject
-            Assert.ThrowsAsync(
-                Is.TypeOf<HttpRequestException>()
-                    .Or.TypeOf<SocketException>()
-                    .Or.TypeOf<TaskCanceledException>()
-                    .Or.TypeOf<TimeoutException>()
-                    .Or.TypeOf<UriFormatException>()
-                    .Or.TypeOf<ArgumentException>(),
-                async () => await cache.DownloadUrl("http://definitely-invalid-domain-that-does-not-exist-12345.invalid").FirstAsync(),
-                "Unexpected exception");
+            Exception? caughtException = null;
+            try
+            {
+                await cache.DownloadUrl("http://definitely-invalid-domain-that-does-not-exist-12345.invalid").FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                caughtException = ex;
+            }
+
+            await Assert.That(caughtException).IsNotNull();
+
+            // Verify it's one of the expected network-related exceptions
+            var isExpectedType = caughtException is HttpRequestException
+                || caughtException is SocketException
+                || caughtException is TaskCanceledException
+                || caughtException is TimeoutException
+                || caughtException is UriFormatException
+                || caughtException is ArgumentException;
+            await Assert.That(isExpectedType).IsTrue();
         }
         finally
         {
@@ -244,26 +254,47 @@ public class DownloadUrlExtensionsTests
             // Test null cache argument validation
             IBlobCache? nullCache = null;
 
-            using (Assert.EnterMultipleScope())
+            using (Assert.Multiple())
             {
                 // Test null argument validations
-                Assert.Throws<ArgumentNullException>(() => nullCache!.DownloadUrl("http://example.com"));
-                Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((Uri)null!));
-                Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl((string)null!));
-                Assert.Throws<ArgumentNullException>(() => cache.DownloadUrl(null!, "http://example.com"));
+                await Assert.That(() => nullCache!.DownloadUrl("http://example.com")).Throws<ArgumentNullException>();
+                await Assert.That(() => cache.DownloadUrl((Uri)null!)).Throws<ArgumentNullException>();
+                await Assert.That(() => cache.DownloadUrl((string)null!)).Throws<ArgumentNullException>();
+                await Assert.That(() => cache.DownloadUrl(null!, "http://example.com")).Throws<ArgumentNullException>();
             }
 
             // Test empty/whitespace strings
-            var emptyUrlException = Assert.ThrowsAsync(
-                Is.TypeOf<ArgumentException>()
-                    .Or.TypeOf<UriFormatException>()
-                    .Or.TypeOf<InvalidOperationException>(),
-                async () => await cache.DownloadUrl(string.Empty).FirstAsync());
-            var whitespaceUrlException = Assert.ThrowsAsync(
-                Is.TypeOf<ArgumentException>()
-                    .Or.TypeOf<UriFormatException>()
-                    .Or.TypeOf<InvalidOperationException>(),
-                async () => await cache.DownloadUrl("   ").FirstAsync());
+            Exception? emptyUrlException = null;
+            try
+            {
+                await cache.DownloadUrl(string.Empty).FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                emptyUrlException = ex;
+            }
+
+            await Assert.That(emptyUrlException).IsNotNull();
+            var isEmptyUrlExpected = emptyUrlException is ArgumentException
+                || emptyUrlException is UriFormatException
+                || emptyUrlException is InvalidOperationException;
+            await Assert.That(isEmptyUrlExpected).IsTrue();
+
+            Exception? whitespaceUrlException = null;
+            try
+            {
+                await cache.DownloadUrl("   ").FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                whitespaceUrlException = ex;
+            }
+
+            await Assert.That(whitespaceUrlException).IsNotNull();
+            var isWhitespaceUrlExpected = whitespaceUrlException is ArgumentException
+                || whitespaceUrlException is UriFormatException
+                || whitespaceUrlException is InvalidOperationException;
+            await Assert.That(isWhitespaceUrlExpected).IsTrue();
         }
         finally
         {
@@ -299,11 +330,11 @@ public class DownloadUrlExtensionsTests
                 await Task.WhenAll(tasks);
 
                 // Assert - verify all downloads completed and data was stored
-                using (Assert.EnterMultipleScope())
+                using (Assert.Multiple())
                 {
                     foreach (var task in tasks)
                     {
-                        Assert.That(task.IsCompletedSuccessfully, Is.True);
+                        await Assert.That(task.IsCompletedSuccessfully).IsTrue();
                     }
                 }
 
@@ -312,20 +343,20 @@ public class DownloadUrlExtensionsTests
                 var content2 = await cache.Get("content2");
                 var content3 = await cache.Get("content3");
 
-                using (Assert.EnterMultipleScope())
+                using (Assert.Multiple())
                 {
-                    Assert.That(content1, Is.Not.Empty);
-                    Assert.That(content2, Is.Not.Empty);
-                    Assert.That(content3, Is.Not.Empty);
+                    await Assert.That(content1).IsNotEmpty();
+                    await Assert.That(content2).IsNotEmpty();
+                    await Assert.That(content3).IsNotEmpty();
 
                     // Verify content types
                     var content1Text = Encoding.UTF8.GetString(content1);
                     var content2Text = Encoding.UTF8.GetString(content2);
                     var content3Text = Encoding.UTF8.GetString(content3);
 
-                    Assert.That(content1Text, Does.Contain("<html>"));
-                    Assert.That(content2Text, Does.Contain("\"key\""));
-                    Assert.That(content3Text, Does.Contain("user-agent"));
+                    await Assert.That(content1Text).Contains("<html>");
+                    await Assert.That(content2Text).Contains("\"key\"");
+                    await Assert.That(content3Text).Contains("user-agent");
                 }
             }
             finally

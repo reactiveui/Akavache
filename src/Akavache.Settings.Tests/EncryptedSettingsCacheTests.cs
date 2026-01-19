@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
+// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
@@ -16,9 +16,8 @@ namespace Akavache.EncryptedSettings.Tests
     /// Tests for the encrypted settings cache, isolated per test to avoid static state leakage.
     /// Uses eventually-consistent polling and treats transient disposal as retryable.
     /// </summary>
-    [TestFixture]
     [Category("Akavache")]
-    [Parallelizable(ParallelScope.None)]
+    [NotInParallel]
     public class EncryptedSettingsCacheTests
     {
         /// <summary>
@@ -39,7 +38,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// <summary>
         /// One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.
         /// </summary>
-        [SetUp]
+        [Before(Test)]
         public void Setup()
         {
             AppBuilder.ResetBuilderStateForTests();
@@ -57,7 +56,7 @@ namespace Akavache.EncryptedSettings.Tests
         /// <summary>
         /// One-time teardown after each test. Best-effort cleanup and static reset.
         /// </summary>
-        [TearDown]
+        [After(Test)]
         public void Teardown()
         {
             try
@@ -80,7 +79,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestCreateAndInsertNewtonsoftAsync()
         {
             var testName = NewName("newtonsoft_test");
@@ -150,7 +148,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestUpdateAndReadNewtonsoftAsync()
         {
             var testName = NewName("newtonsoft_update_test");
@@ -215,7 +212,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestCreateAndInsertSystemTextJsonAsync()
         {
             var testName = NewName("systemjson_test");
@@ -284,7 +280,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestUpdateAndReadSystemTextJsonAsync()
         {
             var testName = NewName("systemjson_update_test");
@@ -349,7 +344,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestOverrideSettingsCachePathAsync()
         {
             var path = Path.Combine(_cacheRoot, "OverridePath");
@@ -371,11 +365,8 @@ namespace Akavache.EncryptedSettings.Tests
 
             await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(akavacheInstance, Is.Not.Null);
-                Assert.That(akavacheInstance!.SettingsCachePath, Is.EqualTo(path));
-            }
+            await Assert.That(akavacheInstance).IsNotNull();
+            await Assert.That(akavacheInstance!.SettingsCachePath).IsEqualTo(path);
         }
 
         /// <summary>
@@ -383,7 +374,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestEncryptedSettingsPersistenceAsync()
         {
             var testName = NewName("persistence_test");
@@ -474,7 +464,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestEncryptedSettingsWrongPasswordAsync()
         {
             var testName = NewName("wrong_password_test");
@@ -498,7 +487,7 @@ namespace Akavache.EncryptedSettings.Tests
                         await TestHelper.EventuallyAsync(() => initialSettings is not null).ConfigureAwait(false);
 
                         // IMPORTANT: Do NOT write using the captured 'initialSettings'.
-                        // Instead, open a *fresh* store, perform the write, and dispose it — retrying on transient disposal.
+                        // Instead, open a *fresh* store, perform the write, and dispose it � retrying on transient disposal.
                         await TestHelper.EventuallyAsync(async () =>
                         {
                             return await TestHelper.WithFreshStoreAsync(
@@ -555,10 +544,9 @@ namespace Akavache.EncryptedSettings.Tests
                             }
                         }).ConfigureAwait(false);
 
-                        Assert.That(
-                            wrongPasswordWorked,
-                            Is.False,
-                            "Wrong password should not provide access to encrypted data.");
+                        await Assert.That(wrongPasswordWorked)
+                            .IsFalse()
+                            .Because("Wrong password should not provide access to encrypted data.");
                     }
                     finally
                     {
@@ -581,7 +569,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestMultipleDisposeAndRecreateAsync()
         {
             var testName = NewName("multi_dispose_test");
@@ -665,7 +652,6 @@ namespace Akavache.EncryptedSettings.Tests
         /// </summary>
         /// <returns>A task that represents the asynchronous test.</returns>
         [Test]
-        [CancelAfter(60000)]
         public async Task TestAppInfoPropertiesAsync()
         {
             IAkavacheInstance? akavacheInstance = null;
@@ -685,15 +671,12 @@ namespace Akavache.EncryptedSettings.Tests
 
             await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(akavacheInstance, Is.Not.Null);
-                Assert.That(akavacheInstance!.ExecutingAssembly, Is.Not.Null);
-                Assert.That(akavacheInstance.ExecutingAssemblyName, Is.Not.Null);
-                Assert.That(akavacheInstance.ApplicationRootPath, Is.Not.Null);
-                Assert.That(akavacheInstance.SettingsCachePath, Is.Not.Null);
-                Assert.That(akavacheInstance.Version, Is.Not.Null);
-            }
+            await Assert.That(akavacheInstance).IsNotNull();
+            await Assert.That(akavacheInstance!.ExecutingAssembly).IsNotNull();
+            await Assert.That(akavacheInstance.ExecutingAssemblyName).IsNotNull();
+            await Assert.That(akavacheInstance.ApplicationRootPath).IsNotNull();
+            await Assert.That(akavacheInstance.SettingsCachePath).IsNotNull();
+            await Assert.That(akavacheInstance.Version).IsNotNull();
         }
 
         /// <summary>
