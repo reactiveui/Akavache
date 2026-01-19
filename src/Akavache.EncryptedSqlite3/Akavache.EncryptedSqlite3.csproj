@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../Akavache.Sqlite3/CacheEntry.cs" />
+    <Compile Include="../Akavache.Sqlite3/SqliteCacheEntry.cs" />
     <Compile Include="../Akavache.Sqlite3/SqliteBlobCache.cs" />
     <Compile Include="../Akavache.Sqlite3/AkavacheBuilderExtensions.cs" />
   </ItemGroup>

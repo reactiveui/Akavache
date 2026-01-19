@@ -5,12 +5,16 @@
 
 using SQLite;
 
-namespace Akavache;
+#if ENCRYPTED
+namespace Akavache.EncryptedSqlite3;
+#else
+namespace Akavache.Sqlite3;
+#endif
 
 /// <summary>
-/// Represents an entry in a memory cache.
+/// Represents an entry in a sqlite cache.
 /// </summary>
-internal class CacheEntry
+internal class SqliteCacheEntry
 {
     /// <summary>
     /// Gets or sets the unique identifier for the cache entry.
