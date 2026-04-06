@@ -24,11 +24,11 @@
   </ItemGroup>
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
-    <PackageVersion Include="Verify.TUnit" Version="31.9.4" />
+    <PackageVersion Include="Verify.TUnit" Version="31.15.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
   </ItemGroup>
