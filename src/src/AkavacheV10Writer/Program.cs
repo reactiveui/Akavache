@@ -84,11 +84,23 @@ finally
 
 Console.WriteLine("V10 Writer completed.");
 
+/// <summary>
+/// Represents a person for testing serialization.
+/// </summary>
 public class Person
 {
+    /// <summary>
+    /// Gets or sets the person's name.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the person's age.
+    /// </summary>
     public int Age { get; set; }
 
+    /// <summary>
+    /// Gets or sets the person's email address.
+    /// </summary>
     public string Email { get; set; } = string.Empty;
 }
