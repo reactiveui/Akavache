@@ -1,9 +1,8 @@
 {
-  "version": "11.5",
+  "version": "11.6",
   "publicReleaseRefSpec": [
-    "^refs/heads/main$", // we release out of master
-    "^refs/heads/develop$", // we release out of develop
-    "^refs/heads/rel/\\d+\\.\\d+\\.\\d+" // we also release branches starting with rel/N.N.N
+    "^refs/heads/master$",
+    "^refs/heads/main$"
   ],
   "nugetPackageVersion":{
     "semVer": 2
