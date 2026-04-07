@@ -135,6 +135,13 @@ internal class AkavacheBuilder : IAkavacheBuilder
     internal static Dictionary<string, ISettingsStorage?>? SettingsStores { get; set; } = [];
 
     /// <inheritdoc />
+    public IAkavacheBuilder WithLegacyFileLocation()
+    {
+        _fileLocationOption = FileLocationOption.Legacy;
+        return this;
+    }
+
+    /// <inheritdoc />
     public IAkavacheBuilder WithApplicationName(string? applicationName)
     {
         if (string.IsNullOrWhiteSpace(applicationName))

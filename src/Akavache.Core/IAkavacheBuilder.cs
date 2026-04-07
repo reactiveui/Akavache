@@ -90,6 +90,14 @@ public interface IAkavacheBuilder : IAkavacheInstance
         where T : ISerializer;
 
     /// <summary>
+    /// Configures the builder to use legacy file locations for cache directories.
+    /// This is required when migrating from V10 to V11 so that V11 can find and read
+    /// the existing V10 database files.
+    /// </summary>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    IAkavacheBuilder WithLegacyFileLocation();
+
+    /// <summary>
     /// Sets the forced DateTime kind for serialization operations.
     /// </summary>
     /// <param name="kind">The DateTime kind to use for all DateTime serialization.</param>

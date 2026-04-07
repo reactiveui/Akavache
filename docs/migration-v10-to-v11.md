@@ -167,9 +167,12 @@ BlobCache.SecureFileStorage = new EncryptedBlobStorage("password");
 AppBuilder.CreateSplatBuilder()
     .WithAkavache<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MySecureApp")
+               .WithLegacyFileLocation()          // Required to find V10 secure databases
                .WithEncryptedSqliteProvider()
                .WithSqliteDefaults("password"));
 ```
+
+> **Important:** The `WithLegacyFileLocation()` call is critical when migrating from V10. Without it, V11 will create new databases in isolated storage directories, and your existing secure cache data will not be found.
 
 ### Scenario 3: Custom Storage Locations
 
@@ -367,9 +370,34 @@ AppBuilder.CreateSplatBuilder()
 ```
 
 #### 3. Data not found after migration
+
+V11 uses isolated storage directories by default, which differ from V10's file locations. To read existing V10 data, you **must** use `WithLegacyFileLocation()` so that V11 looks for database files in the same directories V10 used:
+
 ```csharp
-// Check if application name changed
-builder.WithApplicationName("SameAsV10App") // Must match V10 app name
+// ✅ CORRECT - Use legacy file locations to find V10 databases
+AppBuilder.CreateSplatBuilder()
+    .WithAkavacheCacheDatabase<NewtonsoftBsonSerializer>(builder =>
+        builder.WithApplicationName("SameAsV10App") // Must match V10 app name
+               .WithLegacyFileLocation()             // Required to find V10 databases
+               .WithSqliteProvider()
+               .WithSqliteDefaults());
+
+// ⚠️ WRONG - Without WithLegacyFileLocation(), V11 creates new empty databases
+// in isolated storage and your V10 data will not be found
+builder.WithApplicationName("SameAsV10App")
+       .WithSqliteProvider()
+       .WithSqliteDefaults();
+```
+
+V11 automatically reads data from V10's `CacheElement` table when a key is not found in the new `CacheEntry` table. This backward-compatible read happens transparently — no manual data migration is needed. Just ensure V11 can find the database files by using `WithLegacyFileLocation()`.
+
+You can also pass `FileLocationOption.Legacy` directly when using `CacheDatabase.Initialize`:
+
+```csharp
+CacheDatabase.Initialize<NewtonsoftBsonSerializer>(
+    configure: builder => builder.WithSqliteProvider().WithSqliteDefaults(),
+    applicationName: "SameAsV10App",
+    fileLocationOption: FileLocationOption.Legacy);
 ```
 
 ### Migration Checklist
@@ -377,6 +405,7 @@ builder.WithApplicationName("SameAsV10App") // Must match V10 app name
 - [ ] Updated package references
 - [ ] Replaced initialization code
 - [ ] Added explicit provider initialization
+- [ ] **Used `WithLegacyFileLocation()` to find existing V10 databases**
 - [ ] Tested existing data access
 - [ ] Verified new data storage
 - [ ] Updated DI container registration (if applicable)
