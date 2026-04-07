@@ -164,25 +164,16 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        // Perform the mutation in a fresh store, retrying on transient disposal.
-                        await TestHelper.EventuallyAsync(async () =>
-                        {
-                            return await TestHelper.WithFreshStoreAsync(
-                                instance,
-                                () => instance.GetSecureSettingsStore<ViewSettings>(DefaultPassword, testName),
-                                async s =>
-                                {
-                                    s.EnumTest = EnumTestValue.Option2;
-                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                    await Task.Yield();
-                                    return ok;
-                                }).ConfigureAwait(false);
-                        }).ConfigureAwait(false);
+                        // Mutate directly on the captured store
+                        viewSettings!.EnumTest = EnumTestValue.Option2;
 
-                        // Optional: also observe the change via the originally captured instance (retryable read).
-                        await TestHelper.EventuallyAsync(() =>
-                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                            .ConfigureAwait(false);
+                        // Verify the value is readable from the same instance
+                        await TestHelper.EventuallyAsync(
+                            () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                            timeoutMs: 10000,
+                            initialDelayMs: 50).ConfigureAwait(false);
+
+                        await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                     }
                     finally
                     {
@@ -296,25 +287,16 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        // Perform the mutation in a fresh store, retrying on transient disposal.
-                        await TestHelper.EventuallyAsync(async () =>
-                        {
-                            return await TestHelper.WithFreshStoreAsync(
-                                instance,
-                                () => instance.GetSecureSettingsStore<ViewSettings>(DefaultPassword, testName),
-                                async s =>
-                                {
-                                    s.EnumTest = EnumTestValue.Option2;
-                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                    await Task.Yield();
-                                    return ok;
-                                }).ConfigureAwait(false);
-                        }).ConfigureAwait(false);
+                        // Mutate directly on the captured store
+                        viewSettings!.EnumTest = EnumTestValue.Option2;
 
-                        // Optional: also verify via the initially captured instance.
-                        await TestHelper.EventuallyAsync(() =>
-                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                            .ConfigureAwait(false);
+                        // Verify the value is readable from the same instance
+                        await TestHelper.EventuallyAsync(
+                            () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                            timeoutMs: 10000,
+                            initialDelayMs: 50).ConfigureAwait(false);
+
+                        await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                     }
                     finally
                     {
