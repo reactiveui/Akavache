@@ -202,7 +202,7 @@ public class SqliteBlobCache : IBlobCache
             var time = DateTimeOffset.UtcNow;
 
             // Try V11 table first
-            var rows = await Connection.Table<CacheEntry>()
+            var rows = await Connection.Table<SqliteCacheEntry>()
                 .Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
                 .ToListAsync()
                 .ConfigureAwait(false);
@@ -244,7 +244,7 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
 
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Value is not null && x?.Id is not null)
             .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
@@ -278,7 +278,7 @@ public class SqliteBlobCache : IBlobCache
             var time = DateTimeOffset.UtcNow;
 
             // Try V11 table first
-            var rows = await Connection.Table<CacheEntry>()
+            var rows = await Connection.Table<SqliteCacheEntry>()
                 .Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName)
                 .ToListAsync()
                 .ConfigureAwait(false);
@@ -324,7 +324,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Value is not null && x?.Id is not null)
             .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
@@ -349,7 +349,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Value is not null && x?.Id is not null)
             .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
@@ -369,7 +369,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time)).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time)).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x.Id!);
@@ -394,7 +394,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x.Id!);
@@ -419,7 +419,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => (Key: x.Id!, Time: x?.CreatedAt));
@@ -444,7 +444,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x?.CreatedAt)
@@ -475,7 +475,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => (Key: x.Id!, Time: x?.CreatedAt));
@@ -505,7 +505,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.Table<CacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName).ToListAsync())
+        return _initialized.SelectMany((_, _, _) => Connection.Table<SqliteCacheEntry>().Where(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName).ToListAsync())
             .SelectMany(x => x)
             .Where(x => x?.Id is not null)
             .Select(x => x?.CreatedAt)
@@ -535,7 +535,7 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.SelectMany(
             async (_, _, _) =>
             {
-                var entries = keyValuePairs.Select(x => new CacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry });
+                var entries = keyValuePairs.Select(x => new SqliteCacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry });
 
                 await Connection.RunInTransactionAsync(sql =>
                 {
@@ -580,7 +580,7 @@ public class SqliteBlobCache : IBlobCache
 
         return _initialized.SelectMany(async (_, _, _) =>
             {
-                var entries = keyValuePairs.Select(x => new CacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry, TypeName = type.FullName });
+                var entries = keyValuePairs.Select(x => new SqliteCacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry, TypeName = type.FullName });
                 try
                 {
                     await Connection.RunInTransactionAsync(sql =>
@@ -701,7 +701,7 @@ public class SqliteBlobCache : IBlobCache
                 {
                     foreach (var key in keys)
                     {
-                        sql.Delete<CacheEntry>(key);
+                        sql.Delete<SqliteCacheEntry>(key);
                     }
                 }).ConfigureAwait(false);
 
@@ -737,10 +737,10 @@ public class SqliteBlobCache : IBlobCache
             {
                 await Connection.RunInTransactionAsync(sql =>
                 {
-                    var entries = sql.Table<CacheEntry>().Where(x => keys.Contains(x.Id) && x.TypeName == type.FullName).ToList();
+                    var entries = sql.Table<SqliteCacheEntry>().Where(x => keys.Contains(x.Id) && x.TypeName == type.FullName).ToList();
                     foreach (var key in entries)
                     {
-                        sql.Delete<CacheEntry>(key.Id);
+                        sql.Delete<SqliteCacheEntry>(key.Id);
                     }
                 }).ConfigureAwait(false);
 
@@ -766,10 +766,10 @@ public class SqliteBlobCache : IBlobCache
             {
                 await Connection.RunInTransactionAsync(sql =>
                 {
-                    var entries = sql.Table<CacheEntry>().Where(x => x.TypeName == type.FullName).ToList();
+                    var entries = sql.Table<SqliteCacheEntry>().Where(x => x.TypeName == type.FullName).ToList();
                     foreach (var key in entries)
                     {
-                        sql.Delete<CacheEntry>(key.Id);
+                        sql.Delete<SqliteCacheEntry>(key.Id);
                     }
                 }).ConfigureAwait(false);
 
@@ -795,9 +795,9 @@ public class SqliteBlobCache : IBlobCache
             {
                 await Connection.RunInTransactionAsync(sql =>
                 {
-                    foreach (var key in sql.Table<CacheEntry>().ToList())
+                    foreach (var key in sql.Table<SqliteCacheEntry>().ToList())
                     {
-                        sql.Delete<CacheEntry>(key.Id);
+                        sql.Delete<SqliteCacheEntry>(key.Id);
                     }
                 }).ConfigureAwait(false);
 
@@ -1103,7 +1103,7 @@ public class SqliteBlobCache : IBlobCache
         {
             try
             {
-                await Connection.CreateTableAsync<CacheEntry>().ConfigureAwait(false);
+                await Connection.CreateTableAsync<SqliteCacheEntry>().ConfigureAwait(false);
                 obs.OnNext(Unit.Default);
                 obs.OnCompleted();
             }
