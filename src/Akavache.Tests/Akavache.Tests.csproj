@@ -4,8 +4,18 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <IsPackable>false</IsPackable>
-    <NoWarn>$(NoWarn);CA1510</NoWarn>
+
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="TUnit.Assertions" />
+    <Using Include="TUnit.Assertions.Extensions" />
+    <Using Include="TUnit.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="TUnit.Core.NotInParallelAttribute" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" />

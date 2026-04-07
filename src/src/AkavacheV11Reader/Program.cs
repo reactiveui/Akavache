@@ -49,11 +49,11 @@ try
         try
         {
             var count = await readerCache.Connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM \"{t.Name}\"");
-            Console.WriteLine($" • {t.Name} (rows={count})");
+            Console.WriteLine($" -{t.Name} (rows={count})");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($" • {t.Name} (count error: {ex.Message})");
+            Console.WriteLine($" -{t.Name} (count error: {ex.Message})");
         }
     }
 
@@ -66,7 +66,7 @@ try
             var cols = await readerCache.Connection.QueryAsync<PragmaRow>("PRAGMA table_info('CacheElement')");
             foreach (var c in cols)
             {
-                Console.WriteLine($" • {c.Name} (type={c.Type})");
+                Console.WriteLine($" -{c.Name} (type={c.Type})");
             }
         }
         catch (Exception ex)
@@ -172,36 +172,81 @@ finally
 Console.WriteLine(allPass ? "\n? Compatibility Verified" : "\n? Mismatch Found");
 Environment.ExitCode = allPass ? 0 : 1;
 
+/// <summary>
+/// Represents a person for testing deserialization.
+/// </summary>
 public class Person
 {
+    /// <summary>
+    /// Gets or sets the person's name.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the person's age.
+    /// </summary>
     public int Age { get; set; }
 
+    /// <summary>
+    /// Gets or sets the person's email address.
+    /// </summary>
     public string Email { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Represents a row from the sqlite_master table containing a name.
+/// </summary>
 public class NameRow
 {
+    /// <summary>
+    /// Gets or sets the name value.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Represents a row from a PRAGMA query result.
+/// </summary>
 public class PragmaRow
 {
+    /// <summary>
+    /// Gets or sets the column name.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the column type.
+    /// </summary>
     public string Type { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Represents a sample row read from the cache database.
+/// </summary>
 public class SampleRow
 {
+    /// <summary>
+    /// Gets or sets the cache key.
+    /// </summary>
     public string Key { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the stored type name.
+    /// </summary>
     public string? TypeName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the length of the value data.
+    /// </summary>
     public long? LenValue { get; set; }
 
+    /// <summary>
+    /// Gets or sets the length of the blob data.
+    /// </summary>
     public long? LenData { get; set; }
 
+    /// <summary>
+    /// Gets or sets the expiration timestamp.
+    /// </summary>
     public string? ExpiresAt { get; set; }
 }

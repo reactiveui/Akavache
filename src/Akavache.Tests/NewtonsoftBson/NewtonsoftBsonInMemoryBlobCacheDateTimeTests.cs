@@ -10,6 +10,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for DateTime operations associated with the <see cref="InMemoryBlobCache"/> class with BSON serialization.
 /// </summary>
+[InheritsTests]
 public class NewtonsoftBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
     /// <inheritdoc />

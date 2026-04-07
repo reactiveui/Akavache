@@ -161,7 +161,7 @@ public class ImageExtensionsTests
         byte[]? nullData = null;
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await nullData!.ThrowOnBadImageBuffer().FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await nullData!.ThrowOnBadImageBuffer().FirstAsync());
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ public class ImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await tooSmallData.ThrowOnBadImageBuffer().FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await tooSmallData.ThrowOnBadImageBuffer().FirstAsync());
     }
 
     /// <summary>
@@ -270,7 +270,7 @@ public class ImageExtensionsTests
 
                 // Act & Assert - LoadImageBytes should throw when the key doesn't exist
                 // This could be either KeyNotFoundException or InvalidOperationException depending on implementation
-                Assert.ThrowsAsync(async () => await cache.LoadImageBytes("nonexistent_key").FirstAsync()).WithExceptionType(typeof(Exception));
+                await Assert.ThrowsAsync(async () => await cache.LoadImageBytes("nonexistent_key").FirstAsync()).WithExceptionType(typeof(Exception));
             }
             finally
             {
@@ -523,7 +523,7 @@ public class ImageExtensionsTests
         else
         {
             // Act & Assert
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await buffer.ThrowOnBadImageBuffer().FirstAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await buffer.ThrowOnBadImageBuffer().FirstAsync());
         }
     }
 }

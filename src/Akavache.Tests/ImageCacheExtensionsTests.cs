@@ -15,7 +15,6 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for Akavache.Drawing ImageCacheExtensions functionality.
 /// </summary>
-[NotInParallel]
 [Category("Akavache")]
 public class ImageCacheExtensionsTests
 {
@@ -357,7 +356,7 @@ public class ImageCacheExtensionsTests
         await using var cache = new InMemoryBlobCache(serializer);
 
         // Act & Assert
-        Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetImageSize("nonexistent_image")
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetImageSize("nonexistent_image")
                 .Timeout(TestTimeout)
                 .FirstAsync());
     }

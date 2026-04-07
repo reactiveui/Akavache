@@ -16,7 +16,7 @@ namespace Akavache.Settings.Tests;
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
+[TestExecutor<AkavacheTestExecutor>]
 public class SettingsCacheTests
 {
     /// <summary>
@@ -35,7 +35,6 @@ public class SettingsCacheTests
     [Before(Test)]
     public void Setup()
     {
-        AppBuilder.ResetBuilderStateForTests();
         _appBuilder = AppBuilder.CreateSplatBuilder();
 
         _cacheRoot = Path.Combine(
@@ -48,7 +47,7 @@ public class SettingsCacheTests
     }
 
     /// <summary>
-    /// One-time teardown after each test. Best-effort cleanup and static reset.
+    /// One-time teardown after each test. Best-effort cleanup.
     /// </summary>
     [After(Test)]
     public void Teardown()
@@ -60,12 +59,11 @@ public class SettingsCacheTests
                 Directory.Delete(_cacheRoot, recursive: true);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Best-effort: don't fail tests on IO cleanup.
+            System.Diagnostics.Debug.WriteLine(ex.Message);
         }
-
-        AppBuilder.ResetBuilderStateForTests();
     }
 
     /// <summary>
@@ -112,9 +110,10 @@ public class SettingsCacheTests
 
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -177,9 +176,10 @@ public class SettingsCacheTests
 
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -234,9 +234,10 @@ public class SettingsCacheTests
 
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -299,9 +300,10 @@ public class SettingsCacheTests
 
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });

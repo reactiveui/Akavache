@@ -4,7 +4,7 @@
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <NoWarn>$(NoWarn);CA1510</NoWarn>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,5 +13,15 @@
     <PackageReference Include="System.Reactive" />
     <PackageReference Include="sqlite-net-pcl" />
     <PackageReference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net481'" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Sqlite3" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3" />
+    <InternalsVisibleTo Include="Akavache.NewtonsoftJson" />
+    <InternalsVisibleTo Include="Akavache.SystemTextJson" />
+    <InternalsVisibleTo Include="Akavache.Drawing" />
+    <InternalsVisibleTo Include="Akavache.Settings" />
+    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests" />
   </ItemGroup>
 </Project>

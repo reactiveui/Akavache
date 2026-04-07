@@ -5,8 +5,20 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <NoWarn>$(NoWarn);CA1510</NoWarn>
+
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="TUnit.Assertions" />
+    <Using Include="TUnit.Assertions.Extensions" />
+    <Using Include="TUnit.Core" />
+    <Using Include="TUnit.Core.Executors" />
+    <Using Include="Akavache.Settings.Tests.Executors" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="TUnit.Core.NotInParallelAttribute" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" />

@@ -137,7 +137,7 @@ public class AotCompatibilityTests
                     // If ForcedDateTimeKind is working, retrieved should be UTC or Unspecified
                     // But some serializers may preserve the original kind
                     await Assert.That(retrieved.Kind).
-                        IsEqualTo(DateTimeKind.Utc).Or.EqualTo(DateTimeKind.Unspecified).Or.EqualTo(DateTimeKind.Local);
+                        IsEqualTo(DateTimeKind.Utc).Or.IsEqualTo(DateTimeKind.Unspecified).Or.IsEqualTo(DateTimeKind.Local);
                 }
             }
             finally
@@ -335,7 +335,7 @@ public class AotCompatibilityTests
 
                 // Assert
                 await Assert.That(retrieved).IsEqualTo(largeString);
-                await Assert.That(retrieved!).Length().EqualTo(100000);
+                await Assert.That(retrieved!).Length().IsEqualTo(100000);
             }
             finally
             {
@@ -363,7 +363,7 @@ public class AotCompatibilityTests
 
             // Test GetAllKeys works
             var keys = await cache.GetAllKeys().ToList().FirstAsync();
-            await Assert.That(keys).HasCount().EqualTo(1);
+            await Assert.That(keys).Count().IsEqualTo(1);
             await Assert.That(keys).Contains("test");
         }
         finally

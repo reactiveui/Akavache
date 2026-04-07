@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for Akavache.Drawing BitmapImageExtensions functionality.
 /// </summary>
-[NotInParallel]
 [Category("Akavache")]
 public class BitmapImageExtensionsTests
 {
@@ -222,7 +221,7 @@ public class BitmapImageExtensionsTests
         byte[]? nullData = null;
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!)
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!)
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -238,7 +237,7 @@ public class BitmapImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(tooSmallData)
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(tooSmallData)
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -254,7 +253,7 @@ public class BitmapImageExtensionsTests
         await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
 
         // Act & Assert
-        Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key")
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key")
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -349,7 +348,7 @@ public class BitmapImageExtensionsTests
         else
         {
             // Act & Assert
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
                 .Timeout(TestTimeout)
                 .FirstAsync());
         }

@@ -252,4 +252,74 @@ public static class AkavacheBuilderExtensions
         AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }
+
+    /// <summary>
+    /// Configures a settings store using a custom <see cref="IBlobCache"/> instance and initializes it using the provided configuration action.
+    /// This is useful for testing scenarios where an in-memory cache is preferred.
+    /// </summary>
+    /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
+    /// <param name="builder">The Akavache builder to configure.</param>
+    /// <param name="cache">The custom blob cache instance to use for settings storage.</param>
+    /// <param name="settings">Action to configure the settings instance once created.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="cache"/> is null.</exception>
+    public static IAkavacheBuilder WithSettingsStore<T>(this IAkavacheBuilder builder, IBlobCache cache, Action<T?> settings, string? overrideDatabaseName = null)
+        where T : ISettingsStorage?, new()
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (cache == null)
+        {
+            throw new ArgumentNullException(nameof(cache));
+        }
+
+        var settingsDb = builder.GetSettingsStore<T>(cache, overrideDatabaseName);
+        settings?.Invoke(settingsDb);
+        return builder;
+    }
+
+    /// <summary>
+    /// Gets or creates a settings store using a custom <see cref="IBlobCache"/> instance.
+    /// This is useful for testing scenarios where an in-memory cache is preferred.
+    /// </summary>
+    /// <typeparam name="T">The settings type that implements <see cref="ISettingsStorage"/>.</typeparam>
+    /// <param name="builder">The Akavache builder instance.</param>
+    /// <param name="cache">The custom blob cache instance to use for settings storage.</param>
+    /// <param name="overrideDatabaseName">Optional override database name to use instead of the type name.</param>
+    /// <returns>The settings store instance configured with the custom cache.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="cache"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized.</exception>
+    public static T? GetSettingsStore<T>(this IAkavacheInstance builder, IBlobCache cache, string? overrideDatabaseName = null)
+        where T : ISettingsStorage?, new()
+    {
+        if (builder == null)
+        {
+            throw new ArgumentNullException(nameof(builder));
+        }
+
+        if (cache == null)
+        {
+            throw new ArgumentNullException(nameof(cache));
+        }
+
+        if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
+        {
+            throw new InvalidOperationException("AkavacheBuilder has not been initialized. Call CacheDatabase.Initialize() first.");
+        }
+
+        var key = overrideDatabaseName ?? typeof(T).Name;
+
+        // Validate database name to prevent path traversal attacks
+        var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+
+        AkavacheBuilder.BlobCaches[validatedKey] = cache;
+
+        var viewSettings = new T();
+        AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
+        return viewSettings;
+    }
 }

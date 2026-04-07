@@ -13,7 +13,6 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[NotInParallel]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     private bool _disposed;

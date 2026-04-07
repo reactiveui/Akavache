@@ -673,7 +673,7 @@ public class SerializerExtensionsTests
         var dict = new Dictionary<string, object> { ["key"] = "value" };
 
         // Act & Assert
-        await Assert.That(() => cache!.InsertObjects(dict)).Throws<ArgumentNullException>();
+        await Assert.That(() => cache!.InsertObjects(dict!)).Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -692,7 +692,7 @@ public class SerializerExtensionsTests
         try
         {
             // Act & Assert
-            await Assert.That(() => cache!.InsertObjects(dict)).Throws<ArgumentNullException>();
+            await Assert.That(() => cache!.InsertObjects(dict!)).Throws<ArgumentNullException>();
         }
         finally
         {
@@ -721,7 +721,6 @@ public class SerializerExtensionsTests
                 await cache.InsertObjects(emptyDict).FirstAsync();
 
                 // Assert - test passes if no exception is thrown
-                await Assert.That(true).IsTrue();
             }
             finally
             {
@@ -768,7 +767,7 @@ public class SerializerExtensionsTests
                 await Assert.That(stringValue).IsEqualTo("test string");
                 await Assert.That(intValue).IsEqualTo(42);
                 await Assert.That(userValue).IsNotNull();
-                await Assert.That(userValue.Name).IsEqualTo("Test User");
+                await Assert.That(userValue!.Name).IsEqualTo("Test User");
 
                 // Verify date value - either default or close to test date
                 var isDateValid = dateValue == default || Math.Abs((dateValue - testDate).TotalDays) <= 1;
@@ -1007,7 +1006,6 @@ public class SerializerExtensionsTests
                 }
 
                 // All tests pass - the completion logic is robust
-                await Assert.That(true).IsTrue();
             }
             finally
             {
@@ -1110,9 +1108,9 @@ public class SerializerExtensionsTests
             // Assert
             using (Assert.Multiple())
             {
-                await Assert.That(result1).IsEqualTo("value_1", "First fetch should return value_1");
-                await Assert.That(result2).IsEqualTo("value_2", "Second fetch after invalidation should return value_2");
-                await Assert.That(fetchCount).IsEqualTo(2, "Fetch function should be called twice");
+                await Assert.That(result1).IsEqualTo("value_1");
+                await Assert.That(result2).IsEqualTo("value_2");
+                await Assert.That(fetchCount).IsEqualTo(2);
             }
         }
         finally
@@ -1155,9 +1153,9 @@ public class SerializerExtensionsTests
 
             using (Assert.Multiple())
             {
-                await Assert.That(result1).IsEqualTo("b1", "First call should return b1");
-                await Assert.That(result2).IsEqualTo("b2", "Second call after invalidation should return b2 (not b1)");
-                await Assert.That(cnt).IsEqualTo(2, "Fetch function should be called twice");
+                await Assert.That(result1).IsEqualTo("b1");
+                await Assert.That(result2).IsEqualTo("b2");
+                await Assert.That(cnt).IsEqualTo(2);
             }
         }
         finally
@@ -1365,8 +1363,7 @@ public class SerializerExtensionsTests
             // Act - Should not throw
             await cache.InvalidateObjects<UserObject>([]).FirstAsync();
 
-            // Assert - Test passes if no exception was thrown
-            await Assert.That(true).IsTrue();
+            // Test passes if no exception was thrown
         }
         finally
         {
@@ -1446,12 +1443,10 @@ public class SerializerExtensionsTests
                 await cache.InsertObject("   ", user).FirstAsync();
 
                 // If it doesn't throw, that's acceptable - whitespace is a valid key for InMemoryBlobCache
-                await Assert.That(true).IsTrue();
             }
             catch (ArgumentException)
             {
                 // This is expected for implementations that validate whitespace keys
-                await Assert.That(true).IsTrue();
             }
         }
         finally
@@ -1480,18 +1475,15 @@ public class SerializerExtensionsTests
             {
                 await cache.GetObject<UserObject>("   ").FirstAsync();
 
-                // Should not reach here if key doesn't exist
-                await Assert.That(true).IsTrue();
+                // If it doesn't throw, that's acceptable
             }
             catch (KeyNotFoundException)
             {
                 // This is expected if the key doesn't exist
-                await Assert.That(true).IsTrue();
             }
             catch (ArgumentException)
             {
                 // This is expected for implementations that validate whitespace keys
-                await Assert.That(true).IsTrue();
             }
         }
         finally

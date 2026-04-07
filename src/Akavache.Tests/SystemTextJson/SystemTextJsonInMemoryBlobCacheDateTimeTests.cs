@@ -10,6 +10,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for DateTime operations associated with the <see cref="InMemoryBlobCache"/> class.
 /// </summary>
+[InheritsTests]
 public class SystemTextJsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {
     /// <inheritdoc />

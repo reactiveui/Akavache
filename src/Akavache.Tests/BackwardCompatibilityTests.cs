@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for backward compatibility scenarios, especially for mobile platforms.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 public class BackwardCompatibilityTests
 {
     /// <summary>
@@ -89,12 +88,7 @@ public class BackwardCompatibilityTests
         /// <summary>
         /// Reset the SQLite provider state for testing purposes.
         /// </summary>
-        public static void ResetSqliteProvider()
-        {
-            // We need to use reflection to reset the static field for testing
-            var field = typeof(Akavache.Sqlite3.AkavacheBuilderExtensions)
-                .GetField("_sqliteProvider", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            field?.SetValue(null, null);
-        }
+        public static void ResetSqliteProvider() =>
+            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
     }
 }

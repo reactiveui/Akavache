@@ -126,6 +126,11 @@ public static class AkavacheBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Resets the SQLite provider state for testing purposes.
+    /// </summary>
+    internal static void ResetSqliteProviderForTests() => _sqliteProvider = null;
+
 #if ENCRYPTED
     private static EncryptedSqliteBlobCache CreateEncryptedSqliteCache(string name, IAkavacheBuilder builder, string password)
 #else

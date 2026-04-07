@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for RequestCache functionality.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 public class RequestCacheTests
 {
     /// <summary>
@@ -380,7 +379,6 @@ public class RequestCacheTests
 
         // Assert - Test passes if no OutOfMemoryException is thrown
         // This is mainly a regression test to ensure the cache doesn't leak memory
-        await Assert.That(true).IsTrue();
     }
 
     /// <summary>

@@ -168,7 +168,7 @@ public class LoginExtensionsTests
                 await cache.EraseLogin(host).FirstAsync();
 
                 // Assert - Login should no longer exist
-                Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
                 {
                     await cache.GetLogin(host).FirstAsync();
                 });
@@ -197,7 +197,7 @@ public class LoginExtensionsTests
             try
             {
                 // Act & Assert
-                Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
                 {
                     await cache.GetLogin(host).FirstAsync();
                 });
@@ -463,7 +463,7 @@ public class LoginExtensionsTests
                 await cache.EraseLogin("nonexistent.example.com").FirstAsync();
 
                 // Verify the login is still gone
-                Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
                 {
                     await cache.GetLogin(host).FirstAsync();
                 });

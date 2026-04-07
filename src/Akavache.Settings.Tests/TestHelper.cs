@@ -125,9 +125,10 @@ internal static class TestHelper
                 {
                     await s.DisposeAsync().ConfigureAwait(false);
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Best-effort dispose.
+                    System.Diagnostics.Debug.WriteLine(ex.Message);
                 }
             }
         }

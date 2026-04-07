@@ -12,7 +12,6 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests focused on SqliteBlobCache.InvalidateAll behavior.
 /// </summary>
-[NotInParallel]
 [Category("Akavache")]
 public class SqliteBlobCacheInvalidateAllTests
 {
@@ -44,9 +43,9 @@ public class SqliteBlobCacheInvalidateAllTests
             var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
             await Assert.That(keysAfter).IsEmpty();
 
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("a").Timeout(Timeout).FirstAsync());
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("b").Timeout(Timeout).FirstAsync());
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("c").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("a").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("b").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("c").Timeout(Timeout).FirstAsync());
         }
     }
 
@@ -80,10 +79,10 @@ public class SqliteBlobCacheInvalidateAllTests
             await Assert.That(keysAfter).IsEmpty();
 
             // Both typed and untyped should be gone
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u1").Timeout(Timeout).FirstAsync());
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u2").Timeout(Timeout).FirstAsync());
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t1", userType).Timeout(Timeout).FirstAsync());
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t2", userType).Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u1").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u2").Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t1", userType).Timeout(Timeout).FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t2", userType).Timeout(Timeout).FirstAsync());
         }
     }
 

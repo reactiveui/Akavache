@@ -5,12 +5,13 @@
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.1</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
     <SqlitePclRawVersion>2.1.11</SqlitePclRawVersion>
     <SqliteNetVersion>1.9.172</SqliteNetVersion>
-    <SplatVersion>19.1.1</SplatVersion>
-    <ReactiveUIVersion>22.3.1</ReactiveUIVersion>
-    <TUnitVersion>1.11.56</TUnitVersion>
+    <SplatVersion>19.3.1</SplatVersion>
+    <ReactiveUIVersion>23.2.1</ReactiveUIVersion>
+    <MauiVersion>10.0.51</MauiVersion>
+    <TUnitVersion>1.28.7</TUnitVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
@@ -20,17 +21,17 @@
   </ItemGroup>
   <!-- Non-test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.102" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
   </ItemGroup>
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
     <PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
-    <PackageVersion Include="Verify.TUnit" Version="31.9.4" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.2" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <PackageVersion Include="Verify.TUnit" Version="31.15.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.6.2" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.2.1" />
   </ItemGroup>
   <!-- Core library packages -->
   <ItemGroup>

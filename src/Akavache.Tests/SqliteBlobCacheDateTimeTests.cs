@@ -11,6 +11,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for DateTime operations associated with the <see cref="SqliteBlobCache"/> class.
 /// </summary>
+[InheritsTests]
 public class SqliteBlobCacheDateTimeTests : DateTimeTestBase
 {
     /// <inheritdoc />

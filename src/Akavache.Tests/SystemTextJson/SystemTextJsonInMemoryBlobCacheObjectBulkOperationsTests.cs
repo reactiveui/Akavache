@@ -10,6 +10,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for object bulk operations associated with the <see cref="InMemoryBlobCache"/> class.
 /// </summary>
+[InheritsTests]
 public class SystemTextJsonInMemoryBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
 {
     /// <inheritdoc />

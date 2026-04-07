@@ -87,9 +87,9 @@
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <TUnitImplicitUsings>false</TUnitImplicitUsings>
-    <TUnitAssertionsImplicitUsings>false</TUnitAssertionsImplicitUsings>
-    <NoWarn>$(NoWarn);CS4014</NoWarn>
+    <TUnitImplicitUsings>true</TUnitImplicitUsings>
+    <TUnitAssertionsImplicitUsings>true</TUnitAssertionsImplicitUsings>
+
   </PropertyGroup>
   <!-- MTP Native JSON Configuration -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">

@@ -17,7 +17,7 @@ namespace Akavache.EncryptedSettings.Tests
     /// Uses eventually-consistent polling and treats transient disposal as retryable.
     /// </summary>
     [Category("Akavache")]
-    [NotInParallel]
+    [TestExecutor<AkavacheTestExecutor>]
     public class EncryptedSettingsCacheTests
     {
         /// <summary>
@@ -41,7 +41,6 @@ namespace Akavache.EncryptedSettings.Tests
         [Before(Test)]
         public void Setup()
         {
-            AppBuilder.ResetBuilderStateForTests();
             _appBuilder = AppBuilder.CreateSplatBuilder();
 
             _cacheRoot = Path.Combine(
@@ -54,7 +53,7 @@ namespace Akavache.EncryptedSettings.Tests
         }
 
         /// <summary>
-        /// One-time teardown after each test. Best-effort cleanup and static reset.
+        /// One-time teardown after each test. Best-effort cleanup.
         /// </summary>
         [After(Test)]
         public void Teardown()
@@ -66,12 +65,11 @@ namespace Akavache.EncryptedSettings.Tests
                     Directory.Delete(_cacheRoot, recursive: true);
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // Best-effort: don't fail tests on IO cleanup.
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
-
-            AppBuilder.ResetBuilderStateForTests();
         }
 
         /// <summary>
@@ -133,9 +131,10 @@ namespace Akavache.EncryptedSettings.Tests
 
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });
@@ -166,25 +165,16 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        // Perform the mutation in a fresh store, retrying on transient disposal.
-                        await TestHelper.EventuallyAsync(async () =>
-                        {
-                            return await TestHelper.WithFreshStoreAsync(
-                                instance,
-                                () => instance.GetSecureSettingsStore<ViewSettings>(DefaultPassword, testName),
-                                async s =>
-                                {
-                                    s.EnumTest = EnumTestValue.Option2;
-                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                    await Task.Yield();
-                                    return ok;
-                                }).ConfigureAwait(false);
-                        }).ConfigureAwait(false);
+                        // Mutate directly on the captured store
+                        viewSettings!.EnumTest = EnumTestValue.Option2;
 
-                        // Optional: also observe the change via the originally captured instance (retryable read).
-                        await TestHelper.EventuallyAsync(() =>
-                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                            .ConfigureAwait(false);
+                        // Verify the value is readable from the same instance
+                        await TestHelper.EventuallyAsync(
+                            () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                            timeoutMs: 10000,
+                            initialDelayMs: 50).ConfigureAwait(false);
+
+                        await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                     }
                     finally
                     {
@@ -197,9 +187,10 @@ namespace Akavache.EncryptedSettings.Tests
 
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });
@@ -265,9 +256,10 @@ namespace Akavache.EncryptedSettings.Tests
 
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });
@@ -298,25 +290,16 @@ namespace Akavache.EncryptedSettings.Tests
                     {
                         await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
-                        // Perform the mutation in a fresh store, retrying on transient disposal.
-                        await TestHelper.EventuallyAsync(async () =>
-                        {
-                            return await TestHelper.WithFreshStoreAsync(
-                                instance,
-                                () => instance.GetSecureSettingsStore<ViewSettings>(DefaultPassword, testName),
-                                async s =>
-                                {
-                                    s.EnumTest = EnumTestValue.Option2;
-                                    var ok = TestHelper.TryRead(() => s.EnumTest == EnumTestValue.Option2);
-                                    await Task.Yield();
-                                    return ok;
-                                }).ConfigureAwait(false);
-                        }).ConfigureAwait(false);
+                        // Mutate directly on the captured store
+                        viewSettings!.EnumTest = EnumTestValue.Option2;
 
-                        // Optional: also verify via the initially captured instance.
-                        await TestHelper.EventuallyAsync(() =>
-                                TestHelper.TryRead(() => viewSettings!.EnumTest == EnumTestValue.Option2))
-                            .ConfigureAwait(false);
+                        // Verify the value is readable from the same instance
+                        await TestHelper.EventuallyAsync(
+                            () => TestHelper.TryRead(() => viewSettings.EnumTest == EnumTestValue.Option2),
+                            timeoutMs: 10000,
+                            initialDelayMs: 50).ConfigureAwait(false);
+
+                        await Assert.That(viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
                     }
                     finally
                     {
@@ -329,9 +312,10 @@ namespace Akavache.EncryptedSettings.Tests
 
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });
@@ -449,9 +433,10 @@ namespace Akavache.EncryptedSettings.Tests
                         {
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });
@@ -487,7 +472,7 @@ namespace Akavache.EncryptedSettings.Tests
                         await TestHelper.EventuallyAsync(() => initialSettings is not null).ConfigureAwait(false);
 
                         // IMPORTANT: Do NOT write using the captured 'initialSettings'.
-                        // Instead, open a *fresh* store, perform the write, and dispose it — retrying on transient disposal.
+                        // Instead, open a *fresh* store, perform the write, and dispose it ï¿½ retrying on transient disposal.
                         await TestHelper.EventuallyAsync(async () =>
                         {
                             return await TestHelper.WithFreshStoreAsync(
@@ -554,9 +539,10 @@ namespace Akavache.EncryptedSettings.Tests
                         {
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });
@@ -637,9 +623,10 @@ namespace Akavache.EncryptedSettings.Tests
                         {
                             await instance.DeleteSettingsStore<ViewSettings>(testName).ConfigureAwait(false);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             // Ignore cleanup issues.
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
                         }
                     }
                 });

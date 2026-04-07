@@ -3,11 +3,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
 using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
-using Splat;
+
 using Splat.Builder;
 
 namespace Akavache.Settings.Tests;
@@ -17,7 +16,7 @@ namespace Akavache.Settings.Tests;
 /// Validates the cache selection priority: explicit BlobCaches -> CacheDatabase -> InMemoryBlobCache.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
+[TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseFallbackTests
 {
     /// <summary>
@@ -36,7 +35,6 @@ public class SettingsBaseFallbackTests
     [Before(Test)]
     public void Setup()
     {
-        AppBuilder.ResetBuilderStateForTests();
         _appBuilder = AppBuilder.CreateSplatBuilder();
 
         _cacheRoot = Path.Combine(
@@ -49,37 +47,11 @@ public class SettingsBaseFallbackTests
     }
 
     /// <summary>
-    /// One-time teardown after each test. Best-effort cleanup and static reset.
+    /// One-time teardown after each test. Best-effort cleanup.
     /// </summary>
     [After(Test)]
     public void Teardown()
     {
-        try
-        {
-            if (CacheDatabase.IsInitialized)
-            {
-                var shutdownTask = Task.Run(() => CacheDatabase.Shutdown().Wait());
-                shutdownTask.Wait(TimeSpan.FromSeconds(5));
-            }
-        }
-        catch
-        {
-            // Best-effort: don't fail tests on shutdown.
-        }
-
-        try
-        {
-            // Clear all registered services in AppLocator
-            if (AppLocator.CurrentMutable.HasRegistration(typeof(ISerializer)))
-            {
-                AppLocator.CurrentMutable.UnregisterAll(typeof(ISerializer));
-            }
-        }
-        catch
-        {
-            // Best-effort
-        }
-
         try
         {
             if (Directory.Exists(_cacheRoot))
@@ -87,12 +59,11 @@ public class SettingsBaseFallbackTests
                 Directory.Delete(_cacheRoot, recursive: true);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Best-effort: don't fail tests on IO cleanup.
+            System.Diagnostics.Debug.WriteLine(ex.Message);
         }
-
-        AppBuilder.ResetBuilderStateForTests();
     }
 
     /// <summary>
@@ -200,9 +171,10 @@ public class SettingsBaseFallbackTests
                             await settings2.DisposeAsync().ConfigureAwait(false);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Best-effort cleanup
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });

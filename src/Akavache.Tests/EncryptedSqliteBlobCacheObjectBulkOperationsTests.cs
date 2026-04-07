@@ -11,6 +11,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for object bulk operations associated with the <see cref="EncryptedSqliteBlobCache"/> class.
 /// </summary>
+[InheritsTests]
 public class EncryptedSqliteBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
 {
     /// <inheritdoc />

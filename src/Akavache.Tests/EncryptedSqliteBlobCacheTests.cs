@@ -11,6 +11,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for the <see cref="EncryptedSqliteBlobCache"/> class.
 /// </summary>
+[InheritsTests]
 public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
