@@ -24,16 +24,34 @@ public sealed class TestHttpServer : IDisposable
     /// </summary>
     public TestHttpServer()
     {
-        _listener = new HttpListener();
         _cancellationTokenSource = new CancellationTokenSource();
         _responses = [];
 
-        // Try to find an available port starting from 8999
-        BaseUrl = FindAvailablePort();
-        _listener.Prefixes.Add(BaseUrl);
-        _listener.Start();
+        // Retry loop to handle TOCTOU race between port discovery and HttpListener bind
+        const int maxAttempts = 10;
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            var port = GetEphemeralPort();
+            var url = $"http://localhost:{port}/";
+            var listener = new HttpListener();
+            listener.Prefixes.Add(url);
 
-        _serverTask = Task.Run(async () => await ProcessRequestsAsync(_cancellationTokenSource.Token));
+            try
+            {
+                listener.Start();
+                _listener = listener;
+                BaseUrl = url;
+                _serverTask = Task.Run(async () => await ProcessRequestsAsync(_cancellationTokenSource.Token));
+                return;
+            }
+            catch (HttpListenerException)
+            {
+                // Port was grabbed between discovery and bind - try another
+                listener.Close();
+            }
+        }
+
+        throw new InvalidOperationException($"Failed to start HTTP listener after {maxAttempts} attempts.");
     }
 
     /// <summary>
@@ -94,15 +112,14 @@ public sealed class TestHttpServer : IDisposable
         _disposed = true;
     }
 
-    private static string FindAvailablePort()
+    private static int GetEphemeralPort()
     {
-        // Use TcpListener with port 0 to let the OS assign a free port,
-        // then immediately release it and use that port for HttpListener.
+        // Use TcpListener with port 0 to let the OS assign a free ephemeral port.
         using var tcpListener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
         tcpListener.Start();
         var port = ((System.Net.IPEndPoint)tcpListener.LocalEndpoint).Port;
         tcpListener.Stop();
-        return $"http://localhost:{port}/";
+        return port;
     }
 
     private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
