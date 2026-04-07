@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="TUnit.Assertions" />
+    <Using Include="TUnit.Assertions.Extensions" />
+    <Using Include="TUnit.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
   </ItemGroup>

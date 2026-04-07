@@ -238,6 +238,29 @@ public static class CacheDatabase
     public static IAkavacheBuilder CreateBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default) => new AkavacheBuilder(fileLocationOption);
 
     /// <summary>
+    /// Resets all CacheDatabase state for testing purposes.
+    /// Calls Shutdown first, then clears the builder and initialization flag.
+    /// </summary>
+    internal static void ResetForTests()
+    {
+        if (_isInitialized)
+        {
+            try
+            {
+                Shutdown().Wait();
+            }
+            catch
+            {
+                // Best-effort
+            }
+        }
+
+        _builder = null;
+        _isInitialized = false;
+        _taskPoolOverride = null;
+    }
+
+    /// <summary>
     /// Internal method to set the builder instance. Used by the builder pattern.
     /// </summary>
     /// <param name="builder">The configured builder instance.</param>

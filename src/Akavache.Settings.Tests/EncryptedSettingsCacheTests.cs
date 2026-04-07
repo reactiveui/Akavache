@@ -18,6 +18,7 @@ namespace Akavache.EncryptedSettings.Tests
     /// </summary>
     [Category("Akavache")]
     [NotInParallel]
+    [TestExecutor<AkavacheTestExecutor>]
     public class EncryptedSettingsCacheTests
     {
         /// <summary>
@@ -41,7 +42,6 @@ namespace Akavache.EncryptedSettings.Tests
         [Before(Test)]
         public void Setup()
         {
-            AppBuilder.ResetBuilderStateForTests();
             _appBuilder = AppBuilder.CreateSplatBuilder();
 
             _cacheRoot = Path.Combine(
@@ -54,7 +54,7 @@ namespace Akavache.EncryptedSettings.Tests
         }
 
         /// <summary>
-        /// One-time teardown after each test. Best-effort cleanup and static reset.
+        /// One-time teardown after each test. Best-effort cleanup.
         /// </summary>
         [After(Test)]
         public void Teardown()
@@ -70,8 +70,6 @@ namespace Akavache.EncryptedSettings.Tests
             {
                 // Best-effort: don't fail tests on IO cleanup.
             }
-
-            AppBuilder.ResetBuilderStateForTests();
         }
 
         /// <summary>
@@ -487,7 +485,7 @@ namespace Akavache.EncryptedSettings.Tests
                         await TestHelper.EventuallyAsync(() => initialSettings is not null).ConfigureAwait(false);
 
                         // IMPORTANT: Do NOT write using the captured 'initialSettings'.
-                        // Instead, open a *fresh* store, perform the write, and dispose it — retrying on transient disposal.
+                        // Instead, open a *fresh* store, perform the write, and dispose it ï¿½ retrying on transient disposal.
                         await TestHelper.EventuallyAsync(async () =>
                         {
                             return await TestHelper.WithFreshStoreAsync(

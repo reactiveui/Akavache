@@ -18,6 +18,7 @@ namespace Akavache.Settings.Tests;
 /// </summary>
 [Category("Akavache")]
 [NotInParallel]
+[TestExecutor<AkavacheTestExecutor>]
 public class AkavacheBuilderExtensionsTests
 {
     /// <summary>
@@ -36,7 +37,6 @@ public class AkavacheBuilderExtensionsTests
     [Before(Test)]
     public void Setup()
     {
-        AppBuilder.ResetBuilderStateForTests();
         _appBuilder = AppBuilder.CreateSplatBuilder();
 
         _cacheRoot = Path.Combine(
@@ -49,7 +49,7 @@ public class AkavacheBuilderExtensionsTests
     }
 
     /// <summary>
-    /// One-time teardown after each test. Best-effort cleanup and static reset.
+    /// One-time teardown after each test. Best-effort cleanup.
     /// </summary>
     [After(Test)]
     public void Teardown()
@@ -65,8 +65,6 @@ public class AkavacheBuilderExtensionsTests
         {
             // Best-effort: don't fail tests on IO cleanup.
         }
-
-        AppBuilder.ResetBuilderStateForTests();
     }
 
     /// <summary>
@@ -846,60 +844,35 @@ public class AkavacheBuilderExtensionsTests
 
     /// <summary>
     /// Verifies that DeleteSettingsStore handles IO errors gracefully by catching exceptions.
-    /// On Linux, making the directory non-writable prevents File.Delete from succeeding.
+    /// Creates a directory where the .db file would be, so File.Delete throws an IOException.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task DeleteSettingsStore_ProtectedDirectory_HandlesExceptionGracefullyAsync()
     {
+        var dbName = NewName("delete_err");
+
         RunWithAkavache<NewtonsoftSerializer>(
             NewName("delete_protected_test"),
-            builder =>
-            {
-                builder.WithSettingsStore<ViewSettings>(_ => { });
-                return Task.CompletedTask;
-            },
+            _ => Task.CompletedTask,
             async instance =>
             {
-                // Create a file in the cache directory
-                var filePath = Path.Combine(_cacheRoot, "ViewSettings.db");
-                await File.WriteAllTextAsync(filePath, "dummy").ConfigureAwait(false);
+                // Create a directory where the .db file would be.
+                // File.Delete on a directory path always throws an IOException/UnauthorizedAccessException.
+                var fakePath = Path.Combine(_cacheRoot, $"{dbName}.db");
+                Directory.CreateDirectory(fakePath);
 
-                // Make the directory read-only so File.Delete will throw on Linux
-                var dirInfo = new DirectoryInfo(_cacheRoot);
-                dirInfo.Attributes |= FileAttributes.ReadOnly;
+                // Should not throw - the catch block in DeleteSettingsStore handles IO errors
+                await instance.DeleteSettingsStore<ViewSettings>(dbName).ConfigureAwait(false);
 
-                // On Linux, remove write permission from the directory
-                if (!OperatingSystem.IsWindows())
-                {
-                    File.SetUnixFileMode(_cacheRoot, UnixFileMode.UserRead | UnixFileMode.UserExecute);
-                }
-
+                // Clean up the fake directory
                 try
                 {
-                    // Should not throw - the catch block handles IO errors
-                    await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+                    Directory.Delete(fakePath, recursive: true);
                 }
-                finally
+                catch
                 {
-                    // Restore permissions so teardown can clean up
-                    try
-                    {
-                        if (!OperatingSystem.IsWindows())
-                        {
-                            File.SetUnixFileMode(
-                                _cacheRoot,
-                                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-                        }
-                        else
-                        {
-                            dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-                        }
-                    }
-                    catch
-                    {
-                        // Best-effort cleanup.
-                    }
+                    // Best-effort cleanup.
                 }
             });
 

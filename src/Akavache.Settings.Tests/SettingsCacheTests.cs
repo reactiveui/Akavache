@@ -17,6 +17,7 @@ namespace Akavache.Settings.Tests;
 /// </summary>
 [Category("Akavache")]
 [NotInParallel]
+[TestExecutor<AkavacheTestExecutor>]
 public class SettingsCacheTests
 {
     /// <summary>
@@ -35,7 +36,6 @@ public class SettingsCacheTests
     [Before(Test)]
     public void Setup()
     {
-        AppBuilder.ResetBuilderStateForTests();
         _appBuilder = AppBuilder.CreateSplatBuilder();
 
         _cacheRoot = Path.Combine(
@@ -48,7 +48,7 @@ public class SettingsCacheTests
     }
 
     /// <summary>
-    /// One-time teardown after each test. Best-effort cleanup and static reset.
+    /// One-time teardown after each test. Best-effort cleanup.
     /// </summary>
     [After(Test)]
     public void Teardown()
@@ -64,8 +64,6 @@ public class SettingsCacheTests
         {
             // Best-effort: don't fail tests on IO cleanup.
         }
-
-        AppBuilder.ResetBuilderStateForTests();
     }
 
     /// <summary>
