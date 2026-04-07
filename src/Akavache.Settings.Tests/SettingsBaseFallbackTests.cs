@@ -16,7 +16,6 @@ namespace Akavache.Settings.Tests;
 /// Validates the cache selection priority: explicit BlobCaches -> CacheDatabase -> InMemoryBlobCache.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseFallbackTests
 {
@@ -60,9 +59,10 @@ public class SettingsBaseFallbackTests
                 Directory.Delete(_cacheRoot, recursive: true);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Best-effort: don't fail tests on IO cleanup.
+            System.Diagnostics.Debug.WriteLine(ex.Message);
         }
     }
 
@@ -171,9 +171,10 @@ public class SettingsBaseFallbackTests
                             await settings2.DisposeAsync().ConfigureAwait(false);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Best-effort cleanup
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });

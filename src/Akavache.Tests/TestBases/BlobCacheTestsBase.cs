@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[NotInParallel]
 public abstract class BlobCacheTestsBase : IDisposable
 {
     private bool _disposed;
@@ -321,7 +320,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     await Assert.That(result.Item2).IsEqualTo("Bar");
                 }
 
-                await Assert.That(fetchCount).IsGreaterThanOrEqualTo(1, $"Expected fetch to be called at least once, but was {fetchCount}");
+                await Assert.That(fetchCount).IsGreaterThanOrEqualTo(1);
 
                 var initialFetchCount = fetchCount;
                 result = await fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
@@ -332,7 +331,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                     await Assert.That(result.Item2).IsEqualTo("Bar");
                 }
 
-                await Assert.That(fetchCount).IsLessThanOrEqualTo(initialFetchCount + 1, $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
+                await Assert.That(fetchCount).IsLessThanOrEqualTo(initialFetchCount + 1);
             }
             catch (Exception ex)
             {
@@ -393,7 +392,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 await Assert.That(result.Item2).IsEqualTo(1);
             }
 
-            await Assert.That(fetchCount).IsEqualTo(1, $"Expected fetch to be called exactly once, but was {fetchCount}");
+            await Assert.That(fetchCount).IsEqualTo(1);
 
             var results = new List<Tuple<string, int>?>();
             var initialFetchCount = fetchCount;
@@ -419,7 +418,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 await Assert.That(results[1]?.Item2).IsEqualTo(2);
             }
 
-            await Assert.That(fetchCount).IsEqualTo(initialFetchCount + 1, $"Fetch count increased too much: was {initialFetchCount}, now {fetchCount}");
+            await Assert.That(fetchCount).IsEqualTo(initialFetchCount + 1);
         }
     }
 

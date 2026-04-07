@@ -236,7 +236,6 @@ public class ISerializerInterfaceTests
             {
                 // BSON serializers might have limitations with DateTime handling
                 // Just verify that setting the property doesn't throw an exception
-                await Assert.That(true).IsTrue();
                 return;
             }
 
@@ -359,31 +358,20 @@ public class ISerializerInterfaceTests
         }
         catch (Exception ex)
         {
-            // Some serializers may throw for empty bytes, which is also acceptable
-            // Verify it's one of the expected exception types (including inner exceptions)
-            var isExpectedType = ex is ArgumentException
-                || ex is InvalidOperationException
-                || ex is FormatException
-                || ex is Newtonsoft.Json.JsonException
-                || ex is System.Text.Json.JsonException
-                || ex is Newtonsoft.Json.JsonReaderException
-                || ex is Newtonsoft.Json.JsonSerializationException
-                || ex.InnerException is ArgumentException
-                || ex.InnerException is InvalidOperationException
-                || ex.InnerException is FormatException
-                || ex.InnerException is Newtonsoft.Json.JsonException
-                || ex.InnerException is System.Text.Json.JsonException;
+            // Some serializers may throw for empty bytes, which is also acceptable.
+            // Verify the outer or inner exception is one of the expected types.
+            static bool IsExpectedExceptionType(Exception? e) =>
+                e is ArgumentException
+                or InvalidOperationException
+                or FormatException
+                or Newtonsoft.Json.JsonException
+                or System.Text.Json.JsonException
+                or Newtonsoft.Json.JsonReaderException
+                or Newtonsoft.Json.JsonSerializationException;
 
-            // If not an expected type, at least verify we got an exception (empty bytes are problematic)
-            if (!isExpectedType)
-            {
-                // Any exception for empty bytes is acceptable behavior
-                await Assert.That(ex).IsNotNull();
-            }
-            else
-            {
-                await Assert.That(isExpectedType).IsTrue();
-            }
+            await Assert.That(IsExpectedExceptionType(ex) || IsExpectedExceptionType(ex.InnerException))
+                .IsTrue()
+                .Because($"Expected a known exception type but got {ex.GetType().Name}: {ex.Message}");
         }
     }
 

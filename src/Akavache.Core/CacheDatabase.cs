@@ -241,17 +241,18 @@ public static class CacheDatabase
     /// Resets all CacheDatabase state for testing purposes.
     /// Calls Shutdown first, then clears the builder and initialization flag.
     /// </summary>
-    internal static void ResetForTests()
+    internal static async Task ResetForTestsAsync()
     {
         if (_isInitialized)
         {
             try
             {
-                Shutdown().Wait();
+                await Shutdown().LastOrDefaultAsync();
             }
-            catch
+            catch (Exception ex)
             {
-                // Best-effort
+                // Best-effort: shutdown may fail if caches are already disposed
+                System.Diagnostics.Debug.WriteLine($"CacheDatabase.ResetForTests shutdown failed: {ex.Message}");
             }
         }
 

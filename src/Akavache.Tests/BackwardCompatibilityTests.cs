@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for backward compatibility scenarios, especially for mobile platforms.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 public class BackwardCompatibilityTests
 {
     /// <summary>

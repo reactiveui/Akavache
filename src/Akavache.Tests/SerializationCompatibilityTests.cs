@@ -28,14 +28,16 @@ public class SerializationCompatibilityTests
     /// <summary>
     /// Gets all combinations of serializers for cross-compatibility testing.
     /// </summary>
-    /// <returns>All serializer combinations as tuples.</returns>
-    public static IEnumerable<(ISerializer WriteSerializer, ISerializer ReadSerializer)> GetSerializerCombinations()
+    /// <returns>All serializer combinations as tuples wrapped in Func for test isolation.</returns>
+    public static IEnumerable<(Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer)> GetSerializerCombinations()
     {
         foreach (var writeSerializer in Serializers)
         {
             foreach (var readSerializer in Serializers)
             {
-                yield return (writeSerializer, readSerializer);
+                var ws = writeSerializer;
+                var rs = readSerializer;
+                yield return (() => ws, () => rs);
             }
         }
     }
@@ -74,23 +76,25 @@ public class SerializationCompatibilityTests
         }
 
         // Allow for some DateTime precision loss
-        await Assert.That(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds)).IsLessThan(1);
+        await Assert.That(Math.Abs((testObj.Date - deserializedObj!.Date).TotalSeconds)).IsLessThan(1);
     }
 
     /// <summary>
     /// Tests cross-serializer compatibility for all combinations.
     /// </summary>
-    /// <param name="writeSerializer">The writer serializer.</param>
-    /// <param name="readSerializer">The reader serializer.</param>
+    /// <param name="writeSerializerFactory">Factory for the writer serializer.</param>
+    /// <param name="readSerializerFactory">Factory for the reader serializer.</param>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     [MethodDataSource(nameof(GetSerializerCombinations))]
     public async Task CrossSerializerCompatibilityShouldWork(
-        ISerializer writeSerializer,
-        ISerializer readSerializer)
+        Func<ISerializer> writeSerializerFactory,
+        Func<ISerializer> readSerializerFactory)
     {
-        ArgumentNullException.ThrowIfNull(writeSerializer);
-        ArgumentNullException.ThrowIfNull(readSerializer);
+        ArgumentNullException.ThrowIfNull(writeSerializerFactory);
+        ArgumentNullException.ThrowIfNull(readSerializerFactory);
+        var writeSerializer = writeSerializerFactory();
+        var readSerializer = readSerializerFactory();
 
         // Arrange
         var testObj = new TestObject
@@ -111,7 +115,7 @@ public class SerializationCompatibilityTests
 
             using (Assert.Multiple())
             {
-                await Assert.That(deserializedObj.Name).IsEqualTo(testObj.Name);
+                await Assert.That(deserializedObj!.Name).IsEqualTo(testObj.Name);
                 await Assert.That(deserializedObj.Value).IsEqualTo(testObj.Value);
 
                 // Use a tolerance for DateTime comparisons, which is more readable
@@ -264,7 +268,7 @@ public class SerializationCompatibilityTests
                 await Assert.That(retrievedObject).IsNotNull();
                 using (Assert.Multiple())
                 {
-                    await Assert.That(retrievedObject.Name).IsEqualTo(testObject.Name);
+                    await Assert.That(retrievedObject!.Name).IsEqualTo(testObject.Name);
                     await Assert.That(retrievedObject.Value).IsEqualTo(testObject.Value);
                 }
 
@@ -333,7 +337,7 @@ public class SerializationCompatibilityTests
                     await Assert.That(retrievedObject).IsNotNull();
                     using (Assert.Multiple())
                     {
-                        await Assert.That(retrievedObject.Name).IsEqualTo(testObject.Name);
+                        await Assert.That(retrievedObject!.Name).IsEqualTo(testObject.Name);
                         await Assert.That(retrievedObject.Value).IsEqualTo(testObject.Value);
                     }
 
@@ -404,7 +408,7 @@ public class SerializationCompatibilityTests
                 await Assert.That(retrieved).IsNotNull();
                 using (Assert.Multiple())
                 {
-                    await Assert.That(retrieved.Name).IsEqualTo(testObject.Name);
+                    await Assert.That(retrieved!.Name).IsEqualTo(testObject.Name);
                     await Assert.That(retrieved.Value).IsEqualTo(testObject.Value);
                 }
             }
@@ -491,7 +495,7 @@ public class SerializationCompatibilityTests
                 await Assert.That(retrieved).IsNotNull();
                 using (Assert.Multiple())
                 {
-                    await Assert.That(retrieved.Name).IsEqualTo(testObject.Name);
+                    await Assert.That(retrieved!.Name).IsEqualTo(testObject.Name);
                     await Assert.That(retrieved.Value).IsEqualTo(testObject.Value);
                 }
 

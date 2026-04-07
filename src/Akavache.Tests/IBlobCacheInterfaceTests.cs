@@ -26,9 +26,10 @@ public class IBlobCacheInterfaceTests
         var keyNotFoundEx =
             await Assert.ThrowsAsync<KeyNotFoundException>(async () => await keyNotFoundObs.FirstAsync());
 
+        await Assert.That(keyNotFoundEx).IsNotNull();
         using (Assert.Multiple())
         {
-            await Assert.That(keyNotFoundEx.Message).Contains("test_key");
+            await Assert.That(keyNotFoundEx!.Message).Contains("test_key");
             await Assert.That(keyNotFoundEx.Message).Contains("not present in the cache");
         }
 
@@ -39,9 +40,10 @@ public class IBlobCacheInterfaceTests
         var objectDisposedEx =
             await Assert.ThrowsAsync<ObjectDisposedException>(async () => await objectDisposedObs.FirstAsync());
 
+        await Assert.That(objectDisposedEx).IsNotNull();
         using (Assert.Multiple())
         {
-            await Assert.That(objectDisposedEx.Message).Contains("test_cache");
+            await Assert.That(objectDisposedEx!.Message).Contains("test_cache");
             await Assert.That(objectDisposedEx.Message).Contains("disposed");
         }
     }
@@ -336,9 +338,9 @@ public class IBlobCacheInterfaceTests
             }
 
             // Test null collections validation - simplified approach that should work consistently
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await cache.Insert(null!).FirstAsync());
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await cache.Get((string[])null!).ToList().FirstAsync());
 
             // For empty/whitespace string validation, different cache implementations may handle this differently
@@ -447,7 +449,7 @@ public class IBlobCacheInterfaceTests
         await Task.WhenAll(disposeTasks);
 
         // Subsequent operations should throw ObjectDisposedException
-        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.Get("dispose_test").FirstAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.Get("dispose_test").FirstAsync());
     }
 
     /// <summary>
@@ -506,7 +508,7 @@ public class IBlobCacheInterfaceTests
         // GetAll with Type
         var allTypedData = await cache.GetAll(userType).ToList().FirstAsync();
         await Assert.That(allTypedData).IsNotEmpty();
-        await Assert.That(allTypedData.Any(kvp => kvp.Key == "typed_key")).IsTrue();
+        await Assert.That(allTypedData!.Any(kvp => kvp.Key == "typed_key")).IsTrue();
 
         // Bulk Insert with Type
         var bulkData = new Dictionary<string, byte[]>
@@ -649,7 +651,6 @@ public class IBlobCacheInterfaceTests
             await cache.Invalidate(emptyKeys).FirstAsync();
 
             // These operations should complete without error
-            await Assert.That(true).IsTrue();
         }
         finally
         {

@@ -96,27 +96,13 @@ public sealed class TestHttpServer : IDisposable
 
     private static string FindAvailablePort()
     {
-        for (var port = 8999; port <= 9099; port++)
-        {
-            try
-            {
-                var testListener = new HttpListener();
-                var url = $"http://localhost:{port}/";
-                testListener.Prefixes.Add(url);
-                testListener.Start();
-                testListener.Stop();
-                testListener.Close();
-                return url;
-            }
-            catch (Exception)
-            {
-                // Port is not available, try next one
-                continue;
-            }
-        }
-
-        // Fallback to original port if nothing else works
-        return "http://localhost:8999/";
+        // Use TcpListener with port 0 to let the OS assign a free port,
+        // then immediately release it and use that port for HttpListener.
+        var tcpListener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        tcpListener.Start();
+        var port = ((System.Net.IPEndPoint)tcpListener.LocalEndpoint).Port;
+        tcpListener.Stop();
+        return $"http://localhost:{port}/";
     }
 
     private async Task ProcessRequestsAsync(CancellationToken cancellationToken)

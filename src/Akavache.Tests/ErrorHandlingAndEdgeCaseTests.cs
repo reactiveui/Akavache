@@ -33,11 +33,11 @@ public class ErrorHandlingAndEdgeCaseTests
         await cache.DisposeAsync();
 
         // Act & Assert - operations on disposed cache should throw ObjectDisposedException
-        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.GetObject<string>("test").FirstAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.GetObject<string>("test").FirstAsync());
 
-        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InsertObject("new", "value").FirstAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InsertObject("new", "value").FirstAsync());
 
-        Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InvalidateObject<string>("test").FirstAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await cache.InvalidateObject<string>("test").FirstAsync());
     }
 
     /// <summary>
@@ -122,9 +122,9 @@ public class ErrorHandlingAndEdgeCaseTests
         try
         {
             // Test null key validation - this should always throw ArgumentNullException
-            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InsertObject(null!, "value").FirstAsync());
-            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObject<string>(null!).FirstAsync());
-            Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObject<string>(null!).FirstAsync());
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InsertObject(null!, "value").FirstAsync());
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.GetObject<string>(null!).FirstAsync());
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InvalidateObject<string>(null!).FirstAsync());
 
             // Test various edge case keys - InMemoryBlobCache may allow these
             string[] edgeCaseKeys =
@@ -278,7 +278,7 @@ public class ErrorHandlingAndEdgeCaseTests
                         await cache.InvalidateObject<string>(key).FirstAsync();
 
                         // Verify invalidation
-                        Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>(key).FirstAsync());
+                        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>(key).FirstAsync());
                     }
                 }));
             }
@@ -313,7 +313,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await cache.InsertObject("expired_key", "expired_value", pastExpiration).FirstAsync();
 
             // Should be expired immediately
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("expired_key").FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("expired_key").FirstAsync());
 
             // Test far future expiration
             var farFutureExpiration = DateTimeOffset.Now.AddYears(100);
@@ -328,7 +328,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
             // MinValue expiration (should be expired)
             await cache.InsertObject("min_expiration", "min_value", minExpiration).FirstAsync();
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("min_expiration").FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("min_expiration").FirstAsync());
 
             // MaxValue expiration (should be valid)
             await cache.InsertObject("max_expiration", "max_value", maxExpiration).FirstAsync();
@@ -347,7 +347,7 @@ public class ErrorHandlingAndEdgeCaseTests
             await Task.Delay(200);
 
             // Should now be expired
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("short_expiration").FirstAsync());
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<string>("short_expiration").FirstAsync());
         }
         finally
         {
@@ -467,7 +467,7 @@ public class ErrorHandlingAndEdgeCaseTests
             // Verify all objects were invalidated
             for (var i = 0; i < objectCount; i++)
             {
-                Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>($"user_{i}").FirstAsync());
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetObject<UserObject>($"user_{i}").FirstAsync());
             }
         }
         finally

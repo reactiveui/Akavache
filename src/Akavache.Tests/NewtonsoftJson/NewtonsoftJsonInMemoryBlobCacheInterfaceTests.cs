@@ -8,6 +8,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for the <see cref="InMemoryBlobCache"/> class interface implementation.
 /// </summary>
+[InheritsTests]
 public class NewtonsoftJsonInMemoryBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>

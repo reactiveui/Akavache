@@ -11,7 +11,6 @@ namespace Akavache.Tests;
 /// Tests for core utility functionality.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 public class CoreUtilityTests
 {
     /// <summary>
@@ -245,7 +244,7 @@ public class CoreUtilityTests
             await keyNotFoundObs.FirstAsync();
         });
 
-        await Assert.That(keyNotFoundEx.Message).Contains("test_key");
+        await Assert.That(keyNotFoundEx!.Message).Contains("test_key");
         await Assert.That(keyNotFoundEx.Message).Contains("not present in the cache");
 
         // Test ObjectDisposedException helper
@@ -256,7 +255,7 @@ public class CoreUtilityTests
             await objectDisposedObs.FirstAsync();
         });
 
-        await Assert.That(objectDisposedEx.Message).Contains("test_cache");
+        await Assert.That(objectDisposedEx!.Message).Contains("test_cache");
         await Assert.That(objectDisposedEx.Message).Contains("disposed");
     }
 

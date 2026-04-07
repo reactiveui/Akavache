@@ -17,7 +17,6 @@ namespace Akavache.Tests;
 /// Uses a local test server instead of external dependencies for reliable offline testing.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA1001:Types that own disposable fields should be disposable", Justification = "Cleanup is handled via test hooks")]
 public class DownloadUrlExtensionsTests
 {

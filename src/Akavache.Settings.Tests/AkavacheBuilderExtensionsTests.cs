@@ -17,7 +17,6 @@ namespace Akavache.Settings.Tests;
 /// and the IBlobCache-based settings store overloads.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 [TestExecutor<AkavacheTestExecutor>]
 public class AkavacheBuilderExtensionsTests
 {
@@ -61,9 +60,10 @@ public class AkavacheBuilderExtensionsTests
                 Directory.Delete(_cacheRoot, recursive: true);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // Best-effort: don't fail tests on IO cleanup.
+            System.Diagnostics.Debug.WriteLine(ex.Message);
         }
     }
 
@@ -277,14 +277,17 @@ public class AkavacheBuilderExtensionsTests
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
+        await Assert.That(instance).IsNotNull();
+        var akavacheInstance = instance!;
+
         // Null out the serializer type name so Serializer resolves to null
-        var builder = (AkavacheBuilder)instance!;
+        var builder = (AkavacheBuilder)akavacheInstance;
         var savedTypeName = builder.SerializerTypeName;
         builder.SerializerTypeName = null;
 
         try
         {
-            var action = () => instance.GetSecureSettingsStore<ViewSettings>("password");
+            var action = () => akavacheInstance.GetSecureSettingsStore<ViewSettings>("password");
             await Assert.That(action).ThrowsExactly<InvalidOperationException>();
         }
         finally
@@ -316,13 +319,16 @@ public class AkavacheBuilderExtensionsTests
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-        var builder = (AkavacheBuilder)instance!;
+        await Assert.That(instance).IsNotNull();
+        var akavacheInstance = instance!;
+
+        var builder = (AkavacheBuilder)akavacheInstance;
         var savedTypeName = builder.SerializerTypeName;
         builder.SerializerTypeName = null;
 
         try
         {
-            var action = () => instance.GetSettingsStore<ViewSettings>();
+            var action = () => akavacheInstance.GetSettingsStore<ViewSettings>();
             await Assert.That(action).ThrowsExactly<InvalidOperationException>();
         }
         finally
@@ -548,9 +554,10 @@ public class AkavacheBuilderExtensionsTests
 
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -589,9 +596,10 @@ public class AkavacheBuilderExtensionsTests
                             await viewSettings.DisposeAsync().ConfigureAwait(false);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -626,9 +634,10 @@ public class AkavacheBuilderExtensionsTests
                     {
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -727,9 +736,10 @@ public class AkavacheBuilderExtensionsTests
 
                         await instance.DeleteSettingsStore<ViewSettings>(customName).ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -759,7 +769,7 @@ public class AkavacheBuilderExtensionsTests
                 instance =>
                 {
                     // Verify a store was registered even with null action
-                    var loaded = instance.GetLoadedSettingsStore<ViewSettings>();
+                    instance.GetLoadedSettingsStore<ViewSettings>();
                     instance.DeleteSettingsStore<ViewSettings>().GetAwaiter().GetResult();
                 })
             .Build();
@@ -794,9 +804,10 @@ public class AkavacheBuilderExtensionsTests
                     {
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -832,9 +843,10 @@ public class AkavacheBuilderExtensionsTests
                     {
                         await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         // Swallow cleanup issues.
+                        System.Diagnostics.Debug.WriteLine(ex.Message);
                     }
                 }
             });
@@ -870,9 +882,10 @@ public class AkavacheBuilderExtensionsTests
                 {
                     Directory.Delete(fakePath, recursive: true);
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Best-effort cleanup.
+                    System.Diagnostics.Debug.WriteLine(ex.Message);
                 }
             });
 

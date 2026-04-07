@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for the UpdateExpiration functionality across all IBlobCache implementations.
 /// </summary>
-[NotInParallel]
 public class UpdateExpirationTests : IDisposable
 {
     private bool _disposed;
@@ -49,7 +48,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after UpdateExpiration");
+            await Assert.That(retrievedData).IsEqualTo(originalData);
         }
     }
 
@@ -84,7 +83,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after UpdateExpiration with type");
+            await Assert.That(retrievedData).IsEqualTo(originalData);
         }
     }
 
@@ -124,7 +123,7 @@ public class UpdateExpirationTests : IDisposable
             for (var i = 0; i < keys.Length; i++)
             {
                 var retrievedData = await fixture.GetObject<string>(keys[i]);
-                await Assert.That(retrievedData).IsEqualTo(originalData[i], $"Data for key {keys[i]} should remain unchanged after UpdateExpiration");
+                await Assert.That(retrievedData).IsEqualTo(originalData[i]);
             }
         }
     }
@@ -160,7 +159,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after UpdateExpiration with TimeSpan");
+            await Assert.That(retrievedData).IsEqualTo(originalData);
         }
     }
 
@@ -231,7 +230,7 @@ public class UpdateExpirationTests : IDisposable
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
-            await Assert.That(retrievedData).IsEqualTo(originalData, "Data should remain unchanged after removing expiration");
+            await Assert.That(retrievedData).IsEqualTo(originalData);
         }
     }
 

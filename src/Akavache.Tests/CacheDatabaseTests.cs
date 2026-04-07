@@ -12,7 +12,6 @@ namespace Akavache.Tests;
 /// Tests for CacheDatabase functionality and global configuration.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel]
 public class CacheDatabaseTests
 {
     /// <summary>

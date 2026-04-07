@@ -23,22 +23,22 @@ public class AkavacheTestExecutor : ITestExecutor
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        ResetState();
+        await ResetStateAsync().ConfigureAwait(false);
 
         try
         {
-            await action();
+            await action().ConfigureAwait(false);
         }
         finally
         {
-            ResetState();
+            await ResetStateAsync().ConfigureAwait(false);
         }
     }
 
-    private static void ResetState()
+    private static async Task ResetStateAsync()
     {
-        // Reset CacheDatabase completely (shutdown + clear static state)
-        CacheDatabase.ResetForTests();
+        // Reset CacheDatabase completely (async shutdown + clear static state)
+        await CacheDatabase.ResetForTestsAsync().ConfigureAwait(false);
 
         // Reset Akavache builder static state (settings stores and blob caches)
         AkavacheBuilder.SettingsStores = [];
@@ -52,9 +52,10 @@ public class AkavacheTestExecutor : ITestExecutor
                 AppLocator.CurrentMutable.UnregisterAll(typeof(ISerializer));
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Best-effort
+            // Best-effort: serializer cleanup may fail if no container is configured
+            System.Diagnostics.Debug.WriteLine(ex.Message);
         }
 
         AppBuilder.ResetBuilderStateForTests();

@@ -14,7 +14,6 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
-[NotInParallel]
 public abstract class DateTimeTestBase : IDisposable
 {
     private bool _disposed;

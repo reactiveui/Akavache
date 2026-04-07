@@ -10,6 +10,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for the <see cref="SqliteBlobCache"/> class interface implementation.
 /// </summary>
+[InheritsTests]
 public class SqliteBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc />
