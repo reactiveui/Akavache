@@ -313,10 +313,13 @@ public static class AkavacheBuilderExtensions
 
         var key = overrideDatabaseName ?? typeof(T).Name;
 
-        AkavacheBuilder.BlobCaches[key] = cache;
+        // Validate database name to prevent path traversal attacks
+        var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
+
+        AkavacheBuilder.BlobCaches[validatedKey] = cache;
 
         var viewSettings = new T();
-        AkavacheBuilder.SettingsStores[key] = viewSettings;
+        AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }
 }

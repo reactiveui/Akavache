@@ -49,11 +49,11 @@ try
         try
         {
             var count = await readerCache.Connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM \"{t.Name}\"");
-            Console.WriteLine($" � {t.Name} (rows={count})");
+            Console.WriteLine($" -{t.Name} (rows={count})");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($" � {t.Name} (count error: {ex.Message})");
+            Console.WriteLine($" -{t.Name} (count error: {ex.Message})");
         }
     }
 
@@ -66,7 +66,7 @@ try
             var cols = await readerCache.Connection.QueryAsync<PragmaRow>("PRAGMA table_info('CacheElement')");
             foreach (var c in cols)
             {
-                Console.WriteLine($" � {c.Name} (type={c.Type})");
+                Console.WriteLine($" -{c.Name} (type={c.Type})");
             }
         }
         catch (Exception ex)
