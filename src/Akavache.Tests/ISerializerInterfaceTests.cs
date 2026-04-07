@@ -351,10 +351,8 @@ public class ISerializerInterfaceTests
         // Act & Assert - This may throw or return null depending on serializer
         try
         {
-            var result = serializer.Deserialize<string>(emptyBytes);
-
-            // Some serializers may return null for empty bytes, which is acceptable
-            await Assert.That(result).IsNull().Or.IsTypeOf<string>();
+            // Deserialize<string> may return null or a string for empty bytes - both are acceptable
+            serializer.Deserialize<string>(emptyBytes);
         }
         catch (Exception ex)
         {

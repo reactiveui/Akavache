@@ -98,7 +98,7 @@ public sealed class TestHttpServer : IDisposable
     {
         // Use TcpListener with port 0 to let the OS assign a free port,
         // then immediately release it and use that port for HttpListener.
-        var tcpListener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        using var tcpListener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
         tcpListener.Start();
         var port = ((System.Net.IPEndPoint)tcpListener.LocalEndpoint).Port;
         tcpListener.Stop();
