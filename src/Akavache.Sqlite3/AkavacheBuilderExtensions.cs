@@ -166,6 +166,12 @@ public static class AkavacheBuilderExtensions
             throw new InvalidOperationException("Failed to determine a valid cache directory.");
         }
 
+        // Ensure the cache directory exists (legacy paths may not be pre-created)
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
         var filePath = Path.Combine(directory, $"{validatedName}.db");
 
         // Resolve the serializer from the service locator to ensure proper lifecycle management
