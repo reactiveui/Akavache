@@ -89,7 +89,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .Throttle(TimeSpan.FromMilliseconds(300))
             .SelectMany(static _ => TodoCacheService.GetTodoStats())
             .Catch(Observable.Return(new TodoStats()))
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .ToProperty(this, static x => x.TodoStats);
 
         // Setup cache info with reduced frequency and better error handling
@@ -108,7 +108,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                     LastChecked = DateTimeOffset.Now
                 });
             })
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .ToProperty(this, static x => x.CacheInfo);
 
         // Setup activator for proper lifecycle management
@@ -258,7 +258,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
         // Timer to refresh time-dependent properties (IsOverdue, IsDueSoon) every minute
         Observable.Timer(TimeSpan.Zero, TimeSpan.FromMinutes(1))
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(_ =>
             {
                 // Trigger property notifications for all todos to refresh time-dependent UI
@@ -291,7 +291,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                         // Subscribe to completion status changes with immediate response
                         todoVm.WhenAnyValue(x => x.TodoItem.IsCompleted)
                             .Skip(1) // Skip initial value
-                            .ObserveOn(RxApp.MainThreadScheduler)
+                            .ObserveOn(RxSchedulers.MainThreadScheduler)
                             .Subscribe(isCompleted =>
                             {
                                 // Save the updated todo to cache immediately
@@ -321,7 +321,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
         // Subscribe to notifications with timestamp-based deduplication
         _notificationService.ReminderNotifications
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(todo =>
             {
                 var timestamp = DateTimeOffset.Now.ToString("HH:mm:ss");
@@ -405,7 +405,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> LoadTodos() => TodoCacheService.GetAllTodos()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Do(todos =>
             {
                 if (todos == null || todos.Count == 0)
@@ -442,7 +442,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     private IObservable<Unit> LoadSettings() => TodoCacheService.GetSettings()
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Do(settings => Settings = settings)
             .Select(_ => Unit.Default);
 
@@ -543,10 +543,10 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 // Notify that DatePicker should reset
                 this.RaisePropertyChanged(nameof(NewTodoDueDate));
             }),
-            RxApp.MainThreadScheduler)
+            RxSchedulers.MainThreadScheduler)
         .SelectMany(_ => SaveCurrentTodos())
         .SelectMany(_ => _notificationService.ScheduleReminder(newTodo))
-        .ObserveOn(RxApp.MainThreadScheduler)
+        .ObserveOn(RxSchedulers.MainThreadScheduler)
         .Do(_ =>
         {
             StatusMessage = $"Added todo: {newTodo.Title}" + (dueDate.HasValue ? $" (Due: {dueDate.Value:MMM dd, yyyy HH:mm})" : " (No due date)");

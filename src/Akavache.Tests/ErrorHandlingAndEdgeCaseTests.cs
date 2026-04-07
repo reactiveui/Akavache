@@ -65,7 +65,7 @@ public class ErrorHandlingAndEdgeCaseTests
             using (Assert.Multiple())
             {
                 await Assert.That(retrieved).IsEqualTo(largeData);
-                await Assert.That(retrieved!).Length().EqualTo(10_000_000);
+                await Assert.That(retrieved!).Length().IsEqualTo(10_000_000);
             }
         }
         finally

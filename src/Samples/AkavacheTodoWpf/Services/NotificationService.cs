@@ -38,7 +38,7 @@ public class NotificationService : ReactiveObject, IDisposable
         // Setup cache info
         _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
             .SelectMany(_ => TodoCacheService.GetCacheInfo())
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .ToProperty(this, x => x.CacheInfo, new CacheInfo());
     }
 
