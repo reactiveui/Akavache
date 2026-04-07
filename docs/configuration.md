@@ -89,14 +89,12 @@ AppBuilder.CreateSplatBuilder()
 ### 4. Custom Cache Instances
 
 ```csharp
-// Advanced: Custom cache directory and configuration
+// Advanced: Custom cache with manual instance creation
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
         builder.WithApplicationName("MyApp")
                .WithSqliteProvider()
-               .WithCacheDirectory("/custom/path")
-               .WithConnectionPooling(true)
-               .WithVacuumOnStartup(true));
+               .WithSqliteDefaults());
 ```
 
 #### Manual Instance Creation (advanced scenarios)
@@ -207,37 +205,6 @@ public class CustomCacheManager
 }
 ```
 
-## Advanced Configuration Options
-
-### Connection Pooling
-```csharp
-builder.WithSqliteProvider()
-       .WithConnectionPooling(true)
-       .WithMaxPoolSize(10);
-```
-
-### Custom Cache Directory
-```csharp
-builder.WithSqliteProvider()
-       .WithCacheDirectory("/custom/cache/path")
-       .WithSqliteDefaults();
-```
-
-### Vacuum and Maintenance
-```csharp
-builder.WithSqliteProvider()
-       .WithVacuumOnStartup(true)
-       .WithAutoVacuum(true)
-       .WithSqliteDefaults();
-```
-
-### Custom SQLite Flags
-```csharp
-builder.WithSqliteProvider()
-       .WithSqliteOpenFlags(SQLiteOpenFlags.ReadWriteCreate | SQLiteOpenFlags.FullMutex)
-       .WithSqliteDefaults();
-```
-
 ## Serializer Configuration
 
 ### System.Text.Json Configuration
@@ -274,36 +241,6 @@ var settings = new JsonSerializerSettings
 };
 
 var serializer = new NewtonsoftJsonSerializer(settings);
-```
-
-## Platform-Specific Configuration
-
-### Mobile Applications (iOS/Android)
-```csharp
-AppBuilder.CreateSplatBuilder()
-    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-        builder.WithApplicationName("MyMobileApp")
-               .WithSqliteProvider()
-               .WithMobileDefaults()); // Mobile-optimized settings
-```
-
-### Desktop Applications
-```csharp
-AppBuilder.CreateSplatBuilder()
-    .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-        builder.WithApplicationName("MyDesktopApp")
-               .WithSqliteProvider()
-               .WithDesktopDefaults()); // Desktop-optimized settings
-```
-
-### Web Applications
-```csharp
-// In ConfigureServices
-services.AddSplat(builder =>
-    builder.WithAkavacheCacheDatabase<SystemJsonSerializer>(cacheBuilder =>
-        cacheBuilder.WithApplicationName("MyWebApp")
-                   .WithSqliteProvider()
-                   .WithWebDefaults())); // Web-optimized settings
 ```
 
 ## Dependency Injection Pattern
@@ -466,19 +403,16 @@ else
 
 ### Testing Configuration
 ```csharp
-// Use a separate test database
+// Use in-memory caches for testing
 builder.WithApplicationName("MyApp-Test")
-       .WithSqliteProvider()
-       .WithCacheDirectory(Path.GetTempPath())
-       .WithSqliteDefaults();
+       .WithInMemoryProvider()
+       .WithInMemoryDefaults();
 ```
 
 ### Production Configuration
 ```csharp
 builder.WithApplicationName("MyApp")
        .WithEncryptedSqliteProvider()   // Security for production
-       .WithConnectionPooling(true)     // Performance optimization
-       .WithVacuumOnStartup(true)      // Maintenance
        .WithSqliteDefaults();
 ```
 
