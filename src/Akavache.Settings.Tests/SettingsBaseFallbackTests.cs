@@ -204,7 +204,7 @@ public class SettingsBaseFallbackTests
         where TSerializer : class, ISerializer, new() =>
         _appBuilder
             .WithAkavache<TSerializer>(
-                applicationName,
+                applicationName!,
                 builder =>
                 {
                     // base config

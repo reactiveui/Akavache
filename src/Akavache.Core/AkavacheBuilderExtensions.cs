@@ -3,8 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#if NET6_0_OR_GREATER
 using System.IO;
 
 #endif
@@ -27,13 +27,14 @@ public static class AkavacheBuilderExtensions
     /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
     /// <param name="builder">The Splat application builder to configure.</param>
     /// <param name="configure">An action to configure the Akavache builder settings.</param>
-    /// <param name="applicationName">The name of the application for cache directory paths.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths. Must not be null or whitespace.</param>
     /// <returns>The configured Splat application builder for method chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Action<IAkavacheBuilder> configure, string? applicationName = null)
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Action<IAkavacheBuilder> configure, string applicationName)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -53,13 +54,14 @@ public static class AkavacheBuilderExtensions
     /// <param name="builder">The Splat application builder to configure.</param>
     /// <param name="configureSerializer">A function that creates and configures the serializer instance.</param>
     /// <param name="configure">An action to configure the Akavache builder settings.</param>
-    /// <param name="applicationName">The name of the application for cache directory paths.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths. Must not be null or whitespace.</param>
     /// <returns>The configured Splat application builder for method chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string? applicationName = null)
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string applicationName)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -73,18 +75,18 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes the CacheDatabase with default in-memory caches.
-    /// This is the safest default configuration as it does not require any additional packages.
+    /// Initializes the CacheDatabase with default in-memory caches and a required application name.
     /// </summary>
     /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
     /// <param name="builder">The Splat application builder to configure.</param>
-    /// <param name="applicationName">The name of the application for cache directory paths. If null, uses the current ApplicationName.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths. Must not be null or whitespace.</param>
     /// <returns>The configured Splat application builder for method chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, string? applicationName = null)
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, string applicationName)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -98,19 +100,20 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes the CacheDatabase with default in-memory caches and a custom serializer configuration.
-    /// This is a safe default configuration that does not require any additional packages.
+    /// Initializes the CacheDatabase with default in-memory caches, a required application name,
+    /// and a custom serializer configuration.
     /// </summary>
     /// <typeparam name="T">The type of serializer to use for cache operations.</typeparam>
     /// <param name="builder">The Splat application builder to configure.</param>
     /// <param name="configureSerializer">A function that creates and configures the serializer instance.</param>
-    /// <param name="applicationName">The name of the application for cache directory paths. If null, uses the current ApplicationName.</param>
+    /// <param name="applicationName">The name of the application for cache directory paths. Must not be null or whitespace.</param>
     /// <returns>The configured Splat application builder for method chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, string? applicationName = null)
+    public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, string applicationName)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -124,27 +127,22 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with a custom builder configuration.
+    /// Initializes CacheDatabase with a custom builder configuration and a required application name.
     /// </summary>
     /// <typeparam name="T">The type of Serializer.</typeparam>
     /// <param name="builder">The builder.</param>
-    /// <param name="applicationName">Name of the application.</param>
+    /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
     /// <param name="configure">An action to configure the CacheDatabase builder.</param>
     /// <param name="instance">The instance.</param>
     /// <returns>
     /// The configured builder.
     /// </returns>
-    /// <exception cref="ArgumentNullException">builder
-    /// or
-    /// configure
-    /// or
-    /// instance.</exception>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configure"/>, or <paramref name="instance"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
-
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -162,8 +160,7 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(instance));
         }
 
-        var akavacheBuilder = CacheDatabase.CreateBuilder()
-            .WithApplicationName(applicationName)
+        var akavacheBuilder = CacheDatabase.CreateBuilder(applicationName)
             .WithSerializer<T>();
         configure(akavacheBuilder);
         instance(akavacheBuilder.Build());
@@ -171,26 +168,22 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with a custom builder configuration.
+    /// Initializes CacheDatabase with a custom builder configuration and a required application name.
     /// </summary>
     /// <typeparam name="T">The type of Serializer.</typeparam>
     /// <param name="builder">The builder.</param>
-    /// <param name="applicationName">Name of the application.</param>
+    /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
     /// <param name="configure">An action to configure the CacheDatabase builder.</param>
     /// <param name="instance">The instance.</param>
     /// <returns>
     /// The configured builder.
     /// </returns>
-    /// <exception cref="ArgumentNullException">builder
-    /// or
-    /// configure
-    /// or
-    /// instance.</exception>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/>, <paramref name="configure"/>, or <paramref name="instance"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IAkavacheBuilder> configure, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IAkavacheBuilder> configure, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -208,8 +201,7 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(instance));
         }
 
-        var akavacheBuilder = CacheDatabase.CreateBuilder()
-            .WithApplicationName(applicationName)
+        var akavacheBuilder = CacheDatabase.CreateBuilder(applicationName)
             .WithSerializer<T>();
         configure(akavacheBuilder);
 
@@ -217,21 +209,21 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with a set of default in-memory caches.
-    /// This is the safest default as it doesn't require any additional packages.
+    /// Initializes CacheDatabase with a set of default in-memory caches and a required application name.
     /// </summary>
     /// <typeparam name="T">The type of Serializer.</typeparam>
     /// <param name="builder">The builder.</param>
-    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
+    /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
     /// <param name="instance">The instance created.</param>
     /// <returns>
     /// A BlobCache builder for further configuration.
     /// </returns>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="instance"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IAkavacheInstance> instance)
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -244,8 +236,7 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(instance));
         }
 
-        instance(CacheDatabase.CreateBuilder()
-            .WithApplicationName(applicationName)
+        instance(CacheDatabase.CreateBuilder(applicationName)
             .WithSerializer<T>()
             .WithInMemoryDefaults().Build());
 
@@ -253,21 +244,21 @@ public static class AkavacheBuilderExtensions
     }
 
     /// <summary>
-    /// Initializes CacheDatabase with a set of default in-memory caches.
-    /// This is the safest default as it doesn't require any additional packages.
+    /// Initializes CacheDatabase with a set of default in-memory caches and a required application name.
     /// </summary>
     /// <typeparam name="T">The type of Serializer.</typeparam>
     /// <param name="builder">The builder.</param>
-    /// <param name="applicationName">The application name for cache directories. If null, uses the current ApplicationName.</param>
+    /// <param name="applicationName">The application name for cache directory paths. Must not be null or whitespace.</param>
     /// <param name="instance">The instance created.</param>
     /// <returns>
     /// A BlobCache builder for further configuration.
     /// </returns>
-    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="instance"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
 #if NET6_0_OR_GREATER
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
-    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string? applicationName, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
+    public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
         where T : ISerializer, new()
     {
         if (builder == null)
@@ -280,8 +271,7 @@ public static class AkavacheBuilderExtensions
             throw new ArgumentNullException(nameof(instance));
         }
 
-        return builder.WithCustomRegistration(splat => instance(splat, CacheDatabase.CreateBuilder()
-            .WithApplicationName(applicationName)
+        return builder.WithCustomRegistration(splat => instance(splat, CacheDatabase.CreateBuilder(applicationName)
             .WithSerializer<T>()
             .WithInMemoryDefaults().Build()));
     }
@@ -344,6 +334,7 @@ public static class AkavacheBuilderExtensions
     /// Application name cannot be null or empty. - ApplicationName.
     /// </exception>
 #endif
+    [ExcludeFromCodeCoverage]
     public static string? GetIsolatedCacheDirectory(this IAkavacheInstance builder, string cacheName)
     {
         // Ensure the builder is not null
@@ -427,6 +418,7 @@ public static class AkavacheBuilderExtensions
     /// or
     /// Application name cannot be null or empty. - ApplicationName.
     /// </exception>
+    [ExcludeFromCodeCoverage]
     public static string? GetLegacyCacheDirectory(this IAkavacheInstance builder, string cacheName)
     {
         if (builder == null)
@@ -523,7 +515,7 @@ public static class AkavacheBuilderExtensions
     }
 
 #if IOS || MACCATALYST
-    private static string CreateAppDirectory(NSSearchPathDirectory targetDir, string applicationName, string subDir = "BlobCache")
+    internal static string CreateAppDirectory(NSSearchPathDirectory targetDir, string applicationName, string subDir = "BlobCache")
     {
         using var fm = new NSFileManager();
         var url = fm.GetUrl(targetDir, NSSearchPathDomain.All, null, true, out _) ?? throw new DirectoryNotFoundException();

@@ -328,7 +328,7 @@ public class SettingsCacheTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -357,7 +357,7 @@ public class SettingsCacheTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null, // Don't set via parameter
+                applicationName: "Akavache", // Don't set via parameter
                 builder =>
                 {
                     builder
@@ -394,7 +394,7 @@ public class SettingsCacheTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null, // No custom application name
+                applicationName: "Akavache", // No custom application name
                 builder =>
                 {
                     builder.WithSqliteProvider();
@@ -437,7 +437,7 @@ public class SettingsCacheTests
         where TSerializer : class, ISerializer, new() =>
         _appBuilder
             .WithAkavache<TSerializer>(
-                applicationName,
+                applicationName!,
                 builder =>
                 {
                     // base config

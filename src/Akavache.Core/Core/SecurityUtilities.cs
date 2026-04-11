@@ -35,12 +35,6 @@ internal static class SecurityUtilities
 
         var normalizedName = cacheName.Trim();
 
-        // Check for empty after trimming
-        if (string.IsNullOrEmpty(normalizedName))
-        {
-            throw new ArgumentException("Cache name cannot be null or empty.", parameterName);
-        }
-
         // Check for invalid filename characters first
         if (normalizedName.IndexOfAny(_invalidFileNameChars) >= 0)
         {
@@ -84,12 +78,6 @@ internal static class SecurityUtilities
         }
 
         var normalizedName = applicationName.Trim();
-
-        // Check for empty after trimming
-        if (string.IsNullOrEmpty(normalizedName))
-        {
-            throw new ArgumentException("Application name cannot be null or empty.", parameterName);
-        }
 
         // Check for path traversal sequences
         if (normalizedName.Contains("..") || normalizedName.Contains("/") || normalizedName.Contains("\\"))

@@ -3,9 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Akavache.Helpers;
 using Akavache.Settings;
 using Splat;
 
@@ -16,50 +15,37 @@ namespace Akavache.Core;
 /// </summary>
 internal class AkavacheBuilder : IAkavacheBuilder
 {
+#if NET9_0_OR_GREATER
+    private static readonly System.Threading.Lock _lock = new();
+#else
     private static readonly object _lock = new();
+#endif
     private string? _settingsCachePath;
     private FileLocationOption _fileLocationOption;
+    private Assembly? _explicitExecutingAssembly;
 
-    [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AkavacheBuilder"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Sets <see cref="ApplicationRootPath"/> to the parent of
+    /// <see cref="AppContext.BaseDirectory"/> and leaves
+    /// <see cref="IAkavacheInstance.ExecutingAssembly"/>,
+    /// <see cref="IAkavacheInstance.ExecutingAssemblyName"/>, and
+    /// <see cref="IAkavacheInstance.Version"/> at their sentinel defaults. Callers
+    /// that need assembly metadata must call
+    /// <see cref="WithExecutingAssembly(Assembly)"/> with a caller-owned
+    /// <see cref="Assembly"/> reference — the AOT-safe path.
+    /// </remarks>
+    /// <param name="fileLocationOption">The file location strategy.</param>
     public AkavacheBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default)
     {
         _fileLocationOption = fileLocationOption;
-        try
-        {
-            ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
-            string? fileLocation = null;
-            try
-            {
-                fileLocation = ExecutingAssembly.Location;
-            }
-            catch
-            {
-            }
-
-            if (string.IsNullOrWhiteSpace(fileLocation))
-            {
-                fileLocation = AppContext.BaseDirectory;
-            }
-
-            ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
-
-            // Additional validation before calling FileVersionInfo.GetVersionInfo to prevent Android crashes
-            if (!string.IsNullOrWhiteSpace(fileLocation) && File.Exists(fileLocation))
-            {
-                var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
-                Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
-            }
-        }
-        catch
-        {
-            // Ignore exceptions and leave Version and ApplicationRootPath as null
-        }
-
-        // SettingsCachePath will be computed lazily when first accessed to ensure ApplicationName is properly set
+        ApplicationRootPath = Path.Combine(AppContext.BaseDirectory, "..");
     }
 
     /// <inheritdoc />
-    public Assembly ExecutingAssembly => Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+    public Assembly ExecutingAssembly => _explicitExecutingAssembly ?? typeof(AkavacheBuilder).Assembly;
 
     /// <inheritdoc />
     public string ApplicationName { get; private set; } = "Akavache";
@@ -85,10 +71,10 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
-    public string? ExecutingAssemblyName { get; }
+    public string? ExecutingAssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public Version? Version { get; }
+    public Version? Version { get; private set; }
 
     /// <inheritdoc />
     public IBlobCache? InMemory { get; private set; }
@@ -144,12 +130,30 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheBuilder WithApplicationName(string? applicationName)
     {
-        if (string.IsNullOrWhiteSpace(applicationName))
+        // Null or whitespace is treated as a no-op so the default "Akavache" value
+        // (set by the constructor) stays in place. The strict path — require a real
+        // application name — lives on CacheDatabase.CreateBuilder(string) /
+        // CacheDatabase.Initialize<T>(string), which throw on null/whitespace.
+        // The null check is split out from the whitespace check so the compiler
+        // flow-tracks non-nullness on every TFM (string.IsNullOrWhiteSpace only
+        // carries [NotNullWhen(false)] on net6+).
+        if (applicationName is null || string.IsNullOrWhiteSpace(applicationName))
         {
             return this;
         }
 
-        ApplicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
+        ApplicationName = applicationName;
+        return this;
+    }
+
+    /// <inheritdoc />
+    public IAkavacheBuilder WithExecutingAssembly(Assembly assembly)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(assembly);
+
+        _explicitExecutingAssembly = assembly;
+        ExecutingAssemblyName = assembly.GetName().Name;
+        Version = ReadFileVersion(assembly);
         return this;
     }
 
@@ -198,12 +202,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
-#if NET6_0_OR_GREATER
-    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public IAkavacheBuilder WithSerializer<T>()
-#else
-    public IAkavacheBuilder WithSerializer<T>()
-#endif
         where T : ISerializer, new()
     {
         var serializerType = typeof(T);
@@ -221,12 +220,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
-#if NET6_0_OR_GREATER
-    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-#else
-    public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-#endif
         where T : ISerializer
     {
         var serializerType = typeof(T);
@@ -267,7 +261,29 @@ internal class AkavacheBuilder : IAkavacheBuilder
         return this;
     }
 
-    private void ApplyForcedDateTimeKind(IBlobCache cache)
+    /// <summary>
+    /// Reads and parses the <see cref="AssemblyFileVersionAttribute"/> from
+    /// <paramref name="assembly"/> into a <see cref="System.Version"/>.
+    /// </summary>
+    /// <remarks>
+    /// Returns <see langword="null"/> if the attribute is missing or its value
+    /// cannot be parsed. The assembly reference is caller-owned so there is no
+    /// reflection-based discovery involved.
+    /// </remarks>
+    /// <param name="assembly">The caller-supplied assembly.</param>
+    /// <returns>The parsed version, or <see langword="null"/>.</returns>
+    internal static Version? ReadFileVersion(Assembly assembly)
+    {
+        var versionAttr = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
+        if (versionAttr is null)
+        {
+            return null;
+        }
+
+        return System.Version.TryParse(versionAttr.Version, out var parsed) ? parsed : null;
+    }
+
+    internal void ApplyForcedDateTimeKind(IBlobCache cache)
     {
         if (ForcedDateTimeKind.HasValue)
         {
@@ -275,7 +291,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         }
     }
 
-    private InMemoryBlobCache CreateInMemoryCache()
+    internal InMemoryBlobCache CreateInMemoryCache()
     {
         if (Serializer == null)
         {
@@ -322,10 +338,6 @@ internal class AkavacheBuilder : IAkavacheBuilder
             if (inner is IAsyncDisposable asyncDisposable)
             {
                 await asyncDisposable.DisposeAsync();
-            }
-            else if (inner is IDisposable disposable)
-            {
-                disposable.Dispose();
             }
         }
 

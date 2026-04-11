@@ -181,6 +181,34 @@ public class LoginExtensionsTests
     }
 
     /// <summary>
+    /// Tests that GetLogin throws <see cref="KeyNotFoundException"/> when the stored
+    /// entry deserializes to a null <see cref="LoginInfo"/>. This specifically
+    /// exercises the null branch of the <c>x ?? throw</c> coalesce operator inside
+    /// <see cref="LoginExtensions.GetLogin"/> — the upstream cache miss path throws
+    /// before reaching the Select, leaving that branch uncovered otherwise.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task GetLoginShouldThrowKeyNotFoundExceptionWhenStoredValueIsNull()
+    {
+        var serializer = new SystemJsonSerializer();
+        const string host = "null-login-host";
+        const string key = "login:" + host;
+
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, serializer);
+
+        // Writing an empty byte[] under the typed key causes GetObject<LoginInfo>
+        // to emit a null value (it interprets empty payloads as stored nulls) so
+        // the null branch of LoginExtensions.GetLogin's Select throw runs.
+        await cache.Insert(key, Array.Empty<byte>(), typeof(LoginInfo)).FirstAsync();
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+        {
+            await cache.GetLogin(host).FirstAsync();
+        });
+    }
+
+    /// <summary>
     /// Tests that GetLogin throws KeyNotFoundException when no login exists.
     /// </summary>
     /// <returns>A task representing the test.</returns>

@@ -3,6 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Net.Http;
+using System.Reactive.Threading.Tasks;
+using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
@@ -248,4 +251,296 @@ public class RelativeTimeExtensionsTests
             await cache.DisposeAsync();
         }
     }
+
+    /// <summary>
+    /// Tests Insert(key, data, TimeSpan) round-trips.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertShouldRoundTrip()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.Insert("k", new byte[] { 1, 2, 3 }, TimeSpan.FromMinutes(1)).ToTask();
+            var data = await cache.Get("k").ToTask();
+            await Assert.That(data).IsNotNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InsertObject(key, value, TimeSpan) round-trips.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectShouldRoundTrip()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.InsertObject("k", "value", TimeSpan.FromMinutes(1)).ToTask();
+            var result = await cache.GetObject<string>("k").ToTask();
+            await Assert.That(result).IsEqualTo("value");
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests UpdateExpiration(key, TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeyShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, "k", TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests UpdateExpiration(key, type, TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeyTypeShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, "k", typeof(string), TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests UpdateExpiration(keys, TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeysShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, new[] { "k" }, TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests UpdateExpiration(keys, type, TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeysTypeShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, new[] { "k" }, typeof(string), TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests UpdateExpiration(key, TimeSpan) updates the expiration.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeyShouldWork()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.Insert("k", new byte[] { 1 }).ToTask();
+            await cache.UpdateExpiration("k", TimeSpan.FromMinutes(1)).ToTask();
+            var data = await cache.Get("k").ToTask();
+            await Assert.That(data).IsNotNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests UpdateExpiration(keys, TimeSpan) updates the expiration.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeysShouldWork()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.Insert("k1", new byte[] { 1 }).ToTask();
+            await cache.Insert("k2", new byte[] { 2 }).ToTask();
+            await cache.UpdateExpiration(new[] { "k1", "k2" }, TimeSpan.FromMinutes(1)).ToTask();
+
+            var d1 = await cache.Get("k1").ToTask();
+            var d2 = await cache.Get("k2").ToTask();
+            await Assert.That(d1).IsNotNull();
+            await Assert.That(d2).IsNotNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DownloadUrl(string, HttpMethod, TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DownloadUrlStringHttpMethodShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.DownloadUrl(null!, "http://example.com", HttpMethod.Get, TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests DownloadUrl(Uri, HttpMethod, TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DownloadUrlUriHttpMethodShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.DownloadUrl(null!, new Uri("http://example.com"), HttpMethod.Get, TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests SaveLogin(ISecureBlobCache, ..., TimeSpan) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SaveLoginWithTimeSpanShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.SaveLogin(null!, "user", "pass", "host", TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests InsertObject with TimeSpan throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectWithTimeSpanShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.InsertObject<string>(null!, "key", "val", TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests Insert with TimeSpan throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertWithTimeSpanShouldThrowOnNullCache() =>
+        await Assert.That(static () => RelativeTimeExtensions.Insert(null!, "key", new byte[] { 1, 2 }, TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests <see cref="RelativeTimeExtensions.UpdateExpiration(IBlobCache, string, Type, TimeSpan)"/>
+    /// happy-path: updates the expiration of an existing typed entry.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeyTypeShouldWork()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.Insert("k", new byte[] { 1 }, typeof(string)).ToTask();
+            await cache.UpdateExpiration("k", typeof(string), TimeSpan.FromHours(1)).ToTask();
+
+            var data = await cache.Get("k", typeof(string)).ToTask();
+            await Assert.That(data).IsNotNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="RelativeTimeExtensions.UpdateExpiration(IBlobCache, IEnumerable{string}, Type, TimeSpan)"/>
+    /// happy-path: bulk updates the expiration for multiple typed entries.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task UpdateExpirationKeysTypeShouldWork()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.Insert("k1", new byte[] { 1 }, typeof(string)).ToTask();
+            await cache.Insert("k2", new byte[] { 2 }, typeof(string)).ToTask();
+
+            await cache.UpdateExpiration(new[] { "k1", "k2" }, typeof(string), TimeSpan.FromHours(1)).ToTask();
+
+            var d1 = await cache.Get("k1", typeof(string)).ToTask();
+            var d2 = await cache.Get("k2", typeof(string)).ToTask();
+            await Assert.That(d1).IsNotNull();
+            await Assert.That(d2).IsNotNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="RelativeTimeExtensions.SaveLogin(ISecureBlobCache, string, string, string, TimeSpan)"/>
+    /// happy-path: stores credentials and exercises the non-null cache branch.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SaveLoginWithTimeSpanShouldWork()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.SaveLogin("user", "pass", "host", TimeSpan.FromHours(1)).ToTask();
+
+            var login = await cache.GetLogin("host").ToTask();
+            await Assert.That(login).IsNotNull();
+            await Assert.That(login!.UserName).IsEqualTo("user");
+            await Assert.That(login.Password).IsEqualTo("pass");
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="RelativeTimeExtensions.DownloadUrl(IBlobCache, string, HttpMethod, TimeSpan, IEnumerable{KeyValuePair{string, string}}, bool)"/>
+    /// happy-path by pre-populating the cache so the download is served from cache (avoiding network).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DownloadUrlStringHttpMethodShouldServeFromCache()
+    {
+        var cache = CreateCache();
+        try
+        {
+            const string url = "http://example.invalid/data";
+            await cache.Insert(url, new byte[] { 9, 8, 7 }).ToTask();
+
+            var data = await cache.DownloadUrl(url, HttpMethod.Get, TimeSpan.FromHours(1)).ToTask();
+
+            await Assert.That(data).IsEquivalentTo(new byte[] { 9, 8, 7 });
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="RelativeTimeExtensions.DownloadUrl(IBlobCache, Uri, HttpMethod, TimeSpan, IEnumerable{KeyValuePair{string, string}}, bool)"/>
+    /// happy-path by pre-populating the cache so the download is served from cache (avoiding network).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DownloadUrlUriHttpMethodShouldServeFromCache()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var url = new Uri("http://example.invalid/data");
+            await cache.Insert(url.ToString(), new byte[] { 1, 2, 3 }).ToTask();
+
+            var data = await cache.DownloadUrl(url, HttpMethod.Get, TimeSpan.FromHours(1)).ToTask();
+
+            await Assert.That(data).IsEquivalentTo(new byte[] { 1, 2, 3 });
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    private static InMemoryBlobCache CreateCache() =>
+        new(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
 }

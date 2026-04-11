@@ -124,5 +124,5 @@ internal static class RequestCache
         return _inflightRequests.ContainsKey(requestKey);
     }
 
-    private static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out var _);
+    internal static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out var _);
 }

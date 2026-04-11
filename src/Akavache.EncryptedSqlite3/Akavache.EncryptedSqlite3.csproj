@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="sqlite-net-sqlcipher" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" />
   </ItemGroup>
@@ -15,6 +20,8 @@
   <ItemGroup>
     <Compile Include="../Akavache.Sqlite3/SqliteBlobCache.cs" />
     <Compile Include="../Akavache.Sqlite3/AkavacheBuilderExtensions.cs" />
+    <Compile Include="../Akavache.Sqlite3/SqliteAkavacheConnection.cs" />
+    <Compile Include="../Akavache.Sqlite3/SqliteAkavacheTransaction.cs" />
   </ItemGroup>
 
   <ItemGroup>

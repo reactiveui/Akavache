@@ -259,7 +259,8 @@ Settings are automatically persisted and will survive app updates, making them p
 - **[Serializers](docs/serializers.md)** - System.Text.Json vs Newtonsoft.Json comparison
 - **[Cache Types](docs/cache-types.md)** - UserAccount, LocalMachine, Secure, and InMemory caches
 - **[Basic Operations](docs/basic-operations.md)** - CRUD operations and error handling
-- **[Migration Guide](docs/migration-v10-to-v11.md)** - Upgrading from V10.x to V11.1
+- **[Migration: V10 → V11](docs/migration-v10-to-v11.md)** - Upgrading from V10.x to V11.x
+- **[Migration: V11 → V12](docs/migration-v11-to-v12.md)** - Upgrading from V11.x to V12.x
 - **[Settings Management](docs/settings.md)** - Complete Akavache.Settings guide
 - **[Platform Notes](docs/platform-notes.md)** - Platform-specific guidance
 - **[Performance](docs/performance.md)** - Benchmarks and optimization tips

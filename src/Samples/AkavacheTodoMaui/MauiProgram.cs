@@ -61,9 +61,10 @@ public static class MauiProgram
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     private static IAppBuilder ConfigureAkavache() =>
         AppBuilder.CreateSplatBuilder()
-            .WithAkavacheCacheDatabase<SystemJsonSerializer>(static builder =>
-                builder.WithApplicationName("AkavacheTodoMaui")
+            .WithAkavacheCacheDatabase<SystemJsonSerializer>(
+                static builder => builder
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
                     .WithSqliteProvider()
-                    .WithSqliteDefaults());
+                    .WithSqliteDefaults(),
+                "AkavacheTodoMaui");
 }

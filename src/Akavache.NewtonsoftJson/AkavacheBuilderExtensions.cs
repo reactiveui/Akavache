@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using Akavache.Core;
 using Newtonsoft.Json;
 
 namespace Akavache.NewtonsoftJson
@@ -33,6 +34,8 @@ namespace Akavache.NewtonsoftJson
             }
 
             builder.WithSerializer<NewtonsoftSerializer>();
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftBsonSerializer());
             return builder;
         }
 
@@ -62,6 +65,8 @@ namespace Akavache.NewtonsoftJson
             }
 
             builder.WithSerializer(() => new NewtonsoftSerializer { Options = settings });
+            UniversalSerializer.RegisterSerializer(() => new NewtonsoftSerializer { Options = settings });
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftBsonSerializer());
             return builder;
         }
 
@@ -93,6 +98,8 @@ namespace Akavache.NewtonsoftJson
             var settings = new JsonSerializerSettings();
             configure(settings);
             builder.WithSerializer(() => new NewtonsoftSerializer { Options = settings });
+            UniversalSerializer.RegisterSerializer(() => new NewtonsoftSerializer { Options = settings });
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftBsonSerializer());
             return builder;
         }
 
@@ -116,6 +123,8 @@ namespace Akavache.NewtonsoftJson
             }
 
             builder.WithSerializer<NewtonsoftBsonSerializer>();
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftBsonSerializer());
             return builder;
         }
 
@@ -149,6 +158,8 @@ namespace Akavache.NewtonsoftJson
                 Options = settings,
             };
             builder.WithSerializer(() => serializer);
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
+            UniversalSerializer.RegisterSerializer(() => new NewtonsoftBsonSerializer { Options = settings, });
             return builder;
         }
 
@@ -184,6 +195,8 @@ namespace Akavache.NewtonsoftJson
                 Options = settings,
             };
             builder.WithSerializer(() => serializer);
+            UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
+            UniversalSerializer.RegisterSerializer(() => new NewtonsoftBsonSerializer { Options = settings, });
             return builder;
         }
     }

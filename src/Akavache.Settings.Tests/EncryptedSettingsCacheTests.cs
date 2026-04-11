@@ -337,7 +337,7 @@ namespace Akavache.EncryptedSettings.Tests
 
             _appBuilder
                 .WithAkavache<SystemJsonSerializer>(
-                    applicationName: null,
+                    applicationName: "Akavache",
                     builder =>
                     {
                         builder
@@ -645,7 +645,7 @@ namespace Akavache.EncryptedSettings.Tests
 
             _appBuilder
                 .WithAkavache<SystemJsonSerializer>(
-                    applicationName: null,
+                    applicationName: "Akavache",
                     builder =>
                     {
                         builder
@@ -659,11 +659,20 @@ namespace Akavache.EncryptedSettings.Tests
             await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
             await Assert.That(akavacheInstance).IsNotNull();
+#pragma warning disable CS0618 // Type or member is obsolete — deliberately asserts the legacy surface.
             await Assert.That(akavacheInstance!.ExecutingAssembly).IsNotNull();
-            await Assert.That(akavacheInstance.ExecutingAssemblyName).IsNotNull();
-            await Assert.That(akavacheInstance.ApplicationRootPath).IsNotNull();
+#pragma warning restore CS0618
+            await Assert.That(akavacheInstance!.ApplicationRootPath).IsNotNull();
             await Assert.That(akavacheInstance.SettingsCachePath).IsNotNull();
-            await Assert.That(akavacheInstance.Version).IsNotNull();
+
+            // ExecutingAssemblyName and Version are no longer populated by the
+            // constructor — they default to null unless the caller opts into the
+            // AOT-safe WithExecutingAssembly path. This test exercises the default
+            // path and therefore expects null.
+#pragma warning disable CS0618 // Type or member is obsolete
+            await Assert.That(akavacheInstance.ExecutingAssemblyName).IsNull();
+            await Assert.That(akavacheInstance.Version).IsNull();
+#pragma warning restore CS0618
         }
 
         /// <summary>
@@ -688,7 +697,7 @@ namespace Akavache.EncryptedSettings.Tests
             where TSerializer : class, ISerializer, new() =>
             _appBuilder
                 .WithAkavache<TSerializer>(
-                    applicationName,
+                    applicationName!,
                     builder =>
                     {
                         // base config

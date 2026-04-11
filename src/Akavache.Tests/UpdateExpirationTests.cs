@@ -235,6 +235,84 @@ public class UpdateExpirationTests : IDisposable
     }
 
     /// <summary>
+    /// Tests that the type-scoped single-key
+    /// <see cref="Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(string, Type, DateTimeOffset?)"/>
+    /// accepts a null absolute expiration and leaves the stored value intact.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task UpdateExpirationKeyWithTypeNullExpirationShouldSucceed()
+    {
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        await using (var fixture = CreateBlobCache(path, serializer))
+        {
+            const string key = "typed-null-exp-key";
+            await fixture.InsertObject(key, "value", DateTimeOffset.Now.AddMinutes(30));
+
+            await fixture.UpdateExpiration(key, typeof(string), null).FirstAsync();
+
+            var value = await fixture.GetObject<string>(key);
+            await Assert.That(value).IsEqualTo("value");
+        }
+    }
+
+    /// <summary>
+    /// Tests that the multi-key
+    /// <see cref="Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/>
+    /// accepts a null absolute expiration.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task UpdateExpirationKeysWithNullExpirationShouldSucceed()
+    {
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        await using (var fixture = CreateBlobCache(path, serializer))
+        {
+            var keys = new[] { "multi-null-1", "multi-null-2" };
+            await fixture.InsertObject(keys[0], "v1", DateTimeOffset.Now.AddMinutes(30));
+            await fixture.InsertObject(keys[1], "v2", DateTimeOffset.Now.AddMinutes(30));
+
+            await fixture.UpdateExpiration(keys, null).FirstAsync();
+
+            var first = await fixture.GetObject<string>(keys[0]);
+            var second = await fixture.GetObject<string>(keys[1]);
+            await Assert.That(first).IsEqualTo("v1");
+            await Assert.That(second).IsEqualTo("v2");
+        }
+    }
+
+    /// <summary>
+    /// Tests that the type-scoped multi-key
+    /// <see cref="Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/>
+    /// accepts a null absolute expiration.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task UpdateExpirationKeysWithTypeNullExpirationShouldSucceed()
+    {
+        var serializer = new SystemJsonSerializer();
+
+        using (Utility.WithEmptyDirectory(out var path))
+        await using (var fixture = CreateBlobCache(path, serializer))
+        {
+            var keys = new[] { "typed-multi-null-1", "typed-multi-null-2" };
+            await fixture.InsertObject(keys[0], "v1", DateTimeOffset.Now.AddMinutes(30));
+            await fixture.InsertObject(keys[1], "v2", DateTimeOffset.Now.AddMinutes(30));
+
+            await fixture.UpdateExpiration(keys, typeof(string), null).FirstAsync();
+
+            var first = await fixture.GetObject<string>(keys[0]);
+            var second = await fixture.GetObject<string>(keys[1]);
+            await Assert.That(first).IsEqualTo("v1");
+            await Assert.That(second).IsEqualTo("v2");
+        }
+    }
+
+    /// <summary>
     /// Dispose method for cleanup.
     /// </summary>
     public void Dispose()

@@ -208,7 +208,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task SafePathCombine_ShouldPreventDirectoryTraversal()
     {
-        var basePath = "/tmp/cache";
+        var basePath = Path.Combine(Path.GetTempPath(), "cache");
         var maliciousPaths = new[]
         {
             "../../../etc/passwd",
@@ -294,5 +294,202 @@ public class SecurityUtilitiesTests
         var validName = "ValidCache";
         var result = SecurityUtilities.ValidateCacheName(validName);
         await Assert.That(result).IsEqualTo(validName);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> rejects
+    /// application names that start with a dot character.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldRejectLeadingDot()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(".HiddenApp"));
+        await Assert.That(ex.Message).Contains("cannot start or end with");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> rejects
+    /// application names that end with a dot character.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldRejectTrailingDot()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("MyApp."));
+        await Assert.That(ex.Message).Contains("cannot start or end with");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> rejects
+    /// application names that end with a trailing space character.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldRejectTrailingSpace()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("MyApp "));
+        await Assert.That(ex.Message).Contains("cannot start or end with");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> rejects
+    /// application names composed solely of dots (e.g. "..." which is also a path
+    /// traversal indicator) and reports the appropriate error message.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldRejectAllDots()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("..."));
+        await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> rejects
+    /// application names containing invalid path characters such as the NUL byte.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldRejectInvalidPathCharacters()
+    {
+        var nameWithNul = "MyApp\0Name";
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(nameWithNul));
+        await Assert.That(ex).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> rejects
+    /// the explicit parent directory traversal token.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldRejectParentDirectoryToken()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("my..app"));
+        await Assert.That(ex.Message).Contains("path traversal");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> trims
+    /// leading whitespace and returns the normalized name when otherwise valid.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldTrimLeadingWhitespace()
+    {
+        var result = SecurityUtilities.ValidateApplicationName("  MyApp");
+        await Assert.That(result).IsEqualTo("MyApp");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.SafePathCombine"/> allows a combined
+    /// path that resolves exactly to the base directory.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SafePathCombine_ShouldAllowPathEqualToBase()
+    {
+        var basePath = Path.Combine(Path.GetTempPath(), "akavache-safe-combine");
+        Directory.CreateDirectory(basePath);
+        try
+        {
+            var result = SecurityUtilities.SafePathCombine(basePath, ".");
+            var normalizedBase = Path.GetFullPath(basePath);
+            await Assert.That(result).IsEqualTo(normalizedBase);
+        }
+        finally
+        {
+            if (Directory.Exists(basePath))
+            {
+                Directory.Delete(basePath, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.SafePathCombine"/> throws when the
+    /// base path is whitespace only.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SafePathCombine_ShouldRejectWhitespaceBasePath()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine("   ", "file.db"));
+        await Assert.That(ex.Message).Contains("Base path");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.SafePathCombine"/> throws when the
+    /// relative path is whitespace only.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SafePathCombine_ShouldRejectWhitespaceRelativePath()
+    {
+        var basePath = Path.GetTempPath();
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine(basePath, "   "));
+        await Assert.That(ex.Message).Contains("Relative path");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateDatabaseName"/> rejects
+    /// whitespace-only inputs with an appropriate error message.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateDatabaseName_ShouldRejectWhitespace()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName("   "));
+        await Assert.That(ex.Message).Contains("Database name");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateDatabaseName"/> rejects
+    /// reserved system names by delegating to cache name validation.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateDatabaseName_ShouldRejectReservedName()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName("CON"));
+        await Assert.That(ex.Message).Contains("reserved system name");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateCacheName"/> uses the supplied
+    /// parameter name in the thrown <see cref="ArgumentException"/>.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateCacheName_ShouldUseCustomParameterName()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(null!, "customParam"));
+        await Assert.That(ex.ParamName).IsEqualTo("customParam");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateApplicationName"/> uses the
+    /// supplied parameter name in the thrown <see cref="ArgumentException"/>.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateApplicationName_ShouldUseCustomParameterName()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(".bad", "appParam"));
+        await Assert.That(ex.ParamName).IsEqualTo("appParam");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateCacheName"/> accepts a cache
+    /// name at a reasonably large length (boundary-style check for long valid names).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateCacheName_ShouldAcceptLongValidName()
+    {
+        var longName = new string('a', 200);
+        var result = SecurityUtilities.ValidateCacheName(longName);
+        await Assert.That(result).IsEqualTo(longName);
     }
 }

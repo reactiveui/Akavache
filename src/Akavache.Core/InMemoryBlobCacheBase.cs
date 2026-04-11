@@ -22,18 +22,13 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 {
     private readonly Dictionary<string, CacheEntry> _cache = [];
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
+#if NET9_0_OR_GREATER
+    private readonly System.Threading.Lock _lock = new();
+#else
     private readonly object _lock = new();
+#endif
     private bool _disposed;
     private IHttpService? _httpService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCacheBase"/> class with default scheduler.
-    /// </summary>
-    /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
-    protected InMemoryBlobCacheBase(ISerializer? serializer)
-        : this(CacheDatabase.TaskpoolScheduler, serializer)
-    {
-    }
 
     /// <inheritdoc />
     public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
@@ -732,35 +727,14 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
         return Observable.Start(
             () =>
-        {
-            lock (_lock)
             {
-                var now = Scheduler.Now;
-                var expiredKeys = new List<string>();
-
-                foreach (var kvp in _cache)
+                lock (_lock)
                 {
-                    if (kvp.Value.ExpiresAt <= now)
-                    {
-                        expiredKeys.Add(kvp.Key);
-                    }
+                    VacuumExpiredEntries(_cache, _typeIndex, Scheduler.Now);
                 }
 
-                foreach (var expiredKey in expiredKeys)
-                {
-                    _cache.Remove(expiredKey);
-
-                    // Remove from type indexes
-                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                    foreach (var kvp in _typeIndex)
-                    {
-                        kvp.Value.Remove(expiredKey);
-                    }
-                }
-            }
-
-            return Unit.Default;
-        },
+                return Unit.Default;
+            },
             Scheduler);
     }
 
@@ -866,6 +840,70 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// <typeparam name="T">The type of object associated with the blob.</typeparam>
     /// <returns>A Future result representing the completion of the invalidation.</returns>
     public IObservable<Unit> InvalidateAllObjects<T>() => InvalidateAll(typeof(T));
+
+    /// <summary>
+    /// Removes any entries from <paramref name="cache"/> whose <c>ExpiresAt</c> is at or
+    /// before <paramref name="now"/>, and prunes those keys out of every set in
+    /// <paramref name="typeIndex"/>. Static so the logic is testable in isolation without
+    /// constructing a full <see cref="InMemoryBlobCacheBase"/> and without the coverage
+    /// instrumentation hazards of running inside an <c>Observable.Start</c> lambda.
+    /// </summary>
+    /// <param name="cache">The key-to-entry dictionary to vacuum.</param>
+    /// <param name="typeIndex">The per-type key index to prune.</param>
+    /// <param name="now">The current time used to determine expiration.</param>
+    internal static void VacuumExpiredEntries(
+        Dictionary<string, CacheEntry> cache,
+        Dictionary<Type, HashSet<string>> typeIndex,
+        DateTimeOffset now)
+    {
+        var expiredKeys = CollectExpiredKeys(cache, now);
+
+        foreach (var expiredKey in expiredKeys)
+        {
+            cache.Remove(expiredKey);
+            RemoveKeyFromAllTypeIndexes(typeIndex, expiredKey);
+        }
+    }
+
+    /// <summary>
+    /// Returns the list of keys in <paramref name="cache"/> whose <c>ExpiresAt</c> is at or
+    /// before <paramref name="now"/>. Static so the iteration is directly testable.
+    /// </summary>
+    /// <param name="cache">The cache dictionary to scan.</param>
+    /// <param name="now">The cutoff time.</param>
+    /// <returns>A list of expired keys.</returns>
+    internal static List<string> CollectExpiredKeys(
+        Dictionary<string, CacheEntry> cache,
+        DateTimeOffset now)
+    {
+        var expiredKeys = new List<string>();
+        foreach (var kvp in cache)
+        {
+            if (kvp.Value.ExpiresAt <= now)
+            {
+                expiredKeys.Add(kvp.Key);
+            }
+        }
+
+        return expiredKeys;
+    }
+
+    /// <summary>
+    /// Removes <paramref name="key"/> from every set in <paramref name="typeIndex"/>.
+    /// Iterates the dictionary directly to avoid concurrent <see cref="HashSet{T}"/> access
+    /// issues. Static so the loop body is directly testable.
+    /// </summary>
+    /// <param name="typeIndex">The per-type key index to prune.</param>
+    /// <param name="key">The key to remove from each type's set.</param>
+    internal static void RemoveKeyFromAllTypeIndexes(
+        Dictionary<Type, HashSet<string>> typeIndex,
+        string key)
+    {
+        foreach (var kvp in typeIndex)
+        {
+            kvp.Value.Remove(key);
+        }
+    }
 
     /// <summary>
     /// Releases the unmanaged resources used by the <see cref="InMemoryBlobCacheBase"/> and optionally releases the managed resources.

@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Remove="Foundation" />
   </ItemGroup>
 

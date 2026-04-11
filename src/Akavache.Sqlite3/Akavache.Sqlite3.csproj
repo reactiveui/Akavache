@@ -18,5 +18,6 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Akavache.Tests" />
     <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+    <InternalsVisibleTo Include="Akavache.V10toV11" />
   </ItemGroup>
 </Project>

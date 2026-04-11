@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Akavache.NewtonsoftJson;
 
@@ -39,30 +40,14 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
             return (DateTimeOffset)(DateTime)reader.Value;
         }
 
-        // Handle the case where we stored it as an object with ticks and offset
+        // Handle the case where we stored it as an object with ticks and offset.
+        // JObject.Load fully materialises the object so the Ticks / OffsetTicks
+        // properties can be looked up directly via the ReadLongProperty helper.
         if (reader.TokenType == JsonToken.StartObject)
         {
-            long ticks = 0;
-            long offsetTicks = 0;
-
-            while (reader.Read() && reader.TokenType != JsonToken.EndObject)
-            {
-                if (reader.TokenType == JsonToken.PropertyName)
-                {
-                    var propertyName = reader.Value?.ToString();
-                    reader.Read();
-
-                    switch (propertyName)
-                    {
-                        case "Ticks":
-                            ticks = (long)reader.Value!;
-                            break;
-                        case "OffsetTicks":
-                            offsetTicks = (long)reader.Value!;
-                            break;
-                    }
-                }
-            }
+            var jobject = JObject.Load(reader);
+            var ticks = ReadLongProperty(jobject, "Ticks");
+            var offsetTicks = ReadLongProperty(jobject, "OffsetTicks");
 
             var offset = new TimeSpan(offsetTicks);
             return new DateTimeOffset(ticks, offset);
@@ -91,5 +76,18 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
             writer.WriteValue(dateTimeOffset.Offset.Ticks);
             writer.WriteEndObject();
         }
+    }
+
+    /// <summary>
+    /// Reads a long-valued property from <paramref name="jobject"/>, returning
+    /// <c>0</c> when the property is missing.
+    /// </summary>
+    /// <param name="jobject">The JObject to read from.</param>
+    /// <param name="propertyName">The property name to look up.</param>
+    /// <returns>The long value, or <c>0</c> when the property is not present.</returns>
+    internal static long ReadLongProperty(JObject jobject, string propertyName)
+    {
+        var token = jobject[propertyName];
+        return token is null ? 0 : token.Value<long>();
     }
 }

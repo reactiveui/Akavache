@@ -3,6 +3,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Helpers;
+
 using Splat;
 
 namespace Akavache.Drawing;
@@ -22,10 +24,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable sequence of key-bitmap pairs.</returns>
     public static IObservable<KeyValuePair<string, IBitmap>> LoadImages(this IBlobCache blobCache, IEnumerable<string> keys, float? desiredWidth = null, float? desiredHeight = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return keys.ToObservable()
             .SelectMany(key => blobCache.LoadImage(key, desiredWidth, desiredHeight)
@@ -42,10 +41,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable that completes when all images are cached.</returns>
     public static IObservable<Unit> PreloadImagesFromUrls(this IBlobCache blobCache, IEnumerable<string> urls, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return urls.ToObservable()
             .SelectMany(url => blobCache.DownloadUrl(url, absoluteExpiration: absoluteExpiration)
@@ -66,10 +62,7 @@ public static class ImageCacheExtensions
     /// <returns>The loaded image or the fallback image.</returns>
     public static IObservable<IBitmap> LoadImageWithFallback(this IBlobCache blobCache, string key, byte[] fallbackImageBytes, float? desiredWidth = null, float? desiredHeight = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         if (fallbackImageBytes is null)
         {
@@ -93,10 +86,7 @@ public static class ImageCacheExtensions
     /// <returns>The loaded image or the fallback image.</returns>
     public static IObservable<IBitmap> LoadImageFromUrlWithFallback(this IBlobCache blobCache, string url, byte[] fallbackImageBytes, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         if (fallbackImageBytes is null)
         {
@@ -119,10 +109,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable that completes when the thumbnail is created and cached.</returns>
     public static IObservable<Unit> CreateAndCacheThumbnail(this IBlobCache blobCache, string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.LoadImage(sourceKey, thumbnailWidth, thumbnailHeight)
             .SelectMany(thumbnail => blobCache.SaveImage(thumbnailKey, thumbnail, absoluteExpiration));
@@ -136,13 +123,10 @@ public static class ImageCacheExtensions
     /// <returns>An observable containing the image size information.</returns>
     public static IObservable<Size> GetImageSize(this IBlobCache blobCache, string key)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.Get(key)
-            .SelectMany(bytes => bytes != null ? BitmapImageExtensions.ThrowOnBadImageBuffer(bytes) : Observable.Throw<byte[]>(new InvalidOperationException("Image data is null")))
+            .SelectMany(static bytes => BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(bytes))
             .SelectMany(bytes =>
             {
                 using var ms = new MemoryStream(bytes);
@@ -162,10 +146,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable that completes when all matching images are cleared.</returns>
     public static IObservable<Unit> ClearImageCache(this IBlobCache blobCache, Func<string, bool> keyPattern)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         if (keyPattern is null)
         {

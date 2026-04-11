@@ -3,9 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reflection;
 using Akavache.Core;
 #if NET6_0_OR_GREATER
-using System.Diagnostics.CodeAnalysis;
 #endif
 
 namespace Akavache;
@@ -29,6 +29,23 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <param name="applicationName">The application name.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     IAkavacheBuilder WithApplicationName(string? applicationName);
+
+    /// <summary>
+    /// Configures the executing assembly explicitly, bypassing the reflection
+    /// fallback used by the default constructor.
+    /// </summary>
+    /// <remarks>
+    /// Calling this also refreshes
+    /// <see cref="IAkavacheInstance.ExecutingAssemblyName"/> and
+    /// <see cref="IAkavacheInstance.Version"/> from the supplied assembly's
+    /// metadata. This is the AOT-safe path: callers publishing trimmed or
+    /// NativeAOT binaries should pass <c>typeof(MyApp).Assembly</c> here so
+    /// Akavache does not need to probe
+    /// <see cref="System.Reflection.Assembly.GetEntryAssembly"/> at runtime.
+    /// </remarks>
+    /// <param name="assembly">The assembly to use as the executing assembly.</param>
+    /// <returns>The builder instance for fluent configuration.</returns>
+    IAkavacheBuilder WithExecutingAssembly(Assembly assembly);
 
     /// <summary>
     /// Sets the InMemory cache instance.
@@ -70,9 +87,6 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// </summary>
     /// <typeparam name="T">The type of serializer to configure.</typeparam>
     /// <returns>The builder instance for fluent configuration.</returns>
-#if NET6_0_OR_GREATER
-    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-#endif
     IAkavacheBuilder WithSerializer<T>()
         where T : ISerializer, new();
 
@@ -82,11 +96,7 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <typeparam name="T">The type of serializer to configure.</typeparam>
     /// <param name="configure">A function that creates and configures the serializer instance.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
-#if NET6_0_OR_GREATER
-    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
-#endif
     IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-
         where T : ISerializer;
 
     /// <summary>

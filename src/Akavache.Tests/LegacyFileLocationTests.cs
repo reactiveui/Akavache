@@ -14,6 +14,7 @@ namespace Akavache.Tests;
 /// Validates that V10→V11 migration scenarios work correctly when using legacy file locations.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel("CacheDatabaseState")]
 public class LegacyFileLocationTests
 {
     /// <summary>

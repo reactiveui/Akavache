@@ -365,6 +365,57 @@ public class SizeTests
     }
 
     /// <summary>
+    /// Tests that the == and != operators on Size return the expected results.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task SizeOperatorEqualsAndNotEqualsShouldWork()
+    {
+        // Arrange
+        var size1 = new Size(100f, 200f);
+        var size2 = new Size(100f, 200f);
+        var size3 = new Size(150f, 200f);
+        var size4 = new Size(100f, 250f);
+
+        using (Assert.Multiple())
+        {
+            // Act & Assert - operator ==
+            await Assert.That(size1 == size2).IsTrue();
+            await Assert.That(size1 == size3).IsFalse();
+            await Assert.That(size1 == size4).IsFalse();
+
+            // Act & Assert - operator !=
+            await Assert.That(size1 != size2).IsFalse();
+            await Assert.That(size1 != size3).IsTrue();
+            await Assert.That(size1 != size4).IsTrue();
+        }
+    }
+
+    /// <summary>
+    /// Tests that Equals(object?) handles matching Size, non-matching Size, different type and null.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task SizeEqualsObjectShouldWork()
+    {
+        // Arrange
+        var size1 = new Size(100f, 200f);
+        object sameBoxed = new Size(100f, 200f);
+        object differentBoxed = new Size(150f, 200f);
+        object notASize = "not a size";
+        object? nullObj = null;
+
+        using (Assert.Multiple())
+        {
+            // Act & Assert
+            await Assert.That(size1.Equals(sameBoxed)).IsTrue();
+            await Assert.That(size1.Equals(differentBoxed)).IsFalse();
+            await Assert.That(size1.Equals(notASize)).IsFalse();
+            await Assert.That(size1.Equals(nullObj)).IsFalse();
+        }
+    }
+
+    /// <summary>
     /// Tests Size with realistic image dimensions.
     /// </summary>
     /// <param name="width">The width of the image.</param>

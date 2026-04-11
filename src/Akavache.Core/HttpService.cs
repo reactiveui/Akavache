@@ -100,6 +100,33 @@ public class HttpService : IHttpService
         return conn;
     }
 
+    internal static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)
+    {
+        var request = new HttpRequestMessage(method, uri);
+
+        if (headers is not null)
+        {
+            foreach (var x in headers)
+            {
+                request.Headers.TryAddWithoutValidation(x.Key, x.Value);
+            }
+        }
+
+        return request;
+    }
+
+    internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration)
+    {
+        if (!responseMessage.IsSuccessStatusCode)
+        {
+            return Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode.ToString()}] Http Failure to {url} with expiry {absoluteExpiration.ToString()}: {responseMessage.ReasonPhrase}"));
+        }
+
+        return Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
+    }
+
+    internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
+
     /// <summary>
     /// Makes a web request to the specified URI.
     /// </summary>
@@ -110,7 +137,7 @@ public class HttpService : IHttpService
     /// <param name="retries">The number of retry attempts for failed requests.</param>
     /// <param name="timeout">The timeout duration for the request.</param>
     /// <returns>An observable that emits the HTTP response message.</returns>
-    protected virtual IObservable<HttpResponseMessage> MakeWebRequest(
+    protected internal virtual IObservable<HttpResponseMessage> MakeWebRequest(
         Uri uri,
         HttpMethod method,
         IEnumerable<KeyValuePair<string, string>>? headers = null,
@@ -134,33 +161,6 @@ public class HttpService : IHttpService
 
         return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), CacheDatabase.TaskpoolScheduler).Retry(retries);
     }
-
-    private static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)
-    {
-        var request = new HttpRequestMessage(method, uri);
-
-        if (headers is not null)
-        {
-            foreach (var x in headers)
-            {
-                request.Headers.TryAddWithoutValidation(x.Key, x.Value);
-            }
-        }
-
-        return request;
-    }
-
-    private static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration)
-    {
-        if (!responseMessage.IsSuccessStatusCode)
-        {
-            return Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode.ToString()}] Http Failure to {url} with expiry {absoluteExpiration.ToString()}: {responseMessage.ReasonPhrase}"));
-        }
-
-        return Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
-    }
-
-    private static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
 
     /// <summary>
     /// Provides a fast-failing HTTP service that reduces retries and timeouts to speed up tests.
@@ -192,7 +192,7 @@ public class HttpService : IHttpService
         }
 
         /// <inheritdoc />
-        protected override IObservable<HttpResponseMessage> MakeWebRequest(
+        protected internal override IObservable<HttpResponseMessage> MakeWebRequest(
             Uri uri,
             HttpMethod method,
             IEnumerable<KeyValuePair<string, string>>? headers = null,

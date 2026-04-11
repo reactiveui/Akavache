@@ -4,7 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
-
+    <!-- Benchmarks for legacy V10 APIs which use reflection by design - not AOT-compatible -->
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>false</EnableAotAnalyzer>
   </PropertyGroup>
 
   <ItemGroup>

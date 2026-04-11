@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Akavache.EncryptedSqlite3\Akavache.EncryptedSqlite3.csproj" />
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
   </ItemGroup>

@@ -23,7 +23,8 @@
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
-    <File Path="Migration.md" />
+    <File Path="../docs/migration-v10-to-v11.md" />
+    <File Path="../docs/migration-v11-to-v12.md" />
     <File Path="RunCompatTest.ps1" />
     <File Path="stylecop.json" />
     <File Path="tests.runsettings" />
@@ -41,4 +42,6 @@
   <Project Path="Akavache.Settings/Akavache.Settings.csproj" />
   <Project Path="Akavache.Sqlite3/Akavache.Sqlite3.csproj" />
   <Project Path="Akavache.SystemTextJson/Akavache.SystemTextJson.csproj" />
+  <Project Path="Akavache.SystemTextJson.Bson/Akavache.SystemTextJson.Bson.csproj" />
+  <Project Path="Akavache.V10toV11/Akavache.V10toV11.csproj" />
 </Solution>

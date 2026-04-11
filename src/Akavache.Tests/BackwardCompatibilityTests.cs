@@ -13,6 +13,7 @@ namespace Akavache.Tests;
 /// Tests for backward compatibility scenarios, especially for mobile platforms.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel("CacheDatabaseState")]
 public class BackwardCompatibilityTests
 {
     /// <summary>
@@ -34,11 +35,9 @@ public class BackwardCompatibilityTests
             // This call should now work without explicitly calling WithSqliteProvider() first
             await Assert.That(() =>
             {
-                CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
-                {
-                    builder.WithApplicationName(testAppName);
-                    builder.WithSqliteDefaults(); // This should now work
-                });
+                CacheDatabase.Initialize<SystemJsonSerializer>(
+                    static builder => builder.WithSqliteDefaults(),
+                    testAppName);
             }).ThrowsNothing();
         }
         finally
@@ -65,12 +64,13 @@ public class BackwardCompatibilityTests
             // New pattern: explicit provider initialization
             await Assert.That(() =>
             {
-                CacheDatabase.Initialize<SystemJsonSerializer>(builder =>
-                {
-                    builder.WithApplicationName(testAppName);
-                    builder.WithSqliteProvider();
-                    builder.WithSqliteDefaults();
-                });
+                CacheDatabase.Initialize<SystemJsonSerializer>(
+                    static builder =>
+                    {
+                        builder.WithSqliteProvider();
+                        builder.WithSqliteDefaults();
+                    },
+                    testAppName);
             }).ThrowsNothing();
         }
         finally

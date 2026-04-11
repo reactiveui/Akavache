@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
@@ -221,7 +222,7 @@ public class BitmapImageExtensionsTests
         byte[]? nullData = null;
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData!)
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await BitmapImageExtensions.ThrowOnBadImageBuffer(nullData)
             .Timeout(TestTimeout)
             .FirstAsync());
     }
@@ -405,6 +406,296 @@ public class BitmapImageExtensionsTests
     }
 
     /// <summary>
+    /// Tests that LoadImageFromUrl with a string URL returns a bitmap when the
+    /// cache already contains valid data for the URL key.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Test]
+    public async Task LoadImageFromUrlStringShouldReturnBitmapFromCachedData()
+    {
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+        const string url = "http://example.com/cached_string_url.png";
+        var imageData = CreateValidImageBytes();
+
+        // Seed cache with the URL as the key — DownloadUrl(string url) uses `url` as key.
+        await cache.Insert(url, imageData).Timeout(TestTimeout).FirstAsync();
+
+        var loaded = await cache.LoadImageFromUrl(url).Timeout(TestTimeout).FirstAsync();
+
+        await Assert.That(loaded).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that LoadImageFromUrl with a Uri returns a bitmap when the cache
+    /// already contains valid data for the URL key.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Test]
+    public async Task LoadImageFromUrlUriShouldReturnBitmapFromCachedData()
+    {
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+        var uri = new Uri("http://example.com/cached_uri.png");
+        var imageData = CreateValidImageBytes();
+
+        // HttpService.DownloadUrl(Uri) uses url.ToString() as the cache key.
+        await cache.Insert(uri.ToString(), imageData).Timeout(TestTimeout).FirstAsync();
+
+        var loaded = await cache.LoadImageFromUrl(uri).Timeout(TestTimeout).FirstAsync();
+
+        await Assert.That(loaded).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that LoadImageFromUrl with a key and string URL returns a bitmap
+    /// when the cache already contains valid data for the supplied key.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Test]
+    public async Task LoadImageFromUrlWithKeyAndStringShouldReturnBitmapFromCachedData()
+    {
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+        const string key = "custom_key_string";
+        const string url = "http://example.com/keyed_string_url.png";
+        var imageData = CreateValidImageBytes();
+
+        await cache.Insert(key, imageData).Timeout(TestTimeout).FirstAsync();
+
+        var loaded = await cache.LoadImageFromUrl(key, url).Timeout(TestTimeout).FirstAsync();
+
+        await Assert.That(loaded).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that LoadImageFromUrl with a key and Uri returns a bitmap when
+    /// the cache already contains valid data for the supplied key.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Test]
+    public async Task LoadImageFromUrlWithKeyAndUriShouldReturnBitmapFromCachedData()
+    {
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+        const string key = "custom_key_uri";
+        var uri = new Uri("http://example.com/keyed_uri.png");
+        var imageData = CreateValidImageBytes();
+
+        await cache.Insert(key, imageData).Timeout(TestTimeout).FirstAsync();
+
+        var loaded = await cache.LoadImageFromUrl(key, uri).Timeout(TestTimeout).FirstAsync();
+
+        await Assert.That(loaded).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that LoadImageFromUrl with dimensions round-trips cached data
+    /// while forwarding the desired width and height to the loader.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Test]
+    public async Task LoadImageFromUrlWithDimensionsShouldPassThroughToLoader()
+    {
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+        const string url = "http://example.com/dimensioned.png";
+        var imageData = CreateValidImageBytes();
+
+        await cache.Insert(url, imageData).Timeout(TestTimeout).FirstAsync();
+
+        var loaded = await cache.LoadImageFromUrl(url, fetchAlways: false, desiredWidth: 320f, desiredHeight: 240f)
+            .Timeout(TestTimeout)
+            .FirstAsync();
+
+        await Assert.That(loaded).IsNotNull();
+    }
+
+    /// <summary>
+    /// Tests that LoadImage surfaces an IOException when the bitmap loader
+    /// returns null for otherwise valid bytes.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Test]
+    public async Task LoadImageShouldThrowIOExceptionWhenLoaderReturnsNullBitmap()
+    {
+        // Swap in a loader that returns null for Load so the null-coalescing throw fires.
+        BitmapLoader.Current = new NullReturningBitmapLoader();
+
+        await using var cache = new InMemoryBlobCache(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+        const string key = "null_bitmap_key";
+
+        await cache.Insert(key, CreateValidImageBytes()).Timeout(TestTimeout).FirstAsync();
+
+        await Assert.ThrowsAsync<IOException>(async () => await cache.LoadImage(key)
+            .Timeout(TestTimeout)
+            .FirstAsync());
+    }
+
+    /// <summary>
+    /// Tests LoadImage throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageShouldThrowOnNullCache() =>
+        await Assert.That(static () => BitmapImageExtensions.LoadImage(null!, "key"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests LoadImageFromUrl(string) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageFromUrlStringShouldThrowOnNullCache() =>
+        await Assert.That(static () => BitmapImageExtensions.LoadImageFromUrl(null!, "http://example.com/img.png"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests LoadImageFromUrl(Uri) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageFromUrlUriShouldThrowOnNullCache() =>
+        await Assert.That(static () => BitmapImageExtensions.LoadImageFromUrl(null!, new Uri("http://example.com/img.png")))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests LoadImageFromUrl(key, string) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageFromUrlKeyStringShouldThrowOnNullCache() =>
+        await Assert.That(static () => BitmapImageExtensions.LoadImageFromUrl(null!, "mykey", "http://example.com/img.png"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests LoadImageFromUrl(key, Uri) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageFromUrlKeyUriShouldThrowOnNullCache() =>
+        await Assert.That(static () => BitmapImageExtensions.LoadImageFromUrl(null!, "mykey", new Uri("http://example.com/img.png")))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests <see cref="BitmapImageExtensions.ThrowOnNullOrBadImageBuffer"/> throws
+    /// an "Image data is null" error when handed a <see langword="null"/> buffer.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput() =>
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(null).FirstAsync());
+
+    /// <summary>
+    /// Tests <see cref="BitmapImageExtensions.ThrowOnNullOrBadImageBuffer"/> routes a
+    /// valid (&gt;= 64-byte) buffer through the bad-image guard and returns it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task ThrowOnNullOrBadImageBufferShouldReturnValidBuffer()
+    {
+        var buffer = new byte[128];
+
+        var result = await BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(buffer).FirstAsync();
+
+        await Assert.That(result).IsSameReferenceAs(buffer);
+    }
+
+    /// <summary>
+    /// Tests <see cref="BitmapImageExtensions.ThrowOnNullOrBadImageBuffer"/> forwards
+    /// the short-buffer error from <see cref="BitmapImageExtensions.ThrowOnBadImageBuffer"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer() =>
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(new byte[] { 1, 2, 3 }).FirstAsync());
+
+    /// <summary>
+    /// Tests <see cref="BitmapImageExtensions.BytesToImage"/> returns a decoded
+    /// <see cref="IBitmap"/> on the happy path by routing through
+    /// <see cref="BitmapLoader.Current"/> (the ambient Splat bitmap loader).
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task BytesToImageShouldReturnBitmapOnHappyPath()
+    {
+        var previousLoader = BitmapLoader.Current;
+        BitmapLoader.Current = new MockBitmapLoader();
+        try
+        {
+            var bitmap = await BitmapImageExtensions.BytesToImage(new byte[128], null, null).FirstAsync();
+
+            await Assert.That(bitmap).IsNotNull();
+        }
+        finally
+        {
+            BitmapLoader.Current = previousLoader;
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="BitmapImageExtensions.BytesToImage"/> throws an
+    /// <see cref="IOException"/> when <see cref="BitmapLoader.Current"/> returns a
+    /// <see langword="null"/> bitmap.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task BytesToImageShouldThrowWhenLoaderReturnsNullBitmap()
+    {
+        var previousLoader = BitmapLoader.Current;
+        BitmapLoader.Current = new NullReturningBitmapLoader();
+        try
+        {
+            await Assert.ThrowsAsync<IOException>(async () =>
+                await BitmapImageExtensions.BytesToImage(new byte[128], null, null).FirstAsync());
+        }
+        finally
+        {
+            BitmapLoader.Current = previousLoader;
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="BitmapImageExtensions.BytesToImage"/> propagates desired size
+    /// parameters through to the loader on the happy path.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task BytesToImageShouldForwardDesiredSizeToLoader()
+    {
+        var previousLoader = BitmapLoader.Current;
+        var capturing = new CapturingBitmapLoader();
+        BitmapLoader.Current = capturing;
+        try
+        {
+            _ = await BitmapImageExtensions.BytesToImage(new byte[128], 320f, 240f).FirstAsync();
+
+            await Assert.That(capturing.LastWidth).IsEqualTo(320f);
+            await Assert.That(capturing.LastHeight).IsEqualTo(240f);
+        }
+        finally
+        {
+            BitmapLoader.Current = previousLoader;
+        }
+    }
+
+    private static byte[] CreateValidImageBytes()
+    {
+        var buffer = new byte[128];
+        buffer[0] = 0x89;
+        buffer[1] = 0x50;
+        buffer[2] = 0x4E;
+        buffer[3] = 0x47;
+        buffer[4] = 0x0D;
+        buffer[5] = 0x0A;
+        buffer[6] = 0x1A;
+        buffer[7] = 0x0A;
+        for (var i = 8; i < buffer.Length; i++)
+        {
+            buffer[i] = (byte)(i % 256);
+        }
+
+        return buffer;
+    }
+
+    /// <summary>
     /// Mock bitmap implementation for testing.
     /// </summary>
     private class MockBitmap : IBitmap
@@ -443,6 +734,32 @@ public class BitmapImageExtensionsTests
     }
 
     /// <summary>
+    /// Bitmap loader stub that captures the last requested width/height for the
+    /// <see cref="BytesToImageShouldForwardDesiredSizeToLoader"/> test.
+    /// </summary>
+    private sealed class CapturingBitmapLoader : IBitmapLoader
+    {
+        public float? LastWidth { get; private set; }
+
+        public float? LastHeight { get; private set; }
+
+        public Task<IBitmap?> Load(Stream sourceStream, float? desiredWidth, float? desiredHeight)
+        {
+            LastWidth = desiredWidth;
+            LastHeight = desiredHeight;
+            return Task.FromResult<IBitmap?>(new MockBitmap());
+        }
+
+        public IBitmap Create(float width, float height) => new MockBitmap();
+
+#pragma warning disable CA1822 // Mark members as static - Cannot be static as it implements interface
+        public Task<IBitmap> LoadFromResource(string source, Assembly? assembly) => Task.FromResult<IBitmap>(new MockBitmap());
+
+        public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) => Task.FromResult<IBitmap?>(new MockBitmap());
+#pragma warning restore CA1822 // Mark members as static
+    }
+
+    /// <summary>
     /// Mock bitmap loader implementation for testing.
     /// </summary>
     private class MockBitmapLoader : IBitmapLoader
@@ -456,5 +773,25 @@ public class BitmapImageExtensionsTests
 
         public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) => Task.FromResult<IBitmap?>(new MockBitmap());
 #pragma warning restore CA1822 // Mark members as static
+    }
+
+    /// <summary>
+    /// Bitmap loader that always returns null from <see cref="Load"/> in order
+    /// to exercise the null-bitmap throw path in BytesToImage.
+    /// </summary>
+    private sealed class NullReturningBitmapLoader : IBitmapLoader
+    {
+        public Task<IBitmap?> Load(Stream sourceStream, float? desiredWidth, float? desiredHeight) =>
+            Task.FromResult<IBitmap?>(null);
+
+        public IBitmap Create(float width, float height) => new MockBitmap();
+
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Cannot be static as it implements interface")]
+        public Task<IBitmap> LoadFromResource(string source, Assembly? assembly) =>
+            Task.FromResult<IBitmap>(new MockBitmap());
+
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Cannot be static as it implements interface")]
+        public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) =>
+            Task.FromResult<IBitmap?>(null);
     }
 }

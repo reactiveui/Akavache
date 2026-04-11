@@ -132,12 +132,13 @@ public static class AkavacheBuilderExtensions
     internal static void ResetSqliteProviderForTests() => _sqliteProvider = null;
 
 #if ENCRYPTED
-    private static EncryptedSqliteBlobCache CreateEncryptedSqliteCache(string name, IAkavacheBuilder builder, string password)
+    internal static EncryptedSqliteBlobCache CreateEncryptedSqliteCache(string name, IAkavacheBuilder builder, string password)
 #else
-    private static SqliteBlobCache CreateSqliteCache(string name, IAkavacheBuilder builder)
+    internal static SqliteBlobCache CreateSqliteCache(string name, IAkavacheBuilder builder)
 #endif
     {
-        if (builder.Serializer == null)
+        var serializer = builder.Serializer;
+        if (serializer is null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
         }
@@ -155,27 +156,20 @@ public static class AkavacheBuilderExtensions
         // Validate cache name to prevent path traversal attacks
         var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
 
-        // Determine the cache directory
+        // Determine the cache directory.
         var directory = builder.FileLocationOption switch
         {
             FileLocationOption.Legacy => builder.GetLegacyCacheDirectory(validatedName),
             _ => builder.GetIsolatedCacheDirectory(validatedName),
         };
-        if (string.IsNullOrWhiteSpace(directory))
-        {
-            throw new InvalidOperationException("Failed to determine a valid cache directory.");
-        }
 
-        // Ensure the cache directory exists (legacy paths may not be pre-created)
+        // Ensure the cache directory exists (legacy paths may not be pre-created).
         if (!Directory.Exists(directory))
         {
-            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(directory!);
         }
 
-        var filePath = Path.Combine(directory, $"{validatedName}.db");
-
-        // Resolve the serializer from the service locator to ensure proper lifecycle management
-        var serializer = AppLocator.Current.GetService<ISerializer>(builder.SerializerTypeName) ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
+        var filePath = Path.Combine(directory!, $"{validatedName}.db");
 
 #if ENCRYPTED
         var cache = new EncryptedSqliteBlobCache(filePath, password, serializer);
@@ -194,86 +188,89 @@ public static class AkavacheBuilderExtensions
     /// <summary>
     /// A wrapper that implements ISecureBlobCache by delegating to an IBlobCache.
     /// </summary>
-    private class SecureBlobCacheWrapper(IBlobCache inner) : ISecureBlobCache
+    internal class SecureBlobCacheWrapper : ISecureBlobCache
     {
-        private readonly IBlobCache _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         private bool _disposed;
+
+        internal SecureBlobCacheWrapper(IBlobCache inner) => InnerCache = inner ?? throw new ArgumentNullException(nameof(inner));
+
+        public IBlobCache InnerCache { get; }
 
         public DateTimeKind? ForcedDateTimeKind
         {
-            get => _inner.ForcedDateTimeKind;
-            set => _inner.ForcedDateTimeKind = value;
+            get => InnerCache.ForcedDateTimeKind;
+            set => InnerCache.ForcedDateTimeKind = value;
         }
 
-        public IScheduler Scheduler => _inner.Scheduler;
+        public IScheduler Scheduler => InnerCache.Scheduler;
 
-        public ISerializer Serializer => inner.Serializer ?? throw new ArgumentNullException(nameof(inner.Serializer));
+        public ISerializer Serializer => InnerCache.Serializer ?? throw new InvalidOperationException("The inner cache's Serializer is null.");
 
         public IHttpService HttpService
         {
-            get => _inner.HttpService;
-            set => _inner.HttpService = value;
+            get => InnerCache.HttpService;
+            set => InnerCache.HttpService = value;
         }
 
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
-            _inner.Insert(keyValuePairs, absoluteExpiration);
+            InnerCache.Insert(keyValuePairs, absoluteExpiration);
 
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
-            _inner.Insert(key, data, absoluteExpiration);
+            InnerCache.Insert(key, data, absoluteExpiration);
 
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
-            _inner.Insert(keyValuePairs, type, absoluteExpiration);
+            InnerCache.Insert(keyValuePairs, type, absoluteExpiration);
 
         public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
-                    _inner.Insert(key, data, type, absoluteExpiration);
+                    InnerCache.Insert(key, data, type, absoluteExpiration);
 
-        public IObservable<byte[]?> Get(string key) => _inner.Get(key);
+        public IObservable<byte[]?> Get(string key) => InnerCache.Get(key);
 
-        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => _inner.Get(keys);
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => InnerCache.Get(keys);
 
-        public IObservable<byte[]?> Get(string key, Type type) => _inner.Get(key, type);
+        public IObservable<byte[]?> Get(string key, Type type) => InnerCache.Get(key, type);
 
-        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => _inner.Get(keys, type);
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => InnerCache.Get(keys, type);
 
-        public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => _inner.GetAll(type);
+        public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => InnerCache.GetAll(type);
 
-        public IObservable<string> GetAllKeys() => _inner.GetAllKeys();
+        public IObservable<string> GetAllKeys() => InnerCache.GetAllKeys();
 
-        public IObservable<string> GetAllKeys(Type type) => _inner.GetAllKeys(type);
+        public IObservable<string> GetAllKeys(Type type) => InnerCache.GetAllKeys(type);
 
-        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => _inner.GetCreatedAt(keys);
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => InnerCache.GetCreatedAt(keys);
 
-        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => _inner.GetCreatedAt(key);
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => InnerCache.GetCreatedAt(key);
 
-        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => _inner.GetCreatedAt(keys, type);
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => InnerCache.GetCreatedAt(keys, type);
 
-        public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => _inner.GetCreatedAt(key, type);
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => InnerCache.GetCreatedAt(key, type);
 
-        public IObservable<Unit> Flush() => _inner.Flush();
+        public IObservable<Unit> Flush() => InnerCache.Flush();
 
-        public IObservable<Unit> Flush(Type type) => _inner.Flush(type);
+        public IObservable<Unit> Flush(Type type) => InnerCache.Flush(type);
 
-        public IObservable<Unit> Invalidate(string key) => _inner.Invalidate(key);
+        public IObservable<Unit> Invalidate(string key) => InnerCache.Invalidate(key);
 
-        public IObservable<Unit> Invalidate(string key, Type type) => _inner.Invalidate(key, type);
+        public IObservable<Unit> Invalidate(string key, Type type) => InnerCache.Invalidate(key, type);
 
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => _inner.Invalidate(keys);
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => InnerCache.Invalidate(keys);
 
-        public IObservable<Unit> InvalidateAll(Type type) => _inner.InvalidateAll(type);
+        public IObservable<Unit> InvalidateAll(Type type) => InnerCache.InvalidateAll(type);
 
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => _inner.Invalidate(keys, type);
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => InnerCache.Invalidate(keys, type);
 
-        public IObservable<Unit> InvalidateAll() => _inner.InvalidateAll();
+        public IObservable<Unit> InvalidateAll() => InnerCache.InvalidateAll();
 
-        public IObservable<Unit> Vacuum() => _inner.Vacuum();
+        public IObservable<Unit> Vacuum() => InnerCache.Vacuum();
 
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(key, absoluteExpiration);
+        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, absoluteExpiration);
 
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(key, type, absoluteExpiration);
+        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, type, absoluteExpiration);
 
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(keys, absoluteExpiration);
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, absoluteExpiration);
 
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => _inner.UpdateExpiration(keys, type, absoluteExpiration);
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, type, absoluteExpiration);
 
         public void Dispose()
         {
@@ -288,11 +285,11 @@ public static class AkavacheBuilderExtensions
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected internal virtual void Dispose(bool disposing)
         {
             if (!_disposed && disposing)
             {
-                if (_inner is IDisposable disposable)
+                if (InnerCache is IDisposable disposable)
                 {
                     disposable.Dispose();
                 }
@@ -301,15 +298,11 @@ public static class AkavacheBuilderExtensions
             }
         }
 
-        protected virtual async ValueTask DisposeAsyncCore()
+        protected internal virtual async ValueTask DisposeAsyncCore()
         {
-            if (_inner is IAsyncDisposable asyncDisposable)
+            if (InnerCache is IAsyncDisposable asyncDisposable)
             {
                 await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-            }
-            else if (_inner is IDisposable disposable)
-            {
-                disposable.Dispose();
             }
         }
     }

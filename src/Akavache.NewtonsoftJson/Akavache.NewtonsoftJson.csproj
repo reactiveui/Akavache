@@ -13,6 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
   </ItemGroup>
 

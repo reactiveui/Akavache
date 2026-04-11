@@ -15,6 +15,7 @@ namespace Akavache.Tests;
 /// Tests for serializer extension methods.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel(nameof(SerializerExtensionsTests))]
 public class SerializerExtensionsTests
 {
     /// <summary>
@@ -1536,5 +1537,1383 @@ public class SerializerExtensionsTests
         {
             await cache.DisposeAsync();
         }
+    }
+
+    /// <summary>
+    /// Tests InsertObjects throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectsShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InsertObjects<string>(null!, new[] { new KeyValuePair<string, string>("k", "v") }))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests GetObjects throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectsShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetObjects<string>(null!, new[] { "k" }))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests InsertObject throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InsertObject(null!, "key", "value"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests InsertObject throws on empty key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectShouldThrowOnEmptyKey()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => SerializerExtensions.InsertObject(cache, string.Empty, "value"))
+                .Throws<ArgumentException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InsertObject handles null value by storing empty bytes.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectShouldHandleNullValue()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.InsertObject<string>("k", null!).ToTask();
+            var result = await cache.GetObject<string>("k").ToTask();
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests GetObject throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetObject<string>(null!, "key"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests GetObject throws on empty key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectShouldThrowOnEmptyKey()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => SerializerExtensions.GetObject<string>(cache, string.Empty))
+                .Throws<ArgumentException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests GetAllObjects throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllObjectsShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetAllObjects<string>(null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests GetObjectCreatedAt throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectCreatedAtShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetObjectCreatedAt<string>(null!, "key"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests GetObjectCreatedAt throws on empty key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectCreatedAtShouldThrowOnEmptyKey()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => SerializerExtensions.GetObjectCreatedAt<string>(cache, string.Empty))
+                .Throws<ArgumentException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InvalidateObject throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateObjectShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InvalidateObject<string>(null!, "key"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests InvalidateObject throws on empty key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateObjectShouldThrowOnEmptyKey()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => SerializerExtensions.InvalidateObject<string>(cache, string.Empty))
+                .Throws<ArgumentException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InvalidateObjects throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateObjectsShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InvalidateObjects<string>(null!, new[] { "key" }))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests InvalidateObjects throws on null keys.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateObjectsShouldThrowOnNullKeys()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => cache.InvalidateObjects<string>(null!))
+                .Throws<ArgumentNullException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InvalidateAllObjects throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateAllObjectsShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InvalidateAllObjects<string>(null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Exercises the static <see cref="SerializerExtensions.GetAllObjects{T}"/> extension
+    /// method directly. Tests that use <c>cache.GetAllObjects&lt;T&gt;()</c> on an
+    /// <see cref="InMemoryBlobCache"/> actually hit the shadowing instance method on
+    /// <see cref="InMemoryBlobCacheBase"/>, so the extension body never executes. This
+    /// test invokes the extension explicitly via its static form on the
+    /// <see cref="IBlobCache"/> interface so the extension method body is covered.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task GetAllObjectsStaticExtensionShouldReturnStoredObjects()
+    {
+        var serializer = new SystemJsonSerializer();
+        IBlobCache cache = new InMemoryBlobCache(serializer);
+        try
+        {
+            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
+            await cache.InsertObject("user1", user1).FirstAsync();
+            await cache.InsertObject("user2", user2).FirstAsync();
+
+            var results = await SerializerExtensions.GetAllObjects<UserObject>(cache).ToList();
+
+            await Assert.That(results).Count().IsEqualTo(2);
+            await Assert.That(results.Any(x => x.Name == "User1")).IsTrue();
+            await Assert.That(results.Any(x => x.Name == "User2")).IsTrue();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Exercises the static <see cref="SerializerExtensions.InvalidateAllObjects{T}"/>
+    /// extension method directly. See <see cref="GetAllObjectsStaticExtensionShouldReturnStoredObjects"/>
+    /// for why the static form is necessary.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InvalidateAllObjectsStaticExtensionShouldRemoveAllObjectsOfType()
+    {
+        var serializer = new SystemJsonSerializer();
+        IBlobCache cache = new InMemoryBlobCache(serializer);
+        try
+        {
+            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            await cache.InsertObject("user1", user1).FirstAsync();
+
+            await SerializerExtensions.InvalidateAllObjects<UserObject>(cache).FirstAsync();
+
+            var results = await SerializerExtensions.GetAllObjects<UserObject>(cache).ToList();
+            await Assert.That(results).IsEmpty();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InsertAllObjects throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertAllObjectsShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InsertAllObjects<string>(null!, new[] { new KeyValuePair<string, string>("k", "v") }))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests GetOrFetchObject throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetOrFetchObjectShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetOrFetchObject(null!, "key", static () => Observable.Return("value")))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests GetOrFetchObject throws on null fetchFunc.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetOrFetchObjectShouldThrowOnNullFetchFunc()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => cache.GetOrFetchObject<string>("key", (Func<IObservable<string>>)null!))
+                .Throws<ArgumentNullException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InsertObjects(IDictionary) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectsDictionaryShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.InsertObjects(null!, new Dictionary<string, object>()))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests InsertObjects(IDictionary) throws on null keyValuePairs.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectsDictionaryShouldThrowOnNullPairs()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => cache.InsertObjects((IDictionary<string, object>)null!))
+                .Throws<ArgumentNullException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InsertObjects(IDictionary) returns immediately for empty input.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectsDictionaryShouldReturnImmediatelyForEmpty()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.InsertObjects(new Dictionary<string, object>()).ToTask();
+            var keys = await cache.GetAllKeys().ToList().ToTask();
+            await Assert.That(keys).IsEmpty();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests InsertObjects(IDictionary) inserts mixed types.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectsDictionaryShouldInsertMixedTypes()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var data = new Dictionary<string, object>
+            {
+                ["k1"] = "string value",
+                ["k2"] = 42,
+                ["k3"] = new UserObject { Name = "user", Bio = "bio", Blog = "blog" }
+            };
+
+            await cache.InsertObjects(data).ToTask();
+
+            var keys = await cache.GetAllKeys().ToList().ToTask();
+            await Assert.That(keys.Count).IsEqualTo(3);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests SerializeWithContext throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SerializeWithContextShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.SerializeWithContext("value", null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests DeserializeWithContext returns default for null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldReturnDefaultForNullCache()
+    {
+        var result = SerializerExtensions.DeserializeWithContext<string>(new byte[] { 1, 2, 3 }, null!);
+        await Assert.That(result).IsNull();
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext returns default for null data.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldReturnDefaultForNullData()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var result = SerializerExtensions.DeserializeWithContext<string>(null!, cache);
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext returns default for empty data.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldReturnDefaultForEmptyData()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var result = SerializerExtensions.DeserializeWithContext<string>([], cache);
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests SerializeWithContext handles DateTime via UniversalSerializer.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SerializeWithContextShouldHandleDateTime()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var bytes = SerializerExtensions.SerializeWithContext(date, cache);
+            await Assert.That(bytes).IsNotNull();
+            await Assert.That(bytes.Length).IsGreaterThan(0);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext handles DateTime via UniversalSerializer.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldHandleDateTime()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var bytes = SerializerExtensions.SerializeWithContext(date, cache);
+            var result = SerializerExtensions.DeserializeWithContext<DateTime>(bytes, cache);
+            await Assert.That(result.Year).IsEqualTo(2025);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that SerializerExtensions.InsertObject extension stores empty bytes for a null value.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectExtensionShouldStoreEmptyBytesForNullValue()
+    {
+        var cache = CreateCache();
+        try
+        {
+            // Call extension explicitly to bypass instance-method shadowing.
+            await SerializerExtensions.InsertObject<string>(cache, "null_key", null!).ToTask();
+            var result = await SerializerExtensions.GetObject<string>(cache, "null_key").ToTask();
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that SerializerExtensions.InsertObject wraps serialization failures in InvalidOperationException.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertObjectExtensionShouldWrapSerializationFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            // Circular reference causes System.Text.Json to throw.
+            var circular = new List<object>();
+            circular.Add(circular);
+
+            await Assert.That(async () => await SerializerExtensions.InsertObject(cache, "cyc", circular).ToTask())
+                .Throws<InvalidOperationException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that SerializerExtensions.GetObject returns default for an empty byte marker.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectExtensionShouldReturnDefaultForEmptyBytes()
+    {
+        var cache = CreateCache();
+        try
+        {
+            // Store an empty byte array under a typed key to trigger the empty-length branch.
+            await cache.Insert("empty_key", [], typeof(string)).ToTask();
+            var result = await SerializerExtensions.GetObject<string>(cache, "empty_key").ToTask();
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that SerializerExtensions.GetObject wraps deserialization failures in InvalidOperationException.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectExtensionShouldWrapDeserializationFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            // Store invalid JSON bytes under a typed key so deserialization fails.
+            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            await cache.Insert("bad_json", invalid, typeof(UserObject)).ToTask();
+
+            await Assert.That(async () => await SerializerExtensions.GetObject<UserObject>(cache, "bad_json").ToTask())
+                .Throws<InvalidOperationException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAllObjects returns all stored objects of the requested type.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllObjectsShouldReturnStoredObjects()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var u1 = new UserObject { Name = "A", Bio = "B1", Blog = "Bl1" };
+            var u2 = new UserObject { Name = "B", Bio = "B2", Blog = "Bl2" };
+            await SerializerExtensions.InsertObject(cache, "a", u1).ToTask();
+            await SerializerExtensions.InsertObject(cache, "b", u2).ToTask();
+
+            var allEnumerable = await cache.GetAllObjects<UserObject>().FirstAsync();
+            var all = allEnumerable.ToList();
+            await Assert.That(all.Count).IsEqualTo(2);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAndFetchLatest with cacheValidationPredicate returning false skips caching.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAndFetchLatestShouldSkipCachingWhenValidationFails()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var latest = new UserObject { Name = "Latest", Bio = "B", Blog = "Bl" };
+
+            var results = await cache.GetAndFetchLatest(
+                "validate_key",
+                () => Observable.Return(latest),
+                fetchPredicate: null,
+                absoluteExpiration: null,
+                shouldInvalidateOnError: false,
+                cacheValidationPredicate: _ => false)
+                .ToList()
+                .ToTask();
+
+            await Assert.That(results).IsNotEmpty();
+
+            // Since cacheValidationPredicate returned false, the cache should not contain the key.
+            await Assert.That(async () => await cache.GetObject<UserObject>("validate_key").ToTask())
+                .Throws<KeyNotFoundException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAndFetchLatest invalidates the cache on fetch error when shouldInvalidateOnError is true.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAndFetchLatestShouldInvalidateOnErrorWhenRequested()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var cached = new UserObject { Name = "Cached", Bio = "B", Blog = "Bl" };
+            await SerializerExtensions.InsertObject(cache, "inv_key", cached).ToTask();
+
+            var observed = new List<UserObject?>();
+            Exception? caught = null;
+
+            try
+            {
+                await cache.GetAndFetchLatest<UserObject>(
+                    "inv_key",
+                    () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")),
+                    fetchPredicate: null,
+                    absoluteExpiration: null,
+                    shouldInvalidateOnError: true)
+                    .ForEachAsync(v => observed.Add(v));
+            }
+            catch (Exception ex)
+            {
+                caught = ex;
+            }
+
+            await Assert.That(caught).IsNotNull();
+
+            // Cache entry should have been invalidated.
+            await Assert.That(async () => await cache.GetObject<UserObject>("inv_key").ToTask())
+                .Throws<KeyNotFoundException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAndFetchLatest without shouldInvalidateOnError preserves the cached value on fetch error.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAndFetchLatestShouldNotInvalidateOnErrorByDefault()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var cached = new UserObject { Name = "Cached", Bio = "B", Blog = "Bl" };
+            await SerializerExtensions.InsertObject(cache, "keep_key", cached).ToTask();
+
+            var observed = new List<UserObject?>();
+            try
+            {
+                await cache.GetAndFetchLatest<UserObject>(
+                    "keep_key",
+                    () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")))
+                    .ForEachAsync(v => observed.Add(v));
+            }
+            catch
+            {
+                // expected
+            }
+
+            // Cache entry should still exist.
+            var stillThere = await cache.GetObject<UserObject>("keep_key").ToTask();
+            await Assert.That(stillThere).IsNotNull();
+            await Assert.That(stillThere!.Name).IsEqualTo("Cached");
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests SerializeWithContext handles nullable DateTime via UniversalSerializer.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SerializeWithContextShouldHandleNullableDateTime()
+    {
+        var cache = CreateCache();
+        try
+        {
+            DateTime? date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var bytes = SerializerExtensions.SerializeWithContext(date, cache);
+            await Assert.That(bytes).IsNotNull();
+            await Assert.That(bytes.Length).IsGreaterThan(0);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext handles nullable DateTime via UniversalSerializer.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldHandleNullableDateTime()
+    {
+        var cache = CreateCache();
+        try
+        {
+            DateTime? date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var bytes = SerializerExtensions.SerializeWithContext(date, cache);
+            var result = SerializerExtensions.DeserializeWithContext<DateTime?>(bytes, cache);
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests SerializeWithContext applies ForcedDateTimeKind for non-DateTime types.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SerializeWithContextShouldApplyForcedDateTimeKindForNonDateTime()
+    {
+        var cache = CreateCache();
+        try
+        {
+            cache.ForcedDateTimeKind = DateTimeKind.Utc;
+            var user = new UserObject { Name = "Forced", Bio = "B", Blog = "Bl" };
+            var bytes = SerializerExtensions.SerializeWithContext(user, cache);
+            await Assert.That(bytes.Length).IsGreaterThan(0);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext applies ForcedDateTimeKind for non-DateTime types.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldApplyForcedDateTimeKindForNonDateTime()
+    {
+        var cache = CreateCache();
+        try
+        {
+            cache.ForcedDateTimeKind = DateTimeKind.Utc;
+            var user = new UserObject { Name = "Forced2", Bio = "B", Blog = "Bl" };
+            var bytes = SerializerExtensions.SerializeWithContext(user, cache);
+            var result = SerializerExtensions.DeserializeWithContext<UserObject>(bytes, cache);
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result!.Name).IsEqualTo("Forced2");
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext wraps serializer failures in InvalidOperationException.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldWrapSerializerFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            await Assert.That(() => SerializerExtensions.DeserializeWithContext<UserObject>(invalid, cache))
+                .Throws<InvalidOperationException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext falls back to UniversalSerializer for DateTime failures
+    /// and returns the default value when fallback deserialization also produces default.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldFallbackForDateTimeFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+
+            // The primary serializer fails on invalid bytes, then UniversalSerializer's
+            // TryFallbackDeserialization returns default(DateTime) without throwing.
+            var result = SerializerExtensions.DeserializeWithContext<DateTime>(invalid, cache);
+            await Assert.That(result).IsEqualTo(default(DateTime));
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests DeserializeWithContext falls back for DateTimeOffset failures
+    /// and returns the default value when fallback deserialization also produces default.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldFallbackForDateTimeOffsetFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+
+            // The primary serializer fails on invalid bytes, then UniversalSerializer's
+            // TryFallbackDeserialization returns default(DateTimeOffset) without throwing.
+            var result = SerializerExtensions.DeserializeWithContext<DateTimeOffset>(invalid, cache);
+            await Assert.That(result).IsEqualTo(default(DateTimeOffset));
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests GetAllKeysSafe recovers from a failing underlying source by emitting empty.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeShouldRecoverFromExceptions()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.DisposeAsync();
+
+            // After dispose, GetAllKeys throws; GetAllKeysSafe should swallow and return empty.
+            var keys = await cache.GetAllKeysSafe().ToList().ToTask();
+            await Assert.That(keys).IsEmpty();
+        }
+        finally
+        {
+            // already disposed
+        }
+    }
+
+    /// <summary>
+    /// Tests GetAllKeysSafe(Type) recovers from a failing underlying source by emitting empty.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeWithTypeShouldRecoverFromExceptions()
+    {
+        var cache = CreateCache();
+        await cache.DisposeAsync();
+
+        var keys = await cache.GetAllKeysSafe(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(keys).IsEmpty();
+    }
+
+    /// <summary>
+    /// Tests that GetOrCreateObject throws ArgumentNullException when cache is null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetOrCreateObjectShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetOrCreateObject<string>(null!, "key", static () => "value"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests that GetAllKeysSafe throws ArgumentNullException when cache is null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetAllKeysSafe(null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests that GetAllKeysSafe with Type throws ArgumentNullException when cache is null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeWithTypeShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetAllKeysSafe(null!, typeof(string)))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests that GetAllKeysSafe with Type throws ArgumentNullException when type is null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeWithTypeShouldThrowOnNullType()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await Assert.That(() => cache.GetAllKeysSafe(null!))
+                .Throws<ArgumentNullException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that generic GetAllKeysSafe throws ArgumentNullException when cache is null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeGenericShouldThrowOnNullCache() =>
+        await Assert.That(static () => SerializerExtensions.GetAllKeysSafe<string>(null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests that the generic GetAllKeysSafe returns keys for a specific type.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeGenericShouldReturnKeysForType()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await SerializerExtensions.InsertObject(cache, "u1", new UserObject { Name = "A", Bio = "B", Blog = "C" }).ToTask();
+
+            var keys = await cache.GetAllKeysSafe<UserObject>().ToList().ToTask();
+            await Assert.That(keys.Count).IsGreaterThanOrEqualTo(1);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that the generic GetAllKeysSafe recovers from exceptions by returning empty.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeGenericShouldRecoverFromExceptions()
+    {
+        var cache = CreateCache();
+        await cache.DisposeAsync();
+
+        // After dispose, GetAllKeys throws; GetAllKeysSafe<T> should swallow and return empty.
+        var keys = await cache.GetAllKeysSafe<UserObject>().ToList().ToTask();
+        await Assert.That(keys).IsEmpty();
+    }
+
+    /// <summary>
+    /// Tests that GetAllKeysSafe filters out null and empty keys from a valid cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeShouldReturnKeysFromValidCache()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await cache.Insert("safe_key1", [1, 2, 3]).ToTask();
+            await cache.Insert("safe_key2", [4, 5, 6]).ToTask();
+
+            var keys = await cache.GetAllKeysSafe().ToList().ToTask();
+            await Assert.That(keys.Count).IsGreaterThanOrEqualTo(2);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAllKeysSafe with a Type parameter returns keys for valid cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAllKeysSafeWithTypeShouldReturnKeysForValidCache()
+    {
+        var cache = CreateCache();
+        try
+        {
+            await SerializerExtensions.InsertObject(cache, "typed_key", new UserObject { Name = "T", Bio = "B", Blog = "Bl" }).ToTask();
+
+            var keys = await cache.GetAllKeysSafe(typeof(UserObject)).ToList().ToTask();
+            await Assert.That(keys.Count).IsGreaterThanOrEqualTo(1);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetObject throws KeyNotFoundException when the underlying cache returns null bytes.
+    /// This covers the null byte array guard branch inside GetObject's Select lambda.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetObjectShouldThrowKeyNotFoundWhenCacheReturnsNullBytes()
+    {
+        var cache = new NullReturningBlobCache(new SystemJsonSerializer());
+        try
+        {
+            await Assert.That(async () => await SerializerExtensions.GetObject<UserObject>(cache, "any_key").ToTask())
+                .Throws<KeyNotFoundException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAndFetchLatest Task overload with shouldInvalidateOnError invalidates cache on error.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAndFetchLatestTaskOverloadShouldInvalidateOnError()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var cached = new UserObject { Name = "Cached", Bio = "B", Blog = "Bl" };
+            await SerializerExtensions.InsertObject(cache, "task_inv", cached).ToTask();
+
+            Exception? caught = null;
+            try
+            {
+                await cache.GetAndFetchLatest<UserObject>(
+                    "task_inv",
+                    () => Task.FromException<UserObject>(new InvalidOperationException("task fetch boom")),
+                    fetchPredicate: null,
+                    absoluteExpiration: null,
+                    shouldInvalidateOnError: true)
+                    .ForEachAsync(_ => { });
+            }
+            catch (Exception ex)
+            {
+                caught = ex;
+            }
+
+            await Assert.That(caught).IsNotNull();
+
+            // Cache entry should have been invalidated.
+            await Assert.That(async () => await cache.GetObject<UserObject>("task_inv").ToTask())
+                .Throws<KeyNotFoundException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that GetAndFetchLatest Task overload with cacheValidationPredicate returning false skips caching.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetAndFetchLatestTaskOverloadShouldSkipCachingWhenValidationFails()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var latest = new UserObject { Name = "LatestTask", Bio = "B", Blog = "Bl" };
+
+            var results = await cache.GetAndFetchLatest(
+                "task_validate",
+                () => Task.FromResult(latest),
+                fetchPredicate: null,
+                absoluteExpiration: null,
+                shouldInvalidateOnError: false,
+                cacheValidationPredicate: _ => false)
+                .ToList()
+                .ToTask();
+
+            await Assert.That(results).IsNotEmpty();
+
+            // Since cacheValidationPredicate returned false, the cache should not contain the key.
+            await Assert.That(async () => await cache.GetObject<UserObject>("task_validate").ToTask())
+                .Throws<KeyNotFoundException>();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that DeserializeWithContext returns null for nullable DateTime when the
+    /// primary serializer fails and the UniversalSerializer fallback also cannot
+    /// deserialize the invalid data (returning default instead of throwing).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldFallbackForNullableDateTimeFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+
+            // The primary serializer throws on invalid data. DeserializeWithContext detects
+            // DateTime? and routes to UniversalSerializer.Deserialize<DateTime?>, which
+            // catches the primary failure and tries fallback. With no registered fallback
+            // serializers and data too short for BSON/JSON detection, the fallback returns
+            // default (null for DateTime?).
+            var result = SerializerExtensions.DeserializeWithContext<DateTime?>(invalid, cache);
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that DeserializeWithContext returns null for nullable DateTimeOffset when the
+    /// primary serializer fails and the fallback cannot deserialize the invalid data.
+    /// Unlike non-nullable DateTimeOffset, the nullable variant goes through the
+    /// UniversalSerializer path which returns default (null) instead of throwing.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DeserializeWithContextShouldFallbackForNullableDateTimeOffsetFailure()
+    {
+        var cache = CreateCache();
+        try
+        {
+            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+
+            // The primary serializer throws on invalid data. DeserializeWithContext detects
+            // DateTimeOffset? and routes to UniversalSerializer.Deserialize<DateTimeOffset?>,
+            // which catches the primary failure and tries fallback. With no registered fallback
+            // serializers and data too short for BSON/JSON detection, the fallback returns
+            // default (null for DateTimeOffset?).
+            var result = SerializerExtensions.DeserializeWithContext<DateTimeOffset?>(invalid, cache);
+            await Assert.That(result).IsNull();
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> returns <c>true</c>
+    /// when no fetch predicate is supplied — the helper short-circuits and the cached value
+    /// is always considered stale.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ShouldRefetchCachedValueShouldReturnTrueWhenPredicateIsNull()
+    {
+        var result = SerializerExtensions.ShouldRefetchCachedValue(null, DateTimeOffset.UtcNow);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> returns <c>true</c>
+    /// when the cache has no creation timestamp, regardless of the predicate.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ShouldRefetchCachedValueShouldReturnTrueWhenCreatedAtIsNull()
+    {
+        var result = SerializerExtensions.ShouldRefetchCachedValue(static _ => false, null);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> defers to the
+    /// predicate's verdict when both the predicate and timestamp are present and the
+    /// predicate accepts the timestamp.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ShouldRefetchCachedValueShouldHonourPredicateWhenItReturnsTrue()
+    {
+        var result = SerializerExtensions.ShouldRefetchCachedValue(static _ => true, DateTimeOffset.UtcNow);
+
+        await Assert.That(result).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies <see cref="SerializerExtensions.ShouldRefetchCachedValue"/> returns <c>false</c>
+    /// when the predicate rejects the timestamp — the cached value is considered fresh.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ShouldRefetchCachedValueShouldHonourPredicateWhenItReturnsFalse()
+    {
+        var result = SerializerExtensions.ShouldRefetchCachedValue(static _ => false, DateTimeOffset.UtcNow);
+
+        await Assert.That(result).IsFalse();
+    }
+
+    private static InMemoryBlobCache CreateCache() =>
+        new(System.Reactive.Concurrency.ImmediateScheduler.Instance, new SystemJsonSerializer());
+
+    /// <summary>
+    /// A minimal IBlobCache implementation that returns null from Get(key, type)
+    /// to exercise the null byte array guard in GetObject's Select lambda.
+    /// </summary>
+    private sealed class NullReturningBlobCache : IBlobCache
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NullReturningBlobCache"/> class.
+        /// </summary>
+        /// <param name="serializer">The serializer to use.</param>
+        public NullReturningBlobCache(ISerializer serializer)
+        {
+            Serializer = serializer;
+        }
+
+        /// <inheritdoc/>
+        public ISerializer Serializer { get; }
+
+        /// <inheritdoc/>
+        public IScheduler Scheduler => System.Reactive.Concurrency.ImmediateScheduler.Instance;
+
+        /// <inheritdoc/>
+        public IHttpService HttpService { get; set; } = new HttpService();
+
+        /// <inheritdoc/>
+        public DateTimeKind? ForcedDateTimeKind { get; set; }
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]?> Get(string key) =>
+            Observable.Return<byte[]?>(null);
+
+        /// <inheritdoc/>
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) =>
+            Observable.Empty<KeyValuePair<string, byte[]>>();
+
+        /// <inheritdoc/>
+        public IObservable<byte[]?> Get(string key, Type type) =>
+            Observable.Return<byte[]?>(null);
+
+        /// <inheritdoc/>
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) =>
+            Observable.Empty<KeyValuePair<string, byte[]>>();
+
+        /// <inheritdoc/>
+        public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) =>
+            Observable.Empty<KeyValuePair<string, byte[]>>();
+
+        /// <inheritdoc/>
+        public IObservable<string> GetAllKeys() =>
+            Observable.Empty<string>();
+
+        /// <inheritdoc/>
+        public IObservable<string> GetAllKeys(Type type) =>
+            Observable.Empty<string>();
+
+        /// <inheritdoc/>
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) =>
+            Observable.Empty<(string, DateTimeOffset?)>();
+
+        /// <inheritdoc/>
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key) =>
+            Observable.Return<DateTimeOffset?>(null);
+
+        /// <inheritdoc/>
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) =>
+            Observable.Empty<(string, DateTimeOffset?)>();
+
+        /// <inheritdoc/>
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) =>
+            Observable.Return<DateTimeOffset?>(null);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Flush() =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Flush(Type type) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Invalidate(string key) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Invalidate(string key, Type type) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> InvalidateAll(Type type) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> InvalidateAll() =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Vacuum() =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) =>
+            Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+        }
+
+        /// <inheritdoc/>
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

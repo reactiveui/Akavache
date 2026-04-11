@@ -13,6 +13,7 @@ namespace Akavache.Tests;
 /// Tests for RequestCache functionality.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel(nameof(RequestCacheTests))]
 public class RequestCacheTests
 {
     /// <summary>
@@ -404,5 +405,154 @@ public class RequestCacheTests
             await Assert.That(result1).IsNull();
             await Assert.That(result2).IsNull();
         }
+    }
+
+    /// <summary>
+    /// Tests GetOrCreateRequest throws on null fetch func.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetOrCreateRequestShouldThrowOnNullFetchFunc()
+    {
+        RequestCache.Clear();
+        await Assert.That(static () => RequestCache.GetOrCreateRequest<string>("k", null!))
+            .Throws<ArgumentNullException>();
+    }
+
+    /// <summary>
+    /// Tests GetOrCreateRequest removes entry from cache after error.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetOrCreateRequestShouldRemoveOnError()
+    {
+        RequestCache.Clear();
+        var observable = RequestCache.GetOrCreateRequest<string>("error_key", static () => Observable.Throw<string>(new InvalidOperationException("test")));
+
+        try
+        {
+            await observable.ToTask();
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected
+        }
+
+        // After error, the cache entry should be removed
+        await Assert.That(RequestCache.HasInFlightRequest("error_key", typeof(string))).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests GetOrCreateRequest removes entry from cache after completion.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetOrCreateRequestShouldRemoveOnCompletion()
+    {
+        RequestCache.Clear();
+        var observable = RequestCache.GetOrCreateRequest<string>("complete_key", static () => Observable.Return("value"));
+
+        await observable.ToTask();
+
+        // After completion, the cache entry should be removed
+        await Assert.That(RequestCache.HasInFlightRequest("complete_key", typeof(string))).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests RemoveRequest throws on null type.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveRequestShouldThrowOnNullType() =>
+        await Assert.That(static () => RequestCache.RemoveRequest("k", null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests RemoveRequest removes a specific request.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveRequestShouldRemoveEntry()
+    {
+        RequestCache.Clear();
+
+        // Use a never-completing observable to keep the request in flight
+        _ = RequestCache.GetOrCreateRequest<string>("remove_test", static () => Observable.Never<string>());
+        await Assert.That(RequestCache.HasInFlightRequest("remove_test", typeof(string))).IsTrue();
+
+        RequestCache.RemoveRequest("remove_test", typeof(string));
+
+        await Assert.That(RequestCache.HasInFlightRequest("remove_test", typeof(string))).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests RemoveRequestsForKey returns immediately for empty key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveRequestsForKeyShouldReturnForEmptyKey()
+    {
+        RequestCache.Clear();
+        await Assert.That(() => RequestCache.RemoveRequestsForKey(string.Empty)).ThrowsNothing();
+        await Assert.That(() => RequestCache.RemoveRequestsForKey(null!)).ThrowsNothing();
+    }
+
+    /// <summary>
+    /// Tests RemoveRequestsForKey removes all matching entries.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveRequestsForKeyShouldRemoveMatchingEntries()
+    {
+        RequestCache.Clear();
+        _ = RequestCache.GetOrCreateRequest<string>("multitype_key", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest<int>("multitype_key", static () => Observable.Never<int>());
+
+        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(string))).IsTrue();
+        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(int))).IsTrue();
+
+        RequestCache.RemoveRequestsForKey("multitype_key");
+
+        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(string))).IsFalse();
+        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(int))).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests HasInFlightRequest throws on null type.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task HasInFlightRequestShouldThrowOnNullType() =>
+        await Assert.That(static () => RequestCache.HasInFlightRequest("k", null!))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests HasInFlightRequest returns false for non-existent entry.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task HasInFlightRequestShouldReturnFalseForNonExistent()
+    {
+        RequestCache.Clear();
+        await Assert.That(RequestCache.HasInFlightRequest("nonexistent", typeof(string))).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests Count returns the number of in-flight requests.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task CountShouldReturnInFlightCount()
+    {
+        RequestCache.Clear();
+        await Assert.That(RequestCache.Count).IsEqualTo(0);
+
+        _ = RequestCache.GetOrCreateRequest<string>("count_test_1", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest<string>("count_test_2", static () => Observable.Never<string>());
+
+        await Assert.That(RequestCache.Count).IsEqualTo(2);
+
+        RequestCache.Clear();
+        await Assert.That(RequestCache.Count).IsEqualTo(0);
     }
 }

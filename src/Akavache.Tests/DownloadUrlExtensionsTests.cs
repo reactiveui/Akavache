@@ -18,6 +18,7 @@ namespace Akavache.Tests;
 /// </summary>
 [Category("Akavache")]
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA1001:Types that own disposable fields should be disposable", Justification = "Cleanup is handled via test hooks")]
+[NotInParallel("CacheDatabaseState")]
 public class DownloadUrlExtensionsTests
 {
     private TestHttpServer? _testServer;
@@ -47,7 +48,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(() => serializer);
+        CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -83,7 +84,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(() => serializer);
+        CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -121,7 +122,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(() => serializer);
+        CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -161,7 +162,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(() => serializer);
+        CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -201,7 +202,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(() => serializer);
+        CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         var cache = new InMemoryBlobCache(serializer);
 
@@ -310,7 +311,7 @@ public class DownloadUrlExtensionsTests
     {
         // Arrange
         var serializer = new SystemJsonSerializer();
-        CacheDatabase.Initialize(() => serializer);
+        CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out var path))
         {

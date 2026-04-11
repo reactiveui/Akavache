@@ -100,7 +100,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -137,7 +137,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -164,7 +164,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -225,7 +225,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -265,7 +265,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -307,7 +307,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -370,7 +370,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -422,7 +422,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 b =>
                 {
                     b.WithSqliteProvider()
@@ -461,7 +461,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -488,7 +488,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -680,7 +680,7 @@ public class AkavacheBuilderExtensionsTests
 
         _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: null,
+                applicationName: "Akavache",
                 builder =>
                 {
                     builder
@@ -913,7 +913,7 @@ public class AkavacheBuilderExtensionsTests
         where TSerializer : class, ISerializer, new() =>
         _appBuilder
             .WithAkavache<TSerializer>(
-                applicationName,
+                applicationName!,
                 builder =>
                 {
                     builder

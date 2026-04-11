@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:conv="clr-namespace:AkavacheTodoMaui.Converters"
     xmlns:vm="clr-namespace:AkavacheTodoMaui.ViewModels"
+    x:DataType="vm:MainViewModel"
     Title="Akavache Todo MAUI">
 
     <ContentPage.Resources>
@@ -160,7 +161,7 @@
 
                         <CollectionView ItemsSource="{Binding Todos}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="vm:TodoItemViewModel">
                                     <Border
                                         Margin="2"
                                         Padding="10"
@@ -246,7 +247,7 @@
                             TextColor="#E65100" />
                         <CollectionView HeightRequest="100" ItemsSource="{Binding Notifications}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="x:String">
                                     <Label
                                         Padding="5"
                                         BackgroundColor="#FFF8E1"

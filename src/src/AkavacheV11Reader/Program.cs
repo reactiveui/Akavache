@@ -27,11 +27,8 @@ Console.WriteLine($"V11 Reader starting. DB path: {dbPath}");
 var allPass = true;
 
 // Initialize Akavache v11 (Sqlite defaults just for serializer bootstrapping)
-var instance = CacheDatabase.CreateBuilder()
-
-    // .WithSerializer<NewtonsoftBsonSerializer>()
+var instance = CacheDatabase.CreateBuilder("AkavacheCompatTest")
     .WithSerializer<SystemJsonSerializer>()
-    .WithApplicationName("AkavacheCompatTest")
     .WithSqliteProvider()
     .WithSqliteDefaults()
     .Build();

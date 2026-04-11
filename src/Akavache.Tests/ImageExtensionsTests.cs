@@ -3,6 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
+using System.Reactive.Threading.Tasks;
+using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
@@ -161,7 +164,7 @@ public class ImageExtensionsTests
         byte[]? nullData = null;
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await nullData!.ThrowOnBadImageBuffer().FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await ImageExtensions.ThrowOnBadImageBuffer(nullData).FirstAsync());
     }
 
     /// <summary>
@@ -175,7 +178,7 @@ public class ImageExtensionsTests
         var tooSmallData = new byte[32]; // Less than 64 bytes
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await tooSmallData.ThrowOnBadImageBuffer().FirstAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await ImageExtensions.ThrowOnBadImageBuffer(tooSmallData).FirstAsync());
     }
 
     /// <summary>
@@ -193,7 +196,7 @@ public class ImageExtensionsTests
         }
 
         // Act
-        var result = await validImageData.ThrowOnBadImageBuffer().FirstAsync();
+        var result = await ImageExtensions.ThrowOnBadImageBuffer(validImageData).FirstAsync();
 
         // Assert
         await Assert.That(result).IsEqualTo(validImageData);
@@ -515,7 +518,7 @@ public class ImageExtensionsTests
         if (shouldSucceed)
         {
             // Act
-            var result = await buffer.ThrowOnBadImageBuffer().FirstAsync();
+            var result = await ImageExtensions.ThrowOnBadImageBuffer(buffer).FirstAsync();
 
             // Assert
             await Assert.That(result).IsEqualTo(buffer);
@@ -523,7 +526,481 @@ public class ImageExtensionsTests
         else
         {
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await buffer.ThrowOnBadImageBuffer().FirstAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await ImageExtensions.ThrowOnBadImageBuffer(buffer).FirstAsync());
         }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytes throws when the cached bytes are too small to be a valid image.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesShouldThrowWhenCachedBytesAreTooSmall()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string key = "too_small";
+            var tinyData = new byte[32];
+            await cache.Insert(key, tinyData).FirstAsync();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await cache.LoadImageBytes(key).FirstAsync());
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytes throws when the cached bytes are an empty buffer.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesShouldThrowWhenCachedBytesAreEmpty()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string key = "empty";
+            await cache.Insert(key, []).FirstAsync();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await cache.LoadImageBytes(key).FirstAsync());
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl (string) returns the cached bytes when the URL is already cached.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlStringShouldReturnCachedBytes()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string url = "http://example.com/cached-string.png";
+            var imageData = CreateImageData(128);
+            await cache.Insert(url, imageData, DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
+
+            var result = await cache.LoadImageBytesFromUrl(url).FirstAsync();
+
+            await Assert.That(result).IsEqualTo(imageData);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl (Uri) returns the cached bytes when the URL is already cached.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlUriShouldReturnCachedBytes()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            var uri = new Uri("http://example.com/cached-uri.png");
+            var imageData = CreateImageData(128);
+            await cache.Insert(uri.ToString(), imageData, DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
+
+            var result = await cache.LoadImageBytesFromUrl(uri).FirstAsync();
+
+            await Assert.That(result).IsEqualTo(imageData);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl with explicit key and string URL returns the cached bytes.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlWithKeyAndStringShouldReturnCachedBytes()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string key = "my-key";
+            const string url = "http://example.com/with-key-string.png";
+            var imageData = CreateImageData(256);
+            await cache.Insert(key, imageData, DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
+
+            var result = await cache.LoadImageBytesFromUrl(key, url).FirstAsync();
+
+            await Assert.That(result).IsEqualTo(imageData);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl with explicit key and Uri returns the cached bytes.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlWithKeyAndUriShouldReturnCachedBytes()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string key = "my-uri-key";
+            var uri = new Uri("http://example.com/with-key-uri.png");
+            var imageData = CreateImageData(256);
+            await cache.Insert(key, imageData, DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
+
+            var result = await cache.LoadImageBytesFromUrl(key, uri).FirstAsync();
+
+            await Assert.That(result).IsEqualTo(imageData);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that LoadImageBytesFromUrl throws when the cached bytes are too small to be a valid image.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlShouldThrowWhenCachedBytesAreTooSmall()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string url = "http://example.com/tiny.png";
+            await cache.Insert(url, new byte[10], DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await cache.LoadImageBytesFromUrl(url).FirstAsync());
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests that ThrowOnBadImageBuffer returns the buffer for data exactly at the 64-byte threshold.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ThrowOnBadImageBufferShouldAcceptExactThresholdBuffer()
+    {
+        var buffer = CreateImageData(64);
+
+        var result = await ImageExtensions.ThrowOnBadImageBuffer(buffer).FirstAsync();
+
+        await Assert.That(result).IsEqualTo(buffer);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.ThrowOnNullOrBadImageBuffer"/> throws an
+    /// "Image data is null" error when handed a <see langword="null"/> buffer. The
+    /// in-line ternary that used to live inside <c>LoadImageBytes</c>' <c>SelectMany</c>
+    /// could not reach this branch because no real <see cref="IBlobCache"/> emits
+    /// a null byte array.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput() =>
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await ImageExtensions.ThrowOnNullOrBadImageBuffer(null).FirstAsync());
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.ThrowOnNullOrBadImageBuffer"/> routes a valid
+    /// buffer through the bad-image guard and returns it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task ThrowOnNullOrBadImageBufferShouldReturnValidBuffer()
+    {
+        var buffer = new byte[128];
+
+        var result = await ImageExtensions.ThrowOnNullOrBadImageBuffer(buffer).FirstAsync();
+
+        await Assert.That(result).IsSameReferenceAs(buffer);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.ThrowOnNullOrBadImageBuffer"/> forwards the
+    /// short-buffer error from <see cref="ImageExtensions.ThrowOnBadImageBuffer"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous unit test.</returns>
+    [Test]
+    public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer() =>
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await ImageExtensions.ThrowOnNullOrBadImageBuffer(new byte[] { 1, 2, 3 }).FirstAsync());
+
+    /// <summary>
+    /// Tests that IsValidImageFormat returns false for an empty byte array.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsValidImageFormatShouldReturnFalseForEmptyArray()
+    {
+        byte[] empty = [];
+
+        var result = empty.IsValidImageFormat();
+
+        await Assert.That(result).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests that IsValidImageFormat returns false for a buffer with WebP RIFF header but wrong subtype.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsValidImageFormatShouldReturnFalseForRiffWithoutWebpMarker()
+    {
+        // RIFF header but AVI (not WEBP).
+        byte[] avi = [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x41, 0x56, 0x49, 0x20];
+
+        var result = avi.IsValidImageFormat();
+
+        await Assert.That(result).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests LoadImageBytes throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesShouldThrowOnNullCache() =>
+        await Assert.That(static () => ImageExtensions.LoadImageBytes(null!, "key"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests LoadImageBytesFromUrl(string url) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlStringShouldThrowOnNullCache() =>
+        await Assert.That(static () => ImageExtensions.LoadImageBytesFromUrl(null!, "http://example.com/img.png"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests LoadImageBytesFromUrl(string key, string url) throws on null cache.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlKeyStringShouldThrowOnNullCache() =>
+        await Assert.That(static () => ImageExtensions.LoadImageBytesFromUrl(null!, "mykey", "http://example.com/img.png"))
+            .Throws<ArgumentNullException>();
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.LoadImageBytes"/> surfaces an
+    /// <see cref="InvalidOperationException"/> when the cache yields a null byte array,
+    /// covering the false branch of the inner <c>bytes != null ?</c> ternary inside the
+    /// SelectMany lambda.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesShouldThrowWhenCacheReturnsNullBytes()
+    {
+        var cache = new NullByteBlobCache();
+
+        await Assert.That(async () => await cache.LoadImageBytes("k").FirstAsync())
+            .Throws<InvalidOperationException>();
+    }
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.LoadImageBytesFromUrl(IBlobCache, string, bool, DateTimeOffset?)"/>
+    /// happy path: serves the URL from the cache (avoiding a network call) and returns the bytes.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlStringShouldServeFromCache()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string url = "http://example.invalid/img.bin";
+            var bytes = CreateImageData(128);
+            await cache.Insert(url, bytes).ToTask();
+
+            var result = await cache.LoadImageBytesFromUrl(url).FirstAsync();
+            await Assert.That(result).IsEquivalentTo(bytes);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.LoadImageBytesFromUrl(IBlobCache, Uri, bool, DateTimeOffset?)"/>
+    /// happy path: serves the URL from the cache (avoiding a network call) and returns the bytes.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlUriShouldServeFromCache()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            var url = new Uri("http://example.invalid/img.bin");
+            var bytes = CreateImageData(128);
+            await cache.Insert(url.ToString(), bytes).ToTask();
+
+            var result = await cache.LoadImageBytesFromUrl(url).FirstAsync();
+            await Assert.That(result).IsEquivalentTo(bytes);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.LoadImageBytesFromUrl(IBlobCache, string, string, bool, DateTimeOffset?)"/>
+    /// (key + string url overload) happy path: serves the cached bytes for the supplied key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlKeyStringShouldServeFromCache()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string key = "img-key";
+            var bytes = CreateImageData(128);
+            await cache.Insert(key, bytes).ToTask();
+
+            var result = await cache.LoadImageBytesFromUrl(key, "http://example.invalid/img.bin").FirstAsync();
+            await Assert.That(result).IsEquivalentTo(bytes);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tests <see cref="ImageExtensions.LoadImageBytesFromUrl(IBlobCache, string, Uri, bool, DateTimeOffset?)"/>
+    /// (key + Uri overload) happy path: serves the cached bytes for the supplied key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task LoadImageBytesFromUrlKeyUriShouldServeFromCache()
+    {
+        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        try
+        {
+            const string key = "img-key";
+            var bytes = CreateImageData(128);
+            await cache.Insert(key, bytes).ToTask();
+
+            var result = await cache.LoadImageBytesFromUrl(key, new Uri("http://example.invalid/img.bin")).FirstAsync();
+            await Assert.That(result).IsEquivalentTo(bytes);
+        }
+        finally
+        {
+            await cache.DisposeAsync();
+        }
+    }
+
+    private static byte[] CreateImageData(int size)
+    {
+        var data = new byte[size];
+        for (var i = 0; i < data.Length; i++)
+        {
+            data[i] = (byte)(i % 256);
+        }
+
+        return data;
+    }
+
+    /// <summary>
+    /// Minimal <see cref="IBlobCache"/> stub whose <see cref="Get(string)"/> implementation
+    /// returns a single null byte array. Used to drive the false branch of the
+    /// <c>bytes != null ?</c> ternary inside <see cref="ImageExtensions.LoadImageBytes"/>.
+    /// </summary>
+    private sealed class NullByteBlobCache : IBlobCache
+    {
+        public ISerializer Serializer { get; } = new SystemJsonSerializer();
+
+        public IScheduler Scheduler { get; } = ImmediateScheduler.Instance;
+
+        public IHttpService HttpService { get; set; } = new HttpService();
+
+        public DateTimeKind? ForcedDateTimeKind { get; set; }
+
+        public IObservable<byte[]?> Get(string key) => Observable.Return<byte[]?>(null);
+
+        public void Dispose()
+        {
+        }
+
+        public ValueTask DisposeAsync() => default;
+
+        public IObservable<Unit> Flush() => Observable.Return(Unit.Default);
+
+        public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
+
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+
+        public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => throw new NotImplementedException();
+
+        public IObservable<byte[]?> Get(string key, Type type) => throw new NotImplementedException();
+
+        public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
+
+        public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => throw new NotImplementedException();
+
+        public IObservable<string> GetAllKeys() => throw new NotImplementedException();
+
+        public IObservable<string> GetAllKeys(Type type) => throw new NotImplementedException();
+
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => throw new NotImplementedException();
+
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key) => throw new NotImplementedException();
+
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
+
+        public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => throw new NotImplementedException();
+
+        public IObservable<Unit> Invalidate(string key) => throw new NotImplementedException();
+
+        public IObservable<Unit> Invalidate(string key, Type type) => throw new NotImplementedException();
+
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => throw new NotImplementedException();
+
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => throw new NotImplementedException();
+
+        public IObservable<Unit> InvalidateAll(Type type) => throw new NotImplementedException();
+
+        public IObservable<Unit> InvalidateAll() => throw new NotImplementedException();
+
+        public IObservable<Unit> Vacuum() => throw new NotImplementedException();
+
+        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
     }
 }

@@ -76,14 +76,13 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
     {
         if (value is DateTime dateTime)
         {
-            // Store ticks in a way that preserves the intent while allowing proper deserialization
-            // Convert to UTC for consistent storage, but handle each kind appropriately
+            // Store ticks in a way that preserves the intent while allowing proper deserialization.
+            // Convert to UTC for consistent storage, but handle each kind appropriately.
             var ticksToStore = dateTime.Kind switch
             {
                 DateTimeKind.Utc => dateTime.Ticks,
                 DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
-                DateTimeKind.Unspecified => dateTime.Ticks, // Preserve original ticks for unspecified
-                _ => dateTime.Ticks
+                _ => dateTime.Ticks, // Unspecified — preserve original ticks
             };
 
             writer.WriteValue(ticksToStore);
