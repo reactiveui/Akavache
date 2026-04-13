@@ -332,6 +332,7 @@ public abstract class DateTimeTestBase : IDisposable
 
         if (disposing)
         {
+            // No managed resources to dispose in this base class.
         }
 
         _disposed = true;
