@@ -66,7 +66,8 @@ public class CacheEntryTests
     public async Task EqualsShouldReturnFalseForNull()
     {
         CacheEntry entry = new() { Id = "k" };
-        await Assert.That(entry.Equals(null)).IsFalse();
+        CacheEntry? other = null;
+        await Assert.That(entry.Equals(other)).IsFalse();
     }
 
     /// <summary>

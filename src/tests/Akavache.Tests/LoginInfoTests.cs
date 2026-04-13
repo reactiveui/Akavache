@@ -76,7 +76,8 @@ public class LoginInfoTests
     public async Task EqualsShouldReturnFalseForNull()
     {
         LoginInfo login = new("alice", "secret");
-        await Assert.That(login.Equals(null)).IsFalse();
+        LoginInfo? other = null;
+        await Assert.That(login.Equals(other)).IsFalse();
     }
 
     /// <summary>
