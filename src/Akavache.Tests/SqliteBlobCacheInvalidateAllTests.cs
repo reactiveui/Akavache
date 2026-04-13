@@ -3,9 +3,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
-using Akavache.Tests.Helpers;
+using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
@@ -25,8 +26,7 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_AllItems()
     {
         var serializer = new SystemJsonSerializer();
-        using (Utility.WithEmptyDirectory(out var path))
-        await using (var cache = new SqliteBlobCache(Path.Combine(path, "invalidateall-basic.db"), serializer))
+        await using (var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance))
         {
             // Arrange
             await cache.Insert("a", [1]).Timeout(Timeout).FirstAsync();
@@ -57,8 +57,7 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_TypedAndUntypedItems()
     {
         var serializer = new SystemJsonSerializer();
-        using (Utility.WithEmptyDirectory(out var path))
-        await using (var cache = new SqliteBlobCache(Path.Combine(path, "invalidateall-mixed.db"), serializer))
+        await using (var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance))
         {
             // Arrange: mix typed and untyped entries
             await cache.Insert("u1", [1]).Timeout(Timeout).FirstAsync();
@@ -94,8 +93,7 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldIgnore_ExpiredEntriesButStillClearAll()
     {
         var serializer = new SystemJsonSerializer();
-        using (Utility.WithEmptyDirectory(out var path))
-        await using (var cache = new SqliteBlobCache(Path.Combine(path, "invalidateall-expired.db"), serializer))
+        await using (var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance))
         {
             // Arrange: one expired, one not
             await cache.Insert("live", [1], DateTimeOffset.Now.AddMinutes(5)).Timeout(Timeout).FirstAsync();

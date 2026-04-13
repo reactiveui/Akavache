@@ -13,6 +13,7 @@ namespace Akavache.Tests;
 /// Tests for login extension methods.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel("NativeSqlite")]
 public class LoginExtensionsTests
 {
     /// <summary>

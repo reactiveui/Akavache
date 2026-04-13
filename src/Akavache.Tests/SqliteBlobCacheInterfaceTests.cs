@@ -3,31 +3,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
 using Akavache.Sqlite3;
+using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for the <see cref="SqliteBlobCache"/> class interface implementation.
+/// Uses <see cref="InMemoryAkavacheConnection"/> so native SQLite is not touched.
 /// </summary>
 [InheritsTests]
 public class SqliteBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
-    {
-        if (serializer == null)
-        {
-            throw new ArgumentNullException(nameof(serializer));
-        }
-
-        // Create separate database files for each serializer to ensure compatibility
-        var serializerName = serializer.GetType().Name ?? "Unknown";
-
-        // Further separate JSON and BSON formats to prevent cross-contamination
-        var formatType = serializerName.Contains("Bson") ? "bson" : "json";
-        var fileName = $"sqlite-interface-{serializerName}-{formatType}.db";
-
-        return new SqliteBlobCache(Path.Combine(path, fileName), serializer);
-    }
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
+        new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 }

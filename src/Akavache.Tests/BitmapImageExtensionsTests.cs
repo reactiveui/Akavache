@@ -15,6 +15,7 @@ namespace Akavache.Tests;
 /// Tests for Akavache.Drawing BitmapImageExtensions functionality.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel("BitmapLoader")]
 public class BitmapImageExtensionsTests
 {
     private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);

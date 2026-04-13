@@ -15,6 +15,7 @@ namespace Akavache.Tests;
 /// method to ensure provider-specific SQL actually executes.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel("NativeSqlite")]
 public class SqliteAkavacheConnectionTests
 {
     /// <summary>

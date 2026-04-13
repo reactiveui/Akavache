@@ -371,7 +371,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedConstructorWithNullFileNameShouldThrow() =>
-        await Assert.That(() => new EncryptedSqliteBlobCache((string)null!, GetTestPassword(), new SystemJsonSerializer())).Throws<ArgumentNullException>();
+        await Assert.That(() => new EncryptedSqliteBlobCache((string)null!, "test123", new SystemJsonSerializer())).Throws<ArgumentNullException>();
 
     /// <summary>
     /// Verifies the encrypted constructor throws when given a null password — covers the
@@ -629,26 +629,6 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     }
 
     /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
-    {
-        // Create separate database files for each serializer to ensure compatibility.
-        var serializerName = AppLocator.Current.GetService<ISerializer>()?.GetType().Name ?? "Unknown";
-
-        // Further separate JSON and BSON formats to prevent cross-contamination.
-        var formatType = serializerName.Contains("Bson") ? "bson" : "json";
-        var fileName = $"encrypted-test-{serializerName}-{formatType}.db";
-
-        return new EncryptedSqliteBlobCache(Path.Combine(path, fileName), GetTestPassword(), serializer);
-    }
-
-    /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCacheForPath(string path, ISerializer serializer)
-    {
-        // For round-trip tests, use a consistent database file name to ensure
-        // both cache instances (write and read) use the same database file.
-        var fileName = "encrypted-roundtrip-test.db";
-        return new EncryptedSqliteBlobCache(Path.Combine(path, fileName), GetTestPassword(), serializer);
-    }
-
-    private static string GetTestPassword() => "test123";
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
+        new EncryptedSqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 }

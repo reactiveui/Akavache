@@ -13,7 +13,7 @@ namespace Akavache.Tests;
 /// Tests for backward compatibility scenarios, especially for mobile platforms.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
+[NotInParallel(["CacheDatabaseState", "NativeSqlite"])]
 public class BackwardCompatibilityTests
 {
     /// <summary>

@@ -14,6 +14,7 @@ namespace Akavache.Tests;
 /// Focused serialization compatibility tests to ensure proper cross-serializer compatibility.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel("NativeSqlite")]
 public class SerializationCompatibilityTests
 {
     // 1. Define the data source for the parameters

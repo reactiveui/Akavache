@@ -16,6 +16,7 @@ namespace Akavache.Settings.Tests;
 /// Uses eventually-consistent polling and treats transient disposal as retryable.
 /// </summary>
 [Category("Akavache")]
+[NotInParallel(["CacheDatabaseState", "NativeSqlite"])]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsCacheTests
 {

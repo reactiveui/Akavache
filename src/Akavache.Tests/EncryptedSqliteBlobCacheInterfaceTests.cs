@@ -3,33 +3,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
 using Akavache.EncryptedSqlite3;
+using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
 /// <summary>
 /// Tests for the <see cref="EncryptedSqliteBlobCache"/> class interface implementation.
+/// Uses <see cref="InMemoryAkavacheConnection"/> so native SQLCipher is not touched.
 /// </summary>
 [InheritsTests]
 public class EncryptedSqliteBlobCacheInterfaceTests : BlobCacheTestsBase
 {
     /// <inheritdoc />
-    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
-    {
-        if (serializer == null)
-        {
-            throw new ArgumentNullException(nameof(serializer));
-        }
-
-        // Create separate database files for each serializer to ensure compatibility
-        var serializerName = serializer.GetType().Name ?? "Unknown";
-
-        // Further separate JSON and BSON formats to prevent cross-contamination
-        var formatType = serializerName.Contains("Bson") ? "bson" : "json";
-        var fileName = $"encrypted-interface-{serializerName}-{formatType}.db";
-
-        return new EncryptedSqliteBlobCache(Path.Combine(path, fileName), GetTestPassword(), serializer);
-    }
-
-    private static string GetTestPassword() => "test123";
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
+        new EncryptedSqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 }

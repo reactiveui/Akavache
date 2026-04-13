@@ -3,40 +3,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
 using Akavache.Sqlite3;
+using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
 /// <summary>
-/// Tests for the <see cref="SqliteBlobCache"/> class.
+/// Tests for the <see cref="SqliteBlobCache"/> class. Runs the inherited
+/// <see cref="BlobCacheTestsBase"/> suite against an
+/// <see cref="InMemoryAkavacheConnection"/> so that native SQLite is not touched on the
+/// parallel path — the native provider is exercised in the dedicated integration tests
+/// marked <c>NotInParallel("NativeSqlite")</c>.
 /// </summary>
 [InheritsTests]
 public class SqliteBlobCacheTests : BlobCacheTestsBase
 {
     /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer)
-    {
-        if (serializer == null)
-        {
-            throw new ArgumentNullException(nameof(serializer));
-        }
-
-        // Create separate database files for each serializer AND format type to ensure compatibility
-        var serializerName = serializer.GetType().Name ?? "Unknown";
-
-        // Further separate JSON and BSON formats to prevent cross-contamination
-        var formatType = serializerName.Contains("Bson") ? "bson" : "json";
-        var fileName = $"test-{serializerName}-{formatType}.db";
-
-        return new SqliteBlobCache(Path.Combine(path, fileName), serializer);
-    }
-
-    /// <inheritdoc/>
-    protected override IBlobCache CreateBlobCacheForPath(string path, ISerializer serializer)
-    {
-        // For round-trip tests, use a consistent database file name to ensure
-        // both cache instances (write and read) use the same database file
-        var fileName = "roundtrip-test.db";
-        return new SqliteBlobCache(Path.Combine(path, fileName), serializer);
-    }
+    protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
+        new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 }
