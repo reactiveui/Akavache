@@ -4,6 +4,7 @@
 
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
+using Akavache.Tests.Executors;
 
 namespace Akavache.Tests;
 
@@ -20,6 +21,7 @@ public class BackwardCompatibilityTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
+    [TestExecutor<AkavacheTestExecutor>]
     public async Task WithSqliteDefaults_WithoutProvider_ShouldWorkAfterFix()
     {
         // This test verifies that the fix enables backward compatibility
@@ -50,6 +52,7 @@ public class BackwardCompatibilityTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
+    [TestExecutor<AkavacheTestExecutor>]
     public async Task WithSqliteProvider_ThenDefaults_ShouldWork()
     {
         const string testAppName = "NewPatternTest";
