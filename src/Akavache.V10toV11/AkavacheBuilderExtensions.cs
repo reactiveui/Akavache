@@ -117,15 +117,16 @@ public static class AkavacheBuilderExtensions
         if (options.MigrateSecure)
         {
             // Secure cache may be wrapped in SecureBlobCacheWrapper
-            var secureCache = GetUnderlyingBlobCache(builder.Secure) as SqliteBlobCache;
-            if (secureCache != null)
+            if (GetUnderlyingBlobCache(builder.Secure) is not SqliteBlobCache secureCache)
             {
-                var v10Path = GetV10DatabasePath(builder, Secure);
-                if (v10Path != null)
-                {
-                    V10MigrationService.MigrateAsync(v10Path, secureCache, serializer, options)
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                }
+                return builder;
+            }
+
+            var v10Path = GetV10DatabasePath(builder, Secure);
+            if (v10Path != null)
+            {
+                V10MigrationService.MigrateAsync(v10Path, secureCache, serializer, options)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
             }
         }
 
@@ -177,12 +178,7 @@ public static class AkavacheBuilderExtensions
     internal static string? GetV10DatabasePath(IAkavacheBuilder builder, string cacheName)
     {
         var directory = builder.GetLegacyCacheDirectory(cacheName);
-        if (string.IsNullOrWhiteSpace(directory))
-        {
-            return null;
-        }
-
-        return Path.Combine(directory, V10FileNameMap.GetV10FileName(cacheName));
+        return string.IsNullOrWhiteSpace(directory) ? null : Path.Combine(directory, V10FileNameMap.GetV10FileName(cacheName));
     }
 
     /// <summary>
@@ -205,10 +201,12 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="InvalidOperationException">Thrown when the name is null, empty, or whitespace.</exception>
     internal static void ValidateApplicationName(string? applicationName)
     {
-        if (string.IsNullOrWhiteSpace(applicationName))
+        if (!string.IsNullOrWhiteSpace(applicationName))
         {
-            throw new InvalidOperationException("Application name must be set before configuring V10 file names. Call WithApplicationName() first.");
+            return;
         }
+
+        throw new InvalidOperationException("Application name must be set before configuring V10 file names. Call WithApplicationName() first.");
     }
 
     /// <summary>
@@ -359,15 +357,17 @@ public static class AkavacheBuilderExtensions
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected internal virtual void Dispose(bool disposing)
         {
-            if (!_disposed && disposing)
+            if (_disposed || !disposing)
             {
-                if (InnerCache is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-
-                _disposed = true;
+                return;
             }
+
+            if (InnerCache is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            _disposed = true;
         }
 
         /// <summary>

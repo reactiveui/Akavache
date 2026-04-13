@@ -70,7 +70,7 @@ public class AkavacheV10ReadBenchmarks
         // We can't use Assembly.Location because unit test runners love
         // to move stuff to temp directories
         var st = new StackFrame(true);
-        var di = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(st.GetFileName()!)!));
+        var di = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(st.GetFileName())!));
 
         return di.FullName;
     }
@@ -196,9 +196,7 @@ public class AkavacheV10ReadBenchmarks
             while (remaining > 0)
             {
                 var chunkSize = Math.Min(500, remaining); // Process in reasonable chunks
-                var toWrite = PerfHelper.GenerateRandomDatabaseContents(chunkSize);
-
-                foreach (var kvp in toWrite)
+                foreach (var kvp in PerfHelper.GenerateRandomDatabaseContents(chunkSize))
                 {
                     cache.Insert(kvp.Key, kvp.Value).FirstAsync().GetAwaiter().GetResult();
                     ret.Add(kvp.Key);

@@ -2,9 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Net.Http;
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
@@ -31,7 +29,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task WriteAsyncRxShouldWriteToStream()
     {
-        using var stream = new MemoryStream();
+        await using var stream = new MemoryStream();
         var data = new byte[] { 1, 2, 3, 4, 5 };
 
         await stream.WriteAsyncRx(data, 0, data.Length).ToTask();
@@ -48,7 +46,7 @@ public class HttpExtensionsTests
     {
         await using var stream = new ThrowingStream();
 
-        await Assert.That(async () => await stream.WriteAsyncRx([1], 0, 1).ToTask())
+        await Assert.That(() => stream.WriteAsyncRx([1], 0, 1).ToTask())
             .Throws<Exception>();
     }
 
@@ -57,6 +55,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnNullCache() =>
         await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "https://example.com"))
             .Throws<ArgumentNullException>();
@@ -66,6 +65,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnNullUrl()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -85,6 +85,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnEmptyUrl()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -132,6 +133,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullCache() =>
         await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "key", "https://example.com"))
             .Throws<ArgumentNullException>();
@@ -141,6 +143,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullKey()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -160,6 +163,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyKey()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -179,6 +183,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullUrl()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -198,6 +203,7 @@ public class HttpExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyUrl()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -288,7 +294,7 @@ public class HttpExtensionsTests
         await using var stream = new EndWriteThrowingStream();
         var data = new byte[] { 1, 2, 3 };
 
-        await Assert.That(async () => await stream.WriteAsyncRx(data, 0, data.Length).ToTask())
+        await Assert.That(() => stream.WriteAsyncRx(data, 0, data.Length).ToTask())
             .Throws<InvalidOperationException>();
     }
 

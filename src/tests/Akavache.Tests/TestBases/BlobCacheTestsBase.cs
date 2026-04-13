@@ -12,6 +12,7 @@ namespace Akavache.Tests;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
+[NotInParallel(nameof(RequestCacheTests))]
 public abstract class BlobCacheTestsBase : IDisposable
 {
     /// <summary>
@@ -63,22 +64,18 @@ public abstract class BlobCacheTestsBase : IDisposable
             catch (TimeoutException)
             {
                 // Skip test if request times out
-                return;
             }
             catch (HttpRequestException)
             {
                 // Skip test if httpbin.org is unavailable
-                return;
             }
             catch (TaskCanceledException)
             {
                 // Skip test if request times out
-                return;
             }
             catch (InvalidOperationException)
             {
                 // Observable completed without a value (environment/network quirk) � skip
-                return;
             }
         }
     }
@@ -117,22 +114,18 @@ public abstract class BlobCacheTestsBase : IDisposable
             catch (TimeoutException)
             {
                 // Skip test if request times out
-                return;
             }
             catch (HttpRequestException)
             {
                 // Skip test if httpbin.org is unavailable
-                return;
             }
             catch (TaskCanceledException)
             {
                 // Skip test if request times out
-                return;
             }
             catch (InvalidOperationException)
             {
                 // Observable completed without a value � skip
-                return;
             }
         }
     }
@@ -172,22 +165,18 @@ public abstract class BlobCacheTestsBase : IDisposable
             catch (TimeoutException)
             {
                 // Skip test if request times out
-                return;
             }
             catch (HttpRequestException)
             {
                 // Skip test if httpbin.org is unavailable
-                return;
             }
             catch (TaskCanceledException)
             {
                 // Skip test if request times out
-                return;
             }
             catch (InvalidOperationException)
             {
                 // Observable completed without a value � skip
-                return;
             }
         }
     }
@@ -226,20 +215,16 @@ public abstract class BlobCacheTestsBase : IDisposable
             }
             catch (TimeoutException)
             {
-                return;
             }
             catch (HttpRequestException)
             {
-                return;
             }
             catch (TaskCanceledException)
             {
-                return;
             }
             catch (InvalidOperationException)
             {
                 // Observable completed without a value � skip
-                return;
             }
         }
     }
@@ -310,7 +295,6 @@ public abstract class BlobCacheTestsBase : IDisposable
             catch (Exception ex)
             {
                 Console.WriteLine($"Skipping GetOrFetch test for {serializerType.Name}: {ex.Message}");
-                return;
             }
         }
     }
@@ -374,7 +358,7 @@ public abstract class BlobCacheTestsBase : IDisposable
                 .ObserveOn(ImmediateScheduler.Instance)
                 .Timeout(TimeSpan.FromSeconds(5))
                 .Take(2) // Take at most 2 values (cached + latest)
-                .ForEachAsync(tuple => results.Add(tuple));
+                .ForEachAsync(results.Add);
 
             // Results validation
             using (Assert.Multiple())
@@ -440,13 +424,12 @@ public abstract class BlobCacheTestsBase : IDisposable
     {
         // With the universal shim, most combinations should now work
         // Only skip truly incompatible combinations that can't be shimmed
-        if (serializerType == null || cacheType == null)
+        if (serializerType != null && cacheType != null)
         {
-            throw new ArgumentNullException(serializerType == null ? nameof(serializerType) : nameof(cacheType));
+            return true;
         }
 
-        // Allow all combinations with universal shim support
-        return true;
+        throw new ArgumentNullException(serializerType == null ? nameof(serializerType) : nameof(cacheType));
     }
 
     /// <summary>
@@ -455,32 +438,16 @@ public abstract class BlobCacheTestsBase : IDisposable
     /// <param name="disposing">if set to <c>true</c> [disposing].</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-            }
-
-            _disposed = true;
+            return;
         }
-    }
 
-    /// <summary>
-    /// Gets all combinations of serializers for cross-compatibility testing.
-    /// </summary>
-    /// <returns>All serializer combinations.</returns>
-    private static IEnumerable<object[]> GetCrossSerializerCombinations()
-    {
-        var serializerTypes = Serializers.Select(static s => s[0]).Cast<Type>().ToList();
-
-        foreach (var writeSerializer in serializerTypes)
+        if (disposing)
         {
-            foreach (var readSerializer in serializerTypes)
-            {
-                // Test all combinations, including same-serializer (baseline)
-                yield return [writeSerializer, readSerializer];
-            }
         }
+
+        _disposed = true;
     }
 
     /// <summary>
@@ -498,24 +465,25 @@ public abstract class BlobCacheTestsBase : IDisposable
             // Register the Newtonsoft BSON serializer specifically
             return new NewtonsoftBsonSerializer();
         }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
+
+        if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
             return new SystemJsonBsonSerializer();
         }
-        else if (serializerType == typeof(NewtonsoftSerializer))
+
+        if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
             return new NewtonsoftSerializer();
         }
-        else if (serializerType == typeof(SystemJsonSerializer))
+
+        if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
             return new SystemJsonSerializer();
         }
-        else
-        {
-            return null!;
-        }
+
+        return null!;
     }
 }

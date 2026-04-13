@@ -302,10 +302,12 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <param name="cache">The cache to configure.</param>
     internal void ApplyForcedDateTimeKind(IBlobCache cache)
     {
-        if (ForcedDateTimeKind.HasValue)
+        if (!ForcedDateTimeKind.HasValue)
         {
-            cache.ForcedDateTimeKind = ForcedDateTimeKind.Value;
+            return;
         }
+
+        cache.ForcedDateTimeKind = ForcedDateTimeKind.Value;
     }
 
     /// <summary>
@@ -354,19 +356,23 @@ internal class AkavacheBuilder : IAkavacheBuilder
         /// <inheritdoc />
         public void Dispose()
         {
-            if (inner is IDisposable disposable)
+            if (inner is not IDisposable disposable)
             {
-                disposable.Dispose();
+                return;
             }
+
+            disposable.Dispose();
         }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            if (inner is IAsyncDisposable asyncDisposable)
+            if (inner is not IAsyncDisposable asyncDisposable)
             {
-                await asyncDisposable.DisposeAsync();
+                return;
             }
+
+            await asyncDisposable.DisposeAsync();
         }
 
         /// <inheritdoc />

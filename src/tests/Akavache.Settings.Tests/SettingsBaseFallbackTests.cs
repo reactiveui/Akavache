@@ -79,10 +79,7 @@ public class SettingsBaseFallbackTests
 
         // Initialize CacheDatabase - SettingsBase should fall back to using it
         CacheDatabase.Initialize<NewtonsoftSerializer>(
-            builder =>
-            {
-                builder.WithInMemoryDefaults();
-            },
+            builder => builder.WithInMemoryDefaults(),
             applicationName: appName);
 
         await TestHelper.EventuallyAsync(() => CacheDatabase.IsInitialized).ConfigureAwait(false);
@@ -96,7 +93,7 @@ public class SettingsBaseFallbackTests
             await TestHelper.EventuallyAsync(() => settings is not null).ConfigureAwait(false);
 
             await Assert.That(settings).IsNotNull();
-            await Assert.That(settings!.TestValue).IsEqualTo(42);
+            await Assert.That(settings.TestValue).IsEqualTo(42);
         }
         finally
         {

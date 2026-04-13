@@ -213,7 +213,7 @@ public class AkavacheBuilderTests
     [Test]
     public async Task WithLegacyFileLocationShouldChangeFileLocationOption()
     {
-        var builder = new AkavacheBuilder(FileLocationOption.Default);
+        var builder = new AkavacheBuilder();
 
         var result = builder.WithLegacyFileLocation();
 
@@ -228,10 +228,11 @@ public class AkavacheBuilderTests
     [Test]
     public async Task BuildShouldThrowWhenNoSerializerRegistered()
     {
-        var builder = new AkavacheBuilder();
-
-        // Force a unique serializer type name so that the lookup returns null (no registration).
-        builder.SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N");
+        var builder = new AkavacheBuilder
+        {
+            // Force a unique serializer type name so that the lookup returns null (no registration).
+            SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N")
+        };
 
         await Assert.That(() => builder.Build()).Throws<InvalidOperationException>();
     }
@@ -259,8 +260,10 @@ public class AkavacheBuilderTests
     [Test]
     public async Task WithInMemoryDefaultsShouldThrowWhenNoSerializer()
     {
-        var builder = new AkavacheBuilder();
-        builder.SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N");
+        var builder = new AkavacheBuilder()
+        {
+            SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N"),
+        };
 
         await Assert.That(() => builder.WithInMemoryDefaults()).Throws<InvalidOperationException>();
     }
@@ -500,7 +503,7 @@ public class AkavacheBuilderTests
     [Test]
     public async Task ConstructorWithDefaultOptionShouldPopulateMetadata()
     {
-        var builder = new AkavacheBuilder(FileLocationOption.Default);
+        var builder = new AkavacheBuilder();
 
         await Assert.That(builder.FileLocationOption).IsEqualTo(FileLocationOption.Default);
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -692,7 +695,7 @@ public class AkavacheBuilderTests
     }
 
     /// <summary>
-    /// Stub <see cref="Assembly"/> that reports no custom attributes, used to exercise the "missing attribute" branch.
+    /// Stub <see cref="System.Reflection.Assembly"/> that reports no custom attributes, used to exercise the "missing attribute" branch.
     /// </summary>
     private sealed class NoFileVersionAttributeStubAssembly : Assembly
     {
@@ -700,14 +703,14 @@ public class AkavacheBuilderTests
         public override string? FullName => "AkavacheBuilderTests.NoFileVersion";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => [];
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<Attribute>();
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => [];
+        public override object[] GetCustomAttributes(bool inherit) => Array.Empty<Attribute>();
     }
 
     /// <summary>
-    /// Stub <see cref="Assembly"/> whose <see cref="AssemblyFileVersionAttribute"/> value cannot be parsed as a <see cref="System.Version"/>.
+    /// Stub <see cref="System.Reflection.Assembly"/> whose <see cref="AssemblyFileVersionAttribute"/> value cannot be parsed as a <see cref="System.Version"/>.
     /// </summary>
     private sealed class UnparseableFileVersionStubAssembly : Assembly
     {
@@ -722,7 +725,7 @@ public class AkavacheBuilderTests
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(Type attributeType, bool inherit) =>
-            attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : [];
+            attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : Array.Empty<Attribute>();
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(bool inherit) => _attrs;

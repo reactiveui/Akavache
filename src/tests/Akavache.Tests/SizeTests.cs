@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Drawing;
-using TUnit.Assertions.Extensions;
 
 namespace Akavache.Tests;
 
@@ -395,6 +394,7 @@ public class SizeTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1508:Avoid dead conditional code", Justification = "Test deliberately verifies Equals(null) returns false; the analyzer can't model the boxed object cast.")]
     public async Task SizeEqualsObjectShouldWork()
     {
         // Arrange

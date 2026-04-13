@@ -58,10 +58,12 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
             var serializer = AppLocator.Current.GetService<ISerializer>();
-            if (serializer != null)
+            if (serializer is null)
             {
-                serializer.ForcedDateTimeKind = value;
+                return;
             }
+
+            serializer.ForcedDateTimeKind = value;
         }
     }
 
@@ -755,7 +757,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
     /// <inheritdoc />
     [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Dispose already calls SuppressFinalize")]
-    public async ValueTask DisposeAsync() => await Task.Run(() => Dispose());
+    public async ValueTask DisposeAsync() => await Task.Run(Dispose);
 
     /// <summary>
     /// Insert an object into the cache using the configured serializer.
@@ -864,9 +866,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
         Dictionary<Type, HashSet<string>> typeIndex,
         DateTimeOffset now)
     {
-        var expiredKeys = CollectExpiredKeys(cache, now);
-
-        foreach (var expiredKey in expiredKeys)
+        foreach (var expiredKey in CollectExpiredKeys(cache, now))
         {
             cache.Remove(expiredKey);
             RemoveKeyFromAllTypeIndexes(typeIndex, expiredKey);
@@ -919,18 +919,20 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                lock (_lock)
-                {
-                    _cache.Clear();
-                    _typeIndex.Clear();
-                }
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            lock (_lock)
+            {
+                _cache.Clear();
+                _typeIndex.Clear();
+            }
+        }
+
+        _disposed = true;
     }
 }

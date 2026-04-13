@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
@@ -25,47 +24,47 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task DisposedShouldThrowForAllOperations()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             await cache.DisposeAsync();
 
-            await Assert.That(async () => await cache.Insert("k", [1]).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Insert("k", [1], typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+            await cache.Insert("k", [1]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Insert("k", [1], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.Get("k").ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Get(["k"]).ToList().ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Get("k", typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Get(["k"], typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
+            await cache.Get("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Get(["k"]).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Get("k", typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Get(["k"], typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.GetAllKeys().ToList().ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.GetAllKeys(typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.GetAll(typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
+            await cache.GetAllKeys().ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.GetAllKeys(typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.GetAll(typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.GetCreatedAt("k").ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.GetCreatedAt(["k"]).ToList().ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.GetCreatedAt("k", typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.GetCreatedAt(["k"], typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
+            await cache.GetCreatedAt("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.GetCreatedAt(["k"]).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.GetCreatedAt("k", typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.GetCreatedAt(["k"], typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.Flush().ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Flush(typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+            await cache.Flush().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Flush(typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.Invalidate("k").ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Invalidate(["k"]).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Invalidate("k", typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.Invalidate(["k"], typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+            await cache.Invalidate("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Invalidate(["k"]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Invalidate("k", typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Invalidate(["k"], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.InvalidateAll().ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.InvalidateAll(typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+            await cache.InvalidateAll().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.InvalidateAll(typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.Vacuum().ToTask()).Throws<ObjectDisposedException>();
+            await cache.Vacuum().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-            await Assert.That(async () => await cache.UpdateExpiration("k", DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.UpdateExpiration(["k"], DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
-            await Assert.That(async () => await cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
+            await cache.UpdateExpiration("k", DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.UpdateExpiration(["k"], DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
         }
     }
 
@@ -76,17 +75,17 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task NullArgsShouldThrow()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
-                await Assert.That(async () => await cache.Get((IEnumerable<string>)null!).ToList().ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Get((string)null!, typeof(string)).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Get("k", (Type)null!).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Get((IEnumerable<string>)null!, typeof(string)).ToList().ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Get(["k"], (Type)null!).ToList().ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.GetAll(null!).ToList().ToTask()).Throws<ArgumentNullException>();
+                await cache.Get((IEnumerable<string>)null!).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Get((string)null!, typeof(string)).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Get("k", null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Get((IEnumerable<string>)null!, typeof(string)).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Get(["k"], null!).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.GetAll(null!).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
             }
             finally
             {
@@ -102,16 +101,16 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypeAwareInsertAndGetShouldRoundTrip()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1, 2, 3], typeof(string)).ToTask();
                 var data = await cache.Get("k1", typeof(string)).ToTask();
 
                 await Assert.That(data).IsNotNull();
-                await Assert.That(data!.Length).IsEqualTo(3);
+                await Assert.That(data.Length).IsEqualTo(3);
             }
             finally
             {
@@ -127,9 +126,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypeAwareBulkInsertAndGetShouldRoundTrip()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 var pairs = new[]
@@ -162,9 +161,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypeAwareInvalidateShouldRemoveEntries()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1], typeof(string)).ToTask();
@@ -190,9 +189,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypeAwareInvalidateByKeysShouldRemoveEntries()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1], typeof(string)).ToTask();
@@ -217,9 +216,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypeAwareGetCreatedAtShouldReturnTimestamps()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1], typeof(string)).ToTask();
@@ -245,9 +244,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypeAwareUpdateExpirationShouldUpdateEntries()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1], typeof(string)).ToTask();
@@ -273,13 +272,13 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task GetNonExistentKeyShouldThrow()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
-                await Assert.That(async () => await cache.Get("non_existent_key").ToTask()).Throws<KeyNotFoundException>();
-                await Assert.That(async () => await cache.Get("non_existent_key", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("non_existent_key").ToTask().ShouldThrowAsync<KeyNotFoundException>();
+                await cache.Get("non_existent_key", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
             }
             finally
             {
@@ -295,12 +294,12 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task GetWithWhitespaceKeyShouldThrow()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
-                await Assert.That(async () => await cache.Get(string.Empty).ToTask()).Throws<ArgumentNullException>();
+                await cache.Get(string.Empty).ToTask().ShouldThrowAsync<ArgumentNullException>();
             }
             finally
             {
@@ -316,9 +315,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task VacuumShouldWork()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1], DateTimeOffset.Now.AddSeconds(-10)).ToTask();
@@ -343,9 +342,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task NonTypedHappyPathsShouldRoundTrip()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1, 2]).ToTask();
@@ -399,50 +398,49 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task AdditionalNullAndWhitespaceArgsShouldThrow()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 // GetCreatedAt null arg variants
-                await Assert.That(async () => await cache.GetCreatedAt((string)null!).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.GetCreatedAt((IEnumerable<string>)null!).ToList().ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.GetCreatedAt("k", (Type)null!).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.GetCreatedAt((string)null!, typeof(string)).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.GetCreatedAt(["k"], (Type)null!).ToList().ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.GetCreatedAt((IEnumerable<string>)null!, typeof(string)).ToList().ToTask()).Throws<ArgumentNullException>();
+                await cache.GetCreatedAt((string)null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.GetCreatedAt((IEnumerable<string>)null!).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.GetCreatedAt("k", null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.GetCreatedAt((string)null!, typeof(string)).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.GetCreatedAt(["k"], null!).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.GetCreatedAt((IEnumerable<string>)null!, typeof(string)).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
 
                 // GetAllKeys null type
-                await Assert.That(async () => await cache.GetAllKeys((Type)null!).ToList().ToTask()).Throws<ArgumentNullException>();
+                await cache.GetAllKeys(null!).ToList().ToTask().ShouldThrowAsync<ArgumentNullException>();
 
                 // Insert null args
-                await Assert.That(async () => await cache.Insert((IEnumerable<KeyValuePair<string, byte[]>>)null!).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Insert((IEnumerable<KeyValuePair<string, byte[]>>)null!, typeof(string)).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])
-                ], (Type)null!).ToTask()).Throws<ArgumentNullException>();
+                await cache.Insert(null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Insert(null!, typeof(string)).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], (Type)null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
 
                 // Insert(key, data, type) arg validation
-                await Assert.That(async () => await cache.Insert(string.Empty, [1], typeof(string)).ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.Insert("  ", [1], typeof(string)).ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.Insert("k", (byte[])null!, typeof(string)).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Insert("k", [1], (Type)null!).ToTask()).Throws<ArgumentNullException>();
+                await cache.Insert(string.Empty, [1], typeof(string)).ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.Insert("  ", [1], typeof(string)).ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.Insert("k", null!, typeof(string)).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Insert("k", [1], (Type)null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
 
                 // Invalidate arg validation
-                await Assert.That(async () => await cache.Invalidate(string.Empty).ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.Invalidate("   ").ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.Invalidate(string.Empty, typeof(string)).ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.Invalidate("k", (Type)null!).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Invalidate((IEnumerable<string>)null!).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Invalidate((IEnumerable<string>)null!, typeof(string)).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.Invalidate(["k"], (Type)null!).ToTask()).Throws<ArgumentNullException>();
+                await cache.Invalidate(string.Empty).ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.Invalidate("   ").ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.Invalidate(string.Empty, typeof(string)).ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.Invalidate("k", null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Invalidate((IEnumerable<string>)null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Invalidate((IEnumerable<string>)null!, typeof(string)).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.Invalidate(["k"], null!).ToTask().ShouldThrowAsync<ArgumentNullException>();
 
                 // UpdateExpiration arg validation
-                await Assert.That(async () => await cache.UpdateExpiration(string.Empty, DateTimeOffset.Now).ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.UpdateExpiration(string.Empty, typeof(string), DateTimeOffset.Now).ToTask()).Throws<ArgumentException>();
-                await Assert.That(async () => await cache.UpdateExpiration("k", (Type)null!, DateTimeOffset.Now).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.UpdateExpiration((IEnumerable<string>)null!, DateTimeOffset.Now).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.UpdateExpiration((IEnumerable<string>)null!, typeof(string), DateTimeOffset.Now).ToTask()).Throws<ArgumentNullException>();
-                await Assert.That(async () => await cache.UpdateExpiration(["k"], (Type)null!, DateTimeOffset.Now).ToTask()).Throws<ArgumentNullException>();
+                await cache.UpdateExpiration(string.Empty, DateTimeOffset.Now).ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.UpdateExpiration(string.Empty, typeof(string), DateTimeOffset.Now).ToTask().ShouldThrowAsync<ArgumentException>();
+                await cache.UpdateExpiration("k", null!, DateTimeOffset.Now).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.UpdateExpiration((IEnumerable<string>)null!, DateTimeOffset.Now).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.UpdateExpiration((IEnumerable<string>)null!, typeof(string), DateTimeOffset.Now).ToTask().ShouldThrowAsync<ArgumentNullException>();
+                await cache.UpdateExpiration(["k"], null!, DateTimeOffset.Now).ToTask().ShouldThrowAsync<ArgumentNullException>();
             }
             finally
             {
@@ -459,9 +457,9 @@ public class SqliteBlobCacheDirectTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately exercises the synchronous Dispose path.")]
     public async Task SynchronousDisposeShouldCompleteCleanup()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             await cache.Insert("k1", [1]).ToTask();
 
             // Synchronous dispose exercises the Dispose(bool) wal_checkpoint/journal/close paths
@@ -470,7 +468,7 @@ public class SqliteBlobCacheDirectTests
             // Second dispose is a no-op (early return)
             cache.Dispose();
 
-            await Assert.That(async () => await cache.Get("k1").ToTask()).Throws<ObjectDisposedException>();
+            await cache.Get("k1").ToTask().ShouldThrowAsync<ObjectDisposedException>();
         }
     }
 
@@ -481,9 +479,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task GetCreatedAtForMissingKeyShouldReturnNull()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 var result = await cache.GetCreatedAt("missing").ToTask();
@@ -506,14 +504,14 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task InsertWithPastExpirationShouldNotBeRetrievable()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("expired", [1], typeof(string), DateTimeOffset.UtcNow.AddDays(-1)).ToTask();
 
-                await Assert.That(async () => await cache.Get("expired", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("expired", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
             }
             finally
             {
@@ -529,12 +527,12 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task BeforeWriteToDiskFilterShouldThrowWhenDisposed()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             await cache.DisposeAsync();
 
-            await Assert.That(async () => await cache.BeforeWriteToDiskFilter([1, 2, 3], ImmediateScheduler.Instance).ToTask()).Throws<ObjectDisposedException>();
+            await cache.BeforeWriteToDiskFilter([1, 2, 3], ImmediateScheduler.Instance).ToTask().ShouldThrowAsync<ObjectDisposedException>();
         }
     }
 
@@ -545,9 +543,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task BeforeWriteToDiskFilterShouldReturnDataWhenNotDisposed()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 var input = new byte[] { 10, 20, 30 };
@@ -568,15 +566,15 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task DoubleDisposeAsyncShouldNotThrow()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             await cache.Insert("k", [1]).ToTask();
 
             await cache.DisposeAsync();
             await cache.DisposeAsync();
 
-            await Assert.That(async () => await cache.Get("k").ToTask()).Throws<ObjectDisposedException>();
+            await cache.Get("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
         }
     }
 
@@ -589,19 +587,19 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task GetShouldFallbackToLegacyThenThrowWhenNotFound()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 // Insert a valid entry to ensure the db is initialized, then look for a missing one
                 await cache.Insert("existing", [1, 2]).ToTask();
 
                 // Non-typed Get for missing key exercises full fallback path
-                await Assert.That(async () => await cache.Get("nonexistent").ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("nonexistent").ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
                 // Typed Get for missing key exercises typed fallback path
-                await Assert.That(async () => await cache.Get("nonexistent", typeof(int)).ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("nonexistent", typeof(int)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
             }
             finally
             {
@@ -618,9 +616,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task BulkGetShouldReturnOnlyMatchingKeys()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("a", [1]).ToTask();
@@ -649,9 +647,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task GetAllWithUnusedTypeShouldReturnEmpty()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k", [1], typeof(string)).ToTask();
@@ -673,9 +671,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task GetAllKeysWithTypeShouldFilterByType()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("str1", [1], typeof(string)).ToTask();
@@ -700,9 +698,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task ExpiredEntriesShouldNotBeReturnedByAnyQueryMethod()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 var pastExpiration = DateTimeOffset.UtcNow.AddDays(-1);
@@ -717,12 +715,12 @@ public class SqliteBlobCacheDirectTests
                 await cache.Insert("valid_typed", [4], typeof(string), futureExpiration).ToTask();
 
                 // Non-typed Get should not return expired
-                await Assert.That(async () => await cache.Get("expired_plain").ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("expired_plain").ToTask().ShouldThrowAsync<KeyNotFoundException>();
                 var validData = await cache.Get("valid_plain").ToTask();
                 await Assert.That(validData).IsNotNull();
 
                 // Typed Get should not return expired
-                await Assert.That(async () => await cache.Get("expired_typed", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("expired_typed", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
                 var validTyped = await cache.Get("valid_typed", typeof(string)).ToTask();
                 await Assert.That(validTyped).IsNotNull();
 
@@ -778,9 +776,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task UpdateExpirationToThePastShouldMakeEntryUnretrievable()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k1", [1]).ToTask();
@@ -790,19 +788,19 @@ public class SqliteBlobCacheDirectTests
 
                 // Update single non-typed to past
                 await cache.UpdateExpiration("k1", DateTimeOffset.UtcNow.AddDays(-1)).ToTask();
-                await Assert.That(async () => await cache.Get("k1").ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("k1").ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
                 // Update single typed to past
                 await cache.UpdateExpiration("k2", typeof(string), DateTimeOffset.UtcNow.AddDays(-1)).ToTask();
-                await Assert.That(async () => await cache.Get("k2", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("k2", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
                 // Update bulk non-typed to past
                 await cache.UpdateExpiration(["k3"], DateTimeOffset.UtcNow.AddDays(-1)).ToTask();
-                await Assert.That(async () => await cache.Get("k3").ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("k3").ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
                 // Update bulk typed to past
                 await cache.UpdateExpiration(["k4"], typeof(string), DateTimeOffset.UtcNow.AddDays(-1)).ToTask();
-                await Assert.That(async () => await cache.Get("k4", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+                await cache.Get("k4", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
             }
             finally
             {
@@ -818,9 +816,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task FlushShouldCompleteSuccessfully()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("k", [1]).ToTask();
@@ -849,9 +847,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task VacuumShouldRemoveExpiredAndCompact()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("expired1", [1], DateTimeOffset.UtcNow.AddDays(-1)).ToTask();
@@ -878,9 +876,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task InvalidateAllWithTypeShouldOnlyRemoveMatchingType()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("str1", [1], typeof(string)).ToTask();
@@ -910,9 +908,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task InsertWithNullExpirationShouldNeverExpire()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 // Non-typed insert without expiration
@@ -954,9 +952,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task HttpServicePropertyShouldBeSettableAndGettable()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 // First access exercises the lazy-initialisation branch of the ??=
@@ -989,9 +987,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task ForcedDateTimeKindPropertyShouldBeSettableAndGettable()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await Assert.That(cache.ForcedDateTimeKind).IsNull();
@@ -1013,9 +1011,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task SchedulerPropertyShouldReturnValidScheduler()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await Assert.That(cache.Scheduler).IsNotNull();
@@ -1057,7 +1055,7 @@ public class SqliteBlobCacheDirectTests
     public async Task ConstructorShouldThrowOnNullArgs()
     {
         await Assert.That(() => new SqliteBlobCache((string)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
-        await Assert.That(() => new SqliteBlobCache("test.db", (ISerializer)null!)).Throws<ArgumentNullException>();
+        await Assert.That(() => new SqliteBlobCache("test.db", null!)).Throws<ArgumentNullException>();
         await Assert.That(() => new SqliteBlobCache((SQLite.SQLiteConnectionString)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
     }
 
@@ -1068,9 +1066,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task InvalidateAllShouldRemoveAllEntries()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("a", [1]).ToTask();
@@ -1096,9 +1094,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task BulkInvalidateShouldRemoveOnlySpecifiedKeys()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 await cache.Insert("a", [1]).ToTask();
@@ -1126,9 +1124,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task TypedBulkInsertWithExpirationShouldRoundTrip()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 var future = DateTimeOffset.UtcNow.AddHours(1);
@@ -1156,9 +1154,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task UpdateExpirationToNullShouldMakeEntryPermanent()
     {
-        using (Utility.WithEmptyDirectory(out var path))
+        using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = CreateCache(path);
+            var cache = CreateCache();
             try
             {
                 // Insert with a future expiration
@@ -1166,10 +1164,10 @@ public class SqliteBlobCacheDirectTests
                 await cache.Insert("k2", [2], typeof(string), DateTimeOffset.UtcNow.AddMinutes(5)).ToTask();
 
                 // Update to null expiration (permanent)
-                await cache.UpdateExpiration("k1", (DateTimeOffset?)null).ToTask();
-                await cache.UpdateExpiration("k2", typeof(string), (DateTimeOffset?)null).ToTask();
-                await cache.UpdateExpiration(["k1"], (DateTimeOffset?)null).ToTask();
-                await cache.UpdateExpiration(["k2"], typeof(string), (DateTimeOffset?)null).ToTask();
+                await cache.UpdateExpiration("k1", null).ToTask();
+                await cache.UpdateExpiration("k2", typeof(string), null).ToTask();
+                await cache.UpdateExpiration(["k1"], null).ToTask();
+                await cache.UpdateExpiration(["k2"], typeof(string), null).ToTask();
 
                 var d1 = await cache.Get("k1").ToTask();
                 await Assert.That(d1).IsNotNull();
@@ -1196,42 +1194,42 @@ public class SqliteBlobCacheDirectTests
         var cache = new SqliteBlobCache(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Insert("k", [1]).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Insert("k", [1], typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+        await cache.Insert("k", [1]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Insert("k", [1], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.Get("k").ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Get(["k"]).ToList().ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Get("k", typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Get(["k"], typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
+        await cache.Get("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Get(["k"]).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Get("k", typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Get(["k"], typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.GetAllKeys().ToList().ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.GetAllKeys(typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.GetAll(typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
+        await cache.GetAllKeys().ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.GetAllKeys(typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.GetAll(typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.GetCreatedAt("k").ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.GetCreatedAt(["k"]).ToList().ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.GetCreatedAt("k", typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.GetCreatedAt(["k"], typeof(string)).ToList().ToTask()).Throws<ObjectDisposedException>();
+        await cache.GetCreatedAt("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.GetCreatedAt(["k"]).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.GetCreatedAt("k", typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.GetCreatedAt(["k"], typeof(string)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.Flush().ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Flush(typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+        await cache.Flush().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Flush(typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.Invalidate("k").ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Invalidate(["k"]).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Invalidate("k", typeof(string)).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.Invalidate(["k"], typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+        await cache.Invalidate("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Invalidate(["k"]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Invalidate("k", typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.Invalidate(["k"], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.InvalidateAll().ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.InvalidateAll(typeof(string)).ToTask()).Throws<ObjectDisposedException>();
+        await cache.InvalidateAll().ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.InvalidateAll(typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.Vacuum().ToTask()).Throws<ObjectDisposedException>();
+        await cache.Vacuum().ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
-        await Assert.That(async () => await cache.UpdateExpiration("k", DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.UpdateExpiration(["k"], DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
-        await Assert.That(async () => await cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now).ToTask()).Throws<ObjectDisposedException>();
+        await cache.UpdateExpiration("k", DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.UpdateExpiration(["k"], DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+        await cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now).ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -1246,7 +1244,7 @@ public class SqliteBlobCacheDirectTests
         var cache = new SqliteBlobCache(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.BeforeWriteToDiskFilter([1, 2, 3], ImmediateScheduler.Instance).ToTask()).Throws<ObjectDisposedException>();
+        await cache.BeforeWriteToDiskFilter([1, 2, 3], ImmediateScheduler.Instance).ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -1287,11 +1285,11 @@ public class SqliteBlobCacheDirectTests
         {
             // Typed insert uses the IsValid guard; data should not be persisted.
             await cache.Insert("k", [1], typeof(string)).ToTask();
-            await Assert.That(async () => await cache.Get("k", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+            await cache.Get("k", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
             // Typed bulk insert also uses the IsValid guard.
             await cache.Insert([new KeyValuePair<string, byte[]>("k2", [2])], typeof(string)).ToTask();
-            await Assert.That(async () => await cache.Get("k2", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+            await cache.Get("k2", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
         }
         finally
         {
@@ -1329,7 +1327,7 @@ public class SqliteBlobCacheDirectTests
 
             // Invalidate single
             await cache.Invalidate("k1").ToTask();
-            await Assert.That(async () => await cache.Get("k1").ToTask()).Throws<KeyNotFoundException>();
+            await cache.Get("k1").ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
             // InvalidateAll
             await cache.InvalidateAll().ToTask();
@@ -1355,7 +1353,7 @@ public class SqliteBlobCacheDirectTests
         await cache.DisposeAsync();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Get("k").ToTask()).Throws<ObjectDisposedException>();
+        await cache.Get("k").ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -1364,10 +1362,7 @@ public class SqliteBlobCacheDirectTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ConstructorWithNullConnectionShouldThrow()
-    {
-        await Assert.That(() => new SqliteBlobCache((IAkavacheConnection)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
-    }
+    public async Task ConstructorWithNullConnectionShouldThrow() => await Assert.That(() => new SqliteBlobCache((IAkavacheConnection)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
 
     /// <summary>
     /// Verifies that <see cref="SqliteBlobCache.UpdateExpiration(string, DateTimeOffset?)"/>
@@ -1621,7 +1616,7 @@ public class SqliteBlobCacheDirectTests
         {
             var data = await cache.Get("legacyTyped", typeof(string)).ToTask();
             await Assert.That(data).IsNotNull();
-            await Assert.That(data!).IsEquivalentTo(new byte[] { 1, 2, 3, 4 });
+            await Assert.That(data).IsEquivalentTo(new byte[] { 1, 2, 3, 4 });
         }
         finally
         {
@@ -1642,8 +1637,8 @@ public class SqliteBlobCacheDirectTests
         var cache = new SqliteBlobCache(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         try
         {
-            await Assert.That(async () => await cache.Get("missing").ToTask()).Throws<KeyNotFoundException>();
-            await Assert.That(async () => await cache.Get("missing", typeof(string)).ToTask()).Throws<KeyNotFoundException>();
+            await cache.Get("missing").ToTask().ShouldThrowAsync<KeyNotFoundException>();
+            await cache.Get("missing", typeof(string)).ToTask().ShouldThrowAsync<KeyNotFoundException>();
         }
         finally
         {
@@ -1895,7 +1890,7 @@ public class SqliteBlobCacheDirectTests
         var cache = new SqliteBlobCache(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         try
         {
-            await Assert.That(async () => await cache.Get("k").ToTask()).Throws<InvalidOperationException>();
+            await cache.Get("k").ToTask().ShouldThrowAsync<InvalidOperationException>();
         }
         finally
         {
@@ -2293,20 +2288,15 @@ public class SqliteBlobCacheDirectTests
 
         var observable = SqliteBlobCache.InitializeDatabase(connection, ImmediateScheduler.Instance);
 
-        await Assert.That(async () => await observable.ToTask())
-            .Throws<Exception>();
+        await observable.ToTask().ShouldThrowAsync<Exception>();
     }
 
     /// <summary>
-    /// Creates a <see cref="SqliteBlobCache"/> backed by an <see cref="InMemoryAkavacheConnection"/>
-    /// rather than a real SQLite file. The <paramref name="path"/> argument is retained for
-    /// call-site compatibility but is ignored — the cache's storage lives entirely in-memory,
-    /// which dramatically speeds up the pure-logic tests. End-to-end validation against a real
-    /// SQLite file lives in <c>SqliteBlobCacheSmokeTests</c> and
-    /// <c>SqliteAkavacheConnectionTests</c>.
+    /// Creates a new instance of <see cref="SqliteBlobCache"/> that utilizes an <see cref="InMemoryAkavacheConnection"/>
+    /// for storage, enabling fast, in-memory operations for unit tests and logic validations.
+    /// This method bypasses file-based persistence by storing data entirely in memory.
     /// </summary>
-    /// <param name="path">Ignored; retained for call-site compatibility with the file-backed overload.</param>
-    /// <returns>A new <see cref="SqliteBlobCache"/> backed by an in-memory connection.</returns>
-    private static SqliteBlobCache CreateCache(string path) =>
+    /// <returns>A <see cref="SqliteBlobCache"/> instance backed by an in-memory connection.</returns>
+    private static SqliteBlobCache CreateCache() =>
         new(new InMemoryAkavacheConnection(), new SystemJsonSerializer(), ImmediateScheduler.Instance);
 }

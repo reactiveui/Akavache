@@ -2,9 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
@@ -294,6 +292,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public Task LoadImageBytesFromUrlShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         try
@@ -339,6 +338,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public Task LoadImageBytesFromUrlWithKeyShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         try
@@ -611,6 +611,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldReturnCachedBytes()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -659,6 +660,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlWithKeyAndStringShouldReturnCachedBytes()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -709,6 +711,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlShouldThrowWhenCachedBytesAreTooSmall()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -821,6 +824,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldThrowOnNullCache() =>
         await Assert.That(static () => ImageExtensions.LoadImageBytesFromUrl(null!, "http://example.com/img.png"))
             .Throws<ArgumentNullException>();
@@ -830,6 +834,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlKeyStringShouldThrowOnNullCache() =>
         await Assert.That(static () => ImageExtensions.LoadImageBytesFromUrl(null!, "mykey", "http://example.com/img.png"))
             .Throws<ArgumentNullException>();
@@ -856,6 +861,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldServeFromCache()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -904,6 +910,7 @@ public class ImageExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlKeyStringShouldServeFromCache()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());

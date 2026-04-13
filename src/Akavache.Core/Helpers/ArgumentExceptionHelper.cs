@@ -23,10 +23,12 @@ internal static class ArgumentExceptionHelper
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
     public static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
-        if (argument is null)
+        if (argument is not null)
         {
-            throw new ArgumentNullException(paramName);
+            return;
         }
+
+        throw new ArgumentNullException(paramName);
     }
 
     /// <summary>
@@ -50,9 +52,11 @@ internal static class ArgumentExceptionHelper
             throw new ArgumentNullException(paramName);
         }
 
-        if (string.IsNullOrWhiteSpace(argument))
+        if (!string.IsNullOrWhiteSpace(argument))
         {
-            throw new ArgumentException("The value cannot be empty or composed entirely of whitespace.", paramName);
+            return;
         }
+
+        throw new ArgumentException("The value cannot be empty or composed entirely of whitespace.", paramName);
     }
 }

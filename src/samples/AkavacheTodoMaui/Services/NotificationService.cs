@@ -56,13 +56,13 @@ public class NotificationService : IDisposable
             return $"Overdue: {todo.Title}";
         }
 
-        if (todo?.IsDueSoon == true)
+        if (todo?.IsDueSoon != true)
         {
-            var timeUntilDue = todo.DueDate!.Value - DateTimeOffset.Now;
-            return $"Due soon: {todo.Title} (in {timeUntilDue.Hours}h {timeUntilDue.Minutes}m)";
+            return $"Reminder: {todo?.Title}";
         }
 
-        return $"Reminder: {todo?.Title}";
+        var timeUntilDue = todo.DueDate!.Value - DateTimeOffset.Now;
+        return $"Due soon: {todo.Title} (in {timeUntilDue.Hours}h {timeUntilDue.Minutes}m)";
     }
 
     /// <summary>
@@ -114,8 +114,7 @@ public class NotificationService : IDisposable
     public IObservable<List<TodoItem>> GetTodosNeedingReminders() =>
         TodoCacheService.GetAllTodos()
             .Select(todos => todos.Where(todo =>
-                !todo.IsCompleted &&
-                todo.DueDate.HasValue &&
+                todo is { IsCompleted: false, DueDate: not null } &&
                 _currentSettings.NotificationsEnabled &&
                 ShouldNotify(todo)).ToList());
 
@@ -168,7 +167,7 @@ public class NotificationService : IDisposable
         // Reschedule all reminders with new settings
         return TodoCacheService.GetAllTodos()
             .SelectMany(static todos => todos.ToObservable())
-            .Where(static todo => !todo.IsCompleted && todo.DueDate.HasValue)
+            .Where(static todo => todo is { IsCompleted: false, DueDate: not null })
             .SelectMany(ScheduleReminder)
             .Aggregate(Unit.Default, static (_, _) => Unit.Default);
     }
@@ -188,12 +187,14 @@ public class NotificationService : IDisposable
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed && disposing)
+        if (_disposed || !disposing)
         {
-            _reminderTimer?.Dispose();
-            _reminderSubject?.Dispose();
-            _disposed = true;
+            return;
         }
+
+        _reminderTimer?.Dispose();
+        _reminderSubject.Dispose();
+        _disposed = true;
     }
 
     /// <summary>Timer callback that checks for todos needing immediate reminders.</summary>

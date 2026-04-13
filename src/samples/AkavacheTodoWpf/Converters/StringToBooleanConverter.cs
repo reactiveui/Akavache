@@ -23,13 +23,12 @@ public class StringToBooleanConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => !string.IsNullOrWhiteSpace(value?.ToString());
 
     /// <summary>
-    /// Not implemented for one-way binding.
+    /// One-way converter — returns <see cref="Binding.DoNothing"/> so the binding engine skips the source update.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
-    /// <returns>Not supported.</returns>
-    /// <exception cref="NotImplementedException">Always thrown.</exception>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
+    /// <returns><see cref="Binding.DoNothing"/>.</returns>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }

@@ -54,7 +54,7 @@ internal static class AssemblyInfoHelper
     public static string? ExtractAssemblyName(Assembly assembly)
     {
         var fullName = assembly.FullName;
-        return fullName is null ? null : fullName.Split(',')[0];
+        return fullName?.Split(',')[0];
     }
 
     /// <summary>

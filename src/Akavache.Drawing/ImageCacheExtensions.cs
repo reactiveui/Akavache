@@ -63,10 +63,7 @@ public static class ImageCacheExtensions
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (fallbackImageBytes is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackImageBytes));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
         return blobCache.LoadImage(key, desiredWidth, desiredHeight)
             .Catch<IBitmap, Exception>(_ => BytesToImage(fallbackImageBytes, desiredWidth, desiredHeight));
@@ -87,10 +84,7 @@ public static class ImageCacheExtensions
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (fallbackImageBytes is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackImageBytes));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
         return blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, desiredHeight, absoluteExpiration)
             .Catch<IBitmap, Exception>(_ => BytesToImage(fallbackImageBytes, desiredWidth, desiredHeight));
@@ -147,14 +141,11 @@ public static class ImageCacheExtensions
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (keyPattern is null)
-        {
-            throw new ArgumentNullException(nameof(keyPattern));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(keyPattern);
 
         return blobCache.GetAllKeys()
             .Where(keyPattern)
-            .SelectMany(key => blobCache.Invalidate(key))
+            .SelectMany(blobCache.Invalidate)
             .DefaultIfEmpty(Unit.Default)
             .TakeLast(1);
     }

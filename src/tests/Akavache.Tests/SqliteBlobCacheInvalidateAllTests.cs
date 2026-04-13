@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
@@ -26,27 +25,26 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_AllItems()
     {
         var serializer = new SystemJsonSerializer();
-        await using (var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance))
-        {
-            // Arrange
-            await cache.Insert("a", [1]).Timeout(Timeout).FirstAsync();
-            await cache.Insert("b", [2]).Timeout(Timeout).FirstAsync();
-            await cache.Insert("c", [3]).Timeout(Timeout).FirstAsync();
+        await using var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
-            var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            await Assert.That(keysBefore).Count().IsEqualTo(3);
+        // Arrange
+        await cache.Insert("a", [1]).Timeout(Timeout).FirstAsync();
+        await cache.Insert("b", [2]).Timeout(Timeout).FirstAsync();
+        await cache.Insert("c", [3]).Timeout(Timeout).FirstAsync();
 
-            // Act
-            await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
+        var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
+        await Assert.That(keysBefore).Count().IsEqualTo(3);
 
-            // Assert
-            var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            await Assert.That(keysAfter).IsEmpty();
+        // Act
+        await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
 
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("a").Timeout(Timeout).FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("b").Timeout(Timeout).FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("c").Timeout(Timeout).FirstAsync());
-        }
+        // Assert
+        var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
+        await Assert.That(keysAfter).IsEmpty();
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("a").Timeout(Timeout).FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("b").Timeout(Timeout).FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("c").Timeout(Timeout).FirstAsync());
     }
 
     /// <summary>
@@ -57,32 +55,31 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldRemove_TypedAndUntypedItems()
     {
         var serializer = new SystemJsonSerializer();
-        await using (var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance))
-        {
-            // Arrange: mix typed and untyped entries
-            await cache.Insert("u1", [1]).Timeout(Timeout).FirstAsync();
-            await cache.Insert("u2", [2]).Timeout(Timeout).FirstAsync();
+        await using var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
-            var userType = typeof(string);
-            await cache.Insert("t1", [10], userType).Timeout(Timeout).FirstAsync();
-            await cache.Insert("t2", [20], userType).Timeout(Timeout).FirstAsync();
+        // Arrange: mix typed and untyped entries
+        await cache.Insert("u1", [1]).Timeout(Timeout).FirstAsync();
+        await cache.Insert("u2", [2]).Timeout(Timeout).FirstAsync();
 
-            var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            await Assert.That(keysBefore).Count().IsEqualTo(4);
+        var userType = typeof(string);
+        await cache.Insert("t1", [10], userType).Timeout(Timeout).FirstAsync();
+        await cache.Insert("t2", [20], userType).Timeout(Timeout).FirstAsync();
 
-            // Act
-            await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
+        var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
+        await Assert.That(keysBefore).Count().IsEqualTo(4);
 
-            // Assert
-            var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            await Assert.That(keysAfter).IsEmpty();
+        // Act
+        await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
 
-            // Both typed and untyped should be gone
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u1").Timeout(Timeout).FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u2").Timeout(Timeout).FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t1", userType).Timeout(Timeout).FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t2", userType).Timeout(Timeout).FirstAsync());
-        }
+        // Assert
+        var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
+        await Assert.That(keysAfter).IsEmpty();
+
+        // Both typed and untyped should be gone
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u1").Timeout(Timeout).FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("u2").Timeout(Timeout).FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t1", userType).Timeout(Timeout).FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("t2", userType).Timeout(Timeout).FirstAsync());
     }
 
     /// <summary>
@@ -93,29 +90,28 @@ public class SqliteBlobCacheInvalidateAllTests
     public async Task InvalidateAll_ShouldIgnore_ExpiredEntriesButStillClearAll()
     {
         var serializer = new SystemJsonSerializer();
-        await using (var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance))
-        {
-            // Arrange: one expired, one not
-            await cache.Insert("live", [1], DateTimeOffset.Now.AddMinutes(5)).Timeout(Timeout).FirstAsync();
-            await cache.Insert("expired", [2], DateTimeOffset.Now.AddMilliseconds(200)).Timeout(Timeout).FirstAsync();
+        await using var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
-            // wait for expiration
-            await Task.Delay(300);
+        // Arrange: one expired, one not
+        await cache.Insert("live", [1], DateTimeOffset.Now.AddMinutes(5)).Timeout(Timeout).FirstAsync();
+        await cache.Insert("expired", [2], DateTimeOffset.Now.AddMilliseconds(200)).Timeout(Timeout).FirstAsync();
 
-            var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
+        // wait for expiration
+        await Task.Delay(300);
 
-            // live remains, expired filtered out by GetAllKeys � keysBefore may be 1
-            await Assert.That(keysBefore).Count().IsLessThanOrEqualTo(1);
+        var keysBefore = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
 
-            // Act
-            await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
+        // live remains, expired filtered out by GetAllKeys � keysBefore may be 1
+        await Assert.That(keysBefore).Count().IsLessThanOrEqualTo(1);
 
-            // Assert
-            var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
-            await Assert.That(keysAfter).IsEmpty();
+        // Act
+        await cache.InvalidateAll().Timeout(Timeout).FirstAsync();
 
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("live").Timeout(Timeout).FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expired").Timeout(Timeout).FirstAsync());
-        }
+        // Assert
+        var keysAfter = await cache.GetAllKeys().ToList().Timeout(Timeout).FirstAsync();
+        await Assert.That(keysAfter).IsEmpty();
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("live").Timeout(Timeout).FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expired").Timeout(Timeout).FirstAsync());
     }
 }

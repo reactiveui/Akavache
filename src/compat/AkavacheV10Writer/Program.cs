@@ -43,7 +43,7 @@ const string keyBytes = "compat:bytes";
 var valueString = "Hello, Akavache V10!";
 var valueInt = 42;
 var valuePerson = new Person { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
-var valueBytes = Encoding.UTF8.GetBytes("ByteArray:CAFEBABE");
+var valueBytes = "ByteArray:CAFEBABE"u8.ToArray();
 
 try
 {

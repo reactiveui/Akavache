@@ -57,42 +57,35 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
+        // Test basic byte array operations
+        byte[] testData = [1, 2, 3, 4, 5];
+
+        // Insert
+        await cache.Insert("byte_key", testData).FirstAsync();
+
+        // Get
+        var retrieved = await cache.Get("byte_key").FirstAsync();
+        await Assert.That(retrieved).IsEqualTo(testData);
+
+        // GetCreatedAt
+        var createdAt = await cache.GetCreatedAt("byte_key").FirstAsync();
+        using (Assert.Multiple())
         {
-            // Test basic byte array operations
-            byte[] testData = [1, 2, 3, 4, 5];
-
-            // Insert
-            await cache.Insert("byte_key", testData).FirstAsync();
-
-            // Get
-            var retrieved = await cache.Get("byte_key").FirstAsync();
-            await Assert.That(retrieved).IsEqualTo(testData);
-
-            // GetCreatedAt
-            var createdAt = await cache.GetCreatedAt("byte_key").FirstAsync();
-            using (Assert.Multiple())
-            {
-                await Assert.That(createdAt).IsNotNull();
-                await Assert.That(createdAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
-            }
-
-            // GetAllKeys
-            var keys = await cache.GetAllKeys().ToList().FirstAsync();
-            await Assert.That(keys).Contains("byte_key");
-
-            // Invalidate
-            await cache.Invalidate("byte_key").FirstAsync();
-
-            // Verify invalidated
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("byte_key").FirstAsync());
+            await Assert.That(createdAt).IsNotNull();
+            await Assert.That(createdAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
         }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+
+        // GetAllKeys
+        var keys = await cache.GetAllKeys().ToList().FirstAsync();
+        await Assert.That(keys).Contains("byte_key");
+
+        // Invalidate
+        await cache.Invalidate("byte_key").FirstAsync();
+
+        // Verify invalidated
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("byte_key").FirstAsync());
     }
 
     /// <summary>
@@ -105,43 +98,36 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
+        // Test bulk byte array operations
+        var testData = new Dictionary<string, byte[]>
         {
-            // Test bulk byte array operations
-            var testData = new Dictionary<string, byte[]>
-            {
-                ["key1"] = [1, 2, 3],
-                ["key2"] = [4, 5, 6],
-                ["key3"] = [7, 8, 9]
-            };
+            ["key1"] = [1, 2, 3],
+            ["key2"] = [4, 5, 6],
+            ["key3"] = [7, 8, 9]
+        };
 
-            // Bulk insert
-            await cache.Insert(testData).FirstAsync();
+        // Bulk insert
+        await cache.Insert(testData).FirstAsync();
 
-            // Bulk get
-            var keys = testData.Keys.ToArray();
-            var retrieved = await cache.Get(keys).ToList().FirstAsync();
+        // Bulk get
+        var keys = testData.Keys.ToArray();
+        var retrieved = await cache.Get(keys).ToList().FirstAsync();
 
-            await Assert.That(retrieved).Count().IsEqualTo(3);
-            foreach (var item in retrieved)
-            {
-                await Assert.That(item.Value).IsEqualTo(testData[item.Key]);
-            }
-
-            // Bulk invalidate
-            await cache.Invalidate(keys).FirstAsync();
-
-            // Verify all invalidated
-            foreach (var key in keys)
-            {
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get(key).FirstAsync());
-            }
+        await Assert.That(retrieved).Count().IsEqualTo(3);
+        foreach (var item in retrieved)
+        {
+            await Assert.That(item.Value).IsEqualTo(testData[item.Key]);
         }
-        finally
+
+        // Bulk invalidate
+        await cache.Invalidate(keys).FirstAsync();
+
+        // Verify all invalidated
+        foreach (var key in keys)
         {
-            await cache.DisposeAsync();
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get(key).FirstAsync());
         }
     }
 
@@ -155,48 +141,41 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
+        byte[] testData = [1, 2, 3, 4, 5];
+        var expiration = DateTimeOffset.Now.AddSeconds(1);
+
+        // Insert with expiration
+        await cache.Insert("expiring_key", testData, expiration).FirstAsync();
+
+        // Should be available immediately
+        var retrieved = await cache.Get("expiring_key").FirstAsync();
+        await Assert.That(retrieved).IsEqualTo(testData);
+
+        // Wait for expiration
+        await Task.Delay(1500);
+
+        // Should now be expired
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expiring_key").FirstAsync());
+
+        // Test bulk insert with expiration
+        var bulkData = new Dictionary<string, byte[]> { ["bulk1"] = [1, 2], ["bulk2"] = [3, 4] };
+        var bulkExpiration = DateTimeOffset.Now.AddSeconds(1);
+
+        await cache.Insert(bulkData, bulkExpiration).FirstAsync();
+
+        // Should be available immediately
+        var bulkRetrieved = await cache.Get(bulkData.Keys.ToArray()).ToList().FirstAsync();
+        await Assert.That(bulkRetrieved).Count().IsEqualTo(2);
+
+        // Wait for expiration
+        await Task.Delay(1500);
+
+        // Should now be expired
+        foreach (var key in bulkData.Keys)
         {
-            byte[] testData = [1, 2, 3, 4, 5];
-            var expiration = DateTimeOffset.Now.AddSeconds(1);
-
-            // Insert with expiration
-            await cache.Insert("expiring_key", testData, expiration).FirstAsync();
-
-            // Should be available immediately
-            var retrieved = await cache.Get("expiring_key").FirstAsync();
-            await Assert.That(retrieved).IsEqualTo(testData);
-
-            // Wait for expiration
-            await Task.Delay(1500);
-
-            // Should now be expired
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expiring_key").FirstAsync());
-
-            // Test bulk insert with expiration
-            var bulkData = new Dictionary<string, byte[]> { ["bulk1"] = [1, 2], ["bulk2"] = [3, 4] };
-            var bulkExpiration = DateTimeOffset.Now.AddSeconds(1);
-
-            await cache.Insert(bulkData, bulkExpiration).FirstAsync();
-
-            // Should be available immediately
-            var bulkRetrieved = await cache.Get(bulkData.Keys.ToArray()).ToList().FirstAsync();
-            await Assert.That(bulkRetrieved).Count().IsEqualTo(2);
-
-            // Wait for expiration
-            await Task.Delay(1500);
-
-            // Should now be expired
-            foreach (var key in bulkData.Keys)
-            {
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get(key).FirstAsync());
-            }
-        }
-        finally
-        {
-            await cache.DisposeAsync();
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get(key).FirstAsync());
         }
     }
 
@@ -210,35 +189,28 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
-        {
-            // Insert multiple items
-            await cache.Insert("key1", [1, 2, 3]).FirstAsync();
-            await cache.Insert("key2", [4, 5, 6]).FirstAsync();
-            await cache.Insert("key3", [7, 8, 9]).FirstAsync();
+        // Insert multiple items
+        await cache.Insert("key1", [1, 2, 3]).FirstAsync();
+        await cache.Insert("key2", [4, 5, 6]).FirstAsync();
+        await cache.Insert("key3", [7, 8, 9]).FirstAsync();
 
-            // Verify items exist
-            var keys = await cache.GetAllKeys().ToList().FirstAsync();
-            await Assert.That(keys).Count().IsEqualTo(3);
+        // Verify items exist
+        var keys = await cache.GetAllKeys().ToList().FirstAsync();
+        await Assert.That(keys).Count().IsEqualTo(3);
 
-            // InvalidateAll
-            await cache.InvalidateAll().FirstAsync();
+        // InvalidateAll
+        await cache.InvalidateAll().FirstAsync();
 
-            // Verify all items are gone
-            var keysAfter = await cache.GetAllKeys().ToList().FirstAsync();
-            await Assert.That(keysAfter).IsEmpty();
+        // Verify all items are gone
+        var keysAfter = await cache.GetAllKeys().ToList().FirstAsync();
+        await Assert.That(keysAfter).IsEmpty();
 
-            // Verify individual gets fail
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key1").FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key2").FirstAsync());
-            await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key3").FirstAsync());
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // Verify individual gets fail
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key1").FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key2").FirstAsync());
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("key3").FirstAsync());
     }
 
     /// <summary>
@@ -251,24 +223,17 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
-        {
-            // Insert data
-            await cache.Insert("flush_test", [1, 2, 3]).FirstAsync();
+        // Insert data
+        await cache.Insert("flush_test", [1, 2, 3]).FirstAsync();
 
-            // Flush should complete without error
-            await cache.Flush().FirstAsync();
+        // Flush should complete without error
+        await cache.Flush().FirstAsync();
 
-            // Data should still be available after flush
-            var retrieved = await cache.Get("flush_test").FirstAsync();
-            await Assert.That(retrieved).IsEquivalentTo(new byte[] { 1, 2, 3 });
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // Data should still be available after flush
+        var retrieved = await cache.Get("flush_test").FirstAsync();
+        await Assert.That(retrieved).IsEquivalentTo(new byte[] { 1, 2, 3 });
     }
 
     /// <summary>
@@ -281,26 +246,19 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
-        {
-            // Insert and remove data to create fragmentation
-            await cache.Insert("vacuum_test1", [1, 2, 3]).FirstAsync();
-            await cache.Insert("vacuum_test2", [4, 5, 6]).FirstAsync();
-            await cache.Invalidate("vacuum_test1").FirstAsync();
+        // Insert and remove data to create fragmentation
+        await cache.Insert("vacuum_test1", [1, 2, 3]).FirstAsync();
+        await cache.Insert("vacuum_test2", [4, 5, 6]).FirstAsync();
+        await cache.Invalidate("vacuum_test1").FirstAsync();
 
-            // Vacuum should complete without error
-            await cache.Vacuum().FirstAsync();
+        // Vacuum should complete without error
+        await cache.Vacuum().FirstAsync();
 
-            // Remaining data should still be available
-            var retrieved = await cache.Get("vacuum_test2").FirstAsync();
-            await Assert.That(retrieved).IsEquivalentTo(new byte[] { 4, 5, 6 });
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // Remaining data should still be available
+        var retrieved = await cache.Get("vacuum_test2").FirstAsync();
+        await Assert.That(retrieved).IsEquivalentTo(new byte[] { 4, 5, 6 });
     }
 
     /// <summary>
@@ -313,79 +271,72 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
+
+        // Test null key validation - these should consistently throw ArgumentNullException
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await cache.Insert(null!, [1, 2, 3]).FirstAsync());
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.Get((string)null!).FirstAsync());
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await cache.Invalidate((string)null!).FirstAsync());
+
+        // GetCreatedAt may not always throw for null - InMemoryBlobCache might handle this differently
+        try
+        {
+            await cache.GetCreatedAt((string)null!).FirstAsync();
+
+            // If it doesn't throw, that's also acceptable for some cache implementations
+        }
+        catch (ArgumentNullException)
+        {
+            // This is the expected behavior
+        }
+
+        // Test null collections validation - simplified approach that should work consistently
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await cache.Insert(null!).FirstAsync());
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await cache.Get((string[])null!).ToList().FirstAsync());
+
+        // For empty/whitespace string validation, different cache implementations may handle this differently
+        // InMemoryBlobCache may allow empty strings as valid keys, while other implementations might not
+        // We'll test the behavior but be flexible about the exception type
+        try
+        {
+            // Test empty string - some implementations might allow this, others might not
+            await cache.Insert(string.Empty, [1, 2, 3]).FirstAsync();
+
+            // If it succeeds, that's also acceptable for some cache implementations
+            await cache.Get(string.Empty).FirstAsync();
+        }
+        catch (ArgumentException)
+        {
+            // This is expected behavior for implementations that validate empty strings
+        }
+        catch (KeyNotFoundException)
+        {
+            // This might happen if empty string is allowed as a key but no data is found
+        }
 
         try
         {
-            // Test null key validation - these should consistently throw ArgumentNullException
-            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await cache.Insert(null!, [1, 2, 3]).FirstAsync());
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.Get((string)null!).FirstAsync());
-            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await cache.Invalidate((string)null!).FirstAsync());
-
-            // GetCreatedAt may not always throw for null - InMemoryBlobCache might handle this differently
-            try
-            {
-                await cache.GetCreatedAt((string)null!).FirstAsync();
-
-                // If it doesn't throw, that's also acceptable for some cache implementations
-            }
-            catch (ArgumentNullException)
-            {
-                // This is the expected behavior
-            }
-
-            // Test null collections validation - simplified approach that should work consistently
-            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await cache.Insert(null!).FirstAsync());
-            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await cache.Get((string[])null!).ToList().FirstAsync());
-
-            // For empty/whitespace string validation, different cache implementations may handle this differently
-            // InMemoryBlobCache may allow empty strings as valid keys, while other implementations might not
-            // We'll test the behavior but be flexible about the exception type
-            try
-            {
-                // Test empty string - some implementations might allow this, others might not
-                await cache.Insert(string.Empty, [1, 2, 3]).FirstAsync();
-
-                // If it succeeds, that's also acceptable for some cache implementations
-                await cache.Get(string.Empty).FirstAsync();
-            }
-            catch (ArgumentException)
-            {
-                // This is expected behavior for implementations that validate empty strings
-            }
-            catch (KeyNotFoundException)
-            {
-                // This might happen if empty string is allowed as a key but no data is found
-            }
-
-            try
-            {
-                // Test whitespace string - similar flexibility
-                await cache.Insert("   ", [1, 2, 3]).FirstAsync();
-                await cache.Get("   ").FirstAsync();
-            }
-            catch (ArgumentException)
-            {
-                // This is expected behavior for implementations that validate whitespace strings
-            }
-            catch (KeyNotFoundException)
-            {
-                // This might happen if whitespace string is allowed as a key but no data is found
-            }
-
-            // Verify that valid operations still work
-            await cache.Insert("valid_key", [1, 2, 3]).FirstAsync();
-            var validData = await cache.Get("valid_key").FirstAsync();
-            await Assert.That(validData).IsEquivalentTo(new byte[] { 1, 2, 3 });
+            // Test whitespace string - similar flexibility
+            await cache.Insert("   ", [1, 2, 3]).FirstAsync();
+            await cache.Get("   ").FirstAsync();
         }
-        finally
+        catch (ArgumentException)
         {
-            await cache.DisposeAsync();
+            // This is expected behavior for implementations that validate whitespace strings
         }
+        catch (KeyNotFoundException)
+        {
+            // This might happen if whitespace string is allowed as a key but no data is found
+        }
+
+        // Verify that valid operations still work
+        await cache.Insert("valid_key", [1, 2, 3]).FirstAsync();
+        var validData = await cache.Get("valid_key").FirstAsync();
+        await Assert.That(validData).IsEquivalentTo(new byte[] { 1, 2, 3 });
     }
 
     /// <summary>
@@ -398,27 +349,20 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
-        {
-            // Test Scheduler property
-            await Assert.That(cache.Scheduler).IsNotNull();
+        // Test Scheduler property
+        await Assert.That(cache.Scheduler).IsNotNull();
 
-            // Test ForcedDateTimeKind property
-            cache.ForcedDateTimeKind = DateTimeKind.Utc;
-            await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
+        // Test ForcedDateTimeKind property
+        cache.ForcedDateTimeKind = DateTimeKind.Utc;
+        await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
 
-            cache.ForcedDateTimeKind = DateTimeKind.Local;
-            await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Local);
+        cache.ForcedDateTimeKind = DateTimeKind.Local;
+        await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Local);
 
-            cache.ForcedDateTimeKind = null;
-            await Assert.That(cache.ForcedDateTimeKind).IsNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        cache.ForcedDateTimeKind = null;
+        await Assert.That(cache.ForcedDateTimeKind).IsNull();
     }
 
     /// <summary>
@@ -461,18 +405,11 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
-        {
-            // GetCreatedAt for non-existent key should return null
-            var createdAt = await cache.GetCreatedAt("non_existent_key").FirstAsync();
-            await Assert.That(createdAt).IsNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // GetCreatedAt for non-existent key should return null
+        var createdAt = await cache.GetCreatedAt("non_existent_key").FirstAsync();
+        await Assert.That(createdAt).IsNull();
     }
 
     /// <summary>
@@ -507,7 +444,7 @@ public class IBlobCacheInterfaceTests
         // GetAll with Type
         var allTypedData = await cache.GetAll(userType).ToList().FirstAsync();
         await Assert.That(allTypedData).IsNotEmpty();
-        await Assert.That(allTypedData!.Any(kvp => kvp.Key == "typed_key")).IsTrue();
+        await Assert.That(allTypedData.Any(kvp => kvp.Key == "typed_key")).IsTrue();
 
         // Bulk Insert with Type
         var bulkData = new Dictionary<string, byte[]>
@@ -555,67 +492,60 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
+        // Test GetCreatedAt with multiple keys - simplified approach
+        string[] testKeys = ["key1", "key2", "key3"];
+        byte[] testData = [1, 2, 3];
+
+        // Insert test data
+        foreach (var key in testKeys)
+        {
+            await cache.Insert(key, testData).FirstAsync();
+        }
+
+        // Test bulk GetCreatedAt - InMemoryBlobCache may handle this differently
         try
         {
-            // Test GetCreatedAt with multiple keys - simplified approach
-            string[] testKeys = ["key1", "key2", "key3"];
-            byte[] testData = [1, 2, 3];
+            var createdAtResults = await cache.GetCreatedAt(testKeys).ToList().FirstAsync();
 
-            // Insert test data
-            foreach (var key in testKeys)
+            // Check if we got any results
+            if (createdAtResults.Count > 0)
             {
-                await cache.Insert(key, testData).FirstAsync();
-            }
-
-            // Test bulk GetCreatedAt - InMemoryBlobCache may handle this differently
-            try
-            {
-                var createdAtResults = await cache.GetCreatedAt(testKeys).ToList().FirstAsync();
-
-                // Check if we got any results
-                if (createdAtResults.Count > 0)
+                // If we get results, validate them
+                await Assert.That(createdAtResults).Count().IsLessThanOrEqualTo(testKeys.Length);
+                foreach (var (key, time) in createdAtResults)
                 {
-                    // If we get results, validate them
-                    await Assert.That(createdAtResults).Count().IsLessThanOrEqualTo(testKeys.Length);
-                    foreach (var result in createdAtResults)
+                    using (Assert.Multiple())
                     {
-                        using (Assert.Multiple())
-                        {
-                            await Assert.That(testKeys).Contains(result.Key);
-                            await Assert.That(result.Time).IsNotNull();
-                        }
-
-                        await Assert.That(result.Time!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
+                        await Assert.That(testKeys).Contains(key);
+                        await Assert.That(time).IsNotNull();
                     }
+
+                    await Assert.That(time!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
                 }
-
-                // InMemoryBlobCache might not support bulk GetCreatedAt in the same way
-                // as persistent caches - this is acceptable
-            }
-            catch (NotImplementedException)
-            {
-                // InMemoryBlobCache might not implement bulk GetCreatedAt - this is acceptable
             }
 
-            // Test individual GetCreatedAt operations work
-            foreach (var key in testKeys)
-            {
-                var individualCreatedAt = await cache.GetCreatedAt(key).FirstAsync();
-                await Assert.That(individualCreatedAt).IsNotNull();
-                await Assert.That(individualCreatedAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
-            }
-
-            // Test empty collection handling
-            var emptyKeys = Array.Empty<string>();
-            var emptyResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
-            await Assert.That(emptyResults).IsEmpty();
+            // InMemoryBlobCache might not support bulk GetCreatedAt in the same way
+            // as persistent caches - this is acceptable
         }
-        finally
+        catch (NotImplementedException)
         {
-            await cache.DisposeAsync();
+            // InMemoryBlobCache might not implement bulk GetCreatedAt - this is acceptable
         }
+
+        // Test individual GetCreatedAt operations work
+        foreach (var key in testKeys)
+        {
+            var individualCreatedAt = await cache.GetCreatedAt(key).FirstAsync();
+            await Assert.That(individualCreatedAt).IsNotNull();
+            await Assert.That(individualCreatedAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
+        }
+
+        // Test empty collection handling
+        var emptyKeys = Array.Empty<string>();
+        var emptyResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
+        await Assert.That(emptyResults).IsEmpty();
     }
 
     /// <summary>
@@ -628,32 +558,25 @@ public class IBlobCacheInterfaceTests
         // Arrange
         var serializer = new SystemJsonSerializer();
 
-        var cache = new InMemoryBlobCache(serializer);
+        await using var cache = new InMemoryBlobCache(serializer);
 
-        try
-        {
-            // Test with empty collections
-            var emptyKeys = Array.Empty<string>();
-            var emptyData = new Dictionary<string, byte[]>();
+        // Test with empty collections
+        var emptyKeys = Array.Empty<string>();
+        var emptyData = new Dictionary<string, byte[]>();
 
-            // Insert empty collection
-            await cache.Insert(emptyData).FirstAsync();
+        // Insert empty collection
+        await cache.Insert(emptyData).FirstAsync();
 
-            // Get empty collection
-            var emptyGetResults = await cache.Get(emptyKeys).ToList().FirstAsync();
-            await Assert.That(emptyGetResults).IsEmpty();
+        // Get empty collection
+        var emptyGetResults = await cache.Get(emptyKeys).ToList().FirstAsync();
+        await Assert.That(emptyGetResults).IsEmpty();
 
-            var emptyCreatedAtResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
-            await Assert.That(emptyCreatedAtResults).IsEmpty();
+        var emptyCreatedAtResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
+        await Assert.That(emptyCreatedAtResults).IsEmpty();
 
-            // Invalidate empty collection
-            await cache.Invalidate(emptyKeys).FirstAsync();
+        // Invalidate empty collection
+        await cache.Invalidate(emptyKeys).FirstAsync();
 
-            // These operations should complete without error
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // These operations should complete without error
     }
 }

@@ -28,10 +28,10 @@ public class ISerializerInterfaceTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testString = "Test serialization string";
-        var testInt = 42;
-        var testBool = true;
-        var testDouble = 3.14159;
+        const string testString = "Test serialization string";
+        const int testInt = 42;
+        const bool testBool = true;
+        const double testDouble = 3.14159;
 
         // Act & Assert - String
         var stringBytes = serializer.Serialize(testString);
@@ -64,7 +64,7 @@ public class ISerializerInterfaceTests
         }
 
         var deserializedBool = serializer.Deserialize<bool>(boolBytes);
-        await Assert.That(deserializedBool).IsEqualTo(testBool);
+        await Assert.That(deserializedBool).IsTrue();
 
         // Act & Assert - Double
         var doubleBytes = serializer.Serialize(testDouble);

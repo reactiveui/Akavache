@@ -313,7 +313,7 @@ public class SqliteAkavacheTransactionTests
         var sqliteTempDir = Path.Combine(Path.GetTempPath(), $"akavache_tx_{Guid.NewGuid():N}");
         Directory.CreateDirectory(sqliteTempDir);
 
-        var sqlite = new SqliteAkavacheConnection(new SQLiteConnectionString(Path.Combine(sqliteTempDir, "tx.db"), true));
+        var sqlite = new SqliteAkavacheConnection(new SQLiteConnectionString(Path.Combine(sqliteTempDir, "tx.db")));
         try
         {
             yield return sqlite;

@@ -55,10 +55,12 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
         base.OnAppearing();
 
         // Activate the view model when page appears
-        if (ViewModel is IActivatableViewModel activatable)
+        if (ViewModel is not IActivatableViewModel activatable)
         {
-            activatable.Activator.Activate();
+            return;
         }
+
+        activatable.Activator.Activate();
     }
 
     /// <summary>
@@ -69,9 +71,11 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
         base.OnDisappearing();
 
         // Deactivate the view model when page disappears
-        if (ViewModel is IActivatableViewModel activatable)
+        if (ViewModel is not IActivatableViewModel activatable)
         {
-            activatable.Activator.Deactivate();
+            return;
         }
+
+        activatable.Activator.Deactivate();
     }
 }

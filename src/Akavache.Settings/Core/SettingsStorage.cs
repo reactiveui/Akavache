@@ -170,14 +170,16 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposedValue)
+        if (_disposedValue)
         {
-            if (disposing)
-            {
-                _blobCache.Dispose();
-            }
-
-            _disposedValue = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _blobCache.Dispose();
+        }
+
+        _disposedValue = true;
     }
 }

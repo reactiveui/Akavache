@@ -22,10 +22,10 @@ namespace Akavache.Benchmarks;
 public class CacheDatabaseComprehensiveBenchmarks
 {
     private readonly Random _randomNumberGenerator = new();
+    private readonly AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
     private string _tempDirectory;
     private IDisposable _directoryCleanup;
     private List<TestDataV11> _testObjects;
-    private AppBuilder _appBuilder = AppBuilder.CreateSplatBuilder();
 
     [Params(10, 100, 1000)]
     public int BenchmarkSize { get; set; }
@@ -52,7 +52,7 @@ public class CacheDatabaseComprehensiveBenchmarks
 
                 // Pre-generate test objects
                 _testObjects = [];
-                for (int i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
+                for (var i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
                 {
                     _testObjects.Add(new TestDataV11
                     {
@@ -86,7 +86,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     [BenchmarkCategory("GetOrFetch")]
     public async Task GetOrFetchObject()
     {
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var key = $"get_or_fetch_{i}";
             var testData = _testObjects[i % _testObjects.Count];
@@ -101,7 +101,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     public async Task GetAndFetchLatest()
     {
         // Pre-populate some data
-        for (int i = 0; i < Math.Min(BenchmarkSize, 100); i++)
+        for (var i = 0; i < Math.Min(BenchmarkSize, 100); i++)
         {
             var key = $"get_and_fetch_{i}";
             var testData = _testObjects[i % _testObjects.Count];
@@ -109,7 +109,7 @@ public class CacheDatabaseComprehensiveBenchmarks
         }
 
         var tasks = new List<Task>();
-        for (int i = 0; i < Math.Min(BenchmarkSize, 100); i++)
+        for (var i = 0; i < Math.Min(BenchmarkSize, 100); i++)
         {
             var key = $"get_and_fetch_{i}";
             var testData = _testObjects[i % _testObjects.Count];
@@ -132,7 +132,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         // Pre-populate data
         var keys = new List<string>();
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var key = $"invalidate_test_{i}";
             var testData = _testObjects[i % _testObjects.Count];
@@ -153,7 +153,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         var expiration = DateTimeOffset.Now.AddMinutes(30);
 
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = _testObjects[i % _testObjects.Count];
             await BlobCache.InsertObject($"expiration_test_{i}", testData, expiration);
@@ -166,7 +166,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         var userCache = CacheDatabase.UserAccount;
 
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = _testObjects[i % _testObjects.Count];
             var key = $"user_data_{i}";
@@ -188,7 +188,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         var localCache = CacheDatabase.LocalMachine;
 
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = _testObjects[i % _testObjects.Count];
             var key = $"local_data_{i}";
@@ -210,7 +210,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         var secureCache = CacheDatabase.Secure;
 
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = _testObjects[i % _testObjects.Count];
             var key = $"secure_data_{i}";
@@ -232,7 +232,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     {
         var memoryCache = CacheDatabase.InMemory;
 
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = _testObjects[i % _testObjects.Count];
             var key = $"memory_data_{i}";
@@ -259,7 +259,7 @@ public class CacheDatabaseComprehensiveBenchmarks
             CacheDatabase.InMemory
         ];
 
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var cache = caches[i % caches.Length];
             var testData = _testObjects[i % _testObjects.Count];
@@ -290,7 +290,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     [BenchmarkCategory("Serializer")]
     public async Task SerializerPerformance()
     {
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = _testObjects[i % _testObjects.Count];
             var key = $"serializer_test_{i}";
@@ -312,7 +312,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     public async Task BulkOperations()
     {
         var keyValuePairs = new Dictionary<string, TestDataV11>();
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             keyValuePairs[$"bulk_test_{i}"] = _testObjects[i % _testObjects.Count];
         }

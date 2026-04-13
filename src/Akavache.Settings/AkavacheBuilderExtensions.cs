@@ -85,12 +85,12 @@ public static class AkavacheBuilderExtensions
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
-        if (AkavacheBuilder.SettingsStores.TryGetValue(key, out var settings))
+        if (!AkavacheBuilder.SettingsStores.TryGetValue(key, out var settings))
         {
-            return settings;
+            return null;
         }
 
-        return null;
+        return settings;
     }
 
     /// <summary>
@@ -115,15 +115,17 @@ public static class AkavacheBuilderExtensions
             AkavacheBuilder.SettingsStores.Remove(key);
         }
 
-        if (AkavacheBuilder.BlobCaches.TryGetValue(key, out var cache))
+        if (!AkavacheBuilder.BlobCaches.TryGetValue(key, out var cache))
         {
-            if (cache != null)
-            {
-                await cache.DisposeAsync().ConfigureAwait(false);
-            }
-
-            AkavacheBuilder.BlobCaches.Remove(key);
+            return;
         }
+
+        if (cache != null)
+        {
+            await cache.DisposeAsync().ConfigureAwait(false);
+        }
+
+        AkavacheBuilder.BlobCaches.Remove(key);
     }
 
     /// <summary>

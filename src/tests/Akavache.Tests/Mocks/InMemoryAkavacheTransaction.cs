@@ -73,19 +73,23 @@ internal sealed class InMemoryAkavacheTransaction : IAkavacheTransaction
             throw new InvalidOperationException("Simulated insert failure.");
         }
 
-        if (entity is CacheEntry entry && entry.Id is not null)
+        if (entity is not CacheEntry entry || entry.Id is null)
         {
-            _store[entry.Id] = entry;
+            return;
         }
+
+        _store[entry.Id] = entry;
     }
 
     /// <inheritdoc/>
     public void Delete<T>(object primaryKey)
     {
-        if (primaryKey is string key)
+        if (primaryKey is not string key)
         {
-            _store.TryRemove(key, out _);
+            return;
         }
+
+        _store.TryRemove(key, out _);
     }
 
     /// <inheritdoc/>

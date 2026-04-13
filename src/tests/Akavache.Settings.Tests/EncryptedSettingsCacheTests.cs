@@ -377,9 +377,9 @@ public class EncryptedSettingsCacheTests
                     await TestHelper.EventuallyAsync(() => originalSettings is not null).ConfigureAwait(false);
 
                     // Perform all writes via a fresh store with retryable semantics.
-                    await TestHelper.EventuallyAsync(async () =>
+                    await TestHelper.EventuallyAsync(() =>
                     {
-                        return await TestHelper.WithFreshStoreAsync(
+                        return TestHelper.WithFreshStoreAsync(
                             instance,
                             () => instance.GetSecureSettingsStore<ViewSettings>("test_password", testName),
                             async s =>
@@ -392,7 +392,7 @@ public class EncryptedSettingsCacheTests
                                     s.StringTest is not null && s is { IntTest: 999, BoolTest: false });
                                 await Task.Yield();
                                 return ok;
-                            }).ConfigureAwait(false);
+                            });
                     }).ConfigureAwait(false);
 
                     // Dispose the initially captured instance to release any handles.
@@ -473,9 +473,9 @@ public class EncryptedSettingsCacheTests
 
                     // IMPORTANT: Do NOT write using the captured 'initialSettings'.
                     // Instead, open a *fresh* store, perform the write, and dispose it � retrying on transient disposal.
-                    await TestHelper.EventuallyAsync(async () =>
+                    await TestHelper.EventuallyAsync(() =>
                     {
-                        return await TestHelper.WithFreshStoreAsync(
+                        return TestHelper.WithFreshStoreAsync(
                             instance,
                             () => instance.GetSecureSettingsStore<ViewSettings>("correct_password", testName),
                             async s =>
@@ -486,7 +486,7 @@ public class EncryptedSettingsCacheTests
                                 var ok = TestHelper.TryRead(() => s.StringTest == "Secret Data");
                                 await Task.Yield();
                                 return ok;
-                            }).ConfigureAwait(false);
+                            });
                     }).ConfigureAwait(false);
 
                     // Release the initial settings instance after we've successfully written using a fresh store.
@@ -577,9 +577,9 @@ public class EncryptedSettingsCacheTests
                         var index = i;
 
                         // Write with retry against transient disposal using a fresh store per attempt.
-                        await TestHelper.EventuallyAsync(async () =>
+                        await TestHelper.EventuallyAsync(() =>
                         {
-                            return await TestHelper.WithFreshStoreAsync(
+                            return TestHelper.WithFreshStoreAsync(
                                 instance,
                                 () => instance.GetSecureSettingsStore<ViewSettings>("test_password", testName),
                                 async s =>
@@ -588,7 +588,7 @@ public class EncryptedSettingsCacheTests
                                     var ok = TestHelper.TryRead(() => s.IntTest >= 0);
                                     await Task.Yield();
                                     return ok;
-                                }).ConfigureAwait(false);
+                                });
                         }).ConfigureAwait(false);
 
                         // Verify we can reopen and read something sane.

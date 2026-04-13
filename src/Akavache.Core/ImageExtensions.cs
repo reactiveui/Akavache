@@ -121,25 +121,25 @@ public static class ImageExtensions
 
         // Check for common image format headers
         // PNG: 89 50 4E 47
-        if (imageBytes.Length >= 4 && imageBytes[0] == 0x89 && imageBytes[1] == 0x50 && imageBytes[2] == 0x4E && imageBytes[3] == 0x47)
+        if (imageBytes is [0x89, 0x50, 0x4E, 0x47, ..])
         {
             return true;
         }
 
         // JPEG: FF D8 FF
-        if (imageBytes.Length >= 3 && imageBytes[0] == 0xFF && imageBytes[1] == 0xD8 && imageBytes[2] == 0xFF)
+        if (imageBytes is [0xFF, 0xD8, 0xFF, ..])
         {
             return true;
         }
 
         // GIF: 47 49 46
-        if (imageBytes.Length >= 3 && imageBytes[0] == 0x47 && imageBytes[1] == 0x49 && imageBytes[2] == 0x46)
+        if (imageBytes is [0x47, 0x49, 0x46, ..])
         {
             return true;
         }
 
         // BMP: 42 4D
-        if (imageBytes.Length >= 2 && imageBytes[0] == 0x42 && imageBytes[1] == 0x4D)
+        if (imageBytes is [0x42, 0x4D, ..])
         {
             return true;
         }

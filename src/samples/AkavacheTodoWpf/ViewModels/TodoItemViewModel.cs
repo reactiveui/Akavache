@@ -237,27 +237,31 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
         {
             var dialog = new Views.EditTodoDialog(TodoItem);
-            if (dialog.ShowDialog() == true)
+            if (dialog.ShowDialog() != true)
             {
-                var updatedTodo = dialog.UpdatedTodo;
-                if (updatedTodo != null)
-                {
-                    TodoItem.Title = updatedTodo.Title;
-                    TodoItem.Description = updatedTodo.Description;
-                    TodoItem.DueDate = updatedTodo.DueDate;
-                    TodoItem.Priority = updatedTodo.Priority;
-
-                    // Trigger property notifications for ALL relevant properties
-                    this.RaisePropertyChanged(nameof(TodoItem));
-                    this.RaisePropertyChanged(nameof(TodoItem.Title));
-                    this.RaisePropertyChanged(nameof(TodoItem.Description));
-                    this.RaisePropertyChanged(nameof(TodoItem.DueDate));
-                    this.RaisePropertyChanged(nameof(TodoItem.Priority));
-                    this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
-
-                    SaveTodoItem().Subscribe();
-                }
+                return;
             }
+
+            var updatedTodo = dialog.UpdatedTodo;
+            if (updatedTodo == null)
+            {
+                return;
+            }
+
+            TodoItem.Title = updatedTodo.Title;
+            TodoItem.Description = updatedTodo.Description;
+            TodoItem.DueDate = updatedTodo.DueDate;
+            TodoItem.Priority = updatedTodo.Priority;
+
+            // Trigger property notifications for ALL relevant properties
+            this.RaisePropertyChanged(nameof(TodoItem));
+            this.RaisePropertyChanged(nameof(TodoItem.Title));
+            this.RaisePropertyChanged(nameof(TodoItem.Description));
+            this.RaisePropertyChanged(nameof(TodoItem.DueDate));
+            this.RaisePropertyChanged(nameof(TodoItem.Priority));
+            this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
+
+            SaveTodoItem().Subscribe();
         }));
 
     /// <summary>
@@ -278,10 +282,10 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// Persists this todo back to the cached collection.
     /// </summary>
     /// <returns>An observable that signals when the save operation is complete.</returns>
-    private IObservable<Unit> SaveTodoItem()
-    {
+    private IObservable<Unit> SaveTodoItem() =>
+
         // Use individual cache key for this todo
-        return TodoCacheService.GetAllTodos()
+        TodoCacheService.GetAllTodos()
             .Take(1)
             .SelectMany(todos =>
             {
@@ -302,7 +306,6 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 // Save the updated list
                 return TodoCacheService.SaveTodos(todos);
             });
-    }
 
     /// <summary>
     /// Computes the row background brush for the current todo state.

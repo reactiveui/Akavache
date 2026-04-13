@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Sqlite3Extensions = Akavache.Sqlite3.AkavacheBuilderExtensions;
 

@@ -2,9 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Net.Http;
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
@@ -138,13 +136,14 @@ public class RelativeTimeExtensionsTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public Task DownloadUrlStringShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         try
         {
             // Arrange
             IBlobCache? cache = null;
-            var url = "http://example.com";
+            const string url = "http://example.com";
             var expiration = TimeSpan.FromMinutes(5);
 
             // Act & Assert
@@ -418,6 +417,7 @@ public class RelativeTimeExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringHttpMethodShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.DownloadUrl(null!, "http://example.com", HttpMethod.Get, TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
@@ -523,7 +523,7 @@ public class RelativeTimeExtensionsTests
 
             var login = await cache.GetLogin("host").ToTask();
             await Assert.That(login).IsNotNull();
-            await Assert.That(login!.UserName).IsEqualTo("user");
+            await Assert.That(login.UserName).IsEqualTo("user");
             await Assert.That(login.Password).IsEqualTo("pass");
         }
         finally
@@ -538,6 +538,7 @@ public class RelativeTimeExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringHttpMethodShouldServeFromCache()
     {
         var cache = CreateCache();

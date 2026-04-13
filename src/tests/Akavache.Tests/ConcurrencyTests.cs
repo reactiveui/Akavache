@@ -11,7 +11,7 @@ namespace Akavache.Tests;
 /// Tests for concurrent operations on InMemoryBlobCache.
 /// </summary>
 [Category("Akavache")]
-public class ConcurrencyTests
+public sealed class ConcurrencyTests
 {
     /// <summary>
     /// Tests that concurrent InsertObject operations do not cause IndexOutOfRangeException.
@@ -31,6 +31,7 @@ public class ConcurrencyTests
         for (var t = 0; t < threadCount; t++)
         {
             var threadId = t;
+            var localCache = cache;
             tasks.Add(Task.Run(async () =>
             {
                 try
@@ -41,12 +42,12 @@ public class ConcurrencyTests
                         var value = new TestObject { Id = i, Name = $"Thread {threadId} Item {i}" };
 
                         // Perform concurrent InsertObject operations
-                        await cache.InsertObject(key, value);
+                        await localCache.InsertObject(key, value);
 
                         // Occasionally invalidate to trigger cleanup operations
                         if (i % 10 == 0)
                         {
-                            await cache.InvalidateObject<TestObject>($"key_{threadId}_{i - 5}");
+                            await localCache.InvalidateObject<TestObject>($"key_{threadId}_{i - 5}");
                         }
                     }
                 }
@@ -71,10 +72,12 @@ public class ConcurrencyTests
         }
 
         // Verify no other exceptions occurred
-        if (!exceptions.IsEmpty)
+        if (exceptions.IsEmpty)
         {
-            throw new AggregateException("Unexpected exceptions occurred during concurrent operations", exceptions);
+            return;
         }
+
+        throw new AggregateException("Unexpected exceptions occurred during concurrent operations", exceptions);
     }
 
     /// <summary>
@@ -95,6 +98,7 @@ public class ConcurrencyTests
         for (var t = 0; t < threadCount; t++)
         {
             var threadId = t;
+            var localCache = cache;
             tasks.Add(Task.Run(async () =>
             {
                 try
@@ -111,26 +115,29 @@ public class ConcurrencyTests
                         // adds shared mutable state across threads here.
                         switch ((threadId + i) % 4)
                         {
-                            case 0: // Insert
-                                await cache.InsertObject(key, value);
+                            case 0:
+                            {
+                                await localCache.InsertObject(key, value);
                                 break;
-                            case 1: // Get (may trigger expiration cleanup)
-                                try
-                                {
-                                    await cache.GetObject<TestObject>(key);
-                                }
-                                catch (KeyNotFoundException)
-                                {
-                                    // Expected if key doesn't exist
-                                }
+                            }
 
+                            case 1:
+                            {
+                                await GetObjectIgnoringNotFound(localCache, key);
                                 break;
-                            case 2: // Invalidate
-                                await cache.InvalidateObject<TestObject>(key);
+                            }
+
+                            case 2:
+                            {
+                                await localCache.InvalidateObject<TestObject>(key);
                                 break;
-                            case 3: // Vacuum to trigger cleanup
-                                await cache.Vacuum();
+                            }
+
+                            case 3:
+                            {
+                                await localCache.Vacuum();
                                 break;
+                            }
                         }
 
                         // Add deterministic delays every 20 iterations to create more
@@ -156,9 +163,29 @@ public class ConcurrencyTests
             .Where(ex => ex is IndexOutOfRangeException)
             .ToList();
 
-        if (indexOutOfRangeExceptions.Count > 0)
+        if (indexOutOfRangeExceptions.Count == 0)
         {
-            throw new AggregateException("IndexOutOfRangeExceptions occurred during stress test", indexOutOfRangeExceptions);
+            return;
+        }
+
+        throw new AggregateException("IndexOutOfRangeExceptions occurred during stress test", indexOutOfRangeExceptions);
+    }
+
+    /// <summary>
+    /// Attempts to retrieve an object from the cache using the specified key while ignoring any KeyNotFoundException.
+    /// </summary>
+    /// <param name="cache">The cache from which the object will be retrieved.</param>
+    /// <param name="key">The key associated with the object in the cache.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    private static async Task GetObjectIgnoringNotFound(IBlobCache cache, string key)
+    {
+        try
+        {
+            await cache.GetObject<TestObject>(key);
+        }
+        catch (KeyNotFoundException)
+        {
+            // Expected if key doesn't exist
         }
     }
 

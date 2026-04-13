@@ -112,14 +112,13 @@ public class TodoItem : ReactiveObject
     /// Gets a value indicating whether the todo item is overdue.
     /// </summary>
     [JsonIgnore]
-    public bool IsOverdue => DueDate.HasValue && DueDate.Value < DateTimeOffset.Now && !IsCompleted;
+    public bool IsOverdue => DueDate < DateTimeOffset.Now && !IsCompleted;
 
     /// <summary>
     /// Gets a value indicating whether the todo item is due soon (within 24 hours).
     /// </summary>
     [JsonIgnore]
-    public bool IsDueSoon => DueDate.HasValue &&
-                             DueDate.Value > DateTimeOffset.Now &&
+    public bool IsDueSoon => DueDate > DateTimeOffset.Now &&
                              DueDate.Value <= DateTimeOffset.Now.AddHours(24) &&
                              !IsCompleted;
 

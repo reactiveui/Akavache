@@ -5,7 +5,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
-using Newtonsoft.Json.Serialization;
 
 namespace Akavache.NewtonsoftJson;
 
@@ -232,8 +231,7 @@ public class NewtonsoftSerializer : ISerializer
                     reader2.DateTimeKindHandling = forcedDateTimeKind.Value;
                 }
 
-                var result = serializer.Deserialize<T>(reader2);
-                return result;
+                return serializer.Deserialize<T>(reader2);
             }
         }
         catch

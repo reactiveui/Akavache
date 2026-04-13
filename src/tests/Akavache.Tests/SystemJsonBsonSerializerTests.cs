@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using System.Text.Json;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
@@ -156,7 +155,7 @@ public class SystemJsonBsonSerializerTests
         var serializer = new SystemJsonBsonSerializer();
 
         // Provide JSON data, not BSON
-        var jsonBytes = Encoding.UTF8.GetBytes("{\"Name\":\"json-fallback\",\"Value\":1}");
+        var jsonBytes = "{\"Name\":\"json-fallback\",\"Value\":1}"u8.ToArray();
         var result = serializer.Deserialize<SerializerTestModel>(jsonBytes);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Name).IsEqualTo("json-fallback");
@@ -198,7 +197,7 @@ public class SystemJsonBsonSerializerTests
     public async Task DeserializeWithJsonTypeInfoShouldWork()
     {
         var serializer = new SystemJsonBsonSerializer();
-        var jsonBytes = Encoding.UTF8.GetBytes("{\"Name\":\"aot\",\"Value\":7}");
+        var jsonBytes = "{\"Name\":\"aot\",\"Value\":7}"u8.ToArray();
         var result = serializer.Deserialize(jsonBytes, SerializerTestContext.Default.SerializerTestModel);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Name).IsEqualTo("aot");
@@ -227,7 +226,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task NormalizeDateTimeFormatsShouldLeaveOtherStringsAlone()
     {
-        var input = "{\"Name\":\"test\"}";
+        const string input = "{\"Name\":\"test\"}";
         var result = SystemJsonBsonSerializer.NormalizeDateTimeFormats(input);
         await Assert.That(result).IsEqualTo(input);
     }
@@ -421,7 +420,7 @@ public class SystemJsonBsonSerializerTests
     public async Task NormalizeDateTimeFormatsShouldPreserveUnparseableLong()
     {
         // 20+ digits exceed long.MaxValue (9223372036854775807 is 19 digits).
-        var huge = "99999999999999999999";
+        const string huge = "99999999999999999999";
         var input = $"{{\"Date\":{huge}}}";
 
         var result = SystemJsonBsonSerializer.NormalizeDateTimeFormats(input);
@@ -440,7 +439,7 @@ public class SystemJsonBsonSerializerTests
     {
         // DateTime.MaxValue.Ticks == 3155378975999999999. One step higher is still a valid
         // long but the DateTime constructor throws ArgumentOutOfRangeException.
-        var tooLarge = "3155378976000000000";
+        const string tooLarge = "3155378976000000000";
         var input = $"{{\"Date\":{tooLarge}}}";
 
         var result = SystemJsonBsonSerializer.NormalizeDateTimeFormats(input);
@@ -518,7 +517,7 @@ public class SystemJsonBsonSerializerTests
     public async Task DeserializeShouldUseJsonWhenBsonHeuristicRejects()
     {
         var serializer = new SystemJsonBsonSerializer();
-        var json = "{\"Name\":\"direct\",\"Value\":7}";
+        const string json = "{\"Name\":\"direct\",\"Value\":7}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.Deserialize<SerializerTestModel>(bytes);
@@ -536,7 +535,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldHandleRawNewtonsoftBson()
     {
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
         {
             var newtonsoft = new Newtonsoft.Json.JsonSerializer();
@@ -620,7 +619,7 @@ public class SystemJsonBsonSerializerTests
         // Write a raw BSON document of the form {"Value":"42"} — Newtonsoft will
         // coerce the string "42" into int via ObjectWrapper<int>, but System.Text.Json
         // is strict and throws, forcing the inner catch to take the Newtonsoft path.
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
         {
             await writer.WriteStartObjectAsync();
@@ -649,7 +648,7 @@ public class SystemJsonBsonSerializerTests
         // can coerce this into ObjectWrapper<int>.Value, so both throw and the method
         // falls through to the direct deserialization path (which also fails) and
         // ultimately returns default(int).
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
         {
             await writer.WriteStartObjectAsync();
@@ -780,7 +779,7 @@ public class SystemJsonBsonSerializerTests
         // won't match correctly. Configure STJ with strict unmapped member handling so the
         // wrapper deserialization throws for unexpected shape, then direct deserialization
         // of the full JSON as SerializerTestModel succeeds (since Name is a valid field).
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
         {
             await writer.WriteStartObjectAsync();
@@ -794,10 +793,12 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer();
-        sut.Options = new JsonSerializerOptions
+        var sut = new SystemJsonBsonSerializer
         {
-            UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow
+            Options = new JsonSerializerOptions
+            {
+                UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow
+            }
         };
 
         // The JSON contains "Value": so wrapper path is tried first.
@@ -825,7 +826,7 @@ public class SystemJsonBsonSerializerTests
         // STJ with default options uses PascalCase, so it maps correctly.
         // We need STJ to fail but Newtonsoft to succeed.
         // Use a type with a constructor that Newtonsoft handles but STJ doesn't.
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
         {
             await writer.WriteStartObjectAsync();
@@ -837,14 +838,15 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer();
-
-        // Deserialize as a dictionary — both STJ and Newtonsoft should handle this.
-        // For hitting line 237 specifically, we need STJ direct to throw at line 228.
-        // Let's use a custom options that makes STJ strict and fail.
-        sut.Options = new JsonSerializerOptions
+        var sut = new SystemJsonBsonSerializer
         {
-            UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow
+            // Deserialize as a dictionary — both STJ and Newtonsoft should handle this.
+            // For hitting line 237 specifically, we need STJ direct to throw at line 228.
+            // Let's use a custom options that makes STJ strict and fail.
+            Options = new JsonSerializerOptions
+            {
+                UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow
+            }
         };
 
         // SerializerTestModel has Name and Value, not Count — STJ will throw with
@@ -865,7 +867,7 @@ public class SystemJsonBsonSerializerTests
     public async Task DeserializeBsonFormatShouldSkipWrapperWhenValueFieldMissing()
     {
         // Write a raw BSON document without any "Value" field.
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
         {
             await writer.WriteStartObjectAsync();
@@ -880,7 +882,7 @@ public class SystemJsonBsonSerializerTests
         }
 
         // The above still contains "Value", so build a truly value-less document.
-        using var ms2 = new MemoryStream();
+        await using var ms2 = new MemoryStream();
         await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms2))
         {
             await writer.WriteStartObjectAsync();
@@ -925,7 +927,7 @@ public class SystemJsonBsonSerializerTests
     public async Task TryUnwrapObjectWrapperShouldFallBackToNewtonsoftWhenStjThrows()
     {
         // Trailing comma is rejected by STJ but accepted by Newtonsoft by default.
-        var json = "{\"Value\":\"from-newtonsoft\",}";
+        const string json = "{\"Value\":\"from-newtonsoft\",}";
         var options = new JsonSerializerOptions { AllowTrailingCommas = false };
 
         var succeeded = SystemJsonBsonSerializer.TryUnwrapObjectWrapper<string>(json, options, out var value);
@@ -942,7 +944,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task TryUnwrapObjectWrapperShouldResolveViaStjOnHappyPath()
     {
-        var json = "{\"Value\":\"from-stj\"}";
+        const string json = "{\"Value\":\"from-stj\"}";
         var options = new JsonSerializerOptions();
 
         var succeeded = SystemJsonBsonSerializer.TryUnwrapObjectWrapper<string>(json, options, out var value);

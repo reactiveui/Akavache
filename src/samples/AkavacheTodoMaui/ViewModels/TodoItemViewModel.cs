@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
@@ -16,7 +15,7 @@ namespace AkavacheTodoMaui.ViewModels;
 /// </summary>
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
-public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
+public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
     /// <summary>The notification service used for scheduling reminders.</summary>
     private readonly NotificationService _notificationService;
@@ -265,31 +264,33 @@ public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         // Subscribe to the page disappearing to check if changes were made
         editPage.Disappearing += async (_, _) =>
         {
-            if (editViewModel.WasSaved && editViewModel.UpdatedTodo != null)
+            if (!editViewModel.WasSaved || editViewModel.UpdatedTodo == null)
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    // Update the current todo with the edited values
-                    TodoItem.Title = editViewModel.UpdatedTodo.Title;
-                    TodoItem.Description = editViewModel.UpdatedTodo.Description;
-                    TodoItem.DueDate = editViewModel.UpdatedTodo.DueDate;
-                    TodoItem.Priority = editViewModel.UpdatedTodo.Priority;
-                    TodoItem.Tags = editViewModel.UpdatedTodo.Tags;
-
-                    // Trigger property notifications
-                    this.RaisePropertyChanged(nameof(TodoItem));
-                    this.RaisePropertyChanged(nameof(DueDateDisplay));
-                    this.RaisePropertyChanged(nameof(PriorityDisplay));
-                    this.RaisePropertyChanged(nameof(TagsDisplay));
-                    this.RaisePropertyChanged(nameof(IsOverdue));
-                    this.RaisePropertyChanged(nameof(IsDueSoon));
-                    this.RaisePropertyChanged(nameof(BackgroundColor));
-                    this.RaisePropertyChanged(nameof(TextColor));
-
-                    // Save the updated todo
-                    SaveTodoItem().Subscribe();
-                });
+                return;
             }
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                // Update the current todo with the edited values
+                TodoItem.Title = editViewModel.UpdatedTodo.Title;
+                TodoItem.Description = editViewModel.UpdatedTodo.Description;
+                TodoItem.DueDate = editViewModel.UpdatedTodo.DueDate;
+                TodoItem.Priority = editViewModel.UpdatedTodo.Priority;
+                TodoItem.Tags = editViewModel.UpdatedTodo.Tags;
+
+                // Trigger property notifications
+                this.RaisePropertyChanged(nameof(TodoItem));
+                this.RaisePropertyChanged(nameof(DueDateDisplay));
+                this.RaisePropertyChanged(nameof(PriorityDisplay));
+                this.RaisePropertyChanged(nameof(TagsDisplay));
+                this.RaisePropertyChanged(nameof(IsOverdue));
+                this.RaisePropertyChanged(nameof(IsDueSoon));
+                this.RaisePropertyChanged(nameof(BackgroundColor));
+                this.RaisePropertyChanged(nameof(TextColor));
+
+                // Save the updated todo
+                SaveTodoItem().Subscribe();
+            });
         };
 
         // Navigate to the edit page
@@ -299,29 +300,20 @@ public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Command handler that schedules a reminder for this todo.</summary>
     /// <returns>An observable that completes when scheduling is done.</returns>
-    private IObservable<Unit> ExecuteScheduleReminder()
-    {
-        if (!TodoItem.DueDate.HasValue)
-        {
-            return Observable.Return(Unit.Default);
-        }
-
-        return _notificationService.ScheduleReminder(TodoItem);
-    }
+    private IObservable<Unit> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue ?
+        Observable.Return(Unit.Default) :
+        _notificationService.ScheduleReminder(TodoItem);
 
     /// <summary>Persists the current todo item by merging it into the cached todo list.</summary>
     /// <returns>An observable that completes when the save is done.</returns>
-    private IObservable<Unit> SaveTodoItem()
-    {
+    private IObservable<Unit> SaveTodoItem() =>
+
         // Use individual cache key for this todo
-        return TodoCacheService.GetAllTodos()
+        TodoCacheService.GetAllTodos()
             .Take(1)
             .SelectMany(todos =>
             {
-                if (todos == null)
-                {
-                    todos = [];
-                }
+                todos ??= [];
 
                 // Update the todo in the list
                 var existingTodo = todos.FirstOrDefault(t => t.Id == TodoItem.Id);
@@ -338,5 +330,4 @@ public partial class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 // Save the updated list
                 return TodoCacheService.SaveTodos(todos);
             });
-    }
 }

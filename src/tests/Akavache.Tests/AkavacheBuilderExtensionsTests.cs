@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Executors;
 using Splat;
@@ -66,7 +65,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithAkavacheCacheDatabaseFactoryConfigureShouldThrowOnNullBuilder() =>
         await Assert.That(static () =>
-            AkavacheBuilderExtensions.WithAkavacheCacheDatabase<SystemJsonSerializer>(
+            AkavacheBuilderExtensions.WithAkavacheCacheDatabase(
                 null!, static () => new SystemJsonSerializer(), static b => b.WithInMemoryDefaults(), "TestApp"))
             .Throws<ArgumentNullException>();
 
@@ -78,7 +77,7 @@ public class AkavacheBuilderExtensionsTests
     public async Task WithAkavacheCacheDatabaseFactoryConfigureShouldInitialize()
     {
         var appBuilder = AppBuilder.CreateSplatBuilder();
-        var result = appBuilder.WithAkavacheCacheDatabase<SystemJsonSerializer>(
+        var result = appBuilder.WithAkavacheCacheDatabase(
             static () => new SystemJsonSerializer(),
             static b => b.WithInMemoryDefaults(),
             "TestApp_FactoryConfigureInit");
@@ -118,7 +117,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithAkavacheCacheDatabaseFactoryShouldThrowOnNullBuilder() =>
         await Assert.That(static () =>
-            AkavacheBuilderExtensions.WithAkavacheCacheDatabase<SystemJsonSerializer>(
+            AkavacheBuilderExtensions.WithAkavacheCacheDatabase(
                 null!, static () => new SystemJsonSerializer(), "TestApp"))
             .Throws<ArgumentNullException>();
 
@@ -130,7 +129,7 @@ public class AkavacheBuilderExtensionsTests
     public async Task WithAkavacheCacheDatabaseFactoryShouldInitialize()
     {
         var appBuilder = AppBuilder.CreateSplatBuilder();
-        var result = appBuilder.WithAkavacheCacheDatabase<SystemJsonSerializer>(
+        var result = appBuilder.WithAkavacheCacheDatabase(
             static () => new SystemJsonSerializer(),
             "TestApp_FactoryInit");
 
@@ -335,8 +334,7 @@ public class AkavacheBuilderExtensionsTests
     public async Task WithInMemoryShouldThrowWhenNoSerializerConfigured()
     {
         var builder = CacheDatabase.CreateBuilder();
-        await Assert.That(() => builder.WithInMemory())
-            .Throws<InvalidOperationException>();
+        await Assert.That(() => builder.WithInMemory()).Throws<ArgumentNullException>();
     }
 
     /// <summary>

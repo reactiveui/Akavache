@@ -56,7 +56,7 @@ public class SystemTextJsonBuilderExtensionsTests
     public async Task WithSerializerSystemTextJsonSettingsShouldThrowOnNullSettings()
     {
         var builder = CreateBuilder("WithSerializerSystemTextJsonNullSettings");
-        await Assert.That(() => builder.WithSerializerSystemTextJson((JsonSerializerOptions)null!))
+        await Assert.That(() => builder.WithSerializerSystemTextJson(null!))
             .Throws<ArgumentNullException>();
     }
 

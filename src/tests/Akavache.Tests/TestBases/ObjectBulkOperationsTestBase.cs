@@ -12,6 +12,7 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// Base class for tests associated with object based bulk operations.
 /// </summary>
+[NotInParallel(nameof(RequestCacheTests))]
 public abstract class ObjectBulkOperationsTestBase : IDisposable
 {
     /// <summary>
@@ -171,7 +172,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             var tupleData = Tuple.Create("Foo", 4);
-            var stringData = "TestString";
+            const string stringData = "TestString";
             string[] keys = ["Key1", "Key2", "Key3"];
 
             // Insert both tuples and strings with same keys
@@ -186,7 +187,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             // Should still have the string objects
             var remainingKeys = await fixture.GetAllKeys().ToList().FirstAsync();
             await Assert.That(remainingKeys).Count().IsEqualTo(3);
-            await Assert.That(remainingKeys.All(k => k.StartsWith("str_"))).IsTrue();
+            await Assert.That(remainingKeys.All(k => k.StartsWith("str_", StringComparison.Ordinal))).IsTrue();
         }
     }
 
@@ -215,14 +216,16 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+        }
+
+        _disposed = true;
     }
 
     /// <summary>
@@ -240,24 +243,25 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             // Register the Newtonsoft BSON serializer specifically
             return new NewtonsoftBsonSerializer();
         }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
+
+        if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
             return new SystemJsonBsonSerializer();
         }
-        else if (serializerType == typeof(NewtonsoftSerializer))
+
+        if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
             return new NewtonsoftSerializer();
         }
-        else if (serializerType == typeof(SystemJsonSerializer))
+
+        if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
             return new SystemJsonSerializer();
         }
-        else
-        {
-            return null!;
-        }
+
+        return null!;
     }
 }

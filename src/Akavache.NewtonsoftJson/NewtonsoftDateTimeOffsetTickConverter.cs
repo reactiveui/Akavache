@@ -34,7 +34,7 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
             return null;
         }
 
-        if (reader.TokenType == JsonToken.Date && reader.Value is not null)
+        if (reader is { TokenType: JsonToken.Date, Value: not null })
         {
             return (DateTimeOffset)(DateTime)reader.Value;
         }
@@ -65,16 +65,18 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
     /// <inheritdoc/>
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
-        if (value is DateTimeOffset dateTimeOffset)
+        if (value is not DateTimeOffset dateTimeOffset)
         {
-            // Store both ticks and offset to preserve full DateTimeOffset information
-            writer.WriteStartObject();
-            writer.WritePropertyName("Ticks");
-            writer.WriteValue(dateTimeOffset.Ticks);
-            writer.WritePropertyName("OffsetTicks");
-            writer.WriteValue(dateTimeOffset.Offset.Ticks);
-            writer.WriteEndObject();
+            return;
         }
+
+        // Store both ticks and offset to preserve full DateTimeOffset information
+        writer.WriteStartObject();
+        writer.WritePropertyName("Ticks");
+        writer.WriteValue(dateTimeOffset.Ticks);
+        writer.WritePropertyName("OffsetTicks");
+        writer.WriteValue(dateTimeOffset.Offset.Ticks);
+        writer.WriteEndObject();
     }
 
     /// <summary>
@@ -87,6 +89,6 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
     internal static long ReadLongProperty(JObject jobject, string propertyName)
     {
         var token = jobject[propertyName];
-        return token is null ? 0 : token.Value<long>();
+        return token?.Value<long>() ?? 0;
     }
 }

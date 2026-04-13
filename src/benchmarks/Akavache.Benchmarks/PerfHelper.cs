@@ -76,7 +76,7 @@ internal static class PerfHelper
 
         // NB: Mask off the MSB and set bit 5 so we always end up with
         // valid UTF-8 characters that aren't control characters
-        for (int i = 0; i < bytes.Length; i++)
+        for (var i = 0; i < bytes.Length; i++)
         {
             bytes[i] = (byte)((bytes[i] & 0x7F) | 0x20);
         }

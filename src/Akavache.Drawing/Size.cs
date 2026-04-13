@@ -55,19 +55,5 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
     public bool Equals(Size other) => Width.Equals(other.Width) && Height.Equals(other.Height);
 
     /// <inheritdoc/>
-    public override int GetHashCode()
-    {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
-        // .NET Standard 2.0 compatible hash code generation
-        unchecked
-        {
-            var hash = 17;
-            hash = (hash * 23) + Width.GetHashCode();
-            hash = (hash * 23) + Height.GetHashCode();
-            return hash;
-        }
-#else
-        return HashCode.Combine(Width, Height);
-#endif
-    }
+    public override int GetHashCode() => HashCode.Combine(Width, Height);
 }

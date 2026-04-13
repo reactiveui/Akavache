@@ -43,6 +43,8 @@ public class AkavacheTestExecutorBase : ITestExecutor
     {
         await CacheDatabase.ResetForTestsAsync().ConfigureAwait(false);
 
+        RequestCache.Clear();
+
         AkavacheBuilder.SettingsStores = [];
         AkavacheBuilder.BlobCaches = [];
 

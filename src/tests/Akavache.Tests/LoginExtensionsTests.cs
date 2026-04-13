@@ -27,8 +27,8 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var username = "testuser";
-            var password = "testpassword";
+            const string username = "testuser";
+            const string password = "testpassword";
 
             try
             {
@@ -65,9 +65,9 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var username = "customuser";
-            var password = "custompassword";
-            var host = "example.com";
+            const string username = "customuser";
+            const string password = "custompassword";
+            const string host = "example.com";
 
             try
             {
@@ -105,9 +105,9 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var username = "expiringuser";
-            var password = "expiringpassword";
-            var host = "expiring.example.com";
+            const string username = "expiringuser";
+            const string password = "expiringpassword";
+            const string host = "expiring.example.com";
             var expiration = DateTimeOffset.Now.AddHours(1);
 
             try
@@ -150,9 +150,9 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var username = "erasableuser";
-            var password = "erasablepassword";
-            var host = "erasable.example.com";
+            const string username = "erasableuser";
+            const string password = "erasablepassword";
+            const string host = "erasable.example.com";
 
             try
             {
@@ -168,10 +168,7 @@ public class LoginExtensionsTests
                 await cache.EraseLogin(host).FirstAsync();
 
                 // Assert - Login should no longer exist
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-                {
-                    await cache.GetLogin(host).FirstAsync();
-                });
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetLogin(host).FirstAsync());
             }
             finally
             {
@@ -202,10 +199,7 @@ public class LoginExtensionsTests
         // the null branch of LoginExtensions.GetLogin's Select throw runs.
         await cache.Insert(key, [], typeof(LoginInfo)).FirstAsync();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-        {
-            await cache.GetLogin(host).FirstAsync();
-        });
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetLogin(host).FirstAsync());
     }
 
     /// <summary>
@@ -220,15 +214,12 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var host = "nonexistent.example.com";
+            const string host = "nonexistent.example.com";
 
             try
             {
                 // Act & Assert
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-                {
-                    await cache.GetLogin(host).FirstAsync();
-                });
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetLogin(host).FirstAsync());
             }
             finally
             {
@@ -250,13 +241,13 @@ public class LoginExtensionsTests
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
 
-            var host1 = "site1.example.com";
-            var user1 = "user1";
-            var pass1 = "password1";
+            const string host1 = "site1.example.com";
+            const string user1 = "user1";
+            const string pass1 = "password1";
 
-            var host2 = "site2.example.com";
-            var user2 = "user2";
-            var pass2 = "password2";
+            const string host2 = "site2.example.com";
+            const string user2 = "user2";
+            const string pass2 = "password2";
 
             try
             {
@@ -310,13 +301,13 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var host = "overwrite.example.com";
+            const string host = "overwrite.example.com";
 
-            var originalUser = "originaluser";
-            var originalPass = "originalpass";
+            const string originalUser = "originaluser";
+            const string originalPass = "originalpass";
 
-            var newUser = "newuser";
-            var newPass = "newpass";
+            const string newUser = "newuser";
+            const string newPass = "newpass";
 
             try
             {
@@ -369,9 +360,9 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "persistent_login_test.db");
-            var username = "persistentuser";
-            var password = "persistentpassword";
-            var host = "persistent.example.com";
+            const string username = "persistentuser";
+            const string password = "persistentpassword";
+            const string host = "persistent.example.com";
 
             // Act - Save credentials in first cache instance
             {
@@ -445,8 +436,8 @@ public class LoginExtensionsTests
                 }
 
                 // Test with special characters
-                var specialUser = "user@domain.com";
-                var specialPass = "p@ssw0rd!#$%";
+                const string specialUser = "user@domain.com";
+                const string specialPass = "p@ssw0rd!#$%";
                 await cache.SaveLogin(specialUser, specialPass, "special.example.com").FirstAsync();
                 var specialLogin = await cache.GetLogin("special.example.com").FirstAsync();
                 using (Assert.Multiple())
@@ -474,7 +465,7 @@ public class LoginExtensionsTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
-            var host = "idempotent.example.com";
+            const string host = "idempotent.example.com";
 
             try
             {
@@ -491,10 +482,7 @@ public class LoginExtensionsTests
                 await cache.EraseLogin("nonexistent.example.com").FirstAsync();
 
                 // Verify the login is still gone
-                await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-                {
-                    await cache.GetLogin(host).FirstAsync();
-                });
+                await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetLogin(host).FirstAsync());
             }
             finally
             {

@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 
@@ -24,7 +23,7 @@ public class BackwardCompatibilityTests
     public async Task WithSqliteDefaults_WithoutProvider_ShouldWorkAfterFix()
     {
         // This test verifies that the fix enables backward compatibility
-        var testAppName = "BackwardCompatibilityFixTest";
+        const string testAppName = "BackwardCompatibilityFixTest";
 
         // Clear any previous state
         AkavacheBuilderTestExtensions.ResetSqliteProvider();
@@ -53,7 +52,7 @@ public class BackwardCompatibilityTests
     [Test]
     public async Task WithSqliteProvider_ThenDefaults_ShouldWork()
     {
-        var testAppName = "NewPatternTest";
+        const string testAppName = "NewPatternTest";
 
         // Clear any previous state
         AkavacheBuilderTestExtensions.ResetSqliteProvider();

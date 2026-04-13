@@ -208,7 +208,7 @@ public class AkavacheV10ComprehensiveBenchmarks
             var retrieved = await userCache.GetObject<TestData>(key);
 
             // Verify data integrity
-            if (retrieved.Id != testData.Id)
+            if (retrieved!.Id != testData.Id)
             {
                 throw new InvalidOperationException("Data integrity check failed");
             }
@@ -235,7 +235,7 @@ public class AkavacheV10ComprehensiveBenchmarks
             var retrieved = await localCache.GetObject<TestData>(key);
 
             // Verify data integrity
-            if (retrieved.Id != testData.Id)
+            if (retrieved!.Id != testData.Id)
             {
                 throw new InvalidOperationException("Data integrity check failed");
             }
@@ -262,7 +262,7 @@ public class AkavacheV10ComprehensiveBenchmarks
             var retrieved = await secureCache.GetObject<TestData>(key);
 
             // Verify data integrity
-            if (retrieved.Id != testData.Id)
+            if (retrieved!.Id != testData.Id)
             {
                 throw new InvalidOperationException("Data integrity check failed");
             }
@@ -289,7 +289,7 @@ public class AkavacheV10ComprehensiveBenchmarks
             var retrieved = await memoryCache.GetObject<TestData>(key);
 
             // Verify data integrity
-            if (retrieved.Id != testData.Id)
+            if (retrieved!.Id != testData.Id)
             {
                 throw new InvalidOperationException("Data integrity check failed");
             }
@@ -325,14 +325,14 @@ public class AkavacheV10ComprehensiveBenchmarks
             var retrieved = await cache.GetObject<TestData>(key);
 
             // Update
-            retrieved.Value += 1;
+            retrieved!.Value++;
             await cache.InsertObject(key, retrieved);
 
             // Read again
             var updated = await cache.GetObject<TestData>(key);
 
             // Verify update
-            if (updated.Value != testData.Value + 1)
+            if (updated!.Value != testData.Value + 1)
             {
                 throw new InvalidOperationException("Update verification failed");
             }

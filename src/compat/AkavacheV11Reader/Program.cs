@@ -100,7 +100,7 @@ const string keyBytes = "compat:bytes";
 var expectedString = "Hello, Akavache V10!";
 var expectedInt = 42;
 var expectedPerson = new Person { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
-var expectedBytes = Encoding.UTF8.GetBytes("ByteArray:CAFEBABE");
+var expectedBytes = "ByteArray:CAFEBABE"u8.ToArray();
 
 try
 {

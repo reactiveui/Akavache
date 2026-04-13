@@ -45,7 +45,7 @@ internal static class TestHelper
             {
                 ok = false;
             }
-            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+            catch (InvalidOperationException ex) when (ex.IsDisposedMessage())
             {
                 ok = false;
             }
@@ -112,7 +112,7 @@ internal static class TestHelper
         {
             return false;
         }
-        catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+        catch (InvalidOperationException ex) when (ex.IsDisposedMessage())
         {
             return false;
         }
@@ -149,7 +149,7 @@ internal static class TestHelper
         {
             return false;
         }
-        catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
+        catch (InvalidOperationException ex) when (ex.IsDisposedMessage())
         {
             return false;
         }

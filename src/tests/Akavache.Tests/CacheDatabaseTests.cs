@@ -7,6 +7,7 @@ using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.Settings;
 using Akavache.SystemTextJson;
+using Akavache.Tests.Executors;
 
 namespace Akavache.Tests;
 
@@ -147,76 +148,61 @@ public class CacheDatabaseTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ApplicationNameShouldThrowWhenNotInitialized()
-    {
+    public async Task ApplicationNameShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.ApplicationName)
             .Throws<InvalidOperationException>();
-    }
 
     /// <summary>
     /// Tests ForcedDateTimeKind getter throws when not initialized.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ForcedDateTimeKindShouldThrowWhenNotInitialized()
-    {
+    public async Task ForcedDateTimeKindShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.ForcedDateTimeKind)
             .Throws<InvalidOperationException>();
-    }
 
     /// <summary>
     /// Tests InMemory getter throws when not initialized.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task InMemoryShouldThrowWhenNotInitialized()
-    {
+    public async Task InMemoryShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.InMemory)
             .Throws<InvalidOperationException>();
-    }
 
     /// <summary>
     /// Tests LocalMachine getter throws when not initialized.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task LocalMachineShouldThrowWhenNotInitialized()
-    {
+    public async Task LocalMachineShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.LocalMachine)
             .Throws<InvalidOperationException>();
-    }
 
     /// <summary>
     /// Tests Secure getter throws when not initialized.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task SecureShouldThrowWhenNotInitialized()
-    {
+    public async Task SecureShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.Secure)
             .Throws<InvalidOperationException>();
-    }
 
     /// <summary>
     /// Tests UserAccount getter throws when not initialized.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task UserAccountShouldThrowWhenNotInitialized()
-    {
+    public async Task UserAccountShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.UserAccount)
             .Throws<InvalidOperationException>();
-    }
 
     /// <summary>
     /// Tests Shutdown is a no-op when not initialized.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ShutdownShouldNoopWhenNotInitialized()
-    {
-        await Assert.That(async () => await CacheDatabase.Shutdown().ToTask()).ThrowsNothing();
-    }
+    public async Task ShutdownShouldNoopWhenNotInitialized() => await Assert.That(() => CacheDatabase.Shutdown().ToTask()).ThrowsNothing();
 
     /// <summary>
     /// Tests Initialize with serializer factory.
@@ -225,7 +211,7 @@ public class CacheDatabaseTests
     [Test]
     public async Task InitializeWithSerializerFactoryShouldSucceed()
     {
-        CacheDatabase.Initialize<SystemJsonSerializer>(static () => new SystemJsonSerializer(), "TestApp_FactoryInit");
+        CacheDatabase.Initialize(static () => new SystemJsonSerializer(), "TestApp_FactoryInit");
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
         await Assert.That(CacheDatabase.ApplicationName).IsEqualTo("TestApp_FactoryInit");
     }
@@ -256,15 +242,18 @@ public class CacheDatabaseTests
     public async Task InitializeWithConfigureShouldInvokeAction()
     {
         var configureCalled = false;
-        Action<IAkavacheBuilder> configure = b =>
-        {
-            configureCalled = true;
-            b.WithInMemoryDefaults();
-        };
-        CacheDatabase.Initialize<SystemJsonSerializer>(configure, "TestApp_ConfigureCalled");
+
+        CacheDatabase.Initialize<SystemJsonSerializer>(Configure, "TestApp_ConfigureCalled");
 
         await Assert.That(configureCalled).IsTrue();
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
+        return;
+
+        void Configure(IAkavacheBuilder b)
+        {
+            configureCalled = true;
+            b.WithInMemoryDefaults();
+        }
     }
 
     /// <summary>
@@ -438,6 +427,7 @@ public class CacheDatabaseTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [TestExecutor<AkavacheTestExecutor>]
     public async Task AllPropertiesShouldReturnValuesWhenInitialized()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_AllProps");

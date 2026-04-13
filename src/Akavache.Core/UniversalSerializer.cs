@@ -164,9 +164,7 @@ public static class UniversalSerializer
                 return default; // No data in cache at all
             }
 
-            var matchingKeys = FindKeyCandidates<T>(allKeys, requestedKey);
-
-            foreach (var candidateKey in matchingKeys)
+            foreach (var candidateKey in FindKeyCandidates<T>(allKeys, requestedKey))
             {
                 byte[]? rawData;
                 try
@@ -376,7 +374,7 @@ public static class UniversalSerializer
         return firstChar == 0x7B || // '{'
                firstChar == 0x5B || // '['
                firstChar == 0x22 || // '"'
-               (firstChar >= 0x30 && firstChar <= 0x39) || // '0'-'9'
+               firstChar is >= 0x30 and <= 0x39 || // '0'-'9'
                firstChar == 0x2D || // '-'
                (data.Length >= startIndex + 4 &&
                 data[startIndex] == 0x74 && data[startIndex + 1] == 0x72 && data[startIndex + 2] == 0x75 && data[startIndex + 3] == 0x65) || // 'true'
@@ -686,12 +684,12 @@ public static class UniversalSerializer
             return (T)(object)intValue;
         }
 
-        if (typeof(T) == typeof(bool) && bool.TryParse(jsonString.Trim(), out var boolValue))
+        if (typeof(T) != typeof(bool) || !bool.TryParse(jsonString.Trim(), out var boolValue))
         {
-            return (T)(object)boolValue;
+            return default;
         }
 
-        return default;
+        return (T)(object)boolValue;
     }
 
     /// <summary>

@@ -19,24 +19,16 @@ public class IntToBoolConverter : IValueConverter
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>True if integer is greater than 0.</returns>
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is int intValue)
-        {
-            return intValue > 0;
-        }
-
-        return false;
-    }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is > 0;
 
     /// <summary>
-    /// Not implemented for one-way binding.
+    /// One-way converter — returns <see cref="BindableProperty.UnsetValue"/> so the binding engine leaves the source untouched.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
-    /// <returns>Not supported.</returns>
-    /// <exception cref="NotImplementedException">Always thrown.</exception>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
+    /// <returns><see cref="BindableProperty.UnsetValue"/>.</returns>
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => BindableProperty.UnsetValue;
 }

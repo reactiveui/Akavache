@@ -161,7 +161,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldHandleObjectWrapper()
     {
         var serializer = new NewtonsoftSerializer();
-        var json = "{\"Value\":{\"Name\":\"wrapped\",\"Bio\":\"bio\",\"Blog\":\"blog\"}}";
+        const string json = "{\"Value\":{\"Name\":\"wrapped\",\"Bio\":\"bio\",\"Blog\":\"blog\"}}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
@@ -176,7 +176,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldReturnDefaultForNonJson()
     {
         var serializer = new NewtonsoftSerializer();
-        var bytes = Encoding.UTF8.GetBytes("not json data");
+        var bytes = "not json data"u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
         await Assert.That(result).IsNull();
@@ -190,7 +190,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldReturnDefaultForWhitespace()
     {
         var serializer = new NewtonsoftSerializer();
-        var bytes = Encoding.UTF8.GetBytes("   ");
+        var bytes = "   "u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
         await Assert.That(result).IsNull();
@@ -241,7 +241,7 @@ public class NewtonsoftSerializerTests
 
         // The BSON path threw, so the fallback produced JSON bytes starting with '{'.
         var asString = Encoding.UTF8.GetString(data);
-        await Assert.That(asString.TrimStart().StartsWith("{")).IsTrue();
+        await Assert.That(asString.TrimStart().StartsWith("{", StringComparison.Ordinal)).IsTrue();
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ public class NewtonsoftSerializerTests
         // With MissingMemberHandling.Error, parsing as ObjectWrapper<UserObject> will throw
         // because the BSON contains unknown fields (Name, Bio, Blog). The inner catch then
         // reopens the stream and deserializes directly as UserObject, which succeeds.
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new BsonDataWriter(ms) { CloseOutput = false })
         {
             var inner = JsonSerializer.Create();
@@ -299,7 +299,7 @@ public class NewtonsoftSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldHonorForcedDateTimeKindOnFallback()
     {
-        using var ms = new MemoryStream();
+        await using var ms = new MemoryStream();
         await using (var writer = new BsonDataWriter(ms) { CloseOutput = false })
         {
             var inner = JsonSerializer.Create();
@@ -351,7 +351,7 @@ public class NewtonsoftSerializerTests
 
         // Contains "Value": but the inner value is not a valid UserObject shape,
         // so SimpleObjectWrapper<UserObject> parsing throws and falls through to direct deserialization.
-        var json = "{\"Value\":12345}";
+        const string json = "{\"Value\":12345}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
@@ -370,7 +370,7 @@ public class NewtonsoftSerializerTests
     {
         var serializer = new NewtonsoftSerializer();
 
-        var json = "[1,2,3]";
+        const string json = "[1,2,3]";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<int[]>(bytes);
@@ -390,7 +390,7 @@ public class NewtonsoftSerializerTests
 
         // Starts with '{' so it passes the JSON shape check, but is malformed so the
         // direct deserialization throws and the outer catch returns default.
-        var json = "{\"Name\":";
+        const string json = "{\"Name\":";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
@@ -406,7 +406,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldUnwrapValueTypeWrapper()
     {
         var serializer = new NewtonsoftSerializer();
-        var json = "{\"Value\":42}";
+        const string json = "{\"Value\":42}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<int>(bytes);
@@ -422,7 +422,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldDeserializeDirectlyWithoutValueKey()
     {
         var serializer = new NewtonsoftSerializer();
-        var json = "{\"Name\":\"direct\",\"Bio\":\"b\",\"Blog\":\"g\"}";
+        const string json = "{\"Name\":\"direct\",\"Bio\":\"b\",\"Blog\":\"g\"}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
@@ -503,7 +503,7 @@ public class NewtonsoftSerializerTests
     {
         // Craft data that IsPotentialBsonData returns true for but BSON deserialization fails.
         // Then JSON deserialization succeeds for the value type.
-        var jsonBytes = Encoding.UTF8.GetBytes("42");
+        var jsonBytes = "42"u8.ToArray();
 
         // Prepend a fake BSON header that makes IsPotentialBsonData return true:
         // documentLength matches data size, first content byte is non-JSON.
@@ -535,7 +535,7 @@ public class NewtonsoftSerializerTests
 
         // Data that is not valid BSON and not valid JSON, starting with '{'
         // so it passes the JSON-looking check but fails direct JSON deserialization too.
-        var json = "{\"broken";
+        const string json = "{\"broken";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         // TryDeserializeFromOtherFormats: BSON attempt throws (catch at 243-244),
@@ -554,7 +554,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldReturnWrappedStringValue()
     {
         var serializer = new NewtonsoftSerializer();
-        var json = "{\"Value\":\"hello\"}";
+        const string json = "{\"Value\":\"hello\"}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<string>(bytes);
@@ -575,7 +575,7 @@ public class NewtonsoftSerializerTests
         // Valid JSON object but deserializing as string[] yields null from DeserializeObject
         // because a JSON object cannot be deserialized as a string array — this throws and
         // the outer catch returns default (null).
-        var json = "{\"key\":\"value\"}";
+        const string json = "{\"key\":\"value\"}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
         var result = serializer.TryDeserializeFromOtherFormats<string[]>(bytes);

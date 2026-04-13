@@ -27,7 +27,7 @@ internal static class Utility
             foreach (var file in files)
             {
                 File.SetAttributes(file.FullName, FileAttributes.Normal);
-                new Action(() => file.Delete()).Retry();
+                Retry(file.Delete);
             }
 
             foreach (var dir in dirs)
@@ -42,6 +42,23 @@ internal static class Utility
         {
             Console.Error.WriteLine("***** Failed to clean up!! *****");
             Console.Error.WriteLine(ex);
+        }
+
+        static void Retry(Action block, int retries = 2)
+        {
+            while (true)
+            {
+                try
+                {
+                    block();
+                    return;
+                }
+                catch (Exception) when (retries != 0)
+                {
+                    retries--;
+                    Thread.Sleep(10);
+                }
+            }
         }
     }
 
@@ -62,37 +79,6 @@ internal static class Utility
         di.Create();
 
         directoryPath = di.FullName;
-        return Disposable.Create(() =>
-        {
-            DeleteDirectory(di.FullName);
-        });
-    }
-
-    /// <summary>
-    /// Invokes <paramref name="block"/> and retries it up to <paramref name="retries"/>
-    /// extra times if it throws — used for flaky filesystem cleanup on Windows.
-    /// </summary>
-    /// <param name="block">The action to run.</param>
-    /// <param name="retries">The number of additional attempts after the initial try.</param>
-    public static void Retry(this Action block, int retries = 2)
-    {
-        while (true)
-        {
-            try
-            {
-                block();
-                return;
-            }
-            catch (Exception)
-            {
-                if (retries == 0)
-                {
-                    throw;
-                }
-
-                retries--;
-                Thread.Sleep(10);
-            }
-        }
+        return Disposable.Create(di.FullName, static path => DeleteDirectory(path));
     }
 }

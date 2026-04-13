@@ -42,7 +42,7 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
             return null;
         }
 
-        if (reader.TokenType == JsonToken.Date && reader.Value is not null)
+        if (reader is { TokenType: JsonToken.Date, Value: not null })
         {
             var dateTime = (DateTime)reader.Value;
 
@@ -73,18 +73,20 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
     /// <inheritdoc/>
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
-        if (value is DateTime dateTime)
+        if (value is not DateTime dateTime)
         {
-            // Store ticks in a way that preserves the intent while allowing proper deserialization.
-            // Convert to UTC for consistent storage, but handle each kind appropriately.
-            var ticksToStore = dateTime.Kind switch
-            {
-                DateTimeKind.Utc => dateTime.Ticks,
-                DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
-                _ => dateTime.Ticks, // Unspecified — preserve original ticks
-            };
-
-            writer.WriteValue(ticksToStore);
+            return;
         }
+
+        // Store ticks in a way that preserves the intent while allowing proper deserialization.
+        // Convert to UTC for consistent storage, but handle each kind appropriately.
+        var ticksToStore = dateTime.Kind switch
+        {
+            DateTimeKind.Utc => dateTime.Ticks,
+            DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
+            _ => dateTime.Ticks, // Unspecified — preserve original ticks
+        };
+
+        writer.WriteValue(ticksToStore);
     }
 }

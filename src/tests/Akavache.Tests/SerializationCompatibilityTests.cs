@@ -29,18 +29,16 @@ public class SerializationCompatibilityTests
     /// Gets all combinations of serializers for cross-compatibility testing.
     /// </summary>
     /// <returns>All serializer combinations as tuples wrapped in Func for test isolation.</returns>
-    public static IEnumerable<(Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer)> GetSerializerCombinations()
-    {
-        foreach (var writeSerializer in Serializers)
-        {
-            foreach (var readSerializer in Serializers)
-            {
-                var ws = writeSerializer;
-                var rs = readSerializer;
-                yield return (() => ws, () => rs);
-            }
-        }
-    }
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "Method returns a lazy enumerable used as a TUnit data source — property semantics aren't appropriate.")]
+    public static IEnumerable<(Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer)> GetSerializerCombinations() =>
+        Serializers
+            .SelectMany(
+                _ => Serializers,
+                (writeSerializer, readSerializer) => new { writeSerializer, readSerializer })
+            .Select(t => new { t, ws = t.writeSerializer })
+            .Select(t => new { t, rs = t.t.readSerializer })
+            .Select(t =>
+                ((Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer))(() => t.t.ws, () => t.rs));
 
     /// <summary>
     /// Tests that each serializer can roundtrip its own data.
@@ -72,11 +70,11 @@ public class SerializationCompatibilityTests
         {
             await Assert.That(deserializedObj).IsNotNull();
             await Assert.That(deserializedObj!.Name).IsEqualTo(testObj.Name);
-            await Assert.That(deserializedObj!.Value).IsEqualTo(testObj.Value);
+            await Assert.That(deserializedObj.Value).IsEqualTo(testObj.Value);
         }
 
         // Allow for some DateTime precision loss
-        await Assert.That(Math.Abs((testObj.Date - deserializedObj!.Date).TotalSeconds)).IsLessThan(1);
+        await Assert.That(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds)).IsLessThan(1);
     }
 
     /// <summary>

@@ -53,9 +53,9 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
         _connection.QueryAsync<T>(sql, args);
 
     /// <inheritdoc/>
-    public async Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate)
+    public Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate)
         where T : new() =>
-        await _connection.Table<T>().Where(predicate).FirstOrDefaultAsync().ConfigureAwait(false);
+        _connection.Table<T>().Where(predicate).FirstOrDefaultAsync()!;
 
     /// <inheritdoc/>
     public Task InsertOrReplaceAsync<T>(T entity)
@@ -162,8 +162,8 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
         _connection.CloseAsync();
 
     /// <inheritdoc/>
-    public async ValueTask DisposeAsync() =>
-        await CloseAsync().ConfigureAwait(false);
+    public ValueTask DisposeAsync() =>
+        new(CloseAsync());
 
     /// <summary>
     /// Row shape used to drain the result of <c>PRAGMA wal_checkpoint(...)</c>, which returns

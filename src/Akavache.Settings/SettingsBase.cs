@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Linq;
 using Akavache.Core;
 using Akavache.Settings.Core;
 using Splat; // AppLocator
@@ -131,12 +130,12 @@ public abstract class SettingsBase : SettingsStorage
         }
 
         var firstPair = AkavacheBuilder.BlobCaches.FirstOrDefault(kvp => kvp.Value != null);
-        if (!string.IsNullOrEmpty(firstPair.Key))
+        if (string.IsNullOrEmpty(firstPair.Key))
         {
-            return firstPair.Value;
+            return null;
         }
 
-        return null;
+        return firstPair.Value;
     }
 
     /// <summary>

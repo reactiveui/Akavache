@@ -295,7 +295,7 @@ public class SerializerExtensionsTests
                 // Assert
                 await Assert.That(createdAt).IsNotNull();
                 await Assert.That(createdAt!.Value).IsGreaterThanOrEqualTo(beforeInsert);
-                await Assert.That(createdAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
+                await Assert.That(createdAt.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
             }
             finally
             {
@@ -559,7 +559,7 @@ public class SerializerExtensionsTests
             // Act - GetAndFetchLatest should return cached value first, then latest
             await cache.GetAndFetchLatest("user", () => Observable.Return(latestUser))
                 .Take(2) // Take at most 2 values (cached + latest)
-                .ForEachAsync(user => results.Add(user));
+                .ForEachAsync(results.Add);
 
             // Assert
             await Assert.That(results).IsNotEmpty(); // Should have at least cached value
@@ -673,7 +673,7 @@ public class SerializerExtensionsTests
         var dict = new Dictionary<string, object> { ["key"] = "value" };
 
         // Act & Assert
-        await Assert.That(() => cache!.InsertObjects(dict!)).Throws<ArgumentNullException>();
+        await Assert.That(() => cache!.InsertObjects(dict)).Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -692,7 +692,7 @@ public class SerializerExtensionsTests
         try
         {
             // Act & Assert
-            await Assert.That(() => cache!.InsertObjects(dict!)).Throws<ArgumentNullException>();
+            await Assert.That(() => cache.InsertObjects(dict!)).Throws<ArgumentNullException>();
         }
         finally
         {
@@ -984,7 +984,7 @@ public class SerializerExtensionsTests
                     ["empty_string"] = string.Empty,
                     ["complex_obj"] = new { Prop1 = "value1", Prop2 = 123 }
                 };
-                await cache.InsertObjects(multiDict!).FirstAsync();
+                await cache.InsertObjects(multiDict).FirstAsync();
 
                 // Test 4: Large number of operations to stress test completion logic
                 var largeDict = Enumerable.Range(1, 1000)
@@ -1309,7 +1309,7 @@ public class SerializerExtensionsTests
             // Act & Assert - Fetch function throws
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
-                await cache.GetOrFetchObject<UserObject>(
+                await cache.GetOrFetchObject(
                     "failing_fetch",
                     () => Observable.Throw<UserObject>(new InvalidOperationException("Fetch failed"))).FirstAsync();
             });
@@ -1748,7 +1748,7 @@ public class SerializerExtensionsTests
     public async Task GetAllObjectsStaticExtensionShouldReturnStoredObjects()
     {
         var serializer = new SystemJsonSerializer();
-        IBlobCache cache = new InMemoryBlobCache(serializer);
+        var cache = new InMemoryBlobCache(serializer);
         try
         {
             var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
@@ -1824,7 +1824,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            await Assert.That(() => cache.GetOrFetchObject<string>("key", (Func<IObservable<string>>)null!))
+            await Assert.That(() => cache.GetOrFetchObject("key", (Func<IObservable<string>>)null!))
                 .Throws<ArgumentNullException>();
         }
         finally
@@ -1852,7 +1852,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            await Assert.That(() => cache.InsertObjects((IDictionary<string, object>)null!))
+            await Assert.That(() => cache.InsertObjects(null!))
                 .Throws<ArgumentNullException>();
         }
         finally
@@ -2044,7 +2044,7 @@ public class SerializerExtensionsTests
             var circular = new List<object>();
             circular.Add(circular);
 
-            await Assert.That(async () => await SerializerExtensions.InsertObject(cache, "cyc", circular).ToTask())
+            await Assert.That(() => SerializerExtensions.InsertObject(cache, "cyc", circular).ToTask())
                 .Throws<InvalidOperationException>();
         }
         finally
@@ -2088,7 +2088,7 @@ public class SerializerExtensionsTests
             var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
             await cache.Insert("bad_json", invalid, typeof(UserObject)).ToTask();
 
-            await Assert.That(async () => await SerializerExtensions.GetObject<UserObject>(cache, "bad_json").ToTask())
+            await Assert.That(() => SerializerExtensions.GetObject<UserObject>(cache, "bad_json").ToTask())
                 .Throws<InvalidOperationException>();
         }
         finally
@@ -2147,7 +2147,7 @@ public class SerializerExtensionsTests
             await Assert.That(results).IsNotEmpty();
 
             // Since cacheValidationPredicate returned false, the cache should not contain the key.
-            await Assert.That(async () => await cache.GetObject<UserObject>("validate_key").ToTask())
+            await Assert.That(() => cache.GetObject<UserObject>("validate_key").ToTask())
                 .Throws<KeyNotFoundException>();
         }
         finally
@@ -2174,13 +2174,13 @@ public class SerializerExtensionsTests
 
             try
             {
-                await cache.GetAndFetchLatest<UserObject>(
+                await cache.GetAndFetchLatest(
                     "inv_key",
                     () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")),
                     fetchPredicate: null,
                     absoluteExpiration: null,
                     shouldInvalidateOnError: true)
-                    .ForEachAsync(v => observed.Add(v));
+                    .ForEachAsync(observed.Add);
             }
             catch (Exception ex)
             {
@@ -2190,7 +2190,7 @@ public class SerializerExtensionsTests
             await Assert.That(caught).IsNotNull();
 
             // Cache entry should have been invalidated.
-            await Assert.That(async () => await cache.GetObject<UserObject>("inv_key").ToTask())
+            await Assert.That(() => cache.GetObject<UserObject>("inv_key").ToTask())
                 .Throws<KeyNotFoundException>();
         }
         finally
@@ -2215,10 +2215,10 @@ public class SerializerExtensionsTests
             var observed = new List<UserObject?>();
             try
             {
-                await cache.GetAndFetchLatest<UserObject>(
+                await cache.GetAndFetchLatest(
                     "keep_key",
                     () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")))
-                    .ForEachAsync(v => observed.Add(v));
+                    .ForEachAsync(observed.Add);
             }
             catch
             {
@@ -2359,7 +2359,7 @@ public class SerializerExtensionsTests
             // The primary serializer fails on invalid bytes, then UniversalSerializer's
             // TryFallbackDeserialization returns default(DateTime) without throwing.
             var result = SerializerExtensions.DeserializeWithContext<DateTime>(invalid, cache);
-            await Assert.That(result).IsEqualTo(default(DateTime));
+            await Assert.That(result).IsEqualTo(default);
         }
         finally
         {
@@ -2383,7 +2383,7 @@ public class SerializerExtensionsTests
             // The primary serializer fails on invalid bytes, then UniversalSerializer's
             // TryFallbackDeserialization returns default(DateTimeOffset) without throwing.
             var result = SerializerExtensions.DeserializeWithContext<DateTimeOffset>(invalid, cache);
-            await Assert.That(result).IsEqualTo(default(DateTimeOffset));
+            await Assert.That(result).IsEqualTo(default);
         }
         finally
         {
@@ -2411,6 +2411,7 @@ public class SerializerExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
     public async Task GetAllKeysSafeWithTypeShouldRecoverFromExceptions()
     {
         var cache = CreateCache();
@@ -2538,6 +2539,7 @@ public class SerializerExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
     public async Task GetAllKeysSafeWithTypeShouldReturnKeysForValidCache()
     {
         var cache = CreateCache();
@@ -2565,7 +2567,7 @@ public class SerializerExtensionsTests
         var cache = new NullReturningBlobCache(new SystemJsonSerializer());
         try
         {
-            await Assert.That(async () => await SerializerExtensions.GetObject<UserObject>(cache, "any_key").ToTask())
+            await Assert.That(() => cache.GetObject<UserObject>("any_key").ToTask())
                 .Throws<KeyNotFoundException>();
         }
         finally
@@ -2590,7 +2592,7 @@ public class SerializerExtensionsTests
             Exception? caught = null;
             try
             {
-                await cache.GetAndFetchLatest<UserObject>(
+                await cache.GetAndFetchLatest(
                     "task_inv",
                     () => Task.FromException<UserObject>(new InvalidOperationException("task fetch boom")),
                     fetchPredicate: null,
@@ -2606,7 +2608,7 @@ public class SerializerExtensionsTests
             await Assert.That(caught).IsNotNull();
 
             // Cache entry should have been invalidated.
-            await Assert.That(async () => await cache.GetObject<UserObject>("task_inv").ToTask())
+            await Assert.That(() => cache.GetObject<UserObject>("task_inv").ToTask())
                 .Throws<KeyNotFoundException>();
         }
         finally
@@ -2640,7 +2642,7 @@ public class SerializerExtensionsTests
             await Assert.That(results).IsNotEmpty();
 
             // Since cacheValidationPredicate returned false, the cache should not contain the key.
-            await Assert.That(async () => await cache.GetObject<UserObject>("task_validate").ToTask())
+            await Assert.That(() => cache.GetObject<UserObject>("task_validate").ToTask())
                 .Throws<KeyNotFoundException>();
         }
         finally
@@ -2777,10 +2779,7 @@ public class SerializerExtensionsTests
         /// Initializes a new instance of the <see cref="NullReturningBlobCache"/> class.
         /// </summary>
         /// <param name="serializer">The serializer to use.</param>
-        public NullReturningBlobCache(ISerializer serializer)
-        {
-            Serializer = serializer;
-        }
+        public NullReturningBlobCache(ISerializer serializer) => Serializer = serializer;
 
         /// <inheritdoc/>
         public ISerializer Serializer { get; }

@@ -4,8 +4,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
-using System.Reflection;
-
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
 
@@ -335,7 +333,7 @@ public class ImageCacheExtensionsTests
 
         // Set up mock bitmap loader for testing
         var originalLoader = GetCurrentBitmapLoader();
-        try
+        using (new LoaderRestorer(originalLoader))
         {
             SetupMockBitmapLoader();
 
@@ -347,15 +345,6 @@ public class ImageCacheExtensionsTests
             // Assert
             await Assert.That(bitmap).IsNotNull();
             await Assert.That(bitmap).IsTypeOf<MockBitmap>(); // Corrected line
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
-        {
-            // Skip if platform bitmap loading is not available
-            return;
-        }
-        finally
-        {
-            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -381,7 +370,7 @@ public class ImageCacheExtensionsTests
 
         // Set up mock bitmap loader for testing
         var originalLoader = GetCurrentBitmapLoader();
-        try
+        using (new LoaderRestorer(originalLoader))
         {
             SetupMockBitmapLoader();
 
@@ -393,15 +382,6 @@ public class ImageCacheExtensionsTests
             // Assert
             await Assert.That(bitmap).IsNotNull();
             await Assert.That(bitmap).IsTypeOf<MockBitmap>(); // Corrected line
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
-        {
-            // Skip if platform bitmap loading is not available
-            return;
-        }
-        finally
-        {
-            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -440,8 +420,7 @@ public class ImageCacheExtensionsTests
 
         const string key = "size_test_image";
         var originalLoader = GetCurrentBitmapLoader();
-
-        try
+        using (new LoaderRestorer(originalLoader))
         {
             // Insert valid image data
             await cache.Insert(key, validImageData)
@@ -462,15 +441,6 @@ public class ImageCacheExtensionsTests
                 await Assert.That(size.Width).IsEqualTo(100f);
                 await Assert.That(size.Height).IsEqualTo(200f);
             }
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
-        {
-            // Skip if platform bitmap loading is not available
-            return;
-        }
-        finally
-        {
-            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -670,26 +640,25 @@ public class ImageCacheExtensionsTests
         await cache.Insert("source", imageData).Timeout(TestTimeout).FirstAsync();
 
         var originalLoader = GetCurrentBitmapLoader();
-        try
+        using (new LoaderRestorer(originalLoader))
         {
-            SetupMockBitmapLoader();
+            try
+            {
+                SetupMockBitmapLoader();
 
-            // Act
-            await cache.CreateAndCacheThumbnail("source", "thumb", 50f, 50f)
-                .Timeout(TestTimeout)
-                .FirstAsync();
+                // Act
+                await cache.CreateAndCacheThumbnail("source", "thumb", 50f, 50f)
+                    .Timeout(TestTimeout)
+                    .FirstAsync();
 
-            // Assert - Thumbnail key should now exist in the cache
-            var keys = await cache.GetAllKeys().ToList().Timeout(TestTimeout).FirstAsync();
-            await Assert.That(keys).Contains("thumb");
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
-        {
-            return;
-        }
-        finally
-        {
-            RestoreBitmapLoader(originalLoader);
+                // Assert - Thumbnail key should now exist in the cache
+                var keys = await cache.GetAllKeys().ToList().Timeout(TestTimeout).FirstAsync();
+                await Assert.That(keys).Contains("thumb");
+            }
+            catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
+            {
+                return; // Environment without BitmapLoader - skip test semantics
+            }
         }
     }
 
@@ -713,7 +682,7 @@ public class ImageCacheExtensionsTests
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         var originalLoader = GetCurrentBitmapLoader();
-        try
+        using (new LoaderRestorer(originalLoader))
         {
             SetupMockBitmapLoader();
 
@@ -725,14 +694,6 @@ public class ImageCacheExtensionsTests
             // Assert
             var keys = await cache.GetAllKeys().ToList().Timeout(TestTimeout).FirstAsync();
             await Assert.That(keys).Contains("thumb2");
-        }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") || ex.Message.Contains("dependency resolver"))
-        {
-            return;
-        }
-        finally
-        {
-            RestoreBitmapLoader(originalLoader);
         }
     }
 
@@ -1388,5 +1349,14 @@ public class ImageCacheExtensionsTests
         /// <inheritdoc/>
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Cannot be static as it implements interface")]
         public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) => Task.FromResult<IBitmap?>(new MockBitmap());
+    }
+
+    /// <summary>
+    /// Helper to restore the bitmap loader after a test.
+    /// </summary>
+    private sealed class LoaderRestorer(IBitmapLoader? original) : IDisposable
+    {
+        /// <inheritdoc />
+        public void Dispose() => RestoreBitmapLoader(original);
     }
 }

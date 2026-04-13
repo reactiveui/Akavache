@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
-using System.Net.Http;
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
@@ -110,6 +108,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlWithKeyShouldValidateArguments()
     {
         // Arrange
@@ -182,6 +181,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task HttpServiceShouldHandleNullHeadersGracefully()
     {
         // Arrange
@@ -216,6 +216,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task HttpServiceShouldHandleDifferentHttpMethods()
     {
         // Arrange
@@ -249,6 +250,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task HttpServiceShouldRespectFetchAlwaysParameter()
     {
         // Arrange
@@ -293,6 +295,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task HttpServiceShouldSupportAbsoluteExpiration()
     {
         // Arrange
@@ -328,6 +331,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringForwarderShouldThrowOnNullCache()
     {
         var service = new HttpService();
@@ -360,6 +364,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullCache()
     {
         var service = new HttpService();
@@ -384,6 +389,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldReturnCachedValue()
     {
         var service = new HttpService();
@@ -432,6 +438,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringFetchAlwaysShouldBypassCache()
     {
         var service = new HttpService.FastHttpService(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
@@ -440,9 +447,9 @@ public class HttpServiceTests
         {
             await cache.Insert("fetch-always-key", [9, 9, 9]).ToTask();
 
-            await Assert.That(async () =>
-                await service.DownloadUrl(cache, "fetch-always-key", "https://nonexistent.invalid.localhost.test", fetchAlways: true).ToTask())
-                .Throws<Exception>();
+            await service.DownloadUrl(cache, "fetch-always-key", "https://nonexistent.invalid.localhost.test", fetchAlways: true)
+                .ToTask()
+                .ShouldThrowAsync<Exception>();
         }
         finally
         {
@@ -463,9 +470,9 @@ public class HttpServiceTests
         {
             await cache.Insert("fetch-always-uri-key", [7, 7, 7]).ToTask();
 
-            await Assert.That(async () =>
-                await service.DownloadUrl(cache, "fetch-always-uri-key", new Uri("https://nonexistent.invalid.localhost.test"), fetchAlways: true).ToTask())
-                .Throws<Exception>();
+            await service.DownloadUrl(cache, "fetch-always-uri-key", new Uri("https://nonexistent.invalid.localhost.test"), fetchAlways: true)
+                .ToTask()
+                .ShouldThrowAsync<Exception>();
         }
         finally
         {
@@ -511,6 +518,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task ProcessWebResponseStringUrlShouldThrowOnNonSuccess()
     {
         using var response = new HttpResponseMessage(HttpStatusCode.NotFound)
@@ -518,9 +526,9 @@ public class HttpServiceTests
             ReasonPhrase = "Not Found",
         };
 
-        await Assert.That(async () =>
-            await HttpService.ProcessWebResponse(response, "https://example.com/missing", null).ToTask())
-            .Throws<HttpRequestException>();
+        await HttpService.ProcessWebResponse(response, "https://example.com/missing", null)
+            .ToTask()
+            .ShouldThrowAsync<HttpRequestException>();
     }
 
     /// <summary>
@@ -535,9 +543,9 @@ public class HttpServiceTests
             ReasonPhrase = "Server Error",
         };
 
-        await Assert.That(async () =>
-            await HttpService.ProcessWebResponse(response, new Uri("https://example.com/boom"), DateTimeOffset.UtcNow.AddHours(1)).ToTask())
-            .Throws<HttpRequestException>();
+        await HttpService.ProcessWebResponse(response, new Uri("https://example.com/boom"), DateTimeOffset.UtcNow.AddHours(1))
+            .ToTask()
+            .ShouldThrowAsync<HttpRequestException>();
     }
 
     /// <summary>
@@ -545,6 +553,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task ProcessWebResponseShouldReturnContentOnSuccess()
     {
         var payload = new byte[] { 10, 20, 30 };
@@ -568,6 +577,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldExecuteSelectManyLambdasOnSuccess()
     {
         var serializer = new SystemJsonSerializer();
@@ -635,15 +645,15 @@ public class HttpServiceTests
     {
         var service = new TestableHttpService();
 
-        await Assert.That(async () =>
-            await service.InvokeMakeWebRequest(
+        await service.InvokeMakeWebRequest(
                 new Uri("https://nonexistent.invalid.localhost.test"),
                 HttpMethod.Get,
                 headers: null,
                 content: null,
                 retries: 0,
-                timeout: TimeSpan.FromMilliseconds(100)).ToTask())
-            .Throws<Exception>();
+                timeout: TimeSpan.FromMilliseconds(100))
+            .ToTask()
+            .ShouldThrowAsync<Exception>();
     }
 
     /// <summary>
@@ -655,15 +665,15 @@ public class HttpServiceTests
     {
         var service = new TestableHttpService();
 
-        await Assert.That(async () =>
-            await service.InvokeMakeWebRequest(
+        await service.InvokeMakeWebRequest(
                 new Uri("https://nonexistent.invalid.localhost.test"),
                 HttpMethod.Post,
                 headers: null,
                 content: "request-body",
                 retries: 0,
-                timeout: TimeSpan.FromMilliseconds(100)).ToTask())
-            .Throws<Exception>();
+                timeout: TimeSpan.FromMilliseconds(100))
+            .ToTask()
+            .ShouldThrowAsync<Exception>();
     }
 
     /// <summary>
@@ -817,6 +827,7 @@ public class HttpServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldCoalesceNullCacheValueToEmpty()
     {
         await using var cache = new NullGetBlobCache();

@@ -297,7 +297,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName,
         };
 
-        await Assert.That(() => Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(builder, "test123"))
+        await Assert.That(() => builder.WithSqliteDefaults("test123"))
             .Throws<InvalidOperationException>();
     }
 

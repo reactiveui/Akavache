@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>

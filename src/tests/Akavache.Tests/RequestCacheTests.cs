@@ -147,12 +147,9 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             callCount++;
-            if (callCount == 1)
-            {
-                return Observable.Throw<string>(new InvalidOperationException("First call fails"));
-            }
-
-            return Observable.Return($"success_{callCount}");
+            return callCount == 1 ?
+                Observable.Throw<string>(new InvalidOperationException("First call fails")) :
+                Observable.Return($"success_{callCount}");
         }
 
         // Act & Assert - First call should throw
@@ -371,7 +368,8 @@ public class RequestCacheTests
         for (var i = 0; i < 1000; i++)
         {
             var key = $"memory_test_{i}";
-            await RequestCache.GetOrCreateRequest(key, () => Observable.Return(i)).FirstAsync();
+            var currentIndex = i;
+            await RequestCache.GetOrCreateRequest(key, () => Observable.Return(currentIndex)).FirstAsync();
         }
 
         // Clear to free memory
@@ -426,7 +424,7 @@ public class RequestCacheTests
     public async Task GetOrCreateRequestShouldRemoveOnError()
     {
         RequestCache.Clear();
-        var observable = RequestCache.GetOrCreateRequest<string>("error_key", static () => Observable.Throw<string>(new InvalidOperationException("test")));
+        var observable = RequestCache.GetOrCreateRequest("error_key", static () => Observable.Throw<string>(new InvalidOperationException("test")));
 
         try
         {
@@ -449,7 +447,7 @@ public class RequestCacheTests
     public async Task GetOrCreateRequestShouldRemoveOnCompletion()
     {
         RequestCache.Clear();
-        var observable = RequestCache.GetOrCreateRequest<string>("complete_key", static () => Observable.Return("value"));
+        var observable = RequestCache.GetOrCreateRequest("complete_key", static () => Observable.Return("value"));
 
         await observable.ToTask();
 
@@ -476,7 +474,7 @@ public class RequestCacheTests
         RequestCache.Clear();
 
         // Use a never-completing observable to keep the request in flight
-        _ = RequestCache.GetOrCreateRequest<string>("remove_test", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest("remove_test", static () => Observable.Never<string>());
         await Assert.That(RequestCache.HasInFlightRequest("remove_test", typeof(string))).IsTrue();
 
         RequestCache.RemoveRequest("remove_test", typeof(string));
@@ -504,8 +502,8 @@ public class RequestCacheTests
     public async Task RemoveRequestsForKeyShouldRemoveMatchingEntries()
     {
         RequestCache.Clear();
-        _ = RequestCache.GetOrCreateRequest<string>("multitype_key", static () => Observable.Never<string>());
-        _ = RequestCache.GetOrCreateRequest<int>("multitype_key", static () => Observable.Never<int>());
+        _ = RequestCache.GetOrCreateRequest("multitype_key", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest("multitype_key", static () => Observable.Never<int>());
 
         await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(string))).IsTrue();
         await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(int))).IsTrue();
@@ -546,8 +544,8 @@ public class RequestCacheTests
         RequestCache.Clear();
         await Assert.That(RequestCache.Count).IsEqualTo(0);
 
-        _ = RequestCache.GetOrCreateRequest<string>("count_test_1", static () => Observable.Never<string>());
-        _ = RequestCache.GetOrCreateRequest<string>("count_test_2", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest("count_test_1", static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest("count_test_2", static () => Observable.Never<string>());
 
         await Assert.That(RequestCache.Count).IsEqualTo(2);
 

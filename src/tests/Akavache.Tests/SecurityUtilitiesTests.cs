@@ -22,9 +22,9 @@ public class SecurityUtilitiesTests
         var pathTraversalAttempts = new[]
         {
             "test/../other",
-            "test\\..\\other",
+            @"test\..\other",
             "../../etc/passwd",
-            "..\\..\\windows\\system32",
+            @"..\..\windows\system32",
             "./test",
             ".\\test",
             "test/subdir",
@@ -73,7 +73,7 @@ public class SecurityUtilitiesTests
         var invalidChars = Path.GetInvalidFileNameChars();
 
         // Test first 5 to avoid excessive test time, but skip path separators since they're checked separately
-        foreach (var invalidChar in invalidChars.Where(c => c != '/' && c != '\\').Take(5))
+        foreach (var invalidChar in invalidChars.Where(c => c is not '/' and not '\\').Take(5))
         {
             var nameWithInvalidChar = $"test{invalidChar}cache";
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(nameWithInvalidChar));
@@ -103,8 +103,7 @@ public class SecurityUtilitiesTests
         }
 
         // Test names that become empty after trimming
-        var emptyAfterTrim = new[] { "   ", " " };
-        foreach (var emptyName in emptyAfterTrim)
+        foreach (var emptyName in new[] { "   ", " " })
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(emptyName));
             await Assert.That(ex.Message).Contains("cannot be null or empty");
@@ -289,16 +288,14 @@ public class SecurityUtilitiesTests
     public async Task SecurityUtilities_ShouldRejectLeadingTrailingWhitespace()
     {
         // For security reasons, we don't want to allow trailing whitespace
-        var namesWithTrailingWhitespace = new[] { "ValidCache  " };
-
-        foreach (var nameWithWhitespace in namesWithTrailingWhitespace)
+        foreach (var nameWithWhitespace in new[] { "ValidCache  " })
         {
             var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(nameWithWhitespace));
             await Assert.That(ex.Message).Contains("cannot start or end with");
         }
 
         // But names without leading/trailing whitespace should work
-        var validName = "ValidCache";
+        const string validName = "ValidCache";
         var result = SecurityUtilities.ValidateCacheName(validName);
         await Assert.That(result).IsEqualTo(validName);
     }
@@ -360,7 +357,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectInvalidPathCharacters()
     {
-        var nameWithNul = "MyApp\0Name";
+        const string nameWithNul = "MyApp\0Name";
         var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(nameWithNul));
         await Assert.That(ex).IsNotNull();
     }

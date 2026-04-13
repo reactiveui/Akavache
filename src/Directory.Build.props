@@ -24,6 +24,8 @@
     <WarningsAsErrors>CS860*;CS861*;CS862*;CS8630;CS8634;CS8766;CS8767</WarningsAsErrors>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- Runs IDE* style analyzers during `dotnet build` so editorconfig severities for IDExxxx rules fire at compile time instead of only in the IDE. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>

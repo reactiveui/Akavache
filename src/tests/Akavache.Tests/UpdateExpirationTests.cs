@@ -36,8 +36,8 @@ public class UpdateExpirationTests : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Arrange
-            var key = "test-key";
-            var originalData = "test-value";
+            const string key = "test-key";
+            const string originalData = "test-value";
             var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
             var newExpiration = DateTimeOffset.Now.AddHours(2);
 
@@ -71,8 +71,8 @@ public class UpdateExpirationTests : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Arrange
-            var key = "test-key";
-            var originalData = "test-value";
+            const string key = "test-key";
+            const string originalData = "test-value";
             var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
             var newExpiration = DateTimeOffset.Now.AddHours(2);
 
@@ -147,8 +147,8 @@ public class UpdateExpirationTests : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Arrange
-            var key = "test-key";
-            var originalData = "test-value";
+            const string key = "test-key";
+            const string originalData = "test-value";
             var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
             var extensionTime = TimeSpan.FromHours(1);
 
@@ -182,7 +182,7 @@ public class UpdateExpirationTests : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Arrange
-            var nonExistentKey = "non-existent-key";
+            const string nonExistentKey = "non-existent-key";
             var newExpiration = DateTimeOffset.Now.AddHours(1);
 
             // Act - Should not throw when updating expiration for non-existent key
@@ -219,15 +219,15 @@ public class UpdateExpirationTests : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Arrange
-            var key = "test-key";
-            var originalData = "test-value";
+            const string key = "test-key";
+            const string originalData = "test-value";
             var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
 
             // Insert the data with initial expiration
             await fixture.InsertObject(key, originalData, originalExpiration);
 
             // Act - Remove expiration by setting to null
-            await fixture.UpdateExpiration(key, (DateTimeOffset?)null);
+            await fixture.UpdateExpiration(key, null);
 
             // Assert - Verify the data is still there and retrievable
             var retrievedData = await fixture.GetObject<string>(key);
@@ -328,10 +328,12 @@ public class UpdateExpirationTests : IDisposable
     /// <param name="disposing">Whether we're disposing.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed && disposing)
+        if (_disposed || !disposing)
         {
-            _disposed = true;
+            return;
         }
+
+        _disposed = true;
     }
 
     /// <summary>
@@ -340,7 +342,7 @@ public class UpdateExpirationTests : IDisposable
     /// <param name="path">The path for the cache.</param>
     /// <param name="serializer">The serializer to use.</param>
     /// <returns>A new SqliteBlobCache instance.</returns>
-    private static IBlobCache CreateBlobCache(string path, ISerializer serializer)
+    private static Sqlite3.SqliteBlobCache CreateBlobCache(string path, ISerializer serializer)
     {
         // Create separate database files for each serializer to ensure compatibility
         var serializerName = serializer.GetType().Name ?? "Unknown";
@@ -367,24 +369,25 @@ public class UpdateExpirationTests : IDisposable
             // Register the Newtonsoft BSON serializer specifically
             return new NewtonsoftBsonSerializer();
         }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
+
+        if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
             return new SystemJsonBsonSerializer();
         }
-        else if (serializerType == typeof(NewtonsoftSerializer))
+
+        if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
             return new NewtonsoftSerializer();
         }
-        else if (serializerType == typeof(SystemJsonSerializer))
+
+        if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
             return new SystemJsonSerializer();
         }
-        else
-        {
-            return null!;
-        }
+
+        return null!;
     }
 }

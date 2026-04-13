@@ -39,11 +39,11 @@ public class DateTimeOffsetToDateTimeConverter : IValueConverter
     /// <returns>The converted value.</returns>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is DateTime dateTime)
+        if (value is not DateTime dateTime)
         {
-            return new DateTimeOffset(dateTime);
+            return null;
         }
 
-        return null;
+        return new DateTimeOffset(dateTime);
     }
 }

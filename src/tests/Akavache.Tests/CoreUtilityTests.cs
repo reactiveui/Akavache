@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
+using Akavache.Tests.Executors;
 
 namespace Akavache.Tests;
 
@@ -146,6 +147,8 @@ public class CoreUtilityTests
     /// </summary>
     /// <returns>A task representing the test completion.</returns>
     [Test]
+    [TestExecutor<AkavacheTestExecutor>]
+    [NotInParallel(nameof(RequestCacheTests))]
     public async Task RequestCacheShouldWorkCorrectly()
     {
         // Arrange
@@ -191,26 +194,17 @@ public class CoreUtilityTests
     /// </summary>
     /// <returns>A task representing the test completion.</returns>
     [Test]
+    [TestExecutor<AkavacheTestExecutor>]
+    [NotInParallel(nameof(RequestCacheTests))]
     public async Task RequestCacheShouldHandleDifferentKeys()
     {
         // Arrange
         var callCounts = new Dictionary<string, int>();
 
-        Func<string, IObservable<string>> factory = key =>
-        {
-            if (!callCounts.ContainsKey(key))
-            {
-                callCounts[key] = 0;
-            }
-
-            callCounts[key]++;
-            return Observable.Return($"result_{key}_{callCounts[key]}");
-        };
-
         // Act - Use different keys
-        var request1 = RequestCache.GetOrCreateRequest("key1", () => factory("key1"));
-        var request2 = RequestCache.GetOrCreateRequest("key2", () => factory("key2"));
-        var request3 = RequestCache.GetOrCreateRequest("key1", () => factory("key1")); // Same as first
+        var request1 = RequestCache.GetOrCreateRequest("key1", () => Factory("key1"));
+        var request2 = RequestCache.GetOrCreateRequest("key2", () => Factory("key2"));
+        var request3 = RequestCache.GetOrCreateRequest("key1", () => Factory("key1")); // Same as first
 
         var result1 = await request1.FirstAsync();
         var result2 = await request2.FirstAsync();
@@ -226,6 +220,17 @@ public class CoreUtilityTests
             await Assert.That(callCounts["key1"]).IsEqualTo(1); // Only called once due to caching
             await Assert.That(callCounts["key2"]).IsEqualTo(1); // Only called once
         }
+
+        IObservable<string> Factory(string key)
+        {
+            if (!callCounts.TryGetValue(key, out _))
+            {
+                callCounts[key] = 0;
+            }
+
+            callCounts[key]++;
+            return Observable.Return($"result_{key}_{callCounts[key]}");
+        }
     }
 
     /// <summary>
@@ -238,10 +243,7 @@ public class CoreUtilityTests
         // Test KeyNotFoundException helper
         var keyNotFoundObs = IBlobCache.ExceptionHelpers.ObservableThrowKeyNotFoundException<string>("test_key");
 
-        var keyNotFoundEx = await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-        {
-            await keyNotFoundObs.FirstAsync();
-        });
+        var keyNotFoundEx = await Assert.ThrowsAsync<KeyNotFoundException>(async () => await keyNotFoundObs.FirstAsync());
 
         await Assert.That(keyNotFoundEx!.Message).Contains("test_key");
         await Assert.That(keyNotFoundEx.Message).Contains("not present in the cache");
@@ -249,10 +251,7 @@ public class CoreUtilityTests
         // Test ObjectDisposedException helper
         var objectDisposedObs = IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>("test_cache");
 
-        var objectDisposedEx = await Assert.ThrowsAsync<ObjectDisposedException>(async () =>
-        {
-            await objectDisposedObs.FirstAsync();
-        });
+        var objectDisposedEx = await Assert.ThrowsAsync<ObjectDisposedException>(async () => await objectDisposedObs.FirstAsync());
 
         await Assert.That(objectDisposedEx!.Message).Contains("test_cache");
         await Assert.That(objectDisposedEx.Message).Contains("disposed");

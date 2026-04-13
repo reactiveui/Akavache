@@ -2,9 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Executors;
 using Akavache.Tests.Mocks;
@@ -35,7 +33,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask())
+        await Assert.That(() => cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -46,16 +44,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InsertKeyValuePairsShouldThrowOnNull()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(() => cache.Insert((IEnumerable<KeyValuePair<string, byte[]>>)null!))
-                .Throws<ArgumentNullException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.Insert(null!))
+            .Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -68,7 +59,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Insert("key", [1, 2, 3]).ToTask())
+        await Assert.That(() => cache.Insert("key", [1, 2, 3]).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -82,7 +73,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Get("key").ToTask())
+        await Assert.That(() => cache.Get("key").ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -96,8 +87,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Get(["k1", "k2"]).ToList().ToTask())
-            .Throws<ObjectDisposedException>();
+        await cache.Get(["k1", "k2"]).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -110,8 +100,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetAllKeys().ToList().ToTask())
-            .Throws<ObjectDisposedException>();
+        await cache.GetAllKeys().ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -124,7 +113,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetCreatedAt("key").ToTask())
+        await Assert.That(() => cache.GetCreatedAt("key").ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -138,7 +127,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Invalidate("key").ToTask())
+        await Assert.That(() => cache.Invalidate("key").ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -152,7 +141,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Invalidate(["k1", "k2"]).ToTask())
+        await Assert.That(() => cache.Invalidate(["k1", "k2"]).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -166,7 +155,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.InvalidateAll().ToTask())
+        await Assert.That(() => cache.InvalidateAll().ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -180,7 +169,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Vacuum().ToTask())
+        await Assert.That(() => cache.Vacuum().ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -191,16 +180,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationShouldErrorOnEmptyKey()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.UpdateExpiration(string.Empty, DateTimeOffset.Now).ToTask())
-                .Throws<ArgumentException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.UpdateExpiration(string.Empty, DateTimeOffset.Now).ToTask())
+            .Throws<ArgumentException>();
     }
 
     /// <summary>
@@ -213,7 +195,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.UpdateExpiration("key", DateTimeOffset.Now).ToTask())
+        await Assert.That(() => cache.UpdateExpiration("key", DateTimeOffset.Now).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -224,16 +206,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationTypeShouldErrorOnEmptyKey()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.UpdateExpiration(string.Empty, typeof(string), DateTimeOffset.Now).ToTask())
-                .Throws<ArgumentException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.UpdateExpiration(string.Empty, typeof(string), DateTimeOffset.Now).ToTask())
+            .Throws<ArgumentException>();
     }
 
     /// <summary>
@@ -243,16 +218,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationTypeShouldErrorOnNullType()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.UpdateExpiration("key", null!, DateTimeOffset.Now).ToTask())
-                .Throws<ArgumentNullException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.UpdateExpiration("key", null!, DateTimeOffset.Now).ToTask())
+            .Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -265,7 +233,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.UpdateExpiration("key", typeof(string), DateTimeOffset.Now).ToTask())
+        await Assert.That(() => cache.UpdateExpiration("key", typeof(string), DateTimeOffset.Now).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -276,16 +244,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysShouldErrorOnNullKeys()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.UpdateExpiration((IEnumerable<string>)null!, DateTimeOffset.Now).ToTask())
-                .Throws<ArgumentNullException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.UpdateExpiration((IEnumerable<string>)null!, DateTimeOffset.Now).ToTask())
+            .Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -298,7 +259,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.UpdateExpiration(["k1"], DateTimeOffset.Now).ToTask())
+        await Assert.That(() => cache.UpdateExpiration(["k1"], DateTimeOffset.Now).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -309,16 +270,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysTypeShouldErrorOnNullKeys()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.UpdateExpiration((IEnumerable<string>)null!, typeof(string), DateTimeOffset.Now).ToTask())
-                .Throws<ArgumentNullException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.UpdateExpiration((IEnumerable<string>)null!, typeof(string), DateTimeOffset.Now).ToTask())
+            .Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -328,16 +282,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysTypeShouldErrorOnNullType()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.UpdateExpiration(["k1"], null!, DateTimeOffset.Now).ToTask())
-                .Throws<ArgumentNullException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.UpdateExpiration(["key"], null!, DateTimeOffset.Now).ToTask())
+            .Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -350,7 +297,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.UpdateExpiration(["k1"], typeof(string), DateTimeOffset.Now).ToTask())
+        await Assert.That(() => cache.UpdateExpiration(["k1"], typeof(string), DateTimeOffset.Now).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -361,19 +308,12 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationShouldUpdateExistingEntry()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("key1", [1, 2, 3]).ToTask();
-            await cache.UpdateExpiration("key1", DateTimeOffset.Now.AddHours(1)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("key1", [1, 2, 3]).ToTask();
+        await cache.UpdateExpiration("key1", DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var data = await cache.Get("key1").ToTask();
-            await Assert.That(data).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var data = await cache.Get("key1").ToTask();
+        await Assert.That(data).IsNotNull();
     }
 
     /// <summary>
@@ -383,23 +323,16 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysShouldUpdateMultiple()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1]).ToTask();
-            await cache.Insert("k2", [2]).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1]).ToTask();
+        await cache.Insert("k2", [2]).ToTask();
 
-            await cache.UpdateExpiration(["k1", "k2"], DateTimeOffset.Now.AddHours(1)).ToTask();
+        await cache.UpdateExpiration(["k1", "k2"], DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var d1 = await cache.Get("k1").ToTask();
-            var d2 = await cache.Get("k2").ToTask();
-            await Assert.That(d1).IsNotNull();
-            await Assert.That(d2).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var d1 = await cache.Get("k1").ToTask();
+        var d2 = await cache.Get("k2").ToTask();
+        await Assert.That(d1).IsNotNull();
+        await Assert.That(d2).IsNotNull();
     }
 
     /// <summary>
@@ -409,23 +342,17 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task VacuumShouldRemoveExpiredEntries()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Insert with already-expired timestamp
-            await cache.Insert("expired", [1], DateTimeOffset.Now.AddSeconds(-10)).ToTask();
-            await cache.Insert("valid", [2], DateTimeOffset.Now.AddHours(1)).ToTask();
+        await using var cache = CreateCache();
 
-            await cache.Vacuum().ToTask();
+        // Insert with already-expired timestamp
+        await cache.Insert("expired", [1], DateTimeOffset.Now.AddSeconds(-10)).ToTask();
+        await cache.Insert("valid", [2], DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var keys = await cache.GetAllKeys().ToList().ToTask();
-            await Assert.That(keys).Contains("valid");
-            await Assert.That(keys).DoesNotContain("expired");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await cache.Vacuum().ToTask();
+
+        var keys = await cache.GetAllKeys().ToList().ToTask();
+        await Assert.That(keys).Contains("valid");
+        await Assert.That(keys).DoesNotContain("expired");
     }
 
     /// <summary>
@@ -435,19 +362,12 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task ForcedDateTimeKindSetterShouldPropagate()
     {
-        var cache = CreateCache();
-        try
-        {
-            cache.ForcedDateTimeKind = DateTimeKind.Utc;
-            await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
+        await using var cache = CreateCache();
+        cache.ForcedDateTimeKind = DateTimeKind.Utc;
+        await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
 
-            cache.ForcedDateTimeKind = null;
-            await Assert.That(cache.ForcedDateTimeKind).IsNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        cache.ForcedDateTimeKind = null;
+        await Assert.That(cache.ForcedDateTimeKind).IsNull();
     }
 
     /// <summary>
@@ -457,20 +377,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InsertObjectAndGetObjectShouldRoundTrip()
     {
-        var cache = CreateCache();
-        try
-        {
-            var user = new UserObject { Name = "Alice", Bio = "Dev", Blog = "https://example.com" };
-            await cache.InsertObject("user-1", user).ToTask();
+        await using var cache = CreateCache();
+        var user = new UserObject { Name = "Alice", Bio = "Dev", Blog = "https://example.com" };
+        await cache.InsertObject("user-1", user).ToTask();
 
-            var result = await cache.GetObject<UserObject>("user-1").ToTask();
-            await Assert.That(result).IsNotNull();
-            await Assert.That(result!.Name).IsEqualTo("Alice");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var result = await cache.GetObject<UserObject>("user-1").ToTask();
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Name).IsEqualTo("Alice");
     }
 
     /// <summary>
@@ -480,18 +393,11 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InsertObjectWithExpirationShouldStoreValue()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.InsertObject("k", new UserObject { Name = "Bob" }, DateTimeOffset.Now.AddHours(1)).ToTask();
-            var result = await cache.GetObject<UserObject>("k").ToTask();
-            await Assert.That(result).IsNotNull();
-            await Assert.That(result!.Name).IsEqualTo("Bob");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.InsertObject("k", new UserObject { Name = "Bob" }, DateTimeOffset.Now.AddHours(1)).ToTask();
+        var result = await cache.GetObject<UserObject>("k").ToTask();
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Name).IsEqualTo("Bob");
     }
 
     /// <summary>
@@ -504,7 +410,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.InsertObject("k", new UserObject()).ToTask())
+        await Assert.That(() => cache.InsertObject("k", new UserObject()).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -518,7 +424,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetObject<UserObject>("k").ToTask())
+        await Assert.That(() => cache.GetObject<UserObject>("k").ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -529,21 +435,14 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetAllObjectsShouldReturnAllItemsForType()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.InsertObject("a", new UserObject { Name = "A" }).ToTask();
-            await cache.InsertObject("b", new UserObject { Name = "B" }).ToTask();
-            await cache.InsertObject("c", new UserObject { Name = "C" }).ToTask();
+        await using var cache = CreateCache();
+        await cache.InsertObject("a", new UserObject { Name = "A" }).ToTask();
+        await cache.InsertObject("b", new UserObject { Name = "B" }).ToTask();
+        await cache.InsertObject("c", new UserObject { Name = "C" }).ToTask();
 
-            var all = await cache.GetAllObjects<UserObject>().ToTask();
-            var list = all.ToList();
-            await Assert.That(list.Count).IsEqualTo(3);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var all = await cache.GetAllObjects<UserObject>().ToTask();
+        var list = all.ToList();
+        await Assert.That(list.Count).IsEqualTo(3);
     }
 
     /// <summary>
@@ -556,8 +455,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetAllObjects<UserObject>().ToTask())
-            .Throws<ObjectDisposedException>();
+        await cache.GetAllObjects<UserObject>().ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -567,17 +465,10 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetObjectCreatedAtShouldReturnTimestamp()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.InsertObject("k", new UserObject { Name = "x" }).ToTask();
-            var createdAt = await cache.GetObjectCreatedAt<UserObject>("k").ToTask();
-            await Assert.That(createdAt).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.InsertObject("k", new UserObject { Name = "x" }).ToTask();
+        var createdAt = await cache.GetObjectCreatedAt<UserObject>("k").ToTask();
+        await Assert.That(createdAt).IsNotNull();
     }
 
     /// <summary>
@@ -587,19 +478,11 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InvalidateObjectShouldRemoveEntry()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.InsertObject("k", new UserObject { Name = "x" }).ToTask();
-            await cache.InvalidateObject<UserObject>("k").ToTask();
+        await using var cache = CreateCache();
+        await cache.InsertObject("k", new UserObject { Name = "x" }).ToTask();
+        await cache.InvalidateObject<UserObject>("k").ToTask();
 
-            await Assert.That(async () => await cache.GetObject<UserObject>("k").ToTask())
-                .Throws<KeyNotFoundException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await cache.GetObject<UserObject>("k").ToTask().ShouldThrowAsync<KeyNotFoundException>();
     }
 
     /// <summary>
@@ -609,21 +492,14 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InvalidateAllObjectsShouldRemoveTypedEntries()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.InsertObject("a", new UserObject { Name = "A" }).ToTask();
-            await cache.InsertObject("b", new UserObject { Name = "B" }).ToTask();
+        await using var cache = CreateCache();
+        await cache.InsertObject("a", new UserObject { Name = "A" }).ToTask();
+        await cache.InsertObject("b", new UserObject { Name = "B" }).ToTask();
 
-            await cache.InvalidateAllObjects<UserObject>().ToTask();
+        await cache.InvalidateAllObjects<UserObject>().ToTask();
 
-            var all = await cache.GetAllObjects<UserObject>().ToTask();
-            await Assert.That(all.Count()).IsEqualTo(0);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var all = await cache.GetAllObjects<UserObject>().ToTask();
+        await Assert.That(all.Count()).IsEqualTo(0);
     }
 
     /// <summary>
@@ -636,7 +512,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.InvalidateAll(typeof(UserObject)).ToTask())
+        await Assert.That(() => cache.InvalidateAll(typeof(UserObject)).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -647,24 +523,17 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InsertKeyValuePairsWithTypeShouldPopulateTypeIndex()
     {
-        var cache = CreateCache();
-        try
+        await using var cache = CreateCache();
+        var pairs = new[]
         {
-            var pairs = new[]
-            {
-                new KeyValuePair<string, byte[]>("k1", [1, 2, 3]),
-                new KeyValuePair<string, byte[]>("k2", [4, 5, 6]),
-            };
-            await cache.Insert(pairs, typeof(UserObject)).ToTask();
+            new KeyValuePair<string, byte[]>("k1", [1, 2, 3]),
+            new KeyValuePair<string, byte[]>("k2", [4, 5, 6]),
+        };
+        await cache.Insert(pairs, typeof(UserObject)).ToTask();
 
-            var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(keys).Contains("k1");
-            await Assert.That(keys).Contains("k2");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(keys).Contains("k1");
+        await Assert.That(keys).Contains("k2");
     }
 
     /// <summary>
@@ -677,7 +546,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(UserObject)).ToTask())
+        await Assert.That(() => cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(UserObject)).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -688,17 +557,10 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InsertWithTypeShouldPopulateTypeIndex()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k", [1, 2, 3], typeof(UserObject)).ToTask();
-            var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(keys).Contains("k");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.Insert("k", [1, 2, 3], typeof(UserObject)).ToTask();
+        var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(keys).Contains("k");
     }
 
     /// <summary>
@@ -711,7 +573,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.Insert("k", [1], typeof(UserObject)).ToTask())
+        await Assert.That(() => cache.Insert("k", [1], typeof(UserObject)).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -722,18 +584,11 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetWithTypeShouldReturnValue()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k", [7, 8, 9], typeof(UserObject)).ToTask();
-            var data = await cache.Get("k", typeof(UserObject)).ToTask();
-            await Assert.That(data).IsNotNull();
-            await Assert.That(data!.Length).IsEqualTo(3);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.Insert("k", [7, 8, 9], typeof(UserObject)).ToTask();
+        var data = await cache.Get("k", typeof(UserObject)).ToTask();
+        await Assert.That(data).IsNotNull();
+        await Assert.That(data!.Length).IsEqualTo(3);
     }
 
     /// <summary>
@@ -743,19 +598,12 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetMultipleWithTypeShouldReturnValues()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
-            await cache.Insert("k2", [2], typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
+        await cache.Insert("k2", [2], typeof(UserObject)).ToTask();
 
-            var results = await cache.Get(["k1", "k2", "missing"], typeof(UserObject)).ToList().ToTask();
-            await Assert.That(results.Count).IsEqualTo(2);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var results = await cache.Get(["k1", "k2", "missing"], typeof(UserObject)).ToList().ToTask();
+        await Assert.That(results.Count).IsEqualTo(2);
     }
 
     /// <summary>
@@ -765,20 +613,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetAllByTypeShouldReturnValidAndRemoveExpired()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("valid", [1], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
-            await cache.Insert("expired", [2], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-10)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("valid", [1], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
+        await cache.Insert("expired", [2], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-10)).ToTask();
 
-            var all = await cache.GetAll(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(all.Count).IsEqualTo(1);
-            await Assert.That(all[0].Key).IsEqualTo("valid");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var all = await cache.GetAll(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(all.Count).IsEqualTo(1);
+        await Assert.That(all[0].Key).IsEqualTo("valid");
     }
 
     /// <summary>
@@ -788,16 +629,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetAllByTypeShouldBeEmptyWhenTypeMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            var all = await cache.GetAll(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(all.Count).IsEqualTo(0);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        var all = await cache.GetAll(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(all.Count).IsEqualTo(0);
     }
 
     /// <summary>
@@ -810,8 +644,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetAll(typeof(UserObject)).ToList().ToTask())
-            .Throws<ObjectDisposedException>();
+        await cache.GetAll(typeof(UserObject)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -821,20 +654,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetAllKeysByTypeShouldReturnValidAndRemoveExpired()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("valid", [1], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
-            await cache.Insert("expired", [2], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-5)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("valid", [1], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
+        await cache.Insert("expired", [2], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-5)).ToTask();
 
-            var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(keys).Contains("valid");
-            await Assert.That(keys).DoesNotContain("expired");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(keys).Contains("valid");
+        await Assert.That(keys).DoesNotContain("expired");
     }
 
     /// <summary>
@@ -844,16 +670,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetAllKeysByTypeShouldBeEmptyWhenTypeMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(keys.Count).IsEqualTo(0);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(keys.Count).IsEqualTo(0);
     }
 
     /// <summary>
@@ -866,8 +685,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask())
-            .Throws<ObjectDisposedException>();
+        await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -877,23 +695,16 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetCreatedAtKeysShouldReturnTimestampsAndNulls()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1]).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1]).ToTask();
 
-            var results = await cache.GetCreatedAt(["k1", "missing"]).ToList().ToTask();
-            await Assert.That(results.Count).IsEqualTo(2);
+        var results = await cache.GetCreatedAt(["k1", "missing"]).ToList().ToTask();
+        await Assert.That(results.Count).IsEqualTo(2);
 
-            var k1 = results.First(r => r.Key == "k1");
-            var missing = results.First(r => r.Key == "missing");
-            await Assert.That(k1.Time).IsNotNull();
-            await Assert.That(missing.Time).IsNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var (_, time) = results.First(r => r.Key == "k1");
+        var (_, dateTimeOffset) = results.First(r => r.Key == "missing");
+        await Assert.That(time).IsNotNull();
+        await Assert.That(dateTimeOffset).IsNull();
     }
 
     /// <summary>
@@ -906,8 +717,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(async () => await cache.GetCreatedAt(["k"]).ToList().ToTask())
-            .Throws<ObjectDisposedException>();
+        await cache.GetCreatedAt(["k"]).ToList().ToTask().ShouldThrowAsync<ObjectDisposedException>();
     }
 
     /// <summary>
@@ -917,18 +727,11 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetCreatedAtKeysWithTypeShouldReturnTimestamps()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
-            var results = await cache.GetCreatedAt(["k1"], typeof(UserObject)).ToList().ToTask();
-            await Assert.That(results.Count).IsEqualTo(1);
-            await Assert.That(results[0].Time).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
+        var results = await cache.GetCreatedAt(["k1"], typeof(UserObject)).ToList().ToTask();
+        await Assert.That(results.Count).IsEqualTo(1);
+        await Assert.That(results[0].Time).IsNotNull();
     }
 
     /// <summary>
@@ -938,17 +741,10 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetCreatedAtWithTypeShouldReturnTimestamp()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
-            var created = await cache.GetCreatedAt("k1", typeof(UserObject)).ToTask();
-            await Assert.That(created).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
+        var created = await cache.GetCreatedAt("k1", typeof(UserObject)).ToTask();
+        await Assert.That(created).IsNotNull();
     }
 
     /// <summary>
@@ -958,16 +754,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task FlushShouldComplete()
     {
-        var cache = CreateCache();
-        try
-        {
-            var result = await cache.Flush().ToTask();
-            await Assert.That(result).IsEqualTo(Unit.Default);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        var result = await cache.Flush().ToTask();
+        await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
     /// <summary>
@@ -977,16 +766,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task FlushTypeShouldComplete()
     {
-        var cache = CreateCache();
-        try
-        {
-            var result = await cache.Flush(typeof(UserObject)).ToTask();
-            await Assert.That(result).IsEqualTo(Unit.Default);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        var result = await cache.Flush(typeof(UserObject)).ToTask();
+        await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
     /// <summary>
@@ -996,19 +778,11 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InvalidateWithTypeShouldRemoveEntry()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k", [1], typeof(UserObject)).ToTask();
-            await cache.Invalidate("k", typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k", [1], typeof(UserObject)).ToTask();
+        await cache.Invalidate("k", typeof(UserObject)).ToTask();
 
-            await Assert.That(async () => await cache.Get("k").ToTask())
-                .Throws<KeyNotFoundException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await cache.Get("k").ToTask().ShouldThrowAsync<KeyNotFoundException>();
     }
 
     /// <summary>
@@ -1042,22 +816,14 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetShouldRemoveAndThrowWhenEntryExpired()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("expired", [1], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-5)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("expired", [1], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-5)).ToTask();
 
-            await Assert.That(async () => await cache.Get("expired").ToTask())
-                .Throws<KeyNotFoundException>();
+        await cache.Get("expired").ToTask().ShouldThrowAsync<KeyNotFoundException>();
 
-            // After the failed Get, the key should be removed from the type index as well.
-            var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(keys).DoesNotContain("expired");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // After the failed Get, the key should be removed from the type index as well.
+        var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(keys).DoesNotContain("expired");
     }
 
     /// <summary>
@@ -1067,16 +833,9 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetShouldThrowWhenKeyMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(async () => await cache.Get("missing").ToTask())
-                .Throws<KeyNotFoundException>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(() => cache.Get("missing").ToTask())
+            .Throws<KeyNotFoundException>();
     }
 
     /// <summary>
@@ -1086,19 +845,12 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationWithTypeShouldUpdateMatching()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k", [1], typeof(UserObject)).ToTask();
-            await cache.UpdateExpiration("k", typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k", [1], typeof(UserObject)).ToTask();
+        await cache.UpdateExpiration("k", typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var value = await cache.Get("k").ToTask();
-            await Assert.That(value).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var value = await cache.Get("k").ToTask();
+        await Assert.That(value).IsNotNull();
     }
 
     /// <summary>
@@ -1108,21 +860,14 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationWithTypeShouldIgnoreMismatchedType()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k", [1], typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k", [1], typeof(UserObject)).ToTask();
 
-            // Should not throw; simply no update performed since type mismatches.
-            await cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now.AddHours(1)).ToTask();
+        // Should not throw; simply no update performed since type mismatches.
+        await cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var value = await cache.Get("k").ToTask();
-            await Assert.That(value).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var value = await cache.Get("k").ToTask();
+        await Assert.That(value).IsNotNull();
     }
 
     /// <summary>
@@ -1132,23 +877,16 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysWithTypeShouldUpdateMatching()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
-            await cache.Insert("k2", [2], typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1], typeof(UserObject)).ToTask();
+        await cache.Insert("k2", [2], typeof(UserObject)).ToTask();
 
-            await cache.UpdateExpiration(["k1", "k2"], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
+        await cache.UpdateExpiration(["k1", "k2"], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var v1 = await cache.Get("k1").ToTask();
-            var v2 = await cache.Get("k2").ToTask();
-            await Assert.That(v1).IsNotNull();
-            await Assert.That(v2).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var v1 = await cache.Get("k1").ToTask();
+        var v2 = await cache.Get("k2").ToTask();
+        await Assert.That(v1).IsNotNull();
+        await Assert.That(v2).IsNotNull();
     }
 
     /// <summary>
@@ -1158,20 +896,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetAllKeysShouldRemoveExpired()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("valid", [1], DateTimeOffset.Now.AddHours(1)).ToTask();
-            await cache.Insert("expired", [2], DateTimeOffset.Now.AddSeconds(-5)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("valid", [1], DateTimeOffset.Now.AddHours(1)).ToTask();
+        await cache.Insert("expired", [2], DateTimeOffset.Now.AddSeconds(-5)).ToTask();
 
-            var keys = await cache.GetAllKeys().ToList().ToTask();
-            await Assert.That(keys).Contains("valid");
-            await Assert.That(keys).DoesNotContain("expired");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var keys = await cache.GetAllKeys().ToList().ToTask();
+        await Assert.That(keys).Contains("valid");
+        await Assert.That(keys).DoesNotContain("expired");
     }
 
     /// <summary>
@@ -1181,23 +912,16 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task InvalidateAllShouldClearAllEntries()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k1", [1]).ToTask();
-            await cache.Insert("k2", [2], typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k1", [1]).ToTask();
+        await cache.Insert("k2", [2], typeof(UserObject)).ToTask();
 
-            await cache.InvalidateAll().ToTask();
+        await cache.InvalidateAll().ToTask();
 
-            var keys = await cache.GetAllKeys().ToList().ToTask();
-            await Assert.That(keys.Count).IsEqualTo(0);
-            var typedKeys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(typedKeys.Count).IsEqualTo(0);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var keys = await cache.GetAllKeys().ToList().ToTask();
+        await Assert.That(keys.Count).IsEqualTo(0);
+        var typedKeys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(typedKeys.Count).IsEqualTo(0);
     }
 
     /// <summary>
@@ -1207,17 +931,10 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task SingleArgConstructorShouldUseTaskpoolScheduler()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
-        try
-        {
-            await Assert.That(cache.Scheduler).IsNotNull();
-            await Assert.That(cache.Scheduler).IsEqualTo(CacheDatabase.TaskpoolScheduler);
-            await Assert.That(cache.Serializer).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await Assert.That(cache.Scheduler).IsNotNull();
+        await Assert.That(cache.Scheduler).IsEqualTo(CacheDatabase.TaskpoolScheduler);
+        await Assert.That(cache.Serializer).IsNotNull();
     }
 
     /// <summary>
@@ -1227,24 +944,17 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task ForcedDateTimeKindSetterShouldUpdateAppLocatorSerializer()
     {
-        var cache = CreateCache();
-        try
-        {
-            var cacheSerializer = cache.Serializer;
-            await Assert.That(cacheSerializer).IsNotNull();
+        await using var cache = CreateCache();
+        var cacheSerializer = cache.Serializer;
+        await Assert.That(cacheSerializer).IsNotNull();
 
-            cache.ForcedDateTimeKind = DateTimeKind.Utc;
+        cache.ForcedDateTimeKind = DateTimeKind.Utc;
 
-            await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
-            await Assert.That(cacheSerializer.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
+        await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
+        await Assert.That(cacheSerializer.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
 
-            cache.ForcedDateTimeKind = null;
-            await Assert.That(cacheSerializer.ForcedDateTimeKind).IsNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        cache.ForcedDateTimeKind = null;
+        await Assert.That(cacheSerializer.ForcedDateTimeKind).IsNull();
     }
 
     /// <summary>
@@ -1271,18 +981,11 @@ public class InMemoryBlobCacheBaseTests
         var resolved = AppLocator.Current.GetService<ISerializer>();
         await Assert.That(resolved).IsSameReferenceAs(registered);
 
-        var cache = CreateCache();
-        try
-        {
-            cache.ForcedDateTimeKind = DateTimeKind.Utc;
+        await using var cache = CreateCache();
+        cache.ForcedDateTimeKind = DateTimeKind.Utc;
 
-            await Assert.That(registered.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
-            await Assert.That(registered.LastSetKind).IsEqualTo(DateTimeKind.Utc);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await Assert.That(registered.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
+        await Assert.That(registered.LastSetKind).IsEqualTo(DateTimeKind.Utc);
     }
 
     /// <summary>
@@ -1297,17 +1000,11 @@ public class InMemoryBlobCacheBaseTests
     [TestExecutor<AkavacheTestExecutor>]
     public async Task ForcedDateTimeKindSetterShouldTolerateMissingAppLocatorSerializer()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Setter must not throw even when AppLocator has no registered ISerializer.
-            cache.ForcedDateTimeKind = DateTimeKind.Utc;
-            await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+
+        // Setter must not throw even when AppLocator has no registered ISerializer.
+        cache.ForcedDateTimeKind = DateTimeKind.Utc;
+        await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
     }
 
     /// <summary>
@@ -1320,23 +1017,17 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task VacuumShouldHandleExpiredUntypedEntriesWithEmptyTypeIndex()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Insert untyped entries only — the type index never gets populated.
-            await cache.Insert("expired", [1, 2, 3], DateTimeOffset.Now.AddSeconds(-5)).ToTask();
-            await cache.Insert("valid", [4, 5, 6], DateTimeOffset.Now.AddHours(1)).ToTask();
+        await using var cache = CreateCache();
 
-            await cache.Vacuum().ToTask();
+        // Insert untyped entries only — the type index never gets populated.
+        await cache.Insert("expired", [1, 2, 3], DateTimeOffset.Now.AddSeconds(-5)).ToTask();
+        await cache.Insert("valid", [4, 5, 6], DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var keys = await cache.GetAllKeys().ToList().ToTask();
-            await Assert.That(keys).DoesNotContain("expired");
-            await Assert.That(keys).Contains("valid");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await cache.Vacuum().ToTask();
+
+        var keys = await cache.GetAllKeys().ToList().ToTask();
+        await Assert.That(keys).DoesNotContain("expired");
+        await Assert.That(keys).Contains("valid");
     }
 
     /// <summary>
@@ -1346,25 +1037,18 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task VacuumShouldRemoveExpiredEntryFromTypeIndex()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("expiredTyped", [1, 2, 3], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-5)).ToTask();
-            await cache.Insert("validTyped", [4, 5, 6], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("expiredTyped", [1, 2, 3], typeof(UserObject), DateTimeOffset.Now.AddSeconds(-5)).ToTask();
+        await cache.Insert("validTyped", [4, 5, 6], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var typedKeysBefore = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(typedKeysBefore).Contains("validTyped");
+        var typedKeysBefore = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(typedKeysBefore).Contains("validTyped");
 
-            await cache.Vacuum().ToTask();
+        await cache.Vacuum().ToTask();
 
-            var typedKeysAfter = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
-            await Assert.That(typedKeysAfter).DoesNotContain("expiredTyped");
-            await Assert.That(typedKeysAfter).Contains("validTyped");
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var typedKeysAfter = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
+        await Assert.That(typedKeysAfter).DoesNotContain("expiredTyped");
+        await Assert.That(typedKeysAfter).Contains("validTyped");
     }
 
     /// <summary>
@@ -1372,44 +1056,36 @@ public class InMemoryBlobCacheBaseTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ConstructorShouldThrowOnNullScheduler()
-    {
+    public async Task ConstructorShouldThrowOnNullScheduler() =>
         await Assert.That(static () => new InMemoryBlobCache(null!, new SystemJsonSerializer()))
             .Throws<ArgumentNullException>();
-    }
 
     /// <summary>
     /// Tests that constructing InMemoryBlobCache with a null ISerializer throws ArgumentNullException.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ConstructorShouldThrowOnNullSerializer()
-    {
+    public async Task ConstructorShouldThrowOnNullSerializer() =>
         await Assert.That(static () => new InMemoryBlobCache(ImmediateScheduler.Instance, null))
             .Throws<ArgumentNullException>();
-    }
 
     /// <summary>
     /// Tests that the single-arg ISerializer constructor throws on null serializer.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task SingleArgSerializerConstructorShouldThrowOnNull()
-    {
+    public async Task SingleArgSerializerConstructorShouldThrowOnNull() =>
         await Assert.That(static () => new InMemoryBlobCache((ISerializer)null!))
             .Throws<ArgumentNullException>();
-    }
 
     /// <summary>
     /// Tests that the string constructor throws when the serializer type cannot be resolved.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task StringConstructorShouldThrowWhenSerializerNotRegistered()
-    {
+    public async Task StringConstructorShouldThrowWhenSerializerNotRegistered() =>
         await Assert.That(static () => new InMemoryBlobCache("NonExistentSerializerContract"))
-            .Throws<ArgumentNullException>();
-    }
+            .Throws<InvalidOperationException>();
 
     /// <summary>
     /// Tests GetObject returns default(T) when the stored byte array is null.
@@ -1418,19 +1094,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task GetObjectShouldReturnDefaultWhenStoredDataIsNull()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Insert a null byte array directly via the raw Insert method.
-            await cache.Insert("nulldata", null!, typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
 
-            var result = await cache.GetObject<UserObject>("nulldata").ToTask();
-            await Assert.That(result).IsNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        // Insert a null byte array directly via the raw Insert method.
+        await cache.Insert("nulldata", null!, typeof(UserObject)).ToTask();
+
+        var result = await cache.GetObject<UserObject>("nulldata").ToTask();
+        await Assert.That(result).IsNull();
     }
 
     /// <summary>
@@ -1440,16 +1110,10 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationWithTypeShouldNoopWhenKeyMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Should complete without error even though the key does not exist.
-            await cache.UpdateExpiration("missing", typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+
+        // Should complete without error even though the key does not exist.
+        await cache.UpdateExpiration("missing", typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
     }
 
     /// <summary>
@@ -1459,21 +1123,14 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysWithTypeShouldIgnoreMismatchedType()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.Insert("k", [1], typeof(UserObject)).ToTask();
+        await using var cache = CreateCache();
+        await cache.Insert("k", [1], typeof(UserObject)).ToTask();
 
-            // Update with a different type should be a no-op.
-            await cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now.AddHours(1)).ToTask();
+        // Update with a different type should be a no-op.
+        await cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now.AddHours(1)).ToTask();
 
-            var value = await cache.Get("k").ToTask();
-            await Assert.That(value).IsNotNull();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        var value = await cache.Get("k").ToTask();
+        await Assert.That(value).IsNotNull();
     }
 
     /// <summary>
@@ -1483,16 +1140,10 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationShouldNoopWhenKeyMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Should complete without error even though the key does not exist.
-            await cache.UpdateExpiration("missing", DateTimeOffset.Now.AddHours(1)).ToTask();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+
+        // Should complete without error even though the key does not exist.
+        await cache.UpdateExpiration("missing", DateTimeOffset.Now.AddHours(1)).ToTask();
     }
 
     /// <summary>
@@ -1502,15 +1153,8 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysShouldNoopWhenKeysMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.UpdateExpiration(["missing1", "missing2"], DateTimeOffset.Now.AddHours(1)).ToTask();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.UpdateExpiration(["missing1", "missing2"], DateTimeOffset.Now.AddHours(1)).ToTask();
     }
 
     /// <summary>
@@ -1520,15 +1164,8 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task UpdateExpirationKeysWithTypeShouldNoopWhenKeysMissing()
     {
-        var cache = CreateCache();
-        try
-        {
-            await cache.UpdateExpiration(["missing"], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await cache.UpdateExpiration(["missing"], typeof(UserObject), DateTimeOffset.Now.AddHours(1)).ToTask();
     }
 
     /// <summary>
@@ -1538,15 +1175,8 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task HttpServiceShouldReturnDefaultInstance()
     {
-        var cache = CreateCache();
-        try
-        {
-            await Assert.That(cache.HttpService).IsNotNull().And.IsTypeOf<HttpService>();
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+        await Assert.That(cache.HttpService).IsNotNull().And.IsTypeOf<HttpService>();
     }
 
     /// <summary>
@@ -1556,19 +1186,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task HttpServiceSetterShouldOverrideDefault()
     {
-        var cache = CreateCache();
-        try
-        {
-            // Touch the lazy getter first so the setter is clearly overriding a real instance.
-            _ = cache.HttpService;
-            var custom = new HttpService();
-            cache.HttpService = custom;
-            await Assert.That(cache.HttpService).IsSameReferenceAs(custom);
-        }
-        finally
-        {
-            await cache.DisposeAsync();
-        }
+        await using var cache = CreateCache();
+
+        // Touch the lazy getter first so the setter is clearly overriding a real instance.
+        _ = cache.HttpService;
+        var custom = new HttpService();
+        cache.HttpService = custom;
+        await Assert.That(cache.HttpService).IsSameReferenceAs(custom);
     }
 
     /// <summary>
@@ -1754,9 +1378,6 @@ public class InMemoryBlobCacheBaseTests
     /// </summary>
     private sealed class RecordingForcedKindSerializer : ISerializer
     {
-        /// <summary>Backing field for <see cref="ForcedDateTimeKind"/>.</summary>
-        private DateTimeKind? _kind;
-
         /// <summary>
         /// Gets the last value assigned to <see cref="ForcedDateTimeKind"/>.
         /// </summary>
@@ -1765,10 +1386,10 @@ public class InMemoryBlobCacheBaseTests
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind
         {
-            get => _kind;
+            get;
             set
             {
-                _kind = value;
+                field = value;
                 LastSetKind = value;
             }
         }

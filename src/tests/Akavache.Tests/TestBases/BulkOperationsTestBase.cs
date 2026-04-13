@@ -12,6 +12,7 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
+[NotInParallel(nameof(RequestCacheTests))]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     /// <summary>
@@ -171,14 +172,16 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+        }
+
+        _disposed = true;
     }
 
     /// <summary>
@@ -196,24 +199,25 @@ public abstract class BulkOperationsTestBase : IDisposable
             // Register the Newtonsoft BSON serializer specifically
             return new NewtonsoftBsonSerializer();
         }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
+
+        if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
             return new SystemJsonBsonSerializer();
         }
-        else if (serializerType == typeof(NewtonsoftSerializer))
+
+        if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
             return new NewtonsoftSerializer();
         }
-        else if (serializerType == typeof(SystemJsonSerializer))
+
+        if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
             return new SystemJsonSerializer();
         }
-        else
-        {
-            return null!;
-        }
+
+        return null!;
     }
 }

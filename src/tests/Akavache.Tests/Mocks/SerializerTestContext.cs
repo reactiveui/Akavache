@@ -10,6 +10,4 @@ namespace Akavache.Tests.Mocks;
 /// Source-generated JSON serializer context for AOT testing.
 /// </summary>
 [JsonSerializable(typeof(SerializerTestModel))]
-public partial class SerializerTestContext : JsonSerializerContext
-{
-}
+public partial class SerializerTestContext : JsonSerializerContext;

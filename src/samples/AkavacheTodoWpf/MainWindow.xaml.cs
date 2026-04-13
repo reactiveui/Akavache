@@ -52,10 +52,12 @@ public partial class MainWindow : Window, IViewFor<MainViewModel>
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         // Activate the view model when window loads
-        if (ViewModel is IActivatableViewModel activatable)
+        if (ViewModel is not IActivatableViewModel activatable)
         {
-            activatable.Activator.Activate();
+            return;
         }
+
+        activatable.Activator.Activate();
     }
 
     /// <summary>
@@ -82,51 +84,59 @@ public partial class MainWindow : Window, IViewFor<MainViewModel>
         }
 
         // Deactivate the view model
-        if (ViewModel is IActivatableViewModel activatable)
+        if (ViewModel is not IActivatableViewModel activatable)
         {
-            activatable.Activator.Deactivate();
+            return;
         }
+
+        activatable.Activator.Deactivate();
     }
 
     /// <summary>Restores the window size and position from persisted settings.</summary>
     private void LoadWindowState()
     {
-        if (ViewModel?.Settings != null)
+        if (ViewModel?.Settings == null)
         {
-            var settings = ViewModel.Settings;
-
-            if (settings.WindowWidth > 0 && settings.WindowHeight > 0)
-            {
-                Width = settings.WindowWidth;
-                Height = settings.WindowHeight;
-            }
-
-            if (settings.WindowLeft >= 0 && settings.WindowTop >= 0)
-            {
-                Left = settings.WindowLeft;
-                Top = settings.WindowTop;
-            }
-
-            // Ensure window is visible on screen
-            EnsureWindowIsVisible();
+            return;
         }
+
+        var settings = ViewModel.Settings;
+
+        if (settings.WindowWidth > 0 && settings.WindowHeight > 0)
+        {
+            Width = settings.WindowWidth;
+            Height = settings.WindowHeight;
+        }
+
+        if (settings is { WindowLeft: >= 0, WindowTop: >= 0 })
+        {
+            Left = settings.WindowLeft;
+            Top = settings.WindowTop;
+        }
+
+        // Ensure window is visible on screen
+        EnsureWindowIsVisible();
     }
 
     /// <summary>Persists the current window size and position back to settings.</summary>
     private void SaveWindowState()
     {
-        if (ViewModel?.Settings != null)
+        if (ViewModel?.Settings == null)
         {
-            var settings = ViewModel.Settings;
-
-            if (WindowState == WindowState.Normal)
-            {
-                settings.WindowWidth = Width;
-                settings.WindowHeight = Height;
-                settings.WindowLeft = Left;
-                settings.WindowTop = Top;
-            }
+            return;
         }
+
+        var settings = ViewModel.Settings;
+
+        if (WindowState != WindowState.Normal)
+        {
+            return;
+        }
+
+        settings.WindowWidth = Width;
+        settings.WindowHeight = Height;
+        settings.WindowLeft = Left;
+        settings.WindowTop = Top;
     }
 
     /// <summary>Ensures the restored window position is within the visible screen area.</summary>
@@ -140,9 +150,11 @@ public partial class MainWindow : Window, IViewFor<MainViewModel>
             Left = (screenWidth - Width) / 2;
         }
 
-        if (Top < 0 || Top > screenHeight - Height)
+        if (Top >= 0 && Top <= screenHeight - Height)
         {
-            Top = (screenHeight - Height) / 2;
+            return;
         }
+
+        Top = (screenHeight - Height) / 2;
     }
 }

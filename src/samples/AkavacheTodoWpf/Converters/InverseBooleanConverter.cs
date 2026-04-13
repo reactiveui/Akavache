@@ -22,12 +22,12 @@ public class InverseBooleanConverter : IValueConverter
     /// <returns>Inverted boolean.</returns>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool boolValue)
+        if (value is not bool boolValue)
         {
-            return !boolValue;
+            return true;
         }
 
-        return true;
+        return !boolValue;
     }
 
     /// <summary>
@@ -40,11 +40,11 @@ public class InverseBooleanConverter : IValueConverter
     /// <returns>Inverted boolean.</returns>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool boolValue)
+        if (value is not bool boolValue)
         {
-            return !boolValue;
+            return false;
         }
 
-        return false;
+        return !boolValue;
     }
 }

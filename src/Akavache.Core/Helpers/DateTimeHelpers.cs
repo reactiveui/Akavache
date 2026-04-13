@@ -2,8 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace Akavache.Helpers;
 
 /// <summary>
@@ -180,19 +178,13 @@ internal static partial class DateTimeHelpers
     {
         var dataAsString = Encoding.UTF8.GetString(data);
 
-        // Look for year patterns that suggest modern dates.
-        if (dataAsString.Contains("2025") || dataAsString.Contains("2024") || dataAsString.Contains("2026"))
-        {
-            return _safeFallbackDate;
-        }
+        // Recover when the payload looks like a recent year string or contains an ISO 8601 timestamp.
+        var hasModernDateHint = dataAsString.Contains("2025")
+            || dataAsString.Contains("2024")
+            || dataAsString.Contains("2026")
+            || Iso8601Regex().IsMatch(dataAsString);
 
-        // Try to find ISO 8601 date patterns.
-        if (Iso8601Regex().IsMatch(dataAsString))
-        {
-            return _safeFallbackDate;
-        }
-
-        return null;
+        return hasModernDateHint ? _safeFallbackDate : null;
     }
 
     /// <summary>

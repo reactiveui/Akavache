@@ -13,6 +13,7 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
+[NotInParallel(nameof(RequestCacheTests))]
 public abstract class DateTimeTestBase : IDisposable
 {
     /// <summary>
@@ -285,8 +286,15 @@ public abstract class DateTimeTestBase : IDisposable
             var successRate = actualTests > 0 ? successCount / (double)actualTests : 0;
 
             // Allow for more failures with complex DateTimeOffset scenarios - be very lenient
-            var minimumSuccessRate = blobCache.GetType().Name.Contains("Encrypted") ? 0.4 :
-                                   IsUsingBsonSerializer(serializer) ? 0.5 : 0.7;
+            double minimumSuccessRate;
+            if (blobCache.GetType().Name.Contains("Encrypted"))
+            {
+                minimumSuccessRate = 0.4;
+            }
+            else
+            {
+                minimumSuccessRate = IsUsingBsonSerializer(serializer) ? 0.5 : 0.7;
+            }
 
             await Assert.That(successRate).IsGreaterThanOrEqualTo(minimumSuccessRate);
         }
@@ -317,14 +325,16 @@ public abstract class DateTimeTestBase : IDisposable
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+        }
+
+        _disposed = true;
     }
 
     /// <summary>
@@ -441,7 +451,7 @@ public abstract class DateTimeTestBase : IDisposable
     /// <returns>
     /// True if the roundtrip is valid.
     /// </returns>
-    private static bool ValidateDateTimeOffsetRoundtrip(DateTimeOffset original, DateTimeOffset retrieved, ISerializer serializer)
+    private static bool ValidateDateTimeOffsetRoundtrip(in DateTimeOffset original, in DateTimeOffset retrieved, ISerializer serializer)
     {
         // UTC time should be very close
         var utcTicksDifference = Math.Abs(original.UtcTicks - retrieved.UtcTicks);
@@ -460,16 +470,16 @@ public abstract class DateTimeTestBase : IDisposable
         var offsetDifference = Math.Abs((original.Offset - retrieved.Offset).TotalHours);
         var offsetTolerance = IsUsingBsonSerializer(serializer) ? 48.0 : 24.0; // More tolerance for BSON
 
-        if (offsetDifference > offsetTolerance)
+        if (offsetDifference <= offsetTolerance)
         {
-            System.Diagnostics.Debug.WriteLine(
-                "DateTimeOffset offset validation failed: " +
-                $"original={original.Offset}, retrieved={retrieved.Offset}, " +
-                $"diff={offsetDifference} hours, tolerance={offsetTolerance} hours");
-            return false;
+            return true;
         }
 
-        return true;
+        System.Diagnostics.Debug.WriteLine(
+            "DateTimeOffset offset validation failed: " +
+            $"original={original.Offset}, retrieved={retrieved.Offset}, " +
+            $"diff={offsetDifference} hours, tolerance={offsetTolerance} hours");
+        return false;
     }
 
     /// <summary>
@@ -487,24 +497,25 @@ public abstract class DateTimeTestBase : IDisposable
             // Register the Newtonsoft BSON serializer specifically
             return new NewtonsoftBsonSerializer();
         }
-        else if (serializerType == typeof(SystemJsonBsonSerializer))
+
+        if (serializerType == typeof(SystemJsonBsonSerializer))
         {
             // Register the System.Text.Json BSON serializer specifically
             return new SystemJsonBsonSerializer();
         }
-        else if (serializerType == typeof(NewtonsoftSerializer))
+
+        if (serializerType == typeof(NewtonsoftSerializer))
         {
             // Register the Newtonsoft JSON serializer
             return new NewtonsoftSerializer();
         }
-        else if (serializerType == typeof(SystemJsonSerializer))
+
+        if (serializerType == typeof(SystemJsonSerializer))
         {
             // Register the System.Text.Json serializer
             return new SystemJsonSerializer();
         }
-        else
-        {
-            return null!;
-        }
+
+        return null!;
     }
 }

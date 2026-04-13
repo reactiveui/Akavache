@@ -350,15 +350,17 @@ public static class AkavacheBuilderExtensions
         /// <param name="disposing"><see langword="true"/> when called from <see cref="Dispose()"/>; <see langword="false"/> from a finalizer or async disposal path.</param>
         protected internal virtual void Dispose(bool disposing)
         {
-            if (!_disposed && disposing)
+            if (_disposed || !disposing)
             {
-                if (InnerCache is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-
-                _disposed = true;
+                return;
             }
+
+            if (InnerCache is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            _disposed = true;
         }
 
         /// <summary>

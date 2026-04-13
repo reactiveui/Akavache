@@ -43,7 +43,7 @@ internal static class Utility
                 }
 
                 // Retry deleting single file multiple times, allowing time for file handles to release
-                new Action(() => file.Delete()).Retry(20, 250);
+                Retry(file.Delete, 20, 250);
             }
 
             foreach (var dir in dirs)
@@ -72,6 +72,28 @@ internal static class Utility
             Console.Error.WriteLine("***** Failed to clean up!! *****");
             Console.Error.WriteLine(ex);
         }
+
+        static void Retry(Action block, int retries = 2, int sleepMs = 500)
+        {
+            var attempt = 0;
+            while (true)
+            {
+                try
+                {
+                    block();
+                    return;
+                }
+                catch (Exception) when (retries != 0)
+                {
+                    retries--;
+                    attempt++;
+
+                    // exponential backoff within reason
+                    var delay = Math.Min(sleepMs * (1 << Math.Min(attempt, 4)), 2000);
+                    Thread.Sleep(delay);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -99,33 +121,5 @@ internal static class Utility
 
         directoryPath = di.FullName;
         return Disposable.Create(() => DeleteDirectory(di.FullName));
-    }
-
-    /// <summary>
-    /// Retries the given action with exponential backoff on failure.
-    /// </summary>
-    /// <param name="block">The action to execute.</param>
-    /// <param name="retries">The maximum number of retries.</param>
-    /// <param name="sleepMs">The base sleep interval in milliseconds.</param>
-    public static void Retry(this Action block, int retries = 2, int sleepMs = 500)
-    {
-        var attempt = 0;
-        while (true)
-        {
-            try
-            {
-                block();
-                return;
-            }
-            catch (Exception) when (retries != 0)
-            {
-                retries--;
-                attempt++;
-
-                // exponential backoff within reason
-                var delay = Math.Min(sleepMs * (1 << Math.Min(attempt, 4)), 2000);
-                Thread.Sleep(delay);
-            }
-        }
     }
 }

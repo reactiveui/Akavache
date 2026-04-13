@@ -167,10 +167,10 @@ public class AssemblyInfoHelperTests
         public override string? FullName => "NoVersion";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => [];
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<Attribute>();
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => [];
+        public override object[] GetCustomAttributes(bool inherit) => Array.Empty<Attribute>();
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ public class AssemblyInfoHelperTests
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(Type attributeType, bool inherit) =>
-            attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : [];
+            attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : Array.Empty<Attribute>();
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(bool inherit) => _attrs;

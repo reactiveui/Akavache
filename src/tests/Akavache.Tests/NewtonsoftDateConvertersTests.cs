@@ -169,7 +169,7 @@ public class NewtonsoftDateConvertersTests
         var settings = new JsonSerializerSettings { DateParseHandling = DateParseHandling.DateTime };
         settings.Converters.Add(converter);
 
-        var json = "\"2025-06-15T12:00:00Z\"";
+        const string json = "\"2025-06-15T12:00:00Z\"";
         var result = JsonConvert.DeserializeObject<DateTimeOffset>(json, settings);
         await Assert.That(result.Year).IsEqualTo(2025);
     }
@@ -458,7 +458,7 @@ public class NewtonsoftDateConvertersTests
         var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new JsonSerializer());
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Year).IsEqualTo(2025);
-        await Assert.That(result!.Value.Offset).IsEqualTo(TimeSpan.FromHours(2));
+        await Assert.That(result.Value.Offset).IsEqualTo(TimeSpan.FromHours(2));
     }
 
     /// <summary>

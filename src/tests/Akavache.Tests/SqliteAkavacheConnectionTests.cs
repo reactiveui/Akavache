@@ -197,8 +197,7 @@ public class SqliteAkavacheConnectionTests
 
             await connection.RunInTransactionAsync(tx =>
             {
-                var rows = tx.Query<CacheEntry>(_ => true);
-                foreach (var row in rows)
+                foreach (var row in tx.Query<CacheEntry>(_ => true))
                 {
                     tx.Delete<CacheEntry>(row.Id!);
                 }
@@ -618,10 +617,12 @@ public class SqliteAkavacheConnectionTests
                         throw new InvalidOperationException("Expected at least one row inside the transaction.");
                     }
 
-                    if (!tx.IsValid)
+                    if (tx.IsValid)
                     {
-                        throw new InvalidOperationException("Expected the transaction to be valid.");
+                        return;
                     }
+
+                    throw new InvalidOperationException("Expected the transaction to be valid.");
                 });
 
                 await connection.ExecuteAsync("DELETE FROM CacheEntry WHERE Id = ?", "k");

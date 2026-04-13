@@ -66,7 +66,7 @@ public class CacheDatabaseWriteBenchmarks
     [BenchmarkCategory("Write")]
     public async Task SequentialObjectWrite()
     {
-        for (int i = 0; i < BenchmarkSize; i++)
+        for (var i = 0; i < BenchmarkSize; i++)
         {
             var testData = new TestDataV11
             {

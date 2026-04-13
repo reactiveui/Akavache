@@ -86,8 +86,6 @@ public class SystemJsonSerializer : ISerializer
         var options = Options ?? new JsonSerializerOptions();
 
         // Clone options to avoid modifying the original
-        var effectiveOptions = new JsonSerializerOptions(options);
-
-        return effectiveOptions;
+        return new JsonSerializerOptions(options);
     }
 }

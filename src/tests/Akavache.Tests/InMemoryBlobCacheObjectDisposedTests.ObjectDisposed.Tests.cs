@@ -12,6 +12,11 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class InMemoryBlobCacheObjectDisposedTests
 {
+    /// <summary>
+    /// Verifies that the <see cref="InMemoryBlobCache"/> handles <see cref="ObjectDisposedException"/>
+    /// correctly when performing operations on a disposed cache instance.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
     {

@@ -73,7 +73,7 @@ public class CacheDatabaseReadBenchmarks
     {
         var tasks = new List<Task>();
 
-        for (int i = 0; i < Size; i++)
+        for (var i = 0; i < Size; i++)
         {
             var randomKey = Keys[_randomNumberGenerator.Next(0, Keys.Count - 1)];
             tasks.Add(BlobCache.Get(randomKey).FirstAsync().ToTask());

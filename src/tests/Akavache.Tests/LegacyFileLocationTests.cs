@@ -107,7 +107,7 @@ public class LegacyFileLocationTests
     public async Task LegacyFileLocation_ProducesDifferentPath_ThanDefault()
     {
         // Arrange
-        var appName = "LegacyPathTest";
+        const string appName = "LegacyPathTest";
 
         var defaultBuilder = CacheDatabase.CreateBuilder()
             .WithApplicationName(appName)
@@ -135,7 +135,7 @@ public class LegacyFileLocationTests
     public async Task GetLegacyCacheDirectory_UserAccount_ContainsApplicationName()
     {
         // Arrange
-        var appName = "LegacyDirTest";
+        const string appName = "LegacyDirTest";
         var builder = CacheDatabase.CreateBuilder(FileLocationOption.Legacy)
             .WithApplicationName(appName)
             .WithSerializer<SystemJsonSerializer>();
@@ -156,7 +156,7 @@ public class LegacyFileLocationTests
     public async Task GetLegacyCacheDirectory_Secure_ContainsSecretCache()
     {
         // Arrange
-        var appName = "LegacySecureDirTest";
+        const string appName = "LegacySecureDirTest";
         var builder = CacheDatabase.CreateBuilder(FileLocationOption.Legacy)
             .WithApplicationName(appName)
             .WithSerializer<SystemJsonSerializer>();
@@ -177,7 +177,7 @@ public class LegacyFileLocationTests
     public async Task GetLegacyCacheDirectory_LocalMachine_ContainsBlobCache()
     {
         // Arrange
-        var appName = "LegacyLocalMachineDirTest";
+        const string appName = "LegacyLocalMachineDirTest";
         var builder = CacheDatabase.CreateBuilder(FileLocationOption.Legacy)
             .WithApplicationName(appName)
             .WithSerializer<SystemJsonSerializer>();
@@ -291,9 +291,9 @@ public class LegacyFileLocationTests
                 applicationName: testAppName);
 
             // Act - write data
-            var testKey = "test-key";
-            var testValue = "test-value";
-            await CacheDatabase.UserAccount!.InsertObject(testKey, testValue);
+            const string testKey = "test-key";
+            const string testValue = "test-value";
+            await CacheDatabase.UserAccount.InsertObject(testKey, testValue);
 
             // Assert - read data back
             var result = await CacheDatabase.UserAccount.GetObject<string>(testKey);
@@ -314,7 +314,7 @@ public class LegacyFileLocationTests
     public async Task SettingsCachePath_WithLegacyOption_UsesLegacyDirectory()
     {
         // Arrange
-        var appName = "LegacySettingsPathTest";
+        const string appName = "LegacySettingsPathTest";
 
         var defaultBuilder = CacheDatabase.CreateBuilder()
             .WithApplicationName(appName)
@@ -343,8 +343,8 @@ public class LegacyFileLocationTests
     {
         // Arrange
         var testAppName = $"LegacyPersistTest_{Guid.NewGuid():N}";
-        var testKey = "persist-key";
-        var testValue = "persist-value";
+        const string testKey = "persist-key";
+        const string testValue = "persist-value";
         Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         try
@@ -359,7 +359,7 @@ public class LegacyFileLocationTests
                 },
                 applicationName: testAppName);
 
-            await CacheDatabase.UserAccount!.InsertObject(testKey, testValue);
+            await CacheDatabase.UserAccount.InsertObject(testKey, testValue);
             await CacheDatabase.UserAccount.Flush();
 
             // Reinitialize
@@ -376,7 +376,7 @@ public class LegacyFileLocationTests
                 applicationName: testAppName);
 
             // Assert - data should still be there
-            var result = await CacheDatabase.UserAccount!.GetObject<string>(testKey);
+            var result = await CacheDatabase.UserAccount.GetObject<string>(testKey);
             await Assert.That(result).IsEqualTo(testValue);
         }
         finally

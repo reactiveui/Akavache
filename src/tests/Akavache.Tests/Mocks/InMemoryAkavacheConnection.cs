@@ -50,7 +50,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     /// Gets a mutable store of legacy V10 values that <see cref="TryReadLegacyV10ValueAsync"/> reads from.
     /// Tests can populate this to simulate a V10 database containing pre-existing data.
     /// </summary>
-    public Dictionary<string, byte[]> LegacyV10Store { get; } = new();
+    public Dictionary<string, byte[]> LegacyV10Store { get; } = [];
 
     /// <summary>
     /// Gets the internal live store of <see cref="CacheEntry"/> values. Exposed for test assertions.
@@ -170,12 +170,8 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
         // SQL-based queries are not supported in the in-memory implementation.
         // Return all entries for CacheEntry, empty for others.
-        if (typeof(T) != typeof(CacheEntry))
-        {
-            return Task.FromResult(new List<T>());
-        }
-
-        return Task.FromResult(_store.Values.Cast<T>().ToList());
+        return Task.FromResult(
+            typeof(T) != typeof(CacheEntry) ? [] : _store.Values.Cast<T>().ToList());
     }
 
     /// <inheritdoc/>
@@ -203,7 +199,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     {
         ThrowIfDisposed();
 
-        if (entity is CacheEntry entry && entry.Id is not null)
+        if (entity is CacheEntry { Id: not null } entry)
         {
             _store[entry.Id] = entry;
         }
@@ -260,12 +256,9 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         CheckpointCount++;
         LastCheckpointMode = mode;
 
-        if (FailCheckpoint)
-        {
-            return Task.FromException(new InvalidOperationException("Simulated checkpoint failure."));
-        }
-
-        return Task.CompletedTask;
+        return FailCheckpoint
+            ? Task.FromException(new InvalidOperationException("Simulated checkpoint failure."))
+            : Task.CompletedTask;
     }
 
     /// <inheritdoc/>
@@ -274,12 +267,9 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         ThrowIfDisposed();
         CompactCount++;
 
-        if (FailCompact)
-        {
-            return Task.FromException(new InvalidOperationException("Simulated compact failure."));
-        }
-
-        return Task.CompletedTask;
+        return FailCompact
+            ? Task.FromException(new InvalidOperationException("Simulated compact failure."))
+            : Task.CompletedTask;
     }
 
     /// <inheritdoc/>
@@ -288,12 +278,9 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         ThrowIfDisposed();
         ReleaseAuxiliaryResourcesCount++;
 
-        if (FailReleaseAuxiliaryResources)
-        {
-            return Task.FromException(new InvalidOperationException("Simulated release-auxiliary failure."));
-        }
-
-        return Task.CompletedTask;
+        return FailReleaseAuxiliaryResources
+            ? Task.FromException(new InvalidOperationException("Simulated release-auxiliary failure."))
+            : Task.CompletedTask;
     }
 
     /// <inheritdoc/>
@@ -301,12 +288,9 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     {
         ThrowIfDisposed();
 
-        if (LegacyV10Store.TryGetValue(key, out var value))
-        {
-            return Task.FromResult<byte[]?>(value);
-        }
-
-        return Task.FromResult<byte[]?>(null);
+        return LegacyV10Store.TryGetValue(key, out var value)
+            ? Task.FromResult<byte[]?>(value)
+            : Task.FromResult<byte[]?>(null);
     }
 
     /// <inheritdoc/>
@@ -331,9 +315,11 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     /// <summary>Throws <see cref="ObjectDisposedException"/> when <see cref="SimulateDisposed"/> is set.</summary>
     private void ThrowIfDisposed()
     {
-        if (SimulateDisposed)
+        if (!SimulateDisposed)
         {
-            throw new ObjectDisposedException(nameof(InMemoryAkavacheConnection));
+            return;
         }
+
+        throw new ObjectDisposedException(nameof(InMemoryAkavacheConnection));
     }
 }

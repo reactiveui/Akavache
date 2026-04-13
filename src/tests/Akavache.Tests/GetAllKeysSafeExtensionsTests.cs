@@ -21,20 +21,14 @@ public class GetAllKeysSafeExtensionsTests
     /// Sets up the test cache before each test.
     /// </summary>
     [Before(Test)]
-    public void SetUp()
-    {
-        _cache = new InMemoryBlobCache(new SystemJsonSerializer());
-    }
+    public void SetUp() => _cache = new InMemoryBlobCache(new SystemJsonSerializer());
 
     /// <summary>
     /// Cleans up the test cache after each test.
     /// </summary>
     /// <returns>A task representing the asynchronous cleanup operation.</returns>
     [After(Test)]
-    public async Task TearDown()
-    {
-        await _cache.DisposeAsync();
-    }
+    public async Task TearDown() => await _cache.DisposeAsync();
 
     /// <summary>
     /// Tests that GetAllKeysSafe returns an empty list for an empty cache.
@@ -75,6 +69,7 @@ public class GetAllKeysSafeExtensionsTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
     public async Task GetAllKeysSafe_WithType_ShouldReturnEmptyForEmptyCache()
     {
         // Act
@@ -89,6 +84,7 @@ public class GetAllKeysSafeExtensionsTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
     public async Task GetAllKeysSafe_WithType_ShouldReturnKeysForSpecificType()
     {
         // Arrange
@@ -103,9 +99,9 @@ public class GetAllKeysSafeExtensionsTests
         using (Assert.Multiple())
         {
             await Assert.That(stringKeys).Count().IsEqualTo(1);
-            await Assert.That(stringKeys.First()).Contains("test_string");
+            await Assert.That(stringKeys[0]).Contains("test_string");
             await Assert.That(intKeys).Count().IsEqualTo(1);
-            await Assert.That(intKeys.First()).Contains("test_int");
+            await Assert.That(intKeys[0]).Contains("test_int");
         }
     }
 
@@ -139,7 +135,7 @@ public class GetAllKeysSafeExtensionsTests
 
         // Assert
         await Assert.That(stringKeys).Count().IsEqualTo(1);
-        await Assert.That(stringKeys.First()).Contains("test_string");
+        await Assert.That(stringKeys[0]).Contains("test_string");
     }
 
     /// <summary>
@@ -161,6 +157,7 @@ public class GetAllKeysSafeExtensionsTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
     public async Task GetAllKeysSafe_WithType_ShouldThrowForNullCache()
     {
         // Arrange
@@ -175,11 +172,10 @@ public class GetAllKeysSafeExtensionsTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
-    public async Task GetAllKeysSafe_WithType_ShouldThrowForNullType()
-    {
+    public async Task GetAllKeysSafe_WithType_ShouldThrowForNullType() =>
+
         // Act & Assert
         await Assert.That(() => _cache.GetAllKeysSafe(null!)).Throws<ArgumentNullException>();
-    }
 
     /// <summary>
     /// Tests that generic GetAllKeysSafe throws ArgumentNullException for null cache.

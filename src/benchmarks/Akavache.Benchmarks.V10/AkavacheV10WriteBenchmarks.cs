@@ -87,9 +87,7 @@ public class AkavacheV10WriteBenchmarks
     [BenchmarkCategory("Write")]
     public async Task SequentialWrite()
     {
-        var dataToWrite = PerfHelper.GenerateRandomDatabaseContents(BenchmarkSize);
-
-        foreach (var kvp in dataToWrite)
+        foreach (var kvp in PerfHelper.GenerateRandomDatabaseContents(BenchmarkSize))
         {
             await BenchBlobCache!.Insert(kvp.Key, kvp.Value);
         }

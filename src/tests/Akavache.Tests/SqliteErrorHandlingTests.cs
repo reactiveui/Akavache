@@ -2,10 +2,8 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System; // System first
+// System first
 using System.Reactive.Threading.Tasks;
-using System.Threading.Tasks;
-using Akavache.Core;
 using Akavache.EncryptedSqlite3;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;

@@ -30,7 +30,7 @@ internal static class Utility
             foreach (var file in files)
             {
                 File.SetAttributes(file.FullName, FileAttributes.Normal);
-                new Action(() => file.Delete()).Retry();
+                Retry(file.Delete);
             }
 
             foreach (var dir in dirs)
@@ -46,8 +46,38 @@ internal static class Utility
             Console.Error.WriteLine("***** Failed to clean up!! *****");
             Console.Error.WriteLine(ex);
         }
+
+        return;
+
+        static void Retry(Action block, int retries = 2)
+        {
+            while (true)
+            {
+                try
+                {
+                    block();
+                    return;
+                }
+                catch (Exception)
+                {
+                    if (retries == 0)
+                    {
+                        throw;
+                    }
+
+                    retries--;
+                    Thread.Sleep(10);
+                }
+            }
+        }
     }
 
+    /// <summary>
+    /// Creates a fresh empty directory under the current working directory and
+    /// returns a disposable that recursively deletes it on dispose.
+    /// </summary>
+    /// <param name="directoryPath">The full path of the created directory.</param>
+    /// <returns>A disposable that cleans up the directory when disposed.</returns>
     public static IDisposable WithEmptyDirectory(out string directoryPath)
     {
         var di = new DirectoryInfo(Path.Combine(".", Guid.NewGuid().ToString()));
@@ -63,27 +93,5 @@ internal static class Utility
         {
             DeleteDirectory(di.FullName);
         });
-    }
-
-    public static void Retry(this Action block, int retries = 2)
-    {
-        while (true)
-        {
-            try
-            {
-                block();
-                return;
-            }
-            catch (Exception)
-            {
-                if (retries == 0)
-                {
-                    throw;
-                }
-
-                retries--;
-                Thread.Sleep(10);
-            }
-        }
     }
 }

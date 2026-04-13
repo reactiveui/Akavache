@@ -2,11 +2,12 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using Akavache.Helpers;
 using SQLite;
 
 #if ENCRYPTED
+using System.Diagnostics.CodeAnalysis;
+
 namespace Akavache.EncryptedSqlite3;
 #else
 namespace Akavache.Sqlite3;
@@ -36,9 +37,6 @@ public class SqliteBlobCache : IBlobCache
 
     /// <summary>Indicates whether <see cref="Dispose(bool)"/> has been invoked.</summary>
     private bool _disposed;
-
-    /// <summary>Backing field for the lazily-initialized <see cref="HttpService"/> property.</summary>
-    private IHttpService? _httpService;
 
 #if ENCRYPTED
     /// <summary>
@@ -154,7 +152,11 @@ public class SqliteBlobCache : IBlobCache
     public ISerializer Serializer { get; }
 
     /// <inheritdoc/>
-    public IHttpService HttpService { get => _httpService = GetOrCreateHttpService(_httpService); set => _httpService = value; }
+    public IHttpService HttpService
+    {
+        get => field ??= new HttpService();
+        set;
+    }
 
     /// <inheritdoc/>
     public IObservable<Unit> Flush()
@@ -222,12 +224,7 @@ public class SqliteBlobCache : IBlobCache
 
             // Fallback to legacy V10 table (CacheElement)
             var legacy = await TryGetLegacyValueAsync(Connection, key, time, null).ConfigureAwait(false);
-            if (legacy is not null)
-            {
-                return legacy;
-            }
-
-            throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+            return legacy ?? throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
         });
     }
 
@@ -668,12 +665,11 @@ public class SqliteBlobCache : IBlobCache
         }
 
         return _initialized.SelectMany(
-            async (_) =>
+            async _ =>
             {
                 await Connection.RunInTransactionAsync(tx =>
                 {
-                    var entries = tx.Query<CacheEntry>(x => keys.Contains(x.Id) && x.TypeName == type.FullName);
-                    foreach (var key in entries)
+                    foreach (var key in tx.Query<CacheEntry>(x => keys.Contains(x.Id) && x.TypeName == type.FullName))
                     {
                         tx.Delete<CacheEntry>(key.Id!);
                     }
@@ -696,8 +692,7 @@ public class SqliteBlobCache : IBlobCache
             {
                 await Connection.RunInTransactionAsync(tx =>
                 {
-                    var entries = tx.Query<CacheEntry>(x => x.TypeName == type.FullName);
-                    foreach (var key in entries)
+                    foreach (var key in tx.Query<CacheEntry>(x => x.TypeName == type.FullName))
                     {
                         tx.Delete<CacheEntry>(key.Id!);
                     }
@@ -869,8 +864,8 @@ public class SqliteBlobCache : IBlobCache
 
     /// <summary>
     /// Returns <paramref name="existing"/> when it is non-null, otherwise a freshly
-    /// constructed default <see cref="HttpService"/>. Backs the lazy getter on the
-    /// <see cref="HttpService"/> property.
+    /// constructed default <see cref="HttpService"/>. Used by tests that exercise the
+    /// lazy-init semantics of the <see cref="HttpService"/> property directly.
     /// </summary>
     /// <param name="existing">The currently cached <see cref="IHttpService"/>, or <see langword="null"/>.</param>
     /// <returns>A non-null <see cref="IHttpService"/>.</returns>

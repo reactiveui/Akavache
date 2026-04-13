@@ -84,7 +84,7 @@ public class NotificationService : ReactiveObject, IDisposable
                     Topmost = true
                 };
 
-                var textBlock = new System.Windows.Controls.TextBlock
+                notificationWindow.Content = new System.Windows.Controls.TextBlock
                 {
                     Text = message,
                     Margin = new Thickness(10),
@@ -92,8 +92,6 @@ public class NotificationService : ReactiveObject, IDisposable
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 };
-
-                notificationWindow.Content = textBlock;
 
                 // Auto-close after 5 seconds
                 var timer = new System.Windows.Threading.DispatcherTimer
@@ -158,8 +156,7 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <returns>Observable list of todos needing reminders.</returns>
     public IObservable<List<TodoItem>?> GetTodosNeedingReminders() => TodoCacheService.GetAllTodos()
             .Select(todos => todos?.Where(todo =>
-                !todo.IsCompleted &&
-                todo.DueDate.HasValue &&
+                todo is { IsCompleted: false, DueDate: not null } &&
                 _currentSettings.NotificationsEnabled &&
                 ShouldNotify(todo)).ToList());
 
@@ -230,7 +227,7 @@ public class NotificationService : ReactiveObject, IDisposable
                 }
 
                 return todos.ToObservable()
-                    .Where(todo => !todo.IsCompleted && todo.DueDate.HasValue)
+                    .Where(todo => todo is { IsCompleted: false, DueDate: not null })
                     .SelectMany(ScheduleReminder)
                     .DefaultIfEmpty(Unit.Default)
                     .Take(1);
@@ -252,13 +249,15 @@ public class NotificationService : ReactiveObject, IDisposable
     /// <param name="disposing">True if disposing managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed && disposing)
+        if (_disposed || !disposing)
         {
-            _reminderTimer?.Dispose();
-            _reminderSubject?.Dispose();
-            _cacheInfo?.Dispose();
-            _disposed = true;
+            return;
         }
+
+        _reminderTimer?.Dispose();
+        _reminderSubject?.Dispose();
+        _cacheInfo?.Dispose();
+        _disposed = true;
     }
 
     /// <summary>Builds a human-readable reminder message for a todo.</summary>

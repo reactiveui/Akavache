@@ -309,31 +309,33 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .Subscribe(args =>
             {
                 // When todos are added, subscribe to their property changes
-                if (args.EventArgs.NewItems != null)
+                if (args.EventArgs.NewItems == null)
                 {
-                    foreach (TodoItemViewModel todoVm in args.EventArgs.NewItems)
-                    {
-                        // Subscribe to completion status changes with immediate response
-                        todoVm.WhenAnyValue(x => x.TodoItem.IsCompleted)
-                            .Skip(1) // Skip initial value
-                            .ObserveOn(RxSchedulers.MainThreadScheduler)
-                            .Subscribe(isCompleted =>
-                            {
-                                // Save the updated todo to cache immediately
-                                SaveCurrentTodos().Subscribe(
-                                    _ =>
-                                    {
-                                        // Force statistics refresh after save completes
-                                        RefreshStatistics();
+                    return;
+                }
 
-                                        StatusMessage = isCompleted ?
-                                            $"Completed: {todoVm.TodoItem.Title}" :
-                                            $"Reopened: {todoVm.TodoItem.Title}";
-                                    },
-                                    ex => System.Diagnostics.Debug.WriteLine($"Save failed: {ex.Message}"));
-                            })
-                            .DisposeWith(disposables);
-                    }
+                foreach (TodoItemViewModel todoVm in args.EventArgs.NewItems)
+                {
+                    // Subscribe to completion status changes with immediate response
+                    todoVm.WhenAnyValue(x => x.TodoItem.IsCompleted)
+                        .Skip(1) // Skip initial value
+                        .ObserveOn(RxSchedulers.MainThreadScheduler)
+                        .Subscribe(isCompleted =>
+                        {
+                            // Save the updated todo to cache immediately
+                            SaveCurrentTodos().Subscribe(
+                                _ =>
+                                {
+                                    // Force statistics refresh after save completes
+                                    RefreshStatistics();
+
+                                    StatusMessage = isCompleted ?
+                                        $"Completed: {todoVm.TodoItem.Title}" :
+                                        $"Reopened: {todoVm.TodoItem.Title}";
+                                },
+                                ex => System.Diagnostics.Debug.WriteLine($"Save failed: {ex.Message}"));
+                        })
+                        .DisposeWith(disposables);
                 }
             })
             .DisposeWith(disposables);

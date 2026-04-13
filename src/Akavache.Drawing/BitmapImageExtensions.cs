@@ -138,7 +138,7 @@ public static class BitmapImageExtensions
             throw new ArgumentNullException(nameof(image));
         }
 
-        return ImageToBytes(image)
+        return image.ImageToBytes()
             .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
     }
 

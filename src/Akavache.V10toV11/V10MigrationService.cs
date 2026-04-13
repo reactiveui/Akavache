@@ -117,10 +117,12 @@ internal static class V10MigrationService
         }
 
         // Optionally delete the old file
-        if (options.DeleteOldFiles)
+        if (!options.DeleteOldFiles)
         {
-            TryDeleteV10Database(v10DbPath, options);
+            return;
         }
+
+        TryDeleteV10Database(v10DbPath, options);
     }
 
     /// <summary>
@@ -309,8 +311,7 @@ internal static class V10MigrationService
         // Check if already expired
         try
         {
-            var expiration = new DateTimeOffset(new DateTime(expirationTicks, DateTimeKind.Utc));
-            return expiration;
+            return new DateTimeOffset(new DateTime(expirationTicks, DateTimeKind.Utc));
         }
         catch
         {

@@ -61,7 +61,7 @@ public static class IntegrationTestHelper
             goto foundIt;
         }
 
-        throw new Exception("Couldn't find response body");
+        throw new InvalidOperationException("Couldn't find response body");
 
     foundIt:
 

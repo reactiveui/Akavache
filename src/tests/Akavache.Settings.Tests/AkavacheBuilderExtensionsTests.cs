@@ -434,7 +434,7 @@ public class AkavacheBuilderExtensionsTests
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
-        var action = () => builder!.WithSettingsStore<ViewSettings>((IBlobCache)null!, _ => { });
+        var action = () => builder!.WithSettingsStore<ViewSettings>(null!, _ => { });
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -797,7 +797,7 @@ public class AkavacheBuilderExtensionsTests
                     builder
                         .WithEncryptedSqliteProvider()
                         .WithSettingsCachePath(_cacheRoot)
-                        .WithSecureSettingsStore<ViewSettings>("password", (Action<ViewSettings?>)null!);
+                        .WithSecureSettingsStore<ViewSettings>("password", null!);
                 },
                 instance =>
                 {
@@ -821,7 +821,7 @@ public class AkavacheBuilderExtensionsTests
             NewName("null_action_test"),
             builder =>
             {
-                builder.WithSettingsStore<ViewSettings>((Action<ViewSettings?>)null!);
+                builder.WithSettingsStore<ViewSettings>(null!);
                 return Task.CompletedTask;
             },
             async instance =>
@@ -860,7 +860,7 @@ public class AkavacheBuilderExtensionsTests
             builder =>
             {
                 var cache = new InMemoryBlobCache(builder.Serializer!);
-                builder.WithSettingsStore<ViewSettings>(cache, (Action<ViewSettings?>)null!);
+                builder.WithSettingsStore<ViewSettings>(cache, null!);
                 return Task.CompletedTask;
             },
             async instance =>
@@ -955,9 +955,6 @@ public class AkavacheBuilderExtensionsTests
 
                     configureAsync(builder).GetAwaiter().GetResult();
                 },
-                instance =>
-                {
-                    bodyAsync(instance).GetAwaiter().GetResult();
-                })
+                instance => bodyAsync(instance).GetAwaiter().GetResult())
             .Build();
 }

@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Text;
 using Akavache.Helpers;
 
 namespace Akavache.Tests;
@@ -16,7 +15,6 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class DateTimeHelpersTests
 {
-
     /// <summary>
     /// Tests HandleDateTimeEdgeCase with MinValue and UTC forced kind.
     /// </summary>
@@ -256,7 +254,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFromYearPatterns()
     {
-        var data = Encoding.UTF8.GetBytes("{\"date\":\"2025-03-15T10:30:00Z\"}");
+        var data = "{\"date\":\"2025-03-15T10:30:00Z\"}"u8.ToArray();
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
@@ -268,7 +266,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFrom2024Pattern()
     {
-        var data = Encoding.UTF8.GetBytes("date: 2024-12-25");
+        var data = "date: 2024-12-25"u8.ToArray();
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
@@ -280,7 +278,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFrom2026Pattern()
     {
-        var data = Encoding.UTF8.GetBytes("timestamp: 2026-01-01");
+        var data = "timestamp: 2026-01-01"u8.ToArray();
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
@@ -305,7 +303,7 @@ public class DateTimeHelpersTests
     public async Task AttemptDateTimeRecoveryShouldReturnOriginalWhenNotMinValue()
     {
         var original = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var data = Encoding.UTF8.GetBytes("some data");
+        var data = "some data"u8.ToArray();
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, original);
         await Assert.That(result).IsEqualTo(original);
     }
@@ -350,7 +348,7 @@ public class DateTimeHelpersTests
     public async Task AttemptDateTimeRecoveryShouldRecoverFromIso8601Pattern()
     {
         // Data that has ISO date pattern but not a year keyword
-        var data = Encoding.UTF8.GetBytes("{\"ts\":\"1999-12-31T23:59:59\"}");
+        var data = "{\"ts\":\"1999-12-31T23:59:59\"}"u8.ToArray();
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
 
         // Should detect ISO pattern and return fallback
@@ -487,7 +485,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFrom2024Pattern()
     {
-        var data = Encoding.UTF8.GetBytes("payload contains 2024 in it somewhere");
+        var data = "payload contains 2024 in it somewhere"u8.ToArray();
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
@@ -503,7 +501,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFrom2025Pattern()
     {
-        var data = Encoding.UTF8.GetBytes("event happened on 2025 day");
+        var data = "event happened on 2025 day"u8.ToArray();
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
@@ -519,7 +517,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFrom2026Pattern()
     {
-        var data = Encoding.UTF8.GetBytes("scheduled for 2026 next year");
+        var data = "scheduled for 2026 next year"u8.ToArray();
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
@@ -536,7 +534,7 @@ public class DateTimeHelpersTests
     public async Task TryRecoverDateTimeFromTextShouldRecoverFromIso8601Pattern()
     {
         // Year deliberately outside the 2024-2026 hint set so the ISO 8601 path fires.
-        var data = Encoding.UTF8.GetBytes("captured at 2030-06-15T12:34:56 utc");
+        var data = "captured at 2030-06-15T12:34:56 utc"u8.ToArray();
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
@@ -552,7 +550,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldReturnNullWhenNoPattern()
     {
-        var data = Encoding.UTF8.GetBytes("nothing date-like here at all");
+        var data = "nothing date-like here at all"u8.ToArray();
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 

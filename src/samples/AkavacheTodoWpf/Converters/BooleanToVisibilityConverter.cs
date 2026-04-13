@@ -41,11 +41,11 @@ public class BooleanToVisibilityConverter : IValueConverter
     /// <returns>True if Visible, false otherwise.</returns>
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is Visibility visibility)
+        if (value is not Visibility visibility)
         {
-            return visibility == Visibility.Visible;
+            return false;
         }
 
-        return false;
+        return visibility == Visibility.Visible;
     }
 }

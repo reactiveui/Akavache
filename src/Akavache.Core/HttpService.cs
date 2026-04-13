@@ -135,7 +135,7 @@ public class HttpService : IHttpService
     {
         if (!responseMessage.IsSuccessStatusCode)
         {
-            return Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode.ToString()}] Http Failure to {url} with expiry {absoluteExpiration.ToString()}: {responseMessage.ReasonPhrase}"));
+            return Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"));
         }
 
         return Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
