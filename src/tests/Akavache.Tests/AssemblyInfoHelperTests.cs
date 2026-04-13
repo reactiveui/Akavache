@@ -163,14 +163,19 @@ public class AssemblyInfoHelperTests
     /// </summary>
     private sealed class NoFileVersionAttributeAssembly : Assembly
     {
+        /// <summary>
+        /// A field of the no-file-version assembly attributes, which is always empty.
+        /// </summary>
+        private static readonly Attribute[] _empty = [];
+
         /// <inheritdoc/>
         public override string? FullName => "NoVersion";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => [];
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _empty;
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => [];
+        public override object[] GetCustomAttributes(bool inherit) => _empty;
     }
 
     /// <summary>

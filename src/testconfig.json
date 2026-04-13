@@ -1,26 +1,34 @@
 {
-    "platform": {
-        "execution": {
-            "parallel": false
-        }
-    },
-    "extensions": [
-        {
-            "extensionId": "Microsoft.Testing.Extensions.CodeCoverage",
-            "settings": {
-                "format": "cobertura",
-                "skipAutoProperties": true,
-                "modulePaths": {
-                    "include": [
+    "codeCoverage": {
+        "Configuration": {
+            "Format": "cobertura",
+            "SkipAutoProperties": true,
+            "CodeCoverage": {
+                "ModulePaths": {
+                    "Include": [
                         "Akavache(\\..*)?"
                     ],
-                    "exclude": [
+                    "Exclude": [
                         ".*Tests.*",
                         ".*TestRunner.*",
                         ".*Benchmarks.*"
                     ]
+                },
+                "Sources": {
+                    "Exclude": [
+                        ".*[/\\\\]obj[/\\\\].*",
+                        ".*\\.g\\.cs$"
+                    ]
+                },
+                "Attributes": {
+                    "Exclude": [
+                        "^System\\.CodeDom\\.Compiler\\.GeneratedCodeAttribute$",
+                        "^System\\.Diagnostics\\.CodeAnalysis\\.ExcludeFromCodeCoverageAttribute$",
+                        "^System\\.Diagnostics\\.DebuggerHiddenAttribute$",
+                        "^System\\.Diagnostics\\.DebuggerNonUserCodeAttribute$"
+                    ]
                 }
             }
         }
-    ]
+    }
 }

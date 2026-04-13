@@ -436,30 +436,29 @@ public class SerializationCompatibilityTests
             };
 
             // Test in single cache instance to see if issue is with multiple instances
-            await using (SqliteBlobCache cache = new(dbPath, serializer))
+            await using SqliteBlobCache cache = new(dbPath, serializer);
+
+            // Insert
+            await cache.InsertObject("simple_key", testObject).FirstAsync();
+
+            // Verify via keys
+            var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
+            var typedKeys = await cache.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
+
+            using (Assert.Multiple())
             {
-                // Insert
-                await cache.InsertObject("simple_key", testObject).FirstAsync();
+                await Assert.That(allKeys).IsNotEmpty();
+                await Assert.That(typedKeys).IsNotEmpty();
+            }
 
-                // Verify via keys
-                var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
-                var typedKeys = await cache.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
+            // Get
+            var retrieved = await cache.GetObject<TestObject>("simple_key").FirstAsync();
 
-                using (Assert.Multiple())
-                {
-                    await Assert.That(allKeys).IsNotEmpty();
-                    await Assert.That(typedKeys).IsNotEmpty();
-                }
-
-                // Get
-                var retrieved = await cache.GetObject<TestObject>("simple_key").FirstAsync();
-
-                await Assert.That(retrieved).IsNotNull();
-                using (Assert.Multiple())
-                {
-                    await Assert.That(retrieved!.Name).IsEqualTo(testObject.Name);
-                    await Assert.That(retrieved.Value).IsEqualTo(testObject.Value);
-                }
+            await Assert.That(retrieved).IsNotNull();
+            using (Assert.Multiple())
+            {
+                await Assert.That(retrieved!.Name).IsEqualTo(testObject.Name);
+                await Assert.That(retrieved.Value).IsEqualTo(testObject.Value);
             }
         }
     }

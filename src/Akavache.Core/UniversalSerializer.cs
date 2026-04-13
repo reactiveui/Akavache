@@ -687,9 +687,6 @@ public static class UniversalSerializer
                     ? jsonString[1..^1]
                     : jsonString),
                 var t when t == typeof(int) && int.TryParse(jsonString, out var intValue) => (T)(object)intValue,
-                var t when t == typeof(long) && long.TryParse(jsonString, out var longValue) => (T)(object)longValue,
-                var t when t == typeof(double) && double.TryParse(jsonString, out var doubleValue) =>
-                    (T)(object)doubleValue,
                 var t when t == typeof(bool) && bool.TryParse(jsonString, out var boolValue) => (T)(object)boolValue,
                 _ => default
             };

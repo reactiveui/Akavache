@@ -699,14 +699,22 @@ public class AkavacheBuilderTests
     /// </summary>
     private sealed class NoFileVersionAttributeStubAssembly : Assembly
     {
+        /// <summary>
+        /// Empty attribute array reused by the <see cref="GetCustomAttributes(Type, bool)"/>
+        /// overrides. Typed as <see cref="Attribute"/>[] (not <see cref="object"/>[]) because
+        /// <see cref="CustomAttributeExtensions.GetCustomAttribute{T}(Assembly)"/> casts the
+        /// result to <c>Attribute[]</c>.
+        /// </summary>
+        private static readonly Attribute[] _empty = [];
+
         /// <inheritdoc/>
         public override string? FullName => "AkavacheBuilderTests.NoFileVersion";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => [];
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _empty;
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => [];
+        public override object[] GetCustomAttributes(bool inherit) => _empty;
     }
 
     /// <summary>
