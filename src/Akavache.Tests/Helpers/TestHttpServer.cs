@@ -4,54 +4,43 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
+using System.Net.Sockets;
 
 namespace Akavache.Tests.Helpers;
 
 /// <summary>
-/// A simple local HTTP server for testing HTTP functionality without external dependencies.
-/// Uses only built-in .NET types, no external packages required.
+/// A simple local HTTP server for testing HTTP functionality without external
+/// dependencies. Built on <see cref="TcpListener"/> rather than
+/// <see cref="HttpListener"/> so that shutdown races in the managed HttpListener
+/// stack can't crash the test host — on .NET 8 Linux, HttpListener's read
+/// completion callbacks race with <c>Stop</c>/<c>Close</c> and raise a
+/// <see cref="NullReferenceException"/> from <c>HttpConnection.get_LocalEndPoint</c>
+/// on a ThreadPool worker, which is unhandled and terminates the process.
 /// </summary>
 public sealed class TestHttpServer : IDisposable
 {
-    private readonly HttpListener _listener;
+    private readonly TcpListener _listener;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly Dictionary<string, TestResponse> _responses;
     private readonly Task _serverTask;
     private bool _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestHttpServer"/> class.
+    /// Initializes a new instance of the <see cref="TestHttpServer"/> class,
+    /// binding to an ephemeral port on the loopback interface.
     /// </summary>
     public TestHttpServer()
     {
         _cancellationTokenSource = new CancellationTokenSource();
         _responses = [];
 
-        // Retry loop to handle TOCTOU race between port discovery and HttpListener bind
-        const int maxAttempts = 10;
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            var port = GetEphemeralPort();
-            var url = $"http://localhost:{port}/";
-            var listener = new HttpListener();
-            listener.Prefixes.Add(url);
+        _listener = new TcpListener(IPAddress.Loopback, port: 0);
+        _listener.Start();
 
-            try
-            {
-                listener.Start();
-                _listener = listener;
-                BaseUrl = url;
-                _serverTask = Task.Run(async () => await ProcessRequestsAsync(_cancellationTokenSource.Token));
-                return;
-            }
-            catch (HttpListenerException)
-            {
-                // Port was grabbed between discovery and bind - try another
-                listener.Close();
-            }
-        }
+        var port = ((IPEndPoint)_listener.LocalEndpoint).Port;
+        BaseUrl = $"http://localhost:{port}/";
 
-        throw new InvalidOperationException($"Failed to start HTTP listener after {maxAttempts} attempts.");
+        _serverTask = Task.Run(() => AcceptLoopAsync(_cancellationTokenSource.Token));
     }
 
     /// <summary>
@@ -66,10 +55,11 @@ public sealed class TestHttpServer : IDisposable
     /// <param name="content">The content to return.</param>
     /// <param name="statusCode">The HTTP status code to return.</param>
     /// <param name="contentType">The content type header.</param>
-    public void SetupResponse(string path, string content, HttpStatusCode statusCode = HttpStatusCode.OK, string contentType = "text/html") => _responses[path] = new TestResponse(content, statusCode, contentType);
+    public void SetupResponse(string path, string content, HttpStatusCode statusCode = HttpStatusCode.OK, string contentType = "text/html") =>
+        _responses[path] = new TestResponse(content, statusCode, contentType);
 
     /// <summary>
-    /// Sets up default responses that mimic httpbin.org behavior.
+    /// Sets up default responses that mimic httpbin.org behaviour.
     /// </summary>
     public void SetupDefaultResponses()
     {
@@ -82,7 +72,8 @@ public sealed class TestHttpServer : IDisposable
     }
 
     /// <summary>
-    /// Disposes the test server.
+    /// Disposes the test server, stopping the listener and draining the accept
+    /// loop.
     /// </summary>
     public void Dispose()
     {
@@ -91,93 +82,162 @@ public sealed class TestHttpServer : IDisposable
             return;
         }
 
+        _disposed = true;
+
         _cancellationTokenSource.Cancel();
-        _listener.Stop();
-        _listener.Close();
+
+        try
+        {
+            _listener.Stop();
+        }
+        catch
+        {
+            // Best-effort: listener may already be in a tearing-down state.
+        }
+
+        (_listener as IDisposable)?.Dispose();
 
         try
         {
             _serverTask.Wait(TimeSpan.FromSeconds(5));
         }
-        catch (TaskCanceledException)
-        {
-            // Expected when cancelling
-        }
         catch (AggregateException)
         {
-            // Expected when cancelling
+            // Expected on cancellation.
         }
 
         _cancellationTokenSource.Dispose();
-        _disposed = true;
     }
 
-    private static int GetEphemeralPort()
+    private static async Task<string?> ReadRequestPathAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
-        // Use TcpListener with port 0 to let the OS assign a free ephemeral port.
-        using var tcpListener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
-        tcpListener.Start();
-        var port = ((System.Net.IPEndPoint)tcpListener.LocalEndpoint).Port;
-        tcpListener.Stop();
-        return port;
-    }
-
-    private async Task ProcessRequestsAsync(CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested && _listener.IsListening)
+        var buffer = new byte[4096];
+        var total = 0;
+        while (total < buffer.Length)
         {
+            var read = await stream.ReadAsync(buffer.AsMemory(total, buffer.Length - total), cancellationToken).ConfigureAwait(false);
+            if (read == 0)
+            {
+                break;
+            }
+
+            total += read;
+
+            var headerEnd = IndexOfDoubleCrlf(buffer, total);
+            if (headerEnd < 0)
+            {
+                continue;
+            }
+
+            var request = Encoding.ASCII.GetString(buffer, 0, headerEnd);
+            var firstLineEnd = request.IndexOf('\r');
+            if (firstLineEnd < 0)
+            {
+                return null;
+            }
+
+            var firstLine = request.Substring(0, firstLineEnd);
+            var parts = firstLine.Split(' ');
+            if (parts.Length < 2)
+            {
+                return null;
+            }
+
+            var target = parts[1];
+            var queryStart = target.IndexOf('?');
+            return queryStart >= 0 ? target.Substring(0, queryStart) : target;
+        }
+
+        return null;
+    }
+
+    private static int IndexOfDoubleCrlf(byte[] buffer, int length)
+    {
+        for (var i = 0; i + 3 < length; i++)
+        {
+            if (buffer[i] == (byte)'\r' && buffer[i + 1] == (byte)'\n' && buffer[i + 2] == (byte)'\r' && buffer[i + 3] == (byte)'\n')
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static async Task WriteResponseAsync(NetworkStream stream, TestResponse response, CancellationToken cancellationToken)
+    {
+        var body = Encoding.UTF8.GetBytes(response.Content);
+        var statusCode = (int)response.StatusCode;
+        var reasonPhrase = response.StatusCode.ToString();
+        var headers =
+            $"HTTP/1.1 {statusCode} {reasonPhrase}\r\n" +
+            $"Content-Type: {response.ContentType}; charset=utf-8\r\n" +
+            $"Content-Length: {body.Length}\r\n" +
+            "Connection: close\r\n" +
+            "\r\n";
+        var headerBytes = Encoding.ASCII.GetBytes(headers);
+
+        await stream.WriteAsync(headerBytes, cancellationToken).ConfigureAwait(false);
+        await stream.WriteAsync(body, cancellationToken).ConfigureAwait(false);
+        await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task AcceptLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            TcpClient client;
             try
             {
-                var context = await _listener.GetContextAsync();
-                _ = Task.Run(() => ProcessRequest(context), cancellationToken);
+                client = await _listener.AcceptTcpClientAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
             }
             catch (ObjectDisposedException)
             {
-                // Server is shutting down
                 break;
             }
-            catch (HttpListenerException)
+            catch (SocketException)
             {
-                // Server is shutting down
                 break;
             }
+
+            _ = Task.Run(() => HandleClientAsync(client, cancellationToken), cancellationToken);
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1075:Avoid empty catch clause that catches System.Exception", Justification = "Deliberate")]
-    private void ProcessRequest(HttpListenerContext context)
+    private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
     {
         try
         {
-            var request = context.Request;
-            var response = context.Response;
-            var path = request.Url?.AbsolutePath ?? "/";
-
-            if (_responses.TryGetValue(path, out var testResponse))
+            using (client)
             {
-                response.StatusCode = (int)testResponse.StatusCode;
-                response.ContentType = testResponse.ContentType;
+                client.NoDelay = true;
+                using var stream = client.GetStream();
+                stream.ReadTimeout = 5_000;
+                stream.WriteTimeout = 5_000;
 
-                var buffer = Encoding.UTF8.GetBytes(testResponse.Content);
-                response.ContentLength64 = buffer.Length;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            else
-            {
-                response.StatusCode = 404;
-                response.ContentType = "text/plain";
-                var buffer = Encoding.UTF8.GetBytes("Not Found");
-                response.ContentLength64 = buffer.Length;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
+                var path = await ReadRequestPathAsync(stream, cancellationToken).ConfigureAwait(false);
+                if (path is null)
+                {
+                    return;
+                }
 
-            response.OutputStream.Close();
+                var response = _responses.TryGetValue(path, out var configured)
+                    ? configured
+                    : new TestResponse("Not Found", HttpStatusCode.NotFound, "text/plain");
+
+                await WriteResponseAsync(stream, response, cancellationToken).ConfigureAwait(false);
+            }
         }
-        catch (Exception)
+        catch
         {
-            // Ignore errors during request processing
+            // Tests don't care about per-connection failures; the unit under test
+            // will surface the resulting HTTP error.
         }
     }
 
-    private record TestResponse(string Content, HttpStatusCode StatusCode, string ContentType);
+    private sealed record TestResponse(string Content, HttpStatusCode StatusCode, string ContentType);
 }

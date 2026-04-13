@@ -670,6 +670,39 @@ public class AkavacheBuilderExtensionsTests
     }
 
     /// <summary>
+    /// Verifies that <c>DeleteSettingsStore</c> swallows exceptions raised inside its
+    /// try block. An <c>overrideDatabaseName</c> containing a path-traversal sequence
+    /// makes <c>SecurityUtilities.ValidateDatabaseName</c> throw before
+    /// <see cref="File.Delete(string)"/> is reached, which is precisely the kind of
+    /// failure the catch clause exists to absorb.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Test]
+    public async Task DeleteSettingsStore_DeletionThrows_IsSwallowedAsync()
+    {
+        IAkavacheInstance? instance = null;
+
+        _appBuilder
+            .WithAkavache<NewtonsoftSerializer>(
+                applicationName: "Akavache",
+                builder =>
+                {
+                    builder
+                        .WithSqliteProvider()
+                        .WithSettingsCachePath(_cacheRoot);
+                },
+                inst => instance = inst)
+            .Build();
+
+        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+
+        // A name containing ".." trips SecurityUtilities.ValidateDatabaseName, which
+        // throws inside the try — the catch block must swallow the exception and the
+        // call must complete without bubbling up.
+        await instance!.DeleteSettingsStore<ViewSettings>(overrideDatabaseName: "../evil").ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Verifies that DeleteSettingsStore handles empty SettingsCachePath gracefully.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>

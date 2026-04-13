@@ -89,6 +89,23 @@ public class SettingsStorageTests
     }
 
     /// <summary>
+    /// Tests that <see cref="SettingsStorage.InitializeAsync"/> runs its reflection-
+    /// based eager-load pass on a background thread and visits every property on the
+    /// derived storage type.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InitializeAsyncShouldEagerLoadEveryProperty()
+    {
+        using var storage = new ProbeStorage("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
+
+        await storage.InitializeAsync();
+
+        await Assert.That(storage.AlphaCount).IsGreaterThanOrEqualTo(1);
+        await Assert.That(storage.BetaCount).IsGreaterThanOrEqualTo(1);
+    }
+
+    /// <summary>
     /// Tests that <see cref="SettingsStorage.EagerLoadProperties"/> tolerates an
     /// empty property sequence.
     /// </summary>
@@ -215,6 +232,43 @@ public class SettingsStorageTests
         /// </summary>
         /// <param name="disposing">Whether managed resources should be released.</param>
         public void InvokeDispose(bool disposing) => Dispose(disposing);
+    }
+
+    /// <summary>
+    /// Subclass whose runtime properties increment counters so tests can assert that
+    /// <see cref="SettingsStorage.InitializeAsync"/> visited each one during its
+    /// reflection pass. The property getters swallow exceptions because
+    /// <c>GetOrCreate</c> requires a backing key that has not been configured here.
+    /// </summary>
+    /// <param name="keyPrefix">The key prefix supplied to the base.</param>
+    /// <param name="cache">The backing cache supplied to the base.</param>
+    public class ProbeStorage(string keyPrefix, IBlobCache cache) : SettingsStorage(keyPrefix, cache)
+    {
+        /// <summary>Gets the number of times <see cref="Alpha"/> was read.</summary>
+        public int AlphaCount { get; private set; }
+
+        /// <summary>Gets the number of times <see cref="Beta"/> was read.</summary>
+        public int BetaCount { get; private set; }
+
+        /// <summary>Gets a stub property whose getter increments <see cref="AlphaCount"/>.</summary>
+        public string Alpha
+        {
+            get
+            {
+                AlphaCount++;
+                return string.Empty;
+            }
+        }
+
+        /// <summary>Gets a stub property whose getter increments <see cref="BetaCount"/>.</summary>
+        public string Beta
+        {
+            get
+            {
+                BetaCount++;
+                return string.Empty;
+            }
+        }
     }
 
     /// <summary>

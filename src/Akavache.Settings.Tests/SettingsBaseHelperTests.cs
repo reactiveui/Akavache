@@ -11,8 +11,8 @@ namespace Akavache.Settings.Tests;
 
 /// <summary>
 /// Tests for the static helper decomposition of
-/// <see cref="SettingsBase.GetBlobCacheForClass"/> — each strategy can be exercised
-/// in isolation thanks to the internal helpers.
+/// <see cref="SettingsBase.GetBlobCacheForClass(string)"/> — each strategy can be
+/// exercised in isolation thanks to the internal helpers.
 /// </summary>
 [Category("Akavache")]
 [NotInParallel("CacheDatabaseState")]
@@ -106,7 +106,8 @@ public class SettingsBaseHelperTests
     }
 
     /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase"/> returns
+    /// Tests that the default-resolver overload of
+    /// <see cref="SettingsBase.TryGetFromCacheDatabase()"/> returns
     /// <see langword="null"/> when <see cref="CacheDatabase"/> has not been initialized.
     /// </summary>
     /// <returns>A task.</returns>
@@ -116,6 +117,146 @@ public class SettingsBaseHelperTests
         var result = SettingsBase.TryGetFromCacheDatabase();
 
         await Assert.That(result).IsNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// returns the UserAccount cache when its resolver succeeds.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryGetFromCacheDatabaseShouldReturnUserAccountWhenResolverSucceeds()
+    {
+        var userAccount = new InMemoryBlobCache(new SystemJsonSerializer());
+
+        var result = SettingsBase.TryGetFromCacheDatabase(
+            () => userAccount,
+            ThrowingResolver,
+            ThrowingResolver);
+
+        await Assert.That(result).IsSameReferenceAs(userAccount);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// falls back to LocalMachine when UserAccount's resolver throws.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryGetFromCacheDatabaseShouldFallBackToLocalMachineWhenUserAccountThrows()
+    {
+        var localMachine = new InMemoryBlobCache(new SystemJsonSerializer());
+
+        var result = SettingsBase.TryGetFromCacheDatabase(
+            ThrowingResolver,
+            () => localMachine,
+            ThrowingResolver);
+
+        await Assert.That(result).IsSameReferenceAs(localMachine);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// falls back to InMemory when UserAccount and LocalMachine both throw.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryGetFromCacheDatabaseShouldFallBackToInMemoryWhenOthersThrow()
+    {
+        var inMemory = new InMemoryBlobCache(new SystemJsonSerializer());
+
+        var result = SettingsBase.TryGetFromCacheDatabase(
+            ThrowingResolver,
+            ThrowingResolver,
+            () => inMemory);
+
+        await Assert.That(result).IsSameReferenceAs(inMemory);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// returns <see langword="null"/> when every resolver throws.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryGetFromCacheDatabaseShouldReturnNullWhenAllResolversThrow()
+    {
+        var result = SettingsBase.TryGetFromCacheDatabase(
+            ThrowingResolver,
+            ThrowingResolver,
+            ThrowingResolver);
+
+        await Assert.That(result).IsNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryReadAmbientCache"/> returns the value a
+    /// successful resolver produces.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryReadAmbientCacheShouldReturnValueFromSuccessfulResolver()
+    {
+        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+
+        var result = SettingsBase.TryReadAmbientCache(() => cache);
+
+        await Assert.That(result).IsSameReferenceAs(cache);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryReadAmbientCache"/> swallows a resolver
+    /// exception and returns <see langword="null"/>.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryReadAmbientCacheShouldReturnNullWhenResolverThrows()
+    {
+        var result = SettingsBase.TryReadAmbientCache(ThrowingResolver);
+
+        await Assert.That(result).IsNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// uses the supplied UserAccount resolver when the explicit registry is empty.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetBlobCacheForClassShouldUseInjectedResolvers()
+    {
+        AkavacheBuilder.BlobCaches = [];
+        var userAccount = new InMemoryBlobCache(new SystemJsonSerializer());
+
+        var result = SettingsBase.GetBlobCacheForClass(
+            "AnyClass",
+            () => userAccount,
+            ThrowingResolver,
+            ThrowingResolver);
+
+        await Assert.That(result).IsSameReferenceAs(userAccount);
+    }
+
+    /// <summary>
+    /// Tests that the injectable-resolver <see cref="SettingsBase"/> constructor
+    /// routes the supplied delegates through
+    /// <see cref="SettingsBase.GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// when the registry has no entry for the class.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InjectableResolverConstructorShouldUseFallbackResolvers()
+    {
+        AkavacheBuilder.BlobCaches = [];
+        var userAccount = new InMemoryBlobCache(new SystemJsonSerializer());
+
+        using var settings = new ResolverInjectedSettings(
+            nameof(ResolverInjectedSettings),
+            () => userAccount,
+            ThrowingResolver,
+            ThrowingResolver);
+
+        await Assert.That(settings).IsNotNull();
     }
 
     /// <summary>
@@ -208,7 +349,7 @@ public class SettingsBaseHelperTests
     }
 
     /// <summary>
-    /// Tests that <see cref="SettingsBase.GetBlobCacheForClass"/> throws the
+    /// Tests that <see cref="SettingsBase.GetBlobCacheForClass(string)"/> throws the
     /// descriptive exception when every strategy returns <see langword="null"/>.
     /// </summary>
     /// <returns>A task.</returns>
@@ -222,7 +363,7 @@ public class SettingsBaseHelperTests
     }
 
     /// <summary>
-    /// Tests that <see cref="SettingsBase.GetBlobCacheForClass"/> short-circuits to
+    /// Tests that <see cref="SettingsBase.GetBlobCacheForClass(string)"/> short-circuits to
     /// the registry when an entry exists, never touching the ambient
     /// <see cref="CacheDatabase"/>.
     /// </summary>
@@ -240,4 +381,61 @@ public class SettingsBaseHelperTests
 
         await Assert.That(result).IsSameReferenceAs(registered);
     }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.ReadAmbientUserAccount"/> throws when
+    /// <see cref="CacheDatabase"/> is not initialized — this is the default resolver
+    /// wired up by the parameterless <see cref="SettingsBase"/> constructor, so
+    /// exercising it directly gives us coverage on that line without having to stand
+    /// up a subclass and ambient state.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadAmbientUserAccountShouldThrowWhenNotInitialized() =>
+        await Assert.That(() => SettingsBase.ReadAmbientUserAccount())
+            .Throws<InvalidOperationException>();
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.ReadAmbientLocalMachine"/> throws when
+    /// <see cref="CacheDatabase"/> is not initialized.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadAmbientLocalMachineShouldThrowWhenNotInitialized() =>
+        await Assert.That(() => SettingsBase.ReadAmbientLocalMachine())
+            .Throws<InvalidOperationException>();
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.ReadAmbientInMemory"/> throws when
+    /// <see cref="CacheDatabase"/> is not initialized.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadAmbientInMemoryShouldThrowWhenNotInitialized() =>
+        await Assert.That(() => SettingsBase.ReadAmbientInMemory())
+            .Throws<InvalidOperationException>();
+
+    /// <summary>
+    /// Resolver stub that always throws — mirrors the behaviour of
+    /// <see cref="CacheDatabase"/> property getters when the requested cache kind is
+    /// unconfigured.
+    /// </summary>
+    /// <returns>Never returns; always throws.</returns>
+    private static IBlobCache ThrowingResolver() =>
+        throw new InvalidOperationException("cache kind not configured");
+
+    /// <summary>
+    /// Minimal <see cref="SettingsBase"/> subclass that forwards to the injectable-
+    /// resolver constructor, so tests can exercise the 3-arg overload directly.
+    /// </summary>
+    /// <param name="className">The class name used as the key prefix.</param>
+    /// <param name="userAccountResolver">Delegate that returns the UserAccount cache.</param>
+    /// <param name="localMachineResolver">Delegate that returns the LocalMachine cache.</param>
+    /// <param name="inMemoryResolver">Delegate that returns the InMemory cache.</param>
+    private sealed class ResolverInjectedSettings(
+        string className,
+        Func<IBlobCache> userAccountResolver,
+        Func<IBlobCache> localMachineResolver,
+        Func<IBlobCache> inMemoryResolver)
+        : SettingsBase(className, userAccountResolver, localMachineResolver, inMemoryResolver);
 }
