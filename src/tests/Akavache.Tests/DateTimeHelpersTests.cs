@@ -237,6 +237,20 @@ public class DateTimeHelpersTests
     }
 
     /// <summary>
+    /// Tests ValidateDeserializedDateTime applies the forced kind even when the original value
+    /// is outside the recoverable 1900-2100 window.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateDeserializedDateTimeShouldForceKindWhenOriginalUnreasonable()
+    {
+        DateTime original = new(1800, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var result = DateTimeHelpers.ValidateDeserializedDateTime(DateTime.MinValue, original, DateTimeKind.Local);
+
+        await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
+    }
+
+    /// <summary>
     /// Tests ValidateDeserializedDateTime with MinValue but original also MinValue.
     /// </summary>
     /// <returns>A task.</returns>

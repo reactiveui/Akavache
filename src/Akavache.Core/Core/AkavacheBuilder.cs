@@ -343,26 +343,10 @@ internal class AkavacheBuilder : IAkavacheBuilder
         }
 
         /// <inheritdoc />
-        public void Dispose()
-        {
-            if (inner is not IDisposable disposable)
-            {
-                return;
-            }
-
-            disposable.Dispose();
-        }
+        public void Dispose() => inner.Dispose();
 
         /// <inheritdoc />
-        public async ValueTask DisposeAsync()
-        {
-            if (inner is not IAsyncDisposable asyncDisposable)
-            {
-                return;
-            }
-
-            await asyncDisposable.DisposeAsync();
-        }
+        public async ValueTask DisposeAsync() => await inner.DisposeAsync();
 
         /// <inheritdoc />
         public IObservable<Unit> Flush() => inner.Flush();
