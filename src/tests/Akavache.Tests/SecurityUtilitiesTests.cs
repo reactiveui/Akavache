@@ -191,7 +191,7 @@ public class SecurityUtilitiesTests
     public async Task ValidateDatabaseName_ShouldWorkLikeValidateCacheName()
     {
         // Test that it rejects the same things as ValidateCacheName
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName("./malicious"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateDatabaseName("./malicious"));
         await Assert.That(ex.Message).Contains("cannot");
 
         // Test that it accepts valid names
@@ -254,24 +254,24 @@ public class SecurityUtilitiesTests
         try
         {
             // Test ValidateCacheName
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(null!));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(string.Empty));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName("   "));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateCacheName(null!));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateCacheName(string.Empty));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateCacheName("   "));
 
             // Test ValidateApplicationName
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(null!));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(string.Empty));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("   "));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName(null!));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName(string.Empty));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName("   "));
 
             // Test ValidateDatabaseName
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName(null!));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName(string.Empty));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateDatabaseName(null!));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateDatabaseName(string.Empty));
 
             // Test SafePathCombine
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine(null!, "test"));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine(string.Empty, "test"));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine("/tmp", null!));
-            Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine("/tmp", string.Empty));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.SafePathCombine(null!, "test"));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.SafePathCombine(string.Empty, "test"));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.SafePathCombine("/tmp", null!));
+            Assert.Throws<ArgumentException>(static () => SecurityUtilities.SafePathCombine("/tmp", string.Empty));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -308,7 +308,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectLeadingDot()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(".HiddenApp"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName(".HiddenApp"));
         await Assert.That(ex.Message).Contains("cannot start or end with");
     }
 
@@ -320,7 +320,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectTrailingDot()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("MyApp."));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName("MyApp."));
         await Assert.That(ex.Message).Contains("cannot start or end with");
     }
 
@@ -332,7 +332,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectTrailingSpace()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("MyApp "));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName("MyApp "));
         await Assert.That(ex.Message).Contains("cannot start or end with");
     }
 
@@ -345,7 +345,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectAllDots()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("..."));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName("..."));
         await Assert.That(ex).IsNotNull();
     }
 
@@ -358,7 +358,7 @@ public class SecurityUtilitiesTests
     public async Task ValidateApplicationName_ShouldRejectInvalidPathCharacters()
     {
         const string nameWithNul = "MyApp\0Name";
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(nameWithNul));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName(nameWithNul));
         await Assert.That(ex).IsNotNull();
     }
 
@@ -370,7 +370,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectParentDirectoryToken()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName("my..app"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName("my..app"));
         await Assert.That(ex.Message).Contains("path traversal");
     }
 
@@ -419,7 +419,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task SafePathCombine_ShouldRejectWhitespaceBasePath()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.SafePathCombine("   ", "file.db"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.SafePathCombine("   ", "file.db"));
         await Assert.That(ex.Message).Contains("Base path");
     }
 
@@ -444,7 +444,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateDatabaseName_ShouldRejectWhitespace()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName("   "));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateDatabaseName("   "));
         await Assert.That(ex.Message).Contains("Database name");
     }
 
@@ -456,7 +456,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateDatabaseName_ShouldRejectReservedName()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateDatabaseName("CON"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateDatabaseName("CON"));
         await Assert.That(ex.Message).Contains("reserved system name");
     }
 
@@ -468,7 +468,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateCacheName_ShouldUseCustomParameterName()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateCacheName(null!, "customParam"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateCacheName(null!, "customParam"));
         await Assert.That(ex.ParamName).IsEqualTo("customParam");
     }
 
@@ -480,7 +480,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldUseCustomParameterName()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateApplicationName(".bad", "appParam"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateApplicationName(".bad", "appParam"));
         await Assert.That(ex.ParamName).IsEqualTo("appParam");
     }
 
@@ -570,7 +570,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateNoNullOrTraversal_ShouldUseSuppliedLabelInExceptionMessage()
     {
-        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateNoNullOrTraversal(".bad", "param", "Application name"));
+        var ex = Assert.Throws<ArgumentException>(static () => SecurityUtilities.ValidateNoNullOrTraversal(".bad", "param", "Application name"));
         await Assert.That(ex.Message).StartsWith("Application name '.bad'");
     }
 

@@ -7,7 +7,7 @@ namespace Akavache.Settings.Tests;
 /// <summary>
 /// View Settings.
 /// </summary>
-/// <seealso cref="Akavache.Settings.SettingsBase" />
+/// <seealso cref="SettingsBase" />
 public class ViewSettings : SettingsBase
 {
     /// <summary>

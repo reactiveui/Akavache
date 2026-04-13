@@ -787,7 +787,7 @@ public class ImageExtensionsTests
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput() =>
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await Assert.ThrowsAsync<InvalidOperationException>(static async () =>
             await ImageExtensions.ThrowOnNullOrBadImageBuffer(null).FirstAsync());
 
     /// <summary>
@@ -812,7 +812,7 @@ public class ImageExtensionsTests
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer() =>
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await Assert.ThrowsAsync<InvalidOperationException>(static async () =>
             await ImageExtensions.ThrowOnNullOrBadImageBuffer([1, 2, 3]).FirstAsync());
 
     /// <summary>

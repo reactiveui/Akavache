@@ -108,10 +108,9 @@ internal sealed class InMemoryAkavacheTransaction : IAkavacheTransaction
         }
 
         var compiled = predicate.Compile();
-        return _store.Values
+        return [.. _store.Values
             .Cast<T>()
-            .Where(compiled)
-            .ToList();
+            .Where(compiled)];
     }
 
     /// <inheritdoc/>

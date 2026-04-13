@@ -310,7 +310,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedConstructorWithNullConnectionShouldThrow() =>
-        await Assert.That(() => new EncryptedSqliteBlobCache((IAkavacheConnection)null!, new SystemJsonSerializer()))
+        await Assert.That(static () => new EncryptedSqliteBlobCache((IAkavacheConnection)null!, new SystemJsonSerializer()))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -320,7 +320,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedConstructorWithNullConnectionStringShouldThrow() =>
-        await Assert.That(() => new EncryptedSqliteBlobCache((SQLiteConnectionString)null!, new SystemJsonSerializer()))
+        await Assert.That(static () => new EncryptedSqliteBlobCache((SQLiteConnectionString)null!, new SystemJsonSerializer()))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -330,7 +330,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedConstructorWithNullFileNameShouldThrow() =>
-        await Assert.That(() => new EncryptedSqliteBlobCache(null!, "test123", new SystemJsonSerializer()))
+        await Assert.That(static () => new EncryptedSqliteBlobCache(null!, "test123", new SystemJsonSerializer()))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -340,7 +340,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedConstructorWithNullPasswordShouldThrow() =>
-        await Assert.That(() => new EncryptedSqliteBlobCache("test.db", null!, new SystemJsonSerializer()))
+        await Assert.That(static () => new EncryptedSqliteBlobCache("test.db", null!, new SystemJsonSerializer()))
             .Throws<ArgumentNullException>();
 
     /// <summary>

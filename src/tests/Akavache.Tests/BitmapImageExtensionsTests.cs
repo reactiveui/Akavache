@@ -652,7 +652,7 @@ public class BitmapImageExtensionsTests
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForNullInput() =>
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await Assert.ThrowsAsync<InvalidOperationException>(static async () =>
             await BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(null).FirstAsync());
 
     /// <summary>
@@ -677,7 +677,7 @@ public class BitmapImageExtensionsTests
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task ThrowOnNullOrBadImageBufferShouldThrowForShortBuffer() =>
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await Assert.ThrowsAsync<InvalidOperationException>(static async () =>
             await BitmapImageExtensions.ThrowOnNullOrBadImageBuffer([1, 2, 3]).FirstAsync());
 
     /// <summary>
@@ -716,7 +716,7 @@ public class BitmapImageExtensionsTests
         BitmapLoader.Current = new NullReturningBitmapLoader();
         try
         {
-            await Assert.ThrowsAsync<IOException>(async () =>
+            await Assert.ThrowsAsync<IOException>(static async () =>
                 await BitmapImageExtensions.BytesToImage(new byte[128], null, null).FirstAsync());
         }
         finally

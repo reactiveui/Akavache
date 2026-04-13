@@ -191,7 +191,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     /// <summary>
     /// Users the account operations.
     /// </summary>
-    /// <exception cref="System.InvalidOperationException">Data integrity check failed.</exception>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("UserAccount")]
@@ -218,7 +218,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     /// <summary>
     /// Locals the machine operations.
     /// </summary>
-    /// <exception cref="System.InvalidOperationException">Data integrity check failed.</exception>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("LocalMachine")]
@@ -245,7 +245,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     /// <summary>
     /// Secures the operations.
     /// </summary>
-    /// <exception cref="System.InvalidOperationException">Data integrity check failed.</exception>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("Secure")]
@@ -272,7 +272,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     /// <summary>
     /// Ins the memory operations.
     /// </summary>
-    /// <exception cref="System.InvalidOperationException">Data integrity check failed.</exception>
+    /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("InMemory")]
@@ -299,7 +299,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     /// <summary>
     /// Mixeds the operations.
     /// </summary>
-    /// <exception cref="System.InvalidOperationException">Update verification failed.</exception>
+    /// <exception cref="InvalidOperationException">Update verification failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("Mixed")]

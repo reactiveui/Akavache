@@ -40,7 +40,7 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// metadata. This is the AOT-safe path: callers publishing trimmed or
     /// NativeAOT binaries should pass <c>typeof(MyApp).Assembly</c> here so
     /// Akavache does not need to probe
-    /// <see cref="System.Reflection.Assembly.GetEntryAssembly"/> at runtime.
+    /// <see cref="Assembly.GetEntryAssembly"/> at runtime.
     /// </remarks>
     /// <param name="assembly">The assembly to use as the executing assembly.</param>
     /// <returns>The builder instance for fluent configuration.</returns>

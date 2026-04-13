@@ -105,7 +105,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     public int TransactionIsValidTrueCallsRemaining { get; set; } = int.MaxValue;
 
     /// <summary>
-    /// Gets or sets a value indicating whether <see cref="QueryAsync{T}(System.Linq.Expressions.Expression{System.Func{T, bool}})"/>
+    /// Gets or sets a value indicating whether <see cref="QueryAsync{T}(Expression{Func{T, bool}})"/>
     /// should bypass the predicate filter and return every entry in the store. Used to
     /// exercise post-query defensive <c>x?.Id is not null</c> / <c>x?.Value is not null</c>
     /// branches in <c>SqliteBlobCache</c> by surfacing entries the predicate would normally

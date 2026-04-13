@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 namespace Akavache.Helpers;
 
 /// <summary>
-/// Endian-explicit binary helpers wrapping <see cref="System.Buffers.Binary.BinaryPrimitives"/>
+/// Endian-explicit binary helpers wrapping <see cref="BinaryPrimitives"/>
 /// where available, with a hand-rolled little-endian decoder for legacy targets that lack the
 /// <c>System.Buffers.Binary</c> namespace. Aggressively inlined so the dispatch and bit-shift
 /// reconstruction collapse to a single load on the hot path.

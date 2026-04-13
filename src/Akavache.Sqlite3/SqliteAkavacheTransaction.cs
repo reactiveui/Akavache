@@ -47,7 +47,7 @@ internal sealed class SqliteAkavacheTransaction : IAkavacheTransaction
     /// <inheritdoc/>
     public List<T> Query<T>(Expression<Func<T, bool>> predicate)
         where T : class, new() =>
-        _connection.Table<T>().Where(predicate).ToList();
+        [.. _connection.Table<T>().Where(predicate)];
 
     /// <inheritdoc/>
     public void SetExpiry(string key, string? typeFullName, DateTime? expiresAt)

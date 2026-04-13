@@ -90,7 +90,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="connectionString">The connection string.</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    /// <exception cref="System.ArgumentNullException">connectionString.</exception>
+    /// <exception cref="ArgumentNullException">connectionString.</exception>
     public EncryptedSqliteBlobCache(SQLiteConnectionString connectionString, ISerializer serializer, IScheduler? scheduler = null)
 #else
     /// <summary>

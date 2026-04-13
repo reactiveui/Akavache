@@ -237,7 +237,7 @@ public class UpdateExpirationTests : IDisposable
 
     /// <summary>
     /// Tests that the type-scoped single-key
-    /// <see cref="Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(string, Type, DateTimeOffset?)"/>
+    /// <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(string, Type, DateTimeOffset?)"/>
     /// accepts a null absolute expiration and leaves the stored value intact.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
@@ -261,7 +261,7 @@ public class UpdateExpirationTests : IDisposable
 
     /// <summary>
     /// Tests that the multi-key
-    /// <see cref="Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/>
+    /// <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/>
     /// accepts a null absolute expiration.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
@@ -288,7 +288,7 @@ public class UpdateExpirationTests : IDisposable
 
     /// <summary>
     /// Tests that the type-scoped multi-key
-    /// <see cref="Akavache.Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/>
+    /// <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/>
     /// accepts a null absolute expiration.
     /// </summary>
     /// <returns>A task representing the asynchronous unit test.</returns>

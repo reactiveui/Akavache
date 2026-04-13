@@ -31,7 +31,7 @@ public class BackwardCompatibilityTests
         try
         {
             // This call should now work without explicitly calling WithSqliteProvider() first
-            await Assert.That(() =>
+            await Assert.That(static () =>
             {
                 CacheDatabase.Initialize<SystemJsonSerializer>(
                     static builder => builder.WithSqliteDefaults(),
@@ -60,7 +60,7 @@ public class BackwardCompatibilityTests
         try
         {
             // New pattern: explicit provider initialization
-            await Assert.That(() =>
+            await Assert.That(static () =>
             {
                 CacheDatabase.Initialize<SystemJsonSerializer>(
                     static builder =>
@@ -87,6 +87,6 @@ public class BackwardCompatibilityTests
         /// Reset the SQLite provider state for testing purposes.
         /// </summary>
         public static void ResetSqliteProvider() =>
-            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+            Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
     }
 }

@@ -14,7 +14,7 @@ namespace Akavache.SystemTextJson;
 /// <remarks>
 /// <para>
 /// These extensions dispatch to the concrete <see cref="SystemJsonSerializer"/> or
-/// <see cref="Akavache.SystemTextJson.SystemJsonBsonSerializer"/> instance when the
+/// <see cref="SystemJsonBsonSerializer"/> instance when the
 /// runtime <see cref="ISerializer"/> is backed by one of them. For every other
 /// serializer implementation (for example the Newtonsoft-backed ones) they throw
 /// <see cref="NotSupportedException"/> — those serializers can still be used via the

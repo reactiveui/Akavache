@@ -32,10 +32,10 @@ public class SqliteAkavacheTransactionTests
             {
                 await connection.CreateTableAsync<CacheEntry>();
 
-                await connection.RunInTransactionAsync(tx =>
+                await connection.RunInTransactionAsync(static tx =>
                     tx.InsertOrReplace(new CacheEntry { Id = "k", Value = [1, 2] }));
 
-                var rows = await connection.QueryAsync<CacheEntry>(_ => true);
+                var rows = await connection.QueryAsync<CacheEntry>(static _ => true);
                 await Assert.That(rows.Count).IsEqualTo(1);
                 await Assert.That(rows[0].Id).IsEqualTo("k");
                 await Assert.That(rows[0].Value!).IsEquivalentTo(new byte[] { 1, 2 });
@@ -62,9 +62,9 @@ public class SqliteAkavacheTransactionTests
                 await connection.CreateTableAsync<CacheEntry>();
                 await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1] });
 
-                await connection.RunInTransactionAsync(tx => tx.Delete<CacheEntry>("k"));
+                await connection.RunInTransactionAsync(static tx => tx.Delete<CacheEntry>("k"));
 
-                var rows = await connection.QueryAsync<CacheEntry>(_ => true);
+                var rows = await connection.QueryAsync<CacheEntry>(static _ => true);
                 await Assert.That(rows).IsEmpty();
             }
             finally
@@ -158,17 +158,17 @@ public class SqliteAkavacheTransactionTests
                 });
 
                 // Mismatching type — no-op.
-                await connection.RunInTransactionAsync(tx =>
+                await connection.RunInTransactionAsync(static tx =>
                     tx.SetExpiry("k", "WrongType", new DateTime(2099, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
 
-                var row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
+                var row = await connection.FirstOrDefaultAsync<CacheEntry>(static x => x.Id == "k");
                 await Assert.That(row!.ExpiresAt!.Value.Year).IsEqualTo(2025);
 
                 // Matching type — updates.
-                await connection.RunInTransactionAsync(tx =>
+                await connection.RunInTransactionAsync(static tx =>
                     tx.SetExpiry("k", "MatchingType", new DateTime(2050, 3, 1, 0, 0, 0, DateTimeKind.Utc)));
 
-                row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
+                row = await connection.FirstOrDefaultAsync<CacheEntry>(static x => x.Id == "k");
                 await Assert.That(row!.ExpiresAt!.Value.Year).IsEqualTo(2050);
             }
             finally
@@ -195,7 +195,7 @@ public class SqliteAkavacheTransactionTests
                 await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1] });
 
                 // Should not throw on either backend.
-                await connection.RunInTransactionAsync(tx =>
+                await connection.RunInTransactionAsync(static tx =>
                     tx.Execute("DELETE FROM CacheEntry WHERE Id = ?", "k"));
             }
             finally
@@ -257,7 +257,7 @@ public class SqliteAkavacheTransactionTests
     /// <returns>A task.</returns>
     [Test]
     public async Task SqliteTransactionConstructorShouldThrowOnNullConnection() =>
-        await Assert.That(() => new SqliteAkavacheTransaction(null!)).Throws<ArgumentNullException>();
+        await Assert.That(static () => new SqliteAkavacheTransaction(null!)).Throws<ArgumentNullException>();
 
     /// <summary>
     /// Verifies the encrypted compilation's <c>SqliteAkavacheTransaction</c> constructor
@@ -267,7 +267,7 @@ public class SqliteAkavacheTransactionTests
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedSqliteTransactionConstructorShouldThrowOnNullConnection() =>
-        await Assert.That(() => new Akavache.EncryptedSqlite3.SqliteAkavacheTransaction(null!)).Throws<ArgumentNullException>();
+        await Assert.That(static () => new EncryptedSqlite3.SqliteAkavacheTransaction(null!)).Throws<ArgumentNullException>();
 
     /// <summary>
     /// Verifies that the in-memory transaction's <c>IsValidTrueCallsRemaining</c> counter

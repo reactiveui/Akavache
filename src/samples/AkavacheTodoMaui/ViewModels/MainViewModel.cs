@@ -552,10 +552,9 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         // Parse tags if provided
         if (!string.IsNullOrWhiteSpace(NewTodoTags))
         {
-            newTodo.Tags = NewTodoTags.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            newTodo.Tags = [.. NewTodoTags.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                      .Select(tag => tag.Trim())
-                                     .Where(tag => !string.IsNullOrEmpty(tag))
-                                     .ToList();
+                                     .Where(tag => !string.IsNullOrEmpty(tag))];
         }
 
         // Debug the created todo

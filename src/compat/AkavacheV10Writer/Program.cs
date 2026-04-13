@@ -22,7 +22,7 @@ Directory.CreateDirectory(dbDir);
 
 // V10 initialization
 BlobCache.ApplicationName = "AkavacheCompatTest";
-Akavache.Sqlite3.Registrations.Start("AkavacheCompatTest", () => { });
+Akavache.Sqlite3.Registrations.Start("AkavacheCompatTest", static () => { });
 
 // Create a raw persistent cache pointing at our explicit path
 using SqlRawPersistentBlobCache cache = new(dbPath);

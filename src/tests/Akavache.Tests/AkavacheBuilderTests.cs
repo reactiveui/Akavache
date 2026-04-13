@@ -641,7 +641,7 @@ public class AkavacheBuilderTests
 
     /// <summary>
     /// Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns <see langword="null"/>
-    /// when the attribute value cannot be parsed as a <see cref="System.Version"/>.
+    /// when the attribute value cannot be parsed as a <see cref="Version"/>.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
@@ -710,7 +710,7 @@ public class AkavacheBuilderTests
     }
 
     /// <summary>
-    /// Stub <see cref="System.Reflection.Assembly"/> whose <see cref="AssemblyFileVersionAttribute"/> value cannot be parsed as a <see cref="System.Version"/>.
+    /// Stub <see cref="System.Reflection.Assembly"/> whose <see cref="AssemblyFileVersionAttribute"/> value cannot be parsed as a <see cref="Version"/>.
     /// </summary>
     private sealed class UnparseableFileVersionStubAssembly : Assembly
     {

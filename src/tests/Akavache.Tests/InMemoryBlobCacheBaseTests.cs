@@ -16,7 +16,7 @@ namespace Akavache.Tests;
 /// </summary>
 /// <remarks>
 /// Marked <see cref="NotInParallelAttribute"/> because several tests in this class touch
-/// global <see cref="Splat.AppLocator"/> state via <see cref="AkavacheTestExecutor"/>; running
+/// global <see cref="AppLocator"/> state via <see cref="AkavacheTestExecutor"/>; running
 /// them in parallel with each other (or with other AppLocator-touching tests) would race.
 /// </remarks>
 [Category("Akavache")]
@@ -701,8 +701,8 @@ public class InMemoryBlobCacheBaseTests
         var results = await cache.GetCreatedAt(["k1", "missing"]).ToList().ToTask();
         await Assert.That(results.Count).IsEqualTo(2);
 
-        (_, var time) = results.First(r => r.Key == "k1");
-        (_, var dateTimeOffset) = results.First(r => r.Key == "missing");
+        (_, var time) = results.First(static r => r.Key == "k1");
+        (_, var dateTimeOffset) = results.First(static r => r.Key == "missing");
         await Assert.That(time).IsNotNull();
         await Assert.That(dateTimeOffset).IsNull();
     }
@@ -959,7 +959,7 @@ public class InMemoryBlobCacheBaseTests
 
     /// <summary>
     /// Verifies the <see cref="InMemoryBlobCacheBase.ForcedDateTimeKind"/> setter propagates
-    /// the new value to a serializer registered with <see cref="Splat.AppLocator"/>. Closes
+    /// the new value to a serializer registered with <see cref="AppLocator"/>. Closes
     /// the true branch of the AppLocator-null check inside the setter.
     /// The <see cref="AkavacheTestExecutor"/> resets AppLocator state around the test so the
     /// global registration doesn't leak between tests.
@@ -990,7 +990,7 @@ public class InMemoryBlobCacheBaseTests
 
     /// <summary>
     /// Verifies the <see cref="InMemoryBlobCacheBase.ForcedDateTimeKind"/> setter tolerates
-    /// the case where no <see cref="ISerializer"/> is registered with <see cref="Splat.AppLocator"/>.
+    /// the case where no <see cref="ISerializer"/> is registered with <see cref="AppLocator"/>.
     /// Closes the false branch of the AppLocator-null check inside the setter.
     /// The <see cref="AkavacheTestExecutor"/> resets AppLocator state around the test, so the
     /// pre-test reset guarantees no serializer is registered when the test body runs.
@@ -1373,7 +1373,7 @@ public class InMemoryBlobCacheBaseTests
     /// <summary>
     /// A minimal <see cref="ISerializer"/> stub used to verify the
     /// <see cref="InMemoryBlobCacheBase.ForcedDateTimeKind"/> setter propagates kind updates
-    /// to a serializer registered with <see cref="Splat.AppLocator"/>. Records the most
+    /// to a serializer registered with <see cref="AppLocator"/>. Records the most
     /// recent setter invocation so the test can assert the value reached this instance.
     /// </summary>
     private sealed class RecordingForcedKindSerializer : ISerializer

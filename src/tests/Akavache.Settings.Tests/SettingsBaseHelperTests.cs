@@ -357,7 +357,7 @@ public class SettingsBaseHelperTests
     {
         AkavacheBuilder.BlobCaches = [];
 
-        await Assert.That(() => SettingsBase.GetBlobCacheForClass("UnresolvableClass"))
+        await Assert.That(static () => SettingsBase.GetBlobCacheForClass("UnresolvableClass"))
             .Throws<InvalidOperationException>();
     }
 
@@ -391,7 +391,7 @@ public class SettingsBaseHelperTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadAmbientUserAccountShouldThrowWhenNotInitialized() =>
-        await Assert.That(() => SettingsBase.ReadAmbientUserAccount()).Throws<InvalidOperationException>();
+        await Assert.That(static () => SettingsBase.ReadAmbientUserAccount()).Throws<InvalidOperationException>();
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.ReadAmbientLocalMachine"/> throws when
@@ -400,7 +400,7 @@ public class SettingsBaseHelperTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadAmbientLocalMachineShouldThrowWhenNotInitialized() =>
-        await Assert.That(() => SettingsBase.ReadAmbientLocalMachine()).Throws<InvalidOperationException>();
+        await Assert.That(static () => SettingsBase.ReadAmbientLocalMachine()).Throws<InvalidOperationException>();
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.ReadAmbientInMemory"/> throws when
@@ -409,7 +409,7 @@ public class SettingsBaseHelperTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadAmbientInMemoryShouldThrowWhenNotInitialized() =>
-        await Assert.That(() => SettingsBase.ReadAmbientInMemory()).Throws<InvalidOperationException>();
+        await Assert.That(static () => SettingsBase.ReadAmbientInMemory()).Throws<InvalidOperationException>();
 
     /// <summary>
     /// Resolver stub that always throws — mirrors the behaviour of

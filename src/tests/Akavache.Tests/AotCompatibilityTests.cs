@@ -190,7 +190,7 @@ public class AotCompatibilityTests
             // Test that we can store and retrieve strongly typed objects
             UserObject userObject = new() { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" };
             await cache.InsertObject("user_key", userObject).FirstAsync();
-            var retrievedUser = await cache.GetObject<Mocks.UserObject>("user_key").FirstAsync();
+            var retrievedUser = await cache.GetObject<UserObject>("user_key").FirstAsync();
 
             using (Assert.Multiple())
             {

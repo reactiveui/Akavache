@@ -145,8 +145,8 @@ public class SerializerExtensionsTests
             using (Assert.Multiple())
             {
                 await Assert.That(results).Count().IsEqualTo(2);
-                await Assert.That(results.Any(x => x.Name == "User1")).IsTrue();
-                await Assert.That(results.Any(x => x.Name == "User2")).IsTrue();
+                await Assert.That(results.Any(static x => x.Name == "User1")).IsTrue();
+                await Assert.That(results.Any(static x => x.Name == "User2")).IsTrue();
             }
         }
     }
@@ -919,7 +919,7 @@ public class SerializerExtensionsTests
 
                 // Test 4: Large collection to stress test the Count() approach
                 var largePairs = Enumerable.Range(1, 100)
-                    .Select(i => new KeyValuePair<string, UserObject>(
+                    .Select(static i => new KeyValuePair<string, UserObject>(
                         $"large_user_{i}",
                         new() { Name = $"LargeUser{i}", Bio = $"Bio{i}", Blog = $"Blog{i}" }))
                     .ToList();
@@ -986,7 +986,7 @@ public class SerializerExtensionsTests
 
                 // Test 4: Large number of operations to stress test completion logic
                 var largeDict = Enumerable.Range(1, 1000)
-                    .ToDictionary(i => $"key_{i}", i => (object)$"value_{i}");
+                    .ToDictionary(static i => $"key_{i}", static i => (object)$"value_{i}");
                 await cache.InsertObjects(largeDict).FirstAsync();
 
                 // Test 5: Verify data was actually stored correctly
@@ -1045,8 +1045,8 @@ public class SerializerExtensionsTests
                 // Test with very large number of items to stress the completion logic
                 var massiveDict = Enumerable.Range(1, 1000)
                     .ToDictionary(
-                        i => $"stress_key_{i}",
-                        i => (object)$"stress_value_{i}");
+                        static i => $"stress_key_{i}",
+                        static i => (object)$"stress_value_{i}");
 
                 // This should also complete without exception
                 await cache.InsertObjects(massiveDict).FirstAsync();
@@ -1757,8 +1757,8 @@ public class SerializerExtensionsTests
             var results = await SerializerExtensions.GetAllObjects<UserObject>(cache).ToList();
 
             await Assert.That(results).Count().IsEqualTo(2);
-            await Assert.That(results.Any(x => x.Name == "User1")).IsTrue();
-            await Assert.That(results.Any(x => x.Name == "User2")).IsTrue();
+            await Assert.That(results.Any(static x => x.Name == "User1")).IsTrue();
+            await Assert.That(results.Any(static x => x.Name == "User2")).IsTrue();
         }
         finally
         {
@@ -2215,7 +2215,7 @@ public class SerializerExtensionsTests
             {
                 await cache.GetAndFetchLatest(
                     "keep_key",
-                    () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")))
+                    static () => Observable.Throw<UserObject>(new InvalidOperationException("fetch boom")))
                     .ForEachAsync(observed.Add);
             }
             catch
@@ -2425,7 +2425,7 @@ public class SerializerExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task GetOrCreateObjectShouldThrowOnNullCache() =>
-        await Assert.That(static () => SerializerExtensions.GetOrCreateObject<string>(null!, "key", static () => "value"))
+        await Assert.That(static () => SerializerExtensions.GetOrCreateObject(null!, "key", static () => "value"))
             .Throws<ArgumentNullException>();
 
     /// <summary>

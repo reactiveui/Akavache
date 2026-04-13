@@ -21,15 +21,15 @@ public partial class EditTodoViewModel : ReactiveObject
 
     /// <summary>Backing field for the reactive Title property.</summary>
     [Reactive]
-    private string _title = string.Empty;
+    private string _title;
 
     /// <summary>Backing field for the reactive Description property.</summary>
     [Reactive]
-    private string _description = string.Empty;
+    private string _description;
 
     /// <summary>Backing field for the reactive TagsString property.</summary>
     [Reactive]
-    private string _tagsString = string.Empty;
+    private string _tagsString;
 
     /// <summary>Backing field for the reactive DueDate property.</summary>
     [Reactive]
@@ -41,7 +41,7 @@ public partial class EditTodoViewModel : ReactiveObject
 
     /// <summary>Backing field for the reactive Priority property.</summary>
     [Reactive]
-    private TodoPriority _priority = TodoPriority.Medium;
+    private TodoPriority _priority;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EditTodoViewModel"/> class.
@@ -67,7 +67,7 @@ public partial class EditTodoViewModel : ReactiveObject
 
         // Initialize commands
         SaveCommand = ReactiveCommand.CreateFromTask(ExecuteSave);
-        CancelCommand = ReactiveCommand.Create(ExecuteCancel);
+        CancelCommand = ReactiveCommand.CreateFromTask(ExecuteCancel);
 
         // Initialize priority options
         PriorityOptions = Enum.GetValues<TodoPriority>();
@@ -111,7 +111,6 @@ public partial class EditTodoViewModel : ReactiveObject
         try
         {
             // Parse due date and time
-            DateTimeOffset? dueDate = null;
             var date = DueDate.Date;
 
             if (!string.IsNullOrWhiteSpace(DueTime) && TimeSpan.TryParse(DueTime, out var time))
@@ -119,16 +118,15 @@ public partial class EditTodoViewModel : ReactiveObject
                 date = date.Add(time);
             }
 
-            dueDate = new DateTimeOffset(date);
+            DateTimeOffset? dueDate = new DateTimeOffset(date);
 
             // Parse tags
             List<string> tags = [];
             if (!string.IsNullOrWhiteSpace(TagsString))
             {
-                tags = TagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                tags = [.. TagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                 .Select(static tag => tag.Trim())
-                                .Where(static tag => !string.IsNullOrEmpty(tag))
-                                .ToList();
+                                .Where(static tag => !string.IsNullOrEmpty(tag))];
             }
 
             // Create updated todo
@@ -154,7 +152,8 @@ public partial class EditTodoViewModel : ReactiveObject
     }
 
     /// <summary>Cancels editing and navigates back without saving.</summary>
-    private async void ExecuteCancel()
+    /// <returns>A task to monitor.</returns>
+    private async Task ExecuteCancel()
     {
         WasSaved = false;
         await Shell.Current.GoToAsync("..");

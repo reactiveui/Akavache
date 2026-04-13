@@ -7,7 +7,7 @@ namespace AkavacheTodoMaui;
 /// <summary>
 /// AppShell.
 /// </summary>
-/// <seealso cref="Microsoft.Maui.Controls.Shell" />
+/// <seealso cref="Shell" />
 public partial class AppShell : Shell
 {
     /// <summary>

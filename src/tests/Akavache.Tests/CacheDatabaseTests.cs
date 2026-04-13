@@ -374,7 +374,7 @@ public class CacheDatabaseTests
 
         try
         {
-            await Assert.That(async () => await CacheDatabase.Shutdown().LastOrDefaultAsync()).ThrowsNothing();
+            await Assert.That(static async () => await CacheDatabase.Shutdown().LastOrDefaultAsync()).ThrowsNothing();
         }
         finally
         {
@@ -406,11 +406,11 @@ public class CacheDatabaseTests
 
         try
         {
-            await Assert.That(async () => await CacheDatabase.Shutdown().LastOrDefaultAsync())
+            await Assert.That(static async () => await CacheDatabase.Shutdown().LastOrDefaultAsync())
                 .Throws<InvalidOperationException>();
 
             // ResetForTestsAsync should swallow the exception from Shutdown.
-            await Assert.That(async () => await CacheDatabase.ResetForTestsAsync()).ThrowsNothing();
+            await Assert.That(static async () => await CacheDatabase.ResetForTestsAsync()).ThrowsNothing();
             await Assert.That(CacheDatabase.IsInitialized).IsFalse();
         }
         finally
@@ -467,7 +467,7 @@ public class CacheDatabaseTests
 
         try
         {
-            await Assert.That(async () => await CacheDatabase.Shutdown().LastOrDefaultAsync()).ThrowsNothing();
+            await Assert.That(static async () => await CacheDatabase.Shutdown().LastOrDefaultAsync()).ThrowsNothing();
         }
         finally
         {
@@ -499,7 +499,7 @@ public class CacheDatabaseTests
         try
         {
             // ResetForTestsAsync should swallow the error from Shutdown.
-            await Assert.That(async () => await CacheDatabase.ResetForTestsAsync()).ThrowsNothing();
+            await Assert.That(static async () => await CacheDatabase.ResetForTestsAsync()).ThrowsNothing();
             await Assert.That(CacheDatabase.IsInitialized).IsFalse();
         }
         finally
@@ -602,7 +602,7 @@ public class CacheDatabaseTests
         try
         {
             CacheDatabase.SetBuilder(new FakeAkavacheInstance { ApplicationName = null! });
-            await Assert.That(() => CacheDatabase.ApplicationName).Throws<InvalidOperationException>();
+            await Assert.That(static () => CacheDatabase.ApplicationName).Throws<InvalidOperationException>();
         }
         finally
         {
@@ -638,10 +638,10 @@ public class CacheDatabaseTests
                 UserAccount = null,
             });
 
-            await Assert.That(() => CacheDatabase.InMemory).Throws<InvalidOperationException>();
-            await Assert.That(() => CacheDatabase.LocalMachine).Throws<InvalidOperationException>();
-            await Assert.That(() => CacheDatabase.Secure).Throws<InvalidOperationException>();
-            await Assert.That(() => CacheDatabase.UserAccount).Throws<InvalidOperationException>();
+            await Assert.That(static () => CacheDatabase.InMemory).Throws<InvalidOperationException>();
+            await Assert.That(static () => CacheDatabase.LocalMachine).Throws<InvalidOperationException>();
+            await Assert.That(static () => CacheDatabase.Secure).Throws<InvalidOperationException>();
+            await Assert.That(static () => CacheDatabase.UserAccount).Throws<InvalidOperationException>();
         }
         finally
         {
@@ -668,7 +668,7 @@ public class CacheDatabaseTests
         try
         {
             CacheDatabase.SetBuilder(new FakeAkavacheInstance { ForcedDateTimeKind = null });
-            await Assert.That(() => CacheDatabase.ForcedDateTimeKind).Throws<InvalidOperationException>();
+            await Assert.That(static () => CacheDatabase.ForcedDateTimeKind).Throws<InvalidOperationException>();
         }
         finally
         {
@@ -762,7 +762,7 @@ public class CacheDatabaseTests
     }
 
     /// <summary>
-    /// An <see cref="IBlobCache"/> test double whose <see cref="ThrowingFlushBlobCache.Flush()"/> method throws
+    /// An <see cref="IBlobCache"/> test double whose <see cref="Flush()"/> method throws
     /// synchronously, forcing <see cref="CacheDatabase.Shutdown"/> into its catch block.
     /// Only the members actually used by Shutdown are implemented.
     /// </summary>
@@ -874,7 +874,7 @@ public class CacheDatabaseTests
     }
 
     /// <summary>
-    /// An <see cref="IBlobCache"/> test double whose <see cref="ObservableErrorFlushBlobCache.Flush()"/> method returns
+    /// An <see cref="IBlobCache"/> test double whose <see cref="Flush()"/> method returns
     /// an observable error (rather than throwing synchronously), to exercise the ResetForTestsAsync catch block
     /// when the error propagates through the observable pipeline.
     /// </summary>

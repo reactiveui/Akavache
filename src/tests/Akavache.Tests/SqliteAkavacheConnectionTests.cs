@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Linq.Expressions;
 using Akavache.Sqlite3;
 using Akavache.Tests.Helpers;
 using SQLite;
@@ -62,7 +63,7 @@ public class SqliteAkavacheConnectionTests
 
             await connection.InsertOrReplaceAsync(entry);
 
-            var retrieved = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k1");
+            var retrieved = await connection.FirstOrDefaultAsync<CacheEntry>(static x => x.Id == "k1");
             await Assert.That(retrieved).IsNotNull();
             await Assert.That(retrieved!.Value).IsEquivalentTo(new byte[] { 1, 2, 3 });
             await Assert.That(retrieved.TypeName).IsEqualTo(typeof(string).FullName);
@@ -70,7 +71,7 @@ public class SqliteAkavacheConnectionTests
     }
 
     /// <summary>
-    /// Verifies that <see cref="SqliteAkavacheConnection.QueryAsync{T}(System.Linq.Expressions.Expression{System.Func{T, bool}})"/>
+    /// Verifies that <see cref="SqliteAkavacheConnection.QueryAsync{T}(Expression{Func{T, bool}})"/>
     /// returns only entries matching the predicate.
     /// </summary>
     /// <returns>A task.</returns>
@@ -86,10 +87,10 @@ public class SqliteAkavacheConnectionTests
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "b", Value = [2], TypeName = "T1" });
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "c", Value = [3], TypeName = "T2" });
 
-            var t1 = await connection.QueryAsync<CacheEntry>(x => x.TypeName == "T1");
+            var t1 = await connection.QueryAsync<CacheEntry>(static x => x.TypeName == "T1");
             await Assert.That(t1.Count).IsEqualTo(2);
-            await Assert.That(t1.Any(x => x.Id == "a")).IsTrue();
-            await Assert.That(t1.Any(x => x.Id == "b")).IsTrue();
+            await Assert.That(t1.Any(static x => x.Id == "a")).IsTrue();
+            await Assert.That(t1.Any(static x => x.Id == "b")).IsTrue();
         }
     }
 
@@ -129,7 +130,7 @@ public class SqliteAkavacheConnectionTests
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1] });
             await connection.ExecuteAsync("DELETE FROM CacheEntry WHERE Id = ?", "k");
 
-            var rows = await connection.QueryAsync<CacheEntry>(_ => true);
+            var rows = await connection.QueryAsync<CacheEntry>(static _ => true);
             await Assert.That(rows).IsEmpty();
         }
     }
@@ -168,13 +169,13 @@ public class SqliteAkavacheConnectionTests
             await using var connection = CreateConnection(path);
             await connection.CreateTableAsync<CacheEntry>();
 
-            await connection.RunInTransactionAsync(tx =>
+            await connection.RunInTransactionAsync(static tx =>
             {
                 tx.InsertOrReplace(new CacheEntry { Id = "x", Value = [9] });
                 tx.InsertOrReplace(new CacheEntry { Id = "y", Value = [8] });
             });
 
-            var rows = await connection.QueryAsync<CacheEntry>(_ => true);
+            var rows = await connection.QueryAsync<CacheEntry>(static _ => true);
             await Assert.That(rows.Count).IsEqualTo(2);
         }
     }
@@ -195,15 +196,15 @@ public class SqliteAkavacheConnectionTests
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "p", Value = [1] });
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "q", Value = [2] });
 
-            await connection.RunInTransactionAsync(tx =>
+            await connection.RunInTransactionAsync(static tx =>
             {
-                foreach (var row in tx.Query<CacheEntry>(_ => true))
+                foreach (var row in tx.Query<CacheEntry>(static _ => true))
                 {
                     tx.Delete<CacheEntry>(row.Id!);
                 }
             });
 
-            var remaining = await connection.QueryAsync<CacheEntry>(_ => true);
+            var remaining = await connection.QueryAsync<CacheEntry>(static _ => true);
             await Assert.That(remaining).IsEmpty();
         }
     }
@@ -248,22 +249,22 @@ public class SqliteAkavacheConnectionTests
             DateTime originalExpiry = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1], ExpiresAt = originalExpiry, TypeName = "A" });
 
-            await connection.RunInTransactionAsync(tx =>
+            await connection.RunInTransactionAsync(static tx =>
             {
                 // Non-matching type — should be a no-op.
                 tx.SetExpiry("k", "B", new DateTime(2099, 1, 1, 0, 0, 0, DateTimeKind.Utc));
             });
 
-            var row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
+            var row = await connection.FirstOrDefaultAsync<CacheEntry>(static x => x.Id == "k");
             await Assert.That(row!.ExpiresAt!.Value.Year).IsEqualTo(2025);
 
-            await connection.RunInTransactionAsync(tx =>
+            await connection.RunInTransactionAsync(static tx =>
             {
                 // Matching type — should update.
                 tx.SetExpiry("k", "A", new DateTime(2040, 1, 1, 0, 0, 0, DateTimeKind.Utc));
             });
 
-            row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
+            row = await connection.FirstOrDefaultAsync<CacheEntry>(static x => x.Id == "k");
             await Assert.That(row!.ExpiresAt!.Value.Year).IsEqualTo(2040);
         }
     }
@@ -281,9 +282,9 @@ public class SqliteAkavacheConnectionTests
             await connection.CreateTableAsync<CacheEntry>();
 
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1] });
-            await connection.RunInTransactionAsync(tx => tx.Execute("DELETE FROM CacheEntry WHERE Id = ?", "k"));
+            await connection.RunInTransactionAsync(static tx => tx.Execute("DELETE FROM CacheEntry WHERE Id = ?", "k"));
 
-            var rows = await connection.QueryAsync<CacheEntry>(_ => true);
+            var rows = await connection.QueryAsync<CacheEntry>(static _ => true);
             await Assert.That(rows).IsEmpty();
         }
     }
@@ -593,10 +594,10 @@ public class SqliteAkavacheConnectionTests
                     ExpiresAt = DateTime.UtcNow.AddHours(1),
                 });
 
-                var rows = await connection.QueryAsync<CacheEntry>(x => x.Id == "k");
+                var rows = await connection.QueryAsync<CacheEntry>(static x => x.Id == "k");
                 await Assert.That(rows.Count).IsEqualTo(1);
 
-                var row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
+                var row = await connection.FirstOrDefaultAsync<CacheEntry>(static x => x.Id == "k");
                 await Assert.That(row).IsNotNull();
 
                 var sqlRows = await connection.QueryAsync<CacheEntry>("SELECT * FROM CacheEntry WHERE Id = ?", "k");
@@ -605,13 +606,13 @@ public class SqliteAkavacheConnectionTests
                 var count = await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM CacheEntry");
                 await Assert.That(count).IsEqualTo(1L);
 
-                await connection.RunInTransactionAsync(tx =>
+                await connection.RunInTransactionAsync(static tx =>
                 {
                     tx.InsertOrReplace(new CacheEntry { Id = "k2", Value = [4] });
                     tx.SetExpiry("k2", null, DateTime.UtcNow.AddHours(2));
                     tx.Execute("DELETE FROM CacheEntry WHERE Id = ?", "k2");
 
-                    var inTxRows = tx.Query<CacheEntry>(_ => true);
+                    var inTxRows = tx.Query<CacheEntry>(static _ => true);
                     if (inTxRows.Count == 0)
                     {
                         throw new InvalidOperationException("Expected at least one row inside the transaction.");

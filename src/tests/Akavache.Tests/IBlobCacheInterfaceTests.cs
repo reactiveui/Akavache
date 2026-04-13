@@ -166,7 +166,7 @@ public class IBlobCacheInterfaceTests
         await cache.Insert(bulkData, bulkExpiration).FirstAsync();
 
         // Should be available immediately
-        var bulkRetrieved = await cache.Get(bulkData.Keys.ToArray()).ToList().FirstAsync();
+        var bulkRetrieved = await cache.Get([.. bulkData.Keys]).ToList().FirstAsync();
         await Assert.That(bulkRetrieved).Count().IsEqualTo(2);
 
         // Wait for expiration
@@ -455,11 +455,11 @@ public class IBlobCacheInterfaceTests
         await cache.Insert(bulkData, userType).FirstAsync();
 
         // Bulk Get with Type
-        var bulkRetrieved = await cache.Get(bulkData.Keys.ToArray(), userType).ToList().FirstAsync();
+        var bulkRetrieved = await cache.Get([.. bulkData.Keys], userType).ToList().FirstAsync();
         await Assert.That(bulkRetrieved).Count().IsEqualTo(2);
 
         // Bulk GetCreatedAt with Type
-        var bulkCreatedAt = await cache.GetCreatedAt(bulkData.Keys.ToArray(), userType).ToList().FirstAsync();
+        var bulkCreatedAt = await cache.GetCreatedAt([.. bulkData.Keys], userType).ToList().FirstAsync();
         await Assert.That(bulkCreatedAt).Count().IsEqualTo(2);
 
         // Flush with Type
@@ -472,7 +472,7 @@ public class IBlobCacheInterfaceTests
         await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("typed_key", userType).FirstAsync());
 
         // Bulk Invalidate with Type
-        await cache.Invalidate(bulkData.Keys.ToArray(), userType).FirstAsync();
+        await cache.Invalidate([.. bulkData.Keys], userType).FirstAsync();
 
         // InvalidateAll with Type
         await cache.InvalidateAll(userType).FirstAsync();

@@ -133,7 +133,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
         var builder = CreateBuilder("UseSystemJsonBsonSerializerVariantsFactoryExec");
         builder.UseSystemJsonBsonSerializer();
         builder.UseSystemJsonBsonSerializer(new JsonSerializerOptions { WriteIndented = true });
-        builder.UseSystemJsonBsonSerializer(o => o.WriteIndented = true);
+        builder.UseSystemJsonBsonSerializer(static o => o.WriteIndented = true);
 
         var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new NewtonsoftJson.NewtonsoftSerializer());
 

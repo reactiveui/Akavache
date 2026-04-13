@@ -158,7 +158,7 @@ public class AssemblyInfoHelperTests
     /// Minimal stub <see cref="System.Reflection.Assembly"/> that reports no
     /// <see cref="AssemblyFileVersionAttribute"/>. The overridden attribute methods
     /// must return an <see cref="Attribute"/>[] (not a plain <see cref="object"/>[])
-    /// because <see cref="System.Reflection.CustomAttributeExtensions.GetCustomAttribute{T}(Assembly)"/>
+    /// because <see cref="CustomAttributeExtensions.GetCustomAttribute{T}(Assembly)"/>
     /// casts the result to <c>Attribute[]</c>.
     /// </summary>
     private sealed class NoFileVersionAttributeAssembly : Assembly

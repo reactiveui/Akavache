@@ -199,13 +199,13 @@ public class LegacyFileLocationTests
     {
         // Arrange
         var testAppName = $"LegacyInitTest_{Guid.NewGuid():N}";
-        Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+        Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         try
         {
             // Act
             CacheDatabase.Initialize<SystemJsonSerializer>(
-                configure: builder =>
+                configure: static builder =>
                 {
                     builder.WithSqliteProvider();
                     builder.WithSqliteDefaults();
@@ -225,7 +225,7 @@ public class LegacyFileLocationTests
         finally
         {
             await CacheDatabase.ResetForTestsAsync();
-            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+            Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         }
     }
 
@@ -238,13 +238,13 @@ public class LegacyFileLocationTests
     {
         // Arrange
         var testAppName = $"LegacyBuilderChainTest_{Guid.NewGuid():N}";
-        Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+        Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         try
         {
             // Act - using the new fluent builder method
             CacheDatabase.Initialize<SystemJsonSerializer>(
-                configure: builder =>
+                configure: static builder =>
                 {
                     builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
@@ -264,7 +264,7 @@ public class LegacyFileLocationTests
         finally
         {
             await CacheDatabase.ResetForTestsAsync();
-            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+            Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         }
     }
 
@@ -277,12 +277,12 @@ public class LegacyFileLocationTests
     {
         // Arrange
         var testAppName = $"LegacyDataTest_{Guid.NewGuid():N}";
-        Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+        Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         try
         {
             CacheDatabase.Initialize<SystemJsonSerializer>(
-                configure: builder =>
+                configure: static builder =>
                 {
                     builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
@@ -302,7 +302,7 @@ public class LegacyFileLocationTests
         finally
         {
             await CacheDatabase.ResetForTestsAsync();
-            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+            Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         }
     }
 
@@ -345,13 +345,13 @@ public class LegacyFileLocationTests
         var testAppName = $"LegacyPersistTest_{Guid.NewGuid():N}";
         const string testKey = "persist-key";
         const string testValue = "persist-value";
-        Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+        Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         try
         {
             // Act - write data with first initialization
             CacheDatabase.Initialize<SystemJsonSerializer>(
-                configure: builder =>
+                configure: static builder =>
                 {
                     builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
@@ -364,10 +364,10 @@ public class LegacyFileLocationTests
 
             // Reinitialize
             await CacheDatabase.ResetForTestsAsync();
-            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+            Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
             CacheDatabase.Initialize<SystemJsonSerializer>(
-                configure: builder =>
+                configure: static builder =>
                 {
                     builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
@@ -382,7 +382,7 @@ public class LegacyFileLocationTests
         finally
         {
             await CacheDatabase.ResetForTestsAsync();
-            Akavache.Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+            Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         }
     }
 }

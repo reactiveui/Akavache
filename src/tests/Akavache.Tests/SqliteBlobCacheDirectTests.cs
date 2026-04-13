@@ -1054,9 +1054,9 @@ public class SqliteBlobCacheDirectTests
     [Test]
     public async Task ConstructorShouldThrowOnNullArgs()
     {
-        await Assert.That(() => new SqliteBlobCache((string)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
-        await Assert.That(() => new SqliteBlobCache("test.db", null!)).Throws<ArgumentNullException>();
-        await Assert.That(() => new SqliteBlobCache((SQLite.SQLiteConnectionString)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
+        await Assert.That(static () => new SqliteBlobCache((string)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
+        await Assert.That(static () => new SqliteBlobCache("test.db", null!)).Throws<ArgumentNullException>();
+        await Assert.That(static () => new SqliteBlobCache((SQLite.SQLiteConnectionString)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
     }
 
     /// <summary>
@@ -1362,7 +1362,7 @@ public class SqliteBlobCacheDirectTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ConstructorWithNullConnectionShouldThrow() => await Assert.That(() => new SqliteBlobCache((IAkavacheConnection)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
+    public async Task ConstructorWithNullConnectionShouldThrow() => await Assert.That(static () => new SqliteBlobCache((IAkavacheConnection)null!, new SystemJsonSerializer())).Throws<ArgumentNullException>();
 
     /// <summary>
     /// Verifies that <see cref="SqliteBlobCache.UpdateExpiration(string, DateTimeOffset?)"/>

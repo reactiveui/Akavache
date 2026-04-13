@@ -241,8 +241,8 @@ public static class AkavacheBuilderExtensions
     /// Any value will use User Store For Assembly.
     /// </param>
     /// <returns>The Isolated cache path.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
-    /// <exception cref="System.ArgumentException">
+    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentException">
     /// Cache name cannot be null or empty. - cacheName
     /// or
     /// Application name cannot be null or empty. - ApplicationName.
@@ -261,8 +261,8 @@ public static class AkavacheBuilderExtensions
     /// Any other value will use Machine Store For Assembly.
     /// </param>
     /// <returns>The Isolated cache path.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
-    /// <exception cref="System.ArgumentException">
+    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentException">
     /// Cache name cannot be null or empty. - cacheName
     /// or
     /// Application name cannot be null or empty. - ApplicationName.
@@ -333,8 +333,8 @@ public static class AkavacheBuilderExtensions
     /// <param name="builder">The builder.</param>
     /// <param name="cacheName">Name of the cache.</param>
     /// <returns>The Legacy cache path.</returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
-    /// <exception cref="System.ArgumentException">
+    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="ArgumentException">
     /// Cache name cannot be null or empty. - cacheName
     /// or
     /// Application name cannot be null or empty. - ApplicationName.

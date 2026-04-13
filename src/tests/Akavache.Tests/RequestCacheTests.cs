@@ -490,8 +490,8 @@ public class RequestCacheTests
     public async Task RemoveRequestsForKeyShouldReturnForEmptyKey()
     {
         RequestCache.Clear();
-        await Assert.That(() => RequestCache.RemoveRequestsForKey(string.Empty)).ThrowsNothing();
-        await Assert.That(() => RequestCache.RemoveRequestsForKey(null!)).ThrowsNothing();
+        await Assert.That(static () => RequestCache.RemoveRequestsForKey(string.Empty)).ThrowsNothing();
+        await Assert.That(static () => RequestCache.RemoveRequestsForKey(null!)).ThrowsNothing();
     }
 
     /// <summary>

@@ -85,7 +85,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task DeleteSettingsStore_NullBuilder_ThrowsAsync()
     {
-        var action = () => ((IAkavacheInstance)null!).DeleteSettingsStore<ViewSettings>();
+        var action = static () => ((IAkavacheInstance)null!).DeleteSettingsStore<ViewSettings>();
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -199,7 +199,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithSecureSettingsStore_NullBuilder_ThrowsAsync()
     {
-        var action = () => ((IAkavacheBuilder)null!).WithSecureSettingsStore<ViewSettings>("password", _ => { });
+        var action = static () => ((IAkavacheBuilder)null!).WithSecureSettingsStore<ViewSettings>("password", static _ => { });
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -210,7 +210,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetSecureSettingsStore_NullBuilder_ThrowsAsync()
     {
-        var action = () => ((IAkavacheInstance)null!).GetSecureSettingsStore<ViewSettings>("password");
+        var action = static () => ((IAkavacheInstance)null!).GetSecureSettingsStore<ViewSettings>("password");
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -344,7 +344,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithSettingsStore_NullBuilder_ThrowsAsync()
     {
-        var action = () => ((IAkavacheBuilder)null!).WithSettingsStore<ViewSettings>(_ => { });
+        var action = static () => ((IAkavacheBuilder)null!).WithSettingsStore<ViewSettings>(static _ => { });
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -355,7 +355,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetSettingsStore_NullBuilder_ThrowsAsync()
     {
-        var action = () => ((IAkavacheInstance)null!).GetSettingsStore<ViewSettings>();
+        var action = static () => ((IAkavacheInstance)null!).GetSettingsStore<ViewSettings>();
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -574,8 +574,8 @@ public class AkavacheBuilderExtensionsTests
     {
         RunWithAkavache<NewtonsoftSerializer>(
             NewName("get_cache_store_test"),
-            _ => Task.CompletedTask,
-            async instance =>
+            static _ => Task.CompletedTask,
+            static async instance =>
             {
                 ViewSettings? viewSettings = null;
                 try
@@ -604,7 +604,7 @@ public class AkavacheBuilderExtensionsTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -616,12 +616,12 @@ public class AkavacheBuilderExtensionsTests
     {
         RunWithAkavache<NewtonsoftSerializer>(
             NewName("loaded_store_test"),
-            builder =>
+            static builder =>
             {
-                builder.WithSettingsStore<ViewSettings>(_ => { });
+                builder.WithSettingsStore<ViewSettings>(static _ => { });
                 return Task.CompletedTask;
             },
-            async instance =>
+            static async instance =>
             {
                 try
                 {
@@ -642,7 +642,7 @@ public class AkavacheBuilderExtensionsTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -654,19 +654,19 @@ public class AkavacheBuilderExtensionsTests
     {
         RunWithAkavache<NewtonsoftSerializer>(
             NewName("delete_nofile_test"),
-            builder =>
+            static builder =>
             {
-                builder.WithSettingsStore<ViewSettings>(_ => { });
+                builder.WithSettingsStore<ViewSettings>(static _ => { });
                 return Task.CompletedTask;
             },
-            async instance =>
+            static async instance =>
             {
                 // Delete twice - second time the file won't exist
                 await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
                 await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -819,12 +819,12 @@ public class AkavacheBuilderExtensionsTests
     {
         RunWithAkavache<NewtonsoftSerializer>(
             NewName("null_action_test"),
-            builder =>
+            static builder =>
             {
                 builder.WithSettingsStore<ViewSettings>(null!);
                 return Task.CompletedTask;
             },
-            async instance =>
+            static async instance =>
             {
                 try
                 {
@@ -845,7 +845,7 @@ public class AkavacheBuilderExtensionsTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -857,13 +857,13 @@ public class AkavacheBuilderExtensionsTests
     {
         RunWithAkavache<NewtonsoftSerializer>(
             NewName("null_cache_action_test"),
-            builder =>
+            static builder =>
             {
                 InMemoryBlobCache cache = new(builder.Serializer!);
                 builder.WithSettingsStore<ViewSettings>(cache, null!);
                 return Task.CompletedTask;
             },
-            async instance =>
+            static async instance =>
             {
                 try
                 {
@@ -884,7 +884,7 @@ public class AkavacheBuilderExtensionsTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
     /// <summary>

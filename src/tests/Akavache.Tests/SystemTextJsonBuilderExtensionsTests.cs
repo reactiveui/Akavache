@@ -22,7 +22,7 @@ public class SystemTextJsonBuilderExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerSystemTextJsonShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => Akavache.SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(null!))
+        await Assert.That(static () => SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -45,7 +45,7 @@ public class SystemTextJsonBuilderExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerSystemTextJsonSettingsShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => Akavache.SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(null!, new()))
+        await Assert.That(static () => SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(null!, new()))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -83,7 +83,7 @@ public class SystemTextJsonBuilderExtensionsTests
     public async Task UseSystemTextJsonSerializerConfigureShouldThrowOnNullBuilder()
     {
         Action<JsonSerializerOptions> configure = _ => { };
-        await Assert.That(() => Akavache.SystemTextJson.AkavacheBuilderExtensions.UseSystemTextJsonSerializer(null!, configure))
+        await Assert.That(() => SystemTextJson.AkavacheBuilderExtensions.UseSystemTextJsonSerializer(null!, configure))
             .Throws<ArgumentNullException>();
     }
 
@@ -134,7 +134,7 @@ public class SystemTextJsonBuilderExtensionsTests
         var builder = CreateBuilder("WithSerializerSystemTextJsonVariantsFactoryExec");
         builder.WithSerializerSystemTextJson();
         builder.WithSerializerSystemTextJson(new() { WriteIndented = true });
-        builder.UseSystemTextJsonSerializer(o => o.WriteIndented = true);
+        builder.UseSystemTextJsonSerializer(static o => o.WriteIndented = true);
 
         // Pass a primary that isn't SystemJsonSerializer so the registered factories
         // are kept in the alternatives list and therefore invoked.

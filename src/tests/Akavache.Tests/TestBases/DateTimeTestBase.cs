@@ -438,7 +438,7 @@ public abstract class DateTimeTestBase : IDisposable
             ]);
         }
 
-        return cases.ToArray();
+        return [.. cases];
     }
 
     /// <summary>

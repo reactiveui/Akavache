@@ -98,10 +98,9 @@ public static class CacheDatabase
         {
             var shutdownSettingsBlobs = Observable.Start(static async () =>
             {
-                List<Task> tasks = AkavacheBuilder.BlobCaches
+                List<Task> tasks = [.. AkavacheBuilder.BlobCaches
                 .Where(static cachePair => cachePair.Value != null)
-                .Select(static async cache => await cache.Value!.DisposeAsync())
-                .ToList();
+                .Select(static async cache => await cache.Value!.DisposeAsync())];
                 await Task.WhenAll(tasks);
             }).Select(static _ => Unit.Default);
             shutdownTasks.Add(shutdownSettingsBlobs);
@@ -111,10 +110,9 @@ public static class CacheDatabase
         {
             var shutdownSettingsStores = Observable.Start(static async () =>
             {
-                List<Task> tasks = AkavacheBuilder.SettingsStores
+                List<Task> tasks = [.. AkavacheBuilder.SettingsStores
                 .Where(static cachePair => cachePair.Value != null)
-                .Select(static async cache => await cache.Value!.DisposeAsync())
-                .ToList();
+                .Select(static async cache => await cache.Value!.DisposeAsync())];
                 await Task.WhenAll(tasks);
             }).Select(static _ => Unit.Default);
             shutdownTasks.Add(shutdownSettingsStores);

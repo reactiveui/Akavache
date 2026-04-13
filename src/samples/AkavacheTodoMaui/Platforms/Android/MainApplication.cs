@@ -11,7 +11,7 @@ namespace AkavacheTodoMaui;
 /// <summary>
 /// MainApplication.
 /// </summary>
-/// <seealso cref="Microsoft.Maui.MauiApplication" />
+/// <seealso cref="MauiApplication" />
 [Application]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]

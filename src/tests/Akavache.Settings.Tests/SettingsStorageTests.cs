@@ -26,7 +26,7 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowForNullKeyPrefix() =>
-        await Assert.That(() => new TestStorage(null!, new InMemoryBlobCache(new SystemJsonSerializer())))
+        await Assert.That(static () => new TestStorage(null!, new InMemoryBlobCache(new SystemJsonSerializer())))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -36,7 +36,7 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowForWhitespaceKeyPrefix() =>
-        await Assert.That(() => new TestStorage("   ", new InMemoryBlobCache(new SystemJsonSerializer())))
+        await Assert.That(static () => new TestStorage("   ", new InMemoryBlobCache(new SystemJsonSerializer())))
             .Throws<ArgumentException>();
 
     /// <summary>
@@ -46,7 +46,7 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowForEmptyKeyPrefix() =>
-        await Assert.That(() => new TestStorage(string.Empty, new InMemoryBlobCache(new SystemJsonSerializer())))
+        await Assert.That(static () => new TestStorage(string.Empty, new InMemoryBlobCache(new SystemJsonSerializer())))
             .Throws<ArgumentException>();
 
     /// <summary>
@@ -56,7 +56,7 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task EagerLoadPropertiesShouldThrowOnNullTarget() =>
-        await Assert.That(() => SettingsStorage.EagerLoadProperties(null!, []))
+        await Assert.That(static () => SettingsStorage.EagerLoadProperties(null!, []))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -66,7 +66,7 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task EagerLoadPropertiesShouldThrowOnNullProperties() =>
-        await Assert.That(() => SettingsStorage.EagerLoadProperties(new(), null!))
+        await Assert.That(static () => SettingsStorage.EagerLoadProperties(new(), null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>

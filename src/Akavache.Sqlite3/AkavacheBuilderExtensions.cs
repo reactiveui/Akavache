@@ -70,8 +70,8 @@ public static class AkavacheBuilderExtensions
     /// <returns>
     /// The builder instance for fluent configuration.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">builder.</exception>
-    /// <exception cref="System.InvalidOperationException">
+    /// <exception cref="ArgumentNullException">builder.</exception>
+    /// <exception cref="InvalidOperationException">
     /// No serializer has been registered. Call CacheDatabase.Serializer = new [SerializerType]() before using SQLite defaults.
     /// or
     /// Application name must be set before configuring SQLite defaults. Call WithApplicationName() first.

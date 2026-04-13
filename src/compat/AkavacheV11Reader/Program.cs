@@ -3,16 +3,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Akavache;
-using Akavache.NewtonsoftJson;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
-using Splat.Builder;
 
 /*
  V11 reader app
@@ -54,7 +47,7 @@ try
         }
     }
 
-    var hasCacheElement = tables.Any(x => string.Equals(x.Name, "CacheElement", StringComparison.OrdinalIgnoreCase));
+    var hasCacheElement = tables.Any(static x => string.Equals(x.Name, "CacheElement", StringComparison.OrdinalIgnoreCase));
     if (hasCacheElement)
     {
         Console.WriteLine("PRAGMA table_info('CacheElement'):");

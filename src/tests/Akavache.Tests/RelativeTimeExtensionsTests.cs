@@ -446,7 +446,7 @@ public class RelativeTimeExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task InsertObjectWithTimeSpanShouldThrowOnNullCache() =>
-        await Assert.That(static () => RelativeTimeExtensions.InsertObject<string>(null!, "key", "val", TimeSpan.FromMinutes(1)))
+        await Assert.That(static () => RelativeTimeExtensions.InsertObject(null!, "key", "val", TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
     /// <summary>

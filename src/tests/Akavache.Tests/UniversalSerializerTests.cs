@@ -19,7 +19,7 @@ namespace Akavache.Tests;
 /// Uses the shared <c>CacheDatabaseState</c> <see cref="NotInParallelAttribute"/>
 /// group so these tests serialise against every other test that mutates global
 /// state like <see cref="UniversalSerializer"/>'s registered-factory cache,
-/// <see cref="CacheDatabase"/>, <see cref="Akavache.Core.AkavacheBuilder"/>'s
+/// <see cref="CacheDatabase"/>, <see cref="AkavacheBuilder"/>'s
 /// static stores, and <c>Splat.AppLocator</c>.
 /// </remarks>
 [Category("Akavache")]
@@ -1440,7 +1440,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task CastAsDateTimeShouldReturnDefaultForOtherType()
     {
-        var result = UniversalSerializer.CastAsDateTime<string>("not a datetime");
+        var result = UniversalSerializer.CastAsDateTime("not a datetime");
 
         await Assert.That(result).IsEqualTo(default);
     }
@@ -1481,7 +1481,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task CastAsDateTimeOffsetShouldReturnDefaultForOtherType()
     {
-        var result = UniversalSerializer.CastAsDateTimeOffset<string>("not a datetimeoffset");
+        var result = UniversalSerializer.CastAsDateTimeOffset("not a datetimeoffset");
 
         await Assert.That(result).IsEqualTo(default);
     }

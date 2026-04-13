@@ -274,7 +274,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ConstructorWithNullFileNameShouldThrow() => await Assert.That(() => new EncryptedSqliteBlobCache(null!, TestPassword, new SystemJsonSerializer())).Throws<ArgumentNullException>();
+    public async Task ConstructorWithNullFileNameShouldThrow() => await Assert.That(static () => new EncryptedSqliteBlobCache(null!, TestPassword, new SystemJsonSerializer())).Throws<ArgumentNullException>();
 
     /// <summary>
     /// Tests that the constructor throws ArgumentNullException for a null password.

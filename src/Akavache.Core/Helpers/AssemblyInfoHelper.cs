@@ -59,17 +59,17 @@ internal static class AssemblyInfoHelper
 
     /// <summary>
     /// Reads and parses the <see cref="AssemblyFileVersionAttribute"/> from an
-    /// assembly into a <see cref="System.Version"/>.
+    /// assembly into a <see cref="Version"/>.
     /// </summary>
     /// <remarks>
     /// Returns <see langword="null"/> if the attribute is missing, or if its value
-    /// fails <see cref="System.Version.TryParse(string, out System.Version)"/>.
+    /// fails <see cref="Version.TryParse(string, out Version)"/>.
     /// </remarks>
     /// <param name="assembly">The assembly to inspect.</param>
     /// <returns>The parsed version, or <see langword="null"/>.</returns>
     public static Version? ExtractAssemblyVersion(Assembly assembly) =>
         assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version } &&
-            System.Version.TryParse(version, out var parsed)
+            Version.TryParse(version, out var parsed)
                 ? parsed
                 : null;
 }
