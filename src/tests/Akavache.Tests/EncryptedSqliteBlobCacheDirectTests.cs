@@ -33,7 +33,7 @@ public class EncryptedSqliteBlobCacheDirectTests
             await cache.DisposeAsync();
 
             await cache.Insert("k", [1]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
-            await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
+            await cache.Insert([new("k", [1])]).ToTask().ShouldThrowAsync<ObjectDisposedException>();
             await cache.Insert("k", [1], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
             await cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(string)).ToTask().ShouldThrowAsync<ObjectDisposedException>();
 
@@ -118,11 +118,11 @@ public class EncryptedSqliteBlobCacheDirectTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             await using var cache = CreateCache(path);
-            var pairs = new[]
-            {
-                new KeyValuePair<string, byte[]>("k1", [1]),
-                new KeyValuePair<string, byte[]>("k2", [2]),
-            };
+            KeyValuePair<string, byte[]>[] pairs =
+            [
+                new("k1", [1]),
+                new("k2", [2])
+            ];
             await cache.Insert(pairs, typeof(string)).ToTask();
 
             var results = await cache.Get(["k1", "k2"], typeof(string)).ToList().ToTask();
@@ -521,7 +521,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     [Test]
     public async Task GetOrCreateHttpServiceShouldReturnExistingWhenNonNull()
     {
-        var existing = new HttpService();
+        HttpService existing = new();
 
         var result = EncryptedSqliteBlobCache.GetOrCreateHttpService(existing);
 
@@ -537,7 +537,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     [Test]
     public async Task ToExpiryValueShouldReturnUtcDateTimeForNonNullOffset()
     {
-        var offset = new DateTimeOffset(2025, 6, 15, 12, 30, 0, TimeSpan.FromHours(5));
+        DateTimeOffset offset = new(2025, 6, 15, 12, 30, 0, TimeSpan.FromHours(5));
 
         var result = EncryptedSqliteBlobCache.ToExpiryValue(offset);
 
@@ -566,7 +566,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     [Test]
     public async Task TryGetLegacyValueAsyncShouldReturnNullWhenLegacyRowMissing()
     {
-        var connection = new InMemoryAkavacheConnection();
+        InMemoryAkavacheConnection connection = new();
 
         var result = await EncryptedSqliteBlobCache.TryGetLegacyValueAsync(connection, "no-such-key", DateTimeOffset.UtcNow, null);
 
@@ -581,7 +581,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     [Test]
     public async Task InitializeDatabaseShouldCompleteAndCreateTable()
     {
-        var connection = new InMemoryAkavacheConnection();
+        InMemoryAkavacheConnection connection = new();
 
         var observable = EncryptedSqliteBlobCache.InitializeDatabase(connection, ImmediateScheduler.Instance);
         await observable.ToTask();
@@ -598,7 +598,7 @@ public class EncryptedSqliteBlobCacheDirectTests
     [Test]
     public async Task InitializeDatabaseShouldErrorWhenCreateTableFails()
     {
-        var connection = new InMemoryAkavacheConnection { FailCreateTable = true };
+        InMemoryAkavacheConnection connection = new() { FailCreateTable = true };
 
         var observable = EncryptedSqliteBlobCache.InitializeDatabase(connection, ImmediateScheduler.Instance);
 

@@ -28,7 +28,7 @@ public class DownloadUrlExtensionsTests
     [Before(Test)]
     public void OneTimeSetUp()
     {
-        _testServer = new TestHttpServer();
+        _testServer = new();
         _testServer.SetupDefaultResponses();
     }
 
@@ -46,12 +46,12 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldWorkCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
@@ -82,17 +82,17 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlWithUriShouldWorkCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
                 // Act - Use local test server
-                var uri = new Uri($"{_testServer!.BaseUrl}html");
+                Uri uri = new($"{_testServer!.BaseUrl}html");
                 var bytes = await cache.DownloadUrl(uri).FirstAsync();
 
                 // Assert
@@ -120,12 +120,12 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlWithKeyShouldStoreData()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
@@ -160,18 +160,18 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlWithUriAndKeyShouldStoreData()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
                 // Act - Use local test server
                 const string key = "downloaded_uri_content";
-                var uri = new Uri($"{_testServer!.BaseUrl}html");
+                Uri uri = new($"{_testServer!.BaseUrl}html");
                 await cache.DownloadUrl(key, uri).FirstAsync();
 
                 // Assert - verify data was stored
@@ -200,10 +200,10 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldHandleInvalidUrls()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
-        var cache = new InMemoryBlobCache(serializer);
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -239,9 +239,9 @@ public class DownloadUrlExtensionsTests
     public async Task DownloadUrlShouldValidateArguments()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -300,12 +300,12 @@ public class DownloadUrlExtensionsTests
     public async Task ConcurrentDownloadsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         CacheDatabase.Initialize(() => serializer, "DownloadUrlExtensionsTests");
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {

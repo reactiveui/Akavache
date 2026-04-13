@@ -54,7 +54,7 @@ public class SerializationCompatibilityTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testObj = new TestObject
+        TestObject testObj = new()
         {
             Name = "Test",
             Value = 42,
@@ -95,11 +95,11 @@ public class SerializationCompatibilityTests
         var readSerializer = readSerializerFactory();
 
         // Arrange
-        var testObj = new TestObject
+        TestObject testObj = new()
         {
             Name = "CrossTest",
             Value = 123,
-            Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
+            Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
         };
 
         // Skip known incompatible combinations:
@@ -161,7 +161,7 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task JsonSerializersShouldBeInterchangeableForSimpleTypes()
     {
-        var testObj = new SimpleTestObject
+        SimpleTestObject testObj = new()
         {
             Name = "JsonCrossTest",
             Value = 999,
@@ -194,11 +194,11 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task BsonSerializersShouldBeInterchangeable()
     {
-        var testObj = new TestObject
+        TestObject testObj = new()
         {
             Name = "BsonCrossTest",
             Value = 999,
-            Date = new DateTime(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
+            Date = new(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
         };
 
         ISerializer[] bsonSerializers =
@@ -229,7 +229,7 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task BsonSerializersShouldReadJsonDataFromSameLibrary()
     {
-        var testObj = new SimpleTestObject
+        SimpleTestObject testObj = new()
         {
             Name = "JsonToBsonTest",
             Value = 42,
@@ -255,15 +255,15 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task PureJsonSerializersShouldNotReadBsonData()
     {
-        var testObj = new TestObject
+        TestObject testObj = new()
         {
             Name = "BsonToJsonTest",
             Value = 42,
-            Date = new DateTime(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
+            Date = new(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
         };
 
-        var bsonWriter = new SystemJsonBsonSerializer();
-        var pureJsonReader = new SystemJsonSerializer();
+        SystemJsonBsonSerializer bsonWriter = new();
+        SystemJsonSerializer pureJsonReader = new();
 
         var bsonData = bsonWriter.Serialize(testObj);
 
@@ -295,22 +295,22 @@ public class SerializationCompatibilityTests
         {
             var dbPath = Path.Combine(path, "test.db");
 
-            var testObject = new TestObject
+            TestObject testObject = new()
             {
                 Name = "TestUser",
                 Value = 12345,
-                Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
+                Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
             };
 
             // Test storage phase
-            await using (var cache = new SqliteBlobCache(dbPath, serializer))
+            await using (SqliteBlobCache cache = new(dbPath, serializer))
             {
                 await cache.InsertObject("test_key", testObject).FirstAsync();
                 await cache.Flush().FirstAsync(); // Ensure data is written to disk
             }
 
             // Test retrieval phase with new cache instance
-            await using (var cache = new SqliteBlobCache(dbPath, serializer))
+            await using (SqliteBlobCache cache = new(dbPath, serializer))
             {
                 var retrievedObject = await cache.GetObject<TestObject>("test_key").FirstAsync();
 
@@ -353,11 +353,11 @@ public class SerializationCompatibilityTests
             throw new ArgumentNullException(nameof(readSerializerType));
         }
 
-        var testObject = new TestObject
+        TestObject testObject = new()
         {
             Name = "CrossSerializerTest",
             Value = 99999,
-            Date = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
+            Date = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
         };
 
         using (Utility.WithEmptyDirectory(out var path))
@@ -368,7 +368,7 @@ public class SerializationCompatibilityTests
             {
                 var writeSerializer = (ISerializer)Activator.CreateInstance(writeSerializerType)!;
 
-                await using var writeCache = new SqliteBlobCache(dbPath, writeSerializer);
+                await using SqliteBlobCache writeCache = new(dbPath, writeSerializer);
                 await writeCache.InsertObject("cross_test", testObject).FirstAsync();
                 await writeCache.Flush().FirstAsync();
             }
@@ -377,7 +377,7 @@ public class SerializationCompatibilityTests
             {
                 var readSerializer = (ISerializer)Activator.CreateInstance(readSerializerType)!;
 
-                await using var readCache = new SqliteBlobCache(dbPath, readSerializer);
+                await using SqliteBlobCache readCache = new(dbPath, readSerializer);
 
                 try
                 {
@@ -428,15 +428,15 @@ public class SerializationCompatibilityTests
         {
             var dbPath = Path.Combine(path, "simple_test.db");
 
-            var testObject = new TestObject
+            TestObject testObject = new()
             {
                 Name = "SimpleTest",
                 Value = 123,
-                Date = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
+                Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
             };
 
             // Test in single cache instance to see if issue is with multiple instances
-            await using (var cache = new SqliteBlobCache(dbPath, serializer))
+            await using (SqliteBlobCache cache = new(dbPath, serializer))
             {
                 // Insert
                 await cache.InsertObject("simple_key", testObject).FirstAsync();
@@ -488,16 +488,16 @@ public class SerializationCompatibilityTests
         {
             var dbPath = Path.Combine(path, "debug_multi_instance.db");
 
-            var testObject = new TestObject
+            TestObject testObject = new()
             {
                 Name = "MultiInstanceDebug",
                 Value = 789,
-                Date = new DateTime(2025, 1, 15, 15, 30, 0, DateTimeKind.Utc)
+                Date = new(2025, 1, 15, 15, 30, 0, DateTimeKind.Utc)
             };
 
             // Phase 1: Store data with explicit disposal and verification
             {
-                var cache1 = new SqliteBlobCache(dbPath, serializer);
+                SqliteBlobCache cache1 = new(dbPath, serializer);
                 await cache1.InsertObject("debug_key", testObject).FirstAsync();
                 await cache1.Flush().FirstAsync();
 
@@ -514,7 +514,7 @@ public class SerializationCompatibilityTests
 
             // Phase 2: Try to read with a new instance
             {
-                var cache2 = new SqliteBlobCache(dbPath, serializer);
+                SqliteBlobCache cache2 = new(dbPath, serializer);
 
                 // Check if file exists
                 await Assert.That(File.Exists(dbPath)).IsTrue();
@@ -524,7 +524,7 @@ public class SerializationCompatibilityTests
                 var typedKeys = await cache2.GetAllKeys(typeof(TestObject)).ToList().FirstAsync();
 
                 // Enhanced diagnostics
-                var fileInfo = new FileInfo(dbPath);
+                FileInfo fileInfo = new(dbPath);
                 var walFile = dbPath + "-wal";
                 var shmFile = dbPath + "-shm";
 

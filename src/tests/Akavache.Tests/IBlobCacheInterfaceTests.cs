@@ -55,9 +55,9 @@ public class IBlobCacheInterfaceTests
     public async Task BasicBlobCacheOperationsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test basic byte array operations
         byte[] testData = [1, 2, 3, 4, 5];
@@ -96,12 +96,12 @@ public class IBlobCacheInterfaceTests
     public async Task BulkBlobCacheOperationsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test bulk byte array operations
-        var testData = new Dictionary<string, byte[]>
+        Dictionary<string, byte[]> testData = new()
         {
             ["key1"] = [1, 2, 3],
             ["key2"] = [4, 5, 6],
@@ -139,9 +139,9 @@ public class IBlobCacheInterfaceTests
     public async Task ExpirationOperationsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         byte[] testData = [1, 2, 3, 4, 5];
         var expiration = DateTimeOffset.Now.AddSeconds(1);
@@ -160,7 +160,7 @@ public class IBlobCacheInterfaceTests
         await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.Get("expiring_key").FirstAsync());
 
         // Test bulk insert with expiration
-        var bulkData = new Dictionary<string, byte[]> { ["bulk1"] = [1, 2], ["bulk2"] = [3, 4] };
+        Dictionary<string, byte[]> bulkData = new() { ["bulk1"] = [1, 2], ["bulk2"] = [3, 4] };
         var bulkExpiration = DateTimeOffset.Now.AddSeconds(1);
 
         await cache.Insert(bulkData, bulkExpiration).FirstAsync();
@@ -187,9 +187,9 @@ public class IBlobCacheInterfaceTests
     public async Task InvalidateAllShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Insert multiple items
         await cache.Insert("key1", [1, 2, 3]).FirstAsync();
@@ -221,9 +221,9 @@ public class IBlobCacheInterfaceTests
     public async Task FlushShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Insert data
         await cache.Insert("flush_test", [1, 2, 3]).FirstAsync();
@@ -244,9 +244,9 @@ public class IBlobCacheInterfaceTests
     public async Task VacuumShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Insert and remove data to create fragmentation
         await cache.Insert("vacuum_test1", [1, 2, 3]).FirstAsync();
@@ -269,9 +269,9 @@ public class IBlobCacheInterfaceTests
     public async Task ArgumentValidationShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test null key validation - these should consistently throw ArgumentNullException
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -347,9 +347,9 @@ public class IBlobCacheInterfaceTests
     public async Task CachePropertiesShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test Scheduler property
         await Assert.That(cache.Scheduler).IsNotNull();
@@ -373,9 +373,9 @@ public class IBlobCacheInterfaceTests
     public async Task ConcurrentDisposeShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
+        InMemoryBlobCache cache = new(serializer);
 
         // Insert some data
         await cache.Insert("dispose_test", [1, 2, 3]).FirstAsync();
@@ -403,9 +403,9 @@ public class IBlobCacheInterfaceTests
     public async Task GetCreatedAtShouldHandleMissingKeys()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // GetCreatedAt for non-existent key should return null
         var createdAt = await cache.GetCreatedAt("non_existent_key").FirstAsync();
@@ -420,10 +420,10 @@ public class IBlobCacheInterfaceTests
     public async Task TypeBasedOperationsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
 
-        var testData = new byte[] { 1, 2, 3, 4, 5 };
+        byte[] testData = [1, 2, 3, 4, 5];
         var userType = typeof(string);
 
         // Insert with Type
@@ -447,7 +447,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(allTypedData.Any(kvp => kvp.Key == "typed_key")).IsTrue();
 
         // Bulk Insert with Type
-        var bulkData = new Dictionary<string, byte[]>
+        Dictionary<string, byte[]> bulkData = new()
         {
             ["bulk1"] = [1, 2],
             ["bulk2"] = [3, 4]
@@ -490,9 +490,9 @@ public class IBlobCacheInterfaceTests
     public async Task BulkCollectionOperationsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test GetCreatedAt with multiple keys - simplified approach
         string[] testKeys = ["key1", "key2", "key3"];
@@ -514,7 +514,7 @@ public class IBlobCacheInterfaceTests
             {
                 // If we get results, validate them
                 await Assert.That(createdAtResults).Count().IsLessThanOrEqualTo(testKeys.Length);
-                foreach (var (key, time) in createdAtResults)
+                foreach ((var key, var time) in createdAtResults)
                 {
                     using (Assert.Multiple())
                     {
@@ -543,7 +543,7 @@ public class IBlobCacheInterfaceTests
         }
 
         // Test empty collection handling
-        var emptyKeys = Array.Empty<string>();
+        string[] emptyKeys = [];
         var emptyResults = await cache.GetCreatedAt(emptyKeys).ToList().FirstAsync();
         await Assert.That(emptyResults).IsEmpty();
     }
@@ -556,13 +556,13 @@ public class IBlobCacheInterfaceTests
     public async Task EmptyCollectionOperationsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test with empty collections
-        var emptyKeys = Array.Empty<string>();
-        var emptyData = new Dictionary<string, byte[]>();
+        string[] emptyKeys = [];
+        Dictionary<string, byte[]> emptyData = [];
 
         // Insert empty collection
         await cache.Insert(emptyData).FirstAsync();

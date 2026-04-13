@@ -3,12 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Akavache;
 using Akavache.Sqlite3;
 
@@ -31,7 +25,7 @@ BlobCache.ApplicationName = "AkavacheCompatTest";
 Akavache.Sqlite3.Registrations.Start("AkavacheCompatTest", () => { });
 
 // Create a raw persistent cache pointing at our explicit path
-using var cache = new SqlRawPersistentBlobCache(dbPath);
+using SqlRawPersistentBlobCache cache = new(dbPath);
 
 // Keys
 const string keyString = "compat:string";
@@ -40,9 +34,9 @@ const string keyPerson = "compat:person";
 const string keyBytes = "compat:bytes";
 
 // Values (deterministic)
-var valueString = "Hello, Akavache V10!";
-var valueInt = 42;
-var valuePerson = new Person { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
+const string valueString = "Hello, Akavache V10!";
+const int valueInt = 42;
+Person valuePerson = new() { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
 var valueBytes = "ByteArray:CAFEBABE"u8.ToArray();
 
 try

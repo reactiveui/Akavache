@@ -289,8 +289,8 @@ public class EncryptedSqlite3BuilderExtensionsTests
     public async Task WithSqliteDefaultsShouldThrowWhenApplicationNameEmpty()
     {
         Akavache.EncryptedSqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
-        var serializer = new SystemJsonSerializer();
-        var builder = new FakeBuilder
+        SystemJsonSerializer serializer = new();
+        FakeBuilder builder = new()
         {
             ApplicationName = string.Empty,
             Serializer = serializer,
@@ -309,8 +309,8 @@ public class EncryptedSqlite3BuilderExtensionsTests
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldThrowWhenApplicationNameEmpty()
     {
-        var serializer = new SystemJsonSerializer();
-        var builder = new FakeBuilder
+        SystemJsonSerializer serializer = new();
+        FakeBuilder builder = new()
         {
             ApplicationName = string.Empty,
             Serializer = serializer,
@@ -432,7 +432,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSerializer<T>()
-            where T : ISerializer, new()
+            where T : class, ISerializer, new()
         {
             Serializer = new T();
             SerializerTypeName = typeof(T).AssemblyQualifiedName;
@@ -441,7 +441,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-            where T : ISerializer
+            where T : class, ISerializer
         {
             Serializer = configure();
             SerializerTypeName = typeof(T).AssemblyQualifiedName;

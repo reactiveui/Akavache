@@ -54,11 +54,11 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            var pairs = new[]
-            {
-                new KeyValuePair<string, byte[]>("k1", [1]),
-                new KeyValuePair<string, byte[]>("k2", [2]),
-            };
+            KeyValuePair<string, byte[]>[] pairs =
+            [
+                new("k1", [1]),
+                new("k2", [2])
+            ];
             await wrapper.Insert(pairs).ToTask();
 
             var keys = await wrapper.GetAllKeys().ToList().ToTask();
@@ -104,11 +104,11 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            var pairs = new[]
-            {
-                new KeyValuePair<string, byte[]>("k1", [1]),
-                new KeyValuePair<string, byte[]>("k2", [2]),
-            };
+            KeyValuePair<string, byte[]>[] pairs =
+            [
+                new("k1", [1]),
+                new("k2", [2])
+            ];
             await wrapper.Insert(pairs, typeof(string)).ToTask();
 
             var results = await wrapper.Get(["k1", "k2"], typeof(string)).ToList().ToTask();

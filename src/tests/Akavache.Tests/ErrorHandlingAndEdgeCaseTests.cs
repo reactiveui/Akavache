@@ -21,9 +21,9 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
+        InMemoryBlobCache cache = new(serializer);
 
         // Insert some data first
         await cache.InsertObject("test", "value").FirstAsync();
@@ -47,12 +47,12 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleExtremelyLargeDataCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Create very large data (10MB string)
-        var largeData = new string('X', 10_000_000);
+        string largeData = new('X', 10_000_000);
 
         // Act - Should handle large data without throwing
         await cache.InsertObject("large_data", largeData).FirstAsync();
@@ -74,9 +74,9 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleNullObjectsCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Act - Insert null object
         await cache.InsertObject<string?>("null_key", null).FirstAsync();
@@ -100,9 +100,9 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleInvalidKeysCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test null key validation - this should always throw ArgumentNullException
         await Assert.ThrowsAsync<ArgumentNullException>(async () => await cache.InsertObject(null!, "value").FirstAsync());
@@ -137,7 +137,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
 
         // Test very long keys - should work for InMemoryBlobCache
-        var veryLongKey = new string('k', 10000);
+        string veryLongKey = new('k', 10000);
         await cache.InsertObject(veryLongKey, "long_key_value").FirstAsync();
         var longKeyRetrieved = await cache.GetObject<string>(veryLongKey).FirstAsync();
         await Assert.That(longKeyRetrieved).IsEqualTo("long_key_value");
@@ -215,15 +215,15 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleConcurrentAccessCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         const int concurrencyLevel = 100;
         const int operationsPerThread = 50;
 
         // Act - Perform many concurrent operations
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
 
         for (var i = 0; i < concurrencyLevel; i++)
         {
@@ -273,9 +273,9 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleExpirationEdgeCasesCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test immediate expiration
         var pastExpiration = DateTimeOffset.Now.AddSeconds(-1);
@@ -327,9 +327,9 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleComplexObjectHierarchiesCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Create complex nested object
         var complexObject = new
@@ -338,8 +338,8 @@ public class ErrorHandlingAndEdgeCaseTests
             Name = "Complex Object",
             Timestamp = DateTimeOffset.Now,
             Users = (UserObject[])[
-                new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" },
-                new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" }
+                new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" },
+                new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" }
             ],
             Metadata = new Dictionary<string, object>
             {
@@ -375,20 +375,20 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleMemoryPressureCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Create many objects to simulate memory pressure
         const int objectCount = 1000;
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
 
         for (var i = 0; i < objectCount; i++)
         {
             var index = i;
             tasks.Add(Task.Run(async () =>
             {
-                var user = new UserObject
+                UserObject user = new()
                 {
                     Name = $"User{index}",
                     Bio = $"This is a bio for user {index} with some additional text to make it larger",
@@ -410,7 +410,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
 
         // Test bulk invalidation under memory pressure
-        var invalidationTasks = new List<Task>();
+        List<Task> invalidationTasks = [];
         for (var i = 0; i < objectCount; i++)
         {
             var index = i;
@@ -434,12 +434,12 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleUnicodeAndSpecialCharactersCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test various Unicode and special character scenarios
-        var testCases = new Dictionary<string, string>
+        Dictionary<string, string> testCases = new()
         {
             ["emoji"] = "Hello ?? World ??! ?????",
             ["chinese"] = "????",
@@ -491,12 +491,12 @@ public class ErrorHandlingAndEdgeCaseTests
     public async Task CacheShouldHandleDateTimeEdgeCasesCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        await using var cache = new InMemoryBlobCache(serializer);
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Test various DateTime edge cases
-        var dateTimeCases = new Dictionary<string, DateTime>
+        Dictionary<string, DateTime> dateTimeCases = new()
         {
             ["min_value"] = DateTime.MinValue,
             ["max_value"] = DateTime.MaxValue,
@@ -538,7 +538,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
 
         // Test DateTimeOffset cases
-        var dateTimeOffsetCases = new Dictionary<string, DateTimeOffset>
+        Dictionary<string, DateTimeOffset> dateTimeOffsetCases = new()
         {
             ["offset_min"] = DateTimeOffset.MinValue,
             ["offset_max"] = DateTimeOffset.MaxValue,

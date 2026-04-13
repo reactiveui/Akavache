@@ -74,7 +74,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithSettingsCachePath_NullBuilder_ThrowsAsync()
     {
-        var action = () => ((IAkavacheBuilder)null!).WithSettingsCachePath("/some/path");
+        var action = static () => ((IAkavacheBuilder)null!).WithSettingsCachePath("/some/path");
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
 
@@ -406,7 +406,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task WithSettingsStoreWithCache_NullBuilder_ThrowsAsync()
     {
-        var cache = new InMemoryBlobCache(new NewtonsoftSerializer());
+        InMemoryBlobCache cache = new(new NewtonsoftSerializer());
         var action = () => ((IAkavacheBuilder)null!).WithSettingsStore<ViewSettings>(cache, _ => { });
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
@@ -445,7 +445,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetSettingsStoreWithCache_NullBuilder_ThrowsAsync()
     {
-        var cache = new InMemoryBlobCache(new NewtonsoftSerializer());
+        InMemoryBlobCache cache = new(new NewtonsoftSerializer());
         var action = () => ((IAkavacheInstance)null!).GetSettingsStore<ViewSettings>(cache);
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
@@ -507,7 +507,7 @@ public class AkavacheBuilderExtensionsTests
 
         try
         {
-            var cache = new InMemoryBlobCache(new NewtonsoftSerializer());
+            InMemoryBlobCache cache = new(new NewtonsoftSerializer());
             var action = () => instance!.GetSettingsStore<ViewSettings>(cache);
             await Assert.That(action).ThrowsExactly<InvalidOperationException>();
         }
@@ -531,7 +531,7 @@ public class AkavacheBuilderExtensionsTests
             NewName("cache_store_test"),
             builder =>
             {
-                var cache = new InMemoryBlobCache(builder.Serializer!);
+                InMemoryBlobCache cache = new(builder.Serializer!);
                 builder.WithSettingsStore<ViewSettings>(cache, s => viewSettings = s);
                 return Task.CompletedTask;
             },
@@ -580,7 +580,7 @@ public class AkavacheBuilderExtensionsTests
                 ViewSettings? viewSettings = null;
                 try
                 {
-                    var cache = new InMemoryBlobCache(instance.Serializer!);
+                    InMemoryBlobCache cache = new(instance.Serializer!);
                     var dbName = NewName("custom_cache");
                     viewSettings = instance.GetSettingsStore<ViewSettings>(cache, dbName);
 
@@ -859,7 +859,7 @@ public class AkavacheBuilderExtensionsTests
             NewName("null_cache_action_test"),
             builder =>
             {
-                var cache = new InMemoryBlobCache(builder.Serializer!);
+                InMemoryBlobCache cache = new(builder.Serializer!);
                 builder.WithSettingsStore<ViewSettings>(cache, null!);
                 return Task.CompletedTask;
             },

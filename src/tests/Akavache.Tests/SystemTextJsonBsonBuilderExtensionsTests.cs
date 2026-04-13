@@ -68,7 +68,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
     public async Task UseSystemJsonBsonSerializerSettingsShouldRegisterSerializer()
     {
         var builder = CreateBuilder("UseSystemJsonBsonSerializerSettings");
-        var settings = new JsonSerializerOptions { WriteIndented = true };
+        JsonSerializerOptions settings = new() { WriteIndented = true };
         var result = builder.UseSystemJsonBsonSerializer(settings);
 
         await Assert.That(result).IsSameReferenceAs(builder);

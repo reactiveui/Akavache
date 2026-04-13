@@ -48,7 +48,7 @@ public class CacheDatabaseTests
 
         // Test that it can schedule work
         var workExecuted = false;
-        var resetEvent = new ManualResetEventSlim(false);
+        ManualResetEventSlim resetEvent = new(false);
 
         scheduler.Schedule(() =>
         {
@@ -202,7 +202,7 @@ public class CacheDatabaseTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task ShutdownShouldNoopWhenNotInitialized() => await Assert.That(() => CacheDatabase.Shutdown().ToTask()).ThrowsNothing();
+    public async Task ShutdownShouldNoopWhenNotInitialized() => await Assert.That(static () => CacheDatabase.Shutdown().ToTask()).ThrowsNothing();
 
     /// <summary>
     /// Tests Initialize with serializer factory.
@@ -325,15 +325,15 @@ public class CacheDatabaseTests
         var savedBlobCaches = AkavacheBuilder.BlobCaches;
         var savedSettingsStores = AkavacheBuilder.SettingsStores;
 
-        var liveBlob = new InMemoryBlobCache(new SystemJsonSerializer());
-        var liveStore = new FakeSettingsStorage();
+        InMemoryBlobCache liveBlob = new(new SystemJsonSerializer());
+        FakeSettingsStorage liveStore = new();
 
-        AkavacheBuilder.BlobCaches = new Dictionary<string, IBlobCache?>
+        AkavacheBuilder.BlobCaches = new()
         {
             ["live"] = liveBlob,
             ["null"] = null,
         };
-        AkavacheBuilder.SettingsStores = new Dictionary<string, ISettingsStorage?>
+        AkavacheBuilder.SettingsStores = new()
         {
             ["live"] = liveStore,
             ["null"] = null,
@@ -398,7 +398,7 @@ public class CacheDatabaseTests
         AkavacheBuilder.BlobCaches = null;
         AkavacheBuilder.SettingsStores = null;
 
-        var fakeInstance = new FakeAkavacheInstance
+        FakeAkavacheInstance fakeInstance = new()
         {
             UserAccount = new ThrowingFlushBlobCache(),
         };
@@ -456,7 +456,7 @@ public class CacheDatabaseTests
         AkavacheBuilder.BlobCaches = null;
         AkavacheBuilder.SettingsStores = null;
 
-        var fakeInstance = new FakeAkavacheInstance
+        FakeAkavacheInstance fakeInstance = new()
         {
             UserAccount = null,
             LocalMachine = null,
@@ -490,7 +490,7 @@ public class CacheDatabaseTests
         AkavacheBuilder.BlobCaches = null;
         AkavacheBuilder.SettingsStores = null;
 
-        var fakeInstance = new FakeAkavacheInstance
+        FakeAkavacheInstance fakeInstance = new()
         {
             UserAccount = new ObservableErrorFlushBlobCache(),
         };
@@ -537,7 +537,7 @@ public class CacheDatabaseTests
         AkavacheBuilder.BlobCaches = null;
         AkavacheBuilder.SettingsStores = null;
 
-        var fakeInstance = new FakeAkavacheInstance
+        FakeAkavacheInstance fakeInstance = new()
         {
             ForcedDateTimeKind = DateTimeKind.Utc,
         };

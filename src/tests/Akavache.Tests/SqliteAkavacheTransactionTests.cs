@@ -5,7 +5,6 @@
 using Akavache.Sqlite3;
 using Akavache.Tests.Helpers;
 using Akavache.Tests.Mocks;
-using SQLite;
 
 namespace Akavache.Tests;
 
@@ -122,7 +121,7 @@ public class SqliteAkavacheTransactionTests
                 await connection.CreateTableAsync<CacheEntry>();
                 await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1], ExpiresAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) });
 
-                var newExpiry = new DateTime(2040, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+                DateTime newExpiry = new(2040, 6, 15, 12, 0, 0, DateTimeKind.Utc);
                 await connection.RunInTransactionAsync(tx => tx.SetExpiry("k", null, newExpiry));
 
                 var row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
@@ -241,7 +240,7 @@ public class SqliteAkavacheTransactionTests
     [Test]
     public async Task InMemoryIsValidShouldRespectSimulateNullConnection()
     {
-        await using var connection = new InMemoryAkavacheConnection { SimulateNullConnection = true };
+        await using InMemoryAkavacheConnection connection = new() { SimulateNullConnection = true };
         await connection.CreateTableAsync<CacheEntry>();
 
         var observed = true;
@@ -280,7 +279,7 @@ public class SqliteAkavacheTransactionTests
     [Test]
     public async Task InMemoryIsValidShouldFlipAfterConfiguredCallCount()
     {
-        await using var connection = new InMemoryAkavacheConnection
+        await using InMemoryAkavacheConnection connection = new()
         {
             TransactionIsValidTrueCallsRemaining = 1,
         };
@@ -313,7 +312,7 @@ public class SqliteAkavacheTransactionTests
         var sqliteTempDir = Path.Combine(Path.GetTempPath(), $"akavache_tx_{Guid.NewGuid():N}");
         Directory.CreateDirectory(sqliteTempDir);
 
-        var sqlite = new SqliteAkavacheConnection(new SQLiteConnectionString(Path.Combine(sqliteTempDir, "tx.db")));
+        SqliteAkavacheConnection sqlite = new(new(Path.Combine(sqliteTempDir, "tx.db")));
         try
         {
             yield return sqlite;
@@ -335,8 +334,8 @@ public class SqliteAkavacheTransactionTests
         var encryptedTempDir = Path.Combine(Path.GetTempPath(), $"akavache_tx_enc_{Guid.NewGuid():N}");
         Directory.CreateDirectory(encryptedTempDir);
 
-        var encrypted = new Akavache.EncryptedSqlite3.SqliteAkavacheConnection(
-            new SQLiteConnectionString(Path.Combine(encryptedTempDir, "tx.db"), true, key: "test123"));
+        EncryptedSqlite3.SqliteAkavacheConnection encrypted = new(
+            new(Path.Combine(encryptedTempDir, "tx.db"), true, key: "test123"));
         try
         {
             yield return encrypted;

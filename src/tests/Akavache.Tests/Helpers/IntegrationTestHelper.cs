@@ -33,8 +33,8 @@ public static class IntegrationTestHelper
         // XXX: This is an evil hack, but it's okay for a unit test
         // We can't use Assembly.Location because unit test runners love
         // to move stuff to temp directories
-        var st = new StackFrame(true);
-        var di = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(st.GetFileName())!));
+        StackFrame st = new(true);
+        DirectoryInfo di = new(Path.Combine(Path.GetDirectoryName(st.GetFileName())!));
 
         return di.FullName;
     }
@@ -68,7 +68,7 @@ public static class IntegrationTestHelper
         var headerText = Encoding.UTF8.GetString(bytes, 0, bodyIndex);
         var lines = headerText.Split('\n');
         var statusCode = (HttpStatusCode)int.Parse(lines[0].Split(' ')[1], CultureInfo.InvariantCulture);
-        var ret = new HttpResponseMessage(statusCode)
+        HttpResponseMessage ret = new(statusCode)
         {
             Content = new ByteArrayContent(bytes, bodyIndex + 2, bytes.Length - bodyIndex - 2)
         };

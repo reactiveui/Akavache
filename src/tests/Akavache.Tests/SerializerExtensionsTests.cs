@@ -25,16 +25,16 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsShouldWorkWithEnumerable()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var keyValuePairs = new List<KeyValuePair<string, UserObject>>
-                {
-                    new("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
-                    new("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
-                };
+            InMemoryBlobCache cache = new(serializer);
+            List<KeyValuePair<string, UserObject>> keyValuePairs =
+            [
+                new("user1", new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
+                new("user2", new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
+            ];
 
             try
             {
@@ -74,13 +74,13 @@ public class SerializerExtensionsTests
     public async Task GetObjectsShouldWorkWithMultipleKeys()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
-            var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            UserObject user2 = new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
 
             try
             {
@@ -123,15 +123,15 @@ public class SerializerExtensionsTests
     public async Task GetAllObjectsShouldReturnAllObjectsOfType()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
             // C# 8's 'await using' simplifies async disposal
-            await using var cache = new InMemoryBlobCache(serializer);
+            await using InMemoryBlobCache cache = new(serializer);
 
-            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
-            var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
+            UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            UserObject user2 = new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
 
             // Insert test data
             await cache.InsertObject("user1", user1).FirstAsync();
@@ -159,12 +159,12 @@ public class SerializerExtensionsTests
     public async Task InvalidateObjectShouldRemoveObject()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var user = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject user = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
 
             try
             {
@@ -196,13 +196,13 @@ public class SerializerExtensionsTests
     public async Task InvalidateObjectsShouldRemoveMultipleObjects()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
-            var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            UserObject user2 = new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
 
             try
             {
@@ -233,13 +233,13 @@ public class SerializerExtensionsTests
     public async Task InvalidateAllObjectsShouldRemoveAllObjectsOfType()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
-            var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            UserObject user2 = new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
 
             try
             {
@@ -278,12 +278,12 @@ public class SerializerExtensionsTests
     public async Task GetObjectCreatedAtShouldReturnCreationTime()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var user = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject user = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
             var beforeInsert = DateTimeOffset.Now;
 
             try
@@ -312,15 +312,15 @@ public class SerializerExtensionsTests
     public async Task InsertAllObjectsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
             KeyValuePair<string, UserObject>[] keyValuePairs =
             [
-                new("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
-                new("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
+                new("user1", new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
+                new("user2", new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
             ];
 
             try
@@ -357,12 +357,12 @@ public class SerializerExtensionsTests
     public async Task GetOrCreateObjectShouldCreateWhenNotInCache()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var user = new UserObject { Name = "Created User", Bio = "Created Bio", Blog = "Created Blog" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject user = new() { Name = "Created User", Bio = "Created Bio", Blog = "Created Blog" };
 
             try
             {
@@ -393,13 +393,13 @@ public class SerializerExtensionsTests
     public async Task GetOrCreateObjectShouldReturnExistingFromCache()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var existingUser = new UserObject { Name = "Existing User", Bio = "Existing Bio", Blog = "Existing Blog" };
-            var newUser = new UserObject { Name = "New User", Bio = "New Bio", Blog = "New Blog" };
+            InMemoryBlobCache cache = new(serializer);
+            UserObject existingUser = new() { Name = "Existing User", Bio = "Existing Bio", Blog = "Existing Blog" };
+            UserObject newUser = new() { Name = "New User", Bio = "New Bio", Blog = "New Blog" };
 
             try
             {
@@ -432,10 +432,10 @@ public class SerializerExtensionsTests
     public async Task GetOrFetchObjectShouldFetchWhenNotInCache()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var fetchedUser = new UserObject { Name = "Fetched User", Bio = "Fetched Bio", Blog = "Fetched Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject fetchedUser = new() { Name = "Fetched User", Bio = "Fetched Bio", Blog = "Fetched Blog" };
         var fetchCount = 0;
 
         try
@@ -474,11 +474,11 @@ public class SerializerExtensionsTests
     public async Task GetOrFetchObjectShouldReturnCachedValue()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var cachedUser = new UserObject { Name = "Cached User", Bio = "Cached Bio", Blog = "Cached Blog" };
-        var fetchedUser = new UserObject { Name = "Fetched User", Bio = "Fetched Bio", Blog = "Fetched Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject cachedUser = new() { Name = "Cached User", Bio = "Cached Bio", Blog = "Cached Blog" };
+        UserObject fetchedUser = new() { Name = "Fetched User", Bio = "Fetched Bio", Blog = "Fetched Blog" };
         var fetchCount = 0;
 
         try
@@ -515,10 +515,10 @@ public class SerializerExtensionsTests
     public async Task GetOrFetchObjectWithTaskShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var fetchedUser = new UserObject { Name = "Task Fetched User", Bio = "Task Bio", Blog = "Task Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject fetchedUser = new() { Name = "Task Fetched User", Bio = "Task Bio", Blog = "Task Blog" };
 
         try
         {
@@ -543,18 +543,18 @@ public class SerializerExtensionsTests
     public async Task GetAndFetchLatestShouldReturnCachedThenLatest()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var cachedUser = new UserObject { Name = "Cached User", Bio = "Cached Bio", Blog = "Cached Blog" };
-        var latestUser = new UserObject { Name = "Latest User", Bio = "Latest Bio", Blog = "Latest Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject cachedUser = new() { Name = "Cached User", Bio = "Cached Bio", Blog = "Cached Blog" };
+        UserObject latestUser = new() { Name = "Latest User", Bio = "Latest Bio", Blog = "Latest Blog" };
 
         try
         {
             // Insert cached value
             await cache.InsertObject("user", cachedUser).FirstAsync();
 
-            var results = new List<UserObject?>();
+            List<UserObject?> results = [];
 
             // Act - GetAndFetchLatest should return cached value first, then latest
             await cache.GetAndFetchLatest("user", () => Observable.Return(latestUser))
@@ -587,14 +587,14 @@ public class SerializerExtensionsTests
     public async Task GetAndFetchLatestWithTaskShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var latestUser = new UserObject { Name = "Task Latest User", Bio = "Task Bio", Blog = "Task Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject latestUser = new() { Name = "Task Latest User", Bio = "Task Bio", Blog = "Task Blog" };
 
         try
         {
-            var results = new List<UserObject?>();
+            List<UserObject?> results = [];
 
             // Act - GetAndFetchLatest with no cached value
             await cache.GetAndFetchLatest("new_user", () => Task.FromResult(latestUser))
@@ -620,11 +620,11 @@ public class SerializerExtensionsTests
     public async Task GetAndFetchLatestShouldRespectFetchPredicate()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var cachedUser = new UserObject { Name = "Cached User", Bio = "Cached Bio", Blog = "Cached Blog" };
-        var latestUser = new UserObject { Name = "Latest User", Bio = "Latest Bio", Blog = "Latest Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject cachedUser = new() { Name = "Cached User", Bio = "Cached Bio", Blog = "Cached Blog" };
+        UserObject latestUser = new() { Name = "Latest User", Bio = "Latest Bio", Blog = "Latest Blog" };
         var fetchCount = 0;
 
         try
@@ -632,7 +632,7 @@ public class SerializerExtensionsTests
             // Insert cached value
             await cache.InsertObject("user", cachedUser).FirstAsync();
 
-            var results = new List<UserObject?>();
+            List<UserObject?> results = [];
 
             // Act - Use fetchPredicate that returns false (should not fetch)
             await cache.GetAndFetchLatest(
@@ -670,7 +670,7 @@ public class SerializerExtensionsTests
     {
         // Arrange
         IBlobCache? cache = null;
-        var dict = new Dictionary<string, object> { ["key"] = "value" };
+        Dictionary<string, object> dict = new() { ["key"] = "value" };
 
         // Act & Assert
         await Assert.That(() => cache!.InsertObjects(dict)).Throws<ArgumentNullException>();
@@ -684,9 +684,9 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsShouldThrowArgumentNullExceptionWhenKeyValuePairsIsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
+        InMemoryBlobCache cache = new(serializer);
         Dictionary<string, object>? dict = null;
 
         try
@@ -708,12 +708,12 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsShouldHandleEmptyDictionary()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
-            var emptyDict = new Dictionary<string, object>();
+            InMemoryBlobCache cache = new(serializer);
+            Dictionary<string, object> emptyDict = [];
 
             try
             {
@@ -737,15 +737,15 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsShouldHandleMixedObjectTypes()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
             // Use 'await using' for cleaner async resource management
-            await using var cache = new InMemoryBlobCache(serializer);
+            await using InMemoryBlobCache cache = new(serializer);
 
-            var testDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
-            var mixedObjects = new Dictionary<string, object>
+            DateTime testDate = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+            Dictionary<string, object> mixedObjects = new()
             {
                 ["string"] = "test string",
                 ["int"] = 42,
@@ -784,9 +784,9 @@ public class SerializerExtensionsTests
     public async Task ExtensionMethodsShouldValidateArguments()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -834,24 +834,24 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsShouldHandleEmptySequenceRobustly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
                 // Test 1: Empty dictionary should complete without exception
-                var emptyDict = new Dictionary<string, object>();
+                Dictionary<string, object> emptyDict = [];
                 await cache.InsertObjects(emptyDict).FirstAsync();
 
                 // Test 2: Single item should work
-                var singleDict = new Dictionary<string, object> { ["key1"] = "value1" };
+                Dictionary<string, object> singleDict = new() { ["key1"] = "value1" };
                 await cache.InsertObjects(singleDict).FirstAsync();
 
                 // Test 3: Multiple items should work
-                var multiDict = new Dictionary<string, object>
+                Dictionary<string, object> multiDict = new()
                 {
                     ["key2"] = "value2",
                     ["key3"] = 42,
@@ -891,39 +891,37 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsGenericShouldHandleSequenceCompletionRobustly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
                 // Test 1: Empty collection
-                var emptyPairs = new List<KeyValuePair<string, UserObject>>();
+                List<KeyValuePair<string, UserObject>> emptyPairs = [];
                 await cache.InsertObjects(emptyPairs).FirstAsync();
 
                 // Test 2: Single item
-                var singlePair = new List<KeyValuePair<string, UserObject>>
-                {
-                    new("user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" })
-                };
+                List<KeyValuePair<string, UserObject>> singlePair =
+                    [new("user1", new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" })];
                 await cache.InsertObjects(singlePair).FirstAsync();
 
                 // Test 3: Multiple items
-                var multiPairs = new List<KeyValuePair<string, UserObject>>
-                {
-                    new("user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" }),
-                    new("user3", new UserObject { Name = "User3", Bio = "Bio3", Blog = "Blog3" }),
-                    new("user4", new UserObject { Name = "User4", Bio = "Bio4", Blog = "Blog4" })
-                };
+                List<KeyValuePair<string, UserObject>> multiPairs =
+                [
+                    new("user2", new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" }),
+                    new("user3", new() { Name = "User3", Bio = "Bio3", Blog = "Blog3" }),
+                    new("user4", new() { Name = "User4", Bio = "Bio4", Blog = "Blog4" })
+                ];
                 await cache.InsertObjects(multiPairs).FirstAsync();
 
                 // Test 4: Large collection to stress test the Count() approach
                 var largePairs = Enumerable.Range(1, 100)
                     .Select(i => new KeyValuePair<string, UserObject>(
                         $"large_user_{i}",
-                        new UserObject { Name = $"LargeUser{i}", Bio = $"Bio{i}", Blog = $"Blog{i}" }))
+                        new() { Name = $"LargeUser{i}", Bio = $"Bio{i}", Blog = $"Blog{i}" }))
                     .ToList();
                 await cache.InsertObjects(largePairs).FirstAsync();
 
@@ -959,24 +957,24 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsCompletionLogicShouldBeRobust()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
                 // Test 1: Empty dictionary - should complete without exception
-                var emptyDict = new Dictionary<string, object>();
+                Dictionary<string, object> emptyDict = [];
                 await cache.InsertObjects(emptyDict).FirstAsync();
 
                 // Test 2: Single item - should complete normally
-                var singleDict = new Dictionary<string, object> { ["single"] = "value" };
+                Dictionary<string, object> singleDict = new() { ["single"] = "value" };
                 await cache.InsertObjects(singleDict).FirstAsync();
 
                 // Test 3: Multiple items including edge cases
-                var multiDict = new Dictionary<string, object>
+                Dictionary<string, object> multiDict = new()
                 {
                     ["string_val"] = "test",
                     ["int_val"] = 42,
@@ -1024,16 +1022,16 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsShouldHandleProblematicScenariosRobustly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
                 // Test with null values that might cause serialization edge cases
-                var problematicDict = new Dictionary<string, object?>
+                Dictionary<string, object?> problematicDict = new()
                 {
                     ["null_value"] = null,
                     ["empty_string"] = string.Empty,
@@ -1083,8 +1081,8 @@ public class SerializerExtensionsTests
     public async Task InvalidateShouldClearRequestCacheForGetOrFetchObject()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         var fetchCount = 0;
 
         try
@@ -1128,13 +1126,13 @@ public class SerializerExtensionsTests
     public async Task BugReport524_InvalidateNotWorkingProperlyForInMemory()
     {
         // Arrange - Replicate the exact scenario from the bug report
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         var cnt = 0;
 
         try
         {
-            Func<IObservable<string?>> getOrFetchAsync = () =>
+            var getOrFetchAsync = () =>
             {
                 return cache.GetOrFetchObject(
                     "a",
@@ -1172,9 +1170,9 @@ public class SerializerExtensionsTests
     public async Task InsertObjectWithExpirationShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
-        var user = new UserObject { Name = "Expiring User", Bio = "Bio", Blog = "Blog" };
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
+        UserObject user = new() { Name = "Expiring User", Bio = "Bio", Blog = "Blog" };
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         try
@@ -1205,8 +1203,8 @@ public class SerializerExtensionsTests
     public async Task GetObjectShouldHandleNullValues()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1231,9 +1229,9 @@ public class SerializerExtensionsTests
     public async Task GetObjectsShouldHandleMissingKeys()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
-        var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
+        UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
 
         try
         {
@@ -1261,14 +1259,14 @@ public class SerializerExtensionsTests
     public async Task InsertObjectsWithExpirationShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         var expiration = DateTimeOffset.Now.AddHours(1);
-        var keyValuePairs = new List<KeyValuePair<string, UserObject>>
-        {
-            new("exp_user1", new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
-            new("exp_user2", new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
-        };
+        List<KeyValuePair<string, UserObject>> keyValuePairs =
+        [
+            new("exp_user1", new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" }),
+            new("exp_user2", new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" })
+        ];
 
         try
         {
@@ -1301,8 +1299,8 @@ public class SerializerExtensionsTests
     public async Task GetOrFetchObjectShouldHandleFetchExceptions()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1328,8 +1326,8 @@ public class SerializerExtensionsTests
     public async Task GetOrCreateObjectShouldHandleCreateExceptions()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1355,8 +1353,8 @@ public class SerializerExtensionsTests
     public async Task InvalidateObjectsWithEmptyCollectionShouldCompleteWithoutError()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1379,8 +1377,8 @@ public class SerializerExtensionsTests
     public async Task GetAllObjectsShouldReturnEmptyWhenNoObjectsOfType()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1404,8 +1402,8 @@ public class SerializerExtensionsTests
     public async Task GetObjectCreatedAtShouldReturnNullForNonExistentKey()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1430,9 +1428,9 @@ public class SerializerExtensionsTests
     public async Task InsertObjectShouldThrowForWhitespaceKey()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
-        var user = new UserObject { Name = "User", Bio = "Bio", Blog = "Blog" };
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
+        UserObject user = new() { Name = "User", Bio = "Bio", Blog = "Blog" };
 
         try
         {
@@ -1464,8 +1462,8 @@ public class SerializerExtensionsTests
     public async Task GetObjectShouldThrowForWhitespaceKey()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -1500,8 +1498,8 @@ public class SerializerExtensionsTests
     public async Task ConcurrentGetOrFetchObjectShouldBeThreadSafe()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         var fetchCount = 0;
 
         try
@@ -1544,7 +1542,7 @@ public class SerializerExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task InsertObjectsShouldThrowOnNullCache() =>
-        await Assert.That(static () => SerializerExtensions.InsertObjects<string>(null!, [new KeyValuePair<string, string>("k", "v")
+        await Assert.That(static () => SerializerExtensions.InsertObjects<string>(null!, [new("k", "v")
             ]))
             .Throws<ArgumentNullException>();
 
@@ -1747,12 +1745,12 @@ public class SerializerExtensionsTests
     [Test]
     public async Task GetAllObjectsStaticExtensionShouldReturnStoredObjects()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         try
         {
-            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
-            var user2 = new UserObject { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
+            UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            UserObject user2 = new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" };
             await cache.InsertObject("user1", user1).FirstAsync();
             await cache.InsertObject("user2", user2).FirstAsync();
 
@@ -1777,11 +1775,11 @@ public class SerializerExtensionsTests
     [Test]
     public async Task InvalidateAllObjectsStaticExtensionShouldRemoveAllObjectsOfType()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         try
         {
-            var user1 = new UserObject { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
+            UserObject user1 = new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" };
             await cache.InsertObject("user1", user1).FirstAsync();
 
             await SerializerExtensions.InvalidateAllObjects<UserObject>(cache).FirstAsync();
@@ -1801,7 +1799,7 @@ public class SerializerExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task InsertAllObjectsShouldThrowOnNullCache() =>
-        await Assert.That(static () => SerializerExtensions.InsertAllObjects<string>(null!, [new KeyValuePair<string, string>("k", "v")
+        await Assert.That(static () => SerializerExtensions.InsertAllObjects<string>(null!, [new("k", "v")
             ]))
             .Throws<ArgumentNullException>();
 
@@ -1891,7 +1889,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var data = new Dictionary<string, object>
+            Dictionary<string, object> data = new()
             {
                 ["k1"] = "string value",
                 ["k2"] = 42,
@@ -1977,7 +1975,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
             var bytes = SerializerExtensions.SerializeWithContext(date, cache);
             await Assert.That(bytes).IsNotNull();
             await Assert.That(bytes.Length).IsGreaterThan(0);
@@ -1998,7 +1996,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
             var bytes = SerializerExtensions.SerializeWithContext(date, cache);
             var result = SerializerExtensions.DeserializeWithContext<DateTime>(bytes, cache);
             await Assert.That(result.Year).IsEqualTo(2025);
@@ -2041,7 +2039,7 @@ public class SerializerExtensionsTests
         try
         {
             // Circular reference causes System.Text.Json to throw.
-            var circular = new List<object>();
+            List<object> circular = [];
             circular.Add(circular);
 
             await Assert.That(() => SerializerExtensions.InsertObject(cache, "cyc", circular).ToTask())
@@ -2085,7 +2083,7 @@ public class SerializerExtensionsTests
         try
         {
             // Store invalid JSON bytes under a typed key so deserialization fails.
-            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            byte[] invalid = [0xFF, 0xFE, 0xFD, 0x01];
             await cache.Insert("bad_json", invalid, typeof(UserObject)).ToTask();
 
             await Assert.That(() => SerializerExtensions.GetObject<UserObject>(cache, "bad_json").ToTask())
@@ -2107,8 +2105,8 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var u1 = new UserObject { Name = "A", Bio = "B1", Blog = "Bl1" };
-            var u2 = new UserObject { Name = "B", Bio = "B2", Blog = "Bl2" };
+            UserObject u1 = new() { Name = "A", Bio = "B1", Blog = "Bl1" };
+            UserObject u2 = new() { Name = "B", Bio = "B2", Blog = "Bl2" };
             await SerializerExtensions.InsertObject(cache, "a", u1).ToTask();
             await SerializerExtensions.InsertObject(cache, "b", u2).ToTask();
 
@@ -2132,7 +2130,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var latest = new UserObject { Name = "Latest", Bio = "B", Blog = "Bl" };
+            UserObject latest = new() { Name = "Latest", Bio = "B", Blog = "Bl" };
 
             var results = await cache.GetAndFetchLatest(
                 "validate_key",
@@ -2166,10 +2164,10 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var cached = new UserObject { Name = "Cached", Bio = "B", Blog = "Bl" };
+            UserObject cached = new() { Name = "Cached", Bio = "B", Blog = "Bl" };
             await SerializerExtensions.InsertObject(cache, "inv_key", cached).ToTask();
 
-            var observed = new List<UserObject?>();
+            List<UserObject?> observed = [];
             Exception? caught = null;
 
             try
@@ -2209,10 +2207,10 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var cached = new UserObject { Name = "Cached", Bio = "B", Blog = "Bl" };
+            UserObject cached = new() { Name = "Cached", Bio = "B", Blog = "Bl" };
             await SerializerExtensions.InsertObject(cache, "keep_key", cached).ToTask();
 
-            var observed = new List<UserObject?>();
+            List<UserObject?> observed = [];
             try
             {
                 await cache.GetAndFetchLatest(
@@ -2290,7 +2288,7 @@ public class SerializerExtensionsTests
         try
         {
             cache.ForcedDateTimeKind = DateTimeKind.Utc;
-            var user = new UserObject { Name = "Forced", Bio = "B", Blog = "Bl" };
+            UserObject user = new() { Name = "Forced", Bio = "B", Blog = "Bl" };
             var bytes = SerializerExtensions.SerializeWithContext(user, cache);
             await Assert.That(bytes.Length).IsGreaterThan(0);
         }
@@ -2311,7 +2309,7 @@ public class SerializerExtensionsTests
         try
         {
             cache.ForcedDateTimeKind = DateTimeKind.Utc;
-            var user = new UserObject { Name = "Forced2", Bio = "B", Blog = "Bl" };
+            UserObject user = new() { Name = "Forced2", Bio = "B", Blog = "Bl" };
             var bytes = SerializerExtensions.SerializeWithContext(user, cache);
             var result = SerializerExtensions.DeserializeWithContext<UserObject>(bytes, cache);
             await Assert.That(result).IsNotNull();
@@ -2333,7 +2331,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            byte[] invalid = [0xFF, 0xFE, 0xFD, 0x01];
             await Assert.That(() => SerializerExtensions.DeserializeWithContext<UserObject>(invalid, cache))
                 .Throws<InvalidOperationException>();
         }
@@ -2354,7 +2352,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            byte[] invalid = [0xFF, 0xFE, 0xFD, 0x01];
 
             // The primary serializer fails on invalid bytes, then UniversalSerializer's
             // TryFallbackDeserialization returns default(DateTime) without throwing.
@@ -2378,7 +2376,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            byte[] invalid = [0xFF, 0xFE, 0xFD, 0x01];
 
             // The primary serializer fails on invalid bytes, then UniversalSerializer's
             // TryFallbackDeserialization returns default(DateTimeOffset) without throwing.
@@ -2564,7 +2562,7 @@ public class SerializerExtensionsTests
     [Test]
     public async Task GetObjectShouldThrowKeyNotFoundWhenCacheReturnsNullBytes()
     {
-        var cache = new NullReturningBlobCache(new SystemJsonSerializer());
+        NullReturningBlobCache cache = new(new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.GetObject<UserObject>("any_key").ToTask())
@@ -2586,7 +2584,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var cached = new UserObject { Name = "Cached", Bio = "B", Blog = "Bl" };
+            UserObject cached = new() { Name = "Cached", Bio = "B", Blog = "Bl" };
             await SerializerExtensions.InsertObject(cache, "task_inv", cached).ToTask();
 
             Exception? caught = null;
@@ -2627,7 +2625,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var latest = new UserObject { Name = "LatestTask", Bio = "B", Blog = "Bl" };
+            UserObject latest = new() { Name = "LatestTask", Bio = "B", Blog = "Bl" };
 
             var results = await cache.GetAndFetchLatest(
                 "task_validate",
@@ -2663,7 +2661,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            byte[] invalid = [0xFF, 0xFE, 0xFD, 0x01];
 
             // The primary serializer throws on invalid data. DeserializeWithContext detects
             // DateTime? and routes to UniversalSerializer.Deserialize<DateTime?>, which
@@ -2692,7 +2690,7 @@ public class SerializerExtensionsTests
         var cache = CreateCache();
         try
         {
-            var invalid = new byte[] { 0xFF, 0xFE, 0xFD, 0x01 };
+            byte[] invalid = [0xFF, 0xFE, 0xFD, 0x01];
 
             // The primary serializer throws on invalid data. DeserializeWithContext detects
             // DateTimeOffset? and routes to UniversalSerializer.Deserialize<DateTimeOffset?>,

@@ -20,8 +20,8 @@ public class InMemoryBlobCacheObjectDisposedTests
     [Test]
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         await cache.InsertObject("test", "value").FirstAsync();
         await cache.DisposeAsync();

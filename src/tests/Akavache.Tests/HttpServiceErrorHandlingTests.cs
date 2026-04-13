@@ -2,6 +2,8 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.SystemTextJson;
+
 namespace Akavache.Tests;
 
 /// <summary>
@@ -17,9 +19,9 @@ public class HttpServiceErrorHandlingTests
     [Test]
     public async Task HttpExtensions_FetchUrl_HandlesFailure()
     {
-        var service = new FakeHttpService();
-        var serializer = new SystemTextJson.SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        FakeHttpService service = new();
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         Exception? captured = null;
         service.DownloadUrl(cache, "http://invalid").Subscribe(_ => { }, ex => captured = ex);
         await Assert.That(captured).IsNotNull();

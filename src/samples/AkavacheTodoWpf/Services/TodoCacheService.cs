@@ -55,7 +55,7 @@ public static class TodoCacheService
         {
             if (todos == null || todos.Count == 0)
             {
-                return new TodoStats();
+                return new();
             }
 
             return new TodoStats
@@ -109,7 +109,7 @@ public static class TodoCacheService
                 secureKeysObs,
                 static (userKeys, localKeys, secureKeys) =>
                 {
-                    var result = new CacheInfo
+                    CacheInfo result = new()
                     {
                         UserAccountKeys = userKeys?.Length ?? 0,
                         LocalMachineKeys = localKeys?.Length ?? 0,

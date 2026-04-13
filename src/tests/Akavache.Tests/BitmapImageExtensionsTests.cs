@@ -138,7 +138,7 @@ public class BitmapImageExtensionsTests
         {
             // Arrange
             IBlobCache? cache = null;
-            var uri = new Uri("http://example.com/image.png");
+            Uri uri = new("http://example.com/image.png");
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => cache!.LoadImageFromUrl(uri));
@@ -184,7 +184,7 @@ public class BitmapImageExtensionsTests
         {
             // Arrange
             IBlobCache? cache = null;
-            var uri = new Uri("http://example.com/image.png");
+            Uri uri = new("http://example.com/image.png");
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => cache!.LoadImageFromUrl("key", uri));
@@ -207,7 +207,7 @@ public class BitmapImageExtensionsTests
         {
             // Arrange
             IBlobCache? cache = null;
-            var mockBitmap = new MockBitmap();
+            MockBitmap mockBitmap = new();
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => cache!.SaveImage("key", mockBitmap));
@@ -227,7 +227,7 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageShouldThrowArgumentNullExceptionWhenImageIsNull()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
         IBitmap? nullBitmap = null;
 
         // Act & Assert
@@ -319,7 +319,7 @@ public class BitmapImageExtensionsTests
     public async Task LoadImageShouldHandleMissingKeysCorrectly()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.LoadImage("nonexistent_key")
@@ -335,8 +335,8 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageAndLoadImageShouldWorkTogether()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
-        var mockBitmap = new MockBitmap();
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
+        MockBitmap mockBitmap = new();
         const string key = "test_image";
 
         // Act - Save image (should serialize the bitmap data)
@@ -370,7 +370,7 @@ public class BitmapImageExtensionsTests
     public async Task ImageToBytesShouldWorkWithMockBitmap()
     {
         // Arrange
-        var mockBitmap = new MockBitmap();
+        MockBitmap mockBitmap = new();
 
         // Act
         var bytes = await mockBitmap.ImageToBytes()
@@ -431,7 +431,7 @@ public class BitmapImageExtensionsTests
     public async Task LoadImageWithDimensionsShouldAcceptParameters()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -462,8 +462,8 @@ public class BitmapImageExtensionsTests
     public async Task SaveImageWithExpirationShouldWork()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
-        var mockBitmap = new MockBitmap();
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
+        MockBitmap mockBitmap = new();
         const string key = "expiring_image";
         var expiration = DateTimeOffset.Now.AddMinutes(10);
 
@@ -482,7 +482,7 @@ public class BitmapImageExtensionsTests
     [SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageFromUrlStringShouldReturnBitmapFromCachedData()
     {
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string url = "http://example.com/cached_string_url.png";
         var imageData = CreateValidImageBytes();
 
@@ -502,8 +502,8 @@ public class BitmapImageExtensionsTests
     [Test]
     public async Task LoadImageFromUrlUriShouldReturnBitmapFromCachedData()
     {
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        var uri = new Uri("http://example.com/cached_uri.png");
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        Uri uri = new("http://example.com/cached_uri.png");
         var imageData = CreateValidImageBytes();
 
         // HttpService.DownloadUrl(Uri) uses url.ToString() as the cache key.
@@ -523,7 +523,7 @@ public class BitmapImageExtensionsTests
     [SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageFromUrlWithKeyAndStringShouldReturnBitmapFromCachedData()
     {
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "custom_key_string";
         const string url = "http://example.com/keyed_string_url.png";
         var imageData = CreateValidImageBytes();
@@ -543,9 +543,9 @@ public class BitmapImageExtensionsTests
     [Test]
     public async Task LoadImageFromUrlWithKeyAndUriShouldReturnBitmapFromCachedData()
     {
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "custom_key_uri";
-        var uri = new Uri("http://example.com/keyed_uri.png");
+        Uri uri = new("http://example.com/keyed_uri.png");
         var imageData = CreateValidImageBytes();
 
         await cache.Insert(key, imageData).Timeout(TestTimeout).FirstAsync();
@@ -564,7 +564,7 @@ public class BitmapImageExtensionsTests
     [SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageFromUrlWithDimensionsShouldPassThroughToLoader()
     {
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string url = "http://example.com/dimensioned.png";
         var imageData = CreateValidImageBytes();
 
@@ -588,7 +588,7 @@ public class BitmapImageExtensionsTests
         // Swap in a loader that returns null for Load so the null-coalescing throw fires.
         BitmapLoader.Current = new NullReturningBitmapLoader();
 
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "null_bitmap_key";
 
         await cache.Insert(key, CreateValidImageBytes()).Timeout(TestTimeout).FirstAsync();
@@ -734,7 +734,7 @@ public class BitmapImageExtensionsTests
     public async Task BytesToImageShouldForwardDesiredSizeToLoader()
     {
         var previousLoader = BitmapLoader.Current;
-        var capturing = new CapturingBitmapLoader();
+        CapturingBitmapLoader capturing = new();
         BitmapLoader.Current = capturing;
         try
         {

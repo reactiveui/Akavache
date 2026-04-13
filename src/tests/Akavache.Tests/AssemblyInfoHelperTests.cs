@@ -88,7 +88,7 @@ public class AssemblyInfoHelperTests
     [Test]
     public async Task ExtractAssemblyNameShouldReturnNullWhenFullNameMissing()
     {
-        var stub = new NullFullNameAssembly();
+        NullFullNameAssembly stub = new();
 
         var result = AssemblyInfoHelper.ExtractAssemblyName(stub);
 
@@ -120,7 +120,7 @@ public class AssemblyInfoHelperTests
     [Test]
     public async Task ExtractAssemblyVersionShouldReturnNullWhenAttributeMissing()
     {
-        var stub = new NoFileVersionAttributeAssembly();
+        NoFileVersionAttributeAssembly stub = new();
 
         var result = AssemblyInfoHelper.ExtractAssemblyVersion(stub);
 
@@ -136,7 +136,7 @@ public class AssemblyInfoHelperTests
     [Test]
     public async Task ExtractAssemblyVersionShouldReturnNullWhenValueUnparseable()
     {
-        var stub = new UnparseableFileVersionAssembly();
+        UnparseableFileVersionAssembly stub = new();
 
         var result = AssemblyInfoHelper.ExtractAssemblyVersion(stub);
 
@@ -167,10 +167,10 @@ public class AssemblyInfoHelperTests
         public override string? FullName => "NoVersion";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<Attribute>();
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => [];
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => Array.Empty<Attribute>();
+        public override object[] GetCustomAttributes(bool inherit) => [];
     }
 
     /// <summary>
@@ -189,7 +189,7 @@ public class AssemblyInfoHelperTests
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(Type attributeType, bool inherit) =>
-            attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : Array.Empty<Attribute>();
+            attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : [];
 
         /// <inheritdoc/>
         public override object[] GetCustomAttributes(bool inherit) => _attrs;

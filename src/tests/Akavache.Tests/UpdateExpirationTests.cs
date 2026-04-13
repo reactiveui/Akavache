@@ -106,8 +106,8 @@ public class UpdateExpirationTests : IDisposable
         await using (var fixture = CreateBlobCache(path, serializer))
         {
             // Arrange
-            var keys = new[] { "test-key-1", "test-key-2", "test-key-3" };
-            var originalData = new[] { "value-1", "value-2", "value-3" };
+            string[] keys = ["test-key-1", "test-key-2", "test-key-3"];
+            string[] originalData = ["value-1", "value-2", "value-3"];
             var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
             var newExpiration = DateTimeOffset.Now.AddHours(2);
 
@@ -244,7 +244,7 @@ public class UpdateExpirationTests : IDisposable
     [Test]
     public async Task UpdateExpirationKeyWithTypeNullExpirationShouldSucceed()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
@@ -268,12 +268,12 @@ public class UpdateExpirationTests : IDisposable
     [Test]
     public async Task UpdateExpirationKeysWithNullExpirationShouldSucceed()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var keys = new[] { "multi-null-1", "multi-null-2" };
+            string[] keys = ["multi-null-1", "multi-null-2"];
             await fixture.InsertObject(keys[0], "v1", DateTimeOffset.Now.AddMinutes(30));
             await fixture.InsertObject(keys[1], "v2", DateTimeOffset.Now.AddMinutes(30));
 
@@ -295,12 +295,12 @@ public class UpdateExpirationTests : IDisposable
     [Test]
     public async Task UpdateExpirationKeysWithTypeNullExpirationShouldSucceed()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
         await using (var fixture = CreateBlobCache(path, serializer))
         {
-            var keys = new[] { "typed-multi-null-1", "typed-multi-null-2" };
+            string[] keys = ["typed-multi-null-1", "typed-multi-null-2"];
             await fixture.InsertObject(keys[0], "v1", DateTimeOffset.Now.AddMinutes(30));
             await fixture.InsertObject(keys[1], "v2", DateTimeOffset.Now.AddMinutes(30));
 
@@ -351,7 +351,7 @@ public class UpdateExpirationTests : IDisposable
         var formatType = serializerName.Contains("Bson") ? "bson" : "json";
         var fileName = $"updateexpiration-{serializerName}-{formatType}.db";
 
-        return new Sqlite3.SqliteBlobCache(Path.Combine(path, fileName), serializer);
+        return new(Path.Combine(path, fileName), serializer);
     }
 
     /// <summary>

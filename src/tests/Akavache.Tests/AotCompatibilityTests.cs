@@ -4,6 +4,7 @@
 
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
+using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
@@ -24,7 +25,7 @@ public class AotCompatibilityTests
         await Assert.That(
             static () =>
             {
-                using var cache = new InMemoryBlobCache(default(ISerializer)!);
+                using InMemoryBlobCache cache = new(default(ISerializer)!);
             }).ThrowsException().WithExceptionType(typeof(ArgumentNullException));
 
     /// <summary>
@@ -34,7 +35,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task SerializeWithContextShouldHandleNullValues()
     {
-        var blobCache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache blobCache = new(new SystemJsonSerializer());
 
         // Act
         var result = SerializerExtensions.SerializeWithContext<string?>(null, blobCache);
@@ -51,7 +52,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task DeserializeWithContextShouldHandleNullData()
     {
-        var blobCache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache blobCache = new(new SystemJsonSerializer());
 
         // Act & Assert
         var nullResult = SerializerExtensions.DeserializeWithContext<string>(null!, blobCache);
@@ -70,10 +71,10 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+            await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
             // Test with a Dictionary that can cause circular reference issues
-            var problemObject = new Dictionary<string, object>();
+            Dictionary<string, object> problemObject = [];
             problemObject["self"] = problemObject; // Create circular reference
 
             // Act & Assert - this should handle serialization gracefully
@@ -104,9 +105,9 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            await using var cache = new InMemoryBlobCache(new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
+            await using InMemoryBlobCache cache = new(new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
 
-            var localDateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
+            DateTime localDateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
 
             // Act
             await cache.InsertObject("datetime", localDateTime).FirstAsync();
@@ -137,7 +138,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task ArgumentValidationShouldWorkCorrectly()
     {
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
         // Act & Assert - InMemoryBlobCache may not validate empty strings the same way
         // Try to test actual argument validation if it exists
@@ -162,7 +163,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+            await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
             // Test actual type conversion behavior rather than expecting specific exceptions
             // This test verifies that serialization maintains type integrity
@@ -187,7 +188,7 @@ public class AotCompatibilityTests
             // Rather than forcing an exception, let's test successful serialization
 
             // Test that we can store and retrieve strongly typed objects
-            var userObject = new Mocks.UserObject { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" };
+            UserObject userObject = new() { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" };
             await cache.InsertObject("user_key", userObject).FirstAsync();
             var retrievedUser = await cache.GetObject<Mocks.UserObject>("user_key").FirstAsync();
 
@@ -209,10 +210,10 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+            await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
             // Act - perform multiple concurrent operations
-            var tasks = new List<Task>();
+            List<Task> tasks = [];
 
             for (var i = 0; i < 10; i++)
             {
@@ -246,7 +247,7 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+            await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
             // Insert and remove data multiple times
             for (var i = 0; i < 5; i++)
@@ -277,10 +278,10 @@ public class AotCompatibilityTests
     {
         using (Utility.WithEmptyDirectory(out _))
         {
-            await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+            await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
             // Create a large object
-            var largeString = new string('x', 100000); // 100KB string
+            string largeString = new('x', 100000); // 100KB string
 
             // Act
             await cache.InsertObject("large_object", largeString).FirstAsync();
@@ -299,7 +300,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task ObservableExtensionMethodsShouldWork()
     {
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
         // Test InsertObject and GetObject work with First operator
         await cache.InsertObject("test", "value").FirstAsync();
@@ -323,7 +324,7 @@ public class AotCompatibilityTests
         InMemoryBlobCache cache;
 
         // Test using statement disposal
-        await using (cache = new InMemoryBlobCache(new SystemJsonSerializer()))
+        await using (cache = new(new SystemJsonSerializer()))
         {
             await cache.InsertObject("test", "value").FirstAsync();
             var result = await cache.GetObject<string>("test").FirstAsync();
@@ -331,7 +332,7 @@ public class AotCompatibilityTests
         }
 
         // Test explicit disposal
-        cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        cache = new(new SystemJsonSerializer());
         await cache.InsertObject("test2", "value2").FirstAsync();
         await cache.DisposeAsync();
 
@@ -346,7 +347,7 @@ public class AotCompatibilityTests
     [Test]
     public async Task BulkOperationsShouldWorkCorrectly()
     {
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
         // Test bulk insert
         KeyValuePair<string, string>[] data =

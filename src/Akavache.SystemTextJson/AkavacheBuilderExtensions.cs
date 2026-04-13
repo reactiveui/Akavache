@@ -4,6 +4,7 @@
 
 using System.Text.Json;
 using Akavache.Core;
+using Akavache.Helpers;
 
 namespace Akavache.SystemTextJson;
 
@@ -20,10 +21,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         builder.WithSerializer<SystemJsonSerializer>();
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
@@ -39,15 +37,8 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="settings"/> is null.</exception>
     public static IAkavacheBuilder WithSerializerSystemTextJson(this IAkavacheBuilder builder, JsonSerializerOptions settings)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
-
-        if (settings == null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
+        ArgumentExceptionHelper.ThrowIfNull(settings);
 
         builder.WithSerializer(() => new SystemJsonSerializer { Options = settings });
         UniversalSerializer.RegisterSerializer(() => new SystemJsonSerializer { Options = settings });
@@ -63,17 +54,10 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="configure"/> is null.</exception>
     public static IAkavacheBuilder UseSystemTextJsonSerializer(this IAkavacheBuilder builder, Action<JsonSerializerOptions> configure)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
+        ArgumentExceptionHelper.ThrowIfNull(configure);
 
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
-
-        var settings = new JsonSerializerOptions();
+        JsonSerializerOptions settings = new();
         configure(settings);
         builder.WithSerializer(() => new SystemJsonSerializer { Options = settings });
         UniversalSerializer.RegisterSerializer(() => new SystemJsonSerializer { Options = settings });

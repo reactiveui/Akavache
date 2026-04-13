@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Threading;
@@ -23,7 +24,7 @@ internal static class Utility
         // From https://stackoverflow.com/questions/329355/cannot-delete-directory-with-directory-deletepath-true/329502#329502
         try
         {
-            var di = new DirectoryInfo(directoryPath);
+            DirectoryInfo di = new(directoryPath);
             var files = di.EnumerateFiles();
             var dirs = di.EnumerateDirectories();
 
@@ -80,7 +81,7 @@ internal static class Utility
     /// <returns>A disposable that cleans up the directory when disposed.</returns>
     public static IDisposable WithEmptyDirectory(out string directoryPath)
     {
-        var di = new DirectoryInfo(Path.Combine(".", Guid.NewGuid().ToString()));
+        DirectoryInfo di = new(Path.Combine(".", Guid.NewGuid().ToString()));
         if (di.Exists)
         {
             DeleteDirectory(di.FullName);
@@ -89,9 +90,6 @@ internal static class Utility
         di.Create();
 
         directoryPath = di.FullName;
-        return Disposable.Create(() =>
-        {
-            DeleteDirectory(di.FullName);
-        });
+        return Disposable.Create(directoryPath, static path => DeleteDirectory(path));
     }
 }

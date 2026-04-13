@@ -46,11 +46,11 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            var pairs = new[]
-            {
-                new KeyValuePair<string, byte[]>("k1", [1]),
-                new KeyValuePair<string, byte[]>("k2", [2]),
-            };
+            KeyValuePair<string, byte[]>[] pairs =
+            [
+                new("k1", [1]),
+                new("k2", [2])
+            ];
             await cache.Insert(pairs).ToTask();
 
             var keys = await cache.GetAllKeys().ToList().ToTask();
@@ -96,11 +96,11 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            var pairs = new[]
-            {
-                new KeyValuePair<string, byte[]>("k1", [1]),
-                new KeyValuePair<string, byte[]>("k2", [2]),
-            };
+            KeyValuePair<string, byte[]>[] pairs =
+            [
+                new("k1", [1]),
+                new("k2", [2])
+            ];
             await cache.Insert(pairs, typeof(string)).ToTask();
 
             var results = await cache.Get(["k1", "k2"], typeof(string)).ToList().ToTask();

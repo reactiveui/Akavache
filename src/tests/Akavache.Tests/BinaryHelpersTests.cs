@@ -21,7 +21,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeZero()
     {
-        var data = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        byte[] data = [0x00, 0x00, 0x00, 0x00];
 
         var result = BinaryHelpers.ReadInt32LittleEndian(data);
 
@@ -36,7 +36,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeOne()
     {
-        var data = new byte[] { 0x01, 0x00, 0x00, 0x00 };
+        byte[] data = [0x01, 0x00, 0x00, 0x00];
 
         var result = BinaryHelpers.ReadInt32LittleEndian(data);
 
@@ -52,7 +52,7 @@ public class BinaryHelpersTests
     public async Task ReadInt32LittleEndianShouldDecodeAllByteLanes()
     {
         // Little-endian 0x04030201 → bytes 0x01, 0x02, 0x03, 0x04.
-        var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        byte[] data = [0x01, 0x02, 0x03, 0x04];
 
         var result = BinaryHelpers.ReadInt32LittleEndian(data);
 
@@ -102,7 +102,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeNegativeOne()
     {
-        var data = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF };
+        byte[] data = [0xFF, 0xFF, 0xFF, 0xFF];
 
         var result = BinaryHelpers.ReadInt32LittleEndian(data);
 
@@ -118,7 +118,7 @@ public class BinaryHelpersTests
     public async Task ReadInt32LittleEndianShouldHonourOffset()
     {
         // Pre-pad with junk bytes so the offset matters.
-        var data = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0x01, 0x02, 0x03, 0x04 };
+        byte[] data = [0xAA, 0xBB, 0xCC, 0xDD, 0x01, 0x02, 0x03, 0x04];
 
         var result = BinaryHelpers.ReadInt32LittleEndian(data, offset: 4);
 
@@ -176,7 +176,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeOne()
     {
-        var data = new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        byte[] data = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
         var result = BinaryHelpers.ReadInt64LittleEndian(data);
 
@@ -192,7 +192,7 @@ public class BinaryHelpersTests
     public async Task ReadInt64LittleEndianShouldDecodeAllByteLanes()
     {
         // Little-endian 0x0807060504030201 → bytes 0x01..0x08.
-        var data = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+        byte[] data = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
 
         var result = BinaryHelpers.ReadInt64LittleEndian(data);
 
@@ -240,7 +240,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeNegativeOne()
     {
-        var data = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+        byte[] data = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
 
         var result = BinaryHelpers.ReadInt64LittleEndian(data);
 
@@ -255,7 +255,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt64LittleEndianShouldHonourOffset()
     {
-        var data = new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+        byte[] data = [0xAA, 0xBB, 0xCC, 0xDD, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
 
         var result = BinaryHelpers.ReadInt64LittleEndian(data, offset: 4);
 

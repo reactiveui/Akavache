@@ -21,7 +21,7 @@ public class GetAllKeysSafeExtensionsTests
     /// Sets up the test cache before each test.
     /// </summary>
     [Before(Test)]
-    public void SetUp() => _cache = new InMemoryBlobCache(new SystemJsonSerializer());
+    public void SetUp() => _cache = new(new SystemJsonSerializer());
 
     /// <summary>
     /// Cleans up the test cache after each test.

@@ -71,7 +71,7 @@ public class CacheDatabaseReadBenchmarks
     [BenchmarkCategory("Read")]
     public async Task RandomRead()
     {
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
 
         for (var i = 0; i < Size; i++)
         {
@@ -105,7 +105,7 @@ public class CacheDatabaseReadBenchmarks
             path ??= GetIntegrationTestRootDirectory();
 
             var giantDbSize = Math.Max(1000, BenchmarkSize * 10); // Ensure enough data for benchmarks
-            var cache = new SqliteBlobCache(Path.Combine(path, "benchmarks-read.db"), new SystemJsonSerializer());
+            SqliteBlobCache cache = new(Path.Combine(path, "benchmarks-read.db"), new SystemJsonSerializer());
 
             var keys = cache.GetAllKeys().ToList().FirstAsync().GetAwaiter().GetResult();
             if (keys.Count >= giantDbSize)
@@ -116,7 +116,7 @@ public class CacheDatabaseReadBenchmarks
             cache.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
 
             // Generate smaller chunks to avoid memory issues
-            var ret = new List<string>();
+            List<string> ret = [];
             var remaining = giantDbSize;
 
             while (remaining > 0)
@@ -157,8 +157,8 @@ public class CacheDatabaseReadBenchmarks
         // XXX: This is an evil hack, but it's okay for a unit test
         // We can't use Assembly.Location because unit test runners love
         // to move stuff to temp directories
-        var st = new StackFrame(true);
-        var di = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(st.GetFileName())));
+        StackFrame st = new(true);
+        DirectoryInfo di = new(Path.Combine(Path.GetDirectoryName(st.GetFileName())));
 
         return di.FullName;
     }

@@ -105,7 +105,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             // Act - Skip if httpbin is unavailable
             try
             {
-                var uri = new Uri("https://httpbin.org/html");
+                Uri uri = new("https://httpbin.org/html");
                 var bytes = await fixture.DownloadUrl(uri).Timeout(TimeSpan.FromSeconds(5)).FirstAsync();
 
                 // Assert
@@ -262,7 +262,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             SetupTestSerializer(serializerType);
 
             var fetchCount = 0;
-            var fetcher = new Func<IObservable<Tuple<string, string>>>(() =>
+            Func<IObservable<Tuple<string, string>>> fetcher = new(() =>
             {
                 fetchCount++;
                 return Observable.Return(new Tuple<string, string>("Foo", "Bar"));
@@ -352,7 +352,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             await Assert.That(fetchCount).IsEqualTo(1);
 
-            var results = new List<Tuple<string, int>?>();
+            List<Tuple<string, int>?> results = [];
             var initialFetchCount = fetchCount;
             await fixture.GetAndFetchLatest("Test", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)

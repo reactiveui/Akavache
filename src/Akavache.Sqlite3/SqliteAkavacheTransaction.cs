@@ -33,7 +33,7 @@ internal sealed class SqliteAkavacheTransaction : IAkavacheTransaction
 
     /// <inheritdoc/>
     public void InsertOrReplace<T>(T entity)
-        where T : new() =>
+        where T : class, new() =>
         _connection.InsertOrReplace(entity);
 
     /// <inheritdoc/>
@@ -46,7 +46,7 @@ internal sealed class SqliteAkavacheTransaction : IAkavacheTransaction
 
     /// <inheritdoc/>
     public List<T> Query<T>(Expression<Func<T, bool>> predicate)
-        where T : new() =>
+        where T : class, new() =>
         _connection.Table<T>().Where(predicate).ToList();
 
     /// <inheritdoc/>

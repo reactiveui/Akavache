@@ -20,7 +20,7 @@ internal static class PerfHelper
     /// <returns>A list of generated items.</returns>
     public static async Task<List<string>> GenerateDatabase(IBlobCache targetCache, int size)
     {
-        var ret = new List<string>();
+        List<string> ret = [];
 
         // Write out in groups of 4096
         while (size > 0)

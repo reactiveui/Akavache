@@ -54,7 +54,7 @@ public class CacheDatabaseComprehensiveBenchmarks
                 _testObjects = [];
                 for (var i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
                 {
-                    _testObjects.Add(new TestDataV11
+                    _testObjects.Add(new()
                     {
                         Id = Guid.NewGuid(),
                         Name = $"Test Object {i}",
@@ -108,7 +108,7 @@ public class CacheDatabaseComprehensiveBenchmarks
             await BlobCache.InsertObject(key, testData);
         }
 
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
         for (var i = 0; i < Math.Min(BenchmarkSize, 100); i++)
         {
             var key = $"get_and_fetch_{i}";
@@ -131,7 +131,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     public async Task InvalidateObjects()
     {
         // Pre-populate data
-        var keys = new List<string>();
+        List<string> keys = [];
         for (var i = 0; i < BenchmarkSize; i++)
         {
             var key = $"invalidate_test_{i}";
@@ -311,7 +311,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     [BenchmarkCategory("BulkOperations")]
     public async Task BulkOperations()
     {
-        var keyValuePairs = new Dictionary<string, TestDataV11>();
+        Dictionary<string, TestDataV11> keyValuePairs = new();
         for (var i = 0; i < BenchmarkSize; i++)
         {
             keyValuePairs[$"bulk_test_{i}"] = _testObjects[i % _testObjects.Count];
@@ -321,7 +321,7 @@ public class CacheDatabaseComprehensiveBenchmarks
         await BlobCache.InsertObjects(keyValuePairs);
 
         // Bulk get
-        var keys = keyValuePairs.Keys.ToArray();
+        string[] keys = [.. keyValuePairs.Keys];
         var retrieved = await BlobCache.GetObjects<TestDataV11>(keys).ToList();
 
         // Verify bulk operations

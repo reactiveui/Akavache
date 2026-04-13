@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using AkavacheTodoWpf.Models;
 using AkavacheTodoWpf.Services;
+using AkavacheTodoWpf.Views;
 using ReactiveUI;
 
 namespace AkavacheTodoWpf.ViewModels;
@@ -90,7 +91,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
             .ToProperty(this, x => x.ForegroundBrush);
 
         // Setup activator
-        Activator = new ViewModelActivator();
+        Activator = new();
 
         this.WhenActivated(disposables =>
 
@@ -236,7 +237,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     private IObservable<Unit> ExecuteEdit() =>
         Observable.FromAsync(async () => await Application.Current.Dispatcher.InvokeAsync(() =>
         {
-            var dialog = new Views.EditTodoDialog(TodoItem);
+            EditTodoDialog dialog = new(TodoItem);
             if (dialog.ShowDialog() != true)
             {
                 return;
@@ -315,17 +316,17 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     {
         if (TodoItem.IsCompleted)
         {
-            return new SolidColorBrush(Color.FromRgb(240, 240, 240));
+            return new(Color.FromRgb(240, 240, 240));
         }
 
         if (IsOverdue)
         {
-            return new SolidColorBrush(Color.FromRgb(255, 235, 238));
+            return new(Color.FromRgb(255, 235, 238));
         }
 
         if (IsDueSoon)
         {
-            return new SolidColorBrush(Color.FromRgb(255, 243, 224));
+            return new(Color.FromRgb(255, 243, 224));
         }
 
         return Brushes.Transparent;
@@ -339,20 +340,20 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     {
         if (TodoItem.IsCompleted)
         {
-            return new SolidColorBrush(Color.FromRgb(102, 102, 102));
+            return new(Color.FromRgb(102, 102, 102));
         }
 
         if (IsOverdue)
         {
-            return new SolidColorBrush(Color.FromRgb(211, 47, 47));
+            return new(Color.FromRgb(211, 47, 47));
         }
 
         if (IsDueSoon)
         {
-            return new SolidColorBrush(Color.FromRgb(245, 124, 0));
+            return new(Color.FromRgb(245, 124, 0));
         }
 
-        return new SolidColorBrush(Color.FromRgb(33, 33, 33));
+        return new(Color.FromRgb(33, 33, 33));
     }
 
     /// <summary>

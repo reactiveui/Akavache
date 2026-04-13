@@ -171,7 +171,7 @@ public class SqliteBlobCache : IBlobCache
         {
             try
             {
-                await Connection.CheckpointAsync(CheckpointMode.Passive).ConfigureAwait(false);
+                await Connection.CheckpointAsync().ConfigureAwait(false);
             }
             catch
             {
@@ -203,29 +203,27 @@ public class SqliteBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>(ClassName);
         }
 
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)));
-        }
-
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            var time = DateTimeOffset.UtcNow;
-
-            // Try V11 table first
-            var rows = await Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
-                .ConfigureAwait(false);
-
-            var row = rows.FirstOrDefault();
-            if (row?.Value is not null)
+        return string.IsNullOrWhiteSpace(key)
+            ? Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)))
+            : _initialized.SelectMany(async (_, _, _) =>
             {
-                return row.Value!;
-            }
+                var time = DateTimeOffset.UtcNow;
 
-            // Fallback to legacy V10 table (CacheElement)
-            var legacy = await TryGetLegacyValueAsync(Connection, key, time, null).ConfigureAwait(false);
-            return legacy ?? throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
-        });
+                // Try V11 table first
+                var rows = await Connection.QueryAsync<CacheEntry>(x =>
+                        x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
+                    .ConfigureAwait(false);
+
+                var row = rows.FirstOrDefault();
+                if (row?.Value is not null)
+                {
+                    return row.Value!;
+                }
+
+                // Fallback to legacy V10 table (CacheElement)
+                var legacy = await TryGetLegacyValueAsync(Connection, key, time, null).ConfigureAwait(false);
+                return legacy ?? throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+            });
     }
 
     /// <inheritdoc/>
@@ -558,7 +556,7 @@ public class SqliteBlobCache : IBlobCache
                 // Ensure data is immediately persisted to disk for multi-instance scenarios
                 try
                 {
-                    await Connection.CheckpointAsync(CheckpointMode.Passive).ConfigureAwait(false);
+                    await Connection.CheckpointAsync().ConfigureAwait(false);
                 }
                 catch
                 {
@@ -583,24 +581,13 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(data)));
         }
 
-        if (type is null)
-        {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
-        }
-
-        return Insert([new KeyValuePair<string, byte[]>(key, data)], type, absoluteExpiration);
+        return type is null
+            ? Observable.Throw<Unit>(new ArgumentNullException(nameof(type)))
+            : Insert([new KeyValuePair<string, byte[]>(key, data)], type, absoluteExpiration);
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(string key)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
-        }
-
-        return Invalidate([key]);
-    }
+    public IObservable<Unit> Invalidate(string key) => string.IsNullOrWhiteSpace(key) ? Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))) : Invalidate([key]);
 
     /// <inheritdoc/>
     public IObservable<Unit> Invalidate(string key, Type type)
@@ -610,12 +597,7 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
-        if (type is null)
-        {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
-        }
-
-        return Invalidate([key], type);
+        return type is null ? Observable.Throw<Unit>(new ArgumentNullException(nameof(type))) : Invalidate([key], type);
     }
 
     /// <inheritdoc/>
@@ -632,7 +614,7 @@ public class SqliteBlobCache : IBlobCache
         }
 
         return _initialized.SelectMany(
-            async (_) =>
+            async _ =>
             {
                 await Connection.RunInTransactionAsync(tx =>
                 {
@@ -682,13 +664,9 @@ public class SqliteBlobCache : IBlobCache
     /// <inheritdoc/>
     public IObservable<Unit> InvalidateAll(Type type)
     {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
-        }
-
-        return _initialized.SelectMany(
-            async (_) =>
+        return _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            : _initialized.SelectMany(async _ =>
             {
                 await Connection.RunInTransactionAsync(tx =>
                 {
@@ -705,13 +683,9 @@ public class SqliteBlobCache : IBlobCache
     /// <inheritdoc/>
     public IObservable<Unit> InvalidateAll()
     {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
-        }
-
-        return _initialized.SelectMany(
-            async (_) =>
+        return _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            : _initialized.SelectMany(async _ =>
             {
                 await Connection.RunInTransactionAsync(tx =>
                 {
@@ -728,16 +702,13 @@ public class SqliteBlobCache : IBlobCache
     /// <inheritdoc/>
     public IObservable<Unit> Vacuum()
     {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
-        }
-
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            await Connection.CompactAsync().ConfigureAwait(false);
-            return Unit.Default;
-        });
+        return _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            : _initialized.SelectMany(async (_, _, _) =>
+            {
+                await Connection.CompactAsync().ConfigureAwait(false);
+                return Unit.Default;
+            });
     }
 
     /// <inheritdoc/>
@@ -890,7 +861,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="now">The current time used for expiry checks.</param>
     /// <param name="type">The type filter, or <see langword="null"/> to read untyped entries.</param>
     /// <returns>The raw legacy bytes, or <see langword="null"/> when the key is absent.</returns>
-    internal static Task<byte[]?> TryGetLegacyValueAsync(IAkavacheConnection connection, string key, DateTimeOffset now, Type? type) =>
+    internal static Task<byte[]?> TryGetLegacyValueAsync(IAkavacheConnection connection, string key, in DateTimeOffset now, Type? type) =>
         connection.TryReadLegacyV10ValueAsync(key, now, type);
 
     /// <summary>
@@ -933,15 +904,9 @@ public class SqliteBlobCache : IBlobCache
     /// to be deferred. If the operation can be done immediately, use
     /// Observable.Return and ignore this parameter.</param>
     /// <returns>A Future result representing the encrypted data.</returns>
-    protected internal virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache");
-        }
-
-        return Observable.Return(data, scheduler);
-    }
+    protected internal virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler) => _disposed
+        ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache")
+        : Observable.Return(data, scheduler);
 
     /// <summary>
     /// Disposes of the async resources.

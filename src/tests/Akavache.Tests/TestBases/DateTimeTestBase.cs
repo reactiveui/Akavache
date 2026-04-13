@@ -411,9 +411,8 @@ public abstract class DateTimeTestBase : IDisposable
     /// <returns>Array of DateTimeOffset test cases.</returns>
     private static DateTimeOffset[] GetMobileDesktopDateTimeOffsetTestCases(ISerializer serializer)
     {
-        var cases = new List<DateTimeOffset>
-        {
-            // Common mobile/desktop app timezone scenarios
+        List<DateTimeOffset> cases =
+        [
             new(2025, 1, 15, 10, 30, 45, TimeSpan.Zero), // UTC
             new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(5)), // UTC+5 (India)
             new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(-8)), // UTC-8 (PST)
@@ -427,8 +426,8 @@ public abstract class DateTimeTestBase : IDisposable
 
             // Edge cases (but safer than Min/Max)
             new(2000, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            new(2030, 12, 31, 23, 59, 59, TimeSpan.Zero),
-        };
+            new(2030, 12, 31, 23, 59, 59, TimeSpan.Zero)
+        ];
 
         // Only add extreme edge cases for non-BSON serializers
         if (!IsUsingBsonSerializer(serializer))

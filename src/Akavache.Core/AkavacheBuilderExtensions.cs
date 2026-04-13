@@ -29,7 +29,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Action<IAkavacheBuilder> configure, string applicationName)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -52,7 +52,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string applicationName)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -73,7 +73,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, string applicationName)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -96,7 +96,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavacheCacheDatabase<T>(this IAppBuilder builder, Func<T> configureSerializer, string applicationName)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -121,7 +121,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IAkavacheBuilder> configure, Action<IAkavacheInstance> instance)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -150,7 +150,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IAkavacheBuilder> configure, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -178,7 +178,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IAkavacheInstance> instance)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -205,7 +205,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAppBuilder WithAkavache<T>(this IAppBuilder builder, string applicationName, Action<IMutableDependencyResolver, IAkavacheInstance> instance)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(applicationName);
@@ -297,32 +297,31 @@ public static class AkavacheBuilderExtensions
         };
 
         // Compute CachePath under a writable location (fix iOS bundle write attempt)
-        using (var isoStore = store)
+        using var isoStore = store;
+
+        // Try to get a path within isolated storage for the settings cache using the application name
+        try
         {
-            // Try to get a path within isolated storage for the settings cache using the application name
-            try
+            if (isoStore != null)
             {
-                if (isoStore != null)
+                var isoPath = Path.Combine(validatedApplicationName, validatedCacheName);
+
+                // Ensure the directory exists
+                if (!isoStore.DirectoryExists(isoPath))
                 {
-                    var isoPath = Path.Combine(validatedApplicationName, validatedCacheName);
+                    isoStore.CreateDirectory(isoPath);
+                }
 
-                    // Ensure the directory exists
-                    if (!isoStore.DirectoryExists(isoPath))
-                    {
-                        isoStore.CreateDirectory(isoPath);
-                    }
-
-                    if (isoStore.DirectoryExists(isoPath))
-                    {
-                        isoStore.GetDirectoryNames(isoPath);
-                        cachePath = Path.Combine(isoStore.GetType().GetProperty("RootDirectory", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(isoStore)?.ToString() ?? string.Empty, isoPath);
-                    }
+                if (isoStore.DirectoryExists(isoPath))
+                {
+                    isoStore.GetDirectoryNames(isoPath);
+                    cachePath = Path.Combine(isoStore.GetType().GetProperty("RootDirectory", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(isoStore)?.ToString() ?? string.Empty, isoPath);
                 }
             }
-            catch
-            {
-                // Ignore isolated storage exceptions and fall back to local app data path
-            }
+        }
+        catch
+        {
+            // Ignore isolated storage exceptions and fall back to local app data path
         }
 
         return cachePath;
@@ -361,7 +360,7 @@ public static class AkavacheBuilderExtensions
                         return null;
                     }
 
-                    var di = new DirectoryInfo(Path.Combine(path, "Secret"));
+                    DirectoryInfo di = new(Path.Combine(path, "Secret"));
                     if (!di.Exists)
                     {
                         di.CreateRecursive();
@@ -396,7 +395,7 @@ public static class AkavacheBuilderExtensions
     /// </summary>
     /// <param name="directoryInfo">The directory whose full path should be created on disk.</param>
     internal static void CreateRecursive(this DirectoryInfo directoryInfo) =>
-        _ = directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
+        _ = directoryInfo.SplitFullPath().Aggregate(static (parent, dir) =>
         {
             var path = Path.Combine(parent, dir);
 
@@ -416,7 +415,7 @@ public static class AkavacheBuilderExtensions
     internal static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
     {
         var root = Path.GetPathRoot(directoryInfo.FullName);
-        var components = new List<string>();
+        List<string> components = [];
         for (var path = directoryInfo.FullName; path != root && path is not null; path = Path.GetDirectoryName(path))
         {
             var filename = Path.GetFileName(path);

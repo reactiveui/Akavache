@@ -35,7 +35,7 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldThrowOnNullReader()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        await Assert.That(() => converter.ReadJson(null!, typeof(DateTime), null, new JsonSerializer()))
+        await Assert.That(() => converter.ReadJson(null!, typeof(DateTime), null, new()))
             .Throws<ArgumentNullException>();
     }
 
@@ -47,10 +47,10 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterShouldRoundTripUtc()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var json = JsonConvert.SerializeObject(date, settings);
         var result = JsonConvert.DeserializeObject<DateTime>(json, settings);
 
@@ -66,10 +66,10 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterShouldRoundTripLocal()
     {
         var converter = NewtonsoftDateTimeTickConverter.LocalDateTimeKindDefault;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
         var json = JsonConvert.SerializeObject(date, settings);
         var result = JsonConvert.DeserializeObject<DateTime>(json, settings);
 
@@ -85,10 +85,10 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterShouldHandleUnspecifiedKind()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var json = JsonConvert.SerializeObject(date, settings);
 
         // Should not throw
@@ -116,7 +116,7 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterReadJsonShouldThrowOnNullReader()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        await Assert.That(() => converter.ReadJson(null!, typeof(DateTimeOffset), null, new JsonSerializer()))
+        await Assert.That(() => converter.ReadJson(null!, typeof(DateTimeOffset), null, new()))
             .Throws<ArgumentNullException>();
     }
 
@@ -128,10 +128,10 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterShouldRoundTrip()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
-        var dto = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(5));
+        DateTimeOffset dto = new(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(5));
         var json = JsonConvert.SerializeObject(dto, settings);
         var result = JsonConvert.DeserializeObject<DateTimeOffset>(json, settings);
 
@@ -147,7 +147,7 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterShouldHandleLegacyIntegerFormat()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
         // Construct a legacy integer-only payload (raw ticks)
@@ -166,7 +166,7 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterShouldHandleDirectDate()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var settings = new JsonSerializerSettings { DateParseHandling = DateParseHandling.DateTime };
+        JsonSerializerSettings settings = new() { DateParseHandling = DateParseHandling.DateTime };
         settings.Converters.Add(converter);
 
         const string json = "\"2025-06-15T12:00:00Z\"";
@@ -182,11 +182,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldReturnNullForStringToken()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        using var stringReader = new StringReader("\"hello\"");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("\"hello\"");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -198,11 +198,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldReturnNullForBooleanToken()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        using var stringReader = new StringReader("true");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("true");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -214,11 +214,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldHandleDateTokenWithLocalOverride()
     {
         var converter = NewtonsoftDateTimeTickConverter.LocalDateTimeKindDefault;
-        using var stringReader = new StringReader("\"2025-06-15T12:00:00Z\"");
-        await using var reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.DateTime };
+        using StringReader stringReader = new("\"2025-06-15T12:00:00Z\"");
+        await using JsonTextReader reader = new(stringReader) { DateParseHandling = DateParseHandling.DateTime };
         await reader.ReadAsync();
 
-        var result = (DateTime?)converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = (DateTime?)converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -230,12 +230,12 @@ public class NewtonsoftDateConvertersTests
     [Test]
     public async Task DateTimeConverterReadJsonShouldHandleDateTokenWithUnspecifiedOverride()
     {
-        var converter = new NewtonsoftDateTimeTickConverter(DateTimeKind.Unspecified);
-        using var stringReader = new StringReader("\"2025-06-15T12:00:00Z\"");
-        await using var reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.DateTime };
+        NewtonsoftDateTimeTickConverter converter = new(DateTimeKind.Unspecified);
+        using StringReader stringReader = new("\"2025-06-15T12:00:00Z\"");
+        await using JsonTextReader reader = new(stringReader) { DateParseHandling = DateParseHandling.DateTime };
         await reader.ReadAsync();
 
-        var result = (DateTime?)converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = (DateTime?)converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Unspecified);
     }
@@ -248,11 +248,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldReturnNullForIntegerWithUnrelatedObjectType()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        using var stringReader = new StringReader("12345");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("12345");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(object), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(object), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -265,11 +265,11 @@ public class NewtonsoftDateConvertersTests
     {
         var converter = NewtonsoftDateTimeTickConverter.LocalDateTimeKindDefault;
         var ticks = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local).Ticks;
-        using var stringReader = new StringReader(ticks.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new(ticks.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = (DateTime?)converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = (DateTime?)converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -282,10 +282,10 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterWriteJsonShouldHandleLocalKind()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var writer = new JTokenWriter();
-        var local = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        JTokenWriter writer = new();
+        DateTime local = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
 
-        converter.WriteJson(writer, local, new JsonSerializer());
+        converter.WriteJson(writer, local, new());
 
         await Assert.That(writer.Token).IsNotNull();
         await Assert.That(writer.Token!.Type).IsEqualTo(JTokenType.Integer);
@@ -300,10 +300,10 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterWriteJsonShouldHandleUnspecifiedKind()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var writer = new JTokenWriter();
-        var unspecified = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        JTokenWriter writer = new();
+        DateTime unspecified = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
 
-        converter.WriteJson(writer, unspecified, new JsonSerializer());
+        converter.WriteJson(writer, unspecified, new());
 
         await Assert.That(writer.Token).IsNotNull();
         await Assert.That((long)writer.Token!).IsEqualTo(unspecified.Ticks);
@@ -317,9 +317,9 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterWriteJsonShouldNoOpForNonDateTimeValue()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var writer = new JTokenWriter();
+        JTokenWriter writer = new();
 
-        converter.WriteJson(writer, "not-a-date", new JsonSerializer());
+        converter.WriteJson(writer, "not-a-date", new());
 
         await Assert.That(writer.Token).IsNull();
     }
@@ -332,9 +332,9 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterWriteJsonShouldNoOpForNullValue()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var writer = new JTokenWriter();
+        JTokenWriter writer = new();
 
-        converter.WriteJson(writer, null, new JsonSerializer());
+        converter.WriteJson(writer, null, new());
 
         await Assert.That(writer.Token).IsNull();
     }
@@ -347,7 +347,7 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterShouldHandleMinValue()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
         var date = DateTime.MinValue;
@@ -366,11 +366,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldReturnNullForNullToken()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        using var stringReader = new StringReader("null");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("null");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -383,11 +383,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeConverterReadJsonShouldReturnNullForFloatToken()
     {
         var converter = NewtonsoftDateTimeTickConverter.Default;
-        using var stringReader = new StringReader("3.14");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("3.14");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(DateTime), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(DateTime), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -399,11 +399,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterReadJsonShouldReturnNullForStringToken()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        using var stringReader = new StringReader("\"hello\"");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("\"hello\"");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(DateTimeOffset), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -415,11 +415,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterReadJsonShouldReturnNullForBooleanToken()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        using var stringReader = new StringReader("false");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("false");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(DateTimeOffset), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -431,11 +431,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterReadJsonShouldReturnNullForIntegerWithUnrelatedObjectType()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        using var stringReader = new StringReader("12345");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("12345");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = converter.ReadJson(reader, typeof(object), null, new JsonSerializer());
+        var result = converter.ReadJson(reader, typeof(object), null, new());
         await Assert.That(result).IsNull();
     }
 
@@ -451,11 +451,11 @@ public class NewtonsoftDateConvertersTests
         var offsetTicks = TimeSpan.FromHours(2).Ticks;
         var json = "{\"Ticks\":" + ticks.ToString(System.Globalization.CultureInfo.InvariantCulture) +
                    ",\"Extra\":\"ignored\",\"OffsetTicks\":" + offsetTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}";
-        using var stringReader = new StringReader(json);
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new(json);
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new JsonSerializer());
+        var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Year).IsEqualTo(2025);
         await Assert.That(result.Value.Offset).IsEqualTo(TimeSpan.FromHours(2));
@@ -469,9 +469,9 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterWriteJsonShouldNoOpForNonDateTimeOffsetValue()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var writer = new JTokenWriter();
+        JTokenWriter writer = new();
 
-        converter.WriteJson(writer, "not-a-date", new JsonSerializer());
+        converter.WriteJson(writer, "not-a-date", new());
 
         await Assert.That(writer.Token).IsNull();
     }
@@ -484,9 +484,9 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterWriteJsonShouldNoOpForNullValue()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var writer = new JTokenWriter();
+        JTokenWriter writer = new();
 
-        converter.WriteJson(writer, null, new JsonSerializer());
+        converter.WriteJson(writer, null, new());
 
         await Assert.That(writer.Token).IsNull();
     }
@@ -499,7 +499,7 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterShouldHandleMinValue()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
         var dto = DateTimeOffset.MinValue;
@@ -518,11 +518,11 @@ public class NewtonsoftDateConvertersTests
     public async Task DateTimeOffsetConverterReadJsonShouldHandleEmptyObject()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        using var stringReader = new StringReader("{}");
-        await using var reader = new JsonTextReader(stringReader);
+        using StringReader stringReader = new("{}");
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new JsonSerializer());
+        var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
 
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Ticks).IsEqualTo(0L);
@@ -541,13 +541,13 @@ public class NewtonsoftDateConvertersTests
         var ticks = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero).Ticks;
         var json = "{\"Ticks\":" + ticks.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",\"OffsetTicks\":0}";
 
-        using var stringReader = new StringReader(json);
+        using StringReader stringReader = new(json);
 
         // SupportMultipleContent off; iterate through the object normally.
-        await using var reader = new JsonTextReader(stringReader);
+        await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
-        var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new JsonSerializer());
+        var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
 
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value.Year).IsEqualTo(2025);

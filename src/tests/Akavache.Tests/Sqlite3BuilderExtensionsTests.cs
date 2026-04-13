@@ -4,6 +4,7 @@
 
 using System.Reflection;
 using Akavache.Core;
+using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
 
@@ -34,7 +35,7 @@ public class Sqlite3BuilderExtensionsTests
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("WithSqliteProviderInit");
-        var result = Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(builder);
+        var result = builder.WithSqliteProvider();
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
@@ -47,8 +48,8 @@ public class Sqlite3BuilderExtensionsTests
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("WithSqliteProviderIdempotent");
-        Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(builder);
-        var result = Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(builder);
+        builder.WithSqliteProvider();
+        var result = builder.WithSqliteProvider();
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
@@ -70,7 +71,7 @@ public class Sqlite3BuilderExtensionsTests
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("WithSqliteDefaultsNoSerializer");
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(builder))
+        await Assert.That(() => builder.WithSqliteDefaults())
             .Throws<InvalidOperationException>();
     }
 
@@ -82,15 +83,15 @@ public class Sqlite3BuilderExtensionsTests
     public async Task WithSqliteDefaultsShouldThrowWhenApplicationNameEmpty()
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
-        var serializer = new SystemJsonSerializer();
-        var builder = new FakeAkavacheBuilder
+        SystemJsonSerializer serializer = new();
+        FakeAkavacheBuilder builder = new()
         {
             ApplicationName = string.Empty,
             Serializer = serializer,
             SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName,
         };
 
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(builder))
+        await Assert.That(() => builder.WithSqliteDefaults())
             .Throws<InvalidOperationException>();
     }
 
@@ -108,7 +109,7 @@ public class Sqlite3BuilderExtensionsTests
                 .WithApplicationName($"WithSqliteDefaultsTest_{Guid.NewGuid():N}")
                 .WithSerializer<SystemJsonSerializer>();
 
-            var result = Sqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(builder);
+            var result = builder.WithSqliteDefaults();
 
             try
             {
@@ -179,8 +180,8 @@ public class Sqlite3BuilderExtensionsTests
     [Test]
     public async Task CreateSqliteCacheShouldThrowWhenApplicationNameEmpty()
     {
-        var serializer = new SystemJsonSerializer();
-        var builder = new FakeAkavacheBuilder
+        SystemJsonSerializer serializer = new();
+        FakeAkavacheBuilder builder = new()
         {
             ApplicationName = string.Empty,
             Serializer = serializer,
@@ -206,7 +207,7 @@ public class Sqlite3BuilderExtensionsTests
             .WithLegacyFileLocation()
             .UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(builder);
+        builder.WithSqliteProvider();
 
         var cache = Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache("UserAccount", builder);
         try
@@ -229,9 +230,9 @@ public class Sqlite3BuilderExtensionsTests
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("ResetSqliteProviderForTestsCall");
-        Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(builder);
+        builder.WithSqliteProvider();
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
-        var result = Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(builder);
+        var result = builder.WithSqliteProvider();
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
@@ -242,7 +243,7 @@ public class Sqlite3BuilderExtensionsTests
     [Test]
     public async Task SecureBlobCacheWrapperSerializerShouldThrowWhenNull()
     {
-        var fakeInner = new FakeNullSerializerBlobCache();
+        FakeNullSerializerBlobCache fakeInner = new();
         var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(fakeInner);
 
         await Assert.That(() => _ = wrapper.Serializer)
@@ -259,8 +260,8 @@ public class Sqlite3BuilderExtensionsTests
     {
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var serializer = new SystemJsonSerializer();
-            var inner = new Sqlite3.SqliteBlobCache(
+            SystemJsonSerializer serializer = new();
+            SqliteBlobCache inner = new(
                 Path.Combine(path, "async-dispose-test.db"), serializer);
             var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
 
@@ -276,7 +277,7 @@ public class Sqlite3BuilderExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Second-call Dispose intentionally synchronous to exercise the idempotent sync path.")]
     public async Task SecureBlobCacheWrapperDisposeAsyncShouldWork()
     {
-        var inner = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache inner = new(new SystemJsonSerializer());
         var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
 
         await Assert.That(async () => await wrapper.DisposeAsync()).ThrowsNothing();
@@ -293,7 +294,7 @@ public class Sqlite3BuilderExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately exercises the synchronous Dispose path.")]
     public async Task SecureBlobCacheWrapperDisposeShouldDisposeInner()
     {
-        var inner = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache inner = new(new SystemJsonSerializer());
         var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
 
         wrapper.Dispose();
@@ -524,7 +525,7 @@ public class Sqlite3BuilderExtensionsTests
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSerializer<T>()
-            where T : ISerializer, new()
+            where T : class, ISerializer, new()
         {
             Serializer = new T();
             SerializerTypeName = typeof(T).AssemblyQualifiedName;
@@ -533,7 +534,7 @@ public class Sqlite3BuilderExtensionsTests
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-            where T : ISerializer
+            where T : class, ISerializer
         {
             Serializer = configure();
             SerializerTypeName = typeof(T).AssemblyQualifiedName;

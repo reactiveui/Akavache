@@ -272,7 +272,7 @@ dotnet_diagnostic.CA1500.severity = error # Variable names should not match fiel
 dotnet_diagnostic.CA1501.severity = none # Avoid excessive inheritance — disabled because the analyzer noticeably slows down the build
 dotnet_diagnostic.CA1502.severity = none # Avoid excessive complexity — disabled because the analyzer noticeably slows down the build
 dotnet_diagnostic.CA1505.severity = error # Avoid unmaintainable code
-dotnet_diagnostic.CA1506.severity = error # Avoid excessive class coupling
+dotnet_diagnostic.CA1506.severity = none # Avoid excessive class coupling — adds little signal here, mostly trips on legitimate orchestration code
 dotnet_diagnostic.CA1507.severity = error # Use nameof in place of string
 dotnet_diagnostic.CA1508.severity = error # Avoid dead conditional code
 dotnet_diagnostic.CA1509.severity = error # Invalid entry in code metrics configuration file
@@ -720,67 +720,403 @@ dotnet_diagnostic.SYSLIB1103.severity = error # Configuration binding source gen
 dotnet_diagnostic.SYSLIB1104.severity = error # Configuration binding source generator: language version is too low
 
 ###################
-# Roslynator Analyzers (RCS) - Code Simplification
+# Microsoft .NET Style Rules (IDExxxx) - Language Rules
+###################
+# EnforceCodeStyleInBuild=true (set in Directory.Build.props) promotes these
+# IDE rules into `dotnet build` so they fire at compile time, not just in the
+# IDE. We enable the ones that are unambiguous wins and skip the rules that
+# conflict with an existing convention (SA1101, SA1200, SA1206, SA1400, SA1633,
+# etc.) so we don't double-report.
+
+# Bug catchers — always error.
+dotnet_diagnostic.IDE0035.severity = error # Remove unreachable code
+dotnet_diagnostic.IDE0043.severity = error # Format string contains invalid placeholder
+dotnet_diagnostic.IDE0051.severity = error # Remove unused private member
+dotnet_diagnostic.IDE0052.severity = error # Remove unread private member
+dotnet_diagnostic.IDE0076.severity = error # Remove invalid global SuppressMessage attribute
+dotnet_diagnostic.IDE0077.severity = error # Avoid legacy format target in global SuppressMessage attribute
+dotnet_diagnostic.IDE0080.severity = error # Remove unnecessary suppression operator
+
+# Simplification / cleanup.
+dotnet_diagnostic.IDE0001.severity = error # Simplify name
+dotnet_diagnostic.IDE0002.severity = error # Simplify member access
+dotnet_diagnostic.IDE0004.severity = error # Remove unnecessary cast
+dotnet_diagnostic.IDE0005.severity = error # Remove unnecessary import
+dotnet_diagnostic.IDE0016.severity = error # Use throw expression
+dotnet_diagnostic.IDE0017.severity = error # Use object initializers
+dotnet_diagnostic.IDE0018.severity = error # Inline variable declaration
+dotnet_diagnostic.IDE0019.severity = error # Use pattern matching to avoid 'as' followed by a 'null' check
+dotnet_diagnostic.IDE0020.severity = error # Use pattern matching to avoid 'is' check followed by a cast
+dotnet_diagnostic.IDE0028.severity = error # Use collection initializers
+dotnet_diagnostic.IDE0029.severity = error # Use coalesce expression
+dotnet_diagnostic.IDE0030.severity = error # Use coalesce expression (nullable types)
+dotnet_diagnostic.IDE0031.severity = error # Use null propagation
+dotnet_diagnostic.IDE0032.severity = error # Use auto property
+dotnet_diagnostic.IDE0033.severity = error # Use explicitly provided tuple name
+dotnet_diagnostic.IDE0034.severity = error # Simplify default expression
+dotnet_diagnostic.IDE0037.severity = error # Use inferred member name
+dotnet_diagnostic.IDE0038.severity = error # Use pattern matching ('is' check without a cast)
+dotnet_diagnostic.IDE0041.severity = error # Use 'is null' check
+dotnet_diagnostic.IDE0042.severity = error # Deconstruct variable declaration
+dotnet_diagnostic.IDE0044.severity = error # Add readonly modifier
+dotnet_diagnostic.IDE0046.severity = error # Use conditional expression for return
+dotnet_diagnostic.IDE0047.severity = error # Remove unnecessary parentheses
+dotnet_diagnostic.IDE0049.severity = error # Use language keywords instead of framework type names for type references
+dotnet_diagnostic.IDE0054.severity = error # Use compound assignment
+dotnet_diagnostic.IDE0056.severity = error # Use index operator
+dotnet_diagnostic.IDE0057.severity = error # Use range operator
+dotnet_diagnostic.IDE0059.severity = error # Remove unnecessary value assignment
+dotnet_diagnostic.IDE0062.severity = error # Make local function static
+dotnet_diagnostic.IDE0063.severity = error # Use simple 'using' statement
+dotnet_diagnostic.IDE0066.severity = error # Use switch expression
+dotnet_diagnostic.IDE0070.severity = error # Use 'System.HashCode.Combine'
+dotnet_diagnostic.IDE0071.severity = error # Simplify interpolation
+dotnet_diagnostic.IDE0072.severity = suggestion # Add missing cases to switch expression - sometimes we miss switch cases dilberately.
+dotnet_diagnostic.IDE0074.severity = error # Use compound assignment
+dotnet_diagnostic.IDE0075.severity = error # Simplify conditional expression
+dotnet_diagnostic.IDE0078.severity = error # Use pattern matching
+dotnet_diagnostic.IDE0082.severity = error # Convert typeof to nameof
+dotnet_diagnostic.IDE0083.severity = error # Use pattern matching ('not' operator)
+dotnet_diagnostic.IDE0084.severity = error # Use pattern matching ('IsNot' operator)
+dotnet_diagnostic.IDE0090.severity = error # Simplify 'new' expression
+dotnet_diagnostic.IDE0100.severity = error # Remove unnecessary equality operator
+dotnet_diagnostic.IDE0110.severity = error # Remove unnecessary discard
+dotnet_diagnostic.IDE0120.severity = error # Simplify LINQ expression
+dotnet_diagnostic.IDE0150.severity = error # Prefer 'null' check over type check
+dotnet_diagnostic.IDE0161.severity = error # Use file-scoped namespace declaration
+dotnet_diagnostic.IDE0170.severity = error # Simplify property pattern
+dotnet_diagnostic.IDE0180.severity = error # Use tuple to swap values
+dotnet_diagnostic.IDE0200.severity = error # Remove unnecessary lambda expression
+dotnet_diagnostic.IDE0220.severity = error # Add explicit cast in foreach loop
+dotnet_diagnostic.IDE0240.severity = error # Remove redundant nullable directive
+dotnet_diagnostic.IDE0241.severity = error # Remove unnecessary nullable directive
+dotnet_diagnostic.IDE0250.severity = error # Make struct 'readonly'
+dotnet_diagnostic.IDE0251.severity = error # Make member 'readonly'
+dotnet_diagnostic.IDE0260.severity = error # Use pattern matching
+dotnet_diagnostic.IDE0270.severity = error # Use coalesce expression
+
+# Disabled — conflict with an existing SA/CA rule or project convention.
+dotnet_diagnostic.IDE0003.severity = none # Remove 'this' qualifier — we don't follow the this. prefix style (SA1101 = none)
+dotnet_diagnostic.IDE0007.severity = none # Use var — we don't force var in either direction
+dotnet_diagnostic.IDE0008.severity = none # Use explicit type — we don't force var in either direction
+dotnet_diagnostic.IDE0009.severity = none # Member access should be qualified — SA1101 = none
+dotnet_diagnostic.IDE0010.severity = none # Add missing cases to switch statement — too noisy for default/fallthrough patterns
+dotnet_diagnostic.IDE0011.severity = none # Add braces — RCS1001 / RCS1007 already handle this
+dotnet_diagnostic.IDE0021.severity = none # Use expression body for constructors — preference not enforced
+dotnet_diagnostic.IDE0022.severity = none # Use expression body for methods — preference not enforced
+dotnet_diagnostic.IDE0023.severity = none # Use expression body for conversion operators — preference not enforced
+dotnet_diagnostic.IDE0024.severity = none # Use expression body for operators — preference not enforced
+dotnet_diagnostic.IDE0025.severity = none # Use expression body for properties — preference not enforced
+dotnet_diagnostic.IDE0026.severity = none # Use expression body for indexers — preference not enforced
+dotnet_diagnostic.IDE0027.severity = none # Use expression body for accessors — preference not enforced
+dotnet_diagnostic.IDE0036.severity = none # Order modifiers — SA1206 handles
+dotnet_diagnostic.IDE0039.severity = none # Use local function — anonymous method preference not enforced
+dotnet_diagnostic.IDE0040.severity = none # Add accessibility modifiers — SA1400 handles
+dotnet_diagnostic.IDE0045.severity = none # Use conditional expression for assignment — preference not enforced
+dotnet_diagnostic.IDE0048.severity = none # Add parentheses for clarity — preference not enforced
+dotnet_diagnostic.IDE0053.severity = none # Use expression body for lambdas — preference not enforced
+dotnet_diagnostic.IDE0055.severity = none # Formatting — StyleCop SA rules own formatting
+dotnet_diagnostic.IDE0058.severity = none # Remove unnecessary expression value — too noisy (ignores fluent APIs)
+dotnet_diagnostic.IDE0060.severity = none # Remove unused parameter — CA1801 handles (with api_surface config)
+dotnet_diagnostic.IDE0061.severity = none # Use expression body for local function — preference not enforced
+dotnet_diagnostic.IDE0065.severity = none # 'using' directive placement — SA1200 = none (we put usings outside file-scoped namespaces)
+dotnet_diagnostic.IDE0073.severity = none # Require file header — SA1633 handles
+dotnet_diagnostic.IDE0079.severity = none # Remove unnecessary suppression — can misfire on multi-TFM suppressions
+dotnet_diagnostic.IDE0130.severity = none # Namespace does not match folder structure — we don't enforce strict mirror
+dotnet_diagnostic.IDE0160.severity = none # Use block-scoped namespace — we use file-scoped (IDE0161)
+dotnet_diagnostic.IDE0210.severity = none # Convert to top-level statements — we use Main style
+dotnet_diagnostic.IDE0211.severity = none # Convert to 'Program.Main' style — we use Main style
+dotnet_diagnostic.IDE0280.severity = none # Use nameof — CA1507 / RCS1015 handle this
+dotnet_diagnostic.IDE0290.severity = none # Use primary constructor — subjective, not enforced
+dotnet_diagnostic.IDE0300.severity = none # Use collection expression for array — subjective, not enforced
+dotnet_diagnostic.IDE0301.severity = none # Use collection expression for empty — subjective
+dotnet_diagnostic.IDE0302.severity = none # Use collection expression for stackalloc — subjective
+dotnet_diagnostic.IDE0303.severity = none # Use collection expression for Create — subjective
+dotnet_diagnostic.IDE0304.severity = none # Use collection expression for builder — subjective
+dotnet_diagnostic.IDE0305.severity = none # Use collection expression for fluent — subjective
+dotnet_diagnostic.IDE0306.severity = none # Use collection expression for new — subjective
+
+###################
+# Microsoft .NET Style Rules (IDE1xxx / IDE3xxx) - Naming & Miscellaneous
+###################
+# Naming conventions — SA1300 family already enforces PascalCase / interface
+# prefix / field casing (with our _underscore convention on SA1306/1309/1311
+# deliberately disabled). Leaving IDE1006 off because configuring
+# `dotnet_naming_rule.*` would duplicate what SA already enforces and could
+# conflict with the _underscore convention.
+dotnet_diagnostic.IDE1006.severity = none # Naming rule violation — SA1300 family handles naming
+dotnet_diagnostic.IDE3000.severity = none # Disabled per project convention — not enforced
+
+###################
+# Roslynator Analyzers (RCS1xxx) - Code Simplification
 ###################
 dotnet_diagnostic.RCS1001.severity = error # Add braces (when expression spans over multiple lines)
+dotnet_diagnostic.RCS1003.severity = error # Add braces to if-else (when expression spans over multiple lines)
 dotnet_diagnostic.RCS1005.severity = error # Simplify nested using statement
 dotnet_diagnostic.RCS1006.severity = error # Merge 'else' with nested 'if'
-dotnet_diagnostic.RCS1020.severity = error # Simplify Nullable<T> to T?
+dotnet_diagnostic.RCS1007.severity = error # Add braces
+dotnet_diagnostic.RCS1031.severity = none # Remove unnecessary braces in switch section -- we don't mind braces in switch statements
+dotnet_diagnostic.RCS1032.severity = error # Remove redundant parentheses
+dotnet_diagnostic.RCS1033.severity = error # Remove redundant boolean literal
+dotnet_diagnostic.RCS1039.severity = error # Remove argument list from attribute
+dotnet_diagnostic.RCS1042.severity = error # Remove enum default underlying type
+dotnet_diagnostic.RCS1043.severity = error # Remove 'partial' modifier from type with a single part
 dotnet_diagnostic.RCS1049.severity = error # Simplify boolean comparison
+dotnet_diagnostic.RCS1058.severity = error # Use compound assignment
+dotnet_diagnostic.RCS1061.severity = error # Merge 'if' with nested 'if'
 dotnet_diagnostic.RCS1068.severity = error # Simplify logical negation
 dotnet_diagnostic.RCS1069.severity = error # Remove unnecessary case label
+dotnet_diagnostic.RCS1070.severity = error # Remove redundant default switch section
 dotnet_diagnostic.RCS1071.severity = error # Remove redundant base constructor call
 dotnet_diagnostic.RCS1073.severity = error # Convert 'if' to 'return' statement
 dotnet_diagnostic.RCS1074.severity = error # Remove redundant constructor
+dotnet_diagnostic.RCS1078.severity = error # Use "" or 'string.Empty'
 dotnet_diagnostic.RCS1084.severity = error # Use coalesce expression instead of conditional expression
+dotnet_diagnostic.RCS1085.severity = error # Use auto-implemented property
+dotnet_diagnostic.RCS1089.severity = error # Use --/++ operator instead of assignment
+dotnet_diagnostic.RCS1097.severity = error # Remove redundant 'ToString' call
+dotnet_diagnostic.RCS1103.severity = error # Convert 'if' to assignment
+dotnet_diagnostic.RCS1104.severity = error # Simplify conditional expression
+dotnet_diagnostic.RCS1105.severity = error # Unnecessary interpolation
+dotnet_diagnostic.RCS1107.severity = error # Remove redundant 'ToCharArray' call
+dotnet_diagnostic.RCS1114.severity = error # Remove redundant delegate creation
+dotnet_diagnostic.RCS1124.severity = error # Inline local variable
+dotnet_diagnostic.RCS1126.severity = error # Add braces to if-else
 dotnet_diagnostic.RCS1128.severity = error # Use coalesce expression
+dotnet_diagnostic.RCS1129.severity = error # Remove redundant field initialization
+dotnet_diagnostic.RCS1132.severity = error # Remove redundant overriding member
+dotnet_diagnostic.RCS1133.severity = error # Remove redundant Dispose/Close call
+dotnet_diagnostic.RCS1134.severity = error # Remove redundant statement
 dotnet_diagnostic.RCS1143.severity = error # Simplify coalesce expression
+dotnet_diagnostic.RCS1145.severity = error # Remove redundant 'as' operator
+dotnet_diagnostic.RCS1146.severity = error # Use conditional access
+dotnet_diagnostic.RCS1151.severity = error # Remove redundant cast
 dotnet_diagnostic.RCS1171.severity = error # Simplify lazy initialization
 dotnet_diagnostic.RCS1173.severity = error # Use coalesce expression instead of 'if'
-dotnet_diagnostic.RCS1259.severity = error # Remove empty syntax (replaces RCS1066)
-dotnet_diagnostic.RCS1264.severity = error # Use 'var' or explicit type (replaces RCS1010, RCS1176, RCS1177)
-
-###################
-# Roslynator Analyzers (RCS) - Code Quality & Best Practices
-###################
-dotnet_diagnostic.RCS1018.severity = error # Add/remove accessibility modifiers
-dotnet_diagnostic.RCS1037.severity = error # Remove trailing white-space
-dotnet_diagnostic.RCS1055.severity = error # Unnecessary semicolon at the end of declaration
-dotnet_diagnostic.RCS1078.severity = error # Use "" or 'string.Empty'
-dotnet_diagnostic.RCS1085.severity = error # Use auto-implemented property
-dotnet_diagnostic.RCS1090.severity = error # Add/remove 'ConfigureAwait(false)' call
-dotnet_diagnostic.RCS1102.severity = error # Make class static
-dotnet_diagnostic.RCS1105.severity = error # Unnecessary interpolation
-dotnet_diagnostic.RCS1138.severity = error # Add summary to documentation comment
-dotnet_diagnostic.RCS1139.severity = error # Add summary element to documentation comment
-dotnet_diagnostic.RCS1158.severity = none # Static member in generic type should use a type parameter — common factory pattern
-dotnet_diagnostic.RCS1163.severity = none # Unused parameter — interface implementations and Rx selectors often have unused parameters
-dotnet_diagnostic.RCS1166.severity = error # Value type object is never equal to null
-dotnet_diagnostic.RCS1168.severity = suggestion # Parameter name differs from base name
+dotnet_diagnostic.RCS1174.severity = error # Remove redundant async/await
 dotnet_diagnostic.RCS1179.severity = error # Unnecessary assignment
 dotnet_diagnostic.RCS1180.severity = error # Inline lazy initialization
 dotnet_diagnostic.RCS1188.severity = error # Remove redundant auto-property initialization
-dotnet_diagnostic.RCS1201.severity = error # Use method chaining
+dotnet_diagnostic.RCS1192.severity = error # Unnecessary usage of verbatim string literal
+dotnet_diagnostic.RCS1199.severity = error # Unnecessary null check
+dotnet_diagnostic.RCS1206.severity = error # Use conditional access instead of conditional expression
 dotnet_diagnostic.RCS1207.severity = error # Use anonymous function or method group
 dotnet_diagnostic.RCS1211.severity = error # Remove unnecessary 'else'
-dotnet_diagnostic.RCS1231.severity = suggestion # Make parameter ref read-only
-dotnet_diagnostic.RCS1242.severity = error # Do not pass non-read-only struct by read-only reference
-dotnet_diagnostic.RCS1248.severity = error # Normalize null check
-dotnet_diagnostic.RCS1256.severity = none # Invalid argument null check — conflicts with our ArgumentExceptionHelper helper pattern
+dotnet_diagnostic.RCS1212.severity = error # Remove redundant assignment
+dotnet_diagnostic.RCS1214.severity = error # Unnecessary interpolated string
+dotnet_diagnostic.RCS1216.severity = error # Unnecessary unsafe context
+dotnet_diagnostic.RCS1217.severity = error # Convert interpolated string to concatenation
+dotnet_diagnostic.RCS1218.severity = error # Simplify code branching
+dotnet_diagnostic.RCS1220.severity = error # Use pattern matching instead of combination of 'is' and cast
+dotnet_diagnostic.RCS1221.severity = error # Use pattern matching instead of combination of 'as' and null check
+dotnet_diagnostic.RCS1238.severity = error # Avoid nested ?: operators
+dotnet_diagnostic.RCS1244.severity = error # Simplify 'default' expression
+dotnet_diagnostic.RCS1249.severity = none # Unnecessary null-forgiving operator — disabled because multi-TFM nullability annotations can differ per platform, leading to false positives
+dotnet_diagnostic.RCS1251.severity = error # Remove unnecessary braces from record declaration
+dotnet_diagnostic.RCS1259.severity = error # Remove empty syntax (replaces RCS1066)
+dotnet_diagnostic.RCS1262.severity = error # Unnecessary raw string literal
+dotnet_diagnostic.RCS1265.severity = error # Remove redundant catch block
+dotnet_diagnostic.RCS1268.severity = error # Simplify numeric comparison
 
 ###################
-# Roslynator Analyzers (RCS) - Performance & Optimization
+# Roslynator Analyzers (RCS1xxx) - Code Quality
 ###################
-dotnet_diagnostic.RCS1058.severity = error # Use compound assignment
+dotnet_diagnostic.RCS1013.severity = error # Use predefined type
+dotnet_diagnostic.RCS1014.severity = error # Use explicitly/implicitly typed array
+dotnet_diagnostic.RCS1015.severity = error # Use nameof operator
+dotnet_diagnostic.RCS1016.severity = error # Use block body or expression body
+dotnet_diagnostic.RCS1020.severity = error # Simplify Nullable<T> to T?
+dotnet_diagnostic.RCS1021.severity = error # Convert lambda expression body to expression body
+dotnet_diagnostic.RCS1044.severity = error # Remove original exception from throw statement
+dotnet_diagnostic.RCS1046.severity = none # Asynchronous method name should end with 'Async' — TUnit test method naming convention doesn't follow the Async suffix
+dotnet_diagnostic.RCS1047.severity = error # Non-asynchronous method name should not end with 'Async'
+dotnet_diagnostic.RCS1048.severity = error # Use lambda expression instead of anonymous method
+dotnet_diagnostic.RCS1050.severity = error # Include/omit parentheses when creating new object
+dotnet_diagnostic.RCS1051.severity = error # Add/remove parentheses from condition in conditional operator
+dotnet_diagnostic.RCS1056.severity = none # Avoid usage of using alias directive - used to avoid conflicts
+dotnet_diagnostic.RCS1059.severity = error # Avoid locking on publicly accessible instance
+dotnet_diagnostic.RCS1075.severity = error # Avoid empty catch clause that catches System.Exception
+dotnet_diagnostic.RCS1079.severity = error # Throwing of new NotImplementedException
+dotnet_diagnostic.RCS1081.severity = error # Split variable declaration
+dotnet_diagnostic.RCS1093.severity = error # File contains no code
+dotnet_diagnostic.RCS1094.severity = error # Declare using directive on top level
+dotnet_diagnostic.RCS1096.severity = error # Use 'HasFlag' method or bitwise operator
+dotnet_diagnostic.RCS1098.severity = error # Constant values should be placed on right side of comparisons
+dotnet_diagnostic.RCS1099.severity = error # Default label should be the last label in a switch section
+dotnet_diagnostic.RCS1102.severity = error # Make class static
+dotnet_diagnostic.RCS1108.severity = error # Add 'static' modifier to all partial class declarations
+dotnet_diagnostic.RCS1111.severity = error # Add braces to switch section with multiple statements
+dotnet_diagnostic.RCS1113.severity = error # Use 'string.IsNullOrEmpty' method
+dotnet_diagnostic.RCS1118.severity = error # Mark local variable as const
+dotnet_diagnostic.RCS1123.severity = error # Add parentheses when necessary
+dotnet_diagnostic.RCS1130.severity = error # Bitwise operation on enum without Flags attribute
+dotnet_diagnostic.RCS1135.severity = error # Declare enum member with zero value (when enum has FlagsAttribute)
+dotnet_diagnostic.RCS1136.severity = error # Merge switch sections with equivalent content
+dotnet_diagnostic.RCS1154.severity = error # Sort enum members
+dotnet_diagnostic.RCS1155.severity = error # Use StringComparison when comparing strings
+dotnet_diagnostic.RCS1156.severity = error # Use string.Length instead of comparison with empty string
+dotnet_diagnostic.RCS1157.severity = error # Composite enum value contains undefined flag
+dotnet_diagnostic.RCS1159.severity = error # Use EventHandler<T>
+dotnet_diagnostic.RCS1160.severity = error # Abstract type should not have public constructors
+dotnet_diagnostic.RCS1161.severity = none # Enum should declare explicit values - do not need explicit values
+dotnet_diagnostic.RCS1162.severity = error # Avoid chain of assignments
+dotnet_diagnostic.RCS1166.severity = error # Value type object is never equal to null
+dotnet_diagnostic.RCS1168.severity = suggestion # Parameter name differs from base name
+dotnet_diagnostic.RCS1169.severity = error # Make field read-only
+dotnet_diagnostic.RCS1170.severity = error # Use read-only auto-implemented property
+dotnet_diagnostic.RCS1172.severity = error # Use 'is' operator instead of 'as' operator
+dotnet_diagnostic.RCS1187.severity = error # Use constant instead of field
+dotnet_diagnostic.RCS1191.severity = error # Declare enum value as combination of names
+dotnet_diagnostic.RCS1193.severity = error # Overriding member should not change 'params' modifier
+dotnet_diagnostic.RCS1196.severity = error # Call extension method as instance method
+dotnet_diagnostic.RCS1200.severity = error # Call 'Enumerable.ThenBy' instead of 'Enumerable.OrderBy'
+dotnet_diagnostic.RCS1201.severity = error # Use method chaining
+dotnet_diagnostic.RCS1202.severity = error # Avoid NullReferenceException
+dotnet_diagnostic.RCS1204.severity = error # Use EventArgs.Empty
+dotnet_diagnostic.RCS1205.severity = error # Order named arguments according to the order of parameters
+dotnet_diagnostic.RCS1208.severity = error # Reduce 'if' nesting
+dotnet_diagnostic.RCS1209.severity = error # Order type parameter constraints
+dotnet_diagnostic.RCS1210.severity = error # Return completed task instead of returning null
+dotnet_diagnostic.RCS1215.severity = error # Expression is always equal to true/false
+dotnet_diagnostic.RCS1222.severity = error # Merge preprocessor directives
+dotnet_diagnostic.RCS1223.severity = suggestion # Mark publicly visible type with DebuggerDisplay attribute — only data types benefit; the rule is too broad to be an error
+dotnet_diagnostic.RCS1224.severity = error # Make method an extension method
+dotnet_diagnostic.RCS1225.severity = error # Make class sealed
+dotnet_diagnostic.RCS1227.severity = error # Validate arguments correctly
+dotnet_diagnostic.RCS1229.severity = error # Use async/await when necessary
+dotnet_diagnostic.RCS1231.severity = suggestion # Make parameter ref read-only
+dotnet_diagnostic.RCS1233.severity = error # Use short-circuiting operator
+dotnet_diagnostic.RCS1234.severity = error # Duplicate enum value
+dotnet_diagnostic.RCS1239.severity = error # Use 'for' statement instead of 'while' statement
+dotnet_diagnostic.RCS1240.severity = error # Operator is unnecessary
+dotnet_diagnostic.RCS1242.severity = error # Do not pass non-read-only struct by read-only reference
+dotnet_diagnostic.RCS1243.severity = error # Duplicate word in a comment
+dotnet_diagnostic.RCS1247.severity = error # Fix documentation comment tag
+dotnet_diagnostic.RCS1248.severity = error # Normalize null check
+dotnet_diagnostic.RCS1250.severity = error # Use implicit/explicit object creation
+dotnet_diagnostic.RCS1252.severity = error # Normalize usage of infinite loop
+dotnet_diagnostic.RCS1254.severity = error # Normalize format of enum flag value
+dotnet_diagnostic.RCS1255.severity = none # Simplify argument null check — conflicts with our ArgumentExceptionHelper helper pattern
+dotnet_diagnostic.RCS1257.severity = error # Use enum field explicitly
+dotnet_diagnostic.RCS1258.severity = error # Unnecessary enum flag
+dotnet_diagnostic.RCS1260.severity = error # Add/remove trailing comma
+dotnet_diagnostic.RCS1261.severity = error # Resource can be disposed asynchronously
+dotnet_diagnostic.RCS1264.severity = error # Use 'var' or explicit type (replaces RCS1010, RCS1176, RCS1177)
+dotnet_diagnostic.RCS1266.severity = error # Use raw string literal
+dotnet_diagnostic.RCS1267.severity = error # Use string interpolation instead of 'string.Concat'
+
+###################
+# Roslynator Analyzers (RCS1xxx) - Performance
+###################
 dotnet_diagnostic.RCS1077.severity = error # Optimize LINQ method call
 dotnet_diagnostic.RCS1080.severity = error # Use 'Count/Length' property instead of 'Any' method
 dotnet_diagnostic.RCS1112.severity = error # Combine 'Enumerable.Where' method chain
+dotnet_diagnostic.RCS1186.severity = error # Use Regex instance instead of static method
 dotnet_diagnostic.RCS1190.severity = error # Join string expressions
 dotnet_diagnostic.RCS1195.severity = error # Use ^ operator
 dotnet_diagnostic.RCS1197.severity = error # Optimize StringBuilder.Append/AppendLine call
 dotnet_diagnostic.RCS1198.severity = none # Avoid unnecessary boxing of value type — boxing is unavoidable bridging Rx and IEnumerable<object>
-dotnet_diagnostic.RCS1214.severity = error # Unnecessary interpolated string
+dotnet_diagnostic.RCS1230.severity = error # Unnecessary explicit use of enumerator
 dotnet_diagnostic.RCS1235.severity = error # Optimize method call
+dotnet_diagnostic.RCS1236.severity = error # Use exception filter
+dotnet_diagnostic.RCS1246.severity = error # Use element access
+
+###################
+# Roslynator Analyzers (RCS1xxx) - Maintainability
+###################
+dotnet_diagnostic.RCS1158.severity = none # Static member in generic type should use a type parameter — common factory pattern
+dotnet_diagnostic.RCS1163.severity = none # Unused parameter — interface implementations and Rx selectors often have unused parameters
+dotnet_diagnostic.RCS1164.severity = error # Unused type parameter
+dotnet_diagnostic.RCS1165.severity = none # Unconstrained type parameter checked for null - we validate all parameters for non-nullable enabled platforms
+dotnet_diagnostic.RCS1182.severity = error # Remove redundant base interface
+dotnet_diagnostic.RCS1213.severity = error # Remove unused member declaration
+dotnet_diagnostic.RCS1241.severity = error # Implement non-generic counterpart
+dotnet_diagnostic.RCS1256.severity = none # Invalid argument null check — conflicts with our ArgumentExceptionHelper helper pattern
+
+###################
+# Roslynator Analyzers (RCS1xxx) - Documentation
+###################
+dotnet_diagnostic.RCS1181.severity = error # Convert comment to documentation comment
+dotnet_diagnostic.RCS1189.severity = error # Add or remove region name
+dotnet_diagnostic.RCS1226.severity = none # Add paragraph to documentation comment — &lt;para&gt; wrapping is subjective and adds noise
+dotnet_diagnostic.RCS1228.severity = error # Unused element in a documentation comment
+dotnet_diagnostic.RCS1232.severity = error # Order elements in documentation comment
+dotnet_diagnostic.RCS1253.severity = error # Format documentation comment summary
+dotnet_diagnostic.RCS1263.severity = error # Invalid reference in a documentation comment
+
+###################
+# Roslynator Analyzers (RCS1xxx) - Disabled (covered by CA/SA equivalent)
+###################
+dotnet_diagnostic.RCS1018.severity = none # Add/remove accessibility modifiers — covered by SA1400
+dotnet_diagnostic.RCS1019.severity = none # Order modifiers — covered by SA1206 / SA1208
+dotnet_diagnostic.RCS1037.severity = none # Remove trailing white-space — covered by SA1028
+dotnet_diagnostic.RCS1052.severity = none # Declare each attribute separately — covered by SA1133
+dotnet_diagnostic.RCS1055.severity = none # Unnecessary semicolon at the end of declaration — covered by SA1106
+dotnet_diagnostic.RCS1060.severity = none # Declare each type in separate file — covered by SA1402
+dotnet_diagnostic.RCS1090.severity = none # Add/remove 'ConfigureAwait(false)' call — covered by CA2007 (also disabled)
+dotnet_diagnostic.RCS1110.severity = none # Declare type inside namespace — covered by CA1050
+dotnet_diagnostic.RCS1138.severity = none # Add summary to documentation comment — covered by SA1600
+dotnet_diagnostic.RCS1139.severity = none # Add summary element to documentation comment — covered by SA1604
+dotnet_diagnostic.RCS1140.severity = none # Add exception to documentation comment — covered by SA1614
+dotnet_diagnostic.RCS1141.severity = none # Add 'param' element to documentation comment — covered by SA1611
+dotnet_diagnostic.RCS1142.severity = none # Add 'typeparam' element to documentation comment — covered by SA1618
+dotnet_diagnostic.RCS1175.severity = none # Unused 'this' parameter — covered by CA1822
+dotnet_diagnostic.RCS1194.severity = none # Implement exception constructors — covered by CA1032
+dotnet_diagnostic.RCS1203.severity = none # Use AttributeUsageAttribute — covered by CA1018
+
+###################
+# Roslynator Formatting Analyzers (RCS0xxx) - covered by StyleCop SA equivalents
+###################
+dotnet_diagnostic.RCS0001.severity = none # Add blank line after embedded statement — covered by StyleCop layout rules
+dotnet_diagnostic.RCS0002.severity = none # Add blank line after #region — covered by StyleCop SA1517 family
+dotnet_diagnostic.RCS0003.severity = none # Add blank line after using directive list — covered by SA1516
+dotnet_diagnostic.RCS0005.severity = none # Add blank line before #endregion — covered by StyleCop layout rules
+dotnet_diagnostic.RCS0006.severity = none # Add blank line before using directive list — covered by SA1517
+dotnet_diagnostic.RCS0007.severity = none # Add blank line between accessors — covered by SA1513
+dotnet_diagnostic.RCS0008.severity = none # Add blank line between closing brace and next statement — covered by SA1513
+dotnet_diagnostic.RCS0009.severity = none # Add blank line between declaration and documentation comment — covered by SA1514
+dotnet_diagnostic.RCS0010.severity = none # Add blank line between declarations — covered by SA1516
+dotnet_diagnostic.RCS0011.severity = none # Add/remove blank line between single-line accessors — StyleCop already governs this
+dotnet_diagnostic.RCS0012.severity = none # Add blank line between single-line declarations — covered by SA1516
+dotnet_diagnostic.RCS0013.severity = none # Add blank line between single-line declarations of different kind — covered by SA1516
+dotnet_diagnostic.RCS0015.severity = none # Add/remove blank line between using directives — covered by SA1209 / SA1210
+dotnet_diagnostic.RCS0016.severity = none # Put attribute list on its own line — StyleCop SA1133 governs attribute lists
+dotnet_diagnostic.RCS0020.severity = none # Format accessor's braces — covered by SA1500
+dotnet_diagnostic.RCS0021.severity = none # Format block's braces — covered by SA1500
+dotnet_diagnostic.RCS0023.severity = none # Format type declaration's braces — covered by SA1500
+dotnet_diagnostic.RCS0024.severity = none # Add new line after switch label — covered by SA1003
+dotnet_diagnostic.RCS0025.severity = none # Put full accessor on its own line — covered by SA1502
+dotnet_diagnostic.RCS0027.severity = none # Place new line after/before binary operator — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0028.severity = none # Place new line after/before '?:' operator — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0029.severity = none # Put constructor initializer on its own line — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0030.severity = none # Put embedded statement on its own line — covered by SA1503
+dotnet_diagnostic.RCS0031.severity = none # Put enum member on its own line — covered by SA1136
+dotnet_diagnostic.RCS0032.severity = none # Place new line after/before arrow token — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0033.severity = none # Put statement on its own line — covered by SA1505 family
+dotnet_diagnostic.RCS0034.severity = none # Put type parameter constraint on its own line — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0036.severity = none # Remove blank line between single-line declarations of same kind — covered by SA1516
+dotnet_diagnostic.RCS0039.severity = none # Remove new line before base list — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0041.severity = none # Remove new line between 'if' keyword and 'else' keyword — StyleCop layout rules cover this
+dotnet_diagnostic.RCS0042.severity = none # Put auto-accessors on a single line — formatting preference, not enforced
+dotnet_diagnostic.RCS0044.severity = none # Use carriage return + linefeed as new line — handled by .gitattributes / editorconfig end_of_line
+dotnet_diagnostic.RCS0045.severity = none # Use linefeed as new line — handled by .gitattributes / editorconfig end_of_line
+dotnet_diagnostic.RCS0046.severity = none # Use spaces instead of tab — handled by editorconfig indent_style
+dotnet_diagnostic.RCS0048.severity = none # Put initializer on a single line — formatting preference, not enforced
+dotnet_diagnostic.RCS0049.severity = none # Add blank line after top comment — covered by SA1517
+dotnet_diagnostic.RCS0050.severity = none # Add blank line before top declaration — covered by SA1517
+dotnet_diagnostic.RCS0051.severity = none # Add/remove new line before 'while' in 'do' statement — formatting preference
+dotnet_diagnostic.RCS0052.severity = none # Place new line after/before equals token — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0053.severity = none # Fix formatting of a list — formatting preference
+dotnet_diagnostic.RCS0054.severity = none # Fix formatting of a call chain — formatting preference
+dotnet_diagnostic.RCS0055.severity = none # Fix formatting of a binary expression chain — formatting preference
+dotnet_diagnostic.RCS0056.severity = none # A line is too long — line-length not enforced
+dotnet_diagnostic.RCS0057.severity = none # Normalize whitespace at the beginning of a file — handled by editorconfig
+dotnet_diagnostic.RCS0058.severity = none # Normalize whitespace at the end of a file — covered by SA1518
+dotnet_diagnostic.RCS0059.severity = none # Place new line after/before null-conditional operator — StyleCop wrapping rules cover this
+dotnet_diagnostic.RCS0060.severity = none # Add/remove line after file scoped namespace declaration — formatting preference
+dotnet_diagnostic.RCS0061.severity = none # Add/remove blank line between switch sections — formatting preference
+dotnet_diagnostic.RCS0062.severity = none # Put expression body on its own line — formatting preference
+dotnet_diagnostic.RCS0063.severity = none # Remove unnecessary blank line — covered by SA1505 / SA1507
 
 ###################
 # StyleCop Analyzers (SA) - Spacing Rules
@@ -1148,6 +1484,153 @@ end_of_line = lf
 
 [*.{cmd, bat}]
 end_of_line = crlf
+
+#############################################
+# JetBrains ReSharper / Rider Inspections
+#############################################
+# Mirrors the CA / SA / RCS choices above for Rider and ReSharper users. Only
+# inspections with a clear mapping to our Roslyn analyzer rules are listed;
+# every other ReSharper inspection keeps its default severity. The goal is to
+# avoid Rider double-reporting things the Roslyn analyzers already catch and
+# to keep IDE severities in sync with CI-enforced severities.
+
+###################
+# ReSharper - Layout / Formatting (covered by StyleCop SA)
+###################
+resharper_redundant_linebreak_highlighting = none # covered by SA layout rules
+resharper_missing_linebreak_highlighting = none # covered by SA layout rules
+resharper_bad_empty_braces_line_breaks_highlighting = none # covered by SA1500
+resharper_missing_indent_highlighting = none # covered by editorconfig indent_size
+resharper_missing_blank_lines_highlighting = none # covered by SA1516 / SA1517
+resharper_wrong_indent_size_highlighting = none # covered by editorconfig indent_size
+resharper_bad_indent_highlighting = none # covered by editorconfig indent_size
+resharper_bad_expression_braces_line_breaks_highlighting = none # covered by SA layout rules
+resharper_multiple_spaces_highlighting = none # covered by SA1025
+resharper_bad_expression_braces_indent_highlighting = none # covered by SA layout rules
+resharper_bad_control_braces_indent_highlighting = none # covered by SA layout rules
+resharper_bad_preprocessor_indent_highlighting = none # covered by SA layout rules
+resharper_redundant_blank_lines_highlighting = none # covered by SA1516 / SA1507
+resharper_multiple_statements_on_one_line_highlighting = none # covered by SA1119 / SA1503
+resharper_bad_braces_spaces_highlighting = none # covered by SA1012 / SA1013
+resharper_outdent_is_off_prev_level_highlighting = none # editorconfig indentation
+resharper_bad_symbol_spaces_highlighting = none # covered by SA spacing rules
+resharper_bad_colon_spaces_highlighting = none # covered by SA1024
+resharper_bad_semicolon_spaces_highlighting = none # covered by SA1002
+resharper_bad_square_brackets_spaces_highlighting = none # covered by SA1010 / SA1011
+resharper_bad_parens_spaces_highlighting = none # covered by SA1008 / SA1009
+
+###################
+# ReSharper - 'this' qualifier (matches SA1101 = none)
+###################
+resharper_redundant_this_qualifier_highlighting = none # we don't follow the this. prefix style
+resharper_arrange_this_qualifier_highlighting = none # we don't follow the this. prefix style
+resharper_arrange_default_access_modifier_highlighting = none # SA1400 requires explicit access modifiers — don't suggest removing them
+resharper_redundant_default_access_modifier_highlighting = none # SA1400 requires explicit access modifiers — don't suggest removing them
+resharper_redundant_access_modifier_highlighting = none # access modifiers are deliberate and SA1400 requires them
+resharper_arrange_type_member_modifiers_highlighting = none # SA1206 handles modifier ordering; don't duplicate
+resharper_redundant_empty_switch_section_highlighting = none # handled by RCS1070
+
+###################
+# ReSharper - Redundancies / cleanup
+###################
+resharper_redundant_using_directive_highlighting = error # IDE0005 may not fire at compile time reliably — keep Rider nagging
+resharper_redundant_qualifier_highlighting = error # IDE0001 may not fire at compile time reliably — keep Rider nagging
+resharper_redundant_name_qualifier_highlighting = error # IDE0001 may not fire at compile time reliably — keep Rider nagging
+resharper_redundant_base_qualifier_highlighting = none # IDE0009 is disabled (SA1101 = none) — don't nag in Rider either
+resharper_redundant_cast_highlighting = none # handled by RCS1151
+resharper_redundant_explicit_array_creation_highlighting = none # handled by RCS1014
+resharper_redundant_empty_object_creation_argument_list_highlighting = none # handled by RCS1039
+resharper_redundant_lambda_signature_parentheses_highlighting = error # IDE0063 may not fire at compile time reliably — keep Rider nagging
+resharper_redundant_default_member_initializer_highlighting = none # handled by RCS1188
+resharper_redundant_field_initializer_highlighting = none # handled by RCS1129
+resharper_redundant_overriding_member_highlighting = none # handled by RCS1132
+resharper_redundant_verbatim_string_prefix_highlighting = none # handled by RCS1192
+resharper_redundant_string_interpolation_highlighting = none # handled by RCS1105 / RCS1214
+resharper_redundant_to_string_call_highlighting = none # handled by RCS1097
+
+###################
+# ReSharper - Naming (matches SA/CA naming rules)
+###################
+resharper_inconsistent_naming_highlighting = error # partially handled by SA1300 family but IDE1006 isn't enabled; keep ReSharper active
+
+###################
+# ReSharper - Unused code (matches CA1801 / CA1823 / IDE0051-0052)
+###################
+resharper_unused_parameter_local_highlighting = none # handled by CA1801 (private/internal surface)
+resharper_unused_parameter_global_highlighting = none # public-API parameters can be unused for compat
+resharper_unused_member_local_highlighting = error # IDE0051 may not fire at compile time reliably — keep Rider nagging
+resharper_unused_member_global_highlighting = suggestion # public-API members may be intentionally exposed
+resharper_unused_field_local_highlighting = none # handled by CA1823
+resharper_unused_field_global_highlighting = none # public-API fields may be intentionally exposed
+resharper_unused_type_local_highlighting = error # IDE0052 may not fire at compile time reliably — keep Rider nagging
+resharper_unused_type_global_highlighting = suggestion # public-API types may be intentionally exposed
+resharper_unused_variable_highlighting = none # handled by CS0219
+resharper_unused_auto_property_accessor_local_highlighting = none # data-class setters are intentional even when unused locally
+resharper_unused_auto_property_accessor_global_highlighting = none # public auto-properties may be intentionally exposed
+
+###################
+# ReSharper - Code quality (matches CA/RCS semantic analyzers)
+###################
+resharper_class_never_instantiated_local_highlighting = none # handled by CA1812
+resharper_class_never_instantiated_global_highlighting = suggestion # public types may be instantiated externally
+resharper_class_cannot_be_instantiated_highlighting = none # handled by CA1052
+resharper_class_can_be_sealed_local_highlighting = none # handled by CA1852 (private/internal surface)
+resharper_class_can_be_sealed_global_highlighting = none # public types stay open for inheritance
+resharper_use_nameof_expression_highlighting = none # handled by CA1507 / RCS1015
+resharper_possible_null_reference_exception_highlighting = none # handled bynullability analyzer
+resharper_possible_invalid_operation_exception_highlighting = none # handled bynullability analyzer
+resharper_possible_multiple_enumeration_highlighting = none # handled by CA1851
+resharper_possible_mistaken_argument_null_check_highlighting = none # handled by CA1062
+resharper_convert_to_constant_local_highlighting = none # handled by RCS1118
+resharper_convert_to_static_class_highlighting = none # handled by CA1052
+resharper_convert_to_auto_property_highlighting = none # handled by RCS1085
+resharper_convert_to_auto_property_when_possible_highlighting = none # handled by RCS1085
+resharper_convert_to_auto_property_with_private_setter_highlighting = none # handled by RCS1085
+resharper_auto_property_can_be_made_get_only_local_highlighting = none # handled by RCS1170
+resharper_auto_property_can_be_made_get_only_global_highlighting = suggestion # public setters kept for API consumers
+resharper_member_can_be_made_static_local_highlighting = none # handled by CA1822 (private/internal surface)
+resharper_member_can_be_made_static_global_highlighting = none # public members kept virtual for inheritance
+resharper_member_can_be_private_local_highlighting = none # access modifiers are deliberate — don't suggest tightening
+resharper_method_has_async_overload_highlighting = none # sync call sites are intentional (e.g. test setup, disposal, sample code)
+resharper_member_can_be_private_global_highlighting = none # access modifiers are deliberate — don't suggest tightening
+resharper_field_can_be_made_read_only_local_highlighting = none # handled by RCS1169
+resharper_field_can_be_made_read_only_global_highlighting = none # handled by RCS1169
+resharper_merge_into_pattern_highlighting = none # handled by RCS1220
+resharper_merge_conditional_expression_highlighting = none # handled by RCS1173
+resharper_merge_sequential_checks_highlighting = none # handled by RCS1206
+resharper_simplify_conditional_ternary_expression_highlighting = none # handled by RCS1049 / RCS1104
+resharper_simplify_linq_expression_highlighting = error # handled by RCS1077
+resharper_string_compare_to_is_culture_specific_highlighting = none # handled by CA1310
+resharper_string_ends_with_is_culture_specific_highlighting = none # handled by CA1310
+resharper_string_index_of_is_culture_specific_1_highlighting = none # handled by CA1310
+resharper_string_index_of_is_culture_specific_2_highlighting = none # handled by CA1310
+resharper_string_index_of_is_culture_specific_3_highlighting = none # handled by CA1310
+resharper_string_last_index_of_is_culture_specific_1_highlighting = none # handled by CA1310
+resharper_string_last_index_of_is_culture_specific_2_highlighting = none # handled by CA1310
+resharper_string_last_index_of_is_culture_specific_3_highlighting = none # handled by CA1310
+resharper_string_starts_with_is_culture_specific_highlighting = none # handled by CA1310
+resharper_specify_a_culture_in_string_conversion_explicitly_highlighting = none # handled by CA1304
+
+###################
+# ReSharper - Control flow / nesting
+###################
+resharper_invert_if_highlighting = suggestion # related to RCS1208 — Rider is more aggressive
+resharper_tail_recursive_call_highlighting = suggestion
+
+###################
+# ReSharper - Documentation (covered by StyleCop SA1600 family)
+###################
+resharper_missing_xml_doc_highlighting = none # covered by SA1600 family
+resharper_missing_xml_doc_global_highlighting = none # covered by SA1600 family
+resharper_invalid_xml_doc_comment_highlighting = none # handled by SA1612 / SA1613
+
+###################
+# ReSharper - Typo / spelling (not enforced)
+###################
+resharper_comment_typo_highlighting = none # typo checks are out of scope
+resharper_string_literal_typo_highlighting = none # typo checks are out of scope
+resharper_identifier_typo_highlighting = none # typo checks are out of scope
+resharper_markup_text_typo_highlighting = none # typo checks are out of scope
 
 #############################################
 # Other Settings

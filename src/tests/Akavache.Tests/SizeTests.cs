@@ -20,7 +20,7 @@ public class SizeTests
     public async Task SizeConstructorShouldSetPropertiesCorrectly()
     {
         // Act
-        var size = new Size(100.5f, 200.75f);
+        Size size = new(100.5f, 200.75f);
 
         // Assert
         using (Assert.Multiple())
@@ -38,9 +38,9 @@ public class SizeTests
     public async Task SizeWithZeroDimensionsShouldWork()
     {
         // Act
-        var zeroSize = new Size(0, 0);
-        var zeroWidth = new Size(0, 100);
-        var zeroHeight = new Size(100, 0);
+        Size zeroSize = new(0, 0);
+        Size zeroWidth = new(0, 100);
+        Size zeroHeight = new(100, 0);
 
         // Assert
         using (Assert.Multiple())
@@ -71,7 +71,7 @@ public class SizeTests
     public async Task AspectRatioShouldBeCalculatedCorrectly(float width, float height, float expectedRatio)
     {
         // Arrange
-        var size = new Size(width, height);
+        Size size = new(width, height);
 
         // Act
         var actualRatio = size.AspectRatio;
@@ -89,7 +89,7 @@ public class SizeTests
     public async Task AspectRatioWithZeroWidthShouldReturnZero()
     {
         // Arrange
-        var size = new Size(0f, 100f);
+        Size size = new(0f, 100f);
 
         // Act
         var ratio = size.AspectRatio;
@@ -106,10 +106,10 @@ public class SizeTests
     public async Task SizeEqualityOperatorsShouldWork()
     {
         // Arrange
-        var size1 = new Size(100f, 200f);
-        var size2 = new Size(100f, 200f);
-        var size3 = new Size(150f, 200f);
-        var size4 = new Size(100f, 250f);
+        Size size1 = new(100f, 200f);
+        Size size2 = new(100f, 200f);
+        Size size3 = new(150f, 200f);
+        Size size4 = new(100f, 250f);
 
         // Act & Assert - Equality
         await Assert.That(size1).IsEqualTo(size2);
@@ -130,9 +130,9 @@ public class SizeTests
     public async Task SizeEqualsShouldWork()
     {
         // Arrange
-        var size1 = new Size(100f, 200f);
-        var size2 = new Size(100f, 200f);
-        var size3 = new Size(150f, 200f);
+        Size size1 = new(100f, 200f);
+        Size size2 = new(100f, 200f);
+        Size size3 = new(150f, 200f);
 
         using (Assert.Multiple())
         {
@@ -154,9 +154,9 @@ public class SizeTests
     public async Task SizeGetHashCodeShouldWork()
     {
         // Arrange
-        var size1 = new Size(100f, 200f);
-        var size2 = new Size(100f, 200f);
-        var size3 = new Size(150f, 200f);
+        Size size1 = new(100f, 200f);
+        Size size2 = new(100f, 200f);
+        Size size3 = new(150f, 200f);
 
         // Act
         var hash1 = size1.GetHashCode();
@@ -179,9 +179,9 @@ public class SizeTests
     public async Task SizeToStringShouldWork()
     {
         // Arrange
-        var size1 = new Size(100f, 200f);
-        var size2 = new Size(1.5f, 2.75f);
-        var size3 = new Size(0f, 0f);
+        Size size1 = new(100f, 200f);
+        Size size2 = new(1.5f, 2.75f);
+        Size size3 = new(0f, 0f);
 
         // Act
         var str1 = size1.ToString();
@@ -205,8 +205,8 @@ public class SizeTests
     public async Task SizeWithNegativeDimensionsShouldWork()
     {
         // Arrange & Act
-        var negativeSize = new Size(-100f, -200f);
-        var mixedSize = new Size(-50f, 100f);
+        Size negativeSize = new(-100f, -200f);
+        Size mixedSize = new(-50f, 100f);
 
         using (Assert.Multiple())
         {
@@ -229,8 +229,8 @@ public class SizeTests
     public async Task SizeWithLargeDimensionsShouldWork()
     {
         // Arrange & Act
-        var largeSize = new Size(float.MaxValue, float.MaxValue);
-        var veryLargeSize = new Size(1e30f, 1e30f);
+        Size largeSize = new(float.MaxValue, float.MaxValue);
+        Size veryLargeSize = new(1e30f, 1e30f);
 
         using (Assert.Multiple())
         {
@@ -253,8 +253,8 @@ public class SizeTests
     public async Task SizeWithSmallDimensionsShouldWork()
     {
         // Arrange & Act
-        var smallSize = new Size(float.Epsilon, float.Epsilon);
-        var tinySize = new Size(1e-30f, 1e-30f);
+        Size smallSize = new(float.Epsilon, float.Epsilon);
+        Size tinySize = new(1e-30f, 1e-30f);
 
         using (Assert.Multiple())
         {
@@ -277,9 +277,9 @@ public class SizeTests
     public async Task SizeWithSpecialFloatValuesShouldWork()
     {
         // Arrange & Act
-        var infiniteSize = new Size(float.PositiveInfinity, float.PositiveInfinity);
-        var nanSize = new Size(float.NaN, float.NaN);
-        var mixedSpecialSize = new Size(float.PositiveInfinity, 100f);
+        Size infiniteSize = new(float.PositiveInfinity, float.PositiveInfinity);
+        Size nanSize = new(float.NaN, float.NaN);
+        Size mixedSpecialSize = new(float.PositiveInfinity, 100f);
 
         using (Assert.Multiple())
         {
@@ -327,10 +327,10 @@ public class SizeTests
             await Assert.That(uniqueSizes).Contains(new Size(200f, 400f));
 
             // Check sorting
-            await Assert.That(sortedSizes[0]).IsEqualTo(new Size(100f, 200f));
-            await Assert.That(sortedSizes[1]).IsEqualTo(new Size(100f, 200f)); // Duplicate
-            await Assert.That(sortedSizes[2]).IsEqualTo(new Size(150f, 300f));
-            await Assert.That(sortedSizes[3]).IsEqualTo(new Size(200f, 400f));
+            await Assert.That(sortedSizes[0]).IsEqualTo(new(100f, 200f));
+            await Assert.That(sortedSizes[1]).IsEqualTo(new(100f, 200f)); // Duplicate
+            await Assert.That(sortedSizes[2]).IsEqualTo(new(150f, 300f));
+            await Assert.That(sortedSizes[3]).IsEqualTo(new(200f, 400f));
         }
     }
 
@@ -342,10 +342,10 @@ public class SizeTests
     public async Task SizeShouldWorkAsDictionaryKey()
     {
         // Arrange
-        var sizeDict = new Dictionary<Size, string>();
-        var size1 = new Size(100f, 200f);
-        var size2 = new Size(150f, 300f);
-        var size3 = new Size(100f, 200f); // Same as size1
+        Dictionary<Size, string> sizeDict = [];
+        Size size1 = new(100f, 200f);
+        Size size2 = new(150f, 300f);
+        Size size3 = new(100f, 200f); // Same as size1
 
         // Act
         sizeDict[size1] = "First";
@@ -370,10 +370,10 @@ public class SizeTests
     public async Task SizeOperatorEqualsAndNotEqualsShouldWork()
     {
         // Arrange
-        var size1 = new Size(100f, 200f);
-        var size2 = new Size(100f, 200f);
-        var size3 = new Size(150f, 200f);
-        var size4 = new Size(100f, 250f);
+        Size size1 = new(100f, 200f);
+        Size size2 = new(100f, 200f);
+        Size size3 = new(150f, 200f);
+        Size size4 = new(100f, 250f);
 
         using (Assert.Multiple())
         {
@@ -398,7 +398,7 @@ public class SizeTests
     public async Task SizeEqualsObjectShouldWork()
     {
         // Arrange
-        var size1 = new Size(100f, 200f);
+        Size size1 = new(100f, 200f);
         object sameBoxed = new Size(100f, 200f);
         object differentBoxed = new Size(150f, 200f);
         object notASize = "not a size";
@@ -430,7 +430,7 @@ public class SizeTests
     public async Task SizeWithRealisticImageDimensionsShouldWork(float width, float height)
     {
         // Arrange & Act
-        var size = new Size(width, height);
+        Size size = new(width, height);
 
         using (Assert.Multiple())
         {

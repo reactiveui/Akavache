@@ -104,8 +104,8 @@ public class NewtonsoftSerializer : ISerializer
         // Try JSON format
         try
         {
-            using var stream = new MemoryStream(bytes);
-            using var textReader = new StreamReader(stream);
+            using MemoryStream stream = new(bytes);
+            using StreamReader textReader = new(stream);
             var serializer = JsonSerializer.Create(GetEffectiveSettings());
             return (T?)serializer.Deserialize(textReader, typeof(T));
         }
@@ -178,8 +178,8 @@ public class NewtonsoftSerializer : ISerializer
         try
         {
             var serializer = GetSerializer();
-            using var ms = new MemoryStream();
-            using var writer = new BsonDataWriter(ms);
+            using MemoryStream ms = new();
+            using BsonDataWriter writer = new(ms);
 
             serializer.Serialize(writer, new ObjectWrapper<T>(item));
             return ms.ToArray();
@@ -208,7 +208,7 @@ public class NewtonsoftSerializer : ISerializer
         try
         {
             var serializer = GetSerializer();
-            using var reader = new BsonDataReader(new MemoryStream(bytes));
+            using BsonDataReader reader = new(new MemoryStream(bytes));
 
             var forcedDateTimeKind = ForcedDateTimeKind;
             if (forcedDateTimeKind.HasValue)
@@ -225,7 +225,7 @@ public class NewtonsoftSerializer : ISerializer
             {
                 // Reset stream and try direct deserialization
                 reader.Close();
-                using var reader2 = new BsonDataReader(new MemoryStream(bytes));
+                using BsonDataReader reader2 = new(new MemoryStream(bytes));
                 if (forcedDateTimeKind.HasValue)
                 {
                     reader2.DateTimeKindHandling = forcedDateTimeKind.Value;
@@ -331,7 +331,7 @@ public class NewtonsoftSerializer : ISerializer
         var settings = Options ?? new JsonSerializerSettings();
 
         // Create a copy to avoid modifying the original settings
-        settings = new JsonSerializerSettings
+        settings = new()
         {
             ContractResolver = _contractResolver,
             DateTimeZoneHandling = settings.DateTimeZoneHandling,

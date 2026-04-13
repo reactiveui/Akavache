@@ -48,7 +48,7 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
             var ticks = ReadLongProperty(jobject, "Ticks");
             var offsetTicks = ReadLongProperty(jobject, "OffsetTicks");
 
-            var offset = new TimeSpan(offsetTicks);
+            TimeSpan offset = new(offsetTicks);
             return new DateTimeOffset(ticks, offset);
         }
 

@@ -34,7 +34,7 @@ var instance = CacheDatabase.CreateBuilder("AkavacheCompatTest")
     .Build();
 
 // Create a direct SQLite cache instance pointing at the exact db path used by v10
-await using var readerCache = new SqliteBlobCache(dbPath, instance.Serializer!);
+await using SqliteBlobCache readerCache = new(dbPath, instance.Serializer!);
 
 // Debug: Inspect tables and basic counts
 try
@@ -99,7 +99,7 @@ const string keyBytes = "compat:bytes";
 // Expected values
 var expectedString = "Hello, Akavache V10!";
 var expectedInt = 42;
-var expectedPerson = new Person { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
+Person expectedPerson = new() { Name = "Ada Lovelace", Age = 36, Email = "ada@example.com" };
 var expectedBytes = "ByteArray:CAFEBABE"u8.ToArray();
 
 try

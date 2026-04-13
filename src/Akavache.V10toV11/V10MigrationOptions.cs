@@ -7,7 +7,7 @@ namespace Akavache.V10toV11;
 /// <summary>
 /// Configuration options for migrating data from Akavache V10 databases to V11.
 /// </summary>
-public class V10MigrationOptions
+public record V10MigrationOptions
 {
     /// <summary>
     /// Gets or sets a value indicating whether to delete the old V10 database files after successful migration.

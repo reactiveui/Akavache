@@ -32,15 +32,9 @@ public class SystemJsonSerializer : ISerializer
     /// <param name="bytes">The bytes.</param>
     /// <param name="jsonTypeInfo">The JSON type information for AOT-safe deserialization.</param>
     /// <returns>The deserialized instance, or <c>default</c> when <paramref name="bytes"/> is null or empty.</returns>
-    public static T? DeserializeAot<T>(byte[] bytes, JsonTypeInfo<T> jsonTypeInfo)
-    {
-        if (bytes == null || bytes.Length == 0)
-        {
-            return default;
-        }
-
-        return JsonSerializer.Deserialize(bytes, jsonTypeInfo);
-    }
+    public static T? DeserializeAot<T>(byte[] bytes, JsonTypeInfo<T> jsonTypeInfo) => bytes == null || bytes.Length == 0
+        ? default
+        : JsonSerializer.Deserialize(bytes, jsonTypeInfo);
 
     /// <summary>
     /// Serializes to bytes using the provided <see cref="JsonTypeInfo{T}"/> for
@@ -86,6 +80,6 @@ public class SystemJsonSerializer : ISerializer
         var options = Options ?? new JsonSerializerOptions();
 
         // Clone options to avoid modifying the original
-        return new JsonSerializerOptions(options);
+        return new(options);
     }
 }

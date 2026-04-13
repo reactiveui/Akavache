@@ -122,7 +122,7 @@ public partial class EditTodoViewModel : ReactiveObject
             dueDate = new DateTimeOffset(date);
 
             // Parse tags
-            var tags = new List<string>();
+            List<string> tags = [];
             if (!string.IsNullOrWhiteSpace(TagsString))
             {
                 tags = TagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -132,7 +132,7 @@ public partial class EditTodoViewModel : ReactiveObject
             }
 
             // Create updated todo
-            UpdatedTodo = new TodoItem
+            UpdatedTodo = new()
             {
                 Id = _originalTodo.Id,
                 Title = Title,

@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
+using Akavache.Helpers;
 
 namespace Akavache;
 
@@ -94,14 +95,14 @@ public static class CacheDatabase
             return Observable.Return(Unit.Default);
         }
 
-        var shutdownTasks = new List<IObservable<Unit>>();
+        List<IObservable<Unit>> shutdownTasks = [];
 
         // dispose the settings store
         if (AkavacheBuilder.BlobCaches != null)
         {
             var shutdownSettingsBlobs = Observable.Start(static async () =>
             {
-                var tasks = AkavacheBuilder.BlobCaches
+                List<Task> tasks = AkavacheBuilder.BlobCaches
                 .Where(static cachePair => cachePair.Value != null)
                 .Select(static async cache => await cache.Value!.DisposeAsync())
                 .ToList();
@@ -114,7 +115,7 @@ public static class CacheDatabase
         {
             var shutdownSettingsStores = Observable.Start(static async () =>
             {
-                var tasks = AkavacheBuilder.SettingsStores
+                List<Task> tasks = AkavacheBuilder.SettingsStores
                 .Where(static cachePair => cachePair.Value != null)
                 .Select(static async cache => await cache.Value!.DisposeAsync())
                 .ToList();
@@ -153,7 +154,7 @@ public static class CacheDatabase
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
     public static void Initialize<T>(string applicationName, FileLocationOption fileLocationOption = FileLocationOption.Default)
-       where T : ISerializer, new() => SetBuilder(CreateBuilder(applicationName, fileLocationOption)
+       where T : class, ISerializer, new() => SetBuilder(CreateBuilder(applicationName, fileLocationOption)
             .WithSerializer<T>()
             .WithInMemoryDefaults()
             .Build());
@@ -171,7 +172,7 @@ public static class CacheDatabase
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
     public static void Initialize<T>(Func<T> configureSerializer, string applicationName, FileLocationOption fileLocationOption = FileLocationOption.Default)
-       where T : ISerializer, new() => SetBuilder(CreateBuilder(applicationName, fileLocationOption)
+       where T : class, ISerializer, new() => SetBuilder(CreateBuilder(applicationName, fileLocationOption)
             .WithSerializer(configureSerializer)
             .WithInMemoryDefaults()
             .Build());
@@ -189,12 +190,9 @@ public static class CacheDatabase
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
     public static void Initialize<T>(Action<IAkavacheBuilder> configure, string applicationName, FileLocationOption fileLocationOption = FileLocationOption.Default)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(configure);
 
         var builder = CreateBuilder(applicationName, fileLocationOption)
             .WithSerializer<T>();
@@ -218,12 +216,9 @@ public static class CacheDatabase
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
 #endif
     public static void Initialize<T>(Func<T> configureSerializer, Action<IAkavacheBuilder> configure, string applicationName, FileLocationOption fileLocationOption = FileLocationOption.Default)
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(configure);
 
         var builder = CreateBuilder(applicationName, fileLocationOption)
             .WithSerializer(configureSerializer);
@@ -242,15 +237,10 @@ public static class CacheDatabase
     /// A new Akavache builder instance with the application name already applied.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="applicationName"/> is null or whitespace.</exception>
-    public static IAkavacheBuilder CreateBuilder(string applicationName, FileLocationOption fileLocationOption = FileLocationOption.Default)
-    {
-        if (string.IsNullOrWhiteSpace(applicationName))
-        {
-            throw new ArgumentException("Application name must not be null or whitespace.", nameof(applicationName));
-        }
-
-        return new AkavacheBuilder(fileLocationOption).WithApplicationName(applicationName);
-    }
+    public static IAkavacheBuilder CreateBuilder(string applicationName, FileLocationOption fileLocationOption = FileLocationOption.Default) =>
+        string.IsNullOrWhiteSpace(applicationName)
+            ? throw new ArgumentException("Application name must not be null or whitespace.", nameof(applicationName))
+            : new AkavacheBuilder(fileLocationOption).WithApplicationName(applicationName);
 
     /// <summary>
     /// Creates a new Akavache builder for configuration.
@@ -304,17 +294,12 @@ public static class CacheDatabase
     /// always assigns a non-null instance and is the only writer for <c>_builder</c>.
     /// </summary>
     /// <returns>The configured Akavache instance.</returns>
-    internal static IAkavacheInstance GetOrThrowIfNotInitialized()
-    {
-        if (!_isInitialized || _builder is null)
-        {
-            throw new InvalidOperationException(
+    internal static IAkavacheInstance GetOrThrowIfNotInitialized() =>
+        !_isInitialized || _builder is null
+            ? throw new InvalidOperationException(
                 "CacheDatabase has not been initialized. " +
                 "Call CacheDatabase.Initialize<TSerializer>(\"MyApp\") or " +
                 "CacheDatabase.Initialize<TSerializer>(builder => { ... }, \"MyApp\") first. " +
-                "For advanced scenarios, use CacheDatabase.CreateBuilder(\"MyApp\") to configure custom cache implementations.");
-        }
-
-        return _builder;
-    }
+                "For advanced scenarios, use CacheDatabase.CreateBuilder(\"MyApp\") to configure custom cache implementations.")
+            : _builder;
 }

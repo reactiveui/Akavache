@@ -21,7 +21,7 @@ public class CoreUtilityTests
     public async Task RelativeTimeExtensionsShouldWorkWithPastTimes()
     {
         // Arrange
-        var baseTime = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime baseTime = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
 
         // Act
         var oneHourAgo = baseTime.AddHours(-1);
@@ -45,7 +45,7 @@ public class CoreUtilityTests
     public async Task RelativeTimeExtensionsShouldWorkWithFutureTimes()
     {
         // Arrange
-        var baseTime = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime baseTime = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
 
         // Act
         var oneHourFromNow = baseTime.AddHours(1);
@@ -69,11 +69,11 @@ public class CoreUtilityTests
     public async Task DateTimeOffsetConversionsShouldWorkCorrectly()
     {
         // Arrange
-        var utcTime = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime utcTime = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
         var offset = TimeSpan.FromHours(-5); // EST
 
         // Act
-        var dateTimeOffset = new DateTimeOffset(utcTime, TimeSpan.Zero);
+        DateTimeOffset dateTimeOffset = new(utcTime, TimeSpan.Zero);
         var offsetTime = dateTimeOffset.ToOffset(offset);
 
         using (Assert.Multiple())
@@ -199,7 +199,7 @@ public class CoreUtilityTests
     public async Task RequestCacheShouldHandleDifferentKeys()
     {
         // Arrange
-        var callCounts = new Dictionary<string, int>();
+        Dictionary<string, int> callCounts = [];
 
         // Act - Use different keys
         var request1 = RequestCache.GetOrCreateRequest("key1", () => Factory("key1"));

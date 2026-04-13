@@ -124,7 +124,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public Task CreateTableAsync<T>()
-        where T : new()
+        where T : class, new()
     {
         ThrowIfDisposed();
 
@@ -139,7 +139,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public Task<List<T>> QueryAsync<T>(Expression<Func<T, bool>> predicate)
-        where T : new()
+        where T : class, new()
     {
         ThrowIfDisposed();
 
@@ -164,7 +164,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public Task<List<T>> QueryAsync<T>(string sql, params object[] args)
-        where T : new()
+        where T : class, new()
     {
         ThrowIfDisposed();
 
@@ -176,7 +176,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate)
-        where T : new()
+        where T : class, new()
     {
         ThrowIfDisposed();
 
@@ -195,7 +195,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public Task InsertOrReplaceAsync<T>(T entity)
-        where T : new()
+        where T : class, new()
     {
         ThrowIfDisposed();
 
@@ -233,7 +233,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
             return Task.FromException(new InvalidOperationException("Simulated transaction failure."));
         }
 
-        var transaction = new InMemoryAkavacheTransaction(_store, SimulateNullConnection)
+        InMemoryAkavacheTransaction transaction = new(_store, SimulateNullConnection)
         {
             FailInsertOrReplace = FailInsertOrReplaceInTransaction,
             IsValidTrueCallsRemaining = TransactionIsValidTrueCallsRemaining,

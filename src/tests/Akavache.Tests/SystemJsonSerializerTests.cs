@@ -21,7 +21,7 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task ShouldRoundTrip()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var data = serializer.Serialize(new SerializerTestModel { Name = "test", Value = 42 });
         var result = serializer.Deserialize<SerializerTestModel>(data);
 
@@ -37,7 +37,7 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultForNullBytes()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var result = serializer.Deserialize<SerializerTestModel>(null!);
         await Assert.That(result).IsNull();
     }
@@ -49,7 +49,7 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultForEmptyBytes()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var result = serializer.Deserialize<SerializerTestModel>([]);
         await Assert.That(result).IsNull();
     }
@@ -61,9 +61,9 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task ShouldUseCustomOptions()
     {
-        var serializer = new SystemJsonSerializer
+        SystemJsonSerializer serializer = new()
         {
-            Options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+            Options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
         };
 
         var data = serializer.Serialize(new SerializerTestModel { Name = "test", Value = 1 });
@@ -80,8 +80,8 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task SerializeWithJsonTypeInfoShouldWork()
     {
-        var serializer = new SystemJsonSerializer();
-        var model = new SerializerTestModel { Name = "aot", Value = 99 };
+        SystemJsonSerializer serializer = new();
+        SerializerTestModel model = new() { Name = "aot", Value = 99 };
 
         var data = serializer.Serialize(model, SerializerTestContext.Default.SerializerTestModel);
         await Assert.That(data).IsNotNull();
@@ -98,8 +98,8 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task DeserializeWithJsonTypeInfoShouldWork()
     {
-        var serializer = new SystemJsonSerializer();
-        var model = new SerializerTestModel { Name = "aot-roundtrip", Value = 7 };
+        SystemJsonSerializer serializer = new();
+        SerializerTestModel model = new() { Name = "aot-roundtrip", Value = 7 };
 
         var data = serializer.Serialize(model, SerializerTestContext.Default.SerializerTestModel);
         var result = serializer.Deserialize(data, SerializerTestContext.Default.SerializerTestModel);
@@ -116,7 +116,7 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task DeserializeWithJsonTypeInfoShouldReturnDefaultForNullBytes()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var result = serializer.Deserialize(null!, SerializerTestContext.Default.SerializerTestModel);
         await Assert.That(result).IsNull();
     }
@@ -128,7 +128,7 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task DeserializeWithJsonTypeInfoShouldReturnDefaultForEmptyBytes()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var result = serializer.Deserialize([], SerializerTestContext.Default.SerializerTestModel);
         await Assert.That(result).IsNull();
     }
@@ -140,7 +140,7 @@ public class SystemJsonSerializerTests
     [Test]
     public async Task ForcedDateTimeKindShouldGetAndSet()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         await Assert.That(serializer.ForcedDateTimeKind).IsNull();
 
         serializer.ForcedDateTimeKind = DateTimeKind.Utc;

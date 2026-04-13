@@ -23,10 +23,10 @@ public class LoginExtensionsTests
     public async Task SaveLoginAndGetLoginShouldWorkWithDefaultHost()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string username = "testuser";
             const string password = "testpassword";
 
@@ -61,10 +61,10 @@ public class LoginExtensionsTests
     public async Task SaveLoginAndGetLoginShouldWorkWithCustomHost()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string username = "customuser";
             const string password = "custompassword";
             const string host = "example.com";
@@ -100,11 +100,11 @@ public class LoginExtensionsTests
     public async Task SaveLoginWithExpirationShouldWork()
     {
         // Use a single serializer instance to avoid issues
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string username = "expiringuser";
             const string password = "expiringpassword";
             const string host = "expiring.example.com";
@@ -146,10 +146,10 @@ public class LoginExtensionsTests
     public async Task EraseLoginShouldRemoveLoginCorrectly()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string username = "erasableuser";
             const string password = "erasablepassword";
             const string host = "erasable.example.com";
@@ -188,11 +188,11 @@ public class LoginExtensionsTests
     [Test]
     public async Task GetLoginShouldThrowKeyNotFoundExceptionWhenStoredValueIsNull()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         const string host = "null-login-host";
         const string key = "login:" + host;
 
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Writing an empty byte[] under the typed key causes GetObject<LoginInfo>
         // to emit a null value (it interprets empty payloads as stored nulls) so
@@ -210,10 +210,10 @@ public class LoginExtensionsTests
     public async Task GetLoginShouldThrowKeyNotFoundExceptionWhenNoLoginExists()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string host = "nonexistent.example.com";
 
             try
@@ -236,10 +236,10 @@ public class LoginExtensionsTests
     public async Task MultipleHostsShouldHaveDifferentCredentials()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
 
             const string host1 = "site1.example.com";
             const string user1 = "user1";
@@ -297,10 +297,10 @@ public class LoginExtensionsTests
     public async Task SaveLoginShouldOverwritePreviousCredentials()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string host = "overwrite.example.com";
 
             const string originalUser = "originaluser";
@@ -356,7 +356,7 @@ public class LoginExtensionsTests
     public async Task LoginCredentialsShouldPersistAcrossCacheInstances()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "persistent_login_test.db");
@@ -366,7 +366,7 @@ public class LoginExtensionsTests
 
             // Act - Save credentials in first cache instance
             {
-                var cache1 = new EncryptedSqliteBlobCache(dbPath, "test_password", serializer);
+                EncryptedSqliteBlobCache cache1 = new(dbPath, "test_password", serializer);
                 try
                 {
                     await cache1.SaveLogin(username, password, host).FirstAsync();
@@ -381,7 +381,7 @@ public class LoginExtensionsTests
 
             // Act - Retrieve credentials in second cache instance
             {
-                var cache2 = new EncryptedSqliteBlobCache(dbPath, "test_password", serializer);
+                EncryptedSqliteBlobCache cache2 = new(dbPath, "test_password", serializer);
                 try
                 {
                     var loginInfo = await cache2.GetLogin(host).FirstAsync();
@@ -410,10 +410,10 @@ public class LoginExtensionsTests
     public async Task LoginMethodsShouldHandleEdgeCases()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
 
             try
             {
@@ -461,10 +461,10 @@ public class LoginExtensionsTests
     public async Task EraseLoginShouldBeIdempotent()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out var path))
         {
-            var cache = new EncryptedSqliteBlobCache(Path.Combine(path, "login_test.db"), "test_password", serializer);
+            EncryptedSqliteBlobCache cache = new(Path.Combine(path, "login_test.db"), "test_password", serializer);
             const string host = "idempotent.example.com";
 
             try

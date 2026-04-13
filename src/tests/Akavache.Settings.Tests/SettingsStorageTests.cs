@@ -66,7 +66,7 @@ public class SettingsStorageTests
     /// <returns>A task.</returns>
     [Test]
     public async Task EagerLoadPropertiesShouldThrowOnNullProperties() =>
-        await Assert.That(() => SettingsStorage.EagerLoadProperties(new object(), null!))
+        await Assert.That(() => SettingsStorage.EagerLoadProperties(new(), null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -77,7 +77,7 @@ public class SettingsStorageTests
     [Test]
     public async Task EagerLoadPropertiesShouldInvokeEveryGetter()
     {
-        var probe = new GetterProbe();
+        GetterProbe probe = new();
         var properties = typeof(GetterProbe).GetRuntimeProperties();
 
         SettingsStorage.EagerLoadProperties(probe, properties);
@@ -95,7 +95,7 @@ public class SettingsStorageTests
     [Test]
     public async Task InitializeAsyncShouldEagerLoadEveryProperty()
     {
-        await using var storage = new ProbeStorage("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
+        await using ProbeStorage storage = new("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
 
         await storage.InitializeAsync();
 
@@ -111,7 +111,7 @@ public class SettingsStorageTests
     [Test]
     public async Task EagerLoadPropertiesShouldTolerateEmptySequence()
     {
-        var probe = new GetterProbe();
+        GetterProbe probe = new();
 
         SettingsStorage.EagerLoadProperties(probe, []);
 
@@ -128,7 +128,7 @@ public class SettingsStorageTests
     [Test]
     public async Task OnPropertyChangedShouldRaiseEventWhenSubscribed()
     {
-        await using var storage = new TestStorage("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
+        await using TestStorage storage = new("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
 
         string? observed = null;
         storage.PropertyChanged += (_, args) => observed = args.PropertyName;
@@ -146,7 +146,7 @@ public class SettingsStorageTests
     [Test]
     public async Task OnPropertyChangedShouldBeNoOpWhenNoSubscriber()
     {
-        await using var storage = new TestStorage("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
+        await using TestStorage storage = new("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
 
         storage.RaisePropertyChanged("MyProperty");
 
@@ -162,7 +162,7 @@ public class SettingsStorageTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately exercises the synchronous Dispose path.")]
     public async Task DisposeShouldBeIdempotent()
     {
-        var storage = new TestStorage("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
+        TestStorage storage = new("test_prefix", new InMemoryBlobCache(new SystemJsonSerializer()));
 
         storage.Dispose();
         storage.Dispose();
@@ -179,8 +179,8 @@ public class SettingsStorageTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately exercises the synchronous Dispose path.")]
     public async Task DisposeShouldDisposeUnderlyingBlobCache()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
-        var storage = new TestStorage("test_prefix", cache);
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
+        TestStorage storage = new("test_prefix", cache);
 
         storage.Dispose();
 
@@ -199,8 +199,8 @@ public class SettingsStorageTests
     [Test]
     public async Task DisposeWithDisposingFalseShouldNotTouchManagedResources()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
-        var storage = new TestStorage("test_prefix", cache);
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
+        TestStorage storage = new("test_prefix", cache);
 
         storage.InvokeDispose(disposing: false);
 

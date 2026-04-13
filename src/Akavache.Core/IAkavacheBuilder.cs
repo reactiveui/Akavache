@@ -87,7 +87,7 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <typeparam name="T">The type of serializer to configure.</typeparam>
     /// <returns>The builder instance for fluent configuration.</returns>
     IAkavacheBuilder WithSerializer<T>()
-        where T : ISerializer, new();
+        where T : class, ISerializer, new();
 
     /// <summary>
     /// Configures the serializer to use for cache operations with a custom factory function.
@@ -96,7 +96,7 @@ public interface IAkavacheBuilder : IAkavacheInstance
     /// <param name="configure">A function that creates and configures the serializer instance.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-        where T : ISerializer;
+        where T : class, ISerializer;
 
     /// <summary>
     /// Configures the builder to use legacy file locations for cache directories.

@@ -6,6 +6,7 @@ using System.Net;
 #if NET462_OR_GREATER
 using System.Net.Http;
 #endif
+using Akavache.Helpers;
 
 namespace Akavache;
 
@@ -19,7 +20,7 @@ public class HttpService : IHttpService
     /// </summary>
     public HttpService()
     {
-        var handler = new HttpClientHandler
+        HttpClientHandler handler = new()
         {
             CheckCertificateRevocationList = true,
         };
@@ -29,7 +30,7 @@ public class HttpService : IHttpService
                                              DecompressionMethods.Deflate;
         }
 
-        HttpClient = new HttpClient(handler);
+        HttpClient = new(handler);
     }
 
     /// <summary>
@@ -38,25 +39,24 @@ public class HttpService : IHttpService
     public HttpClient HttpClient { get; set; }
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
         blobCache.DownloadUrl(url, url, method, headers, fetchAlways, absoluteExpiration);
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => url is null
-            ? throw new ArgumentNullException(nameof(url))
-            : blobCache.DownloadUrl(url.ToString(), url, method, headers, fetchAlways, absoluteExpiration);
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(url);
+        return blobCache.DownloadUrl(url.ToString(), url, method, headers, fetchAlways, absoluteExpiration);
+    }
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         method ??= HttpMethod.Get;
 
-        var doFetch = MakeWebRequest(new Uri(url), method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
+        var doFetch = MakeWebRequest(new(url), method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
         var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
 
         IObservable<byte[]?> ret;
@@ -75,12 +75,9 @@ public class HttpService : IHttpService
     }
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         method ??= HttpMethod.Get;
 
@@ -111,7 +108,7 @@ public class HttpService : IHttpService
     /// <returns>A configured request message.</returns>
     internal static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)
     {
-        var request = new HttpRequestMessage(method, uri);
+        HttpRequestMessage request = new(method, uri);
 
         if (headers is not null)
         {
@@ -131,15 +128,10 @@ public class HttpService : IHttpService
     /// <param name="url">The original request URL, used in error messages.</param>
     /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
     /// <returns>An observable that emits the response bytes.</returns>
-    internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration)
-    {
-        if (!responseMessage.IsSuccessStatusCode)
-        {
-            return Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"));
-        }
-
-        return Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
-    }
+    internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration) =>
+        !responseMessage.IsSuccessStatusCode
+            ? Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"))
+            : Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
 
     /// <summary>
     /// Reads the response body as a byte array, throwing if the response status indicates failure.

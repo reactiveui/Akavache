@@ -64,7 +64,7 @@ public class AkavacheV10ComprehensiveBenchmarks
         _testObjects = [];
         for (var i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
         {
-            _testObjects.Add(new TestData
+            _testObjects.Add(new()
             {
                 Id = Guid.NewGuid(),
                 Name = $"Test Object {i}",
@@ -128,7 +128,7 @@ public class AkavacheV10ComprehensiveBenchmarks
             await BenchBlobCache!.InsertObject(key, testData);
         }
 
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
         for (var i = 0; i < Math.Min(BenchmarkSize, 100); i++)
         {
             var key = $"get_and_fetch_{i}";
@@ -155,7 +155,7 @@ public class AkavacheV10ComprehensiveBenchmarks
     public async Task InvalidateObjects()
     {
         // Pre-populate data
-        var keys = new List<string>();
+        List<string> keys = [];
         for (var i = 0; i < BenchmarkSize; i++)
         {
             var key = $"invalidate_test_{i}";

@@ -24,7 +24,7 @@ public interface IAkavacheTransaction
     /// <typeparam name="T">The entity type.</typeparam>
     /// <param name="entity">The entity to insert or replace.</param>
     void InsertOrReplace<T>(T entity)
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Deletes an entity by its primary key.
@@ -47,7 +47,7 @@ public interface IAkavacheTransaction
     /// <param name="predicate">A filter expression.</param>
     /// <returns>A list of matching entities.</returns>
     List<T> Query<T>(Expression<Func<T, bool>> predicate)
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Updates the expiration time of a cache entry by key, with an optional type filter.

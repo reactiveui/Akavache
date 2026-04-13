@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
+using Akavache.Helpers;
 
 using SQLitePCL;
 
@@ -47,10 +48,7 @@ public static class AkavacheBuilderExtensions
     public static IAkavacheBuilder WithSqliteProvider(this IAkavacheBuilder builder)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         // Ensure SQLitePCL is initialized only once
         if (_sqliteProvider != null)
@@ -88,10 +86,7 @@ public static class AkavacheBuilderExtensions
     public static IAkavacheBuilder WithSqliteDefaults(this IAkavacheBuilder builder)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         // For backward compatibility, automatically initialize the SQLite provider if not already done
         if (_sqliteProvider == null)
@@ -161,15 +156,8 @@ public static class AkavacheBuilderExtensions
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
         }
 
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Cache name cannot be null or empty.", nameof(name));
-        }
-
-        if (string.IsNullOrWhiteSpace(builder.ApplicationName))
-        {
-            throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(name);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(builder.ApplicationName);
 
         // Validate cache name to prevent path traversal attacks
         var validatedName = SecurityUtilities.ValidateCacheName(name, nameof(name));
@@ -216,7 +204,11 @@ public static class AkavacheBuilderExtensions
         /// that wraps the specified <paramref name="inner"/> blob cache as a secure cache.
         /// </summary>
         /// <param name="inner">The underlying blob cache to delegate all operations to.</param>
-        internal SecureBlobCacheWrapper(IBlobCache inner) => InnerCache = inner ?? throw new ArgumentNullException(nameof(inner));
+        internal SecureBlobCacheWrapper(IBlobCache inner)
+        {
+            ArgumentExceptionHelper.ThrowIfNull(inner);
+            InnerCache = inner;
+        }
 
         /// <summary>Gets the underlying blob cache that this wrapper delegates to.</summary>
         public IBlobCache InnerCache { get; }

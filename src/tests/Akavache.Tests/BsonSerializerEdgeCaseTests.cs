@@ -23,8 +23,8 @@ public class BsonSerializerEdgeCaseTests
     [Test]
     public async Task SystemTextJsonBsonSerializer_SerializesAndDeserializesSimpleObject()
     {
-        var serializer = new SystemJsonBsonSerializer();
-        var user = new UserObject { Name = "BsonUser", Bio = "Bio", Blog = "Blog" };
+        SystemJsonBsonSerializer serializer = new();
+        UserObject user = new() { Name = "BsonUser", Bio = "Bio", Blog = "Blog" };
         var data = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(data);
         await Assert.That(roundtrip).IsNotNull();
@@ -38,8 +38,8 @@ public class BsonSerializerEdgeCaseTests
     [Test]
     public async Task NewtonsoftBsonSerializer_SerializesAndDeserializesSimpleObject()
     {
-        var serializer = new NewtonsoftBsonSerializer();
-        var user = new UserObject { Name = "NewtonUser", Bio = "Bio", Blog = "Blog" };
+        NewtonsoftBsonSerializer serializer = new();
+        UserObject user = new() { Name = "NewtonUser", Bio = "Bio", Blog = "Blog" };
         var data = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(data);
         await Assert.That(roundtrip).IsNotNull();
@@ -55,8 +55,8 @@ public class BsonSerializerEdgeCaseTests
     {
         try
         {
-            var serializer = new NewtonsoftBsonSerializer();
-            var list = new List<object>();
+            NewtonsoftBsonSerializer serializer = new();
+            List<object> list = [];
             list.Add(list); // circular reference
             Assert.Throws<JsonSerializationException>(() => serializer.Serialize(list));
             return Task.CompletedTask;
@@ -74,10 +74,10 @@ public class BsonSerializerEdgeCaseTests
     [Test]
     public async Task BsonSerializer_GracefullyHandlesInvalidDataDuringDeserialize()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         // random invalid BSON-like bytes
-        var invalid = new byte[] { 0x00, 0x01, 0x02, 0xFF, 0xFE };
+        byte[] invalid = [0x00, 0x01, 0x02, 0xFF, 0xFE];
         await Assert.That(serializer.Deserialize<UserObject>(invalid)).IsNull();
     }
 }

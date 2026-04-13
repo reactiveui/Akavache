@@ -92,7 +92,7 @@ public class ISerializerInterfaceTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testUser = new UserObject
+        UserObject testUser = new()
         {
             Name = "Test User",
             Bio = "Test Bio with special characters: ������������",
@@ -157,16 +157,16 @@ public class ISerializerInterfaceTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testList = new List<int>
-        {
+        List<int> testList =
+        [
             1,
             2,
             3,
             4,
             5
-        };
+        ];
         string[] testArray = ["one", "two", "three"];
-        var testDict = new Dictionary<string, string> { ["key1"] = "value1", ["key2"] = "value2", ["key3"] = "value3" };
+        Dictionary<string, string> testDict = new() { ["key1"] = "value1", ["key2"] = "value2", ["key3"] = "value3" };
 
         // Act & Assert - List
         var listBytes = serializer.Serialize(testList);
@@ -282,7 +282,7 @@ public class ISerializerInterfaceTests
         }
 
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var testDate = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
+        DateTime testDate = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
 
         // Test with UTC forcing
         serializer.ForcedDateTimeKind = DateTimeKind.Utc;
@@ -344,7 +344,7 @@ public class ISerializerInterfaceTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        var emptyBytes = Array.Empty<byte>();
+        byte[] emptyBytes = [];
 
         // Act & Assert - This may throw or return null depending on serializer
         try
@@ -387,7 +387,7 @@ public class ISerializerInterfaceTests
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
         // Create a large object (large string)
-        var largeString = new string('X', 1_000_000); // 1MB string
+        string largeString = new('X', 1_000_000); // 1MB string
 
         // Create a large collection
         var largeList = Enumerable.Range(0, 10_000).ToList();
@@ -440,13 +440,13 @@ public class ISerializerInterfaceTests
                         Value = "Deeply nested value",
                         Numbers = (int[])[1, 2, 3, 4, 5],
                         Users = (UserObject[])[
-                            new UserObject
+                            new()
                             {
                                 Name = "Nested User 1",
                                 Bio = "Bio 1",
                                 Blog = "Blog 1"
                             },
-                            new UserObject
+                            new()
                             {
                                 Name = "Nested User 2",
                                 Bio = "Bio 2",
@@ -487,10 +487,10 @@ public class ISerializerInterfaceTests
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
         const string testData = "Thread safety test data";
         const int taskCount = 50;
-        var exceptions = new List<Exception>();
+        List<Exception> exceptions = [];
 
         // Act - Run many concurrent serialization operations
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
 
         for (var i = 0; i < taskCount; i++)
         {

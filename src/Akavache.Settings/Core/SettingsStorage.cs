@@ -139,7 +139,7 @@ public abstract class SettingsStorage : ISettingsStorage
     /// Raises the <see cref="PropertyChanged"/> event for the specified property name.
     /// </summary>
     /// <param name="propertyName">The name of the property that changed, automatically inferred from the calling member.</param>
-    protected void OnPropertyChanged(string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    protected void OnPropertyChanged(string? propertyName = null) => PropertyChanged?.Invoke(this, new(propertyName));
 
     /// <summary>
     /// Sets or creates a setting value, updating both the in-memory cache and persistent storage.

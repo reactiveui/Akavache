@@ -22,8 +22,8 @@ public class ExtendedJsonSerializerTests
     [Test]
     public async Task SystemJsonSerializer_SerializesAndDeserializes_UserObject()
     {
-        var serializer = new SystemJsonSerializer();
-        var user = new UserObject { Name = "System", Bio = "Bio", Blog = "Blog" };
+        SystemJsonSerializer serializer = new();
+        UserObject user = new() { Name = "System", Bio = "Bio", Blog = "Blog" };
         var bytes = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(bytes);
         await Assert.That(roundtrip).IsNotNull();
@@ -37,8 +37,8 @@ public class ExtendedJsonSerializerTests
     [Test]
     public async Task NewtonsoftSerializer_SerializesAndDeserializes_UserObject()
     {
-        var serializer = new NewtonsoftSerializer();
-        var user = new UserObject { Name = "Newton", Bio = "Bio", Blog = "Blog" };
+        NewtonsoftSerializer serializer = new();
+        UserObject user = new() { Name = "Newton", Bio = "Bio", Blog = "Blog" };
         var bytes = serializer.Serialize(user);
         var roundtrip = serializer.Deserialize<UserObject>(bytes);
         await Assert.That(roundtrip).IsNotNull();
@@ -52,7 +52,7 @@ public class ExtendedJsonSerializerTests
     [Test]
     public async Task SystemJsonSerializer_SerializesDateTimeUtc()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var dt = DateTime.UtcNow;
         var bytes = serializer.Serialize(dt);
         var roundtrip = serializer.Deserialize<DateTime>(bytes);
@@ -66,7 +66,7 @@ public class ExtendedJsonSerializerTests
     [Test]
     public async Task NewtonsoftSerializer_SerializesDateTimeOffset()
     {
-        var serializer = new NewtonsoftSerializer();
+        NewtonsoftSerializer serializer = new();
         var dto = DateTimeOffset.UtcNow;
         var bytes = serializer.Serialize(dto);
         var roundtrip = serializer.Deserialize<DateTimeOffset>(bytes);
@@ -80,7 +80,7 @@ public class ExtendedJsonSerializerTests
     [Test]
     public async Task SystemJsonSerializer_ThrowsOnUnsupportedType()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         await Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests())).IsNotNull();
     }
 
@@ -91,7 +91,7 @@ public class ExtendedJsonSerializerTests
     [Test]
     public async Task NewtonsoftSerializer_ThrowsOnUnsupportedType()
     {
-        var serializer = new NewtonsoftSerializer();
+        NewtonsoftSerializer serializer = new();
         await Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests())).IsNotNull();
     }
 }

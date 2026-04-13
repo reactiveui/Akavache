@@ -60,7 +60,7 @@ public class RequestCacheTests
     {
         // Arrange
         RequestCache.Clear();
-        var callCounts = new Dictionary<string, int>();
+        Dictionary<string, int> callCounts = [];
 
         IObservable<string> Factory(string key)
         {

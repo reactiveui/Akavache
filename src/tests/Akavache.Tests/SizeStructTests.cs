@@ -35,8 +35,8 @@ public class SizeStructTests
     [Test]
     public async Task Size_Equals_Works()
     {
-        var a = new Size(10, 20);
-        var b = new Size(10, 20);
+        Size a = new(10, 20);
+        Size b = new(10, 20);
         using (Assert.Multiple())
         {
             await Assert.That(a).IsEqualTo(b);
@@ -52,8 +52,8 @@ public class SizeStructTests
     [Test]
     public async Task Size_GetHashCode_Consistent()
     {
-        var a = new Size(5, 7);
-        var b = new Size(5, 7);
+        Size a = new(5, 7);
+        Size b = new(5, 7);
         await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
     }
 
@@ -64,8 +64,8 @@ public class SizeStructTests
     [Test]
     public async Task Size_Inequality_Works()
     {
-        var a = new Size(1, 2);
-        var b = new Size(2, 1);
+        Size a = new(1, 2);
+        Size b = new(2, 1);
         using (Assert.Multiple())
         {
             await Assert.That(a).IsNotEqualTo(b);

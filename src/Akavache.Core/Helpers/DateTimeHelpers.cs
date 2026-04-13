@@ -28,25 +28,17 @@ internal static partial class DateTimeHelpers
     /// <param name="dateTime">The source DateTime.</param>
     /// <param name="targetKind">The desired kind.</param>
     /// <returns>A DateTime adjusted to the target kind.</returns>
-    public static DateTime ConvertDateTimeKind(DateTime dateTime, DateTimeKind targetKind)
-    {
-        if (targetKind == DateTimeKind.Utc)
+    public static DateTime ConvertDateTimeKind(DateTime dateTime, DateTimeKind targetKind) =>
+        targetKind switch
         {
-            return dateTime.Kind == DateTimeKind.Local
+            DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local
                 ? dateTime.ToUniversalTime()
-                : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
-        }
-
-        if (targetKind == DateTimeKind.Local)
-        {
-            return dateTime.Kind == DateTimeKind.Utc
+                : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
+            DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc
                 ? dateTime.ToLocalTime()
-                : DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
-        }
-
-        // Unspecified — preserve the wall-clock value but mark its kind as unspecified.
-        return DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
-    }
+                : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
+            _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified)
+        };
 
     /// <summary>
     /// Handles common <see cref="DateTime"/> edge cases that arise from cross-serializer
@@ -65,14 +57,23 @@ internal static partial class DateTimeHelpers
         // an Unspecified one.
         if (dateTime == DateTime.MinValue && forcedDateTimeKind == DateTimeKind.Utc)
         {
+            // BSON serializers sometimes return DateTime.MinValue for serialization errors;
+            // when forced UTC is requested we still want a tagged UTC MinValue rather than
+            // an Unspecified one.
             return (T)(object)DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
         }
 
         if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
         {
+            // BSON serializers sometimes return DateTime.MinValue for serialization errors;
+            // when forced UTC is requested we still want a tagged UTC MinValue rather than
+            // an Unspecified one.
             return (T)(object)ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value);
         }
 
+        // BSON serializers sometimes return DateTime.MinValue for serialization errors;
+        // when forced UTC is requested we still want a tagged UTC MinValue rather than
+        // an Unspecified one.
         return (T)(object)dateTime;
     }
 
@@ -128,20 +129,27 @@ internal static partial class DateTimeHelpers
     /// <returns>The validated/corrected DateTime.</returns>
     public static DateTime ValidateDeserializedDateTime(DateTime dateTime, DateTime? originalValue, DateTimeKind? forcedDateTimeKind)
     {
-        if (dateTime == DateTime.MinValue && originalValue.HasValue && originalValue.Value != DateTime.MinValue)
+        if (dateTime != DateTime.MinValue || !originalValue.HasValue || originalValue.Value == DateTime.MinValue)
+        {
+            return forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value
+                ? ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value)
+                : dateTime;
+        }
+
+        // Suggests a deserialization issue — recover the original if it looks reasonable.
+        if (originalValue.Value.Year is >= 1900 and <= 2100)
         {
             // Suggests a deserialization issue — recover the original if it looks reasonable.
-            if (originalValue.Value.Year is >= 1900 and <= 2100)
-            {
-                return originalValue.Value;
-            }
+            return originalValue.Value;
         }
 
         if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
         {
+            // Suggests a deserialization issue — recover the original if it looks reasonable.
             return ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value);
         }
 
+        // Suggests a deserialization issue — recover the original if it looks reasonable.
         return dateTime;
     }
 
@@ -154,18 +162,13 @@ internal static partial class DateTimeHelpers
     /// <param name="data">The serialized data.</param>
     /// <param name="problematicResult">The (likely corrupt) DateTime returned by the serializer.</param>
     /// <returns>A recovered DateTime or the original <paramref name="problematicResult"/>.</returns>
-    public static DateTime AttemptDateTimeRecovery(byte[] data, DateTime problematicResult)
-    {
-        if (problematicResult != DateTime.MinValue || data.Length <= 10)
-        {
-            return problematicResult;
-        }
-
-        return TryRecoverDateTimeFromText(data)
-            ?? TryRecoverDateTimeFromBinary(data)
-            ?? TryRecoverDateTimeFromLargeDataFallback(data)
-            ?? problematicResult;
-    }
+    public static DateTime AttemptDateTimeRecovery(byte[] data, DateTime problematicResult) =>
+        problematicResult != DateTime.MinValue || data.Length <= 10
+            ? problematicResult
+            : TryRecoverDateTimeFromText(data)
+              ?? TryRecoverDateTimeFromBinary(data)
+              ?? TryRecoverDateTimeFromLargeDataFallback(data)
+              ?? problematicResult;
 
     /// <summary>
     /// Strategy 1: parses the data as UTF-8 text and looks for year patterns or ISO 8601
@@ -180,9 +183,9 @@ internal static partial class DateTimeHelpers
 
         // Recover when the payload looks like a recent year string or contains an ISO 8601 timestamp.
         var hasModernDateHint = dataAsString.Contains("2025")
-            || dataAsString.Contains("2024")
-            || dataAsString.Contains("2026")
-            || Iso8601Regex().IsMatch(dataAsString);
+                                || dataAsString.Contains("2024")
+                                || dataAsString.Contains("2026")
+                                || Iso8601Regex().IsMatch(dataAsString);
 
         return hasModernDateHint ? _safeFallbackDate : null;
     }

@@ -510,7 +510,7 @@ public class AkavacheBuilderExtensionsTests
     public async Task CreateRecursiveShouldCreateNestedDirectories()
     {
         var tempPath = Path.Combine(Path.GetTempPath(), "AkavacheTest", Guid.NewGuid().ToString("N"), "level1", "level2", "level3");
-        var dirInfo = new DirectoryInfo(tempPath);
+        DirectoryInfo dirInfo = new(tempPath);
 
         try
         {
@@ -540,7 +540,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task SplitFullPathShouldReturnComponents()
     {
-        var dirInfo = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "foo", "bar"));
+        DirectoryInfo dirInfo = new(Path.Combine(Path.GetTempPath(), "foo", "bar"));
         var components = dirInfo.SplitFullPath().ToList();
         await Assert.That(components.Count).IsGreaterThan(0);
     }
@@ -554,7 +554,7 @@ public class AkavacheBuilderExtensionsTests
     {
         var tempPath = Path.Combine(Path.GetTempPath(), "AkavacheTestExtra", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempPath);
-        var dirInfo = new DirectoryInfo(tempPath);
+        DirectoryInfo dirInfo = new(tempPath);
 
         try
         {
@@ -588,7 +588,7 @@ public class AkavacheBuilderExtensionsTests
         var root = Path.Combine(Path.GetTempPath(), "AkavacheTestExtra", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var leaf = Path.Combine(root, "newLeaf");
-        var dirInfo = new DirectoryInfo(leaf);
+        DirectoryInfo dirInfo = new(leaf);
 
         try
         {
@@ -616,7 +616,7 @@ public class AkavacheBuilderExtensionsTests
     public async Task SplitFullPathShouldIncludeRoot()
     {
         var full = Path.Combine(Path.GetTempPath(), "alpha", "beta", "gamma");
-        var dirInfo = new DirectoryInfo(full);
+        DirectoryInfo dirInfo = new(full);
         var components = dirInfo.SplitFullPath().ToList();
 
         await Assert.That(components.Count).IsGreaterThanOrEqualTo(4);
@@ -641,7 +641,7 @@ public class AkavacheBuilderExtensionsTests
             return;
         }
 
-        var dirInfo = new DirectoryInfo(root);
+        DirectoryInfo dirInfo = new(root);
         var components = dirInfo.SplitFullPath().ToList();
 
         // Root-only path should yield at least the root.
@@ -663,7 +663,7 @@ public class AkavacheBuilderExtensionsTests
         }
 
         var single = Path.Combine(root, "single_" + Guid.NewGuid().ToString("N"));
-        var dirInfo = new DirectoryInfo(single);
+        DirectoryInfo dirInfo = new(single);
         var components = dirInfo.SplitFullPath().ToList();
 
         await Assert.That(components.Count).IsGreaterThanOrEqualTo(2);
@@ -848,7 +848,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnNullApplicationName()
     {
-        var stub = new StubAkavacheInstance(null);
+        StubAkavacheInstance stub = new(null);
         await Assert.That(() => stub.GetIsolatedCacheDirectory("UserAccount"))
             .Throws<ArgumentException>();
     }
@@ -861,7 +861,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnWhitespaceApplicationName()
     {
-        var stub = new StubAkavacheInstance("   ");
+        StubAkavacheInstance stub = new("   ");
         await Assert.That(() => stub.GetIsolatedCacheDirectory("UserAccount"))
             .Throws<ArgumentException>();
     }
@@ -874,7 +874,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnNullApplicationName()
     {
-        var stub = new StubAkavacheInstance(null);
+        StubAkavacheInstance stub = new(null);
         await Assert.That(() => stub.GetLegacyCacheDirectory("LocalMachine"))
             .Throws<ArgumentException>();
     }
@@ -887,7 +887,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnWhitespaceApplicationName()
     {
-        var stub = new StubAkavacheInstance("\t");
+        StubAkavacheInstance stub = new("\t");
         await Assert.That(() => stub.GetLegacyCacheDirectory("LocalMachine"))
             .Throws<ArgumentException>();
     }
@@ -901,7 +901,7 @@ public class AkavacheBuilderExtensionsTests
     public async Task SplitFullPathShouldSkipEmptyFilenameComponents()
     {
         var pathWithTrailing = Path.Combine(Path.GetTempPath(), "foo", "bar") + Path.DirectorySeparatorChar;
-        var dirInfo = new DirectoryInfo(pathWithTrailing);
+        DirectoryInfo dirInfo = new(pathWithTrailing);
 
         var components = dirInfo.SplitFullPath().ToList();
 

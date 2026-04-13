@@ -133,7 +133,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             .ToProperty(this, static x => x.CacheInfo);
 
         // Setup activator for proper lifecycle management
-        Activator = new ViewModelActivator();
+        Activator = new();
 
         this.WhenActivated(SetupBindings);
 
@@ -228,7 +228,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
 
         return
         [
-            new TodoItem
+            new()
             {
                 Title = "Review Akavache Documentation",
                 Description = "Go through the comprehensive Akavache documentation and examples",
@@ -236,7 +236,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Priority = TodoPriority.High,
                 Tags = ["documentation", "akavache"]
             },
-            new TodoItem
+            new()
             {
                 Title = "Implement Cache Expiration",
                 Description = "Add proper cache expiration for temporary data",
@@ -244,7 +244,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Priority = TodoPriority.Medium,
                 Tags = ["development", "caching"]
             },
-            new TodoItem
+            new()
             {
                 Title = "Test Notification System",
                 Description = "Verify that notifications work correctly for due dates",
@@ -252,7 +252,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Priority = TodoPriority.Critical,
                 Tags = ["testing", "notifications"]
             },
-            new TodoItem
+            new()
             {
                 Title = "Write Unit Tests",
                 Description = "Create comprehensive unit tests for cache service",
@@ -260,7 +260,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Priority = TodoPriority.High,
                 Tags = ["testing", "development"]
             },
-            new TodoItem
+            new()
             {
                 Title = "Optimize Performance",
                 Description = "Profile and optimize cache performance for large datasets",
@@ -448,7 +448,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Todos.Clear();
                 foreach (var todo in todos.OrderBy(GetSortKey))
                 {
-                    var todoViewModel = new TodoItemViewModel(todo, _notificationService, RemoveTodoFromCollection);
+                    TodoItemViewModel todoViewModel = new(todo, _notificationService, RemoveTodoFromCollection);
                     Todos.Add(todoViewModel);
                 }
             })
@@ -540,7 +540,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
             System.Diagnostics.Debug.WriteLine("No due date selected - NewTodoDueDate is null");
         }
 
-        var newTodo = new TodoItem
+        TodoItem newTodo = new()
         {
             Title = NewTodoTitle,
             Description = NewTodoDescription,
@@ -561,7 +561,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
         // Debug the created todo
         System.Diagnostics.Debug.WriteLine($"Created todo: {newTodo.Title}, Due: {newTodo.DueDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "No due date"}");
 
-        var viewModel = new TodoItemViewModel(newTodo, _notificationService, RemoveTodoFromCollection);
+        TodoItemViewModel viewModel = new(newTodo, _notificationService, RemoveTodoFromCollection);
 
         return Observable.Start(
             () =>
@@ -649,7 +649,7 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
                 Todos.Clear();
                 foreach (var todo in sampleTodos)
                 {
-                    var todoViewModel = new TodoItemViewModel(todo, _notificationService, RemoveTodoFromCollection);
+                    TodoItemViewModel todoViewModel = new(todo, _notificationService, RemoveTodoFromCollection);
                     Todos.Add(todoViewModel);
                 }
             }))

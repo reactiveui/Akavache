@@ -29,8 +29,8 @@ public class HttpExtensionsTests
     [Test]
     public async Task WriteAsyncRxShouldWriteToStream()
     {
-        await using var stream = new MemoryStream();
-        var data = new byte[] { 1, 2, 3, 4, 5 };
+        await using MemoryStream stream = new();
+        byte[] data = [1, 2, 3, 4, 5];
 
         await stream.WriteAsyncRx(data, 0, data.Length).ToTask();
 
@@ -44,7 +44,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task WriteAsyncRxShouldPropagateException()
     {
-        await using var stream = new ThrowingStream();
+        await using ThrowingStream stream = new();
 
         await Assert.That(() => stream.WriteAsyncRx([1], 0, 1).ToTask())
             .Throws<Exception>();
@@ -68,7 +68,7 @@ public class HttpExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnNullUrl()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl((string)null!))
@@ -88,7 +88,7 @@ public class HttpExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnEmptyUrl()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(string.Empty))
@@ -116,7 +116,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlUriShouldThrowOnNullUrl()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl((Uri)null!))
@@ -146,7 +146,7 @@ public class HttpExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullKey()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(null!, "https://example.com"))
@@ -166,7 +166,7 @@ public class HttpExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyKey()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(string.Empty, "https://example.com"))
@@ -186,7 +186,7 @@ public class HttpExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullUrl()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl("key", (string)null!))
@@ -206,7 +206,7 @@ public class HttpExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyUrl()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl("key", string.Empty))
@@ -234,7 +234,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullKey()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(null!, new Uri("https://example.com")))
@@ -253,7 +253,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnEmptyKey()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl(string.Empty, new Uri("https://example.com")))
@@ -272,7 +272,7 @@ public class HttpExtensionsTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullUrl()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => cache.DownloadUrl("key", (Uri)null!))
@@ -291,8 +291,8 @@ public class HttpExtensionsTests
     [Test]
     public async Task WriteAsyncRxShouldHandleEndWriteFailure()
     {
-        await using var stream = new EndWriteThrowingStream();
-        var data = new byte[] { 1, 2, 3 };
+        await using EndWriteThrowingStream stream = new();
+        byte[] data = [1, 2, 3];
 
         await Assert.That(() => stream.WriteAsyncRx(data, 0, data.Length).ToTask())
             .Throws<InvalidOperationException>();

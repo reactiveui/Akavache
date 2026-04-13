@@ -138,9 +138,9 @@ public partial class App
     {
         // Create and show main window with dependency injection
         var notificationService = _host!.Services.GetRequiredService<NotificationService>();
-        var mainViewModel = new MainViewModel(notificationService);
+        MainViewModel mainViewModel = new(notificationService);
 
-        var mainWindow = new MainWindow
+        MainWindow mainWindow = new()
         {
             ViewModel = mainViewModel
         };

@@ -63,7 +63,7 @@ public partial class EditTodoDialog : Window
         }
 
         // Create updated todo
-        UpdatedTodo = new TodoItem
+        UpdatedTodo = new()
         {
             Id = OriginalTodo.Id,
             Title = txtTitle.Text,

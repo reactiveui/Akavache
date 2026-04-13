@@ -73,11 +73,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, DateTimeOffset? absoluteExpiration = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(key);
 
         // Handle null values by storing an empty byte array as a marker
         byte[] serializedData;
@@ -116,11 +112,7 @@ public static class SerializerExtensions
     public static IObservable<T?> GetObject<T>(this IBlobCache blobCache, string key)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(key);
 
         return blobCache.Get(key, typeof(T)).Select(x =>
         {
@@ -182,11 +174,7 @@ public static class SerializerExtensions
     public static IObservable<DateTimeOffset?> GetObjectCreatedAt<T>(this IBlobCache blobCache, string key)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException($"'-{nameof(key)}' cannot be null or whitespace.", nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(key);
 
         return blobCache.GetCreatedAt(key, typeof(T));
     }
@@ -203,11 +191,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InvalidateObject<T>(this IBlobCache blobCache, string key)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(key);
 
         return blobCache.Invalidate(key, typeof(T));
     }
@@ -224,11 +208,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InvalidateObjects<T>(this IBlobCache blobCache, IEnumerable<string> keys)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(keys);
 
         return blobCache.Invalidate(keys, typeof(T));
     }
@@ -295,11 +275,7 @@ public static class SerializerExtensions
     public static IObservable<T?> GetOrFetchObject<T>(this IBlobCache blobCache, string key, Func<IObservable<T>> fetchFunc, DateTimeOffset? absoluteExpiration = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (fetchFunc is null)
-        {
-            throw new ArgumentNullException(nameof(fetchFunc));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(fetchFunc);
 
         // Try to get from cache first
         return blobCache.GetObject<T>(key).Catch<T?, Exception>(_ =>
@@ -524,11 +500,7 @@ public static class SerializerExtensions
     public static IObservable<Unit> InsertObjects(this IBlobCache blobCache, IDictionary<string, object> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (keyValuePairs is null)
-        {
-            throw new ArgumentNullException(nameof(keyValuePairs));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(keyValuePairs);
 
         if (keyValuePairs.Count == 0)
         {
@@ -563,10 +535,7 @@ public static class SerializerExtensions
 #endif
     public static byte[] SerializeWithContext<T>(T value, IBlobCache cache)
     {
-        if (cache is null)
-        {
-            throw new ArgumentNullException(nameof(cache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(cache);
 
         var serializer = cache.Serializer;
 
@@ -669,8 +638,8 @@ public static class SerializerExtensions
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.GetAllKeys()
-            .Where(key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
-            .Catch<string, Exception>(ex =>
+            .Where(static key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
+            .Catch<string, Exception>(static ex =>
             {
                 // Log the exception and return empty sequence instead of crashing
                 System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");
@@ -688,15 +657,11 @@ public static class SerializerExtensions
     public static IObservable<string> GetAllKeysSafe(this IBlobCache blobCache, Type type)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
-        if (type is null)
-        {
-            throw new ArgumentNullException(nameof(type));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(type);
 
         return blobCache.GetAllKeys(type)
-            .Where(key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
-            .Catch<string, Exception>(ex =>
+            .Where(static key => !string.IsNullOrEmpty(key)) // Filter out null/empty keys
+            .Catch<string, Exception>(static ex =>
             {
                 // Log the exception and return empty sequence instead of crashing
                 System.Diagnostics.Debug.WriteLine($"GetAllKeysSafe caught exception: {ex.Message}");

@@ -24,8 +24,8 @@ public class SqliteBlobCacheInvalidateAllTests
     [Test]
     public async Task InvalidateAll_ShouldRemove_AllItems()
     {
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        SystemJsonSerializer serializer = new();
+        await using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
         // Arrange
         await cache.Insert("a", [1]).Timeout(Timeout).FirstAsync();
@@ -54,8 +54,8 @@ public class SqliteBlobCacheInvalidateAllTests
     [Test]
     public async Task InvalidateAll_ShouldRemove_TypedAndUntypedItems()
     {
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        SystemJsonSerializer serializer = new();
+        await using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
         // Arrange: mix typed and untyped entries
         await cache.Insert("u1", [1]).Timeout(Timeout).FirstAsync();
@@ -89,8 +89,8 @@ public class SqliteBlobCacheInvalidateAllTests
     [Test]
     public async Task InvalidateAll_ShouldIgnore_ExpiredEntriesButStillClearAll()
     {
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new SqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+        SystemJsonSerializer serializer = new();
+        await using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
         // Arrange: one expired, one not
         await cache.Insert("live", [1], DateTimeOffset.Now.AddMinutes(5)).Timeout(Timeout).FirstAsync();

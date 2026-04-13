@@ -103,7 +103,7 @@ public class AkavacheV10WriteBenchmarks
     {
         for (var i = 0; i < BenchmarkSize; i++)
         {
-            var testData = new TestData
+            TestData testData = new()
             {
                 Id = Guid.NewGuid(),
                 Name = $"Test Item {i}",
@@ -124,7 +124,7 @@ public class AkavacheV10WriteBenchmarks
     public async Task ParallelWrite()
     {
         var dataToWrite = PerfHelper.GenerateRandomDatabaseContents(BenchmarkSize);
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
 
         foreach (var kvp in dataToWrite)
         {

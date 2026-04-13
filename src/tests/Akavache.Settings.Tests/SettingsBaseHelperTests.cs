@@ -41,7 +41,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldReturnExactMatch()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
         AkavacheBuilder.BlobCaches = new()
         {
             ["KnownClass"] = cache,
@@ -60,7 +60,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstNonNullEntry()
     {
-        var fallback = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache fallback = new(new SystemJsonSerializer());
         AkavacheBuilder.BlobCaches = new()
         {
             ["RenamedDatabase"] = fallback,
@@ -126,7 +126,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldReturnUserAccountWhenResolverSucceeds()
     {
-        var userAccount = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             () => userAccount,
@@ -144,7 +144,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldFallBackToLocalMachineWhenUserAccountThrows()
     {
-        var localMachine = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache localMachine = new(new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             ThrowingResolver,
@@ -162,7 +162,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldFallBackToInMemoryWhenOthersThrow()
     {
-        var inMemory = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache inMemory = new(new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             ThrowingResolver,
@@ -196,7 +196,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryReadAmbientCacheShouldReturnValueFromSuccessfulResolver()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
 
         var result = SettingsBase.TryReadAmbientCache(() => cache);
 
@@ -225,7 +225,7 @@ public class SettingsBaseHelperTests
     public async Task GetBlobCacheForClassShouldUseInjectedResolvers()
     {
         AkavacheBuilder.BlobCaches = [];
-        var userAccount = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(new SystemJsonSerializer());
 
         var result = SettingsBase.GetBlobCacheForClass(
             "AnyClass",
@@ -247,9 +247,9 @@ public class SettingsBaseHelperTests
     public async Task InjectableResolverConstructorShouldUseFallbackResolvers()
     {
         AkavacheBuilder.BlobCaches = [];
-        var userAccount = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(new SystemJsonSerializer());
 
-        await using var settings = new ResolverInjectedSettings(
+        await using ResolverInjectedSettings settings = new(
             nameof(ResolverInjectedSettings),
             () => userAccount,
             ThrowingResolver,
@@ -281,7 +281,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetTransientFallbackShouldReturnInMemoryWhenSerializerRegistered()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         AppLocator.CurrentMutable.RegisterConstant<ISerializer>(serializer);
         try
         {
@@ -370,7 +370,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task GetBlobCacheForClassShouldShortCircuitToRegistry()
     {
-        var registered = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache registered = new(new SystemJsonSerializer());
         AkavacheBuilder.BlobCaches = new()
         {
             ["MyClass"] = registered,

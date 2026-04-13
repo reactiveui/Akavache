@@ -121,14 +121,17 @@ public static class ImageCacheExtensions
         return blobCache.Get(key)
             .SelectMany(static bytes => BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(bytes))
             .SelectMany(bytes =>
-            {
-                using var ms = new MemoryStream(bytes);
-                return Observable.FromAsync(async () =>
+                Observable.FromAsync(async () =>
                 {
+#if NETFRAMEWORK
+                    using var ms = new MemoryStream(bytes);
+#else
+                    await using var ms = new MemoryStream(bytes);
+#endif
                     var bitmap = await BitmapLoader.Current.Load(ms, null, null);
                     return bitmap != null ? new Size(bitmap.Width, bitmap.Height) : throw new InvalidOperationException("Failed to load image for size detection");
-                });
-            });
+                }))
+            .SelectMany(static size => Observable.Return(size));
     }
 
     /// <summary>
@@ -163,10 +166,10 @@ public static class ImageCacheExtensions
     internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
+#if NETFRAMEWORK
             using var ms = new MemoryStream(compressedImage);
 #else
-            await using var ms = new MemoryStream(compressedImage);
+            await using MemoryStream ms = new(compressedImage);
 #endif
             var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");

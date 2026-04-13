@@ -5,6 +5,8 @@
 using System.Text.Json;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Mocks;
+using Newtonsoft.Json.Bson;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace Akavache.Tests;
 
@@ -21,10 +23,10 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task OptionsShouldGetAndSet()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         await Assert.That(serializer.Options).IsNull();
 
-        var customOptions = new JsonSerializerOptions { WriteIndented = true };
+        JsonSerializerOptions customOptions = new() { WriteIndented = true };
         serializer.Options = customOptions;
         await Assert.That(serializer.Options).IsEqualTo(customOptions);
     }
@@ -36,7 +38,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task ForcedDateTimeKindShouldDefaultToUtc()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         await Assert.That(serializer.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
     }
 
@@ -98,7 +100,7 @@ public class SystemJsonBsonSerializerTests
     public async Task IsPotentialBsonDataShouldReturnTrueForValidBson()
     {
         // Serialize an actual object to BSON
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var data = serializer.Serialize(new SerializerTestModel { Name = "test", Value = 42 });
 
         var result = SystemJsonBsonSerializer.IsPotentialBsonData(data);
@@ -112,7 +114,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task ShouldRoundTripBson()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var data = serializer.Serialize(new SerializerTestModel { Name = "bson-test", Value = 42 });
         var result = serializer.Deserialize<SerializerTestModel>(data);
 
@@ -128,7 +130,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultForNullBytes()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var result = serializer.Deserialize<SerializerTestModel>(null!);
         await Assert.That(result).IsNull();
     }
@@ -140,7 +142,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultForEmptyBytes()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var result = serializer.Deserialize<SerializerTestModel>([]);
         await Assert.That(result).IsNull();
     }
@@ -152,7 +154,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldFallBackToJson()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         // Provide JSON data, not BSON
         var jsonBytes = "{\"Name\":\"json-fallback\",\"Value\":1}"u8.ToArray();
@@ -168,8 +170,8 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultForInvalidData()
     {
-        var serializer = new SystemJsonBsonSerializer();
-        var invalid = new byte[] { 0xFF, 0xFE, 0x00, 0x01, 0x02 };
+        SystemJsonBsonSerializer serializer = new();
+        byte[] invalid = [0xFF, 0xFE, 0x00, 0x01, 0x02];
         var result = serializer.Deserialize<SerializerTestModel>(invalid);
         await Assert.That(result).IsNull();
     }
@@ -181,9 +183,9 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task SerializeWithJsonTypeInfoShouldWork()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var data = serializer.Serialize(
-            new SerializerTestModel { Name = "aot", Value = 1 },
+            new() { Name = "aot", Value = 1 },
             SerializerTestContext.Default.SerializerTestModel);
         await Assert.That(data).IsNotNull();
         await Assert.That(data.Length).IsGreaterThan(0);
@@ -196,7 +198,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeWithJsonTypeInfoShouldWork()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var jsonBytes = "{\"Name\":\"aot\",\"Value\":7}"u8.ToArray();
         var result = serializer.Deserialize(jsonBytes, SerializerTestContext.Default.SerializerTestModel);
         await Assert.That(result).IsNotNull();
@@ -238,9 +240,9 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task ShouldAcceptCustomOptions()
     {
-        var serializer = new SystemJsonBsonSerializer
+        SystemJsonBsonSerializer serializer = new()
         {
-            Options = new JsonSerializerOptions { WriteIndented = true }
+            Options = new() { WriteIndented = true }
         };
 
         var data = serializer.Serialize(new SerializerTestModel { Name = "custom", Value = 5 });
@@ -256,7 +258,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldReturnDefaultForMalformedBson()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         // Craft bytes that look BSON-ish in length header but are not valid BSON.
         var data = new byte[32];
@@ -279,7 +281,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldFallBackWhenBsonFormatFails()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         var data = new byte[16];
         BitConverter.GetBytes(16).CopyTo(data, 0);
@@ -300,7 +302,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldReturnDefaultValueTypeOnFailure()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var data = new byte[16];
         BitConverter.GetBytes(16).CopyTo(data, 0);
         for (var i = 4; i < data.Length; i++)
@@ -320,7 +322,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldRoundTripString()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var bytes = serializer.SerializeToBson("hello-bson");
 
         var result = serializer.DeserializeBsonFormat<string>(bytes);
@@ -335,7 +337,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldRoundTripInteger()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var bytes = serializer.SerializeToBson(12345);
 
         var result = serializer.DeserializeBsonFormat<int>(bytes);
@@ -350,8 +352,8 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldRoundTripDateTime()
     {
-        var serializer = new SystemJsonBsonSerializer();
-        var original = new DateTime(2025, 6, 15, 12, 30, 45, DateTimeKind.Utc);
+        SystemJsonBsonSerializer serializer = new();
+        DateTime original = new(2025, 6, 15, 12, 30, 45, DateTimeKind.Utc);
         var bytes = serializer.SerializeToBson(original);
 
         var result = serializer.DeserializeBsonFormat<DateTime>(bytes);
@@ -367,10 +369,10 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldHandleEmptyDocument()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         // Minimal valid empty BSON document: int32 length (5) + terminator (0x00) = 5 bytes.
-        var emptyBson = new byte[] { 0x05, 0x00, 0x00, 0x00, 0x00 };
+        byte[] emptyBson = [0x05, 0x00, 0x00, 0x00, 0x00];
 
         // Path is exercised - empty document yields a default-constructed object or null
         await Assert.That(() => serializer.DeserializeBsonFormat<SerializerTestModel>(emptyBson)).ThrowsNothing();
@@ -384,9 +386,9 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldHandleEmptyBsonForReferenceType()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
-        var emptyBson = new byte[] { 0x05, 0x00, 0x00, 0x00, 0x00 };
+        byte[] emptyBson = [0x05, 0x00, 0x00, 0x00, 0x00];
 
         // Path is exercised - empty BSON document yields default-constructed object
         await Assert.That(() => serializer.Deserialize<SerializerTestModel>(emptyBson)).ThrowsNothing();
@@ -400,7 +402,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task SerializeToBsonShouldHandleNullValue()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var bytes = serializer.SerializeToBson<SerializerTestModel?>(null);
 
         await Assert.That(bytes).IsNotNull();
@@ -455,7 +457,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultWhenAllPathsFail()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         var data = new byte[15];
         BitConverter.GetBytes(15).CopyTo(data, 0);
@@ -476,12 +478,12 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldRoundTripList()
     {
-        var serializer = new SystemJsonBsonSerializer();
-        var source = new List<SerializerTestModel>
-        {
+        SystemJsonBsonSerializer serializer = new();
+        List<SerializerTestModel> source =
+        [
             new() { Name = "a", Value = 1 },
-            new() { Name = "b", Value = 2 },
-        };
+            new() { Name = "b", Value = 2 }
+        ];
 
         var bytes = serializer.SerializeToBson(source);
         var result = serializer.DeserializeBsonFormat<List<SerializerTestModel>>(bytes);
@@ -500,7 +502,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task SerializeToBsonShouldHandleObjectTypedPayload()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         object payload = new SerializerTestModel { Name = "obj", Value = 3 };
 
         var bytes = serializer.SerializeToBson(payload);
@@ -516,7 +518,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldUseJsonWhenBsonHeuristicRejects()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         const string json = "{\"Name\":\"direct\",\"Value\":7}";
         var bytes = Encoding.UTF8.GetBytes(json);
 
@@ -535,15 +537,15 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldHandleRawNewtonsoftBson()
     {
-        await using var ms = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
+        await using MemoryStream ms = new();
+        await using (BsonDataWriter writer = new(ms))
         {
-            var newtonsoft = new Newtonsoft.Json.JsonSerializer();
+            JsonSerializer newtonsoft = new();
             newtonsoft.Serialize(writer, new SerializerTestModel { Name = "raw", Value = 42 });
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer sut = new();
         var result = sut.DeserializeBsonFormat<SerializerTestModel>(bytes);
 
         await Assert.That(result).IsNotNull();
@@ -560,7 +562,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldHonorForcedDateTimeKindLocal()
     {
-        var serializer = new SystemJsonBsonSerializer
+        SystemJsonBsonSerializer serializer = new()
         {
             ForcedDateTimeKind = DateTimeKind.Local,
         };
@@ -580,7 +582,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeBsonFormatShouldWorkWithNullForcedDateTimeKind()
     {
-        var serializer = new SystemJsonBsonSerializer
+        SystemJsonBsonSerializer serializer = new()
         {
             ForcedDateTimeKind = null,
         };
@@ -600,7 +602,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldHandleValueTypeRoundTrip()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var data = serializer.Serialize(42);
         var result = serializer.Deserialize<int>(data);
 
@@ -619,8 +621,8 @@ public class SystemJsonBsonSerializerTests
         // Write a raw BSON document of the form {"Value":"42"} — Newtonsoft will
         // coerce the string "42" into int via ObjectWrapper<int>, but System.Text.Json
         // is strict and throws, forcing the inner catch to take the Newtonsoft path.
-        await using var ms = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
+        await using MemoryStream ms = new();
+        await using (BsonDataWriter writer = new(ms))
         {
             await writer.WriteStartObjectAsync();
             await writer.WritePropertyNameAsync("Value");
@@ -629,7 +631,7 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer sut = new();
         var result = sut.DeserializeBsonFormat<int>(bytes);
 
         await Assert.That(result).IsEqualTo(42);
@@ -648,8 +650,8 @@ public class SystemJsonBsonSerializerTests
         // can coerce this into ObjectWrapper<int>.Value, so both throw and the method
         // falls through to the direct deserialization path (which also fails) and
         // ultimately returns default(int).
-        await using var ms = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
+        await using MemoryStream ms = new();
+        await using (BsonDataWriter writer = new(ms))
         {
             await writer.WriteStartObjectAsync();
             await writer.WritePropertyNameAsync("Value");
@@ -658,7 +660,7 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer sut = new();
         var result = sut.DeserializeBsonFormat<int>(bytes);
 
         await Assert.That(result).IsEqualTo(0);
@@ -722,7 +724,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldReturnDefaultValueTypeFromBson()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         // Serialize 0 (the default for int) as BSON — this will produce valid BSON
         // that deserializes to default(int) = 0.
@@ -742,7 +744,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task DeserializeShouldCatchBsonExceptionAndFallBackForValueType()
     {
-        var serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
 
         // Craft bytes that pass IsPotentialBsonData (valid length header, non-JSON first byte)
         // but are malformed BSON that causes DeserializeBsonFormat to throw internally.
@@ -779,8 +781,8 @@ public class SystemJsonBsonSerializerTests
         // won't match correctly. Configure STJ with strict unmapped member handling so the
         // wrapper deserialization throws for unexpected shape, then direct deserialization
         // of the full JSON as SerializerTestModel succeeds (since Name is a valid field).
-        await using var ms = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
+        await using MemoryStream ms = new();
+        await using (BsonDataWriter writer = new(ms))
         {
             await writer.WriteStartObjectAsync();
             await writer.WritePropertyNameAsync("Name");
@@ -793,9 +795,9 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer
+        SystemJsonBsonSerializer sut = new()
         {
-            Options = new JsonSerializerOptions
+            Options = new()
             {
                 UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow
             }
@@ -826,8 +828,8 @@ public class SystemJsonBsonSerializerTests
         // STJ with default options uses PascalCase, so it maps correctly.
         // We need STJ to fail but Newtonsoft to succeed.
         // Use a type with a constructor that Newtonsoft handles but STJ doesn't.
-        await using var ms = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
+        await using MemoryStream ms = new();
+        await using (BsonDataWriter writer = new(ms))
         {
             await writer.WriteStartObjectAsync();
             await writer.WritePropertyNameAsync("Name");
@@ -838,12 +840,12 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms.ToArray();
-        var sut = new SystemJsonBsonSerializer
+        SystemJsonBsonSerializer sut = new()
         {
             // Deserialize as a dictionary — both STJ and Newtonsoft should handle this.
             // For hitting line 237 specifically, we need STJ direct to throw at line 228.
             // Let's use a custom options that makes STJ strict and fail.
-            Options = new JsonSerializerOptions
+            Options = new()
             {
                 UnmappedMemberHandling = System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow
             }
@@ -867,8 +869,8 @@ public class SystemJsonBsonSerializerTests
     public async Task DeserializeBsonFormatShouldSkipWrapperWhenValueFieldMissing()
     {
         // Write a raw BSON document without any "Value" field.
-        await using var ms = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms))
+        await using MemoryStream ms = new();
+        await using (BsonDataWriter writer = new(ms))
         {
             await writer.WriteStartObjectAsync();
             await writer.WritePropertyNameAsync("Name");
@@ -882,8 +884,8 @@ public class SystemJsonBsonSerializerTests
         }
 
         // The above still contains "Value", so build a truly value-less document.
-        await using var ms2 = new MemoryStream();
-        await using (var writer = new Newtonsoft.Json.Bson.BsonDataWriter(ms2))
+        await using MemoryStream ms2 = new();
+        await using (BsonDataWriter writer = new(ms2))
         {
             await writer.WriteStartObjectAsync();
             await writer.WritePropertyNameAsync("Name");
@@ -894,7 +896,7 @@ public class SystemJsonBsonSerializerTests
         }
 
         var bytes = ms2.ToArray();
-        var sut = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer sut = new();
         var result = sut.DeserializeBsonFormat<SerializerTestModel>(bytes);
 
         await Assert.That(result).IsNotNull();
@@ -910,7 +912,7 @@ public class SystemJsonBsonSerializerTests
     [Test]
     public async Task TryUnwrapObjectWrapperShouldReturnFalseWhenBothSerializersReturnNull()
     {
-        var options = new JsonSerializerOptions();
+        JsonSerializerOptions options = new();
 
         var succeeded = SystemJsonBsonSerializer.TryUnwrapObjectWrapper<string>("null", options, out var value);
 
@@ -928,7 +930,7 @@ public class SystemJsonBsonSerializerTests
     {
         // Trailing comma is rejected by STJ but accepted by Newtonsoft by default.
         const string json = "{\"Value\":\"from-newtonsoft\",}";
-        var options = new JsonSerializerOptions { AllowTrailingCommas = false };
+        JsonSerializerOptions options = new() { AllowTrailingCommas = false };
 
         var succeeded = SystemJsonBsonSerializer.TryUnwrapObjectWrapper<string>(json, options, out var value);
 
@@ -945,7 +947,7 @@ public class SystemJsonBsonSerializerTests
     public async Task TryUnwrapObjectWrapperShouldResolveViaStjOnHappyPath()
     {
         const string json = "{\"Value\":\"from-stj\"}";
-        var options = new JsonSerializerOptions();
+        JsonSerializerOptions options = new();
 
         var succeeded = SystemJsonBsonSerializer.TryUnwrapObjectWrapper<string>(json, options, out var value);
 

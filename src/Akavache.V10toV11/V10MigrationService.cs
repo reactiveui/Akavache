@@ -57,7 +57,7 @@ internal static class V10MigrationService
         options.Logger?.Invoke($"Starting migration from '{v10DbPath}'...");
 
         // Open the V10 database read-only
-        var v10Connection = new SqliteAkavacheConnection(v10DbPath, SQLiteOpenFlags.ReadOnly | SQLiteOpenFlags.SharedCache);
+        SqliteAkavacheConnection v10Connection = new(v10DbPath, SQLiteOpenFlags.ReadOnly | SQLiteOpenFlags.SharedCache);
 
         try
         {
@@ -70,7 +70,7 @@ internal static class V10MigrationService
             }
 
             // Read all entries from the V10 database
-            var v10Entries = await v10Connection.QueryAsync<V10CacheElement>(_ => true).ConfigureAwait(false);
+            var v10Entries = await v10Connection.QueryAsync<V10CacheElement>(static _ => true).ConfigureAwait(false);
             options.Logger?.Invoke($"Found {v10Entries.Count} entries in V10 database.");
 
             if (v10Entries.Count == 0)
@@ -80,7 +80,7 @@ internal static class V10MigrationService
             }
 
             // Convert and insert entries in batches using transactions
-            var converted = new List<CacheEntry>(v10Entries.Count);
+            List<CacheEntry> converted = new(v10Entries.Count);
             var failedCount = 0;
 
             foreach (var v10Entry in v10Entries)
@@ -134,7 +134,7 @@ internal static class V10MigrationService
     {
         try
         {
-            var sentinel = await v11Cache.Connection.FirstOrDefaultAsync<CacheEntry>(e => e.Id == MigrationSentinelKey)
+            var sentinel = await v11Cache.Connection.FirstOrDefaultAsync<CacheEntry>(static e => e.Id == MigrationSentinelKey)
                 .ConfigureAwait(false);
             return sentinel != null;
         }
@@ -165,7 +165,7 @@ internal static class V10MigrationService
             value = TryReserialize(value, v10Entry.TypeName, serializer, options);
         }
 
-        return new CacheEntry
+        return new()
         {
             Id = v10Entry.Key,
             CreatedAt = createdAt,
@@ -287,7 +287,7 @@ internal static class V10MigrationService
 
         try
         {
-            return new DateTimeOffset(new DateTime(ticks, DateTimeKind.Utc));
+            return new(new(ticks, DateTimeKind.Utc));
         }
         catch
         {
@@ -311,7 +311,7 @@ internal static class V10MigrationService
         // Check if already expired
         try
         {
-            return new DateTimeOffset(new DateTime(expirationTicks, DateTimeKind.Utc));
+            return new DateTimeOffset(new(expirationTicks, DateTimeKind.Utc));
         }
         catch
         {
@@ -326,7 +326,7 @@ internal static class V10MigrationService
     /// <returns>A task representing the asynchronous write.</returns>
     internal static async Task WriteMigrationSentinelAsync(SqliteBlobCache v11Cache)
     {
-        var sentinel = new CacheEntry
+        CacheEntry sentinel = new()
         {
             Id = MigrationSentinelKey,
             CreatedAt = DateTimeOffset.UtcNow,

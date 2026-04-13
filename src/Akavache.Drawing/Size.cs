@@ -2,6 +2,8 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Akavache.Drawing;
 
 /// <summary>
@@ -12,6 +14,7 @@ namespace Akavache.Drawing;
 /// </remarks>
 /// <param name="width">The width dimension in pixels.</param>
 /// <param name="height">The height dimension in pixels.</param>
+[DebuggerDisplay("Width: {Width}, Height: {Height}")]
 public readonly struct Size(float width, float height) : IEquatable<Size>
 {
     /// <summary>
@@ -35,7 +38,7 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
     /// <param name="left">The first size to compare.</param>
     /// <param name="right">The second size to compare.</param>
     /// <returns><c>true</c> if the sizes are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(in Size left, in Size right) => left.Width.Equals(right.Width) && left.Height.Equals(right.Height);
+    public static bool operator ==(in Size left, in Size right) => left.Equals(right);
 
     /// <summary>
     /// Determines whether two <see cref="Size"/> instances are not equal.
@@ -43,7 +46,7 @@ public readonly struct Size(float width, float height) : IEquatable<Size>
     /// <param name="left">The first size to compare.</param>
     /// <param name="right">The second size to compare.</param>
     /// <returns><c>true</c> if the sizes are not equal; otherwise, <c>false</c>.</returns>
-    public static bool operator !=(in Size left, in Size right) => !(left == right);
+    public static bool operator !=(in Size left, in Size right) => !left.Equals(right);
 
     /// <inheritdoc/>
     public override string ToString() => $"{Width}x{Height}";

@@ -36,7 +36,7 @@ public class NotificationService : IDisposable
             .Subscribe(settings => _currentSettings = settings);
 
         // Start reminder timer
-        _reminderTimer = new Timer(CheckForReminders, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+        _reminderTimer = new(CheckForReminders, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
     }
 
     /// <summary>

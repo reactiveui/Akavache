@@ -19,8 +19,8 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateCacheName_ShouldRejectPathTraversalAttempts()
     {
-        var pathTraversalAttempts = new[]
-        {
+        string[] pathTraversalAttempts =
+        [
             "test/../other",
             @"test\..\other",
             "../../etc/passwd",
@@ -29,7 +29,7 @@ public class SecurityUtilitiesTests
             ".\\test",
             "test/subdir",
             "test\\subdir"
-        };
+        ];
 
         foreach (var maliciousName in pathTraversalAttempts)
         {
@@ -48,13 +48,13 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateCacheName_ShouldRejectReservedSystemNames()
     {
-        var reservedNames = new[]
-        {
+        string[] reservedNames =
+        [
             "CON", "PRN", "AUX", "NUL",
             "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
             "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
             "con", "prn", "aux", "nul" // Test case insensitive
-        };
+        ];
 
         foreach (var reservedName in reservedNames)
         {
@@ -88,13 +88,13 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateCacheName_ShouldRejectProblematicPrefixesSuffixes()
     {
-        var problematicNames = new[]
-        {
+        string[] problematicNames =
+        [
             ".hiddenfile",
             "normalfile.",
             "spacefile ",  // trailing space
             "..."
-        };
+        ];
 
         foreach (var problematicName in problematicNames)
         {
@@ -117,8 +117,8 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateCacheName_ShouldAcceptValidNames()
     {
-        var validNames = new[]
-        {
+        string[] validNames =
+        [
             "UserAccount",
             "LocalMachine",
             "Secure",
@@ -129,7 +129,7 @@ public class SecurityUtilitiesTests
             "A",
             "CacheWithUpper",
             "cachewithlong123456789012345678901234567890"
-        };
+        ];
 
         foreach (var validName in validNames)
         {
@@ -145,12 +145,12 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldRejectPathTraversalAttempts()
     {
-        var pathTraversalAttempts = new[]
-        {
+        string[] pathTraversalAttempts =
+        [
             "MyApp/../OtherApp",
             "App/SubApp", // Should reject paths with subdirectories
             "App\\SubApp"
-        };
+        ];
 
         foreach (var maliciousName in pathTraversalAttempts)
         {
@@ -166,15 +166,15 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateApplicationName_ShouldAcceptValidNames()
     {
-        var validNames = new[]
-        {
+        string[] validNames =
+        [
             "MyApplication",
             "App123",
             "app_name",
             "app-name",
             "SimpleApp",
             "AkavacheTestApp"
-        };
+        ];
 
         foreach (var validName in validNames)
         {
@@ -207,12 +207,12 @@ public class SecurityUtilitiesTests
     public async Task SafePathCombine_ShouldPreventDirectoryTraversal()
     {
         var basePath = Path.Combine(Path.GetTempPath(), "cache");
-        var maliciousPaths = new[]
-        {
+        string[] maliciousPaths =
+        [
             "../../../etc/passwd",
             "subdir/../../../etc",
             "normal/../../etc/passwd"
-        };
+        ];
 
         foreach (var maliciousPath in maliciousPaths)
         {
@@ -229,12 +229,12 @@ public class SecurityUtilitiesTests
     public async Task SafePathCombine_ShouldAllowSafeRelativePaths()
     {
         var basePath = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar);
-        var safePaths = new[]
-        {
+        string[] safePaths =
+        [
             "cache.db",
             "subdir",
             Path.Combine("subdir", "cache.db")
-        };
+        ];
 
         foreach (var safePath in safePaths)
         {
@@ -492,7 +492,7 @@ public class SecurityUtilitiesTests
     [Test]
     public async Task ValidateCacheName_ShouldAcceptLongValidName()
     {
-        var longName = new string('a', 200);
+        string longName = new('a', 200);
         var result = SecurityUtilities.ValidateCacheName(longName);
         await Assert.That(result).IsEqualTo(longName);
     }

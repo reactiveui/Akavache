@@ -39,27 +39,27 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public Task CreateTableAsync<T>()
-        where T : new() =>
+        where T : class, new() =>
         _connection.CreateTableAsync<T>();
 
     /// <inheritdoc/>
     public Task<List<T>> QueryAsync<T>(Expression<Func<T, bool>> predicate)
-        where T : new() =>
+        where T : class, new() =>
         _connection.Table<T>().Where(predicate).ToListAsync();
 
     /// <inheritdoc/>
     public Task<List<T>> QueryAsync<T>(string sql, params object[] args)
-        where T : new() =>
+        where T : class, new() =>
         _connection.QueryAsync<T>(sql, args);
 
     /// <inheritdoc/>
     public Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate)
-        where T : new() =>
+        where T : class, new() =>
         _connection.Table<T>().Where(predicate).FirstOrDefaultAsync()!;
 
     /// <inheritdoc/>
     public Task InsertOrReplaceAsync<T>(T entity)
-        where T : new() =>
+        where T : class, new() =>
         _connection.InsertOrReplaceAsync(entity);
 
     /// <inheritdoc/>
@@ -116,7 +116,9 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
     {
         // V10 schema columns: Key (varchar), TypeName (varchar), Value (BLOB), Expiration (bigint), CreatedAt (bigint).
         // Expiration is ticks (bigint). NULL or 0 means unexpired; otherwise require Expiration > nowTicks.
-        var nowTicks = now.UtcTicks;
+        // Box nowTicks once and reuse the same boxed reference across every parameter array
+        // — sqlite-net's parameter API takes object[], so a long would otherwise box per array.
+        object boxedNowTicks = now.UtcTicks;
         const string expiryPredicate = "(Expiration IS NULL OR Expiration = 0 OR Expiration > ?)";
 
         var sqlStatements = new List<(string Sql, object[] Args)>(3);
@@ -126,17 +128,17 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
             {
                 sqlStatements.Add((
                     $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
-                    [key, nowTicks, type.AssemblyQualifiedName!]));
+                    [key, boxedNowTicks, type.AssemblyQualifiedName!]));
             }
 
             sqlStatements.Add((
                 $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
-                [key, nowTicks, type.FullName!]));
+                [key, boxedNowTicks, type.FullName!]));
         }
 
         sqlStatements.Add((
             $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate}",
-            [key, nowTicks]));
+            [key, boxedNowTicks]));
 
         foreach (var (sql, args) in sqlStatements)
         {

@@ -13,7 +13,7 @@ namespace AkavacheTodoWpf;
 /// Interaction logic for MainWindow.xaml with ReactiveUI integration.
 /// </summary>
 [SupportedOSPlatform("windows10.0.19041.0")]
-public partial class MainWindow : Window, IViewFor<MainViewModel>
+public partial class MainWindow : IViewFor<MainViewModel>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindow"/> class.

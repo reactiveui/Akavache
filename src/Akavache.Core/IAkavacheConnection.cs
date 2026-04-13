@@ -18,7 +18,7 @@ public interface IAkavacheConnection : IAsyncDisposable
     /// <typeparam name="T">The entity type whose schema defines the table.</typeparam>
     /// <returns>A task that completes when the table is created.</returns>
     Task CreateTableAsync<T>()
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Queries all entities of type <typeparamref name="T"/> matching the given predicate.
@@ -27,7 +27,7 @@ public interface IAkavacheConnection : IAsyncDisposable
     /// <param name="predicate">A filter expression.</param>
     /// <returns>A list of matching entities.</returns>
     Task<List<T>> QueryAsync<T>(Expression<Func<T, bool>> predicate)
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Executes a raw SQL query and maps results to entities of type <typeparamref name="T"/>.
@@ -37,7 +37,7 @@ public interface IAkavacheConnection : IAsyncDisposable
     /// <param name="args">The parameters.</param>
     /// <returns>A list of mapped entities.</returns>
     Task<List<T>> QueryAsync<T>(string sql, params object[] args)
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Returns the first entity matching the predicate, or <c>default</c> if none match.
@@ -46,7 +46,7 @@ public interface IAkavacheConnection : IAsyncDisposable
     /// <param name="predicate">A filter expression.</param>
     /// <returns>The first matching entity, or <c>default</c>.</returns>
     Task<T?> FirstOrDefaultAsync<T>(Expression<Func<T, bool>> predicate)
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Inserts or replaces a single entity asynchronously.
@@ -55,7 +55,7 @@ public interface IAkavacheConnection : IAsyncDisposable
     /// <param name="entity">The entity to insert or replace.</param>
     /// <returns>A task that completes when the operation finishes.</returns>
     Task InsertOrReplaceAsync<T>(T entity)
-        where T : new();
+        where T : class, new();
 
     /// <summary>
     /// Executes a raw SQL statement with optional parameters.

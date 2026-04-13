@@ -33,7 +33,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(() => cache.Insert([new KeyValuePair<string, byte[]>("k", [1])]).ToTask())
+        await Assert.That(() => cache.Insert([new("k", [1])]).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -378,7 +378,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task InsertObjectAndGetObjectShouldRoundTrip()
     {
         await using var cache = CreateCache();
-        var user = new UserObject { Name = "Alice", Bio = "Dev", Blog = "https://example.com" };
+        UserObject user = new() { Name = "Alice", Bio = "Dev", Blog = "https://example.com" };
         await cache.InsertObject("user-1", user).ToTask();
 
         var result = await cache.GetObject<UserObject>("user-1").ToTask();
@@ -524,11 +524,11 @@ public class InMemoryBlobCacheBaseTests
     public async Task InsertKeyValuePairsWithTypeShouldPopulateTypeIndex()
     {
         await using var cache = CreateCache();
-        var pairs = new[]
-        {
-            new KeyValuePair<string, byte[]>("k1", [1, 2, 3]),
-            new KeyValuePair<string, byte[]>("k2", [4, 5, 6]),
-        };
+        KeyValuePair<string, byte[]>[] pairs =
+        [
+            new("k1", [1, 2, 3]),
+            new("k2", [4, 5, 6])
+        ];
         await cache.Insert(pairs, typeof(UserObject)).ToTask();
 
         var keys = await cache.GetAllKeys(typeof(UserObject)).ToList().ToTask();
@@ -546,7 +546,7 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         await cache.DisposeAsync();
 
-        await Assert.That(() => cache.Insert([new KeyValuePair<string, byte[]>("k", [1])], typeof(UserObject)).ToTask())
+        await Assert.That(() => cache.Insert([new("k", [1])], typeof(UserObject)).ToTask())
             .Throws<ObjectDisposedException>();
     }
 
@@ -701,8 +701,8 @@ public class InMemoryBlobCacheBaseTests
         var results = await cache.GetCreatedAt(["k1", "missing"]).ToList().ToTask();
         await Assert.That(results.Count).IsEqualTo(2);
 
-        var (_, time) = results.First(r => r.Key == "k1");
-        var (_, dateTimeOffset) = results.First(r => r.Key == "missing");
+        (_, var time) = results.First(r => r.Key == "k1");
+        (_, var dateTimeOffset) = results.First(r => r.Key == "missing");
         await Assert.That(time).IsNotNull();
         await Assert.That(dateTimeOffset).IsNull();
     }
@@ -931,7 +931,7 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task SingleArgConstructorShouldUseTaskpoolScheduler()
     {
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
         await Assert.That(cache.Scheduler).IsNotNull();
         await Assert.That(cache.Scheduler).IsEqualTo(CacheDatabase.TaskpoolScheduler);
         await Assert.That(cache.Serializer).IsNotNull();
@@ -972,7 +972,7 @@ public class InMemoryBlobCacheBaseTests
         // Register a sentinel serializer so the setter routes its propagation through it.
         // Use the explicit (object, Type) overload to avoid any generic-inference ambiguity
         // that would register the recorder under its concrete type instead of ISerializer.
-        var registered = new RecordingForcedKindSerializer();
+        RecordingForcedKindSerializer registered = new();
         AppLocator.CurrentMutable.RegisterConstant(registered, typeof(ISerializer));
 
         // Sanity check: confirm the registration is what AppLocator returns. If a parallel
@@ -1190,7 +1190,7 @@ public class InMemoryBlobCacheBaseTests
 
         // Touch the lazy getter first so the setter is clearly overriding a real instance.
         _ = cache.HttpService;
-        var custom = new HttpService();
+        HttpService custom = new();
         cache.HttpService = custom;
         await Assert.That(cache.HttpService).IsSameReferenceAs(custom);
     }
@@ -1203,8 +1203,8 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task CollectExpiredKeysShouldReturnEntriesAtOrBeforeNow()
     {
-        var now = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        var cache = new Dictionary<string, CacheEntry>
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new()
         {
             ["expired"] = new() { Id = "expired", ExpiresAt = now.AddMinutes(-5).UtcDateTime },
             ["expiringNow"] = new() { Id = "expiringNow", ExpiresAt = now.UtcDateTime },
@@ -1226,8 +1226,8 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task CollectExpiredKeysShouldReturnEmptyWhenNothingExpired()
     {
-        var now = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        var cache = new Dictionary<string, CacheEntry>
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new()
         {
             ["k1"] = new() { Id = "k1", ExpiresAt = now.AddHours(1).UtcDateTime },
             ["k2"] = new() { Id = "k2", ExpiresAt = null },
@@ -1259,7 +1259,7 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task RemoveKeyFromAllTypeIndexesShouldPruneEverySetThatContainsKey()
     {
-        var typeIndex = new Dictionary<Type, HashSet<string>>
+        Dictionary<Type, HashSet<string>> typeIndex = new()
         {
             [typeof(string)] = ["k1", "k2"],
             [typeof(int)] = ["k1", "k3"],
@@ -1283,7 +1283,7 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task RemoveKeyFromAllTypeIndexesShouldNoOpForEmptyIndex()
     {
-        var typeIndex = new Dictionary<Type, HashSet<string>>();
+        Dictionary<Type, HashSet<string>> typeIndex = [];
 
         // Should not throw.
         InMemoryBlobCacheBase.RemoveKeyFromAllTypeIndexes(typeIndex, "anyKey");
@@ -1299,13 +1299,13 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task VacuumExpiredEntriesShouldRemoveExpiredAndPruneTypeIndex()
     {
-        var now = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        var cache = new Dictionary<string, CacheEntry>
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new()
         {
             ["expired"] = new() { Id = "expired", ExpiresAt = now.AddMinutes(-1).UtcDateTime, TypeName = "T1" },
             ["valid"] = new() { Id = "valid", ExpiresAt = now.AddHours(1).UtcDateTime, TypeName = "T1" },
         };
-        var typeIndex = new Dictionary<Type, HashSet<string>>
+        Dictionary<Type, HashSet<string>> typeIndex = new()
         {
             [typeof(string)] = ["expired", "valid"],
         };
@@ -1326,12 +1326,12 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task VacuumExpiredEntriesShouldBeNoOpWhenNothingExpired()
     {
-        var now = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        var cache = new Dictionary<string, CacheEntry>
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new()
         {
             ["valid"] = new() { Id = "valid", ExpiresAt = now.AddHours(1).UtcDateTime },
         };
-        var typeIndex = new Dictionary<Type, HashSet<string>>
+        Dictionary<Type, HashSet<string>> typeIndex = new()
         {
             [typeof(string)] = ["valid"],
         };
@@ -1351,12 +1351,12 @@ public class InMemoryBlobCacheBaseTests
     [Test]
     public async Task VacuumExpiredEntriesShouldRemoveEntriesEvenWithEmptyTypeIndex()
     {
-        var now = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        var cache = new Dictionary<string, CacheEntry>
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new()
         {
             ["expired"] = new() { Id = "expired", ExpiresAt = now.AddMinutes(-1).UtcDateTime },
         };
-        var typeIndex = new Dictionary<Type, HashSet<string>>();
+        Dictionary<Type, HashSet<string>> typeIndex = [];
 
         InMemoryBlobCacheBase.VacuumExpiredEntries(cache, typeIndex, now);
 

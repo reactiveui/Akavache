@@ -33,15 +33,12 @@ public static class UniversalSerializer
 #endif
     public static T? Deserialize<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind = null)
     {
-        if (data == null || data.Length == 0)
+        if (data is null or { Length: 0 })
         {
             return default;
         }
 
-        if (primarySerializer == null)
-        {
-            throw new ArgumentNullException(nameof(primarySerializer));
-        }
+        ArgumentNullException.ThrowIfNull(primarySerializer);
 
         try
         {
@@ -87,15 +84,12 @@ public static class UniversalSerializer
 #endif
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind = null)
     {
-        if (value == null)
+        if (value is null)
         {
             return [];
         }
 
-        if (targetSerializer == null)
-        {
-            throw new ArgumentNullException(nameof(targetSerializer));
-        }
+        ArgumentNullException.ThrowIfNull(targetSerializer);
 
         try
         {
@@ -149,7 +143,7 @@ public static class UniversalSerializer
         string requestedKey,
         ISerializer primarySerializer)
     {
-        if (cache == null || string.IsNullOrEmpty(requestedKey) || primarySerializer == null)
+        if (cache is null || string.IsNullOrEmpty(requestedKey) || primarySerializer is null)
         {
             return default;
         }
@@ -291,25 +285,19 @@ public static class UniversalSerializer
     /// <returns>The candidate subset of <paramref name="allKeys"/>.</returns>
     internal static List<string> FindKeyCandidates<T>(IEnumerable<string> allKeys, string requestedKey)
     {
-        var possibleKeys = new HashSet<string>
-        {
+        HashSet<string> possibleKeys =
+        [
             requestedKey,
             $"{typeof(T).FullName}___{requestedKey}",
             $"{typeof(T).Name}___{requestedKey}",
-            $"{typeof(T).Assembly.GetName().Name}.{typeof(T).Name}___{requestedKey}",
-        };
+            $"{typeof(T).Assembly.GetName().Name}.{typeof(T).Name}___{requestedKey}"
+        ];
 
         var prefixSuffix = $"___{requestedKey}";
-        var candidates = new List<string>();
+        List<string> candidates = [];
         foreach (var key in allKeys)
         {
-            if (possibleKeys.Contains(key))
-            {
-                candidates.Add(key);
-                continue;
-            }
-
-            if (key.EndsWith(prefixSuffix, StringComparison.Ordinal))
+            if (possibleKeys.Contains(key) || key.EndsWith(prefixSuffix, StringComparison.Ordinal))
             {
                 candidates.Add(key);
                 continue;
@@ -359,7 +347,7 @@ public static class UniversalSerializer
 
         // Skip any leading whitespace.
         var startIndex = 0;
-        while (startIndex < data.Length && (data[startIndex] == 0x20 || data[startIndex] == 0x09 || data[startIndex] == 0x0A || data[startIndex] == 0x0D))
+        while (startIndex < data.Length && data[startIndex] is 0x20 or 0x09 or 0x0A or 0x0D)
         {
             startIndex++;
         }
@@ -371,18 +359,56 @@ public static class UniversalSerializer
 
         // Check for typical JSON starting characters.
         var firstChar = data[startIndex];
-        return firstChar == 0x7B || // '{'
-               firstChar == 0x5B || // '['
-               firstChar == 0x22 || // '"'
-               firstChar is >= 0x30 and <= 0x39 || // '0'-'9'
-               firstChar == 0x2D || // '-'
-               (data.Length >= startIndex + 4 &&
-                data[startIndex] == 0x74 && data[startIndex + 1] == 0x72 && data[startIndex + 2] == 0x75 && data[startIndex + 3] == 0x65) || // 'true'
-               (data.Length >= startIndex + 5 &&
-                data[startIndex] == 0x66 && data[startIndex + 1] == 0x61 && data[startIndex + 2] == 0x6C && data[startIndex + 3] == 0x73 && data[startIndex + 4] == 0x65) || // 'false'
-               (data.Length >= startIndex + 4 &&
-                data[startIndex] == 0x6E && data[startIndex + 1] == 0x75 && data[startIndex + 2] == 0x6C && data[startIndex + 3] == 0x6C); // 'null'
+
+        return IsJsonObjectOrArray(firstChar) ||
+               IsJsonString(firstChar) ||
+               IsJsonNumber(firstChar) ||
+               IsJsonBoolean(data, startIndex) ||
+               IsJsonNull(data, startIndex);
     }
+
+    /// <summary>
+    /// Checks if the character represents the start of a JSON object '{' or array '['.
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>True if the character is '{' or '['.</returns>
+    internal static bool IsJsonObjectOrArray(byte c) => c is 0x7B or 0x5B;
+
+    /// <summary>
+    /// Checks if the character represents the start of a JSON string '"'.
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>True if the character is '"'.</returns>
+    internal static bool IsJsonString(byte c) => c == 0x22;
+
+    /// <summary>
+    /// Checks if the character represents the start of a JSON number ('0'-'9' or '-').
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>True if the character is '0'-'9' or '-'.</returns>
+    internal static bool IsJsonNumber(byte c) => c is (>= 0x30 and <= 0x39) or 0x2D;
+
+    /// <summary>
+    /// Checks if the data at the specified index represents a JSON boolean ('true' or 'false').
+    /// </summary>
+    /// <param name="data">The data buffer to check.</param>
+    /// <param name="index">The index at which to start the check.</param>
+    /// <returns>True if the data starting at the index matches 'true' or 'false'.</returns>
+    internal static bool IsJsonBoolean(byte[] data, int index) =>
+        (data.Length >= index + 4 &&
+         data[index] == 0x74 && data[index + 1] == 0x72 && data[index + 2] == 0x75 && data[index + 3] == 0x65) || // 'true'
+        (data.Length >= index + 5 &&
+         data[index] == 0x66 && data[index + 1] == 0x61 && data[index + 2] == 0x6C && data[index + 3] == 0x73 && data[index + 4] == 0x65); // 'false'
+
+    /// <summary>
+    /// Checks if the data at the specified index represents a JSON null ('null').
+    /// </summary>
+    /// <param name="data">The data buffer to check.</param>
+    /// <param name="index">The index at which to start the check.</param>
+    /// <returns>True if the data starting at the index matches 'null'.</returns>
+    internal static bool IsJsonNull(byte[] data, int index) =>
+        data.Length >= index + 4 &&
+        data[index] == 0x6E && data[index + 1] == 0x75 && data[index + 2] == 0x6C && data[index + 3] == 0x6C;
 
     /// <summary>
     /// Attempts fallback deserialization strategies.
@@ -521,7 +547,7 @@ public static class UniversalSerializer
     /// <returns>A list of alternative serializers.</returns>
     internal static List<ISerializer> GetAvailableAlternativeSerializers(ISerializer excludeSerializer)
     {
-        var alternatives = new List<ISerializer>();
+        List<ISerializer> alternatives = [];
         var excludeType = excludeSerializer.GetType();
 
         foreach (var factory in _registeredSerializerFactories)
@@ -589,7 +615,7 @@ public static class UniversalSerializer
                         }
                         else
                         {
-                            dateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
+                            dateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
                         }
                     }
 
@@ -661,35 +687,23 @@ public static class UniversalSerializer
     /// <returns>The deserialized object or default.</returns>
     internal static T? TryBasicJsonDeserialization<T>(byte[] data)
     {
-        var jsonString = Encoding.UTF8.GetString(data);
+        var jsonString = Encoding.UTF8.GetString(data).Trim();
 
         // Basic JSON structure validation.
-        if (string.IsNullOrWhiteSpace(jsonString))
-        {
-            return default;
-        }
-
-        // Handle simple types.
-        if (typeof(T) == typeof(string))
-        {
-            // Remove quotes if present.
-            var trimmed = jsonString.Trim();
-            return trimmed.StartsWith("\"") && trimmed.EndsWith("\"")
-                ? (T)(object)trimmed.Substring(1, trimmed.Length - 2)
-                : (T)(object)jsonString;
-        }
-
-        if (typeof(T) == typeof(int) && int.TryParse(jsonString.Trim(), out var intValue))
-        {
-            return (T)(object)intValue;
-        }
-
-        if (typeof(T) != typeof(bool) || !bool.TryParse(jsonString.Trim(), out var boolValue))
-        {
-            return default;
-        }
-
-        return (T)(object)boolValue;
+        return string.IsNullOrWhiteSpace(jsonString)
+            ? default
+            : typeof(T) switch
+            {
+                var t when t == typeof(string) => (T)(object)(jsonString.StartsWith('\"') && jsonString.EndsWith('\"')
+                    ? jsonString[1..^1]
+                    : jsonString),
+                var t when t == typeof(int) && int.TryParse(jsonString, out var intValue) => (T)(object)intValue,
+                var t when t == typeof(long) && long.TryParse(jsonString, out var longValue) => (T)(object)longValue,
+                var t when t == typeof(double) && double.TryParse(jsonString, out var doubleValue) =>
+                    (T)(object)doubleValue,
+                var t when t == typeof(bool) && bool.TryParse(jsonString, out var boolValue) => (T)(object)boolValue,
+                _ => default
+            };
     }
 
     /// <summary>
@@ -710,7 +724,7 @@ public static class UniversalSerializer
             if (serializerTypeName.Contains("Newtonsoft") && !serializerTypeName.Contains("Bson"))
             {
                 // Use a safer minimum date for regular Newtonsoft serializer
-                return new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                return new(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             }
         }
 
@@ -720,7 +734,7 @@ public static class UniversalSerializer
             if (serializerTypeName.Contains("Newtonsoft") && !serializerTypeName.Contains("Bson"))
             {
                 // Use a safer maximum date for regular Newtonsoft serializer
-                return new DateTime(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                return new(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);
             }
         }
 

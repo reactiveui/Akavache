@@ -87,7 +87,7 @@ public class SettingsBaseFallbackTests
         try
         {
             // Creating a SettingsBase-derived class should fall back to CacheDatabase.UserAccount
-            settings = new TestSettings();
+            settings = new();
 
             // Verify that the settings instance is created successfully
             await TestHelper.EventuallyAsync(() => settings is not null).ConfigureAwait(false);

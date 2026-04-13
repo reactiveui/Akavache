@@ -45,7 +45,7 @@ public class SystemTextJsonBuilderExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerSystemTextJsonSettingsShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => Akavache.SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(null!, new JsonSerializerOptions()))
+        await Assert.That(static () => Akavache.SystemTextJson.AkavacheBuilderExtensions.WithSerializerSystemTextJson(null!, new()))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -68,7 +68,7 @@ public class SystemTextJsonBuilderExtensionsTests
     public async Task WithSerializerSystemTextJsonSettingsShouldRegisterSerializer()
     {
         var builder = CreateBuilder("WithSerializerSystemTextJsonSettings");
-        var settings = new JsonSerializerOptions { WriteIndented = true };
+        JsonSerializerOptions settings = new() { WriteIndented = true };
         var result = builder.WithSerializerSystemTextJson(settings);
 
         await Assert.That(result).IsSameReferenceAs(builder);
@@ -133,7 +133,7 @@ public class SystemTextJsonBuilderExtensionsTests
 
         var builder = CreateBuilder("WithSerializerSystemTextJsonVariantsFactoryExec");
         builder.WithSerializerSystemTextJson();
-        builder.WithSerializerSystemTextJson(new JsonSerializerOptions { WriteIndented = true });
+        builder.WithSerializerSystemTextJson(new() { WriteIndented = true });
         builder.UseSystemTextJsonSerializer(o => o.WriteIndented = true);
 
         // Pass a primary that isn't SystemJsonSerializer so the registered factories

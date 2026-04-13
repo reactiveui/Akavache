@@ -21,7 +21,7 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldAttachDateTimeConverterByDefault()
     {
-        var resolver = new NewtonsoftDateTimeContractResolver();
+        NewtonsoftDateTimeContractResolver resolver = new();
         var contract = resolver.ResolveContract(typeof(DateTime));
 
         await Assert.That(contract).IsNotNull();
@@ -35,7 +35,7 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldAttachDateTimeConverterForNullable()
     {
-        var resolver = new NewtonsoftDateTimeContractResolver(null, DateTimeKind.Utc);
+        NewtonsoftDateTimeContractResolver resolver = new(null, DateTimeKind.Utc);
         var contract = resolver.ResolveContract(typeof(DateTime?));
 
         await Assert.That(contract.Converter).IsTypeOf<NewtonsoftDateTimeTickConverter>();
@@ -48,7 +48,7 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldAttachDateTimeOffsetConverter()
     {
-        var resolver = new NewtonsoftDateTimeContractResolver();
+        NewtonsoftDateTimeContractResolver resolver = new();
         var contract = resolver.ResolveContract(typeof(DateTimeOffset));
 
         await Assert.That(contract.Converter).IsSameReferenceAs(NewtonsoftDateTimeOffsetTickConverter.Default);
@@ -61,7 +61,7 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldAttachDateTimeOffsetConverterForNullable()
     {
-        var resolver = new NewtonsoftDateTimeContractResolver();
+        NewtonsoftDateTimeContractResolver resolver = new();
         var contract = resolver.ResolveContract(typeof(DateTimeOffset?));
 
         await Assert.That(contract.Converter).IsSameReferenceAs(NewtonsoftDateTimeOffsetTickConverter.Default);
@@ -74,7 +74,7 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldNotAttachConverterForOtherTypes()
     {
-        var resolver = new NewtonsoftDateTimeContractResolver();
+        NewtonsoftDateTimeContractResolver resolver = new();
         var contract = resolver.ResolveContract(typeof(string));
 
         await Assert.That(contract).IsNotNull();
@@ -88,8 +88,8 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldHonorExistingResolverWithConverter()
     {
-        var inner = new ResolverWithConverter();
-        var resolver = new NewtonsoftDateTimeContractResolver(inner, null);
+        ResolverWithConverter inner = new();
+        NewtonsoftDateTimeContractResolver resolver = new(inner, null);
 
         var contract = resolver.ResolveContract(typeof(DateTime));
 
@@ -104,8 +104,8 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldApplyConverterWhenExistingReturnsNoConverter()
     {
-        var inner = new DefaultContractResolver();
-        var resolver = new NewtonsoftDateTimeContractResolver(inner, DateTimeKind.Local);
+        DefaultContractResolver inner = new();
+        NewtonsoftDateTimeContractResolver resolver = new(inner, DateTimeKind.Local);
 
         var contract = resolver.ResolveContract(typeof(DateTime));
 
@@ -119,8 +119,8 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverShouldIgnoreSameTypeExistingResolver()
     {
-        var inner = new NewtonsoftDateTimeContractResolver();
-        var resolver = new NewtonsoftDateTimeContractResolver
+        NewtonsoftDateTimeContractResolver inner = new();
+        NewtonsoftDateTimeContractResolver resolver = new()
         {
             ExistingContractResolver = inner,
         };
@@ -138,7 +138,7 @@ public class NewtonsoftDateTimeContractResolverTests
     [Test]
     public async Task ContractResolverForceDateTimeKindShouldBeSettable()
     {
-        var resolver = new NewtonsoftDateTimeContractResolver
+        NewtonsoftDateTimeContractResolver resolver = new()
         {
             ForceDateTimeKind = DateTimeKind.Utc,
         };

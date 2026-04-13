@@ -49,7 +49,7 @@ public class AkavacheTestExecutorBase : ITestExecutor
         AkavacheBuilder.BlobCaches = [];
 
         var previousLocator = AppLocator.GetLocator();
-        var freshLocator = new ModernDependencyResolver();
+        ModernDependencyResolver freshLocator = new();
         AppLocator.SetLocator(freshLocator);
         AppLocator.CurrentMutable.InitializeSplat();
 

@@ -32,7 +32,7 @@ public partial class App : Application
     /// <returns>The main window.</returns>
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var window = new Window(new AppShell());
+        Window window = new(new AppShell());
 
         // Handle window lifecycle events
         window.Created += OnWindowCreated;

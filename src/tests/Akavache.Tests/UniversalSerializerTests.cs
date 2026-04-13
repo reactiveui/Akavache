@@ -56,8 +56,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldDeserializeFromPrimarySerializer()
     {
         // Arrange
-        var primarySerializer = new SystemJsonSerializer();
-        var testObject = new UserObject { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" };
+        SystemJsonSerializer primarySerializer = new();
+        UserObject testObject = new() { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" };
         var serializedData = primarySerializer.Serialize(testObject);
 
         // Act
@@ -81,7 +81,7 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldHandleNullEmptyData()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         // Act & Assert
         var nullResult = UniversalSerializer.Deserialize<string>(null!, serializer);
@@ -99,8 +99,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldSerializeWithTargetSerializer()
     {
         // Arrange
-        var targetSerializer = new SystemJsonSerializer();
-        var testObject = new UserObject { Name = "Serialize Test", Bio = "Serialize Bio", Blog = "Serialize Blog" };
+        SystemJsonSerializer targetSerializer = new();
+        UserObject testObject = new() { Name = "Serialize Test", Bio = "Serialize Bio", Blog = "Serialize Blog" };
 
         // Act
         var serializedData = UniversalSerializer.Serialize(testObject, targetSerializer);
@@ -123,7 +123,7 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldHandleNullValues()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
         // Act
         var result = UniversalSerializer.Serialize<string>(null!, serializer);
@@ -141,8 +141,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldHandleDateTimeSerialization()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var testDateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
+        SystemJsonSerializer serializer = new();
+        DateTime testDateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
 
         // Act
         var serializedData = UniversalSerializer.Serialize(testDateTime, serializer, DateTimeKind.Utc);
@@ -162,9 +162,9 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldHandleCrossSerializerScenarios()
     {
         // Arrange
-        var systemJsonSerializer = new SystemJsonSerializer();
-        var newtonsoftSerializer = new NewtonsoftSerializer();
-        var testObject = new UserObject { Name = "Cross Test", Bio = "Cross Bio", Blog = "Cross Blog" };
+        SystemJsonSerializer systemJsonSerializer = new();
+        NewtonsoftSerializer newtonsoftSerializer = new();
+        UserObject testObject = new() { Name = "Cross Test", Bio = "Cross Bio", Blog = "Cross Blog" };
 
         // Act - Serialize with one, deserialize with UniversalSerializer using another
         var systemJsonData = systemJsonSerializer.Serialize(testObject);
@@ -205,7 +205,7 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldHandleDateTimeEdgeCases()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         DateTime[] edgeCases =
         [
             DateTime.MinValue,
@@ -243,8 +243,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldDetectBsonData()
     {
         // Arrange
-        var bsonSerializer = new NewtonsoftBsonSerializer();
-        var testObject = new UserObject { Name = "BSON Test", Bio = "BSON Bio", Blog = "BSON Blog" };
+        NewtonsoftBsonSerializer bsonSerializer = new();
+        UserObject testObject = new() { Name = "BSON Test", Bio = "BSON Bio", Blog = "BSON Blog" };
         var bsonData = bsonSerializer.Serialize(testObject);
 
         // Act - Try to deserialize BSON data with a different serializer
@@ -266,8 +266,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldDetectJsonData()
     {
         // Arrange
-        var jsonSerializer = new SystemJsonSerializer();
-        var testObject = new UserObject { Name = "JSON Test", Bio = "JSON Bio", Blog = "JSON Blog" };
+        SystemJsonSerializer jsonSerializer = new();
+        UserObject testObject = new() { Name = "JSON Test", Bio = "JSON Bio", Blog = "JSON Blog" };
         var jsonData = jsonSerializer.Serialize(testObject);
 
         // Act & Assert
@@ -284,10 +284,10 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldTryAlternativeKeys()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
 
-        var cache = new InMemoryBlobCache(serializer);
-        var testObject = new UserObject { Name = "Alt Key Test", Bio = "Alt Bio", Blog = "Alt Blog" };
+        InMemoryBlobCache cache = new(serializer);
+        UserObject testObject = new() { Name = "Alt Key Test", Bio = "Alt Bio", Blog = "Alt Blog" };
 
         try
         {
@@ -318,10 +318,10 @@ public class UniversalSerializerTests
         try
         {
             // Arrange
-            var serializer = new SystemJsonSerializer();
+            SystemJsonSerializer serializer = new();
 
             // Create a problematic object (circular reference)
-            var circularRef = new List<object>();
+            List<object> circularRef = [];
             circularRef.Add(circularRef);
 
             // Act & Assert
@@ -342,8 +342,8 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldValidateDeserializedDateTime()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var testDateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
+        SystemJsonSerializer serializer = new();
+        DateTime testDateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
 
         // Act
         var serializedData = UniversalSerializer.Serialize(testDateTime, serializer, DateTimeKind.Utc);
@@ -362,7 +362,7 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldHandleComplexObjects()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var complexObject = new
         {
             User = new UserObject { Name = "Complex User", Bio = "Complex Bio", Blog = "Complex Blog" },
@@ -387,7 +387,7 @@ public class UniversalSerializerTests
     public async Task UniversalSerializerShouldPreprocessDateTime()
     {
         // Arrange
-        var newtonsoftSerializer = new NewtonsoftSerializer();
+        NewtonsoftSerializer newtonsoftSerializer = new();
 
         // Test edge cases that might be problematic for certain serializers
         DateTime[] edgeDates =
@@ -596,9 +596,99 @@ public class UniversalSerializerTests
     [Test]
     public async Task IsPotentialJsonDataShouldReturnFalseForBinaryData()
     {
-        var data = new byte[] { 0xFF, 0xFE, 0x00, 0x01, 0x02 };
+        byte[] data = [0xFF, 0xFE, 0x00, 0x01, 0x02];
         var result = UniversalSerializer.IsPotentialJsonData(data);
         await Assert.That(result).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests the IsJsonObjectOrArray method.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsJsonObjectOrArrayShouldReturnTrueForCorrectCharacters()
+    {
+        using (Assert.Multiple())
+        {
+            await Assert.That(UniversalSerializer.IsJsonObjectOrArray((byte)'{')).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonObjectOrArray((byte)'[')).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonObjectOrArray((byte)'}')).IsFalse();
+            await Assert.That(UniversalSerializer.IsJsonObjectOrArray((byte)']')).IsFalse();
+            await Assert.That(UniversalSerializer.IsJsonObjectOrArray((byte)'a')).IsFalse();
+        }
+    }
+
+    /// <summary>
+    /// Tests the IsJsonString method.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsJsonStringShouldReturnTrueForQuote()
+    {
+        using (Assert.Multiple())
+        {
+            await Assert.That(UniversalSerializer.IsJsonString((byte)'"')).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonString((byte)'\'')).IsFalse();
+            await Assert.That(UniversalSerializer.IsJsonString((byte)'a')).IsFalse();
+        }
+    }
+
+    /// <summary>
+    /// Tests the IsJsonNumber method.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsJsonNumberShouldReturnTrueForDigitsAndMinus()
+    {
+        using (Assert.Multiple())
+        {
+            for (byte i = (byte)'0'; i <= (byte)'9'; i++)
+            {
+                await Assert.That(UniversalSerializer.IsJsonNumber(i)).IsTrue();
+            }
+
+            await Assert.That(UniversalSerializer.IsJsonNumber((byte)'-')).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonNumber((byte)'+')).IsFalse();
+            await Assert.That(UniversalSerializer.IsJsonNumber((byte)'a')).IsFalse();
+        }
+    }
+
+    /// <summary>
+    /// Tests the IsJsonBoolean method.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsJsonBooleanShouldReturnTrueForTrueAndFalse()
+    {
+        var trueData = "true"u8.ToArray();
+        var falseData = "false"u8.ToArray();
+        var notBoolData = "notbool"u8.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(UniversalSerializer.IsJsonBoolean(trueData, 0)).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonBoolean(falseData, 0)).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonBoolean(notBoolData, 0)).IsFalse();
+            await Assert.That(UniversalSerializer.IsJsonBoolean(trueData[..3], 0)).IsFalse();
+        }
+    }
+
+    /// <summary>
+    /// Tests the IsJsonNull method.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsJsonNullShouldReturnTrueForNull()
+    {
+        var nullData = "null"u8.ToArray();
+        var notNullData = "notnull"u8.ToArray();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(UniversalSerializer.IsJsonNull(nullData, 0)).IsTrue();
+            await Assert.That(UniversalSerializer.IsJsonNull(notNullData, 0)).IsFalse();
+            await Assert.That(UniversalSerializer.IsJsonNull(nullData[..3], 0)).IsFalse();
+        }
     }
 
     /// <summary>
@@ -680,7 +770,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldHandleMinValueForNewtonsoft()
     {
-        var serializer = new NewtonsoftSerializer();
+        NewtonsoftSerializer serializer = new();
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(DateTime.MinValue, serializer, null);
         await Assert.That(result.Year).IsEqualTo(1900);
     }
@@ -692,7 +782,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldHandleMaxValueForNewtonsoft()
     {
-        var serializer = new NewtonsoftSerializer();
+        NewtonsoftSerializer serializer = new();
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(DateTime.MaxValue, serializer, null);
         await Assert.That(result.Year).IsEqualTo(2100);
     }
@@ -704,7 +794,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldNotModifyMinValueForSystemJson()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(DateTime.MinValue, serializer, null);
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
@@ -716,8 +806,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldConvertLocalToUtcWhenForced()
     {
-        var serializer = new SystemJsonSerializer();
-        var localDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        SystemJsonSerializer serializer = new();
+        DateTime localDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(localDate, serializer, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -729,8 +819,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldConvertUtcToLocalWhenForced()
     {
-        var serializer = new SystemJsonSerializer();
-        var utcDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        SystemJsonSerializer serializer = new();
+        DateTime utcDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(utcDate, serializer, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -742,8 +832,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldConvertToUnspecifiedWhenForced()
     {
-        var serializer = new SystemJsonSerializer();
-        var utcDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        SystemJsonSerializer serializer = new();
+        DateTime utcDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result =
             UniversalSerializer.PreprocessDateTimeForSerialization(utcDate, serializer, DateTimeKind.Unspecified);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Unspecified);
@@ -756,8 +846,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldConvertUnspecifiedToLocalWhenForced()
     {
-        var serializer = new SystemJsonSerializer();
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        SystemJsonSerializer serializer = new();
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(date, serializer, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -769,7 +859,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldNotModifyMinValueForBsonSerializer()
     {
-        var serializer = new NewtonsoftBsonSerializer();
+        NewtonsoftBsonSerializer serializer = new();
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(DateTime.MinValue, serializer, null);
 
         // BSON serializer contains "Newtonsoft" but also "Bson", so no special handling
@@ -786,7 +876,7 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var primary = new SystemJsonSerializer();
+            SystemJsonSerializer primary = new();
             var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(primary);
 
             var hasSystemJson = alternatives.Any(static s => s.GetType() == typeof(SystemJsonSerializer));
@@ -808,7 +898,7 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var primary = new SystemJsonSerializer();
+            SystemJsonSerializer primary = new();
             var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(primary);
 
             // 4 registered minus the SystemJsonSerializer primary = 3
@@ -853,8 +943,8 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var bsonSerializer = new NewtonsoftBsonSerializer();
-            var testObject = new UserObject { Name = "BSON Fallback", Bio = "Bio", Blog = "Blog" };
+            NewtonsoftBsonSerializer bsonSerializer = new();
+            UserObject testObject = new() { Name = "BSON Fallback", Bio = "Bio", Blog = "Blog" };
             var bsonData = bsonSerializer.Serialize(testObject);
 
             var result =
@@ -878,8 +968,8 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var jsonSerializer = new SystemJsonSerializer();
-            var testObject = new UserObject { Name = "JSON Fallback", Bio = "Bio", Blog = "Blog" };
+            SystemJsonSerializer jsonSerializer = new();
+            UserObject testObject = new() { Name = "JSON Fallback", Bio = "Bio", Blog = "Blog" };
             var jsonData = jsonSerializer.Serialize(testObject);
 
             var result =
@@ -920,8 +1010,8 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var primary = new SystemJsonSerializer();
-            var circularRef = new List<object>();
+            SystemJsonSerializer primary = new();
+            List<object> circularRef = [];
             circularRef.Add(circularRef);
 
             await Assert.That(() => UniversalSerializer.TryFallbackSerialization(circularRef, primary, null))
@@ -943,7 +1033,7 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var primary = new SystemJsonSerializer();
+            SystemJsonSerializer primary = new();
             var result = UniversalSerializer.TryFallbackSerialization("test", primary, DateTimeKind.Utc);
             await Assert.That(result).IsNotNull();
             await Assert.That(result).IsNotEmpty();
@@ -964,8 +1054,8 @@ public class UniversalSerializerTests
         ResetRegistry();
         try
         {
-            var primary = new SystemJsonSerializer();
-            var data = new byte[] { 0xFF, 0xFE };
+            SystemJsonSerializer primary = new();
+            byte[] data = [0xFF, 0xFE];
 
             var result = UniversalSerializer.TryAlternativeSerializers<string>(data, primary, null);
             await Assert.That(result).IsNull();
@@ -987,8 +1077,8 @@ public class UniversalSerializerTests
         try
         {
             // Use Newtonsoft to serialize, then ask UniversalSerializer to find alternatives
-            var nsSerializer = new NewtonsoftSerializer();
-            var testObj = new UserObject { Name = "Alt", Bio = "Bio", Blog = "Blog" };
+            NewtonsoftSerializer nsSerializer = new();
+            UserObject testObj = new() { Name = "Alt", Bio = "Bio", Blog = "Blog" };
             var data = nsSerializer.Serialize(testObj);
 
             // Exclude Newtonsoft as primary, expect a registered alternative to handle it
@@ -1015,7 +1105,7 @@ public class UniversalSerializerTests
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
         UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
         var minBytes = new SystemJsonSerializer().Serialize(DateTimeOffset.MinValue);
         var maxBytes = new SystemJsonSerializer().Serialize(DateTimeOffset.MaxValue);
 
@@ -1036,8 +1126,8 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var bsonSerializer = new NewtonsoftBsonSerializer();
-            var testObject = new UserObject { Name = "BSON Direct", Bio = "Bio", Blog = "Blog" };
+            NewtonsoftBsonSerializer bsonSerializer = new();
+            UserObject testObject = new() { Name = "BSON Direct", Bio = "Bio", Blog = "Blog" };
             var bsonData = bsonSerializer.Serialize(testObject);
 
             var result = UniversalSerializer.TryDeserializeBsonFormat<UserObject>(bsonData, null);
@@ -1062,8 +1152,8 @@ public class UniversalSerializerTests
             RegisterAllSerializers();
             try
             {
-                var bsonSerializer = new NewtonsoftBsonSerializer();
-                var testDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+                NewtonsoftBsonSerializer bsonSerializer = new();
+                DateTime testDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
                 var bsonData = bsonSerializer.Serialize(testDate);
 
                 // Path is exercised even if BSON-direct DateTime serialization returns MinValue + recovery
@@ -1096,8 +1186,8 @@ public class UniversalSerializerTests
             RegisterAllSerializers();
             try
             {
-                var bsonSerializer = new NewtonsoftBsonSerializer();
-                var testDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+                NewtonsoftBsonSerializer bsonSerializer = new();
+                DateTime testDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
                 var bsonData = bsonSerializer.Serialize(testDate);
 
                 // Path exercised regardless of result value (BSON DateTime handling has special cases)
@@ -1128,8 +1218,8 @@ public class UniversalSerializerTests
             RegisterAllSerializers();
             try
             {
-                var bsonSerializer = new NewtonsoftBsonSerializer();
-                var testDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+                NewtonsoftBsonSerializer bsonSerializer = new();
+                DateTime testDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
                 var bsonData = bsonSerializer.Serialize(testDate);
 
                 // Path exercised regardless of result value (BSON DateTime handling has special cases)
@@ -1169,8 +1259,8 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var jsonSerializer = new SystemJsonSerializer();
-            var testObject = new UserObject { Name = "JSON Direct", Bio = "Bio", Blog = "Blog" };
+            SystemJsonSerializer jsonSerializer = new();
+            UserObject testObject = new() { Name = "JSON Direct", Bio = "Bio", Blog = "Blog" };
             var jsonData = jsonSerializer.Serialize(testObject);
 
             var result = UniversalSerializer.TryDeserializeJsonFormat<UserObject>(jsonData, null);
@@ -1193,8 +1283,8 @@ public class UniversalSerializerTests
         RegisterAllSerializers();
         try
         {
-            var jsonSerializer = new SystemJsonSerializer();
-            var testDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            SystemJsonSerializer jsonSerializer = new();
+            DateTime testDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
             var jsonData = jsonSerializer.Serialize(testDate);
 
             var result = UniversalSerializer.TryDeserializeJsonFormat<DateTime>(jsonData, DateTimeKind.Utc);
@@ -1227,7 +1317,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryDeserializeJsonFormatShouldReturnDefaultForBinaryData()
     {
-        var data = new byte[] { 0xFF, 0xFE, 0x00, 0x01, 0x02 };
+        byte[] data = [0xFF, 0xFE, 0x00, 0x01, 0x02];
         var result = UniversalSerializer.TryDeserializeJsonFormat<UserObject>(data, null);
         await Assert.That(result).IsNull();
     }
@@ -1271,7 +1361,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryDeserializeCandidateShouldReturnFalseWhenResultEqualsDefault()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var data = serializer.Serialize(0);
 
         var succeeded = UniversalSerializer.TryDeserializeCandidate<int>(data, serializer, out var result);
@@ -1289,8 +1379,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryDeserializeCandidateShouldReturnTrueOnHappyPath()
     {
-        var serializer = new SystemJsonSerializer();
-        var user = new UserObject { Name = "happy", Bio = "bio", Blog = "blog" };
+        SystemJsonSerializer serializer = new();
+        UserObject user = new() { Name = "happy", Bio = "bio", Blog = "blog" };
         var data = serializer.Serialize(user);
 
         var succeeded = UniversalSerializer.TryDeserializeCandidate<UserObject>(data, serializer, out var result);
@@ -1335,7 +1425,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task CastAsDateTimeShouldReturnValueForDateTimeType()
     {
-        var expected = new DateTime(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        DateTime expected = new(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 
         var result = UniversalSerializer.CastAsDateTime(expected);
 
@@ -1376,7 +1466,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task CastAsDateTimeOffsetShouldReturnValueForDateTimeOffsetType()
     {
-        var expected = new DateTimeOffset(2025, 1, 2, 3, 4, 5, TimeSpan.FromHours(2));
+        DateTimeOffset expected = new(2025, 1, 2, 3, 4, 5, TimeSpan.FromHours(2));
 
         var result = UniversalSerializer.CastAsDateTimeOffset(expected);
 
@@ -1494,7 +1584,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForNullKey()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
         try
         {
             var result =
@@ -1517,7 +1607,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForNullSerializer()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
         try
         {
             var result = await UniversalSerializer.TryFindDataWithAlternativeKeys<string>(cache, "key", null!);
@@ -1536,7 +1626,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForEmptyCache()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
         try
         {
             var result =
@@ -1559,11 +1649,11 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldFindByTypePrefix()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         try
         {
-            var testObj = new UserObject { Name = "found", Bio = "bio", Blog = "blog" };
+            UserObject testObj = new() { Name = "found", Bio = "bio", Blog = "blog" };
             var prefixedKey = $"{typeof(UserObject).FullName}___my_key";
             var bytes = serializer.Serialize(testObj);
             await cache.Insert(prefixedKey, bytes).ToTask();
@@ -1587,11 +1677,11 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldFindByShortNamePrefix()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         try
         {
-            var testObj = new UserObject { Name = "found2", Bio = "bio", Blog = "blog" };
+            UserObject testObj = new() { Name = "found2", Bio = "bio", Blog = "blog" };
             var shortKey = $"{nameof(UserObject)}___my_key2";
             var bytes = serializer.Serialize(testObj);
             await cache.Insert(shortKey, bytes).ToTask();
@@ -1615,8 +1705,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultForEmptyEntry()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         try
         {
             await cache.Insert("empty_key", []).ToTask();
@@ -1642,8 +1732,8 @@ public class UniversalSerializerTests
         try
         {
             // Serialize with Newtonsoft BSON, deserialize with SystemJson (which fails) - fallback should work
-            var bsonSerializer = new NewtonsoftBsonSerializer();
-            var testObject = new UserObject { Name = "Fallback Test", Bio = "Bio", Blog = "Blog" };
+            NewtonsoftBsonSerializer bsonSerializer = new();
+            UserObject testObject = new() { Name = "Fallback Test", Bio = "Bio", Blog = "Blog" };
             var bsonData = bsonSerializer.Serialize(testObject);
 
             var result = UniversalSerializer.Deserialize<UserObject>(bsonData, new SystemJsonSerializer());
@@ -1667,7 +1757,7 @@ public class UniversalSerializerTests
         try
         {
             // Garbage data with no registered alternatives - all fallbacks return default
-            var garbageData = new byte[] { 0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA };
+            byte[] garbageData = [0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA];
 
             var result = UniversalSerializer.Deserialize<UserObject>(garbageData, new SystemJsonSerializer());
             await Assert.That(result).IsNull();
@@ -1685,7 +1775,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task SerializeShouldThrowForCircularReferences()
     {
-        var circularRef = new List<object>();
+        List<object> circularRef = [];
         circularRef.Add(circularRef);
 
         await Assert.That(() => UniversalSerializer.Serialize(circularRef, new SystemJsonSerializer()))
@@ -1702,8 +1792,8 @@ public class UniversalSerializerTests
         // Register a serializer that always throws
         UniversalSerializer.RegisterSerializer(static () => new ThrowingSerializer());
 
-        var primary = new ThrowingSerializer();
-        var data = new byte[] { 0xFF, 0xFE, 0xFD, 0xFC, 0xFB };
+        ThrowingSerializer primary = new();
+        byte[] data = [0xFF, 0xFE, 0xFD, 0xFC, 0xFB];
 
         // Primary throws and all fallbacks throw too -> result is default (no exception)
         var result = UniversalSerializer.Deserialize<UserObject>(data, primary);
@@ -1720,8 +1810,8 @@ public class UniversalSerializerTests
     public async Task DeserializeShouldReturnNullWhenPrimaryAndAllFallbacksThrow()
     {
         UniversalSerializer.RegisterSerializer(static () => new ThrowingSerializer());
-        var primary = new ThrowingSerializer();
-        var data = new byte[] { 0x01, 0x02, 0x03 };
+        ThrowingSerializer primary = new();
+        byte[] data = [0x01, 0x02, 0x03];
 
         var result = UniversalSerializer.Deserialize<UserObject>(data, primary);
         await Assert.That(result).IsNull();
@@ -1734,7 +1824,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultWhenGetAllKeysThrows()
     {
-        var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(new SystemJsonSerializer());
         await cache.DisposeAsync();
 
         // Disposed cache's GetAllKeys returns an observable that throws ObjectDisposedException.
@@ -1755,13 +1845,13 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldReturnDefaultWhenGetThrowsInnerCatch()
     {
-        var inner = new InMemoryBlobCache(new SystemJsonSerializer());
+        InMemoryBlobCache inner = new(new SystemJsonSerializer());
         try
         {
             // Insert a key whose key is the raw "lookup" name so it is matched by EndsWith.
             await inner.Insert("lookup_inner_catch", [0x01, 0x02]).ToTask();
 
-            var wrapper = new ThrowingGetCacheWrapper(inner);
+            ThrowingGetCacheWrapper wrapper = new(inner);
             var result =
                 await UniversalSerializer.TryFindDataWithAlternativeKeys<UserObject>(
                     wrapper,
@@ -1785,7 +1875,7 @@ public class UniversalSerializerTests
     public async Task TryAlternativeSerializersShouldRecoverDateTimeMinValueFromDataPattern()
     {
         UniversalSerializer.RegisterSerializer(static () => new MinValueDateTimeSerializer());
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
 
         // Data long enough (>10 bytes) containing "2025" to trigger recovery.
         var data = "{\"date\":\"2025-06-15\"}"u8.ToArray();
@@ -1803,10 +1893,10 @@ public class UniversalSerializerTests
     public async Task TryAlternativeSerializersShouldHandleDateTimeMinValueWhenRecoveryFails()
     {
         UniversalSerializer.RegisterSerializer(static () => new MinValueDateTimeSerializer());
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
 
         // Small data without year pattern -> AttemptDateTimeRecovery returns MinValue.
-        var data = new byte[] { 0x00, 0x00 };
+        byte[] data = [0x00, 0x00];
 
         var result = UniversalSerializer.TryAlternativeSerializers<DateTime>(data, primary, null);
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
@@ -1822,7 +1912,7 @@ public class UniversalSerializerTests
         UniversalSerializer.RegisterSerializer(static () => new ThrowingSerializer());
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
         var data = new SystemJsonSerializer().Serialize("hello");
 
         var result = UniversalSerializer.TryAlternativeSerializers<string>(data, primary, null);
@@ -1846,7 +1936,7 @@ public class UniversalSerializerTests
 
         // Primary is a different type from ThrowingSerializer, so ThrowingSerializer
         // remains in the alternatives list and its exception triggers the catch.
-        var primary = new NewtonsoftBsonSerializer();
+        NewtonsoftBsonSerializer primary = new();
         var data = new SystemJsonSerializer().Serialize("hello");
 
         var result = UniversalSerializer.TryAlternativeSerializers<string>(data, primary, null);
@@ -1863,7 +1953,7 @@ public class UniversalSerializerTests
         UniversalSerializer.RegisterSerializer(static () => throw new InvalidOperationException("factory boom"));
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
         var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(primary);
 
         // Should contain only the successfully created alternative.
@@ -2013,8 +2103,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldConvertUnspecifiedToUtcWhenForced()
     {
-        var serializer = new SystemJsonSerializer();
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        SystemJsonSerializer serializer = new();
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(date, serializer, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -2026,8 +2116,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task DeserializeShouldValidateDateTimeResultFromPrimary()
     {
-        var serializer = new SystemJsonSerializer();
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        SystemJsonSerializer serializer = new();
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var data = serializer.Serialize(date);
 
         var result = UniversalSerializer.Deserialize<DateTime>(data, serializer, DateTimeKind.Utc);
@@ -2049,7 +2139,7 @@ public class UniversalSerializerTests
         // so the fallback succeeds and returns the object.
         UniversalSerializer.RegisterSerializer(static () => new ThrowingEqualsBsonResultSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
 
         // Data that looks like BSON (length header) so TryFallbackDeserialization enters the BSON path
         // where the registered ThrowingEqualsBsonResultSerializer produces a ThrowingEqualsObject.
@@ -2071,7 +2161,7 @@ public class UniversalSerializerTests
         // Register only a throwing serializer so fallback also fails
         UniversalSerializer.RegisterSerializer(static () => new ThrowingSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
 
         await Assert.That(() => UniversalSerializer.Serialize("some value", primary))
             .Throws<InvalidOperationException>();
@@ -2085,8 +2175,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task TryFindDataWithAlternativeKeysShouldSkipDefaultValueResults()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
         try
         {
             // Store a default int (0) under a key that will match
@@ -2117,8 +2207,8 @@ public class UniversalSerializerTests
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
 
         // Serialize with SystemJson so data is valid JSON
-        var jsonSerializer = new SystemJsonSerializer();
-        var testObj = new UserObject { Name = "Fallthrough", Bio = "Bio", Blog = "Blog" };
+        SystemJsonSerializer jsonSerializer = new();
+        UserObject testObj = new() { Name = "Fallthrough", Bio = "Bio", Blog = "Blog" };
         var jsonData = jsonSerializer.Serialize(testObj);
 
         // Use a ThrowingSerializer as primary so TryFallbackDeserialization is entered.
@@ -2172,7 +2262,7 @@ public class UniversalSerializerTests
     {
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
         var result = UniversalSerializer.TryFallbackSerialization("test-value", primary, DateTimeKind.Local);
         await Assert.That(result).IsNotNull();
         await Assert.That(result).IsNotEmpty();
@@ -2189,7 +2279,7 @@ public class UniversalSerializerTests
         UniversalSerializer.RegisterSerializer(static () => new ThrowingSerializer());
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
         var result = UniversalSerializer.TryFallbackSerialization("test-continue", primary, null);
         await Assert.That(result).IsNotNull();
         await Assert.That(result).IsNotEmpty();
@@ -2258,7 +2348,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task PreprocessDateTimeShouldNotModifyMaxValueForBsonSerializer()
     {
-        var serializer = new NewtonsoftBsonSerializer();
+        NewtonsoftBsonSerializer serializer = new();
         var result = UniversalSerializer.PreprocessDateTimeForSerialization(DateTime.MaxValue, serializer, null);
         await Assert.That(result).IsEqualTo(DateTime.MaxValue);
     }
@@ -2339,7 +2429,7 @@ public class UniversalSerializerTests
     public async Task TryAlternativeSerializersShouldHandleNonMinValueDateTimeWithForcedKind()
     {
         UniversalSerializer.RegisterSerializer(static () => new FakeBsonFixedUtcSerializer());
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
 
         var data = new byte[20];
         var result = UniversalSerializer.TryAlternativeSerializers<DateTime>(data, primary, DateTimeKind.Local);
@@ -2354,8 +2444,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task DeserializeShouldValidateDateTimeKindConversionLocalToUtc()
     {
-        var serializer = new SystemJsonSerializer();
-        var localDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        SystemJsonSerializer serializer = new();
+        DateTime localDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
         var data = serializer.Serialize(localDate);
 
         var result = UniversalSerializer.Deserialize<DateTime>(data, serializer, DateTimeKind.Utc);
@@ -2370,8 +2460,8 @@ public class UniversalSerializerTests
     [Test]
     public async Task SerializeShouldPreprocessDateTimeWithForcedLocalKind()
     {
-        var serializer = new SystemJsonSerializer();
-        var utcDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        SystemJsonSerializer serializer = new();
+        DateTime utcDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
 
         var data = UniversalSerializer.Serialize(utcDate, serializer, DateTimeKind.Local);
         await Assert.That(data).IsNotNull();
@@ -2390,7 +2480,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task DeserializeShouldReturnNonDateTimeResultDirectly()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var data = serializer.Serialize(42);
 
         var result = UniversalSerializer.Deserialize<int>(data, serializer);
@@ -2477,10 +2567,10 @@ public class UniversalSerializerTests
     {
         UniversalSerializer.RegisterSerializer(static () => new FixedStringSerializer("from-alt"));
 
-        var primary = new ThrowingSerializer();
+        ThrowingSerializer primary = new();
 
         // Data that is neither BSON (too short) nor JSON (starts with 0xFF)
-        var data = new byte[] { 0xFF, 0xFE };
+        byte[] data = [0xFF, 0xFE];
 
         var result = UniversalSerializer.TryFallbackDeserialization<string>(data, primary, null);
         await Assert.That(result).IsEqualTo("from-alt");
@@ -2497,8 +2587,8 @@ public class UniversalSerializerTests
         // Register a non-BSON serializer that can handle UserObject
         UniversalSerializer.RegisterSerializer(static () => new SystemJsonSerializer());
 
-        var jsonSerializer = new SystemJsonSerializer();
-        var testObj = new UserObject { Name = "FallThrough", Bio = "B", Blog = "B" };
+        SystemJsonSerializer jsonSerializer = new();
+        UserObject testObj = new() { Name = "FallThrough", Bio = "B", Blog = "B" };
         var jsonData = jsonSerializer.Serialize(testObj);
 
         // Use the valid JSON data directly. IsPotentialBsonData will return false
@@ -2520,7 +2610,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task SerializeShouldSetForcedKindEvenForNonDateTimeTypes()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var data = UniversalSerializer.Serialize("test-string", serializer, DateTimeKind.Utc);
         await Assert.That(data).IsNotNull();
         await Assert.That(data).IsNotEmpty();
@@ -2533,7 +2623,7 @@ public class UniversalSerializerTests
     [Test]
     public async Task DeserializeShouldSetForcedKindEvenForNonDateTimeTypes()
     {
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var data = serializer.Serialize("hello");
         var result = UniversalSerializer.Deserialize<string>(data, serializer, DateTimeKind.Utc);
         await Assert.That(result).IsEqualTo("hello");

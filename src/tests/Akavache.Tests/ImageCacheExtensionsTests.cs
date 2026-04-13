@@ -100,8 +100,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         byte[]? nullFallback = null;
 
         // Act & Assert
@@ -139,8 +139,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         byte[]? nullFallback = null;
 
         // Act & Assert
@@ -221,8 +221,8 @@ public class ImageCacheExtensionsTests
     public async Task ClearImageCacheShouldThrowArgumentNullExceptionWhenPatternIsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         Func<string, bool>? nullPattern = null;
 
         // Act & Assert
@@ -237,9 +237,9 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesShouldHandleEmptyKeyCollections()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
-        var emptyKeys = Array.Empty<string>();
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
+        string[] emptyKeys = [];
 
         // Act
         var results = await cache.LoadImages(emptyKeys).ToList().FirstAsync();
@@ -256,9 +256,9 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsShouldHandleEmptyUrlCollections()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
-        var emptyUrls = Array.Empty<string>();
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
+        string[] emptyUrls = [];
 
         // Act
         var result = await cache.PreloadImagesFromUrls(emptyUrls).FirstAsync();
@@ -275,8 +275,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesShouldGracefullyHandleMissingKeys()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         string[] keys = ["missing_key1", "missing_key2"];
 
         // Act
@@ -294,8 +294,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsShouldGracefullyHandleInvalidUrls()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Use URLs that will cause UriFormatException to test error handling
         string[] invalidUrls = ["not-a-url", "also/invalid"];
@@ -323,8 +323,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackShouldUseFallbackWhenMainImageFails()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -356,8 +356,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageFromUrlWithFallbackShouldUseFallbackWhenUrlFails()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer)
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer)
         {
             // Force immediate error to avoid any real network and ensure fallback path
             HttpService = new ThrowingHttpService()
@@ -393,8 +393,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldHandleMissingImages()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(async () => await cache.GetImageSize("nonexistent_image")
@@ -410,8 +410,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldWorkWithValidImageData()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -452,8 +452,8 @@ public class ImageCacheExtensionsTests
     public async Task ClearImageCacheShouldWorkWithPatternMatching()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Insert some test data
         await cache.Insert("image_1", [1, 2, 3])
@@ -487,8 +487,8 @@ public class ImageCacheExtensionsTests
     public async Task ClearImageCacheShouldHandleEmptyPatternMatches()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
 
         // Insert some test data
         await cache.Insert("test_key", [1, 2, 3])
@@ -516,8 +516,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesWithDimensionsShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         string[] keys = ["missing1", "missing2"]; // Use missing keys to test error handling
 
         // Act
@@ -537,8 +537,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsWithExpirationShouldWork()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(serializer);
         string[] urls = ["http://invalid1.com", "http://invalid2.com"]; // Use invalid URLs to test error handling
         var expiration = DateTimeOffset.Now.AddHours(1);
 
@@ -559,8 +559,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesShouldReturnPairsForSuccessfullyLoadedImages()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -604,8 +604,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsShouldCompleteWhenDownloadsSucceed()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer)
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer)
         {
             HttpService = new SuccessHttpService()
         };
@@ -629,8 +629,8 @@ public class ImageCacheExtensionsTests
     public async Task CreateAndCacheThumbnailShouldLoadAndSaveThumbnail()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -670,8 +670,8 @@ public class ImageCacheExtensionsTests
     public async Task CreateAndCacheThumbnailShouldHonourAbsoluteExpiration()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -705,8 +705,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldThrowWhenBitmapLoaderReturnsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
@@ -743,8 +743,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackShouldThrowWhenFallbackBitmapIsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -779,8 +779,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImagesShouldProjectKeyValuePairsForSuccessfulLoads()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -820,8 +820,8 @@ public class ImageCacheExtensionsTests
     public async Task PreloadImagesFromUrlsShouldProjectUnitForSuccessfulDownloads()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer)
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer)
         {
             HttpService = new SuccessHttpService(),
         };
@@ -845,8 +845,8 @@ public class ImageCacheExtensionsTests
     public async Task CreateAndCacheThumbnailShouldExecuteLoadAndSave()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -882,8 +882,8 @@ public class ImageCacheExtensionsTests
     public async Task CreateAndCacheThumbnailShouldExecuteLoadAndSaveWithExpiration()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -919,8 +919,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldReturnSizeForValidBitmap()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[128];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -956,8 +956,8 @@ public class ImageCacheExtensionsTests
     public async Task GetImageSizeShouldThrowWhenLoaderReturnsNullBitmap()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var imageData = new byte[128];
         for (var i = 0; i < imageData.Length; i++)
         {
@@ -989,8 +989,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackShouldThrowIoWhenFallbackLoaderReturnsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -1020,8 +1020,8 @@ public class ImageCacheExtensionsTests
     public async Task LoadImageWithFallbackShouldReturnBitmapFromFallbackWhenLoaderSucceeds()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        await using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, serializer);
+        SystemJsonSerializer serializer = new();
+        await using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
@@ -1121,7 +1121,7 @@ public class ImageCacheExtensionsTests
         var originalLoader = GetCurrentBitmapLoader();
         try
         {
-            var capturing = new SizeCapturingBitmapLoader();
+            SizeCapturingBitmapLoader capturing = new();
             BitmapLoader.Current = capturing;
 
             await ImageCacheExtensions.BytesToImage([0x01, 0x02], desiredWidth: 320f, desiredHeight: 240f)
@@ -1148,9 +1148,9 @@ public class ImageCacheExtensionsTests
         var originalLoader = GetCurrentBitmapLoader();
         try
         {
-            var capturing = new SizeCapturingBitmapLoader();
+            SizeCapturingBitmapLoader capturing = new();
             BitmapLoader.Current = capturing;
-            var payload = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
+            byte[] payload = [0xDE, 0xAD, 0xBE, 0xEF];
 
             await ImageCacheExtensions.BytesToImage(payload, desiredWidth: null, desiredHeight: null)
                 .FirstAsync()

@@ -29,7 +29,7 @@ public class HttpServiceTests
     [Before(Test)]
     public void OneTimeSetUp()
     {
-        _testServer = new TestHttpServer();
+        _testServer = new();
         _testServer.SetupDefaultResponses();
     }
 
@@ -47,7 +47,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldInstantiateCorrectly()
     {
         // Act
-        var httpService = new HttpService();
+        HttpService httpService = new();
 
         // Assert
         await Assert.That(httpService).IsNotNull();
@@ -65,7 +65,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldSetupCompressionCorrectly()
     {
         // Act
-        var httpService = new HttpService();
+        HttpService httpService = new();
 
         // Assert - HttpClient should be configured properly
         using (Assert.Multiple())
@@ -86,9 +86,9 @@ public class HttpServiceTests
     public async Task DownloadUrlWithUriShouldValidateArguments()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
         Uri? nullUri = null;
 
         try
@@ -112,9 +112,9 @@ public class HttpServiceTests
     public async Task DownloadUrlWithKeyShouldValidateArguments()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -137,8 +137,8 @@ public class HttpServiceTests
     {
         // Arrange & Act
         // Use 'using' to ensure services (and their HttpClients) are always disposed
-        var service1 = new HttpService();
-        var service2 = new HttpService();
+        HttpService service1 = new();
+        HttpService service2 = new();
 
         // Assert
         // 'Assert.Multiple' ensures all assertions run before the test fails
@@ -163,7 +163,7 @@ public class HttpServiceTests
     public async Task HttpServiceShouldSupportCustomConfiguration()
     {
         // Arrange
-        var httpService = new HttpService();
+        HttpService httpService = new();
         var customTimeout = TimeSpan.FromSeconds(30);
 
         // Act
@@ -185,9 +185,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldHandleNullHeadersGracefully()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -220,9 +220,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldHandleDifferentHttpMethods()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -254,9 +254,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldRespectFetchAlwaysParameter()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -299,9 +299,9 @@ public class HttpServiceTests
     public async Task HttpServiceShouldSupportAbsoluteExpiration()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         try
@@ -334,7 +334,7 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringForwarderShouldThrowOnNullCache()
     {
-        var service = new HttpService();
+        HttpService service = new();
         await Assert.That(() => service.DownloadUrl(null!, "https://example.invalid"))
             .Throws<ArgumentNullException>();
     }
@@ -346,8 +346,8 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlUriShouldThrowOnNullUri()
     {
-        var service = new HttpService();
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        HttpService service = new();
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await Assert.That(() => service.DownloadUrl(cache, (Uri)null!))
@@ -367,7 +367,7 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullCache()
     {
-        var service = new HttpService();
+        HttpService service = new();
         await Assert.That(() => service.DownloadUrl(null!, "key", "https://example.invalid"))
             .Throws<ArgumentNullException>();
     }
@@ -379,7 +379,7 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullCache()
     {
-        var service = new HttpService();
+        HttpService service = new();
         await Assert.That(() => service.DownloadUrl(null!, "key", new Uri("https://example.invalid")))
             .Throws<ArgumentNullException>();
     }
@@ -392,11 +392,11 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldReturnCachedValue()
     {
-        var service = new HttpService();
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        HttpService service = new();
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            var expected = new byte[] { 1, 2, 3 };
+            byte[] expected = [1, 2, 3];
             await cache.Insert("cached-key", expected).ToTask();
 
             var result = await service.DownloadUrl(cache, "cached-key", "https://example.invalid").ToTask();
@@ -416,11 +416,11 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlKeyUriShouldReturnCachedValue()
     {
-        var service = new HttpService();
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        HttpService service = new();
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            var expected = new byte[] { 4, 5, 6 };
+            byte[] expected = [4, 5, 6];
             await cache.Insert("cached-uri-key", expected).ToTask();
 
             var result = await service.DownloadUrl(cache, "cached-uri-key", new Uri("https://example.invalid")).ToTask();
@@ -441,8 +441,8 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringFetchAlwaysShouldBypassCache()
     {
-        var service = new HttpService.FastHttpService(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await cache.Insert("fetch-always-key", [9, 9, 9]).ToTask();
@@ -464,8 +464,8 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlKeyUriFetchAlwaysShouldBypassCache()
     {
-        var service = new HttpService.FastHttpService(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             await cache.Insert("fetch-always-uri-key", [7, 7, 7]).ToTask();
@@ -487,11 +487,11 @@ public class HttpServiceTests
     [Test]
     public async Task CreateWebRequestWithNullHeadersShouldSucceed()
     {
-        var request = HttpService.CreateWebRequest(new Uri("https://example.com"), HttpMethod.Get, null);
+        var request = HttpService.CreateWebRequest(new("https://example.com"), HttpMethod.Get, null);
 
         await Assert.That(request).IsNotNull();
         await Assert.That(request.Method).IsEqualTo(HttpMethod.Get);
-        await Assert.That(request.RequestUri).IsEqualTo(new Uri("https://example.com"));
+        await Assert.That(request.RequestUri).IsEqualTo(new("https://example.com"));
     }
 
     /// <summary>
@@ -501,13 +501,13 @@ public class HttpServiceTests
     [Test]
     public async Task CreateWebRequestWithHeadersShouldAddHeaders()
     {
-        var headers = new[]
-        {
-            new KeyValuePair<string, string>("X-Test-Header", "test-value"),
-            new KeyValuePair<string, string>("X-Other", "other-value"),
-        };
+        KeyValuePair<string, string>[] headers =
+        [
+            new("X-Test-Header", "test-value"),
+            new("X-Other", "other-value")
+        ];
 
-        var request = HttpService.CreateWebRequest(new Uri("https://example.com"), HttpMethod.Post, headers);
+        var request = HttpService.CreateWebRequest(new("https://example.com"), HttpMethod.Post, headers);
 
         await Assert.That(request.Headers.Contains("X-Test-Header")).IsTrue();
         await Assert.That(request.Headers.Contains("X-Other")).IsTrue();
@@ -521,7 +521,7 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task ProcessWebResponseStringUrlShouldThrowOnNonSuccess()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+        using HttpResponseMessage response = new(HttpStatusCode.NotFound)
         {
             ReasonPhrase = "Not Found",
         };
@@ -538,7 +538,7 @@ public class HttpServiceTests
     [Test]
     public async Task ProcessWebResponseUriShouldThrowOnNonSuccess()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+        using HttpResponseMessage response = new(HttpStatusCode.InternalServerError)
         {
             ReasonPhrase = "Server Error",
         };
@@ -556,8 +556,8 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task ProcessWebResponseShouldReturnContentOnSuccess()
     {
-        var payload = new byte[] { 10, 20, 30 };
-        using var response = new HttpResponseMessage(HttpStatusCode.OK)
+        byte[] payload = [10, 20, 30];
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
         {
             Content = new ByteArrayContent(payload),
         };
@@ -580,9 +580,9 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldExecuteSelectManyLambdasOnSuccess()
     {
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -613,9 +613,9 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlKeyUriShouldExecuteSelectManyLambdasOnSuccess()
     {
-        var serializer = new SystemJsonSerializer();
-        var httpService = new HttpService();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        HttpService httpService = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -643,10 +643,10 @@ public class HttpServiceTests
     [Test]
     public async Task MakeWebRequestWithNullContentShouldExecuteNoContentBranch()
     {
-        var service = new TestableHttpService();
+        TestableHttpService service = new();
 
         await service.InvokeMakeWebRequest(
-                new Uri("https://nonexistent.invalid.localhost.test"),
+                new("https://nonexistent.invalid.localhost.test"),
                 HttpMethod.Get,
                 headers: null,
                 content: null,
@@ -663,10 +663,10 @@ public class HttpServiceTests
     [Test]
     public async Task MakeWebRequestWithContentShouldExecuteContentBranch()
     {
-        var service = new TestableHttpService();
+        TestableHttpService service = new();
 
         await service.InvokeMakeWebRequest(
-                new Uri("https://nonexistent.invalid.localhost.test"),
+                new("https://nonexistent.invalid.localhost.test"),
                 HttpMethod.Post,
                 headers: null,
                 content: "request-body",
@@ -683,7 +683,7 @@ public class HttpServiceTests
     [Test]
     public async Task FastHttpServiceDefaultConstructorShouldNotThrow()
     {
-        var service = new HttpService.FastHttpService();
+        HttpService.FastHttpService service = new();
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient).IsNotNull();
@@ -697,7 +697,7 @@ public class HttpServiceTests
     public async Task FastHttpServiceWithCustomRetriesAndTimeoutShouldNotThrow()
     {
         var timeout = TimeSpan.FromSeconds(5);
-        var service = new HttpService.FastHttpService(retries: 1, timeout: timeout);
+        HttpService.FastHttpService service = new(retries: 1, timeout: timeout);
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient.Timeout).IsEqualTo(timeout);
@@ -711,12 +711,12 @@ public class HttpServiceTests
     [Test]
     public async Task MakeWebRequestWithContentShouldAssignStringContentAndSend()
     {
-        var service = new TestableHttpService();
+        TestableHttpService service = new();
 
         try
         {
             await service.InvokeMakeWebRequest(
-                new Uri("http://127.0.0.1:1/unused"),
+                new("http://127.0.0.1:1/unused"),
                 HttpMethod.Post,
                 headers: null,
                 content: "hello-body",
@@ -736,14 +736,14 @@ public class HttpServiceTests
     [Test]
     public async Task MakeWebRequestWithContentAndRetriesShouldExecuteDeferBody()
     {
-        var service = new TestableHttpService();
+        TestableHttpService service = new();
 
         try
         {
             await service.InvokeMakeWebRequest(
-                new Uri("http://127.0.0.1:1/unused"),
+                new("http://127.0.0.1:1/unused"),
                 HttpMethod.Put,
-                headers: [new KeyValuePair<string, string>("X-Test", "1")],
+                headers: [new("X-Test", "1")],
                 content: "{\"key\":\"value\"}",
                 retries: 2,
                 timeout: TimeSpan.FromMilliseconds(250)).ToTask();
@@ -761,12 +761,12 @@ public class HttpServiceTests
     [Test]
     public async Task MakeWebRequestWithNullContentAndRetriesShouldExecuteDeferBody()
     {
-        var service = new TestableHttpService();
+        TestableHttpService service = new();
 
         try
         {
             await service.InvokeMakeWebRequest(
-                new Uri("http://127.0.0.1:1/unused"),
+                new("http://127.0.0.1:1/unused"),
                 HttpMethod.Get,
                 headers: null,
                 content: null,
@@ -787,7 +787,7 @@ public class HttpServiceTests
     [Test]
     public async Task FastHttpServiceWithInvalidNegativeTimeoutShouldSwallowException()
     {
-        var service = new HttpService.FastHttpService(retries: 0, timeout: TimeSpan.FromSeconds(-5));
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromSeconds(-5));
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient).IsNotNull();
@@ -800,7 +800,7 @@ public class HttpServiceTests
     [Test]
     public async Task FastHttpServiceWithZeroTimeoutShouldSwallowException()
     {
-        var service = new HttpService.FastHttpService(retries: 0, timeout: TimeSpan.Zero);
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.Zero);
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient).IsNotNull();
@@ -813,7 +813,7 @@ public class HttpServiceTests
     [Test]
     public async Task FastHttpServiceWithMinValueTimeoutShouldSwallowException()
     {
-        var service = new HttpService.FastHttpService(retries: 0, timeout: TimeSpan.MinValue);
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.MinValue);
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient).IsNotNull();
@@ -830,8 +830,8 @@ public class HttpServiceTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldCoalesceNullCacheValueToEmpty()
     {
-        await using var cache = new NullGetBlobCache();
-        var service = new HttpService();
+        await using NullGetBlobCache cache = new();
+        HttpService service = new();
         try
         {
             var result = await service.DownloadUrl(cache, "any-key", "https://example.invalid").FirstAsync();
@@ -854,8 +854,8 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlKeyUriShouldCoalesceNullCacheValueToEmpty()
     {
-        await using var cache = new NullGetBlobCache();
-        var service = new HttpService();
+        await using NullGetBlobCache cache = new();
+        HttpService service = new();
         try
         {
             var result = await service.DownloadUrl(cache, "any-key", new Uri("https://example.invalid")).FirstAsync();

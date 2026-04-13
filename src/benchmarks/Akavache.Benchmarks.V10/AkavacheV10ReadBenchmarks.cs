@@ -69,8 +69,8 @@ public class AkavacheV10ReadBenchmarks
         // XXX: This is an evil hack, but it's okay for a unit test
         // We can't use Assembly.Location because unit test runners love
         // to move stuff to temp directories
-        var st = new StackFrame(true);
-        var di = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(st.GetFileName())!));
+        StackFrame st = new(true);
+        DirectoryInfo di = new(Path.Combine(Path.GetDirectoryName(st.GetFileName())!));
 
         return di.FullName;
     }
@@ -131,7 +131,7 @@ public class AkavacheV10ReadBenchmarks
     [BenchmarkCategory("Read")]
     public async Task RandomRead()
     {
-        var tasks = new List<Task>();
+        List<Task> tasks = [];
 
         for (var i = 0; i < Size; i++)
         {
@@ -179,7 +179,7 @@ public class AkavacheV10ReadBenchmarks
             path ??= GetIntegrationTestRootDirectory();
 
             var giantDbSize = Math.Max(1000, BenchmarkSize * 10); // Ensure enough data for benchmarks
-            var cache = new SqlRawPersistentBlobCache(Path.Combine(path, "benchmarks-read-v10.db"));
+            SqlRawPersistentBlobCache cache = new(Path.Combine(path, "benchmarks-read-v10.db"));
 
             var keys = cache.GetAllKeys().ToList().FirstAsync().GetAwaiter().GetResult();
             if (keys.Count >= giantDbSize)
@@ -190,7 +190,7 @@ public class AkavacheV10ReadBenchmarks
             cache.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
 
             // Generate smaller chunks to avoid memory issues
-            var ret = new List<string>();
+            List<string> ret = [];
             var remaining = giantDbSize;
 
             while (remaining > 0)
@@ -205,7 +205,7 @@ public class AkavacheV10ReadBenchmarks
                 // Also add some object data
                 for (var i = 0; i < Math.Min(100, chunkSize); i++)
                 {
-                    var testData = new TestData
+                    TestData testData = new()
                     {
                         Id = Guid.NewGuid(),
                         Name = $"Test Item {i}",

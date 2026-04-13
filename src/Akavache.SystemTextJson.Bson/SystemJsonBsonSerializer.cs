@@ -136,21 +136,21 @@ public partial class SystemJsonBsonSerializer : ISerializer
 
         return dateTimeTickPattern.Replace(jsonString, static match =>
         {
-            if (long.TryParse(match.Groups[1].Value, out var ticks))
+            if (!long.TryParse(match.Groups[1].Value, out var ticks))
             {
-                try
-                {
-                    var dateTime = new DateTime(ticks, DateTimeKind.Utc);
-                    var isoString = dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-                    return $"\"Date\":\"{isoString}\"";
-                }
-                catch
-                {
-                    return match.Value;
-                }
+                return match.Value;
             }
 
-            return match.Value;
+            try
+            {
+                DateTime dateTime = new(ticks, DateTimeKind.Utc);
+                var isoString = dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                return $"\"Date\":\"{isoString}\"";
+            }
+            catch
+            {
+                return match.Value;
+            }
         });
     }
 
@@ -213,13 +213,13 @@ public partial class SystemJsonBsonSerializer : ISerializer
     {
         try
         {
-            var wrapper = new ObjectWrapper<T>(item);
+            ObjectWrapper<T> wrapper = new(item);
             var options = _jsonSerializer.GetEffectiveOptions();
             var jsonString = System.Text.Json.JsonSerializer.Serialize(wrapper, options);
             var token = Newtonsoft.Json.Linq.JToken.Parse(jsonString);
 
-            using var ms = new MemoryStream();
-            using var writer = new BsonDataWriter(ms);
+            using MemoryStream ms = new();
+            using BsonDataWriter writer = new(ms);
             token.WriteTo(writer);
             return ms.ToArray();
         }
@@ -244,7 +244,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     {
         try
         {
-            using var reader = new BsonDataReader(new MemoryStream(bytes));
+            using BsonDataReader reader = new(new MemoryStream(bytes));
 
             if (ForcedDateTimeKind.HasValue)
             {
@@ -293,7 +293,9 @@ public partial class SystemJsonBsonSerializer : ISerializer
     /// containing a date represented as ticks in a specific format.
     /// </summary>
     /// <returns>A regular expression to match tick-based date representations.</returns>
-    [GeneratedRegex(@"""Date"":(\d{15,})")]
+    [GeneratedRegex("""
+                    "Date":(\d{15,})
+                    """)]
     private static partial Regex GetDateRegex();
 
     /// <summary>

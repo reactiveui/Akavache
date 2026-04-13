@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
+using Akavache.Helpers;
 using Akavache.Sqlite3;
 
 using Splat;
@@ -36,10 +37,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="InvalidOperationException">Thrown when no serializer has been registered.</exception>
     public static IAkavacheBuilder WithV10FileNames(this IAkavacheBuilder builder)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         if (builder.Serializer == null)
         {
@@ -78,17 +76,14 @@ public static class AkavacheBuilderExtensions
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     public static IAkavacheBuilder MigrateFromV10(this IAkavacheBuilder builder, Action<V10MigrationOptions>? configure = null)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         if (builder.Serializer == null)
         {
             throw new InvalidOperationException("No serializer has been registered.");
         }
 
-        var options = new V10MigrationOptions();
+        V10MigrationOptions options = new();
         configure?.Invoke(options);
 
         var serializer = builder.Serializer;
@@ -157,9 +152,9 @@ public static class AkavacheBuilderExtensions
         var filePath = Path.Combine(directory, V10FileNameMap.GetV10FileName(cacheName));
 
         var serializer = AppLocator.Current.GetService<ISerializer>(builder.SerializerTypeName)
-            ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
+                         ?? throw new InvalidOperationException($"No serializer of type '{builder.SerializerTypeName}' is registered in the service locator.");
 
-        var cache = new SqliteBlobCache(filePath, serializer);
+        SqliteBlobCache cache = new(filePath, serializer);
 
         if (builder.ForcedDateTimeKind.HasValue)
         {
@@ -221,7 +216,11 @@ public static class AkavacheBuilderExtensions
         /// Initializes a new instance of the <see cref="SecureBlobCacheWrapper"/> class.
         /// </summary>
         /// <param name="inner">The blob cache to delegate to.</param>
-        internal SecureBlobCacheWrapper(IBlobCache inner) => InnerCache = inner ?? throw new ArgumentNullException(nameof(inner));
+        internal SecureBlobCacheWrapper(IBlobCache inner)
+        {
+            ArgumentExceptionHelper.ThrowIfNull(inner);
+            InnerCache = inner;
+        }
 
         /// <summary>
         /// Gets the underlying blob cache that this wrapper delegates all operations to.

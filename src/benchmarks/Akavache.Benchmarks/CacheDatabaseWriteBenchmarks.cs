@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -68,7 +69,7 @@ public class CacheDatabaseWriteBenchmarks
     {
         for (var i = 0; i < BenchmarkSize; i++)
         {
-            var testData = new TestDataV11
+            TestDataV11 testData = new()
             {
                 Id = Guid.NewGuid(),
                 Name = $"Test Item {i}",

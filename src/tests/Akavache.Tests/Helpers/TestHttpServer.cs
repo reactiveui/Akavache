@@ -39,10 +39,10 @@ public sealed class TestHttpServer : IDisposable
     /// </summary>
     public TestHttpServer()
     {
-        _cancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource = new();
         _responses = [];
 
-        _listener = new TcpListener(IPAddress.Loopback, port: 0);
+        _listener = new(IPAddress.Loopback, port: 0);
         _listener.Start();
 
         var port = ((IPEndPoint)_listener.LocalEndpoint).Port;
@@ -64,7 +64,7 @@ public sealed class TestHttpServer : IDisposable
     /// <param name="statusCode">The HTTP status code to return.</param>
     /// <param name="contentType">The content type header.</param>
     public void SetupResponse(string path, string content, HttpStatusCode statusCode = HttpStatusCode.OK, string contentType = "text/html") =>
-        _responses[path] = new TestResponse(content, statusCode, contentType);
+        _responses[path] = new(content, statusCode, contentType);
 
     /// <summary>
     /// Sets up default responses that mimic httpbin.org behaviour.
@@ -252,7 +252,7 @@ public sealed class TestHttpServer : IDisposable
 
                 var response = _responses.TryGetValue(path, out var configured)
                     ? configured
-                    : new TestResponse("Not Found", HttpStatusCode.NotFound, "text/plain");
+                    : new("Not Found", HttpStatusCode.NotFound, "text/plain");
 
                 await WriteResponseAsync(stream, response, cancellationToken).ConfigureAwait(false);
             }

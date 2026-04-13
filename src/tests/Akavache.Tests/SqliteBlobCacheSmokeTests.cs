@@ -32,7 +32,7 @@ public class SqliteBlobCacheSmokeTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "smoke.db");
-            var cache = new SqliteBlobCache(dbPath, new SystemJsonSerializer());
+            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer());
             try
             {
                 await cache.Insert("k", [1, 2, 3]).ToTask();
@@ -61,7 +61,7 @@ public class SqliteBlobCacheSmokeTests
         {
             var dbPath = Path.Combine(path, "durable.db");
 
-            var writer = new SqliteBlobCache(dbPath, new SystemJsonSerializer());
+            SqliteBlobCache writer = new(dbPath, new SystemJsonSerializer());
             try
             {
                 await writer.Insert("persisted", [9, 8, 7]).ToTask();
@@ -71,7 +71,7 @@ public class SqliteBlobCacheSmokeTests
                 await writer.DisposeAsync();
             }
 
-            var reader = new SqliteBlobCache(dbPath, new SystemJsonSerializer());
+            SqliteBlobCache reader = new(dbPath, new SystemJsonSerializer());
             try
             {
                 var data = await reader.Get("persisted").ToTask();
@@ -97,7 +97,7 @@ public class SqliteBlobCacheSmokeTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, "vacuum.db");
-            var cache = new SqliteBlobCache(dbPath, new SystemJsonSerializer());
+            SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer());
             try
             {
                 await cache.Insert("expired", [1], DateTimeOffset.UtcNow.AddDays(-1)).ToTask();

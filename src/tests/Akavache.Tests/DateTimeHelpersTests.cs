@@ -34,7 +34,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertLocalToUtc()
     {
-        var localDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        DateTime localDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
         var result = DateTimeHelpers.HandleDateTimeEdgeCase<DateTime>(localDate, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -46,7 +46,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertUtcToLocal()
     {
-        var utcDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime utcDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.HandleDateTimeEdgeCase<DateTime>(utcDate, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -58,7 +58,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldReturnUnchangedWhenNoForcedKind()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.HandleDateTimeEdgeCase<DateTime>(date, null);
         await Assert.That(result).IsEqualTo(date);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
@@ -71,7 +71,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertUnspecifiedToUtc()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var result = DateTimeHelpers.HandleDateTimeEdgeCase<DateTime>(date, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -83,7 +83,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertUnspecifiedToLocal()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var result = DateTimeHelpers.HandleDateTimeEdgeCase<DateTime>(date, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -95,7 +95,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeWithCrossSerializerSupportShouldHandleNormalDateTime()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.HandleDateTimeWithCrossSerializerSupport<DateTime>(date, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -142,7 +142,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeOffsetWithCrossSerializerSupportShouldHandleNormalValue()
     {
-        var dto = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(5));
+        DateTimeOffset dto = new(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(5));
         var result = DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<DateTimeOffset>(dto);
         await Assert.That(result).IsEqualTo(dto);
     }
@@ -156,7 +156,7 @@ public class DateTimeHelpersTests
     {
         var min = DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<DateTimeOffset>(DateTimeOffset.MinValue);
         var max = DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<DateTimeOffset>(DateTimeOffset.MaxValue);
-        var normal = DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<DateTimeOffset>(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        var normal = DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<DateTimeOffset>(new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
         await Assert.That(min).IsEqualTo(DateTimeOffset.MinValue);
         await Assert.That(max).IsEqualTo(DateTimeOffset.MaxValue);
@@ -170,7 +170,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldRecoverOriginalValue()
     {
-        var original = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime original = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(DateTime.MinValue, original, null);
         await Assert.That(result).IsEqualTo(original);
     }
@@ -193,7 +193,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldApplyForcedUtcKind()
     {
-        var localDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        DateTime localDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(localDate, null, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -205,7 +205,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldApplyForcedLocalKind()
     {
-        var utcDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime utcDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(utcDate, null, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -217,7 +217,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldApplyForcedUnspecifiedKind()
     {
-        var utcDate = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime utcDate = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(utcDate, null, DateTimeKind.Unspecified);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Unspecified);
     }
@@ -229,7 +229,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldNotRecoverUnreasonableOriginal()
     {
-        var original = new DateTime(1800, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTime original = new(1800, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(DateTime.MinValue, original, null);
 
         // The original year is outside 1900-2100 range so it won't be recovered
@@ -290,7 +290,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task AttemptDateTimeRecoveryShouldReturnOriginalForShortData()
     {
-        var data = new byte[] { 1, 2, 3 };
+        byte[] data = [1, 2, 3];
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
@@ -302,7 +302,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task AttemptDateTimeRecoveryShouldReturnOriginalWhenNotMinValue()
     {
-        var original = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        DateTime original = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var data = "some data"u8.ToArray();
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, original);
         await Assert.That(result).IsEqualTo(original);
@@ -401,7 +401,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldConvertUnspecifiedToUtc()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(date, null, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
@@ -413,7 +413,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldSpecifyLocalWhenUnspecifiedInputForcedLocal()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(date, null, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
@@ -439,7 +439,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldNotConvertWhenKindsMatch()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Local);
         var result = DateTimeHelpers.HandleDateTimeEdgeCase<DateTime>(date, DateTimeKind.Local);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
         await Assert.That(result).IsEqualTo(date);
@@ -453,7 +453,7 @@ public class DateTimeHelpersTests
     [Test]
     public async Task ValidateDeserializedDateTimeShouldNotConvertWhenKindsMatch()
     {
-        var date = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime date = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var result = DateTimeHelpers.ValidateDeserializedDateTime(date, null, DateTimeKind.Utc);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
         await Assert.That(result).IsEqualTo(date);
@@ -469,7 +469,7 @@ public class DateTimeHelpersTests
     {
         // 12 bytes (> 10), no year pattern in UTF8, 8+ bytes for binary scan
         // Values chosen so BitConverter.ToInt64 won't produce a date in 2000-2100 range
-        var data = new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF };
+        byte[] data = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF];
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
 
         // Small data (<= 50 bytes), no year pattern, binary search finds ticks=1 which is year ~1970
@@ -580,7 +580,7 @@ public class DateTimeHelpersTests
     {
         // Build a buffer where the first 8 bytes encode an Int64 little-endian millisecond
         // value that decodes to a year between 2000 and 2100.
-        var target = new DateTime(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+        DateTime target = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         var ms = (long)(target - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
         var data = BitConverter.GetBytes(ms);
 

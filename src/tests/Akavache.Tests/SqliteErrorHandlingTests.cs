@@ -25,17 +25,17 @@ public class SqliteErrorHandlingTests
     {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var path = Path.Combine(tempDir, "enc.db");
 
-        await using (var cache = new EncryptedSqliteBlobCache(path, "password1", serializer))
+        await using (EncryptedSqliteBlobCache cache = new(path, "password1", serializer))
         {
             await cache.Insert("key", [1, 2, 3]);
             await cache.Flush();
             await cache.DisposeAsync();
         }
 
-        await using var cache2 = new EncryptedSqliteBlobCache(path, "password2", serializer);
+        await using EncryptedSqliteBlobCache cache2 = new(path, "password2", serializer);
 
         Exception? ex = null;
         try
@@ -59,10 +59,10 @@ public class SqliteErrorHandlingTests
     {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var path = Path.Combine(tempDir, "plain.db");
-        await using var cache = new SqliteBlobCache(path, serializer);
-        var data = new byte[] { 10, 20, 30, 40 };
+        await using SqliteBlobCache cache = new(path, serializer);
+        byte[] data = [10, 20, 30, 40];
         await cache.Insert("bin", data);
         var fetched = await cache.Get("bin").ToTask();
         await Assert.That(fetched).IsEquivalentTo(data);

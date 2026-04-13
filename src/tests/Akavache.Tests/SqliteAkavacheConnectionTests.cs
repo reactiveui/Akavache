@@ -51,7 +51,7 @@ public class SqliteAkavacheConnectionTests
             await using var connection = CreateConnection(path);
             await connection.CreateTableAsync<CacheEntry>();
 
-            var entry = new CacheEntry
+            CacheEntry entry = new()
             {
                 Id = "k1",
                 Value = [1, 2, 3],
@@ -223,7 +223,7 @@ public class SqliteAkavacheConnectionTests
 
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1], ExpiresAt = DateTime.UtcNow.AddMinutes(1) });
 
-            var newExpiry = new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime newExpiry = new(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             await connection.RunInTransactionAsync(tx => tx.SetExpiry("k", null, newExpiry));
 
             var row = await connection.FirstOrDefaultAsync<CacheEntry>(x => x.Id == "k");
@@ -245,7 +245,7 @@ public class SqliteAkavacheConnectionTests
             await using var connection = CreateConnection(path);
             await connection.CreateTableAsync<CacheEntry>();
 
-            var originalExpiry = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime originalExpiry = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             await connection.InsertOrReplaceAsync(new CacheEntry { Id = "k", Value = [1], ExpiresAt = originalExpiry, TypeName = "A" });
 
             await connection.RunInTransactionAsync(tx =>
@@ -386,7 +386,7 @@ public class SqliteAkavacheConnectionTests
             var dbPath = Path.Combine(path, "legacy.db");
 
             // Arrange: manually build a V10-shaped CacheElement table.
-            using (var raw = new SQLiteConnection(dbPath))
+            using (SQLiteConnection raw = new(dbPath))
             {
                 raw.Execute(
                     "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
@@ -399,7 +399,7 @@ public class SqliteAkavacheConnectionTests
                     DateTime.UtcNow.Ticks);
             }
 
-            await using var connection = new SqliteAkavacheConnection(new SQLiteConnectionString(dbPath, true));
+            await using SqliteAkavacheConnection connection = new(new(dbPath, true));
 
             var result = await connection.TryReadLegacyV10ValueAsync("legacyKey", DateTimeOffset.UtcNow, typeof(string));
             await Assert.That(result).IsNotNull();
@@ -419,7 +419,7 @@ public class SqliteAkavacheConnectionTests
         {
             var dbPath = Path.Combine(path, "legacy.db");
 
-            using (var raw = new SQLiteConnection(dbPath))
+            using (SQLiteConnection raw = new(dbPath))
             {
                 raw.Execute(
                     "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
@@ -432,7 +432,7 @@ public class SqliteAkavacheConnectionTests
                     DateTime.UtcNow.Ticks);
             }
 
-            await using var connection = new SqliteAkavacheConnection(new SQLiteConnectionString(dbPath, true));
+            await using SqliteAkavacheConnection connection = new(new(dbPath, true));
 
             var result = await connection.TryReadLegacyV10ValueAsync("k", DateTimeOffset.UtcNow, type: null);
             await Assert.That(result).IsNotNull();
@@ -471,7 +471,7 @@ public class SqliteAkavacheConnectionTests
             var dbPath = Path.Combine(path, "legacy.db");
             var expiredTicks = DateTime.UtcNow.AddMinutes(-1).Ticks;
 
-            using (var raw = new SQLiteConnection(dbPath))
+            using (SQLiteConnection raw = new(dbPath))
             {
                 raw.Execute(
                     "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
@@ -484,7 +484,7 @@ public class SqliteAkavacheConnectionTests
                     DateTime.UtcNow.Ticks);
             }
 
-            await using var connection = new SqliteAkavacheConnection(new SQLiteConnectionString(dbPath, true));
+            await using SqliteAkavacheConnection connection = new(new(dbPath, true));
 
             var result = await connection.TryReadLegacyV10ValueAsync("expired", DateTimeOffset.UtcNow, typeof(string));
             await Assert.That(result).IsNull();
@@ -536,7 +536,7 @@ public class SqliteAkavacheConnectionTests
         {
             var dbPath = Path.Combine(path, "ro.db");
 
-            using (var raw = new SQLiteConnection(dbPath))
+            using (SQLiteConnection raw = new(dbPath))
             {
                 raw.Execute(
                     "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
@@ -549,7 +549,7 @@ public class SqliteAkavacheConnectionTests
                     DateTime.UtcNow.Ticks);
             }
 
-            await using var connection = new SqliteAkavacheConnection(dbPath, SQLiteOpenFlags.ReadOnly);
+            await using SqliteAkavacheConnection connection = new(dbPath, SQLiteOpenFlags.ReadOnly);
 
             var result = await connection.TryReadLegacyV10ValueAsync("k", DateTimeOffset.UtcNow, typeof(string));
             await Assert.That(result).IsNotNull();
@@ -573,8 +573,8 @@ public class SqliteAkavacheConnectionTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"enc_conn_{Guid.NewGuid():N}.db");
-            var connection = new Akavache.EncryptedSqlite3.SqliteAkavacheConnection(
-                new SQLiteConnectionString(dbPath, true, key: "test123"));
+            EncryptedSqlite3.SqliteAkavacheConnection connection = new(
+                new(dbPath, true, key: "test123"));
 
             try
             {
@@ -658,7 +658,7 @@ public class SqliteAkavacheConnectionTests
             var dbPath = Path.Combine(path, "encrypted-legacy.db");
 
             // Build a SQLCipher-encrypted database with the legacy V10 CacheElement schema.
-            using (var raw = new SQLiteConnection(new SQLiteConnectionString(dbPath, true, key: "test123")))
+            using (SQLiteConnection raw = new(new(dbPath, true, key: "test123")))
             {
                 raw.Execute(
                     "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
@@ -671,8 +671,8 @@ public class SqliteAkavacheConnectionTests
                     DateTime.UtcNow.Ticks);
             }
 
-            await using var connection = new Akavache.EncryptedSqlite3.SqliteAkavacheConnection(
-                new SQLiteConnectionString(dbPath, true, key: "test123"));
+            await using EncryptedSqlite3.SqliteAkavacheConnection connection = new(
+                new(dbPath, true, key: "test123"));
 
             var result = await connection.TryReadLegacyV10ValueAsync("legacyKey", DateTimeOffset.UtcNow, typeof(string));
             await Assert.That(result).IsNotNull();
@@ -692,7 +692,7 @@ public class SqliteAkavacheConnectionTests
         {
             var dbPath = Path.Combine(path, "encrypted-ro.db");
 
-            using (var raw = new SQLiteConnection(new SQLiteConnectionString(dbPath, true, key: "test123")))
+            using (SQLiteConnection raw = new(new(dbPath, true, key: "test123")))
             {
                 raw.Execute("CREATE TABLE Test (Key varchar PRIMARY KEY)");
             }
@@ -701,7 +701,7 @@ public class SqliteAkavacheConnectionTests
             // construction with a key is required to actually decrypt. The test ensures the
             // constructor itself executes without throwing, exercising the second .ctor on the
             // encrypted compilation.
-            await using var connection = new Akavache.EncryptedSqlite3.SqliteAkavacheConnection(
+            await using EncryptedSqlite3.SqliteAkavacheConnection connection = new(
                 dbPath,
                 SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite);
 
@@ -718,7 +718,7 @@ public class SqliteAkavacheConnectionTests
     private static SqliteAkavacheConnection CreateConnection(string directory)
     {
         var dbPath = Path.Combine(directory, $"conn_{Guid.NewGuid():N}.db");
-        return new SqliteAkavacheConnection(new SQLiteConnectionString(dbPath, true));
+        return new(new(dbPath, true));
     }
 
     /// <summary>

@@ -27,9 +27,9 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
 
         // Set up data context with dependency injection
         var notificationService = Handler?.MauiContext?.Services?.GetService<NotificationService>()
-                                 ?? new NotificationService();
+                                  ?? new NotificationService();
 
-        ViewModel = new MainViewModel(notificationService);
+        ViewModel = new(notificationService);
         BindingContext = ViewModel;
     }
 

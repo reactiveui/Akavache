@@ -133,13 +133,10 @@ public static class BitmapImageExtensions
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (image is null)
-        {
-            throw new ArgumentNullException(nameof(image));
-        }
-
-        return image.ImageToBytes()
-            .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
+        return image is null
+            ? throw new ArgumentNullException(nameof(image))
+            : image.ImageToBytes()
+                .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
     }
 
     /// <summary>
@@ -156,10 +153,10 @@ public static class BitmapImageExtensions
 
         return Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
+#if NETFRAMEWORK
             using var stream = new MemoryStream();
 #else
-            await using var stream = new MemoryStream();
+            await using MemoryStream stream = new();
 #endif
             await image.Save(CompressedBitmapFormat.Png, 1.0f, stream);
             return stream.ToArray();
@@ -174,7 +171,7 @@ public static class BitmapImageExtensions
     /// <param name="compressedImage">The compressed image buffer to check.</param>
     /// <returns>An observable emitting the buffer, or signalling an error when invalid.</returns>
     internal static IObservable<byte[]> ThrowOnBadImageBuffer(byte[]? compressedImage) =>
-        (compressedImage is null || compressedImage.Length < 64) ?
+        compressedImage is null || compressedImage.Length < 64 ?
             Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image")) :
             Observable.Return(compressedImage);
 
@@ -205,10 +202,10 @@ public static class BitmapImageExtensions
     internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
+#if NETFRAMEWORK
             using var ms = new MemoryStream(compressedImage);
 #else
-            await using var ms = new MemoryStream(compressedImage);
+            await using MemoryStream ms = new(compressedImage);
 #endif
             var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");

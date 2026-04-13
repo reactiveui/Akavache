@@ -68,7 +68,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
     public async Task WithSerializerNewtonsoftJsonSettingsShouldRegisterSerializer()
     {
         var builder = CreateBuilder("WithSerializerNewtonsoftJsonSettings");
-        var settings = new JsonSerializerSettings { Formatting = Formatting.Indented };
+        JsonSerializerSettings settings = new() { Formatting = Formatting.Indented };
         var result = builder.WithSerializerNewtonsoftJson(settings);
 
         await Assert.That(result).IsSameReferenceAs(builder);

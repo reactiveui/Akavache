@@ -229,10 +229,10 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesShouldWorkWithValidData()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
             var imageData = new byte[128];
             for (var i = 0; i < imageData.Length; i++)
             {
@@ -267,10 +267,10 @@ public class ImageExtensionsTests
     public async Task LoadImageBytesShouldThrowWhenImageDataIsNull()
     {
         // Arrange
-        var serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         using (Utility.WithEmptyDirectory(out _))
         {
-            var cache = new InMemoryBlobCache(serializer);
+            InMemoryBlobCache cache = new(serializer);
 
             try
             {
@@ -321,7 +321,7 @@ public class ImageExtensionsTests
         {
             // Arrange
             IBlobCache? cache = null;
-            var uri = new Uri("http://example.com/image.jpg");
+            Uri uri = new("http://example.com/image.jpg");
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => cache!.LoadImageBytesFromUrl(uri));
@@ -367,7 +367,7 @@ public class ImageExtensionsTests
         {
             // Arrange
             IBlobCache? cache = null;
-            var uri = new Uri("http://example.com/image.jpg");
+            Uri uri = new("http://example.com/image.jpg");
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => cache!.LoadImageBytesFromUrl("key", uri));
@@ -386,8 +386,8 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -406,8 +406,8 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlUriShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -426,8 +426,8 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlWithKeyShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -446,8 +446,8 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlWithKeyAndUriShouldThrowArgumentNullExceptionWhenUrlIsNull()
     {
-        var serializer = new SystemJsonSerializer();
-        var cache = new InMemoryBlobCache(serializer);
+        SystemJsonSerializer serializer = new();
+        InMemoryBlobCache cache = new(serializer);
 
         try
         {
@@ -568,7 +568,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesShouldThrowWhenCachedBytesAreTooSmall()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "too_small";
@@ -591,7 +591,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesShouldThrowWhenCachedBytesAreEmpty()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "empty";
@@ -614,7 +614,7 @@ public class ImageExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldReturnCachedBytes()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string url = "http://example.com/cached-string.png";
@@ -638,10 +638,10 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlUriShouldReturnCachedBytes()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            var uri = new Uri("http://example.com/cached-uri.png");
+            Uri uri = new("http://example.com/cached-uri.png");
             var imageData = CreateImageData(128);
             await cache.Insert(uri.ToString(), imageData, DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
 
@@ -663,7 +663,7 @@ public class ImageExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlWithKeyAndStringShouldReturnCachedBytes()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "my-key";
@@ -688,11 +688,11 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlWithKeyAndUriShouldReturnCachedBytes()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "my-uri-key";
-            var uri = new Uri("http://example.com/with-key-uri.png");
+            Uri uri = new("http://example.com/with-key-uri.png");
             var imageData = CreateImageData(256);
             await cache.Insert(key, imageData, DateTimeOffset.Now.AddMinutes(10)).FirstAsync();
 
@@ -714,7 +714,7 @@ public class ImageExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlShouldThrowWhenCachedBytesAreTooSmall()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string url = "http://example.com/tiny.png";
@@ -849,7 +849,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesShouldThrowWhenCacheReturnsNullBytes()
     {
-        var cache = new NullByteBlobCache();
+        NullByteBlobCache cache = new();
 
         await Assert.That(async () => await cache.LoadImageBytes("k").FirstAsync())
             .Throws<InvalidOperationException>();
@@ -864,7 +864,7 @@ public class ImageExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlStringShouldServeFromCache()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string url = "http://example.invalid/img.bin";
@@ -888,10 +888,10 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlUriShouldServeFromCache()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            var url = new Uri("http://example.invalid/img.bin");
+            Uri url = new("http://example.invalid/img.bin");
             var bytes = CreateImageData(128);
             await cache.Insert(url.ToString(), bytes).ToTask();
 
@@ -913,7 +913,7 @@ public class ImageExtensionsTests
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task LoadImageBytesFromUrlKeyStringShouldServeFromCache()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "img-key";
@@ -937,7 +937,7 @@ public class ImageExtensionsTests
     [Test]
     public async Task LoadImageBytesFromUrlKeyUriShouldServeFromCache()
     {
-        var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
             const string key = "img-key";

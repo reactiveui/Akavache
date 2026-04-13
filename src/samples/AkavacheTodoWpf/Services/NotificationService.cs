@@ -4,6 +4,7 @@
 
 using System.Runtime.Versioning;
 using System.Windows;
+using System.Windows.Threading;
 using AkavacheTodoWpf.Models;
 using ReactiveUI;
 
@@ -40,7 +41,7 @@ public class NotificationService : ReactiveObject, IDisposable
             .Subscribe(settings => _currentSettings = settings ?? new AppSettings());
 
         // Start reminder timer
-        _reminderTimer = new Timer(CheckForReminders, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+        _reminderTimer = new(CheckForReminders, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
         // Setup cache info
         _cacheInfo = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
@@ -73,7 +74,7 @@ public class NotificationService : ReactiveObject, IDisposable
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 // Create a simple notification window or use system tray
-                var notificationWindow = new Window
+                Window notificationWindow = new()
                 {
                     Title = "Todo Reminder",
                     Width = 300,
@@ -87,14 +88,14 @@ public class NotificationService : ReactiveObject, IDisposable
                 notificationWindow.Content = new System.Windows.Controls.TextBlock
                 {
                     Text = message,
-                    Margin = new Thickness(10),
+                    Margin = new(10),
                     TextWrapping = TextWrapping.Wrap,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 };
 
                 // Auto-close after 5 seconds
-                var timer = new System.Windows.Threading.DispatcherTimer
+                DispatcherTimer timer = new()
                 {
                     Interval = TimeSpan.FromSeconds(5)
                 };

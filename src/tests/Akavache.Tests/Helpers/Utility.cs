@@ -28,7 +28,7 @@ internal static class Utility
                 return;
             }
 
-            var di = new DirectoryInfo(directoryPath);
+            DirectoryInfo di = new(directoryPath);
             var files = di.EnumerateFiles();
             var dirs = di.EnumerateDirectories();
 
@@ -111,7 +111,7 @@ internal static class Utility
         {
         }
 
-        var di = new DirectoryInfo(Path.Combine(TempRoot, Guid.NewGuid().ToString()));
+        DirectoryInfo di = new(Path.Combine(TempRoot, Guid.NewGuid().ToString()));
         if (di.Exists)
         {
             DeleteDirectory(di.FullName);
@@ -120,6 +120,6 @@ internal static class Utility
         di.Create();
 
         directoryPath = di.FullName;
-        return Disposable.Create(() => DeleteDirectory(di.FullName));
+        return Disposable.Create(directoryPath, static path => DeleteDirectory(path));
     }
 }

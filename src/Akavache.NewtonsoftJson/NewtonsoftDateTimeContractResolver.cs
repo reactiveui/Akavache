@@ -41,8 +41,8 @@ internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractRes
     {
         // Check if we have an existing contract resolver and it's not another instance of this class
         // to prevent infinite recursion
-        var contract = (ExistingContractResolver is not null &&
-                       ExistingContractResolver.GetType() != typeof(NewtonsoftDateTimeContractResolver))
+        var contract = ExistingContractResolver is not null &&
+                       ExistingContractResolver.GetType() != typeof(NewtonsoftDateTimeContractResolver)
                        ? ExistingContractResolver.ResolveContract(type)
                        : null;
 

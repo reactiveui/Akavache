@@ -66,7 +66,7 @@ internal sealed class InMemoryAkavacheTransaction : IAkavacheTransaction
 
     /// <inheritdoc/>
     public void InsertOrReplace<T>(T entity)
-        where T : new()
+        where T : class, new()
     {
         if (FailInsertOrReplace)
         {
@@ -100,7 +100,7 @@ internal sealed class InMemoryAkavacheTransaction : IAkavacheTransaction
 
     /// <inheritdoc/>
     public List<T> Query<T>(Expression<Func<T, bool>> predicate)
-        where T : new()
+        where T : class, new()
     {
         if (typeof(T) != typeof(CacheEntry))
         {

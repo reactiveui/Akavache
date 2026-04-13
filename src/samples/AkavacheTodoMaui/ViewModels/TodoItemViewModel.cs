@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables.Fluent;
 using AkavacheTodoMaui.Models;
 using AkavacheTodoMaui.Services;
+using AkavacheTodoMaui.Views;
 using ReactiveUI;
 
 namespace AkavacheTodoMaui.ViewModels;
@@ -70,7 +71,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
             .ToProperty(this, x => x.IsDueSoon);
 
         // Setup activator
-        Activator = new ViewModelActivator();
+        Activator = new();
 
         this.WhenActivated(disposables =>
         {
@@ -258,8 +259,8 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     private Unit ExecuteEdit()
     {
         // Navigate to edit page for MAUI
-        var editViewModel = new EditTodoViewModel(TodoItem);
-        var editPage = new Views.EditTodoPage(editViewModel);
+        EditTodoViewModel editViewModel = new(TodoItem);
+        EditTodoPage editPage = new(editViewModel);
 
         // Subscribe to the page disappearing to check if changes were made
         editPage.Disappearing += async (_, _) =>

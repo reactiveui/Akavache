@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
+using Akavache.Helpers;
 using Newtonsoft.Json;
 
 namespace Akavache.NewtonsoftJson;
@@ -27,10 +28,7 @@ public static class AkavacheBuilderExtensions
         public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         builder.WithSerializer<NewtonsoftSerializer>();
         UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
@@ -53,15 +51,9 @@ public static class AkavacheBuilderExtensions
         public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
-        if (settings == null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(settings);
 
         builder.WithSerializer(() => new NewtonsoftSerializer { Options = settings });
         UniversalSerializer.RegisterSerializer(() => new NewtonsoftSerializer { Options = settings });
@@ -84,17 +76,11 @@ public static class AkavacheBuilderExtensions
         public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(configure);
 
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         configure(settings);
         builder.WithSerializer(() => new NewtonsoftSerializer { Options = settings });
         UniversalSerializer.RegisterSerializer(() => new NewtonsoftSerializer { Options = settings });
@@ -116,10 +102,7 @@ public static class AkavacheBuilderExtensions
         public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         builder.WithSerializer<NewtonsoftBsonSerializer>();
         UniversalSerializer.RegisterSerializer(static () => new NewtonsoftSerializer());
@@ -142,17 +125,11 @@ public static class AkavacheBuilderExtensions
         public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
-        if (settings == null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(settings);
 
-        var serializer = new NewtonsoftBsonSerializer
+        NewtonsoftBsonSerializer serializer = new()
         {
             Options = settings,
         };
@@ -177,19 +154,13 @@ public static class AkavacheBuilderExtensions
         public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
 #endif
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(configure);
 
-        var settings = new JsonSerializerSettings();
+        JsonSerializerSettings settings = new();
         configure(settings);
-        var serializer = new NewtonsoftBsonSerializer
+        NewtonsoftBsonSerializer serializer = new()
         {
             Options = settings,
         };

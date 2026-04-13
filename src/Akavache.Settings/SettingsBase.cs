@@ -129,13 +129,8 @@ public abstract class SettingsBase : SettingsStorage
             return cache;
         }
 
-        var firstPair = AkavacheBuilder.BlobCaches.FirstOrDefault(kvp => kvp.Value != null);
-        if (string.IsNullOrEmpty(firstPair.Key))
-        {
-            return null;
-        }
-
-        return firstPair.Value;
+        var firstPair = AkavacheBuilder.BlobCaches.FirstOrDefault(static kvp => kvp.Value != null);
+        return string.IsNullOrEmpty(firstPair.Key) ? null : firstPair.Value;
     }
 
     /// <summary>
@@ -196,12 +191,7 @@ public abstract class SettingsBase : SettingsStorage
     internal static IBlobCache? TryGetTransientFallback()
     {
         var serializer = AppLocator.Current.GetService<ISerializer>();
-        if (serializer is null)
-        {
-            return null;
-        }
-
-        return new InMemoryBlobCache(serializer);
+        return serializer is null ? null : new InMemoryBlobCache(serializer);
     }
 
     /// <summary>
@@ -217,6 +207,6 @@ public abstract class SettingsBase : SettingsStorage
         var available = AkavacheBuilder.BlobCaches is null || AkavacheBuilder.BlobCaches.Count == 0
             ? "<none>"
             : string.Join(", ", AkavacheBuilder.BlobCaches.Keys);
-        return new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {available}");
+        return new($"No blob cache found for class '{className}'. Available caches: {available}");
     }
 }

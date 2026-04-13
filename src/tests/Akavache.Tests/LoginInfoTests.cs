@@ -17,7 +17,7 @@ public class LoginInfoTests
     [Test]
     public async Task ConstructorShouldSetProperties()
     {
-        var login = new LoginInfo("user1", "pass1");
+        LoginInfo login = new("user1", "pass1");
         await Assert.That(login.UserName).IsEqualTo("user1");
         await Assert.That(login.Password).IsEqualTo("pass1");
     }
@@ -29,7 +29,7 @@ public class LoginInfoTests
     [Test]
     public async Task TupleConstructorShouldSetProperties()
     {
-        var login = new LoginInfo(("user2", "pass2"));
+        LoginInfo login = new(("user2", "pass2"));
         await Assert.That(login.UserName).IsEqualTo("user2");
         await Assert.That(login.Password).IsEqualTo("pass2");
     }

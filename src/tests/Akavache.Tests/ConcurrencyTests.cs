@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Reactive.Threading.Tasks;
 using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
@@ -21,11 +22,11 @@ public sealed class ConcurrencyTests
     public async Task InMemoryBlobCache_ConcurrentInsertObject_ShouldNotThrowIndexOutOfRangeException()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
         const int threadCount = 10;
         const int operationsPerThread = 100;
-        var exceptions = new ConcurrentBag<Exception>();
-        var tasks = new List<Task>();
+        ConcurrentBag<Exception> exceptions = [];
+        List<Task> tasks = [];
 
         // Act
         for (var t = 0; t < threadCount; t++)
@@ -39,7 +40,7 @@ public sealed class ConcurrencyTests
                     for (var i = 0; i < operationsPerThread; i++)
                     {
                         var key = $"key_{threadId}_{i}";
-                        var value = new TestObject { Id = i, Name = $"Thread {threadId} Item {i}" };
+                        TestObject value = new() { Id = i, Name = $"Thread {threadId} Item {i}" };
 
                         // Perform concurrent InsertObject operations
                         await localCache.InsertObject(key, value);
@@ -88,11 +89,11 @@ public sealed class ConcurrencyTests
     public async Task InMemoryBlobCache_HighVolumeStressTest_ShouldNotThrowIndexOutOfRangeException()
     {
         // Arrange
-        await using var cache = new InMemoryBlobCache(new SystemJsonSerializer());
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
         const int threadCount = 50;
         const int operationsPerThread = 500;
-        var exceptions = new ConcurrentBag<Exception>();
-        var tasks = new List<Task>();
+        ConcurrentBag<Exception> exceptions = [];
+        List<Task> tasks = [];
 
         // Act - Create a high-stress scenario with mixed operations
         for (var t = 0; t < threadCount; t++)
@@ -106,7 +107,7 @@ public sealed class ConcurrencyTests
                     for (var i = 0; i < operationsPerThread; i++)
                     {
                         var key = $"stress_key_{threadId}_{i}";
-                        var value = new TestObject { Id = i, Name = $"Stress Thread {threadId} Item {i}" };
+                        TestObject value = new() { Id = i, Name = $"Stress Thread {threadId} Item {i}" };
 
                         // Mix of operations to stress the Dictionary and HashSet operations.
                         // Operation choice is derived deterministically from (threadId, i)
@@ -169,6 +170,27 @@ public sealed class ConcurrencyTests
         }
 
         throw new AggregateException("IndexOutOfRangeExceptions occurred during stress test", indexOutOfRangeExceptions);
+    }
+
+    /// <summary>
+    /// Concurrent writes followed by concurrent reads round-trip every entry intact.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task InMemoryBlobCache_ConcurrentWritesShouldNotCorrupt()
+    {
+        await using InMemoryBlobCache cache = new(new SystemJsonSerializer());
+        var localCache = cache;
+
+        var writeTasks = Enumerable.Range(0, 50)
+            .Select(i => localCache.InsertObject($"user_{i}", new TestObject { Id = i, Name = $"User{i}" }).FirstAsync().ToTask());
+        await Task.WhenAll(writeTasks);
+
+        var readTasks = Enumerable.Range(0, 50)
+            .Select(i => localCache.GetObject<TestObject>($"user_{i}").FirstAsync().ToTask());
+        var results = await Task.WhenAll(readTasks);
+
+        await Assert.That(results.All(static r => r is { Name: { } name } && name.StartsWith("User", StringComparison.Ordinal))).IsTrue();
     }
 
     /// <summary>

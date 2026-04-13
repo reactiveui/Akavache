@@ -173,7 +173,8 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheBuilder WithInMemory(IBlobCache cache)
     {
-        InMemory = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        InMemory = cache;
         return this;
     }
 
@@ -196,27 +197,30 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheBuilder WithLocalMachine(IBlobCache cache)
     {
-        LocalMachine = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        LocalMachine = cache;
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithSecure(ISecureBlobCache cache)
     {
-        Secure = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        Secure = cache;
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithUserAccount(IBlobCache cache)
     {
-        UserAccount = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        UserAccount = cache;
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithSerializer<T>()
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
@@ -234,7 +238,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
 
     /// <inheritdoc />
     public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-        where T : ISerializer
+        where T : class, ISerializer
     {
         var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
@@ -322,7 +326,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         }
 
         // Always use Akavache.InMemoryBlobCache from Akavache.Core and pass the serializer
-        var cache = new InMemoryBlobCache(Serializer);
+        InMemoryBlobCache cache = new(Serializer);
         ApplyForcedDateTimeKind(cache);
         return cache;
     }
