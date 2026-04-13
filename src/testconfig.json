@@ -4,29 +4,12 @@
             "Format": "cobertura",
             "SkipAutoProperties": true,
             "CodeCoverage": {
-                "ModulePaths": {
-                    "Include": [
-                        ".*\\.dll$",
-                        ".*\\.exe$"
-                    ],
-                    "Exclude": [
-                        ".*Tests.*",
-                        ".*TestRunner.*",
-                        ".*Benchmarks.*"
-                    ]
-                },
-                "Sources": {
-                    "Exclude": [
-                        ".*[/\\\\]obj[/\\\\].*",
-                        ".*\\.g\\.cs$"
-                    ]
-                },
                 "Attributes": {
                     "Exclude": [
-                        "^System\\.CodeDom\\.Compiler\\.GeneratedCodeAttribute$",
-                        "^System\\.Diagnostics\\.CodeAnalysis\\.ExcludeFromCodeCoverageAttribute$",
                         "^System\\.Diagnostics\\.DebuggerHiddenAttribute$",
-                        "^System\\.Diagnostics\\.DebuggerNonUserCodeAttribute$"
+                        "^System\\.Diagnostics\\.DebuggerNonUserCodeAttribute$",
+                        "^System\\.CodeDom\\.Compiler\\.GeneratedCodeAttribute$",
+                        "^System\\.Diagnostics\\.CodeAnalysis\\.ExcludeFromCodeCoverageAttribute$"
                     ]
                 }
             }
