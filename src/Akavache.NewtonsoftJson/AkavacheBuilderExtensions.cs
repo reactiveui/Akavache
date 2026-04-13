@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -20,13 +20,8 @@ public static class AkavacheBuilderExtensions
     /// <param name="builder">The Akavache builder to configure.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
-#if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder)
-#else
-        public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder)
-#endif
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
 
@@ -43,16 +38,10 @@ public static class AkavacheBuilderExtensions
     /// <param name="settings">The JSON serializer settings to use for customizing serialization behavior.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="settings"/> is null.</exception>
-#if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
-#else
-        public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
-#endif
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
-
         ArgumentExceptionHelper.ThrowIfNull(settings);
 
         builder.WithSerializer(() => new NewtonsoftSerializer { Options = settings });
@@ -68,16 +57,10 @@ public static class AkavacheBuilderExtensions
     /// <param name="configure">Action to configure the JSON serializer settings.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="configure"/> is null.</exception>
-#if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
-#else
-        public static IAkavacheBuilder WithSerializerNewtonsoftJson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
-#endif
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
-
         ArgumentExceptionHelper.ThrowIfNull(configure);
 
         JsonSerializerSettings settings = new();
@@ -94,13 +77,8 @@ public static class AkavacheBuilderExtensions
     /// <param name="builder">The Akavache builder to configure.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
-#if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder)
-#else
-        public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder)
-#endif
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
 
@@ -117,16 +95,10 @@ public static class AkavacheBuilderExtensions
     /// <param name="settings">The JSON serializer settings to use for customizing BSON serialization behavior.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="settings"/> is null.</exception>
-#if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
-#else
-        public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder, JsonSerializerSettings settings)
-#endif
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
-
         ArgumentExceptionHelper.ThrowIfNull(settings);
 
         NewtonsoftBsonSerializer serializer = new()
@@ -146,16 +118,10 @@ public static class AkavacheBuilderExtensions
     /// <param name="configure">Action to configure the JSON serializer settings for BSON serialization.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="configure"/> is null.</exception>
-#if NET6_0_OR_GREATER
-
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
-#else
-        public static IAkavacheBuilder WithSerializerNewtonsoftBson(this IAkavacheBuilder builder, Action<JsonSerializerSettings> configure)
-#endif
     {
         ArgumentExceptionHelper.ThrowIfNull(builder);
-
         ArgumentExceptionHelper.ThrowIfNull(configure);
 
         JsonSerializerSettings settings = new();
