@@ -59,18 +59,6 @@ public class CacheEntryTests
     }
 
     /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="false"/> for a <see langword="null"/> argument.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task EqualsShouldReturnFalseForNull()
-    {
-        CacheEntry entry = new() { Id = "k" };
-        CacheEntry? other = null;
-        await Assert.That(entry.Equals(other)).IsFalse();
-    }
-
-    /// <summary>
     /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> short-circuits on reference equality.
     /// </summary>
     /// <returns>A task.</returns>

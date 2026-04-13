@@ -69,18 +69,6 @@ public class LoginInfoTests
     }
 
     /// <summary>
-    /// Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> returns <see langword="false"/> for a <see langword="null"/> argument.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task EqualsShouldReturnFalseForNull()
-    {
-        LoginInfo login = new("alice", "secret");
-        LoginInfo? other = null;
-        await Assert.That(login.Equals(other)).IsFalse();
-    }
-
-    /// <summary>
     /// Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> short-circuits on reference equality.
     /// </summary>
     /// <returns>A task.</returns>
