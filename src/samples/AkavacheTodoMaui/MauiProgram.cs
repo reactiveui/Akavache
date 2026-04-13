@@ -8,7 +8,9 @@ using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using AkavacheTodoMaui.Services;
 using AkavacheTodoMaui.ViewModels;
+#if DEBUG
 using Microsoft.Extensions.Logging;
+#endif
 using ReactiveUI;
 using Splat;
 using Splat.Builder;
