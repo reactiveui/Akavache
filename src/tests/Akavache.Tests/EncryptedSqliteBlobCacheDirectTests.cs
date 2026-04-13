@@ -529,6 +529,27 @@ public class EncryptedSqliteBlobCacheDirectTests
     }
 
     /// <summary>
+    /// Tests that both branches of the <see cref="EncryptedSqliteBlobCache.HttpService"/>
+    /// <c>??=</c> getter are exercised: the first access lazy-initialises the backing field
+    /// and the second returns the cached instance.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task HttpServicePropertyShouldLazyInitialiseAndCache()
+    {
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            await using var cache = CreateCache(path);
+
+            var first = cache.HttpService;
+            var second = cache.HttpService;
+
+            await Assert.That(first).IsNotNull();
+            await Assert.That(second).IsSameReferenceAs(first);
+        }
+    }
+
+    /// <summary>
     /// Tests <see cref="EncryptedSqliteBlobCache.ToExpiryValue"/> returns the UTC
     /// <see cref="DateTime"/> component when given a non-null
     /// <see cref="DateTimeOffset"/>.
