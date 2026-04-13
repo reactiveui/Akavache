@@ -305,8 +305,9 @@ public static class CacheDatabase
         {
             throw new InvalidOperationException(
                 "CacheDatabase has not been initialized. " +
-                "Call CacheDatabase.Initialize() or CacheDatabase.Initialize(builder => { ... }) first. " +
-                "For more advanced scenarios, use CacheDatabase.CreateBuilder() to configure custom cache implementations.");
+                "Call CacheDatabase.Initialize<TSerializer>(\"MyApp\") or " +
+                "CacheDatabase.Initialize<TSerializer>(builder => { ... }, \"MyApp\") first. " +
+                "For advanced scenarios, use CacheDatabase.CreateBuilder(\"MyApp\") to configure custom cache implementations.");
         }
 
         return _builder;

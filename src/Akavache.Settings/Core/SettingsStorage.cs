@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Akavache.Helpers;
 
 namespace Akavache.Settings.Core;
 
@@ -30,10 +31,7 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <exception cref="ArgumentException">Thrown when <paramref name="keyPrefix"/> is null, empty, or whitespace.</exception>
     protected SettingsStorage(string keyPrefix, IBlobCache cache)
     {
-        if (string.IsNullOrWhiteSpace(keyPrefix))
-        {
-            throw new ArgumentException("Invalid key prefix", nameof(keyPrefix));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(keyPrefix);
 
         _keyPrefix = keyPrefix;
         _blobCache = cache;
@@ -49,21 +47,21 @@ public abstract class SettingsStorage : ISettingsStorage
 
     /// <summary>
     /// Initializes all settings properties by loading them from storage or setting them to their default values.
-    /// This method uses reflection to enumerate properties and is useful for preloading settings at startup.
     /// </summary>
+    /// <remarks>
+    /// Reflection is required here: the base class cannot know which properties a derived
+    /// settings type defines without enumerating them at runtime. The enumeration calls
+    /// each property getter, which routes through <see cref="GetOrCreate{T}(T, string?)"/>
+    /// and primes the in-memory cache. The actual loop is delegated to
+    /// <see cref="EagerLoadProperties"/> so it can be unit-tested in isolation.
+    /// </remarks>
     /// <returns>A task representing the asynchronous initialization operation.</returns>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
 #endif
     public Task InitializeAsync() =>
-        Task.Run(() =>
-            {
-                foreach (var property in GetType().GetRuntimeProperties())
-                {
-                    property.GetValue(this);
-                }
-            });
+        Task.Run(() => EagerLoadProperties(this, GetType().GetRuntimeProperties()));
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -88,6 +86,25 @@ public abstract class SettingsStorage : ISettingsStorage
     }
 
     /// <summary>
+    /// Iterates <paramref name="properties"/> and invokes each getter against
+    /// <paramref name="target"/>, ignoring the returned values. Used by
+    /// <see cref="InitializeAsync"/> to prime the in-memory cache for every settings
+    /// property on a subclass.
+    /// </summary>
+    /// <param name="target">The instance to read property values from.</param>
+    /// <param name="properties">The properties to enumerate.</param>
+    internal static void EagerLoadProperties(object target, IEnumerable<PropertyInfo> properties)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(target);
+        ArgumentExceptionHelper.ThrowIfNull(properties);
+
+        foreach (var property in properties)
+        {
+            property.GetValue(target);
+        }
+    }
+
+    /// <summary>
     /// Gets the value for the specified key from cache or storage, or creates and stores the default value if not found.
     /// This method provides efficient property access with automatic caching and storage persistence.
     /// </summary>
@@ -102,10 +119,7 @@ public abstract class SettingsStorage : ISettingsStorage
 #endif
     protected T? GetOrCreate<T>(T defaultValue, [CallerMemberName] string? key = null)
     {
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(key);
 
         _cacheLock.EnterReadLock();
 
@@ -144,10 +158,7 @@ public abstract class SettingsStorage : ISettingsStorage
 #endif
     protected void SetOrCreate<T>(T value, [CallerMemberName] string? key = null)
     {
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(key);
 
         AddToInternalCache(key, value);
 

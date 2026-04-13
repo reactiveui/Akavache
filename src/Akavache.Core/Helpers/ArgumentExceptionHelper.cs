@@ -31,11 +31,19 @@ internal static class ArgumentExceptionHelper
     }
 
     /// <summary>
-    /// Throws an <see cref="ArgumentException"/> if <paramref name="argument"/> is null,
-    /// empty, or composed entirely of white-space characters.
+    /// Validates that <paramref name="argument"/> is neither null nor composed entirely
+    /// of white-space characters.
     /// </summary>
+    /// <remarks>
+    /// Throws <see cref="ArgumentNullException"/> when <paramref name="argument"/> is
+    /// <see langword="null"/>, and <see cref="ArgumentException"/> when it is empty or
+    /// whitespace-only. Mirrors the exception shape of the
+    /// <c>ArgumentException.ThrowIfNullOrWhiteSpace</c> BCL helper added in .NET 8.
+    /// </remarks>
     /// <param name="argument">The string argument to validate.</param>
     /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="argument"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="argument"/> is empty or whitespace.</exception>
     public static void ThrowIfNullOrWhiteSpace([NotNull] string? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
         if (argument is null)

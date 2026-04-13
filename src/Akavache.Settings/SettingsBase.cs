@@ -21,68 +21,119 @@ namespace Akavache.Settings;
 public abstract class SettingsBase(string className) : SettingsStorage($"__{className}__", GetBlobCacheForClass(className))
 {
     /// <summary>
-    /// Gets the blob cache for the specified class, handling override database names.
+    /// Resolves the blob cache that backs a settings class, walking through the
+    /// strategies in priority order: explicit registry → ambient
+    /// <see cref="CacheDatabase"/> caches → transient fallback. Throws when none
+    /// of the strategies produce a non-null cache.
     /// </summary>
-    /// <param name="className">The class name.</param>
-    /// <returns>The blob cache for the class.</returns>
-    private static IBlobCache GetBlobCacheForClass(string className)
+    /// <param name="className">The settings class name (used both as a registry key and in the error message).</param>
+    /// <returns>The resolved <see cref="IBlobCache"/>.</returns>
+    /// <exception cref="InvalidOperationException">No cache could be resolved for <paramref name="className"/>.</exception>
+    internal static IBlobCache GetBlobCacheForClass(string className) =>
+        TryGetFromBlobCacheRegistry(className)
+            ?? TryGetFromCacheDatabase()
+            ?? TryGetTransientFallback()
+            ?? throw CreateNoCacheFoundException(className);
+
+    /// <summary>
+    /// Looks up <paramref name="className"/> in <see cref="AkavacheBuilder.BlobCaches"/>.
+    /// </summary>
+    /// <remarks>
+    /// Falls back to the first registered non-null entry when the exact class name is
+    /// missing — this keeps consumers that rename their settings store database working
+    /// without a custom registration step.
+    /// </remarks>
+    /// <param name="className">The class name to look up.</param>
+    /// <returns>The matching cache, or <see langword="null"/> when nothing is registered.</returns>
+    internal static IBlobCache? TryGetFromBlobCacheRegistry(string className)
     {
-        // Prefer an explicitly created settings cache for the given class name
-        if (AkavacheBuilder.BlobCaches != null)
+        if (AkavacheBuilder.BlobCaches is null)
         {
-            if (AkavacheBuilder.BlobCaches.TryGetValue(className, out var cache) && cache != null)
-            {
-                return cache;
-            }
-
-            // If not found, return the first available cache (supports override database names)
-            var firstPair = AkavacheBuilder.BlobCaches
-                .FirstOrDefault(kvp => kvp.Value != null);
-
-            // Check if we found a valid cache (default KeyValuePair has null Key and Value)
-            if (!string.IsNullOrEmpty(firstPair.Key))
-            {
-                return firstPair.Value!;
-            }
+            return null;
         }
 
-        // Fallbacks to any initialized CacheDatabase cache
+        if (AkavacheBuilder.BlobCaches.TryGetValue(className, out var cache) && cache != null)
+        {
+            return cache;
+        }
+
+        var firstPair = AkavacheBuilder.BlobCaches.FirstOrDefault(kvp => kvp.Value != null);
+        if (!string.IsNullOrEmpty(firstPair.Key))
+        {
+            return firstPair.Value;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the first non-null ambient cache (UserAccount → LocalMachine → InMemory)
+    /// from <see cref="CacheDatabase"/> when it has been initialized.
+    /// </summary>
+    /// <returns>The first available ambient cache, or <see langword="null"/>.</returns>
+    internal static IBlobCache? TryGetFromCacheDatabase()
+    {
         try
         {
-            if (CacheDatabase.IsInitialized)
+            if (!CacheDatabase.IsInitialized)
             {
-                if (CacheDatabase.UserAccount is IBlobCache user)
-                {
-                    return user;
-                }
+                return null;
+            }
 
-                if (CacheDatabase.LocalMachine is IBlobCache local)
-                {
-                    return local;
-                }
+            if (CacheDatabase.UserAccount is IBlobCache user)
+            {
+                return user;
+            }
 
-                if (CacheDatabase.InMemory is IBlobCache mem)
-                {
-                    return mem;
-                }
+            if (CacheDatabase.LocalMachine is IBlobCache local)
+            {
+                return local;
+            }
+
+            if (CacheDatabase.InMemory is IBlobCache mem)
+            {
+                return mem;
             }
         }
         catch
         {
-            // Ignore and proceed to last resort
+            // Ambient cache property getters can throw when the underlying instance
+            // has not been configured for the requested cache kind.
         }
 
-        // Last resort: create a transient in-memory cache if a serializer is registered
+        return null;
+    }
+
+    /// <summary>
+    /// Builds a transient in-memory cache when an <see cref="ISerializer"/> has been
+    /// registered with Splat. Used as the last resort before
+    /// <see cref="GetBlobCacheForClass"/> throws.
+    /// </summary>
+    /// <returns>A fresh <see cref="InMemoryBlobCache"/>, or <see langword="null"/> when no serializer is registered.</returns>
+    internal static IBlobCache? TryGetTransientFallback()
+    {
         var serializer = AppLocator.Current.GetService<ISerializer>();
-        if (serializer != null)
+        if (serializer is null)
         {
-            return new InMemoryBlobCache(serializer);
+            return null;
         }
 
-        // If no cache is found, throw a descriptive exception
-        var available = AkavacheBuilder.BlobCaches == null || AkavacheBuilder.BlobCaches.Count == 0
+        return new InMemoryBlobCache(serializer);
+    }
+
+    /// <summary>
+    /// Builds the descriptive <see cref="InvalidOperationException"/> thrown by
+    /// <see cref="GetBlobCacheForClass"/> when no cache can be resolved. The message
+    /// lists every key currently registered in <see cref="AkavacheBuilder.BlobCaches"/>
+    /// to make diagnosis easier.
+    /// </summary>
+    /// <param name="className">The class name that failed resolution.</param>
+    /// <returns>A new <see cref="InvalidOperationException"/>.</returns>
+    internal static InvalidOperationException CreateNoCacheFoundException(string className)
+    {
+        var available = AkavacheBuilder.BlobCaches is null || AkavacheBuilder.BlobCaches.Count == 0
             ? "<none>"
             : string.Join(", ", AkavacheBuilder.BlobCaches.Keys);
-        throw new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {available}");
+        return new InvalidOperationException($"No blob cache found for class '{className}'. Available caches: {available}");
     }
 }

@@ -1560,7 +1560,8 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         try
         {
-            var first = cache.HttpService;
+            // Touch the lazy getter first so the setter is clearly overriding a real instance.
+            _ = cache.HttpService;
             var custom = new HttpService();
             cache.HttpService = custom;
             await Assert.That(cache.HttpService).IsSameReferenceAs(custom);
