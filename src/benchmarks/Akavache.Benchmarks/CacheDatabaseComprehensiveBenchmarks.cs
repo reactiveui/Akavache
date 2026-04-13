@@ -311,7 +311,7 @@ public class CacheDatabaseComprehensiveBenchmarks
     [BenchmarkCategory("BulkOperations")]
     public async Task BulkOperations()
     {
-        Dictionary<string, TestDataV11> keyValuePairs = new();
+        Dictionary<string, TestDataV11> keyValuePairs = [];
         for (var i = 0; i < BenchmarkSize; i++)
         {
             keyValuePairs[$"bulk_test_{i}"] = _testObjects[i % _testObjects.Count];

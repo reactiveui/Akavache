@@ -56,7 +56,7 @@ public class ImageExtensionsTests
     public async Task IsValidImageFormatShouldIdentifyGifCorrectly()
     {
         // Arrange - GIF header: 47 49 46
-        byte[] gifHeader = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]; // GIF89a
+        byte[] gifHeader = "GIF89a"u8.ToArray(); // GIF89a
 
         // Act
         var isValid = gifHeader.IsValidImageFormat();
@@ -90,13 +90,47 @@ public class ImageExtensionsTests
     public async Task IsValidImageFormatShouldIdentifyWebPCorrectly()
     {
         // Arrange - WebP header: 52 49 46 46 ... 57 45 42 50
-        byte[] webpHeader = [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50];
+        byte[] webpHeader = "RIFF\0\0\0\0WEBP"u8.ToArray();
 
         // Act
         var isValid = webpHeader.IsValidImageFormat();
 
         // Assert
         await Assert.That(isValid).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that IsWebP correctly identifies WebP images.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsWebPShouldIdentifyWebPCorrectly()
+    {
+        // Arrange - WebP header: 52 49 46 46 ... 57 45 42 50
+        byte[] webpHeader = "RIFF\0\0\0\0WEBP"u8.ToArray();
+
+        // Act
+        var isWebP = ImageExtensions.IsWebP(webpHeader);
+
+        // Assert
+        await Assert.That(isWebP).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that IsWebP returns false for non-WebP images.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsWebPShouldReturnFalseForNonWebP()
+    {
+        // Arrange - PNG header
+        byte[] pngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+        // Act
+        var isWebP = ImageExtensions.IsWebP(pngHeader);
+
+        // Assert
+        await Assert.That(isWebP).IsFalse();
     }
 
     /// <summary>
@@ -473,12 +507,12 @@ public class ImageExtensionsTests
             new { Name = "JPEG_FF_D8_FF_E0", Data = (byte[])[0xFF, 0xD8, 0xFF, 0xE0], Expected = true },
             new { Name = "JPEG_FF_D8_FF_E1", Data = (byte[])[0xFF, 0xD8, 0xFF, 0xE1], Expected = true },
             new { Name = "JPEG_FF_D8_FF_DB", Data = (byte[])[0xFF, 0xD8, 0xFF, 0xDB], Expected = true },
-            new { Name = "GIF87a", Data = (byte[])[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], Expected = true },
-            new { Name = "GIF89a", Data = (byte[])[0x47, 0x49, 0x46, 0x38, 0x39, 0x61], Expected = true },
+            new { Name = "GIF87a", Data = (byte[])"GIF87a"u8.ToArray(), Expected = true },
+            new { Name = "GIF89a", Data = (byte[])"GIF89a"u8.ToArray(), Expected = true },
             new { Name = "BMP", Data = (byte[])[0x42, 0x4D, 0x36, 0x84, 0x03, 0x00], Expected = true },
-            new { Name = "WebP", Data = (byte[])[0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50], Expected = true },
-            new { Name = "TIFF_MM", Data = (byte[])[0x4D, 0x4D, 0x00, 0x2A], Expected = true },
-            new { Name = "TIFF_II", Data = (byte[])[0x49, 0x49, 0x2A, 0x00], Expected = true },
+            new { Name = "WebP", Data = (byte[])"RIFF\0\0\0\0WEBP"u8.ToArray(), Expected = true },
+            new { Name = "TIFF_MM", Data = (byte[])"MM\0*"u8.ToArray(), Expected = true },
+            new { Name = "TIFF_II", Data = (byte[])"II*\0"u8.ToArray(), Expected = true },
             new { Name = "ICO", Data = (byte[])[0x00, 0x00, 0x01, 0x00], Expected = true },
             new { Name = "Invalid", Data = (byte[])[0x00, 0x01, 0x02, 0x03], Expected = false },
             new { Name = "Empty", Data = Array.Empty<byte>(), Expected = false },
@@ -803,7 +837,7 @@ public class ImageExtensionsTests
     public async Task IsValidImageFormatShouldReturnFalseForRiffWithoutWebpMarker()
     {
         // RIFF header but AVI (not WEBP).
-        byte[] avi = [0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x41, 0x56, 0x49, 0x20];
+        byte[] avi = "RIFF\0\0\0\0AVI "u8.ToArray();
 
         var result = avi.IsValidImageFormat();
 

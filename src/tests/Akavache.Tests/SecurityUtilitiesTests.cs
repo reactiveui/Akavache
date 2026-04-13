@@ -496,4 +496,130 @@ public class SecurityUtilitiesTests
         var result = SecurityUtilities.ValidateCacheName(longName);
         await Assert.That(result).IsEqualTo(longName);
     }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateNoNullOrTraversal"/> trims
+    /// leading whitespace from an otherwise valid name. Trailing whitespace is
+    /// rejected outright by the prefix/suffix check, so this only covers the
+    /// leading-whitespace path.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateNoNullOrTraversal_ShouldTrimLeadingWhitespace()
+    {
+        var result = SecurityUtilities.ValidateNoNullOrTraversal("  ok", "param", "Cache name");
+        await Assert.That(result).IsEqualTo("ok");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateNoNullOrTraversal"/> throws
+    /// when the supplied value is <see langword="null"/>, empty, or whitespace-only,
+    /// and that the exception message uses the supplied label.
+    /// </summary>
+    /// <param name="value">The value to validate.</param>
+    /// <returns>A task.</returns>
+    [Test]
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments("   ")]
+    public async Task ValidateNoNullOrTraversal_ShouldThrowOnNullOrWhitespace(string? value)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateNoNullOrTraversal(value!, "param", "Cache name"));
+        await Assert.That(ex.Message).Contains("Cache name cannot be null or empty.");
+        await Assert.That(ex.ParamName).IsEqualTo("param");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateNoNullOrTraversal"/> rejects
+    /// names that start with a dot, end with a dot, or end with a space.
+    /// </summary>
+    /// <param name="value">The candidate value containing the disallowed prefix/suffix.</param>
+    /// <returns>A task.</returns>
+    [Test]
+    [Arguments(".leading")]
+    [Arguments("trailing.")]
+    [Arguments("trailingspace ")]
+    public async Task ValidateNoNullOrTraversal_ShouldRejectDotOrSpacePrefixOrSuffix(string value)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateNoNullOrTraversal(value, "param", "Cache name"));
+        await Assert.That(ex.Message).Contains("cannot start or end with '.' or space characters");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateNoNullOrTraversal"/> rejects
+    /// names containing a parent-directory traversal sequence, a forward slash, or a backslash.
+    /// </summary>
+    /// <param name="value">The candidate containing the traversal sequence.</param>
+    /// <returns>A task.</returns>
+    [Test]
+    [Arguments("foo..bar")]
+    [Arguments("a/b")]
+    [Arguments("a\\b")]
+    public async Task ValidateNoNullOrTraversal_ShouldRejectPathTraversalSequences(string value)
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateNoNullOrTraversal(value, "param", "Cache name"));
+        await Assert.That(ex.Message).Contains("invalid path traversal characters");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.ValidateNoNullOrTraversal"/> includes
+    /// the supplied label in the thrown exception messages so the same helper can be
+    /// reused for cache, application, and database name validation.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValidateNoNullOrTraversal_ShouldUseSuppliedLabelInExceptionMessage()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => SecurityUtilities.ValidateNoNullOrTraversal(".bad", "param", "Application name"));
+        await Assert.That(ex.Message).StartsWith("Application name '.bad'");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.IsReservedSystemName"/> recognises every
+    /// Windows-reserved device name in upper case.
+    /// </summary>
+    /// <param name="reservedName">The reserved Windows device name.</param>
+    /// <returns>A task.</returns>
+    [Test]
+    [Arguments("CON")]
+    [Arguments("PRN")]
+    [Arguments("AUX")]
+    [Arguments("NUL")]
+    [Arguments("COM1")]
+    [Arguments("COM9")]
+    [Arguments("LPT1")]
+    [Arguments("LPT9")]
+    public async Task IsReservedSystemName_ShouldMatchEveryWindowsReservedName(string reservedName) =>
+        await Assert.That(SecurityUtilities.IsReservedSystemName(reservedName)).IsTrue();
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.IsReservedSystemName"/> matches reserved
+    /// names case-insensitively because they are normalised via
+    /// <see cref="string.ToUpperInvariant"/>.
+    /// </summary>
+    /// <param name="reservedName">The reserved name in mixed/lowercase form.</param>
+    /// <returns>A task.</returns>
+    [Test]
+    [Arguments("con")]
+    [Arguments("Prn")]
+    [Arguments("com5")]
+    [Arguments("LpT3")]
+    public async Task IsReservedSystemName_ShouldMatchCaseInsensitively(string reservedName) =>
+        await Assert.That(SecurityUtilities.IsReservedSystemName(reservedName)).IsTrue();
+
+    /// <summary>
+    /// Tests that <see cref="SecurityUtilities.IsReservedSystemName"/> returns
+    /// <see langword="false"/> for ordinary names and for tokens that look like
+    /// reserved names but fall outside the list (e.g. <c>COM10</c>, <c>LPT0</c>).
+    /// </summary>
+    /// <param name="ordinaryName">The candidate name.</param>
+    /// <returns>A task.</returns>
+    [Test]
+    [Arguments("MyApp")]
+    [Arguments("BlobCache")]
+    [Arguments("COM10")]
+    [Arguments("LPT0")]
+    [Arguments("CON1")]
+    public async Task IsReservedSystemName_ShouldReturnFalseForOrdinaryNames(string ordinaryName) =>
+        await Assert.That(SecurityUtilities.IsReservedSystemName(ordinaryName)).IsFalse();
 }

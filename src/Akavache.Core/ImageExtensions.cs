@@ -24,12 +24,12 @@ public static class ImageExtensions
     /// <summary>
     /// The GIF header.
     /// </summary>
-    private static readonly byte[] GifHeader = [0x47, 0x49, 0x46];
+    private static readonly byte[] GifHeader = "GIF"u8.ToArray();
 
     /// <summary>
     /// The BMP header.
     /// </summary>
-    private static readonly byte[] BmpHeader = [0x42, 0x4D];
+    private static readonly byte[] BmpHeader = "BM"u8.ToArray();
 
     /// <summary>
     /// Loads image data from the blob cache as raw bytes.
@@ -177,7 +177,7 @@ public static class ImageExtensions
     /// </summary>
     /// <param name="imageBytes">The image bytes.</param>
     /// <returns>True if it is WebP.</returns>
-    private static bool IsWebP(byte[] imageBytes) =>
+    internal static bool IsWebP(byte[] imageBytes) =>
         imageBytes.Length >= 12 &&
         imageBytes[0] == 0x52 && imageBytes[1] == 0x49 && imageBytes[2] == 0x46 && imageBytes[3] == 0x46 && // RIFF
         imageBytes[8] == 0x57 && imageBytes[9] == 0x45 && imageBytes[10] == 0x42 && imageBytes[11] == 0x50; // WEBP

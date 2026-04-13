@@ -249,7 +249,7 @@ internal static class V10MigrationService
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses Type.GetType and Assembly.GetType to resolve types dynamically.")]
     internal static Type? ResolveType(string typeName)
     {
-        // First try the full assembly-qualified name
+        // First, try the full assembly-qualified name
         var type = Type.GetType(typeName);
         if (type != null)
         {
@@ -320,10 +320,10 @@ internal static class V10MigrationService
     }
 
     /// <summary>
-    /// Writes the migration sentinel entry into the V11 cache to prevent re-migration on subsequent runs.
+    /// Writes the migration sentinel entry into the V11 cache to prevent re-migration on further runs.
     /// </summary>
     /// <param name="v11Cache">The V11 cache to mark as migrated.</param>
-    /// <returns>A task representing the asynchronous write.</returns>
+    /// <returns>A task representing the asynchronous writer.</returns>
     internal static async Task WriteMigrationSentinelAsync(SqliteBlobCache v11Cache)
     {
         CacheEntry sentinel = new()

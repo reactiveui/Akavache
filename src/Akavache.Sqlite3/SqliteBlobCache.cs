@@ -159,41 +159,30 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Flush()
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
-        }
-
-        // For SQLite, perform a WAL checkpoint to ensure data is persisted to the main database file
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            try
+    public IObservable<Unit> Flush() =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            : _initialized.SelectMany(async (_, _, _) =>
             {
-                await Connection.CheckpointAsync().ConfigureAwait(false);
-            }
-            catch
-            {
-                // If WAL checkpoint fails, the data is still safe in the transaction log
-                // Continue without error as this is not critical for data integrity
-            }
+                // For SQLite, perform a WAL checkpoint to ensure data is persisted to the main database file.
+                try
+                {
+                    await Connection.CheckpointAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // If WAL checkpoint fails, the data is still safe in the transaction log
+                    // Continue without error as this is not critical for data integrity
+                }
 
-            return Unit.Default;
-        });
-    }
+                return Unit.Default;
+            });
 
     /// <inheritdoc/>
-    public IObservable<Unit> Flush(Type type)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
-        }
-
-        // no-op on sql.
-        return Observable.Return(Unit.Default);
-    }
+    public IObservable<Unit> Flush(Type type) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
+            : Observable.Return(Unit.Default);
 
     /// <inheritdoc/>
     public IObservable<byte[]?> Get(string key)
@@ -205,25 +194,7 @@ public class SqliteBlobCache : IBlobCache
 
         return string.IsNullOrWhiteSpace(key)
             ? Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)))
-            : _initialized.SelectMany(async (_, _, _) =>
-            {
-                var time = DateTimeOffset.UtcNow;
-
-                // Try V11 table first
-                var rows = await Connection.QueryAsync<CacheEntry>(x =>
-                        x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
-                    .ConfigureAwait(false);
-
-                var row = rows.FirstOrDefault();
-                if (row?.Value is not null)
-                {
-                    return row.Value!;
-                }
-
-                // Fallback to legacy V10 table (CacheElement)
-                var legacy = await TryGetLegacyValueAsync(Connection, key, time, null).ConfigureAwait(false);
-                return legacy ?? throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
-            });
+            : _initialized.SelectMany((_, _, _) => ReadValueWithLegacyFallbackAsync(key, type: null));
     }
 
     /// <inheritdoc/>
@@ -265,29 +236,7 @@ public class SqliteBlobCache : IBlobCache
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>(ClassName);
         }
 
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            var time = DateTimeOffset.UtcNow;
-
-            // Try V11 table first
-            var rows = await Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName)
-                .ConfigureAwait(false);
-
-            var row = rows.FirstOrDefault();
-            if (row?.Value is not null)
-            {
-                return row.Value!;
-            }
-
-            // Fallback to legacy V10 table (CacheElement)
-            var legacy = await TryGetLegacyValueAsync(Connection, key, time, type).ConfigureAwait(false);
-            if (legacy is not null)
-            {
-                return legacy;
-            }
-
-            throw new KeyNotFoundException($"The given key '{key}' (type '{type.FullName}') was not present in the cache.");
-        });
+        return _initialized.SelectMany((_, _, _) => ReadValueWithLegacyFallbackAsync(key, type));
     }
 
     /// <inheritdoc/>
@@ -345,9 +294,9 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time)))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Id is not null)
-            .Select(x => x.Id!);
+            .Select(static x => x.Id!);
     }
 
     /// <inheritdoc/>
@@ -892,6 +841,43 @@ public class SqliteBlobCache : IBlobCache
         connected.Connect();
 
         return connected.SubscribeOn(scheduler);
+    }
+
+    /// <summary>
+    /// Reads a single value from the V11 <c>CacheEntry</c> table, falling back
+    /// to the legacy V10 <c>CacheElement</c> store, and finally throwing
+    /// <see cref="KeyNotFoundException"/> when neither store has the key.
+    /// </summary>
+    /// <remarks>
+    /// Shared by <see cref="Get(string)"/> and <see cref="Get(string, Type)"/>;
+    /// <paramref name="type"/> is <see langword="null"/> for the untyped overload
+    /// and a concrete type for the typed overload (which scopes the V11 lookup to
+    /// rows whose <c>TypeName</c> column matches <paramref name="type"/>'s full name).
+    /// Marked <c>internal</c> so unit tests can drive this method directly against
+    /// an <c>InMemoryAkavacheConnection</c> without going through the full
+    /// <see cref="Get(string)"/> observable plumbing.
+    /// </remarks>
+    /// <param name="key">The cache key to read.</param>
+    /// <param name="type">The optional type filter; <see langword="null"/> for untyped reads.</param>
+    /// <returns>The stored bytes for the key.</returns>
+    internal async Task<byte[]> ReadValueWithLegacyFallbackAsync(string key, Type? type)
+    {
+        var time = DateTimeOffset.UtcNow;
+
+        var rows = type is null
+            ? await Connection.QueryAsync<CacheEntry>(x =>
+                    x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
+                .ConfigureAwait(false)
+            : await Connection.QueryAsync<CacheEntry>(x =>
+                    x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName)
+                .ConfigureAwait(false);
+
+        return rows.FirstOrDefault()?.Value
+            ?? await TryGetLegacyValueAsync(Connection, key, time, type).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException(
+                type is null
+                    ? $"The given key '{key}' was not present in the cache."
+                    : $"The given key '{key}' (type '{type.FullName}') was not present in the cache.");
     }
 
     /// <summary>

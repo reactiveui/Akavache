@@ -150,11 +150,8 @@ public static class AkavacheBuilderExtensions
     internal static SqliteBlobCache CreateSqliteCache(string name, IAkavacheBuilder builder)
 #endif
     {
-        var serializer = builder.Serializer;
-        if (serializer is null)
-        {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
-        }
+        var serializer = builder.Serializer
+            ?? throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using SQLite caches.");
 
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(name);
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(builder.ApplicationName);

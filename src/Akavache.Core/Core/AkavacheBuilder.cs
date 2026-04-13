@@ -22,15 +22,6 @@ internal class AkavacheBuilder : IAkavacheBuilder
     private static readonly object _lock = new();
 #endif
 
-    /// <summary>Cached settings cache directory path, computed lazily.</summary>
-    private string? _settingsCachePath;
-
-    /// <summary>The file location strategy chosen by the builder.</summary>
-    private FileLocationOption _fileLocationOption;
-
-    /// <summary>Caller-supplied executing assembly, or <see langword="null"/> if not set.</summary>
-    private Assembly? _explicitExecutingAssembly;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="AkavacheBuilder"/> class.
     /// </summary>
@@ -47,12 +38,16 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <param name="fileLocationOption">The file location strategy.</param>
     public AkavacheBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default)
     {
-        _fileLocationOption = fileLocationOption;
+        FileLocationOption = fileLocationOption;
         ApplicationRootPath = Path.Combine(AppContext.BaseDirectory, "..");
     }
 
     /// <inheritdoc />
-    public Assembly ExecutingAssembly => _explicitExecutingAssembly ?? typeof(AkavacheBuilder).Assembly;
+    public Assembly ExecutingAssembly
+    {
+        get => field ?? typeof(AkavacheBuilder).Assembly;
+        private set;
+    }
 
     /// <inheritdoc />
     public string ApplicationName { get; private set; } = "Akavache";
@@ -63,18 +58,13 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public string? SettingsCachePath
     {
-        get
+        // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
+        get => field ??= FileLocationOption switch
         {
-            // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
-            _settingsCachePath ??= _fileLocationOption switch
-                {
-                    FileLocationOption.Legacy => this.GetLegacyCacheDirectory("SettingsCache"),
-                    _ => this.GetIsolatedCacheDirectory("SettingsCache"),
-                };
-
-            return _settingsCachePath;
-        }
-        set => _settingsCachePath = value;
+            FileLocationOption.Legacy => this.GetLegacyCacheDirectory("SettingsCache"),
+            _ => this.GetIsolatedCacheDirectory("SettingsCache"),
+        };
+        set;
     }
 
     /// <inheritdoc />
@@ -121,7 +111,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <value>
     /// The file location option.
     /// </value>
-    public FileLocationOption FileLocationOption => _fileLocationOption;
+    public FileLocationOption FileLocationOption { get; private set; }
 
     /// <summary>
     /// Gets or sets the registry of named blob caches created by builders.
@@ -136,7 +126,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheBuilder WithLegacyFileLocation()
     {
-        _fileLocationOption = FileLocationOption.Legacy;
+        FileLocationOption = FileLocationOption.Legacy;
         return this;
     }
 
@@ -164,7 +154,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     {
         ArgumentExceptionHelper.ThrowIfNull(assembly);
 
-        _explicitExecutingAssembly = assembly;
+        ExecutingAssembly = assembly;
         ExecutingAssemblyName = assembly.GetName().Name;
         Version = ReadFileVersion(assembly);
         return this;
@@ -289,16 +279,11 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// </remarks>
     /// <param name="assembly">The caller-supplied assembly.</param>
     /// <returns>The parsed version, or <see langword="null"/>.</returns>
-    internal static Version? ReadFileVersion(Assembly assembly)
-    {
-        var versionAttr = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
-        if (versionAttr is null)
-        {
-            return null;
-        }
-
-        return Version.TryParse(versionAttr.Version, out var parsed) ? parsed : null;
-    }
+    internal static Version? ReadFileVersion(Assembly assembly) =>
+        assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version } &&
+            Version.TryParse(version, out var parsed)
+                ? parsed
+                : null;
 
     /// <summary>
     /// Applies the configured <see cref="ForcedDateTimeKind"/> (if any) to the supplied cache.

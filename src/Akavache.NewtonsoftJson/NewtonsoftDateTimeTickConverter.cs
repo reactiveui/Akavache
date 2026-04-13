@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Helpers;
 using Newtonsoft.Json;
 
 namespace Akavache.NewtonsoftJson;
@@ -32,10 +33,7 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
     /// <inheritdoc/>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
-        if (reader is null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(reader);
 
         if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
         {

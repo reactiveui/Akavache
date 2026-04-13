@@ -77,10 +77,8 @@ public class NewtonsoftSerializer : ISerializer
     }
 
     /// <inheritdoc/>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
-#endif
     [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
     public T? Deserialize<T>(byte[] bytes)
     {
@@ -117,10 +115,8 @@ public class NewtonsoftSerializer : ISerializer
     }
 
     /// <inheritdoc/>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
-#endif
     public byte[] Serialize<T>(T item)
     {
         if (UseBsonFormat)
@@ -169,10 +165,8 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="item">The item to serialize.</param>
     /// <returns>BSON bytes.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
-#endif
     internal byte[] SerializeToBson<T>(T item)
     {
         try
@@ -199,10 +193,8 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="bytes">The BSON bytes.</param>
     /// <returns>The deserialized object.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
-#endif
     internal T? DeserializeBsonFormat<T>(byte[] bytes)
     {
         try
@@ -247,10 +239,8 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="bytes">The data bytes.</param>
     /// <returns>The deserialized object or default.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
-#endif
     [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
     internal T? TryDeserializeFromOtherFormats<T>(byte[] bytes)
     {

@@ -67,14 +67,9 @@ internal static class AssemblyInfoHelper
     /// </remarks>
     /// <param name="assembly">The assembly to inspect.</param>
     /// <returns>The parsed version, or <see langword="null"/>.</returns>
-    public static Version? ExtractAssemblyVersion(Assembly assembly)
-    {
-        var versionAttr = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
-        if (versionAttr is null)
-        {
-            return null;
-        }
-
-        return Version.TryParse(versionAttr.Version, out var version) ? version : null;
-    }
+    public static Version? ExtractAssemblyVersion(Assembly assembly) =>
+        assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version } &&
+            System.Version.TryParse(version, out var parsed)
+                ? parsed
+                : null;
 }

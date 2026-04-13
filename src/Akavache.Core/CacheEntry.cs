@@ -49,24 +49,14 @@ public class CacheEntry : IEquatable<CacheEntry>
     public override bool Equals(object? obj) => Equals(obj as CacheEntry);
 
     /// <inheritdoc />
-    public bool Equals(CacheEntry? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return string.Equals(Id, other.Id, StringComparison.Ordinal) &&
-               CreatedAt.Equals(other.CreatedAt) &&
-               Nullable.Equals(ExpiresAt, other.ExpiresAt) &&
-               string.Equals(TypeName, other.TypeName, StringComparison.Ordinal) &&
-               ValueEquals(Value, other.Value);
-    }
+    public bool Equals(CacheEntry? other) =>
+        other is not null &&
+        (ReferenceEquals(this, other) ||
+         (string.Equals(Id, other.Id, StringComparison.Ordinal) &&
+          CreatedAt.Equals(other.CreatedAt) &&
+          Nullable.Equals(ExpiresAt, other.ExpiresAt) &&
+          string.Equals(TypeName, other.TypeName, StringComparison.Ordinal) &&
+          ValueEquals(Value, other.Value)));
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -90,18 +80,7 @@ public class CacheEntry : IEquatable<CacheEntry>
     /// <param name="left">The first byte array.</param>
     /// <param name="right">The second byte array.</param>
     /// <returns>True if the byte arrays are equal.</returns>
-    private static bool ValueEquals(byte[]? left, byte[]? right)
-    {
-        if (ReferenceEquals(left, right))
-        {
-            return true;
-        }
-
-        if (left is null || right is null)
-        {
-            return false;
-        }
-
-        return left.AsSpan().SequenceEqual(right);
-    }
+    private static bool ValueEquals(byte[]? left, byte[]? right) =>
+        ReferenceEquals(left, right) ||
+        (left is not null && right is not null && left.AsSpan().SequenceEqual(right));
 }

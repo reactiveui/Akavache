@@ -132,11 +132,10 @@ public static class BitmapImageExtensions
     public static IObservable<Unit> SaveImage(this IBlobCache blobCache, string key, IBitmap image, DateTimeOffset? absoluteExpiration = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
+        ArgumentExceptionHelper.ThrowIfNull(image);
 
-        return image is null
-            ? throw new ArgumentNullException(nameof(image))
-            : image.ImageToBytes()
-                .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
+        return image.ImageToBytes()
+            .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
     }
 
     /// <summary>
@@ -146,10 +145,7 @@ public static class BitmapImageExtensions
     /// <returns>A Future result representing the byte array.</returns>
     public static IObservable<byte[]> ImageToBytes(this IBitmap image)
     {
-        if (image is null)
-        {
-            throw new ArgumentNullException(nameof(image));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(image);
 
         return Observable.FromAsync(async () =>
         {

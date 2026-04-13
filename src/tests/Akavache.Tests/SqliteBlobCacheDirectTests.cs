@@ -2292,6 +2292,91 @@ public class SqliteBlobCacheDirectTests
     }
 
     /// <summary>
+    /// Tests that <see cref="SqliteBlobCache.ReadValueWithLegacyFallbackAsync"/>
+    /// returns the stored bytes when the V11 <c>CacheEntry</c> table contains
+    /// the requested key (untyped overload).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadValueWithLegacyFallbackAsyncShouldReturnV11ValueWhenPresent()
+    {
+        await using var cache = CreateCache();
+        await cache.Insert("v11-key", [10, 20, 30]).ToTask();
+
+        var bytes = await cache.ReadValueWithLegacyFallbackAsync("v11-key", type: null);
+
+        await Assert.That(bytes).IsEquivalentTo(new byte[] { 10, 20, 30 });
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SqliteBlobCache.ReadValueWithLegacyFallbackAsync"/>
+    /// returns the stored bytes from the V11 table when the typed overload's
+    /// <c>TypeName</c> filter matches the entry.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadValueWithLegacyFallbackAsyncShouldReturnTypedV11ValueWhenPresent()
+    {
+        await using var cache = CreateCache();
+        await cache.Insert("typed-key", [4, 5, 6], typeof(string)).ToTask();
+
+        var bytes = await cache.ReadValueWithLegacyFallbackAsync("typed-key", typeof(string));
+
+        await Assert.That(bytes).IsEquivalentTo(new byte[] { 4, 5, 6 });
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SqliteBlobCache.ReadValueWithLegacyFallbackAsync"/>
+    /// falls through to the legacy V10 store when the V11 table has no row, and
+    /// returns those bytes instead.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadValueWithLegacyFallbackAsyncShouldFallBackToLegacyV10Store()
+    {
+        InMemoryAkavacheConnection connection = new();
+        connection.LegacyV10Store["legacy-only"] = "\t\t\t"u8.ToArray();
+        await using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+
+        var bytes = await cache.ReadValueWithLegacyFallbackAsync("legacy-only", type: null);
+
+        await Assert.That(bytes).IsEquivalentTo("\t\t\t"u8.ToArray());
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SqliteBlobCache.ReadValueWithLegacyFallbackAsync"/>
+    /// throws <see cref="KeyNotFoundException"/> when neither the V11 nor the
+    /// legacy V10 stores contain the requested key.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadValueWithLegacyFallbackAsyncShouldThrowWhenKeyMissingInBothStores()
+    {
+        await using var cache = CreateCache();
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(
+            async () => await cache.ReadValueWithLegacyFallbackAsync("missing", type: null));
+    }
+
+    /// <summary>
+    /// Tests that the <see cref="KeyNotFoundException"/> message produced by the
+    /// typed branch of <see cref="SqliteBlobCache.ReadValueWithLegacyFallbackAsync"/>
+    /// includes the type's full name so callers can disambiguate identical keys
+    /// stored under different types.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ReadValueWithLegacyFallbackAsyncShouldIncludeTypeNameInMissingMessage()
+    {
+        await using var cache = CreateCache();
+
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(
+            async () => await cache.ReadValueWithLegacyFallbackAsync("missing", typeof(string)));
+
+        await Assert.That(ex!.Message).Contains("System.String");
+    }
+
+    /// <summary>
     /// Creates a new instance of <see cref="SqliteBlobCache"/> that utilizes an <see cref="InMemoryAkavacheConnection"/>
     /// for storage, enabling fast, in-memory operations for unit tests and logic validations.
     /// This method bypasses file-based persistence by storing data entirely in memory.

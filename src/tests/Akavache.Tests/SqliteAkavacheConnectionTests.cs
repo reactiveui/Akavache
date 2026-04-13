@@ -427,7 +427,7 @@ public class SqliteAkavacheConnectionTests
                     "INSERT INTO CacheElement (Key, TypeName, Value, Expiration, CreatedAt) VALUES (?, ?, ?, ?, ?)",
                     "k",
                     "SomeOther.Type",
-                    new byte[] { 99 },
+                    "c"u8.ToArray(),
                     0L,
                     DateTime.UtcNow.Ticks);
             }

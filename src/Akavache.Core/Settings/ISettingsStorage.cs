@@ -21,9 +21,7 @@ public interface ISettingsStorage : INotifyPropertyChanged, IDisposable, IAsyncD
     /// load all settings at startup rather than loading them individually on first access.
     /// </summary>
     /// <returns>A task that represents the asynchronous initialization operation.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-#endif
     Task InitializeAsync();
 }

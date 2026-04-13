@@ -21,7 +21,7 @@ public class BinaryHelpersTests
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeZero()
     {
-        byte[] data = [0x00, 0x00, 0x00, 0x00];
+        byte[] data = "\0\0\0\0"u8.ToArray();
 
         var result = BinaryHelpers.ReadInt32LittleEndian(data);
 

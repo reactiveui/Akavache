@@ -82,16 +82,15 @@ public class NotificationService : ReactiveObject, IDisposable
                     WindowStartupLocation = WindowStartupLocation.CenterScreen,
                     WindowStyle = WindowStyle.ToolWindow,
                     ResizeMode = ResizeMode.NoResize,
-                    Topmost = true
-                };
-
-                notificationWindow.Content = new System.Windows.Controls.TextBlock
-                {
-                    Text = message,
-                    Margin = new(10),
-                    TextWrapping = TextWrapping.Wrap,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
+                    Topmost = true,
+                    Content = new System.Windows.Controls.TextBlock
+                    {
+                        Text = message,
+                        Margin = new(10),
+                        TextWrapping = TextWrapping.Wrap,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    },
                 };
 
                 // Auto-close after 5 seconds

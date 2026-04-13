@@ -2,6 +2,8 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Helpers;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -24,38 +26,17 @@ internal static class SecurityUtilities
     /// <exception cref="ArgumentException">Thrown when the cache name contains invalid characters or path traversal sequences.</exception>
     public static string ValidateCacheName(string cacheName, string parameterName = "cacheName")
     {
-        if (string.IsNullOrWhiteSpace(cacheName))
-        {
-            throw new ArgumentException("Cache name cannot be null or empty.", parameterName);
-        }
+        var normalizedName = ValidateNoNullOrTraversal(cacheName, parameterName, "Cache name");
 
-        // Check for problematic prefixes/suffixes BEFORE trimming (but allow leading spaces in cache names for now)
-        if (cacheName.StartsWith(".") || cacheName.EndsWith(".") || cacheName.EndsWith(" "))
-        {
-            throw new ArgumentException($"Cache name '{cacheName}' cannot start or end with '.' or space characters.", parameterName);
-        }
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            normalizedName.IndexOfAny(_invalidFileNameChars) >= 0,
+            $"Cache name '{cacheName}' contains invalid filename characters.",
+            parameterName);
 
-        var normalizedName = cacheName.Trim();
-
-        // Check for invalid filename characters first
-        if (normalizedName.IndexOfAny(_invalidFileNameChars) >= 0)
-        {
-            throw new ArgumentException($"Cache name '{cacheName}' contains invalid filename characters.", parameterName);
-        }
-
-        // Check for path traversal sequences
-        if (normalizedName.Contains("..") || normalizedName.Contains("/") || normalizedName.Contains("\\"))
-        {
-            throw new ArgumentException($"Cache name '{cacheName}' contains invalid path traversal characters. Cache names cannot contain '..' (parent directory), '/' or '\\' characters.", parameterName);
-        }
-
-        // Reject names that could be problematic on various file systems
-        string[] reservedNames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
-        ];
-        if (reservedNames.Contains(normalizedName.ToUpperInvariant()))
-        {
-            throw new ArgumentException($"Cache name '{cacheName}' is a reserved system name and cannot be used.", parameterName);
-        }
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            IsReservedSystemName(normalizedName),
+            $"Cache name '{cacheName}' is a reserved system name and cannot be used.",
+            parameterName);
 
         return normalizedName;
     }
@@ -69,30 +50,12 @@ internal static class SecurityUtilities
     /// <exception cref="ArgumentException">Thrown when the application name contains invalid characters or path traversal sequences.</exception>
     public static string ValidateApplicationName(string applicationName, string parameterName = "applicationName")
     {
-        if (string.IsNullOrWhiteSpace(applicationName))
-        {
-            throw new ArgumentException("Application name cannot be null or empty.", parameterName);
-        }
+        var normalizedName = ValidateNoNullOrTraversal(applicationName, parameterName, "Application name");
 
-        // Check for problematic prefixes/suffixes BEFORE trimming
-        if (applicationName.StartsWith(".") || applicationName.EndsWith(".") || applicationName.EndsWith(" "))
-        {
-            throw new ArgumentException($"Application name '{applicationName}' cannot start or end with '.' or space characters.", parameterName);
-        }
-
-        var normalizedName = applicationName.Trim();
-
-        // Check for path traversal sequences
-        if (normalizedName.Contains("..") || normalizedName.Contains("/") || normalizedName.Contains("\\"))
-        {
-            throw new ArgumentException($"Application name '{applicationName}' contains invalid path traversal characters. Application names cannot contain '..' (parent directory), '/' or '\\' characters.", parameterName);
-        }
-
-        // Check for invalid path characters (less restrictive than filename chars)
-        if (normalizedName.IndexOfAny(_invalidPathChars) >= 0)
-        {
-            throw new ArgumentException($"Application name '{applicationName}' contains invalid path characters.", parameterName);
-        }
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            normalizedName.IndexOfAny(_invalidPathChars) >= 0,
+            $"Application name '{applicationName}' contains invalid path characters.",
+            parameterName);
 
         return normalizedName;
     }
@@ -106,10 +69,10 @@ internal static class SecurityUtilities
     /// <exception cref="ArgumentException">Thrown when the database name contains invalid characters or path traversal sequences.</exception>
     public static string ValidateDatabaseName(string databaseName, string parameterName = "databaseName")
     {
-        if (string.IsNullOrWhiteSpace(databaseName))
-        {
-            throw new ArgumentException("Database name cannot be null or empty.", parameterName);
-        }
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            string.IsNullOrWhiteSpace(databaseName),
+            "Database name cannot be null or empty.",
+            parameterName);
 
         // Use the same validation as cache names since they're used similarly
         return ValidateCacheName(databaseName, parameterName);
@@ -124,32 +87,71 @@ internal static class SecurityUtilities
     /// <exception cref="ArgumentException">Thrown when the resulting path would escape the base directory.</exception>
     public static string SafePathCombine(string basePath, string relativePath)
     {
-        if (string.IsNullOrWhiteSpace(basePath))
-        {
-            throw new ArgumentException("Base path cannot be null or empty.", nameof(basePath));
-        }
+        ArgumentExceptionHelper.ThrowArgumentIf(string.IsNullOrWhiteSpace(basePath), "Base path cannot be null or empty.", nameof(basePath));
+        ArgumentExceptionHelper.ThrowArgumentIf(string.IsNullOrWhiteSpace(relativePath), "Relative path cannot be null or empty.", nameof(relativePath));
 
-        if (string.IsNullOrWhiteSpace(relativePath))
-        {
-            throw new ArgumentException("Relative path cannot be null or empty.", nameof(relativePath));
-        }
-
-        // Normalize the base path
         var normalizedBasePath = Path.GetFullPath(basePath);
-
-        // Combine the paths
-        var combinedPath = Path.Combine(normalizedBasePath, relativePath);
-
-        // Get the full path to resolve any relative components
-        var fullPath = Path.GetFullPath(combinedPath);
+        var fullPath = Path.GetFullPath(Path.Combine(normalizedBasePath, relativePath));
 
         // Ensure the final path is still within the base directory
-        if (!fullPath.StartsWith(normalizedBasePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(fullPath, normalizedBasePath, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException($"The path '{relativePath}' would result in a location outside the base directory '{basePath}'.", nameof(relativePath));
-        }
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            !fullPath.StartsWith(normalizedBasePath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(fullPath, normalizedBasePath, StringComparison.OrdinalIgnoreCase),
+            $"The path '{relativePath}' would result in a location outside the base directory '{basePath}'.",
+            nameof(relativePath));
 
         return fullPath;
+    }
+
+    /// <summary>
+    /// Shared guard for the three checks every name validation in this class
+    /// performs: not null/whitespace, no leading dot, no trailing dot or space,
+    /// and no <c>..</c> / <c>/</c> / <c>\</c> path-traversal sequences.
+    /// </summary>
+    /// <param name="value">The raw value supplied by the caller.</param>
+    /// <param name="parameterName">The parameter name for error reporting.</param>
+    /// <param name="label">Human-readable label used in exception messages (e.g. <c>"Cache name"</c>).</param>
+    /// <returns>The trimmed value, ready for downstream validation.</returns>
+    /// <exception cref="ArgumentException">Thrown when any of the shared rules are violated.</exception>
+    internal static string ValidateNoNullOrTraversal(string value, string parameterName, string label)
+    {
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            string.IsNullOrWhiteSpace(value),
+            $"{label} cannot be null or empty.",
+            parameterName);
+
+        // Check for problematic prefixes/suffixes BEFORE trimming.
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            value.StartsWith(".") || value.EndsWith(".") || value.EndsWith(" "),
+            $"{label} '{value}' cannot start or end with '.' or space characters.",
+            parameterName);
+
+        var normalized = value.Trim();
+
+        ArgumentExceptionHelper.ThrowArgumentIf(
+            normalized.Contains("..") || normalized.Contains("/") || normalized.Contains("\\"),
+            $"{label} '{value}' contains invalid path traversal characters. {label}s cannot contain '..' (parent directory), '/' or '\\' characters.",
+            parameterName);
+
+        return normalized;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="normalizedName"/> matches one of the
+    /// Windows-reserved device names (<c>CON</c>, <c>PRN</c>, <c>AUX</c>, <c>NUL</c>,
+    /// <c>COM1..9</c>, <c>LPT1..9</c>). The match is case-insensitive via
+    /// <see cref="string.ToUpperInvariant"/>.
+    /// </summary>
+    /// <param name="normalizedName">The trimmed candidate name.</param>
+    /// <returns><see langword="true"/> when the name is reserved on Windows.</returns>
+    internal static bool IsReservedSystemName(string normalizedName)
+    {
+        string[] reservedNames =
+        [
+            "CON", "PRN", "AUX", "NUL",
+            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+        ];
+        return reservedNames.Contains(normalizedName.ToUpperInvariant());
     }
 }

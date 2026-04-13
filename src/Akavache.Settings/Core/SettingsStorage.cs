@@ -61,10 +61,8 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <see cref="EagerLoadProperties"/> so it can be unit-tested in isolation.
     /// </remarks>
     /// <returns>A task representing the asynchronous initialization operation.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-#endif
     public Task InitializeAsync() =>
         Task.Run(() => EagerLoadProperties(this, GetType().GetRuntimeProperties()));
 
@@ -118,21 +116,16 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <param name="key">The property name, automatically inferred from the calling member.</param>
     /// <returns>The setting value from cache, storage, or the provided default value.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("GetOrCreate requires types to be preserved for serialization.")]
     [RequiresDynamicCode("GetOrCreate requires types to be preserved for serialization.")]
-#endif
     protected T? GetOrCreate<T>(T defaultValue, [CallerMemberName] string? key = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(key);
 
-        if (_cache.TryGetValue(key, out var value))
-        {
-            return (T?)value;
-        }
-
-        return _blobCache.GetOrCreateObject($"{_keyPrefix}:{key}", () => defaultValue)
-            .Do(x => _cache[key] = x).Wait();
+        return _cache.TryGetValue(key, out var value)
+            ? (T?)value
+            : _blobCache.GetOrCreateObject($"{_keyPrefix}:{key}", () => defaultValue)
+                .Do(x => _cache[key] = x).Wait();
     }
 
     /// <summary>
@@ -148,10 +141,8 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <typeparam name="T">The type of the setting value.</typeparam>
     /// <param name="value">The value to store for this setting.</param>
     /// <param name="key">The property name, automatically inferred from the calling member.</param>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("SetOrCreate requires types to be preserved for serialization.")]
     [RequiresDynamicCode("SetOrCreate requires types to be preserved for serialization.")]
-#endif
     protected void SetOrCreate<T>(T value, [CallerMemberName] string? key = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(key);

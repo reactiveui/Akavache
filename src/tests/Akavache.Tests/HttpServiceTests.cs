@@ -445,7 +445,7 @@ public class HttpServiceTests
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            await cache.Insert("fetch-always-key", [9, 9, 9]).ToTask();
+            await cache.Insert("fetch-always-key", "\t\t\t"u8.ToArray()).ToTask();
 
             await service.DownloadUrl(cache, "fetch-always-key", "https://nonexistent.invalid.localhost.test", fetchAlways: true)
                 .ToTask()

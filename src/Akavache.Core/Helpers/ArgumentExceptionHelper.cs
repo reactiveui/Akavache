@@ -59,4 +59,36 @@ internal static class ArgumentExceptionHelper
 
         throw new ArgumentException("The value cannot be empty or composed entirely of whitespace.", paramName);
     }
+
+    /// <summary>
+    /// Throws an <see cref="ArgumentException"/> with the supplied message and parameter name.
+    /// Centralises the throw site so call-sites read as a single statement instead of an
+    /// inline <c>throw new ArgumentException(...)</c>.
+    /// </summary>
+    /// <param name="message">The validation message describing why the argument is invalid.</param>
+    /// <param name="paramName">The parameter name to attach to the exception.</param>
+    /// <exception cref="ArgumentException">Always thrown.</exception>
+    [DoesNotReturn]
+    public static void ThrowArgument(string message, string paramName) =>
+        throw new ArgumentException(message, paramName);
+
+    /// <summary>
+    /// Throws an <see cref="ArgumentException"/> when <paramref name="condition"/> is
+    /// <see langword="true"/>. Lets validation call-sites collapse to a single line
+    /// (<c>ArgumentExceptionHelper.ThrowArgumentIf(name.IsBad(), "...", nameof(name))</c>)
+    /// instead of an explicit <c>if</c>/<c>throw</c> block.
+    /// </summary>
+    /// <param name="condition">When <see langword="true"/>, the exception is thrown.</param>
+    /// <param name="message">The validation message describing why the argument is invalid.</param>
+    /// <param name="paramName">The parameter name to attach to the exception.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="condition"/> is <see langword="true"/>.</exception>
+    public static void ThrowArgumentIf(bool condition, string message, string paramName)
+    {
+        if (!condition)
+        {
+            return;
+        }
+
+        throw new ArgumentException(message, paramName);
+    }
 }

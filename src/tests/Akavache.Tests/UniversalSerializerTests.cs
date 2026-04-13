@@ -1896,7 +1896,7 @@ public class UniversalSerializerTests
         ThrowingSerializer primary = new();
 
         // Small data without year pattern -> AttemptDateTimeRecovery returns MinValue.
-        byte[] data = [0x00, 0x00];
+        byte[] data = "\0\0"u8.ToArray();
 
         var result = UniversalSerializer.TryAlternativeSerializers<DateTime>(data, primary, null);
         await Assert.That(result).IsEqualTo(DateTime.MinValue);

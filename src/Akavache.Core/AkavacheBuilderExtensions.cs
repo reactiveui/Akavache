@@ -376,9 +376,9 @@ public static class AkavacheBuilderExtensions
 #elif IOS || MACCATALYST
         return cacheName switch
         {
-            "LocalMachine" => (string)CreateAppDirectory(NSSearchPathDirectory.CachesDirectory, builder.ApplicationName, "BlobCache"),
-            "Secure" => (string)CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "SecretCache"),
-            _ => (string)CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "BlobCache"),
+            "LocalMachine" => CreateAppDirectory(NSSearchPathDirectory.CachesDirectory, builder.ApplicationName, "BlobCache"),
+            "Secure" => CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "SecretCache"),
+            _ => CreateAppDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, builder.ApplicationName, "BlobCache"),
         };
 #else
         return cacheName switch

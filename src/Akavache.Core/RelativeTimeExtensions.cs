@@ -42,10 +42,8 @@ public static class RelativeTimeExtensions
     /// <param name="expiration">A time span that will be added to the current time to determine expiration.</param>
     /// <typeparam name="T">The type of object to insert.</typeparam>
     /// <returns>An observable that signals when the item is added to the cache.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
-#endif
     public static IObservable<Unit> InsertObject<T>(this IBlobCache blobCache, string key, T value, TimeSpan expiration)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
@@ -93,10 +91,8 @@ public static class RelativeTimeExtensions
     /// <param name="host">The host to store against.</param>
     /// <param name="expiration">A timespan that will be added to the current DateTime.</param>
     /// <returns>A observable which will signal when the item is added.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
-#endif
     public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host, TimeSpan expiration)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);

@@ -43,21 +43,11 @@ public class LoginInfo(string username, string password) : IEquatable<LoginInfo>
     public override bool Equals(object? obj) => Equals(obj as LoginInfo);
 
     /// <inheritdoc />
-    public bool Equals(LoginInfo? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return string.Equals(UserName, other.UserName, StringComparison.Ordinal) &&
-               string.Equals(Password, other.Password, StringComparison.Ordinal);
-    }
+    public bool Equals(LoginInfo? other) =>
+        other is not null &&
+        (ReferenceEquals(this, other) ||
+         (string.Equals(UserName, other.UserName, StringComparison.Ordinal) &&
+          string.Equals(Password, other.Password, StringComparison.Ordinal)));
 
     /// <inheritdoc />
     public override int GetHashCode()

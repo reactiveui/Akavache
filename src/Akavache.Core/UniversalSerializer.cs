@@ -27,10 +27,8 @@ public static class UniversalSerializer
     /// <param name="primarySerializer">The primary serializer to try first.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The deserialized object.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Universal deserialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal deserialization requires types to be preserved.")]
-#endif
     public static T? Deserialize<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind = null)
     {
         if (data is null or { Length: 0 })
@@ -78,10 +76,8 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
-#endif
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind = null)
     {
         if (value is null)
@@ -134,10 +130,8 @@ public static class UniversalSerializer
     /// <param name="requestedKey">The original key that was requested.</param>
     /// <param name="primarySerializer">The primary serializer being used.</param>
     /// <returns>The data if found using alternative key formats, otherwise default.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Universal key compatibility requires types to be preserved.")]
     [RequiresDynamicCode("Universal key compatibility requires types to be preserved.")]
-#endif
     public static async Task<T?> TryFindDataWithAlternativeKeys<T>(
         IBlobCache cache,
         string requestedKey,
@@ -609,14 +603,9 @@ public static class UniversalSerializer
                     if (dateTime == DateTime.MinValue && data.Length > 20)
                     {
                         var recoveredDateTime = DateTimeHelpers.AttemptDateTimeRecovery(data, dateTime);
-                        if (recoveredDateTime != DateTime.MinValue)
-                        {
-                            dateTime = recoveredDateTime;
-                        }
-                        else
-                        {
-                            dateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
-                        }
+                        dateTime = recoveredDateTime != DateTime.MinValue
+                            ? recoveredDateTime
+                            : new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
                     }
 
                     // Ensure proper DateTimeKind via the shared converter helper.
@@ -739,12 +728,9 @@ public static class UniversalSerializer
         }
 
         // Apply forced DateTime kind via the shared converter helper.
-        if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-        {
-            return DateTimeHelpers.ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value);
-        }
-
-        return dateTime;
+        return forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value
+            ? DateTimeHelpers.ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value)
+            : dateTime;
     }
 
     /// <summary>
