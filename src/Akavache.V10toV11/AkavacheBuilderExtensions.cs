@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
@@ -16,8 +15,13 @@ namespace Akavache.V10toV11;
 /// </summary>
 public static class AkavacheBuilderExtensions
 {
+    /// <summary>The cache name used for the user account cache.</summary>
     private const string UserAccount = "UserAccount";
+
+    /// <summary>The cache name used for the local machine cache.</summary>
     private const string LocalMachine = "LocalMachine";
+
+    /// <summary>The cache name used for the secure cache.</summary>
     private const string Secure = "Secure";
 
     /// <summary>
@@ -128,6 +132,12 @@ public static class AkavacheBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Creates a <see cref="SqliteBlobCache"/> rooted at the legacy V10 directory and filename for the given cache name.
+    /// </summary>
+    /// <param name="cacheName">The logical V11 cache name (e.g., "UserAccount").</param>
+    /// <param name="builder">The Akavache builder used to resolve directories and the serializer.</param>
+    /// <returns>A <see cref="SqliteBlobCache"/> bound to the legacy V10 file path.</returns>
     internal static SqliteBlobCache CreateV10Cache(string cacheName, IAkavacheBuilder builder)
     {
         var directory = builder.GetLegacyCacheDirectory(cacheName);
@@ -158,6 +168,12 @@ public static class AkavacheBuilderExtensions
         return cache;
     }
 
+    /// <summary>
+    /// Gets the absolute path to the V10 database file for the given cache name, or <c>null</c> if no legacy directory is available.
+    /// </summary>
+    /// <param name="builder">The Akavache builder used to resolve directories.</param>
+    /// <param name="cacheName">The logical V11 cache name.</param>
+    /// <returns>The full path to the V10 database file, or <c>null</c> if it cannot be determined.</returns>
     internal static string? GetV10DatabasePath(IAkavacheBuilder builder, string cacheName)
     {
         var directory = builder.GetLegacyCacheDirectory(cacheName);
@@ -169,6 +185,11 @@ public static class AkavacheBuilderExtensions
         return Path.Combine(directory, V10FileNameMap.GetV10FileName(cacheName));
     }
 
+    /// <summary>
+    /// Unwraps known secure cache wrappers to retrieve the underlying <see cref="IBlobCache"/>.
+    /// </summary>
+    /// <param name="secureBlobCache">The secure cache to unwrap.</param>
+    /// <returns>The underlying blob cache, or <c>null</c> if none can be resolved.</returns>
     internal static IBlobCache? GetUnderlyingBlobCache(ISecureBlobCache? secureBlobCache) => secureBlobCache switch
     {
         SecureBlobCacheWrapper ourWrapper => ourWrapper.InnerCache,
@@ -177,6 +198,11 @@ public static class AkavacheBuilderExtensions
         _ => null,
     };
 
+    /// <summary>
+    /// Validates that an application name has been configured on the builder.
+    /// </summary>
+    /// <param name="applicationName">The application name to validate.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the name is null, empty, or whitespace.</exception>
     internal static void ValidateApplicationName(string? applicationName)
     {
         if (string.IsNullOrWhiteSpace(applicationName))
@@ -190,94 +216,136 @@ public static class AkavacheBuilderExtensions
     /// </summary>
     internal class SecureBlobCacheWrapper : ISecureBlobCache
     {
+        /// <summary>Tracks whether the wrapper has been disposed.</summary>
         private bool _disposed;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureBlobCacheWrapper"/> class.
+        /// </summary>
+        /// <param name="inner">The blob cache to delegate to.</param>
         internal SecureBlobCacheWrapper(IBlobCache inner) => InnerCache = inner ?? throw new ArgumentNullException(nameof(inner));
 
+        /// <summary>
+        /// Gets the underlying blob cache that this wrapper delegates all operations to.
+        /// </summary>
         public IBlobCache InnerCache { get; }
 
+        /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind
         {
             get => InnerCache.ForcedDateTimeKind;
             set => InnerCache.ForcedDateTimeKind = value;
         }
 
+        /// <inheritdoc/>
         public IScheduler Scheduler => InnerCache.Scheduler;
 
+        /// <inheritdoc/>
         public ISerializer Serializer => InnerCache.Serializer;
 
+        /// <inheritdoc/>
         public IHttpService HttpService
         {
             get => InnerCache.HttpService;
             set => InnerCache.HttpService = value;
         }
 
+        /// <inheritdoc/>
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
             InnerCache.Insert(keyValuePairs, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
             InnerCache.Insert(key, data, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
             InnerCache.Insert(keyValuePairs, type, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
             InnerCache.Insert(key, data, type, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<byte[]?> Get(string key) => InnerCache.Get(key);
 
+        /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => InnerCache.Get(keys);
 
+        /// <inheritdoc/>
         public IObservable<byte[]?> Get(string key, Type type) => InnerCache.Get(key, type);
 
+        /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => InnerCache.Get(keys, type);
 
+        /// <inheritdoc/>
         public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => InnerCache.GetAll(type);
 
+        /// <inheritdoc/>
         public IObservable<string> GetAllKeys() => InnerCache.GetAllKeys();
 
+        /// <inheritdoc/>
         public IObservable<string> GetAllKeys(Type type) => InnerCache.GetAllKeys(type);
 
+        /// <inheritdoc/>
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => InnerCache.GetCreatedAt(keys);
 
+        /// <inheritdoc/>
         public IObservable<DateTimeOffset?> GetCreatedAt(string key) => InnerCache.GetCreatedAt(key);
 
+        /// <inheritdoc/>
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => InnerCache.GetCreatedAt(keys, type);
 
+        /// <inheritdoc/>
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => InnerCache.GetCreatedAt(key, type);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Flush() => InnerCache.Flush();
 
+        /// <inheritdoc/>
         public IObservable<Unit> Flush(Type type) => InnerCache.Flush(type);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Invalidate(string key) => InnerCache.Invalidate(key);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Invalidate(string key, Type type) => InnerCache.Invalidate(key, type);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Invalidate(IEnumerable<string> keys) => InnerCache.Invalidate(keys);
 
+        /// <inheritdoc/>
         public IObservable<Unit> InvalidateAll(Type type) => InnerCache.InvalidateAll(type);
 
+        /// <inheritdoc/>
         public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => InnerCache.Invalidate(keys, type);
 
+        /// <inheritdoc/>
         public IObservable<Unit> InvalidateAll() => InnerCache.InvalidateAll();
 
+        /// <inheritdoc/>
         public IObservable<Unit> Vacuum() => InnerCache.Vacuum();
 
+        /// <inheritdoc/>
         public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(key, type, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, absoluteExpiration);
 
+        /// <inheritdoc/>
         public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => InnerCache.UpdateExpiration(keys, type, absoluteExpiration);
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <inheritdoc/>
         public async ValueTask DisposeAsync()
         {
             await DisposeAsyncCore().ConfigureAwait(false);
@@ -285,6 +353,10 @@ public static class AkavacheBuilderExtensions
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the wrapper and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected internal virtual void Dispose(bool disposing)
         {
             if (!_disposed && disposing)
@@ -298,6 +370,10 @@ public static class AkavacheBuilderExtensions
             }
         }
 
+        /// <summary>
+        /// Asynchronously releases the resources owned by the wrapper.
+        /// </summary>
+        /// <returns>A <see cref="ValueTask"/> representing the asynchronous dispose operation.</returns>
         protected internal virtual async ValueTask DisposeAsyncCore()
         {
             if (InnerCache is IAsyncDisposable asyncDisposable)

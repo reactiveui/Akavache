@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -17,10 +17,16 @@ namespace Akavache.Settings.Core;
 /// </summary>
 public abstract class SettingsStorage : ISettingsStorage
 {
+    /// <summary>The underlying blob cache used for persistent storage of settings values.</summary>
     private readonly IBlobCache _blobCache;
-    private readonly Dictionary<string, object?> _cache;
-    private readonly ReaderWriterLockSlim _cacheLock;
+
+    /// <summary>In-memory cache of settings values keyed by property name.</summary>
+    private readonly ConcurrentDictionary<string, object?> _cache;
+
+    /// <summary>Prefix prepended to every settings key in the blob cache to avoid collisions.</summary>
     private readonly string _keyPrefix;
+
+    /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>
     private bool _disposedValue;
 
     /// <summary>
@@ -36,8 +42,7 @@ public abstract class SettingsStorage : ISettingsStorage
         _keyPrefix = keyPrefix;
         _blobCache = cache;
 
-        _cache = [];
-        _cacheLock = new();
+        _cache = new();
     }
 
     /// <summary>
@@ -121,22 +126,13 @@ public abstract class SettingsStorage : ISettingsStorage
     {
         ArgumentExceptionHelper.ThrowIfNull(key);
 
-        _cacheLock.EnterReadLock();
-
-        try
+        if (_cache.TryGetValue(key, out var value))
         {
-            if (_cache.TryGetValue(key, out var value))
-            {
-                return (T?)value;
-            }
-        }
-        finally
-        {
-            _cacheLock.ExitReadLock();
+            return (T?)value;
         }
 
         return _blobCache.GetOrCreateObject($"{_keyPrefix}:{key}", () => defaultValue)
-            .Do(x => AddToInternalCache(key, x)).Wait();
+            .Do(x => _cache[key] = x).Wait();
     }
 
     /// <summary>
@@ -160,7 +156,7 @@ public abstract class SettingsStorage : ISettingsStorage
     {
         ArgumentExceptionHelper.ThrowIfNull(key);
 
-        AddToInternalCache(key, value);
+        _cache[key] = value;
 
         // Fire and forget, we retrieve the value from the in-memory cache from now on
         _blobCache.InsertObject($"{_keyPrefix}:{key}", value).Subscribe();
@@ -178,22 +174,10 @@ public abstract class SettingsStorage : ISettingsStorage
         {
             if (disposing)
             {
-                _cacheLock.Dispose();
                 _blobCache.Dispose();
             }
 
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
             _disposedValue = true;
         }
-    }
-
-    private void AddToInternalCache(string key, object? value)
-    {
-        _cacheLock.EnterWriteLock();
-
-        _cache[key] = value;
-
-        _cacheLock.ExitWriteLock();
     }
 }

@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
@@ -19,6 +18,7 @@ namespace Akavache.Sqlite3;
 /// </summary>
 internal sealed class SqliteAkavacheConnection : IAkavacheConnection
 {
+    /// <summary>The underlying sqlite-net asynchronous connection.</summary>
     private readonly SQLiteAsyncConnection _connection;
 
     /// <summary>
@@ -119,26 +119,26 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
         var nowTicks = now.UtcTicks;
         const string expiryPredicate = "(Expiration IS NULL OR Expiration = 0 OR Expiration > ?)";
 
-        var sqls = new List<(string Sql, object[] Args)>(3);
+        var sqlStatements = new List<(string Sql, object[] Args)>(3);
         if (type is not null)
         {
             if (!string.IsNullOrWhiteSpace(type.AssemblyQualifiedName))
             {
-                sqls.Add((
+                sqlStatements.Add((
                     $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
                     [key, nowTicks, type.AssemblyQualifiedName!]));
             }
 
-            sqls.Add((
+            sqlStatements.Add((
                 $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
                 [key, nowTicks, type.FullName!]));
         }
 
-        sqls.Add((
+        sqlStatements.Add((
             $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate}",
             [key, nowTicks]));
 
-        foreach (var (sql, args) in sqls)
+        foreach (var (sql, args) in sqlStatements)
         {
             try
             {
@@ -171,12 +171,15 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
     /// </summary>
     private sealed class WalCheckpointRow
     {
+        /// <summary>Gets or sets the busy flag returned by the checkpoint pragma.</summary>
         [Column("busy")]
         public int Busy { get; set; }
 
+        /// <summary>Gets or sets the number of frames in the WAL log at checkpoint time.</summary>
         [Column("log")]
         public int Log { get; set; }
 
+        /// <summary>Gets or sets the number of frames successfully checkpointed.</summary>
         [Column("checkpointed")]
         public int Checkpointed { get; set; }
     }
@@ -187,6 +190,7 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
     /// </summary>
     private sealed class JournalModeRow
     {
+        /// <summary>Gets or sets the journal mode name returned by the pragma.</summary>
         [Column("journal_mode")]
         public string JournalMode { get; set; } = string.Empty;
     }

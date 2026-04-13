@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
@@ -12,6 +11,7 @@ namespace Akavache.Core;
 /// </summary>
 internal static class RequestCache
 {
+    /// <summary>The set of currently in-flight requests, keyed by type-qualified cache key.</summary>
     private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new();
 
     /// <summary>
@@ -124,5 +124,9 @@ internal static class RequestCache
         return _inflightRequests.ContainsKey(requestKey);
     }
 
+    /// <summary>
+    /// Removes the entry identified by <paramref name="requestKey"/> from the in-flight cache.
+    /// </summary>
+    /// <param name="requestKey">The fully-qualified request key.</param>
     internal static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out var _);
 }

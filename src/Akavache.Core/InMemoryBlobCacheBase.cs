@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -20,14 +19,23 @@ namespace Akavache;
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
 public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : ISecureBlobCache
 {
+    /// <summary>The in-memory key to cache entry mapping.</summary>
     private readonly Dictionary<string, CacheEntry> _cache = [];
+
+    /// <summary>Per-type index of keys for fast type-scoped lookups.</summary>
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
 #if NET9_0_OR_GREATER
-    private readonly System.Threading.Lock _lock = new();
+    /// <summary>Synchronization primitive guarding mutations of the cache and type index.</summary>
+    private readonly Lock _lock = new();
 #else
+    /// <summary>Synchronization primitive guarding mutations of the cache and type index.</summary>
     private readonly object _lock = new();
 #endif
+
+    /// <summary>Tracks whether the instance has been disposed.</summary>
     private bool _disposed;
+
+    /// <summary>The cached HTTP service instance, lazily created on first access.</summary>
     private IHttpService? _httpService;
 
     /// <inheritdoc />

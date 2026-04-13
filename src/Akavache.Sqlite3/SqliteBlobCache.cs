@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -17,7 +16,6 @@ namespace Akavache.Sqlite3;
 /// Provides a SQLite-based implementation of IBlobCache for persistent data storage.
 /// This cache stores data in a SQLite database file for reliable persistence across application restarts.
 /// </summary>
-[SQLite.Preserve(AllMembers = true)]
 #if ENCRYPTED
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:File name should match first type name", Justification = "Reused file.")]
 public class EncryptedSqliteBlobCache : ISecureBlobCache
@@ -26,14 +24,20 @@ public class SqliteBlobCache : IBlobCache
 #endif
 {
 #if ENCRYPTED
+    /// <summary>The runtime class name used in diagnostics and disposed exceptions.</summary>
     private const string ClassName = nameof(EncryptedSqliteBlobCache);
 #else
+    /// <summary>The runtime class name used in diagnostics and disposed exceptions.</summary>
     private const string ClassName = nameof(SqliteBlobCache);
 #endif
 
+    /// <summary>Observable that completes once the underlying database schema is initialized.</summary>
     private readonly IObservable<Unit> _initialized;
 
+    /// <summary>Indicates whether <see cref="Dispose(bool)"/> has been invoked.</summary>
     private bool _disposed;
+
+    /// <summary>Backing field for the lazily-initialized <see cref="HttpService"/> property.</summary>
     private IHttpService? _httpService;
 
 #if ENCRYPTED

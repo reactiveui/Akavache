@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -20,7 +19,10 @@ public class HttpService : IHttpService
     /// </summary>
     public HttpService()
     {
-        var handler = new HttpClientHandler();
+        var handler = new HttpClientHandler
+        {
+            CheckCertificateRevocationList = true,
+        };
         if (handler.SupportsAutomaticDecompression)
         {
             handler.AutomaticDecompression = DecompressionMethods.GZip |
@@ -100,6 +102,13 @@ public class HttpService : IHttpService
         return conn;
     }
 
+    /// <summary>
+    /// Builds an <see cref="HttpRequestMessage"/> for the specified URI, method, and headers.
+    /// </summary>
+    /// <param name="uri">The target URI.</param>
+    /// <param name="method">The HTTP method.</param>
+    /// <param name="headers">Optional request headers.</param>
+    /// <returns>A configured request message.</returns>
     internal static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)
     {
         var request = new HttpRequestMessage(method, uri);
@@ -115,6 +124,13 @@ public class HttpService : IHttpService
         return request;
     }
 
+    /// <summary>
+    /// Reads the response body as a byte array, throwing if the response status indicates failure.
+    /// </summary>
+    /// <param name="responseMessage">The HTTP response to process.</param>
+    /// <param name="url">The original request URL, used in error messages.</param>
+    /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
+    /// <returns>An observable that emits the response bytes.</returns>
     internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration)
     {
         if (!responseMessage.IsSuccessStatusCode)
@@ -125,6 +141,13 @@ public class HttpService : IHttpService
         return Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
     }
 
+    /// <summary>
+    /// Reads the response body as a byte array, throwing if the response status indicates failure.
+    /// </summary>
+    /// <param name="responseMessage">The HTTP response to process.</param>
+    /// <param name="url">The original request URI, used in error messages.</param>
+    /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
+    /// <returns>An observable that emits the response bytes.</returns>
     internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
 
     /// <summary>
@@ -167,7 +190,10 @@ public class HttpService : IHttpService
     /// </summary>
     public class FastHttpService : HttpService
     {
+        /// <summary>The number of retry attempts configured for outgoing requests.</summary>
         private readonly int _retries;
+
+        /// <summary>The request timeout configured for outgoing requests.</summary>
         private readonly TimeSpan _timeout;
 
         /// <summary>

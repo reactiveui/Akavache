@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Splat;
@@ -24,7 +23,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? seriali
     /// </summary>
     /// <param name="serialzerType">Type of the serialzer.</param>
     public InMemoryBlobCache(string serialzerType)
-        : this(CacheDatabase.TaskpoolScheduler, AppLocator.Current.GetService<ISerializer>(contract: serialzerType) ?? throw new ArgumentNullException(nameof(serializer), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
+        : this(CacheDatabase.TaskpoolScheduler, AppLocator.Current.GetService<ISerializer>(contract: serialzerType) ?? throw new InvalidOperationException("No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
     {
     }
 

@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Serialization;
 
 namespace Akavache.NewtonsoftJson;
 
@@ -15,10 +15,13 @@ namespace Akavache.NewtonsoftJson;
 /// </summary>
 public class NewtonsoftSerializer : ISerializer
 {
+    /// <summary>The contract resolver used to enforce Akavache DateTime handling.</summary>
     private readonly NewtonsoftDateTimeContractResolver _contractResolver = new();
 #if NET9_0_OR_GREATER
-    private readonly System.Threading.Lock _serializerLock = new();
+    /// <summary>Synchronisation primitive guarding access to <see cref="Options"/>.</summary>
+    private readonly Lock _serializerLock = new();
 #else
+    /// <summary>Synchronisation primitive guarding access to <see cref="Options"/>.</summary>
     private readonly object _serializerLock = new();
 #endif
 
@@ -79,6 +82,7 @@ public class NewtonsoftSerializer : ISerializer
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
 #endif
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
     public T? Deserialize<T>(byte[] bytes)
     {
         if (bytes == null || bytes.Length == 0)
@@ -139,6 +143,7 @@ public class NewtonsoftSerializer : ISerializer
     /// <param name="settings">The Newtonsoft.Json settings to use.</param>
     /// <param name="value">When this method returns <see langword="true"/>, contains the unwrapped value; otherwise <c>default</c>.</param>
     /// <returns><see langword="true"/> if a non-null wrapper was produced.</returns>
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
     internal static bool TryUnwrapSimpleObjectWrapper<T>(string jsonString, JsonSerializerSettings settings, out T? value)
     {
         try
@@ -248,6 +253,7 @@ public class NewtonsoftSerializer : ISerializer
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
 #endif
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
     internal T? TryDeserializeFromOtherFormats<T>(byte[] bytes)
     {
         // First try BSON format if not already attempted
@@ -296,6 +302,10 @@ public class NewtonsoftSerializer : ISerializer
         }
     }
 
+    /// <summary>
+    /// Creates a <see cref="JsonSerializer"/> instance configured with the current options and contract resolver.
+    /// </summary>
+    /// <returns>A configured <see cref="JsonSerializer"/>.</returns>
     internal JsonSerializer GetSerializer()
     {
         var settings = Options ?? new JsonSerializerSettings();
@@ -313,6 +323,11 @@ public class NewtonsoftSerializer : ISerializer
         }
     }
 
+    /// <summary>
+    /// Returns a copy of the current <see cref="JsonSerializerSettings"/> with the Akavache contract resolver applied.
+    /// </summary>
+    /// <returns>The effective <see cref="JsonSerializerSettings"/> used for serialization.</returns>
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "We honour caller-supplied JsonSerializerSettings — including TypeNameHandling — because Akavache is a generic serialization layer and forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs (a documented Newtonsoft.Json feature). Callers who deserialize untrusted blobs are responsible for restricting the binder via Options.SerializationBinder before they hand the settings to us.")]
     internal JsonSerializerSettings GetEffectiveSettings()
     {
         var settings = Options ?? new JsonSerializerSettings();
@@ -342,6 +357,7 @@ public class NewtonsoftSerializer : ISerializer
             MetadataPropertyHandling = settings.MetadataPropertyHandling,
             TypeNameAssemblyFormatHandling = settings.TypeNameAssemblyFormatHandling,
             ConstructorHandling = settings.ConstructorHandling,
+            SerializationBinder = settings.SerializationBinder,
             Error = settings.Error
         };
 
@@ -359,6 +375,9 @@ public class NewtonsoftSerializer : ISerializer
     [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Used for JSON deserialization")]
     internal class SimpleObjectWrapper<T>
     {
+        /// <summary>
+        /// Gets or sets the wrapped value.
+        /// </summary>
         public T? Value { get; set; }
     }
 
@@ -368,12 +387,22 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type of the wrapped value.</typeparam>
     private class ObjectWrapper<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class.
+        /// </summary>
         public ObjectWrapper()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class with the supplied value.
+        /// </summary>
+        /// <param name="value">The value to wrap.</param>
         public ObjectWrapper(T? value) => Value = value;
 
+        /// <summary>
+        /// Gets or sets the wrapped value.
+        /// </summary>
         public T? Value { get; set; }
     }
 }

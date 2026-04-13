@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Helpers;
@@ -160,7 +159,17 @@ public static class ImageCacheExtensions
             .TakeLast(1);
     }
 
-    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
+    /// <summary>
+    /// Decodes <paramref name="compressedImage"/> into an <see cref="IBitmap"/> via the
+    /// ambient <see cref="BitmapLoader.Current"/>. Pulled out as an <c>internal static</c>
+    /// helper so the bitmap-decode path can be unit-tested in isolation against a mocked
+    /// loader without needing a full blob-cache pipeline.
+    /// </summary>
+    /// <param name="compressedImage">The encoded image bytes.</param>
+    /// <param name="desiredWidth">Optional target width for the decoded bitmap.</param>
+    /// <param name="desiredHeight">Optional target height for the decoded bitmap.</param>
+    /// <returns>An observable that emits the decoded bitmap or fails with <see cref="IOException"/>.</returns>
+    internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Observable.FromAsync(async () =>
         {
 #if NETSTANDARD2_0 || NET462_OR_GREATER

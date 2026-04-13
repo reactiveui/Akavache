@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -11,6 +10,7 @@ using System.IO;
 using System.IO.IsolatedStorage;
 using System.Reflection;
 using Akavache.Core;
+using Akavache.Helpers;
 using Splat;
 using Splat.Builder;
 
@@ -337,21 +337,9 @@ public static class AkavacheBuilderExtensions
     [ExcludeFromCodeCoverage]
     public static string? GetIsolatedCacheDirectory(this IAkavacheInstance builder, string cacheName)
     {
-        // Ensure the builder is not null
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
-
-        if (string.IsNullOrWhiteSpace(cacheName))
-        {
-            throw new ArgumentException("Cache name cannot be null or empty.", nameof(cacheName));
-        }
-
-        if (string.IsNullOrWhiteSpace(builder.ApplicationName))
-        {
-            throw new ArgumentException("Application name cannot be null or empty.", nameof(builder.ApplicationName));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(cacheName);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(builder.ApplicationName);
 
         // Validate input to prevent path traversal attacks
         var validatedCacheName = SecurityUtilities.ValidateCacheName(cacheName, nameof(cacheName));
@@ -392,7 +380,7 @@ public static class AkavacheBuilderExtensions
 
                     if (isoStore.DirectoryExists(isoPath))
                     {
-                        var dirNames = isoStore.GetDirectoryNames(isoPath);
+                        isoStore.GetDirectoryNames(isoPath);
                         cachePath = Path.Combine(isoStore.GetType().GetProperty("RootDirectory", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(isoStore)?.ToString() ?? string.Empty, isoPath);
                     }
                 }
@@ -477,6 +465,10 @@ public static class AkavacheBuilderExtensions
 #endif
     }
 
+    /// <summary>
+    /// Recursively creates all directories along the full path of the supplied <see cref="DirectoryInfo"/>.
+    /// </summary>
+    /// <param name="directoryInfo">The directory whose full path should be created on disk.</param>
     internal static void CreateRecursive(this DirectoryInfo directoryInfo) =>
         _ = directoryInfo.SplitFullPath().Aggregate((parent, dir) =>
         {
@@ -490,6 +482,11 @@ public static class AkavacheBuilderExtensions
             return path;
         });
 
+    /// <summary>
+    /// Splits the full path of the supplied <see cref="DirectoryInfo"/> into its individual path components.
+    /// </summary>
+    /// <param name="directoryInfo">The directory whose full path will be split.</param>
+    /// <returns>The ordered path components, beginning with the root.</returns>
     internal static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
     {
         var root = Path.GetPathRoot(directoryInfo.FullName);
@@ -515,6 +512,13 @@ public static class AkavacheBuilderExtensions
     }
 
 #if IOS || MACCATALYST
+    /// <summary>
+    /// Creates a per-application directory beneath a system search-path directory on Apple platforms.
+    /// </summary>
+    /// <param name="targetDir">The platform search-path directory to use as the parent.</param>
+    /// <param name="applicationName">The application name segment to use within the path.</param>
+    /// <param name="subDir">The leaf cache sub-directory name.</param>
+    /// <returns>The fully qualified path of the created directory.</returns>
     internal static string CreateAppDirectory(NSSearchPathDirectory targetDir, string applicationName, string subDir = "BlobCache")
     {
         using var fm = new NSFileManager();

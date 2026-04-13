@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -16,8 +15,9 @@ namespace Akavache.SystemTextJson;
 /// A BSON serializer that uses Newtonsoft.Json.Bson for BSON encoding/decoding
 /// and System.Text.Json for object serialization.
 /// </summary>
-public class SystemJsonBsonSerializer : ISerializer
+public partial class SystemJsonBsonSerializer : ISerializer
 {
+    /// <summary>The inner JSON serializer used for the JSON fallback path.</summary>
     private readonly SystemJsonSerializer _jsonSerializer = new();
 
     /// <summary>
@@ -132,7 +132,7 @@ public class SystemJsonBsonSerializer : ISerializer
     /// <returns>Normalized JSON string.</returns>
     internal static string NormalizeDateTimeFormats(string jsonString)
     {
-        var dateTimeTickPattern = new Regex(@"""Date"":(\d{15,})");
+        var dateTimeTickPattern = GetDateRegex();
 
         return dateTimeTickPattern.Replace(jsonString, static match =>
         {
@@ -201,6 +201,12 @@ public class SystemJsonBsonSerializer : ISerializer
         return false;
     }
 
+    /// <summary>
+    /// Serializes <paramref name="item"/> to BSON bytes, falling back to plain JSON on failure.
+    /// </summary>
+    /// <typeparam name="T">The type to serialize.</typeparam>
+    /// <param name="item">The item to serialize.</param>
+    /// <returns>The serialized BSON (or JSON fallback) bytes.</returns>
     [RequiresUnreferencedCode("Reflection-based BSON serialization.")]
     [RequiresDynamicCode("Reflection-based BSON serialization.")]
     internal byte[] SerializeToBson<T>(T item)
@@ -224,6 +230,14 @@ public class SystemJsonBsonSerializer : ISerializer
         }
     }
 
+    /// <summary>
+    /// Attempts to decode <paramref name="bytes"/> as BSON, unwrapping any
+    /// <see cref="ObjectWrapper{T}"/> payload and falling back to direct
+    /// JSON/Newtonsoft deserialization on failure.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="bytes">The BSON bytes to decode.</param>
+    /// <returns>The deserialized value, or <c>default</c> if all paths fail.</returns>
     [RequiresUnreferencedCode("Reflection-based BSON deserialization.")]
     [RequiresDynamicCode("Reflection-based BSON deserialization.")]
     internal T? DeserializeBsonFormat<T>(byte[] bytes)
@@ -274,14 +288,37 @@ public class SystemJsonBsonSerializer : ISerializer
         return default;
     }
 
+    /// <summary>
+    /// Creates a regular expression to identify JSON date fields
+    /// containing a date represented as ticks in a specific format.
+    /// </summary>
+    /// <returns>A regular expression to match tick-based date representations.</returns>
+    [GeneratedRegex(@"""Date"":(\d{15,})")]
+    private static partial Regex GetDateRegex();
+
+    /// <summary>
+    /// Wraps a value so that primitive and root-level types can be encoded as a
+    /// BSON document (BSON requires an object root).
+    /// </summary>
+    /// <typeparam name="T">The wrapped value type.</typeparam>
     internal class ObjectWrapper<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class.
+        /// </summary>
         public ObjectWrapper()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class with the supplied value.
+        /// </summary>
+        /// <param name="value">The value to wrap.</param>
         public ObjectWrapper(T? value) => Value = value;
 
+        /// <summary>
+        /// Gets or sets the wrapped value.
+        /// </summary>
         public T? Value { get; set; }
     }
 }

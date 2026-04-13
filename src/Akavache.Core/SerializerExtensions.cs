@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -303,7 +302,7 @@ public static class SerializerExtensions
         }
 
         // Try to get from cache first
-        return blobCache.GetObject<T>(key).Catch<T?, Exception>(ex =>
+        return blobCache.GetObject<T>(key).Catch<T?, Exception>(_ =>
         {
             // When a cache miss occurs (either key not found or expired),
             // we need to fetch the data. We use RequestCache to deduplicate
@@ -315,7 +314,7 @@ public static class SerializerExtensions
             return RequestCache.GetOrCreateRequest(key, () =>
                 fetchFunc().SelectMany(value =>
                     blobCache.InsertObject(key, value, absoluteExpiration)
-                        .Select(__ => value)
+                        .Select(_ => value)
                         .Take(1))); // Ensure we only take one result
         });
     }
@@ -438,18 +437,18 @@ public static class SerializerExtensions
                     var shouldInvalidate = shouldInvalidateOnError ?
                         blobCache.InvalidateObject<T>(key) :
                         Observable.Return(Unit.Default);
-                    return shouldInvalidate.SelectMany(__ => Observable.Throw<T>(ex));
+                    return shouldInvalidate.SelectMany(_ => Observable.Throw<T>(ex));
                 });
 
                 return fetchObs
                     .SelectMany(x =>
                         cacheValidationPredicate is not null && !cacheValidationPredicate(x)
                             ? Observable.Return(default(T))
-                            : blobCache.InvalidateObject<T>(key).Select(__ => x))
+                            : blobCache.InvalidateObject<T>(key).Select(_ => x))
                     .SelectMany(x =>
                         cacheValidationPredicate is not null && !cacheValidationPredicate(x!)
                             ? Observable.Return(default(T))
-                            : blobCache.InsertObject(key, x, absoluteExpiration).Select(__ => x));
+                            : blobCache.InsertObject(key, x, absoluteExpiration).Select(_ => x));
             });
 
         var result = blobCache.GetObject<T>(key).Select(x => (x, true))

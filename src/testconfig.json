@@ -12,11 +12,12 @@
                 "skipAutoProperties": true,
                 "modulePaths": {
                     "include": [
-                        "Akavache\\..*"
+                        "Akavache(\\..*)?"
                     ],
                     "exclude": [
                         ".*Tests.*",
-                        ".*TestRunner.*"
+                        ".*TestRunner.*",
+                        ".*Benchmarks.*"
                     ]
                 }
             }

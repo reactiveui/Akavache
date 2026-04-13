@@ -6,14 +6,14 @@
   </Configurations>
   <Folder Name="/Compatability/">
     <File Path="RunCompatTest.ps1" />
-    <Project Path="src/AkavacheV10Writer/AkavacheV10Writer.csproj" />
-    <Project Path="src/AkavacheV11Reader/AkavacheV11Reader.csproj" />
+    <Project Path="compat/AkavacheV10Writer/AkavacheV10Writer.csproj" />
+    <Project Path="compat/AkavacheV11Reader/AkavacheV11Reader.csproj" />
   </Folder>
   <Folder Name="/Examples/">
-    <Project Path="Samples/AkavacheTodoMaui/AkavacheTodoMaui.csproj">
+    <Project Path="samples/AkavacheTodoMaui/AkavacheTodoMaui.csproj">
       <Deploy Solution="*|Any CPU" />
     </Project>
-    <Project Path="Samples/AkavacheTodoWpf/AkavacheTodoWpf.csproj" />
+    <Project Path="samples/AkavacheTodoWpf/AkavacheTodoWpf.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="../.github/workflows/ci-build.yml" />
@@ -29,11 +29,13 @@
     <File Path="stylecop.json" />
     <File Path="tests.runsettings" />
   </Folder>
+  <Folder Name="/Benchmarks/">
+    <Project Path="benchmarks/Akavache.Benchmarks/Akavache.Benchmarks.csproj" />
+    <Project Path="benchmarks/Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj" />
+  </Folder>
   <Folder Name="/Tests/">
-    <Project Path="Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj" />
-    <Project Path="Akavache.Benchmarks/Akavache.Benchmarks.csproj" />
-    <Project Path="Akavache.Settings.Tests/Akavache.Settings.Tests.csproj" />
-    <Project Path="Akavache.Tests/Akavache.Tests.csproj" />
+    <Project Path="tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj" />
+    <Project Path="tests/Akavache.Tests/Akavache.Tests.csproj" />
   </Folder>
   <Project Path="Akavache.Core/Akavache.csproj" />
   <Project Path="Akavache.Drawing/Akavache.Drawing.csproj" />

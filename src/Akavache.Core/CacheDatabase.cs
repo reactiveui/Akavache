@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -15,8 +14,13 @@ namespace Akavache;
 /// </summary>
 public static class CacheDatabase
 {
+    /// <summary>The currently configured Akavache instance.</summary>
     private static IAkavacheInstance? _builder;
+
+    /// <summary>Tracks whether <see cref="Initialize{T}(string, FileLocationOption)"/> has been called.</summary>
     private static bool _isInitialized;
+
+    /// <summary>Optional override for the task pool scheduler.</summary>
     private static IScheduler? _taskPoolOverride;
 
     /// <summary>
@@ -262,6 +266,7 @@ public static class CacheDatabase
     /// Resets all CacheDatabase state for testing purposes.
     /// Calls Shutdown first, then clears the builder and initialization flag.
     /// </summary>
+    /// <returns>A task that completes once shutdown and reset are done.</returns>
     internal static async Task ResetForTestsAsync()
     {
         if (_isInitialized)

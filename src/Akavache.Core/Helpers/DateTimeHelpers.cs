@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Text;
@@ -13,9 +12,12 @@ namespace Akavache.Helpers;
 /// <c>UniversalSerializer</c> so the logic is testable in isolation and reusable across
 /// serializer implementations.
 /// </summary>
-internal static class DateTimeHelpers
+internal static partial class DateTimeHelpers
 {
+    /// <summary>The Unix epoch (1970-01-01T00:00:00Z) used as the reference point for millisecond-timestamp recovery.</summary>
     private static readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>A fixed, modern UTC date returned by recovery strategies when only a hint of a real date is detectable.</summary>
     private static readonly DateTime _safeFallbackDate = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
 
     /// <summary>
@@ -185,8 +187,7 @@ internal static class DateTimeHelpers
         }
 
         // Try to find ISO 8601 date patterns.
-        const string iso8601Pattern = @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}";
-        if (System.Text.RegularExpressions.Regex.IsMatch(dataAsString, iso8601Pattern))
+        if (Iso8601Regex().IsMatch(dataAsString))
         {
             return _safeFallbackDate;
         }
@@ -242,4 +243,9 @@ internal static class DateTimeHelpers
     /// <returns>A recovered DateTime, or <c>null</c> if the buffer is too small to apply this strategy.</returns>
     public static DateTime? TryRecoverDateTimeFromLargeDataFallback(byte[] data) =>
         data.Length > 50 ? _safeFallbackDate : null;
+
+    /// <summary>Source-generated regex matching ISO 8601 timestamps inside arbitrary payloads.</summary>
+    /// <returns>The compiled regex.</returns>
+    [System.Text.RegularExpressions.GeneratedRegex(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")]
+    private static partial System.Text.RegularExpressions.Regex Iso8601Regex();
 }

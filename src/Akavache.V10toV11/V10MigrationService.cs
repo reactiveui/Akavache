@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
@@ -58,7 +57,7 @@ internal static class V10MigrationService
         options.Logger?.Invoke($"Starting migration from '{v10DbPath}'...");
 
         // Open the V10 database read-only
-        var v10Connection = new Akavache.Sqlite3.SqliteAkavacheConnection(v10DbPath, SQLiteOpenFlags.ReadOnly | SQLiteOpenFlags.SharedCache);
+        var v10Connection = new SqliteAkavacheConnection(v10DbPath, SQLiteOpenFlags.ReadOnly | SQLiteOpenFlags.SharedCache);
 
         try
         {
@@ -143,6 +142,13 @@ internal static class V10MigrationService
         }
     }
 
+    /// <summary>
+    /// Converts a V10 cache row into a V11 <see cref="CacheEntry"/>, optionally re-serializing the payload.
+    /// </summary>
+    /// <param name="v10Entry">The source V10 row.</param>
+    /// <param name="serializer">The current serializer used for re-serialization.</param>
+    /// <param name="options">The migration options controlling conversion behavior.</param>
+    /// <returns>A new <see cref="CacheEntry"/> ready for insertion into the V11 cache.</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     internal static CacheEntry ConvertEntry(V10CacheElement v10Entry, ISerializer serializer, V10MigrationOptions options)
@@ -167,6 +173,15 @@ internal static class V10MigrationService
         };
     }
 
+    /// <summary>
+    /// Attempts to re-serialize a V10 BSON payload using the current serializer for the given type.
+    /// Returns the original bytes if the type cannot be resolved or re-serialization fails.
+    /// </summary>
+    /// <param name="value">The original payload bytes.</param>
+    /// <param name="typeName">The type name recorded with the V10 entry.</param>
+    /// <param name="serializer">The current serializer.</param>
+    /// <param name="options">The migration options used for diagnostics.</param>
+    /// <returns>The re-serialized bytes, or the original bytes when re-serialization is not possible.</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration uses reflection to dynamically resolve types and call generic Serialize/Deserialize methods.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration uses reflection to dynamically resolve types and call generic Serialize/Deserialize methods.")]
     internal static byte[]? TryReserialize(byte[] value, string? typeName, ISerializer serializer, V10MigrationOptions options)
@@ -224,6 +239,11 @@ internal static class V10MigrationService
         }
     }
 
+    /// <summary>
+    /// Resolves a CLR <see cref="Type"/> from a possibly assembly-qualified name, falling back to scanning loaded assemblies.
+    /// </summary>
+    /// <param name="typeName">The type name to resolve.</param>
+    /// <returns>The resolved <see cref="Type"/>, or <c>null</c> if it cannot be found.</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses Type.GetType and Assembly.GetType to resolve types dynamically.")]
     internal static Type? ResolveType(string typeName)
     {
@@ -251,9 +271,14 @@ internal static class V10MigrationService
             .FirstOrDefault(t => t != null);
     }
 
+    /// <summary>
+    /// Converts a V10 tick value to a UTC <see cref="DateTimeOffset"/>, returning the current time for invalid inputs.
+    /// </summary>
+    /// <param name="ticks">The tick count from the V10 row.</param>
+    /// <returns>The corresponding <see cref="DateTimeOffset"/>.</returns>
     internal static DateTimeOffset TicksToDateTimeOffset(long ticks)
     {
-        if (ticks <= 0 || ticks < MinValidTicks)
+        if (ticks is <= 0 or < MinValidTicks)
         {
             return DateTimeOffset.UtcNow;
         }
@@ -268,10 +293,15 @@ internal static class V10MigrationService
         }
     }
 
+    /// <summary>
+    /// Converts a V10 expiration tick value to a nullable <see cref="DateTimeOffset"/>, mapping zero or sentinel values to <c>null</c>.
+    /// </summary>
+    /// <param name="expirationTicks">The expiration tick count from the V10 row.</param>
+    /// <returns>The expiration time, or <c>null</c> if the entry has no expiration.</returns>
     internal static DateTimeOffset? ConvertExpiration(long expirationTicks)
     {
         // V10 stored 0 or very small values to mean "no expiration"
-        if (expirationTicks <= 0 || expirationTicks < MinValidTicks)
+        if (expirationTicks is <= 0 or < MinValidTicks)
         {
             return null;
         }
@@ -288,6 +318,11 @@ internal static class V10MigrationService
         }
     }
 
+    /// <summary>
+    /// Writes the migration sentinel entry into the V11 cache to prevent re-migration on subsequent runs.
+    /// </summary>
+    /// <param name="v11Cache">The V11 cache to mark as migrated.</param>
+    /// <returns>A task representing the asynchronous write.</returns>
     internal static async Task WriteMigrationSentinelAsync(SqliteBlobCache v11Cache)
     {
         var sentinel = new CacheEntry
@@ -302,12 +337,29 @@ internal static class V10MigrationService
         await v11Cache.Connection.InsertOrReplaceAsync(sentinel).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Logs a failure that occurred while converting a single V10 entry.
+    /// </summary>
+    /// <param name="options">Migration options carrying the logger.</param>
+    /// <param name="key">The key of the entry that failed.</param>
+    /// <param name="ex">The exception raised during conversion.</param>
     internal static void LogConvertEntryFailure(V10MigrationOptions options, string key, Exception ex) =>
         options.Logger?.Invoke($"Failed to convert entry '{key}': {ex.Message}");
 
+    /// <summary>
+    /// Logs a failure that occurred while attempting to re-serialize a payload for a given type.
+    /// </summary>
+    /// <param name="options">Migration options carrying the logger.</param>
+    /// <param name="typeName">The type name involved in re-serialization.</param>
+    /// <param name="ex">The exception raised during re-serialization.</param>
     internal static void LogReserializationFailure(V10MigrationOptions options, string? typeName, Exception ex) =>
         options.Logger?.Invoke($"Re-serialization failed for type '{typeName}': {ex.Message}. Keeping original bytes.");
 
+    /// <summary>
+    /// Attempts to delete the original V10 database file after migration, logging any failure.
+    /// </summary>
+    /// <param name="v10DbPath">Full path to the V10 database file.</param>
+    /// <param name="options">Migration options carrying the logger.</param>
     internal static void TryDeleteV10Database(string v10DbPath, V10MigrationOptions options)
     {
         try
