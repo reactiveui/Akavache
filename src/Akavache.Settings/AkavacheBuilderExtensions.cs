@@ -80,7 +80,7 @@ public static class AkavacheBuilderExtensions
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
-        return AkavacheBuilder.SettingsStores.GetValueOrDefault(key);
+        return AkavacheBuilder.SettingsStores.TryGetValue(key, out var store) ? store : null;
     }
 
     /// <summary>
