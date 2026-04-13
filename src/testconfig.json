@@ -6,7 +6,7 @@
             "CodeCoverage": {
                 "ModulePaths": {
                     "Include": [
-                        "Akavache(\\..*)?"
+                        ".*[/\\\\]Akavache[^/\\\\]*\\.dll$"
                     ],
                     "Exclude": [
                         ".*Tests.*",
