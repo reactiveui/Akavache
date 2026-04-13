@@ -289,16 +289,6 @@ public partial class SystemJsonBsonSerializer : ISerializer
     }
 
     /// <summary>
-    /// Creates a regular expression to identify JSON date fields
-    /// containing a date represented as ticks in a specific format.
-    /// </summary>
-    /// <returns>A regular expression to match tick-based date representations.</returns>
-    [GeneratedRegex("""
-                    "Date":(\d{15,})
-                    """)]
-    private static partial Regex GetDateRegex();
-
-    /// <summary>
     /// Wraps a value so that primitive and root-level types can be encoded as a
     /// BSON document (BSON requires an object root).
     /// </summary>

@@ -810,7 +810,7 @@ public class SqliteBlobCache : IBlobCache
     /// <param name="now">The current time used for expiry checks.</param>
     /// <param name="type">The type filter, or <see langword="null"/> to read untyped entries.</param>
     /// <returns>The raw legacy bytes, or <see langword="null"/> when the key is absent.</returns>
-    internal static Task<byte[]?> TryGetLegacyValueAsync(IAkavacheConnection connection, string key, in DateTimeOffset now, Type? type) =>
+    internal static Task<byte[]?> TryGetLegacyValueAsync(IAkavacheConnection connection, string key, DateTimeOffset now, Type? type) =>
         connection.TryReadLegacyV10ValueAsync(key, now, type);
 
     /// <summary>
