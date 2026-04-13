@@ -36,25 +36,21 @@ internal static class RequestCache
 
         return _inflightRequests.GetOrAdd(
             requestKey,
-            static (requestKey, fetchFunc) =>
-            {
-                return fetchFunc().Select(x => (object)x!)
-                    .Do(
-                        onNext: static _ => { },
-                        onError: _ =>
-                        {
-                            // Remove from cache on error to allow retry
-                            RemoveRequestInternal(requestKey);
-                        },
-                        onCompleted: () =>
-                        {
-                            // Remove from cache on completion to ensure future requests are fresh
-                            RemoveRequestInternal(requestKey);
-                        })
-                    .Replay(1)
-                    .RefCount();
-            },
-            fetchFunc).Select(x => (T)x);
+            cacheKey => fetchFunc().Select(x => (object)x!)
+                .Do(
+                    onNext: static _ => { },
+                    onError: _ =>
+                    {
+                        // Remove from cache on error to allow retry
+                        RemoveRequestInternal(cacheKey);
+                    },
+                    onCompleted: () =>
+                    {
+                        // Remove from cache on completion to ensure future requests are fresh
+                        RemoveRequestInternal(cacheKey);
+                    })
+                .Replay(1)
+                .RefCount()).Select(x => (T)x);
     }
 
     /// <summary>

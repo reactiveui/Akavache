@@ -721,7 +721,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     internal static void VacuumExpiredEntries(
         Dictionary<string, CacheEntry> cache,
         Dictionary<Type, HashSet<string>> typeIndex,
-        in DateTimeOffset now)
+        DateTimeOffset now)
     {
         foreach (var expiredKey in CollectExpiredKeys(cache, now))
         {
@@ -739,7 +739,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// <returns>A list of expired keys.</returns>
     internal static List<string> CollectExpiredKeys(
         Dictionary<string, CacheEntry> cache,
-        in DateTimeOffset now)
+        DateTimeOffset now)
     {
         List<string> expiredKeys = [];
         foreach (var kvp in cache)

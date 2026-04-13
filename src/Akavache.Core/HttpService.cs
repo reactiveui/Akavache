@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 #if NET462_OR_GREATER
 using System.Net.Http;
@@ -128,6 +129,7 @@ public class HttpService : IHttpService
     /// <param name="url">The original request URL, used in error messages.</param>
     /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
     /// <returns>An observable that emits the response bytes.</returns>
+    [SuppressMessage("Style", "IDE0200:Remove unnecessary lambda expression", Justification = "Method-group conversion of ReadAsByteArrayAsync is ambiguous on net6+ where an overload accepting a CancellationToken exists.")]
     internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration) =>
         !responseMessage.IsSuccessStatusCode
             ? Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"))

@@ -30,6 +30,7 @@ internal sealed class RequiresDynamicCodeAttribute :
     /// Initializes a new instance of the <see cref="RequiresDynamicCodeAttribute"/> class
     /// with the specified message.
     /// </summary>
+    /// <param name="message">A message that contains information about the usage of dynamic code.</param>
     public RequiresDynamicCodeAttribute(string message) =>
         Message = message;
 

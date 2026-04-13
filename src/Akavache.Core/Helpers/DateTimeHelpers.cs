@@ -238,9 +238,4 @@ internal static partial class DateTimeHelpers
     /// <returns>A recovered DateTime, or <c>null</c> if the buffer is too small to apply this strategy.</returns>
     public static DateTime? TryRecoverDateTimeFromLargeDataFallback(byte[] data) =>
         data.Length > 50 ? _safeFallbackDate : null;
-
-    /// <summary>Source-generated regex matching ISO 8601 timestamps inside arbitrary payloads.</summary>
-    /// <returns>The compiled regex.</returns>
-    [System.Text.RegularExpressions.GeneratedRegex(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")]
-    private static partial System.Text.RegularExpressions.Regex Iso8601Regex();
 }

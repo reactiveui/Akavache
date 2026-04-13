@@ -7,9 +7,9 @@
 // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/HashCode.cs
 #if NETFRAMEWORK
 
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 namespace System;
 
@@ -184,7 +184,7 @@ internal struct HashCode
     /// Calculates the final hash code after consecutive <see cref="Add{T}(T)"/> invocations.
     /// </summary>
     /// <returns>The calculated hash code.</returns>
-    public int ToHashCode()
+    public readonly int ToHashCode()
     {
         var length = _length;
         var position = length % 4;
@@ -289,9 +289,9 @@ internal struct HashCode
     /// <returns>A random 32-bit unsigned integer seed.</returns>
     internal static uint GenerateGlobalSeed()
     {
-        var random = new Random();
         var bytes = new byte[4];
-        random.NextBytes(bytes);
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(bytes);
         return BitConverter.ToUInt32(bytes, 0);
     }
 

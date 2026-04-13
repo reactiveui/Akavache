@@ -17,9 +17,7 @@ namespace System.Diagnostics.CodeAnalysis;
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-internal sealed class DoesNotReturnAttribute : Attribute
-{
-}
+internal sealed class DoesNotReturnAttribute : Attribute;
 
 #else
 using System.Runtime.CompilerServices;

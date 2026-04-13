@@ -23,9 +23,7 @@ namespace System.Diagnostics.CodeAnalysis;
     AttributeTargets.Property |
     AttributeTargets.ReturnValue,
     Inherited = false)]
-internal sealed class NotNullAttribute : Attribute
-{
-}
+internal sealed class NotNullAttribute : Attribute;
 
 #else
 using System.Runtime.CompilerServices;

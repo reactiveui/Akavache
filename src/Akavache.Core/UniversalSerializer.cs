@@ -36,7 +36,7 @@ public static class UniversalSerializer
             return default;
         }
 
-        ArgumentNullException.ThrowIfNull(primarySerializer);
+        ArgumentExceptionHelper.ThrowIfNull(primarySerializer);
 
         try
         {
@@ -85,7 +85,7 @@ public static class UniversalSerializer
             return [];
         }
 
-        ArgumentNullException.ThrowIfNull(targetSerializer);
+        ArgumentExceptionHelper.ThrowIfNull(targetSerializer);
 
         try
         {
@@ -683,8 +683,8 @@ public static class UniversalSerializer
             ? default
             : typeof(T) switch
             {
-                var t when t == typeof(string) => (T)(object)(jsonString.StartsWith('\"') && jsonString.EndsWith('\"')
-                    ? jsonString[1..^1]
+                var t when t == typeof(string) => (T)(object)(jsonString.Length >= 2 && jsonString[0] == '"' && jsonString[jsonString.Length - 1] == '"'
+                    ? jsonString.Substring(1, jsonString.Length - 2)
                     : jsonString),
                 var t when t == typeof(int) && int.TryParse(jsonString, out var intValue) => (T)(object)intValue,
                 var t when t == typeof(bool) && bool.TryParse(jsonString, out var boolValue) => (T)(object)boolValue,
