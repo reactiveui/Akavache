@@ -441,6 +441,43 @@ public class SqliteAkavacheConnectionTests
     }
 
     /// <summary>
+    /// Verifies <see cref="SqliteAkavacheConnection.TryReadLegacyV10ValueAsync"/> matches a V10
+    /// row whose <c>TypeName</c> was stored in the <see cref="Type.AssemblyQualifiedName"/> form
+    /// (the first legacy probe form tried before <see cref="Type.FullName"/>).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryReadLegacyV10ValueAsyncShouldReturnRowMatchedByAssemblyQualifiedName()
+    {
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var dbPath = Path.Combine(path, "legacy.db");
+
+            // Arrange: seed a V10 row whose TypeName column holds the AssemblyQualifiedName
+            // variant. The legacy probe should hit this on its first attempt (the typed AQN
+            // query) before ever falling through to the FullName query.
+            using (SQLiteConnection raw = new(dbPath))
+            {
+                raw.Execute(
+                    "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
+                raw.Execute(
+                    "INSERT INTO CacheElement (Key, TypeName, Value, Expiration, CreatedAt) VALUES (?, ?, ?, ?, ?)",
+                    "aqnKey",
+                    typeof(string).AssemblyQualifiedName,
+                    new byte[] { 1, 2, 3, 4 },
+                    0L,
+                    DateTime.UtcNow.Ticks);
+            }
+
+            await using SqliteAkavacheConnection connection = new(new(dbPath, true));
+
+            var result = await connection.TryReadLegacyV10ValueAsync("aqnKey", DateTimeOffset.UtcNow, typeof(string));
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result!).IsEquivalentTo(new byte[] { 1, 2, 3, 4 });
+        }
+    }
+
+    /// <summary>
     /// Verifies <see cref="SqliteAkavacheConnection.TryReadLegacyV10ValueAsync"/> returns null
     /// when the CacheElement table does not exist at all (new database).
     /// </summary>

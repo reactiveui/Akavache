@@ -1522,6 +1522,116 @@ public class InMemoryBlobCacheBaseTests
     }
 
     /// <summary>
+    /// Verifies the untyped <see cref="InMemoryBlobCacheBase.Insert(IEnumerable{KeyValuePair{string, byte[]}}, DateTimeOffset?)"/>
+    /// overload short-circuits to the cached unit observable when handed an empty
+    /// <see cref="ICollection{T}"/>, without scheduling any work on the thread pool.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InsertIEnumerableShouldEarlyExitOnEmptyCollection()
+    {
+        await using var cache = CreateCache();
+
+        await cache.Insert([]);
+
+        var keys = await cache.GetAllKeys().ToList();
+        await Assert.That(keys).IsEmpty();
+    }
+
+    /// <summary>
+    /// Verifies the typed <see cref="InMemoryBlobCacheBase.Insert(IEnumerable{KeyValuePair{string, byte[]}}, Type, DateTimeOffset?)"/>
+    /// overload short-circuits to the cached unit observable on empty input.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TypedInsertIEnumerableShouldEarlyExitOnEmptyCollection()
+    {
+        await using var cache = CreateCache();
+
+        await cache.Insert([], typeof(string));
+
+        var typedKeys = await cache.GetAllKeys(typeof(string)).ToList();
+        await Assert.That(typedKeys).IsEmpty();
+    }
+
+    /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.Invalidate(IEnumerable{string})"/> short-circuits
+    /// on an empty key set — the cache stays untouched and no observable start work runs.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateIEnumerableShouldEarlyExitOnEmptyCollection()
+    {
+        await using var cache = CreateCache();
+        await cache.Insert("survivor", [9]);
+
+        await cache.Invalidate([]);
+
+        var keys = await cache.GetAllKeys().ToList();
+        await Assert.That(keys).Contains("survivor");
+    }
+
+    /// <summary>
+    /// Verifies the bulk typed <see cref="InMemoryBlobCacheBase.Insert(IEnumerable{KeyValuePair{string, byte[]}}, Type, DateTimeOffset?)"/>
+    /// evicts a key from its previous type bucket when it is re-inserted under a new type,
+    /// preserving the "one type per key" invariant that the O(1) reverse index depends on.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task BulkTypedInsertShouldEvictKeyFromPreviousTypeBucket()
+    {
+        await using var cache = CreateCache();
+
+        // Arrange: land "k1" in the string bucket first.
+        await cache.Insert([new KeyValuePair<string, byte[]>("k1", [1])], typeof(string));
+        await Assert.That((await cache.GetAllKeys(typeof(string)).ToList()).ToList()).Contains("k1");
+
+        // Act: re-insert the same key under a different type, in the bulk path.
+        await cache.Insert([new KeyValuePair<string, byte[]>("k1", [2])], typeof(int));
+
+        // Assert: k1 is now only in the int bucket.
+        await Assert.That((await cache.GetAllKeys(typeof(string)).ToList()).ToList()).DoesNotContain("k1");
+        await Assert.That((await cache.GetAllKeys(typeof(int)).ToList()).ToList()).Contains("k1");
+    }
+
+    /// <summary>
+    /// Verifies the single-key typed <see cref="InMemoryBlobCacheBase.Insert(string, byte[], Type, DateTimeOffset?)"/>
+    /// evicts a key from its previous type bucket when it is re-inserted under a new type.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SingleKeyTypedInsertShouldEvictKeyFromPreviousTypeBucket()
+    {
+        await using var cache = CreateCache();
+
+        await cache.Insert("k1", [1], typeof(string));
+        await Assert.That((await cache.GetAllKeys(typeof(string)).ToList()).ToList()).Contains("k1");
+
+        await cache.Insert("k1", [2], typeof(int));
+
+        await Assert.That((await cache.GetAllKeys(typeof(string)).ToList()).ToList()).DoesNotContain("k1");
+        await Assert.That((await cache.GetAllKeys(typeof(int)).ToList()).ToList()).Contains("k1");
+    }
+
+    /// <summary>
+    /// Verifies the single-key typed <see cref="InMemoryBlobCacheBase.Insert(string, byte[], Type, DateTimeOffset?)"/>
+    /// is a no-op for the "same type, same key" path — the reverse index remains consistent
+    /// and the key stays in its existing bucket.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SingleKeyTypedInsertReplayingSameTypeShouldRetainBucketMembership()
+    {
+        await using var cache = CreateCache();
+
+        await cache.Insert("k1", [1], typeof(string));
+        await cache.Insert("k1", [2], typeof(string));
+
+        var keys = await cache.GetAllKeys(typeof(string)).ToList();
+        await Assert.That(keys.ToList()).Contains("k1");
+    }
+
+    /// <summary>
     /// Creates a new <see cref="InMemoryBlobCache"/> using the immediate scheduler and System.Text.Json serializer.
     /// </summary>
     /// <returns>A new in-memory blob cache instance.</returns>

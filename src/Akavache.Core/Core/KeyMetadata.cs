@@ -15,7 +15,7 @@ namespace Akavache.Core;
 internal static class KeyMetadata<T>
 {
     /// <summary>Cached <c>typeof(T).FullName</c> (or <c>typeof(T).Name</c> when <see cref="Type.FullName"/> is null).</summary>
-    public static readonly string FullName = typeof(T).FullName ?? typeof(T).Name;
+    public static readonly string FullName = KeyMetadata.BuildFullName(typeof(T));
 
     /// <summary>Cached <c>typeof(T).Name</c>.</summary>
     public static readonly string Name = typeof(T).Name;
@@ -23,8 +23,5 @@ internal static class KeyMetadata<T>
     /// <summary>Cached <c>Assembly.Name + '.' + typeof(T).Name</c>, matching the original
     /// third-form prefix built by <see cref="UniversalSerializer"/>. If the assembly name is
     /// null it collapses to just the short type name.</summary>
-    public static readonly string AssemblyQualifiedShortName =
-        typeof(T).Assembly.GetName().Name is { } asmName
-            ? asmName + "." + typeof(T).Name
-            : typeof(T).Name;
+    public static readonly string AssemblyQualifiedShortName = KeyMetadata.BuildAssemblyQualifiedShortName(typeof(T));
 }
