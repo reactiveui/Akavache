@@ -20,11 +20,20 @@ namespace Akavache;
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
 public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : ISecureBlobCache
 {
-    /// <summary>The in-memory key to cache entry mapping.</summary>
-    private readonly Dictionary<string, CacheEntry> _cache = [];
+    /// <summary>The in-memory key to cache entry mapping. Uses ordinal comparison — cache keys
+    /// are opaque identifiers, not user-facing text, so culture-sensitive collation would be
+    /// both wrong and slower.</summary>
+    private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.Ordinal);
 
-    /// <summary>Per-type index of keys for fast type-scoped lookups.</summary>
+    /// <summary>Per-type index of keys for fast type-scoped lookups. Inner sets also use
+    /// ordinal comparison for the same reason as <see cref="_cache"/>.</summary>
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
+
+    /// <summary>Reverse map from cache key to the <see cref="Type"/> bucket it currently lives
+    /// in, if any. Populated by the typed <c>Insert</c> overloads and cleared alongside
+    /// <see cref="_cache"/>. Lets removal paths delete a key from <see cref="_typeIndex"/> in
+    /// O(1) instead of scanning every registered type's <see cref="HashSet{T}"/>.</summary>
+    private readonly Dictionary<string, Type> _keyToType = new(StringComparer.Ordinal);
 #if NET9_0_OR_GREATER
     /// <summary>Synchronization primitive guarding mutations of the cache and type index.</summary>
     private readonly Lock _lock = new();
@@ -65,28 +74,32 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(keyValuePairs);
-        return _disposed
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
-                () =>
-                {
-                    lock (_lock)
-                    {
-                        foreach (var pair in keyValuePairs)
-                        {
-                            _cache[pair.Key] = new()
-                            {
-                                Id = pair.Key,
-                                Value = pair.Value,
-                                CreatedAt = Scheduler.Now,
-                                ExpiresAt = absoluteExpiration,
-                            };
-                        }
-                    }
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
 
-                    return Unit.Default;
-                },
-                Scheduler);
+        // Empty-input guard — skip the Observable.Start scheduling and lock acquisition entirely.
+        if (keyValuePairs is ICollection<KeyValuePair<string, byte[]>> { Count: 0 })
+        {
+            return Core.CachedObservables.UnitDefault;
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                lock (_lock)
+                {
+                    var now = Scheduler.Now;
+                    foreach (var pair in keyValuePairs)
+                    {
+                        _cache[pair.Key] = new CacheEntry(pair.Key, typeName: null, pair.Value, now, absoluteExpiration);
+                    }
+                }
+
+                return Unit.Default;
+            },
+            Scheduler);
     }
 
     /// <inheritdoc />
@@ -98,13 +111,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     lock (_lock)
                     {
-                        _cache[key] = new()
-                        {
-                            Id = key,
-                            Value = data,
-                            CreatedAt = Scheduler.Now,
-                            ExpiresAt = absoluteExpiration,
-                        };
+                        _cache[key] = new CacheEntry(key, typeName: null, data, Scheduler.Now, absoluteExpiration);
                     }
 
                     return Unit.Default;
@@ -112,37 +119,53 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
-        _disposed
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
-                () =>
-                {
-                    lock (_lock)
-                    {
-                        if (!_typeIndex.TryGetValue(type, out var value))
-                        {
-                            value = [];
-                            _typeIndex[type] = value;
-                        }
+    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null)
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
 
-                        foreach (var pair in keyValuePairs)
-                        {
-                            _cache[pair.Key] = new()
-                            {
-                                Id = pair.Key,
-                                TypeName = type.FullName,
-                                Value = pair.Value,
-                                CreatedAt = Scheduler.Now,
-                                ExpiresAt = absoluteExpiration,
-                            };
-                            value.Add(pair.Key);
-                        }
+        // Empty-input guard — skip the Observable.Start scheduling and lock acquisition entirely.
+        if (keyValuePairs is ICollection<KeyValuePair<string, byte[]>> { Count: 0 })
+        {
+            return Core.CachedObservables.UnitDefault;
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                lock (_lock)
+                {
+                    if (!_typeIndex.TryGetValue(type, out var value))
+                    {
+                        value = new HashSet<string>(StringComparer.Ordinal);
+                        _typeIndex[type] = value;
                     }
 
-                    return Unit.Default;
-                },
-                Scheduler);
+                    var typeFullName = type.FullName;
+                    var now = Scheduler.Now;
+                    foreach (var pair in keyValuePairs)
+                    {
+                        // If this key was previously associated with a different type, evict it
+                        // from that bucket first so the reverse-index invariant (one type per key)
+                        // holds and subsequent O(1) removal works.
+                        if (_keyToType.TryGetValue(pair.Key, out var previousType) && previousType != type
+                            && _typeIndex.TryGetValue(previousType, out var previousSet))
+                        {
+                            previousSet.Remove(pair.Key);
+                        }
+
+                        _cache[pair.Key] = new CacheEntry(pair.Key, typeFullName, pair.Value, now, absoluteExpiration);
+                        value.Add(pair.Key);
+                        _keyToType[pair.Key] = type;
+                    }
+                }
+
+                return Unit.Default;
+            },
+            Scheduler);
+    }
 
     /// <inheritdoc />
     public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
@@ -155,19 +178,20 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     {
                         if (!_typeIndex.TryGetValue(type, out var value))
                         {
-                            value = [];
+                            value = new HashSet<string>(StringComparer.Ordinal);
                             _typeIndex[type] = value;
                         }
 
-                        _cache[key] = new()
+                        // Evict from a previous type bucket so the one-type-per-key invariant holds.
+                        if (_keyToType.TryGetValue(key, out var previousType) && previousType != type
+                            && _typeIndex.TryGetValue(previousType, out var previousSet))
                         {
-                            Id = key,
-                            TypeName = type.FullName,
-                            Value = data,
-                            CreatedAt = Scheduler.Now,
-                            ExpiresAt = absoluteExpiration,
-                        };
+                            previousSet.Remove(key);
+                        }
+
+                        _cache[key] = new CacheEntry(key, type.FullName, data, Scheduler.Now, absoluteExpiration);
                         value.Add(key);
+                        _keyToType[key] = type;
                     }
 
                     return Unit.Default;
@@ -238,8 +262,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         }
 
                         var now = Scheduler.Now;
-                        List<KeyValuePair<string, byte[]>> result = [];
-                        List<string> expiredKeys = [];
+                        List<KeyValuePair<string, byte[]>> result = new(keys.Count);
+                        List<string> expiredKeys = new(keys.Count);
 
                         foreach (var key in keys)
                         {
@@ -266,7 +290,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         return result;
                     }
                 },
-                Scheduler).SelectMany(x => x);
+                Scheduler).SelectMany(static x => x);
 
     /// <inheritdoc />
     public IObservable<string> GetAllKeys() =>
@@ -278,8 +302,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     lock (_lock)
                     {
                         var now = Scheduler.Now;
-                        List<string> expiredKeys = [];
-                        List<string> validKeys = [];
+                        List<string> expiredKeys = new(_cache.Count);
+                        List<string> validKeys = new(_cache.Count);
 
                         foreach (var kvp in _cache)
                         {
@@ -302,7 +326,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         return validKeys;
                     }
                 },
-                Scheduler).SelectMany(x => x);
+                Scheduler).SelectMany(static x => x);
 
     /// <inheritdoc />
     public IObservable<string> GetAllKeys(Type type) =>
@@ -319,8 +343,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         }
 
                         var now = Scheduler.Now;
-                        List<string> expiredKeys = [];
-                        List<string> validKeys = [];
+                        List<string> expiredKeys = new(keys.Count);
+                        List<string> validKeys = new(keys.Count);
 
                         foreach (var key in keys)
                         {
@@ -347,7 +371,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         return validKeys;
                     }
                 },
-                Scheduler).SelectMany(x => x);
+                Scheduler).SelectMany(static x => x);
 
     /// <inheritdoc />
     public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) =>
@@ -386,10 +410,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => GetCreatedAt(key);
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush() => Observable.Return(Unit.Default);
+    public IObservable<Unit> Flush() => Core.CachedObservables.UnitDefault;
 
     /// <inheritdoc />
-    public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
+    public IObservable<Unit> Flush(Type type) => Core.CachedObservables.UnitDefault;
 
     /// <inheritdoc />
     public IObservable<Unit> Invalidate(string key) =>
@@ -401,13 +425,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     lock (_lock)
                     {
                         _cache.Remove(key);
-
-                        // Remove from type indexes
-                        // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                        foreach (var kvp in _typeIndex)
-                        {
-                            kvp.Value.Remove(key);
-                        }
+                        RemoveKeyFromTypeIndexFast(_typeIndex, _keyToType, key);
                     }
 
                     // Clear any pending requests for this key to ensure GetOrFetchObject
@@ -422,39 +440,44 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public IObservable<Unit> Invalidate(string key, Type type) => Invalidate(key);
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys) =>
-        _disposed
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
-            : Observable.Start(
-                () =>
+    public IObservable<Unit> Invalidate(IEnumerable<string> keys)
+    {
+        if (_disposed)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
+        }
+
+        // Empty-input guard — skip the Observable.Start scheduling and lock acquisition entirely.
+        if (keys is ICollection<string> { Count: 0 })
+        {
+            return Core.CachedObservables.UnitDefault;
+        }
+
+        return Observable.Start(
+            () =>
+            {
+                var keysToInvalidate = keys.ToList(); // Materialize the enumerable
+
+                lock (_lock)
                 {
-                    var keysToInvalidate = keys.ToList(); // Materialize the enumerable
-
-                    lock (_lock)
-                    {
-                        foreach (var key in keysToInvalidate)
-                        {
-                            _cache.Remove(key);
-
-                            // Remove from type indexes
-                            // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                            foreach (var kvp in _typeIndex)
-                            {
-                                kvp.Value.Remove(key);
-                            }
-                        }
-                    }
-
-                    // Clear any pending requests for these keys to ensure GetOrFetchObject
-                    // will actually fetch fresh data instead of returning cached request results
                     foreach (var key in keysToInvalidate)
                     {
-                        RequestCache.RemoveRequestsForKey(key);
+                        _cache.Remove(key);
+                        RemoveKeyFromTypeIndexFast(_typeIndex, _keyToType, key);
                     }
+                }
 
-                    return Unit.Default;
-                },
-                Scheduler);
+                // Clear any pending requests for these keys to ensure GetOrFetchObject
+                // will actually fetch fresh data instead of returning cached request results
+                foreach (var key in keysToInvalidate)
+                {
+                    RequestCache.RemoveRequestsForKey(key);
+                }
+
+                return Unit.Default;
+            },
+            Scheduler);
+    }
 
     /// <inheritdoc />
     public IObservable<Unit> InvalidateAll(Type type) =>
@@ -469,11 +492,13 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     {
                         if (_typeIndex.TryGetValue(type, out var keys))
                         {
-                            keysToInvalidate.AddRange(keys); // Capture keys before clearing
+                            // Capture keys before clearing. Spread pre-sizes from the ICollection source.
+                            keysToInvalidate = [.. keys];
 
                             foreach (var key in keys)
                             {
                                 _cache.Remove(key);
+                                _keyToType.Remove(key);
                             }
 
                             keys.Clear();
@@ -505,6 +530,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     {
                         _cache.Clear();
                         _typeIndex.Clear();
+                        _keyToType.Clear();
                     }
 
                     // Clear all pending requests to ensure GetOrFetchObject
@@ -620,7 +646,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     lock (_lock)
                     {
-                        VacuumExpiredEntries(_cache, _typeIndex, Scheduler.Now);
+                        VacuumExpiredEntriesFast(_cache, _typeIndex, _keyToType, Scheduler.Now);
                     }
 
                     return Unit.Default;
@@ -636,7 +662,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
     /// <inheritdoc />
     [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Dispose already calls SuppressFinalize")]
-    public async ValueTask DisposeAsync() => await Task.Run(Dispose);
+    public ValueTask DisposeAsync() => new(Task.Run(Dispose));
 
     /// <summary>
     /// Insert an object into the cache using the configured serializer.
@@ -679,10 +705,10 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<IEnumerable<T>>(GetType().Name)
             : GetAll(typeof(T))
                 .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
-                .Where(obj => obj is not null)
-                .Select(obj => obj!)
+                .Where(static obj => obj is not null)
+                .Select(static obj => obj!)
                 .ToList()
-                .Select(list => (IEnumerable<T>)list);
+                .Select(static list => (IEnumerable<T>)list);
 
     /// <summary>
     /// Returns the time that the object with the key was added to the cache, or returns
@@ -731,6 +757,55 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     }
 
     /// <summary>
+    /// O(1) vacuum that uses <paramref name="keyToType"/> for type-index removal instead of
+    /// scanning every registered type. Keeps <see cref="VacuumExpiredEntries"/> around for
+    /// unit tests that exercise the all-scan logic directly.
+    /// </summary>
+    /// <param name="cache">The key-to-entry dictionary to vacuum.</param>
+    /// <param name="typeIndex">The per-type key index to prune.</param>
+    /// <param name="keyToType">Reverse key-to-type map maintained alongside <paramref name="typeIndex"/>.</param>
+    /// <param name="now">The cutoff time used to determine expiration.</param>
+    internal static void VacuumExpiredEntriesFast(
+        Dictionary<string, CacheEntry> cache,
+        Dictionary<Type, HashSet<string>> typeIndex,
+        Dictionary<string, Type> keyToType,
+        DateTimeOffset now)
+    {
+        foreach (var expiredKey in CollectExpiredKeys(cache, now))
+        {
+            cache.Remove(expiredKey);
+            RemoveKeyFromTypeIndexFast(typeIndex, keyToType, expiredKey);
+        }
+    }
+
+    /// <summary>
+    /// Removes <paramref name="key"/> from whichever type's set it currently lives in, as
+    /// recorded by <paramref name="keyToType"/>. O(1) replacement for the historical all-scan.
+    /// Safe to call when the key isn't in any type set (e.g. it was inserted via an untyped
+    /// <c>Insert</c>).
+    /// </summary>
+    /// <param name="typeIndex">The per-type key index being pruned.</param>
+    /// <param name="keyToType">Reverse key-to-type map.</param>
+    /// <param name="key">The cache key being removed.</param>
+    internal static void RemoveKeyFromTypeIndexFast(
+        Dictionary<Type, HashSet<string>> typeIndex,
+        Dictionary<string, Type> keyToType,
+        string key)
+    {
+        if (!keyToType.TryGetValue(key, out var type))
+        {
+            return;
+        }
+
+        if (typeIndex.TryGetValue(type, out var set))
+        {
+            set.Remove(key);
+        }
+
+        keyToType.Remove(key);
+    }
+
+    /// <summary>
     /// Returns the list of keys in <paramref name="cache"/> whose <c>ExpiresAt</c> is at or
     /// before <paramref name="now"/>. Static so the iteration is directly testable.
     /// </summary>
@@ -741,7 +816,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
         Dictionary<string, CacheEntry> cache,
         DateTimeOffset now)
     {
-        List<string> expiredKeys = [];
+        List<string> expiredKeys = new(cache.Count);
         foreach (var kvp in cache)
         {
             if (kvp.Value.ExpiresAt <= now)
@@ -787,6 +862,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             {
                 _cache.Clear();
                 _typeIndex.Clear();
+                _keyToType.Clear();
             }
         }
 

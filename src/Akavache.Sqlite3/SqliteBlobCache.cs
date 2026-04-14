@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
 using Akavache.Helpers;
 using SQLite;
 
@@ -182,7 +183,7 @@ public class SqliteBlobCache : IBlobCache
     public IObservable<Unit> Flush(Type type) =>
         _disposed
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : Observable.Return(Unit.Default);
+            : Akavache.Core.CachedObservables.UnitDefault;
 
     /// <inheritdoc/>
     public IObservable<byte[]?> Get(string key)
@@ -213,9 +214,9 @@ public class SqliteBlobCache : IBlobCache
         var time = DateTimeOffset.UtcNow;
 
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Value is not null && x.Id is not null)
-            .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
+            .Select(static x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
     }
 
     /// <inheritdoc/>
@@ -259,9 +260,9 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Value is not null && x.Id is not null)
-            .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
+            .Select(static x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
     }
 
     /// <inheritdoc/>
@@ -279,9 +280,9 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Value is not null && x.Id is not null)
-            .Select(x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
+            .Select(static x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
     }
 
     /// <inheritdoc/>
@@ -314,9 +315,9 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Id is not null)
-            .Select(x => x.Id!);
+            .Select(static x => x.Id!);
     }
 
     /// <inheritdoc/>
@@ -334,7 +335,7 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Id is not null)
             .Select(static x => (Key: x.Id!, Time: (DateTimeOffset?)x.CreatedAt));
     }
@@ -353,11 +354,22 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key))
-            .SelectMany(x => x)
-            .Where(static x => x.Id is not null)
-            .Select(static x => (DateTimeOffset?)x.CreatedAt)
-            .DefaultIfEmpty();
+
+        // Single async projection replaces the 4-operator Rx chain (SelectMany/SelectMany/Where/Select/DefaultIfEmpty).
+        // Defensive null-Id filter is preserved because backends with BypassPredicate=true can return null-Id rows.
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            var results = await Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key).ConfigureAwait(false);
+            for (var i = 0; i < results.Count; i++)
+            {
+                if (results[i].Id is not null)
+                {
+                    return (DateTimeOffset?)results[i].CreatedAt;
+                }
+            }
+
+            return null;
+        });
     }
 
     /// <inheritdoc/>
@@ -380,7 +392,7 @@ public class SqliteBlobCache : IBlobCache
 
         var time = DateTimeOffset.UtcNow;
         return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName))
-            .SelectMany(x => x)
+            .SelectMany(static x => x)
             .Where(static x => x.Id is not null)
             .Select(static x => (Key: x.Id!, Time: (DateTimeOffset?)x.CreatedAt));
     }
@@ -404,11 +416,22 @@ public class SqliteBlobCache : IBlobCache
         }
 
         var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName))
-            .SelectMany(x => x)
-            .Where(static x => x.Id is not null)
-            .Select(static x => (DateTimeOffset?)x.CreatedAt)
-            .DefaultIfEmpty();
+
+        // Single async projection replaces the 4-operator Rx chain (SelectMany/SelectMany/Where/Select/DefaultIfEmpty).
+        // Defensive null-Id filter is preserved because backends with BypassPredicate=true can return null-Id rows.
+        return _initialized.SelectMany(async (_, _, _) =>
+        {
+            var results = await Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName).ConfigureAwait(false);
+            for (var i = 0; i < results.Count; i++)
+            {
+                if (results[i].Id is not null)
+                {
+                    return (DateTimeOffset?)results[i].CreatedAt;
+                }
+            }
+
+            return null;
+        });
     }
 
     /// <inheritdoc/>
@@ -426,22 +449,24 @@ public class SqliteBlobCache : IBlobCache
 
         var expiry = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
 
+        // Hoist DateTime.Now out of the per-entry projection — a single wall-clock read per
+        // batch is what the old code intended anyway, and this avoids a syscall per item.
+        var createdAt = DateTime.Now;
+
         return _initialized.SelectMany(
             async (_, _, _) =>
             {
-                var entries = keyValuePairs.Select(x => new CacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry });
-
                 await Connection.RunInTransactionAsync(tx =>
                 {
-                    foreach (var entry in entries)
+                    foreach (var kvp in keyValuePairs)
                     {
-                        tx.InsertOrReplace(entry);
+                        tx.InsertOrReplace(new CacheEntry(kvp.Key, typeName: null, kvp.Value, createdAt, expiry));
                     }
                 }).ConfigureAwait(false);
 
                 return Unit.Default;
             })
-            .Select(_ => Unit.Default);
+            .SelectUnit();
     }
 
     /// <inheritdoc/>
@@ -467,9 +492,12 @@ public class SqliteBlobCache : IBlobCache
 
         var expiry = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
 
+        // Hoist DateTime.Now and the reflected type-name string out of the per-entry projection.
+        var createdAt = DateTime.Now;
+        var typeName = type.FullName;
+
         return _initialized.SelectMany(async (_, _, _) =>
             {
-                var entries = keyValuePairs.Select(x => new CacheEntry { CreatedAt = DateTime.Now, Id = x.Key, Value = x.Value, ExpiresAt = expiry, TypeName = type.FullName });
                 try
                 {
                     await Connection.RunInTransactionAsync(tx =>
@@ -479,7 +507,7 @@ public class SqliteBlobCache : IBlobCache
                             return;
                         }
 
-                        foreach (var entry in entries)
+                        foreach (var kvp in keyValuePairs)
                         {
                             try
                             {
@@ -488,7 +516,7 @@ public class SqliteBlobCache : IBlobCache
                                     return;
                                 }
 
-                                tx.InsertOrReplace(entry);
+                                tx.InsertOrReplace(new CacheEntry(kvp.Key, typeName, kvp.Value, createdAt, expiry));
                             }
                             catch (Exception)
                             {
@@ -514,7 +542,7 @@ public class SqliteBlobCache : IBlobCache
 
                 return Unit.Default;
             })
-            .Select(_ => Unit.Default);
+            .SelectUnit();
     }
 
     /// <inheritdoc/>

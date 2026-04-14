@@ -14,6 +14,35 @@ namespace Akavache;
 public class CacheEntry : IEquatable<CacheEntry>
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="CacheEntry"/> class.
+    /// Required by sqlite-net's ORM which materialises rows via reflection.
+    /// </summary>
+    public CacheEntry()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CacheEntry"/> class with all fields populated.
+    /// Preferred over the parameterless form at construction sites in the library: on older runtimes
+    /// (notably net462) the JIT produces tighter codegen for a single ctor + field writes than for
+    /// a <c>new() { … }</c> initializer that expands to a parameterless ctor followed by property
+    /// setters.
+    /// </summary>
+    /// <param name="id">The cache entry's unique key.</param>
+    /// <param name="typeName">Optional type discriminator, stored alongside the row.</param>
+    /// <param name="value">The serialized payload bytes.</param>
+    /// <param name="createdAt">The instant at which the entry was created.</param>
+    /// <param name="expiresAt">Optional absolute expiration time. Null means "never expires".</param>
+    public CacheEntry(string? id, string? typeName, byte[]? value, DateTimeOffset createdAt, DateTimeOffset? expiresAt)
+    {
+        Id = id;
+        TypeName = typeName;
+        Value = value;
+        CreatedAt = createdAt;
+        ExpiresAt = expiresAt;
+    }
+
+    /// <summary>
     /// Gets or sets the unique identifier for the cache entry.
     /// </summary>
     [PrimaryKey]
@@ -75,12 +104,13 @@ public class CacheEntry : IEquatable<CacheEntry>
     }
 
     /// <summary>
-    /// Checks if two byte arrays are equal.
+    /// Checks whether two byte arrays contain equal data, treating two <see langword="null"/>
+    /// buffers as equal.
     /// </summary>
     /// <param name="left">The first byte array.</param>
     /// <param name="right">The second byte array.</param>
     /// <returns>True if the byte arrays are equal.</returns>
-    private static bool ValueEquals(byte[]? left, byte[]? right) =>
+    internal static bool ValueEquals(byte[]? left, byte[]? right) =>
         ReferenceEquals(left, right) ||
         (left is not null && right is not null && left.AsSpan().SequenceEqual(right));
 }

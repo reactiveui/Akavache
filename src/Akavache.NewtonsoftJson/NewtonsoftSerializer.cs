@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using Akavache.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
@@ -71,9 +72,9 @@ public class NewtonsoftSerializer : ISerializer
             return false;
         }
 
-        // Additional check: try to identify JSON by looking for common JSON patterns in the data.
-        var dataString = Encoding.UTF8.GetString(data);
-        return !(dataString.TrimStart().StartsWith("{") || dataString.TrimStart().StartsWith("["));
+        // Additional check: if the payload starts with a JSON opener (after whitespace),
+        // it's probably JSON, not BSON. Byte-level probe — zero allocations.
+        return !BinaryHelpers.StartsWithJsonOpener(data);
     }
 
     /// <inheritdoc/>
@@ -102,7 +103,7 @@ public class NewtonsoftSerializer : ISerializer
         // Try JSON format
         try
         {
-            using MemoryStream stream = new(bytes);
+            using MemoryStream stream = new(bytes, writable: false);
             using StreamReader textReader = new(stream);
             var serializer = JsonSerializer.Create(GetEffectiveSettings());
             return (T?)serializer.Deserialize(textReader, typeof(T));
@@ -172,7 +173,7 @@ public class NewtonsoftSerializer : ISerializer
         try
         {
             var serializer = GetSerializer();
-            using MemoryStream ms = new();
+            using MemoryStream ms = new(capacity: 256);
             using BsonDataWriter writer = new(ms);
 
             serializer.Serialize(writer, new ObjectWrapper<T>(item));
@@ -200,7 +201,7 @@ public class NewtonsoftSerializer : ISerializer
         try
         {
             var serializer = GetSerializer();
-            using BsonDataReader reader = new(new MemoryStream(bytes));
+            using BsonDataReader reader = new(new MemoryStream(bytes, writable: false));
 
             var forcedDateTimeKind = ForcedDateTimeKind;
             if (forcedDateTimeKind.HasValue)
@@ -217,7 +218,7 @@ public class NewtonsoftSerializer : ISerializer
             {
                 // Reset stream and try direct deserialization
                 reader.Close();
-                using BsonDataReader reader2 = new(new MemoryStream(bytes));
+                using BsonDataReader reader2 = new(new MemoryStream(bytes, writable: false));
                 if (forcedDateTimeKind.HasValue)
                 {
                     reader2.DateTimeKindHandling = forcedDateTimeKind.Value;
@@ -258,18 +259,16 @@ public class NewtonsoftSerializer : ISerializer
             }
         }
 
-        // Try JSON format
+        // Try JSON format. Byte-level probe first — lets us skip the UTF-8 decode when the
+        // payload clearly isn't JSON (the common fallback-from-BSON path).
+        if (!BinaryHelpers.StartsWithJsonOpener(bytes))
+        {
+            return default;
+        }
+
         try
         {
             var jsonString = Encoding.UTF8.GetString(bytes);
-
-            // Skip if it doesn't look like JSON
-            if (string.IsNullOrWhiteSpace(jsonString) ||
-                (!jsonString.TrimStart().StartsWith("{") && !jsonString.TrimStart().StartsWith("[")))
-            {
-                return default;
-            }
-
             var settings = GetEffectiveSettings();
 
             // Try ObjectWrapper format first (from BSON serializers).

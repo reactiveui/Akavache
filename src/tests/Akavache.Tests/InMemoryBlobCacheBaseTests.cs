@@ -1363,6 +1363,165 @@ public class InMemoryBlobCacheBaseTests
     }
 
     /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.RemoveKeyFromTypeIndexFast"/> removes the key
+    /// from the single type bucket tracked by <c>keyToType</c> and clears the
+    /// reverse-map entry, without touching unrelated buckets.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveKeyFromTypeIndexFastShouldRemoveFromTrackedBucketOnly()
+    {
+        Dictionary<Type, HashSet<string>> typeIndex = new()
+        {
+            [typeof(string)] = ["k1", "k2"],
+            [typeof(int)] = ["k3"],
+        };
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
+        {
+            ["k1"] = typeof(string),
+            ["k2"] = typeof(string),
+            ["k3"] = typeof(int),
+        };
+
+        InMemoryBlobCacheBase.RemoveKeyFromTypeIndexFast(typeIndex, keyToType, "k1");
+
+        await Assert.That(typeIndex[typeof(string)]).DoesNotContain("k1");
+        await Assert.That(typeIndex[typeof(string)]).Contains("k2");
+        await Assert.That(typeIndex[typeof(int)]).Contains("k3");
+        await Assert.That(keyToType).DoesNotContainKey("k1");
+        await Assert.That(keyToType).ContainsKey("k2");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.RemoveKeyFromTypeIndexFast"/> is a no-op when
+    /// the key was never tracked by the reverse map (e.g. it was inserted via an untyped <c>Insert</c>).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveKeyFromTypeIndexFastShouldNoOpForUntrackedKey()
+    {
+        Dictionary<Type, HashSet<string>> typeIndex = new()
+        {
+            [typeof(string)] = ["tracked"],
+        };
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
+        {
+            ["tracked"] = typeof(string),
+        };
+
+        InMemoryBlobCacheBase.RemoveKeyFromTypeIndexFast(typeIndex, keyToType, "untracked");
+
+        await Assert.That(typeIndex[typeof(string)]).Contains("tracked");
+        await Assert.That(keyToType).ContainsKey("tracked");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.RemoveKeyFromTypeIndexFast"/> tolerates the
+    /// case where the reverse map points to a type that has already been evicted from
+    /// <c>typeIndex</c> — it still cleans the reverse-map entry.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task RemoveKeyFromTypeIndexFastShouldClearReverseMapWhenTypeBucketMissing()
+    {
+        Dictionary<Type, HashSet<string>> typeIndex = [];
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
+        {
+            ["k1"] = typeof(string),
+        };
+
+        InMemoryBlobCacheBase.RemoveKeyFromTypeIndexFast(typeIndex, keyToType, "k1");
+
+        await Assert.That(keyToType).DoesNotContainKey("k1");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.VacuumExpiredEntriesFast"/> removes expired
+    /// entries from the cache, prunes the corresponding entries from both <c>typeIndex</c>
+    /// and <c>keyToType</c>, and preserves valid entries untouched.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task VacuumExpiredEntriesFastShouldRemoveExpiredAndPruneIndexes()
+    {
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new(StringComparer.Ordinal)
+        {
+            ["expired"] = new() { Id = "expired", ExpiresAt = now.AddMinutes(-1).UtcDateTime, TypeName = "System.String" },
+            ["valid"] = new() { Id = "valid", ExpiresAt = now.AddHours(1).UtcDateTime, TypeName = "System.String" },
+        };
+        Dictionary<Type, HashSet<string>> typeIndex = new()
+        {
+            [typeof(string)] = new(StringComparer.Ordinal) { "expired", "valid" },
+        };
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
+        {
+            ["expired"] = typeof(string),
+            ["valid"] = typeof(string),
+        };
+
+        InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
+
+        await Assert.That(cache).DoesNotContainKey("expired");
+        await Assert.That(cache).ContainsKey("valid");
+        await Assert.That(typeIndex[typeof(string)]).DoesNotContain("expired");
+        await Assert.That(typeIndex[typeof(string)]).Contains("valid");
+        await Assert.That(keyToType).DoesNotContainKey("expired");
+        await Assert.That(keyToType).ContainsKey("valid");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.VacuumExpiredEntriesFast"/> is a no-op when
+    /// nothing is expired — cache, type-index, and reverse-map are all left untouched.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task VacuumExpiredEntriesFastShouldBeNoOpWhenNothingExpired()
+    {
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new(StringComparer.Ordinal)
+        {
+            ["valid"] = new() { Id = "valid", ExpiresAt = now.AddHours(1).UtcDateTime },
+        };
+        Dictionary<Type, HashSet<string>> typeIndex = new()
+        {
+            [typeof(string)] = new(StringComparer.Ordinal) { "valid" },
+        };
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
+        {
+            ["valid"] = typeof(string),
+        };
+
+        InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
+
+        await Assert.That(cache).ContainsKey("valid");
+        await Assert.That(typeIndex[typeof(string)]).Contains("valid");
+        await Assert.That(keyToType).ContainsKey("valid");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.VacuumExpiredEntriesFast"/> handles expired
+    /// entries whose keys were never typed (never tracked in <c>keyToType</c>) —
+    /// the cache row is still removed and no exception is thrown.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task VacuumExpiredEntriesFastShouldRemoveUntrackedExpiredEntries()
+    {
+        DateTimeOffset now = new(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        Dictionary<string, CacheEntry> cache = new(StringComparer.Ordinal)
+        {
+            ["expired-untyped"] = new() { Id = "expired-untyped", ExpiresAt = now.AddMinutes(-1).UtcDateTime },
+        };
+        Dictionary<Type, HashSet<string>> typeIndex = [];
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal);
+
+        InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
+
+        await Assert.That(cache).DoesNotContainKey("expired-untyped");
+    }
+
+    /// <summary>
     /// Creates a new <see cref="InMemoryBlobCache"/> using the immediate scheduler and System.Text.Json serializer.
     /// </summary>
     /// <returns>A new in-memory blob cache instance.</returns>

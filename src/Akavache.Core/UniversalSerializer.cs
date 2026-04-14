@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using Akavache.Helpers;
 
@@ -15,6 +16,21 @@ public static class UniversalSerializer
 {
     /// <summary>The list of factories registered for fallback serializer creation.</summary>
     private static readonly List<Func<ISerializer>> _registeredSerializerFactories = [];
+
+    /// <summary>
+    /// Per-serializer-type cache for the "does the type name contain 'Bson'" check. The check
+    /// runs on every fallback deserialize attempt and previously materialized the type name
+    /// plus ran a substring probe on every call; caching by <see cref="Type"/> keeps the hot
+    /// path allocation-free.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, bool> _isBsonSerializerByType = new();
+
+    /// <summary>
+    /// Per-serializer-type cache for the "is this the plain (non-BSON) Newtonsoft serializer"
+    /// check used by <see cref="PreprocessDateTimeForSerialization"/> to work around
+    /// Newtonsoft.Json's DateTime.MinValue/MaxValue quirks.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, bool> _isPlainNewtonsoftSerializerByType = new();
 
     /// <summary>Cached list of alternative serializer instances, invalidated on registration.</summary>
     private static List<ISerializer>? _alternativeSerializers;
@@ -144,8 +160,9 @@ public static class UniversalSerializer
 
         try
         {
-            // Get all available keys from the cache
-            var allKeys = await cache.GetAllKeys().ToList().FirstAsync();
+            // Get all available keys from the cache. Awaiting the Rx observable already takes
+            // the last (and only) emission, so FirstAsync() on top of ToList() was redundant.
+            var allKeys = await cache.GetAllKeys().ToList();
 
             if (allKeys.Count == 0)
             {
@@ -279,16 +296,19 @@ public static class UniversalSerializer
     /// <returns>The candidate subset of <paramref name="allKeys"/>.</returns>
     internal static List<string> FindKeyCandidates<T>(IEnumerable<string> allKeys, string requestedKey)
     {
+        // Cached per-T reflection strings avoid re-walking typeof(T).FullName / .Name /
+        // Assembly.GetName().Name on every lookup. Each string interpolation below also
+        // only touches the (cached) T metadata plus the per-call requestedKey.
         HashSet<string> possibleKeys =
         [
             requestedKey,
-            $"{typeof(T).FullName}___{requestedKey}",
-            $"{typeof(T).Name}___{requestedKey}",
-            $"{typeof(T).Assembly.GetName().Name}.{typeof(T).Name}___{requestedKey}"
+            $"{KeyMetadata<T>.FullName}___{requestedKey}",
+            $"{KeyMetadata<T>.Name}___{requestedKey}",
+            $"{KeyMetadata<T>.AssemblyQualifiedShortName}___{requestedKey}"
         ];
 
         var prefixSuffix = $"___{requestedKey}";
-        List<string> candidates = [];
+        List<string> candidates = new(8);
         foreach (var key in allKeys)
         {
             if (possibleKeys.Contains(key) || key.EndsWith(prefixSuffix, StringComparison.Ordinal))
@@ -582,7 +602,7 @@ public static class UniversalSerializer
                 var serializer = factory();
 
                 // Only use serializers that look like BSON serializers
-                if (!serializer.GetType().Name.Contains("Bson", StringComparison.OrdinalIgnoreCase))
+                if (!IsBsonSerializer(serializer))
                 {
                     continue;
                 }
@@ -647,7 +667,7 @@ public static class UniversalSerializer
                 var serializer = factory();
 
                 // Skip BSON serializers - we want JSON ones
-                if (serializer.GetType().Name.Contains("Bson", StringComparison.OrdinalIgnoreCase))
+                if (IsBsonSerializer(serializer))
                 {
                     continue;
                 }
@@ -701,27 +721,18 @@ public static class UniversalSerializer
     /// <returns>The preprocessed DateTime value.</returns>
     internal static DateTime PreprocessDateTimeForSerialization(DateTime dateTime, ISerializer serializer, DateTimeKind? forcedDateTimeKind)
     {
-        var serializerTypeName = serializer.GetType().Name;
-
-        // Handle special cases for problematic DateTime values
-        if (dateTime == DateTime.MinValue)
+        // Handle special cases for problematic DateTime values. Cached type probe replaces
+        // two Contains() calls against GetType().Name per invocation.
+        if (dateTime == DateTime.MinValue && IsPlainNewtonsoftSerializer(serializer))
         {
-            // Some serializers have issues with DateTime.MinValue
-            if (serializerTypeName.Contains("Newtonsoft") && !serializerTypeName.Contains("Bson"))
-            {
-                // Use a safer minimum date for regular Newtonsoft serializer
-                return new(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            }
+            // Use a safer minimum date for regular Newtonsoft serializer
+            return new(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         }
 
-        if (dateTime == DateTime.MaxValue)
+        if (dateTime == DateTime.MaxValue && IsPlainNewtonsoftSerializer(serializer))
         {
-            // Some serializers have issues with DateTime.MaxValue
-            if (serializerTypeName.Contains("Newtonsoft") && !serializerTypeName.Contains("Bson"))
-            {
-                // Use a safer maximum date for regular Newtonsoft serializer
-                return new(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);
-            }
+            // Use a safer maximum date for regular Newtonsoft serializer
+            return new(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);
         }
 
         // Apply forced DateTime kind via the shared converter helper.
@@ -737,5 +748,34 @@ public static class UniversalSerializer
     {
         _registeredSerializerFactories.Clear();
         _alternativeSerializers = null;
+        _isBsonSerializerByType.Clear();
+        _isPlainNewtonsoftSerializerByType.Clear();
     }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="serializer"/>'s runtime type name contains
+    /// "Bson". Result is cached per <see cref="Type"/>.
+    /// </summary>
+    /// <param name="serializer">The serializer instance to probe.</param>
+    /// <returns><see langword="true"/> if the serializer is a BSON variant.</returns>
+    internal static bool IsBsonSerializer(ISerializer serializer) =>
+        _isBsonSerializerByType.GetOrAdd(
+            serializer.GetType(),
+            static t => t.Name.Contains("Bson", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="serializer"/> is the plain (non-BSON)
+    /// Newtonsoft.Json serializer. Result is cached per <see cref="Type"/>.
+    /// </summary>
+    /// <param name="serializer">The serializer instance to probe.</param>
+    /// <returns><see langword="true"/> if the serializer is Newtonsoft.Json (not the BSON variant).</returns>
+    internal static bool IsPlainNewtonsoftSerializer(ISerializer serializer) =>
+        _isPlainNewtonsoftSerializerByType.GetOrAdd(
+            serializer.GetType(),
+            static t =>
+            {
+                var name = t.Name;
+                return name.Contains("Newtonsoft", StringComparison.OrdinalIgnoreCase)
+                    && !name.Contains("Bson", StringComparison.OrdinalIgnoreCase);
+            });
 }

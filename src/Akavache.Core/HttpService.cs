@@ -72,7 +72,7 @@ public class HttpService : IHttpService
 
         var conn = ret.PublishLast();
         conn.Connect();
-        return conn.Select(x => x ?? []);
+        return conn.Select(static x => x ?? []);
     }
 
     /// <inheritdoc />
@@ -88,7 +88,7 @@ public class HttpService : IHttpService
         IObservable<byte[]> ret;
         if (!fetchAlways)
         {
-            ret = blobCache.Get(key).Catch(fetchAndCache).Select(x => x ?? []);
+            ret = blobCache.Get(key).Catch(fetchAndCache).Select(static x => x ?? []);
         }
         else
         {

@@ -44,8 +44,8 @@ public static class ImageCacheExtensions
 
         return urls.ToObservable()
             .SelectMany(url => blobCache.DownloadUrl(url, absoluteExpiration: absoluteExpiration)
-                .Catch<byte[], Exception>(_ => Observable.Empty<byte[]>()))
-            .Select(_ => Unit.Default)
+                .Catch<byte[], Exception>(static _ => Observable.Empty<byte[]>()))
+            .Select(static _ => Unit.Default)
             .DefaultIfEmpty(Unit.Default)
             .TakeLast(1);
     }
@@ -120,18 +120,17 @@ public static class ImageCacheExtensions
 
         return blobCache.Get(key)
             .SelectMany(static bytes => BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(bytes))
-            .SelectMany(bytes =>
+            .SelectMany(static bytes =>
                 Observable.FromAsync(async () =>
                 {
 #if NETFRAMEWORK
-                    using var ms = new MemoryStream(bytes);
+                    using var ms = new MemoryStream(bytes, writable: false);
 #else
-                    await using var ms = new MemoryStream(bytes);
+                    await using var ms = new MemoryStream(bytes, writable: false);
 #endif
-                    var bitmap = await BitmapLoader.Current.Load(ms, null, null);
+                    var bitmap = await BitmapLoader.Current.Load(ms, null, null).ConfigureAwait(false);
                     return bitmap != null ? new Size(bitmap.Width, bitmap.Height) : throw new InvalidOperationException("Failed to load image for size detection");
-                }))
-            .SelectMany(static size => Observable.Return(size));
+                }));
     }
 
     /// <summary>
@@ -167,11 +166,11 @@ public static class ImageCacheExtensions
         Observable.FromAsync(async () =>
         {
 #if NETFRAMEWORK
-            using var ms = new MemoryStream(compressedImage);
+            using var ms = new MemoryStream(compressedImage, writable: false);
 #else
-            await using MemoryStream ms = new(compressedImage);
+            await using MemoryStream ms = new(compressedImage, writable: false);
 #endif
-            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
+            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ConfigureAwait(false);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");
         });
 }

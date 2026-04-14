@@ -2629,6 +2629,79 @@ public class UniversalSerializerTests
     }
 
     /// <summary>
+    /// Verifies the BSON-serializer probe classifies concrete serializer types correctly —
+    /// <see cref="SystemJsonBsonSerializer"/> and <see cref="NewtonsoftBsonSerializer"/> are BSON,
+    /// <see cref="SystemJsonSerializer"/> and <see cref="NewtonsoftSerializer"/> are not.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsBsonSerializerShouldClassifyConcreteSerializers()
+    {
+        UniversalSerializer.ResetCaches();
+
+        await Assert.That(UniversalSerializer.IsBsonSerializer(new SystemJsonBsonSerializer())).IsTrue();
+        await Assert.That(UniversalSerializer.IsBsonSerializer(new NewtonsoftBsonSerializer())).IsTrue();
+        await Assert.That(UniversalSerializer.IsBsonSerializer(new SystemJsonSerializer())).IsFalse();
+        await Assert.That(UniversalSerializer.IsBsonSerializer(new NewtonsoftSerializer())).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies the BSON probe returns the same answer on repeat invocations for a given type —
+    /// the second call goes through the cache (different code path from the first).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsBsonSerializerShouldCachePerType()
+    {
+        UniversalSerializer.ResetCaches();
+        SystemJsonBsonSerializer bson = new();
+
+        var first = UniversalSerializer.IsBsonSerializer(bson);
+        var second = UniversalSerializer.IsBsonSerializer(bson);
+        var third = UniversalSerializer.IsBsonSerializer(new SystemJsonBsonSerializer());
+
+        await Assert.That(first).IsTrue();
+        await Assert.That(second).IsTrue();
+        await Assert.That(third).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies the plain-Newtonsoft probe returns true for <see cref="NewtonsoftSerializer"/>
+    /// and false for the BSON variant and System.Text.Json serializers (the "Newtonsoft &amp;&amp;
+    /// !Bson" conjunction).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task IsPlainNewtonsoftSerializerShouldRequireBothConditions()
+    {
+        UniversalSerializer.ResetCaches();
+
+        await Assert.That(UniversalSerializer.IsPlainNewtonsoftSerializer(new NewtonsoftSerializer())).IsTrue();
+        await Assert.That(UniversalSerializer.IsPlainNewtonsoftSerializer(new NewtonsoftBsonSerializer())).IsFalse();
+        await Assert.That(UniversalSerializer.IsPlainNewtonsoftSerializer(new SystemJsonSerializer())).IsFalse();
+        await Assert.That(UniversalSerializer.IsPlainNewtonsoftSerializer(new SystemJsonBsonSerializer())).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UniversalSerializer.ResetCaches"/> clears both the BSON and the
+    /// plain-Newtonsoft caches — a subsequent probe re-runs the classification logic.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ResetCachesShouldClearSerializerKindCaches()
+    {
+        UniversalSerializer.IsBsonSerializer(new SystemJsonBsonSerializer());
+        UniversalSerializer.IsPlainNewtonsoftSerializer(new NewtonsoftSerializer());
+
+        UniversalSerializer.ResetCaches();
+
+        // After reset the next probe should still produce a correct answer — this validates the
+        // classifier doesn't hand back a stale or corrupted result after the caches were cleared.
+        await Assert.That(UniversalSerializer.IsBsonSerializer(new SystemJsonBsonSerializer())).IsTrue();
+        await Assert.That(UniversalSerializer.IsPlainNewtonsoftSerializer(new NewtonsoftSerializer())).IsTrue();
+    }
+
+    /// <summary>
     /// Reset registry between tests so registered serializers don't bleed between tests.
     /// </summary>
     private static void ResetRegistry() => UniversalSerializer.ResetCaches();

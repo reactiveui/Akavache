@@ -346,7 +346,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         public void Dispose() => inner.Dispose();
 
         /// <inheritdoc />
-        public async ValueTask DisposeAsync() => await inner.DisposeAsync();
+        public ValueTask DisposeAsync() => inner.DisposeAsync();
 
         /// <inheritdoc />
         public IObservable<Unit> Flush() => inner.Flush();

@@ -50,7 +50,7 @@ public static class SerializerExtensions
         return blobCache
             .Get(keys, typeof(T))
             .Select(x => (x.Key, Data: blobCache.Serializer.Deserialize<T>(x.Value)))
-            .Where(x => x.Data is not null).Select(x => new KeyValuePair<string, T>(x.Key, x.Data!));
+            .Where(static x => x.Data is not null).Select(static x => new KeyValuePair<string, T>(x.Key, x.Data!));
     }
 
     /// <summary>
@@ -149,8 +149,8 @@ public static class SerializerExtensions
         return blobCache
             .GetAll(typeof(T))
             .Select(x => blobCache.Serializer.Deserialize<T>(x.Value))
-            .Where(x => x is not null)
-            .Select(x => x!);
+            .Where(static x => x is not null)
+            .Select(static x => x!);
     }
 
     /// <summary>
@@ -385,14 +385,14 @@ public static class SerializerExtensions
     {
         var fetch = Observable.Defer(() => blobCache.GetObjectCreatedAt<T>(key))
             .Select(x => ShouldRefetchCachedValue(fetchPredicate, x))
-            .Where(x => x)
+            .Where(static x => x)
             .SelectMany(_ =>
             {
                 var fetchObs = fetchFunc().Catch<T, Exception>(ex =>
                 {
                     var shouldInvalidate = shouldInvalidateOnError ?
                         blobCache.InvalidateObject<T>(key) :
-                        Observable.Return(Unit.Default);
+                        Core.CachedObservables.UnitDefault;
                     return shouldInvalidate.SelectMany(_ => Observable.Throw<T>(ex));
                 });
 
@@ -407,10 +407,10 @@ public static class SerializerExtensions
                             : blobCache.InsertObject(key, x, absoluteExpiration).Select(_ => x));
             });
 
-        var result = blobCache.GetObject<T>(key).Select(x => (x, true))
+        var result = blobCache.GetObject<T>(key).Select(static x => (x, true))
             .Catch(Observable.Return((default(T), false)));
 
-        return result.SelectMany(x => x.Item2 ? Observable.Return(x.Item1) : Observable.Empty<T>())
+        return result.SelectMany(static x => x.Item2 ? Observable.Return(x.Item1) : Observable.Empty<T>())
             .Concat(fetch)
             .Multicast(new ReplaySubject<T?>())
             .RefCount();
@@ -480,7 +480,7 @@ public static class SerializerExtensions
 
         if (keyValuePairs.Count == 0)
         {
-            return Observable.Return(Unit.Default);
+            return Core.CachedObservables.UnitDefault;
         }
 
         // For mixed object types, we need to serialize each one individually and use its specific type
@@ -492,7 +492,7 @@ public static class SerializerExtensions
         return insertOperations.Merge()
             .TakeLast(insertOperations.Count)
             .LastOrDefaultAsync()
-            .Select(_ => Unit.Default);
+            .SelectUnit();
     }
 
     /// <summary>

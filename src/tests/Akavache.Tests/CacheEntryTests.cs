@@ -188,4 +188,116 @@ public class CacheEntryTests
         CacheEntry b = new() { Id = "k", TypeName = "t", Value = null };
         await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
     }
+
+    /// <summary>
+    /// Tests that the parameterised constructor populates every field verbatim.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ParameterisedConstructorShouldPopulateAllFields()
+    {
+        var created = new DateTimeOffset(2026, 3, 4, 5, 6, 7, TimeSpan.Zero);
+        var expires = new DateTimeOffset(2026, 4, 5, 6, 7, 8, TimeSpan.Zero);
+        byte[] payload = [1, 2, 3];
+
+        var entry = new CacheEntry("my-key", "My.Type", payload, created, expires);
+
+        await Assert.That(entry.Id).IsEqualTo("my-key");
+        await Assert.That(entry.TypeName).IsEqualTo("My.Type");
+        await Assert.That(entry.Value).IsEqualTo(payload);
+        await Assert.That(entry.CreatedAt).IsEqualTo(created);
+        await Assert.That(entry.ExpiresAt).IsEqualTo(expires);
+    }
+
+    /// <summary>
+    /// Tests that the parameterised constructor accepts null typeName, null value, and null expiry.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ParameterisedConstructorShouldAcceptNullOptionalFields()
+    {
+        var created = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+        var entry = new CacheEntry("key", typeName: null, value: null, created, expiresAt: null);
+
+        await Assert.That(entry.Id).IsEqualTo("key");
+        await Assert.That(entry.TypeName).IsNull();
+        await Assert.That(entry.Value).IsNull();
+        await Assert.That(entry.ExpiresAt).IsNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> returns true when both buffers are the same reference.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnTrueForSameReference()
+    {
+        byte[] buf = [1, 2, 3];
+        await Assert.That(CacheEntry.ValueEquals(buf, buf)).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> returns true when both buffers are null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnTrueForBothNull() =>
+        await Assert.That(CacheEntry.ValueEquals(null, null)).IsTrue();
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> returns false when exactly one buffer is null.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnFalseWhenOnlyOneIsNull()
+    {
+        byte[] buf = [1];
+        await Assert.That(CacheEntry.ValueEquals(buf, null)).IsFalse();
+        await Assert.That(CacheEntry.ValueEquals(null, buf)).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> returns true for distinct buffers with identical contents.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnTrueForDistinctBuffersWithEqualContent()
+    {
+        byte[] a = [1, 2, 3, 4, 5];
+        byte[] b = [1, 2, 3, 4, 5];
+        await Assert.That(CacheEntry.ValueEquals(a, b)).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> returns false for buffers of equal length but differing content.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnFalseForEqualLengthDifferentContent()
+    {
+        byte[] a = [1, 2, 3];
+        byte[] b = [1, 2, 4];
+        await Assert.That(CacheEntry.ValueEquals(a, b)).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> returns false for buffers of different length.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnFalseForDifferentLengths()
+    {
+        byte[] a = [1, 2, 3];
+        byte[] b = [1, 2];
+        await Assert.That(CacheEntry.ValueEquals(a, b)).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="CacheEntry.ValueEquals"/> treats two empty buffers as equal.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task ValueEqualsShouldReturnTrueForTwoEmptyBuffers() =>
+        await Assert.That(CacheEntry.ValueEquals([], [])).IsTrue();
 }
