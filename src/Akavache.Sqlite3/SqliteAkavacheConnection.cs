@@ -154,19 +154,21 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
         new(CloseAsync());
 
     /// <summary>
-    /// Executes a single legacy SELECT statement, swallowing "table/column not found" style
-    /// exceptions so the caller can fall through to the next query form.
+    /// Executes a single legacy SELECT statement, swallowing sqlite-net schema errors (missing
+    /// table / missing column, typical when the DB is already on the v11 schema) so the caller
+    /// can fall through to the next query form. Non-SQLite failures (e.g. disposed connection,
+    /// cancellation) propagate unchanged so real bugs aren't masked.
     /// </summary>
     /// <param name="sql">The legacy SQL statement.</param>
     /// <param name="args">Bound parameters.</param>
-    /// <returns>The matching blob, or <see langword="null"/> if the query failed or returned no row.</returns>
+    /// <returns>The matching blob, or <see langword="null"/> if the legacy schema isn't present.</returns>
     private async Task<byte[]?> TryExecuteLegacyAsync(string sql, object[] args)
     {
         try
         {
             return await _connection.ExecuteScalarAsync<byte[]?>(sql, args).ConfigureAwait(false);
         }
-        catch
+        catch (SQLiteException)
         {
             // Table/columns may not exist in newer DBs — caller falls through to the next form.
             return null;
