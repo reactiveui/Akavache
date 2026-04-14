@@ -12,7 +12,6 @@ namespace Akavache.Tests;
 /// Achieved via the public AkavacheBuilder.WithInMemoryDefaults() which creates the wrapper.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class SecureBlobCacheWrapperTests
 {
     /// <summary>

@@ -13,7 +13,6 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// Tests associated with the DateTime and DateTimeOffset.
 /// </summary>
-[NotInParallel(nameof(RequestCacheTests))]
 public abstract class DateTimeTestBase : IDisposable
 {
     /// <summary>

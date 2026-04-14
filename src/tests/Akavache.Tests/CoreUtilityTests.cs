@@ -148,7 +148,6 @@ public class CoreUtilityTests
     /// <returns>A task representing the test completion.</returns>
     [Test]
     [TestExecutor<AkavacheTestExecutor>]
-    [NotInParallel(nameof(RequestCacheTests))]
     public async Task RequestCacheShouldWorkCorrectly()
     {
         // Arrange
@@ -195,7 +194,6 @@ public class CoreUtilityTests
     /// <returns>A task representing the test completion.</returns>
     [Test]
     [TestExecutor<AkavacheTestExecutor>]
-    [NotInParallel(nameof(RequestCacheTests))]
     public async Task RequestCacheShouldHandleDifferentKeys()
     {
         // Arrange

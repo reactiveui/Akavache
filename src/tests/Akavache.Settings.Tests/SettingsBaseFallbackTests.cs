@@ -15,7 +15,6 @@ namespace Akavache.Settings.Tests;
 /// Validates the cache selection priority: explicit BlobCaches -> CacheDatabase -> InMemoryBlobCache.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseFallbackTests
 {

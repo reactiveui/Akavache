@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
-using Splat;
 using Splat.Builder;
 using TUnit.Core.Interfaces;
 
@@ -21,22 +20,37 @@ public class AkavacheTestExecutorBase : ITestExecutor
     {
         ArgumentNullException.ThrowIfNull(testAction);
 
-        await ResetStateAsync().ConfigureAwait(false);
-        ConfigureBuilder();
-
         try
         {
+            await ResetStateAsync().ConfigureAwait(false);
+            ConfigureBuilder();
             await testAction().ConfigureAwait(false);
         }
         finally
         {
-            await ResetStateAsync().ConfigureAwait(false);
+            await Clean().ConfigureAwait(false);
         }
     }
 
     /// <summary>
-    /// Resets every piece of Akavache and Splat static state. Override to reset
-    /// additional state holders owned by a particular test class.
+    /// Runs in the <c>finally</c> block of <see cref="ExecuteTest"/>, regardless
+    /// of whether the test action succeeded or threw. Defaults to a full
+    /// <see cref="ResetStateAsync"/>; override when a test class needs to dispose
+    /// additional per-test fixtures before the shared state is torn down.
+    /// </summary>
+    /// <returns>A task representing the asynchronous cleanup operation.</returns>
+    protected virtual Task Clean() => ResetStateAsync();
+
+    /// <summary>
+    /// Resets every piece of Akavache static state. The Splat <c>AppLocator</c>
+    /// instance is intentionally <em>not</em> replaced here: per-class
+    /// <c>[Before(Test)]</c> hooks register Splat services (e.g. <c>BitmapLoader</c>
+    /// mocks) before TUnit invokes our executor, so swapping the locator out from
+    /// under them would silently wipe their fixture setup. Akavache's own
+    /// <c>WithSerializer&lt;T&gt;</c> / builder registrations are idempotent
+    /// (<c>HasRegistration</c> checks before re-registering), so leaving the
+    /// locator intact does not leak serializer state across tests. Override to
+    /// reset additional state holders owned by a particular test class.
     /// </summary>
     /// <returns>A task representing the asynchronous reset operation.</returns>
     protected virtual async Task ResetStateAsync()
@@ -48,15 +62,16 @@ public class AkavacheTestExecutorBase : ITestExecutor
         AkavacheBuilder.SettingsStores = [];
         AkavacheBuilder.BlobCaches = [];
 
-        var previousLocator = AppLocator.GetLocator();
-        ModernDependencyResolver freshLocator = new();
-        AppLocator.SetLocator(freshLocator);
-        AppLocator.CurrentMutable.InitializeSplat();
+        // Clear UniversalSerializer's registered-factory list and cached alternatives.
+        // Without this, builder-extension tests that register fakes leak into later
+        // tests that expect only the serializer they configure themselves.
+        UniversalSerializer.ResetCaches();
 
-        if (!ReferenceEquals(previousLocator, freshLocator))
-        {
-            previousLocator?.Dispose();
-        }
+        // Clear the cached Sqlite3 / EncryptedSqlite3 provider flags so
+        // WithSqliteDefaults() / WithEncryptedSqliteDefaults() re-trigger the
+        // provider bootstrap that registers native batteries.
+        Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
+        EncryptedSqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         AppBuilder.ResetBuilderStateForTests();
     }

@@ -12,7 +12,6 @@ namespace Akavache.Tests;
 /// <summary>
 /// Tests for the UpdateExpiration functionality across all IBlobCache implementations.
 /// </summary>
-[NotInParallel("NativeSqlite")]
 public class UpdateExpirationTests : IDisposable
 {
     /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>

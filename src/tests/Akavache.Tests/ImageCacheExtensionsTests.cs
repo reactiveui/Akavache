@@ -15,7 +15,6 @@ namespace Akavache.Tests;
 /// Tests for Akavache.Drawing ImageCacheExtensions functionality.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("BitmapLoader")]
 public class ImageCacheExtensionsTests
 {
     /// <summary>

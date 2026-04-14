@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Exercises argument validation, fluent configuration methods, and <see cref="AkavacheBuilder.Build"/>.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class AkavacheBuilderTests
 {
     /// <summary>

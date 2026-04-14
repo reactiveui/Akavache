@@ -12,7 +12,6 @@ namespace Akavache.Tests.TestBases;
 /// <summary>
 /// A base class for tests about bulk operations.
 /// </summary>
-[NotInParallel(nameof(RequestCacheTests))]
 public abstract class BulkOperationsTestBase : IDisposable
 {
     /// <summary>

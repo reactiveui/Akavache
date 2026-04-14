@@ -20,7 +20,6 @@ namespace Akavache.Tests;
 /// them in parallel with each other (or with other AppLocator-touching tests) would race.
 /// </remarks>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class InMemoryBlobCacheBaseTests
 {
     /// <summary>

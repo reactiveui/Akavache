@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for Akavache.SystemTextJson.Bson.AkavacheBuilderExtensions.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class SystemTextJsonBsonBuilderExtensionsTests
 {
     /// <summary>
@@ -22,7 +21,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => Akavache.SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!))
+        await Assert.That(static () => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -45,7 +44,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerSettingsShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => Akavache.SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, new JsonSerializerOptions()))
+        await Assert.That(static () => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, new JsonSerializerOptions()))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -83,7 +82,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
     public async Task UseSystemJsonBsonSerializerConfigureShouldThrowOnNullBuilder()
     {
         Action<JsonSerializerOptions> configure = _ => { };
-        await Assert.That(() => Akavache.SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, configure))
+        await Assert.That(() => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, configure))
             .Throws<ArgumentNullException>();
     }
 

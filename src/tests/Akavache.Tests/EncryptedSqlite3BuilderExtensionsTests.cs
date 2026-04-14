@@ -14,7 +14,6 @@ namespace Akavache.Tests;
 /// Tests for EncryptedSqlite3.AkavacheBuilderExtensions.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel(["CacheDatabaseState", "NativeSqlite"])]
 public class EncryptedSqlite3BuilderExtensionsTests
 {
     /// <summary>

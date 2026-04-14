@@ -16,7 +16,6 @@ namespace Akavache.Tests;
 /// uninitialized states, initialization overloads, and shutdown.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class CacheDatabaseTests
 {
     /// <summary>

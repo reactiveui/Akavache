@@ -18,7 +18,6 @@ namespace Akavache.Tests;
 /// the two layers compose correctly under real SQLite semantics.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("NativeSqlite")]
 public class SqliteBlobCacheSmokeTests
 {
     /// <summary>

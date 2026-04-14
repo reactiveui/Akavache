@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for Akavache.Drawing BitmapImageExtensions functionality.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("BitmapLoader")]
 public class BitmapImageExtensionsTests
 {
     /// <summary>The default timeout applied to observable-based test operations.</summary>

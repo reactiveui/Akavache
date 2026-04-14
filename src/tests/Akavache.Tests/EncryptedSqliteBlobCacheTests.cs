@@ -19,7 +19,6 @@ namespace Akavache.Tests;
 /// SQLCipher native runtime for every test.
 /// </summary>
 [InheritsTests]
-[NotInParallel("CacheDatabaseState")]
 public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 {
     /// <summary>

@@ -14,7 +14,6 @@ namespace Akavache.Settings.Tests;
 /// exercised in isolation thanks to the internal helpers.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseHelperTests
 {

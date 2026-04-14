@@ -14,7 +14,6 @@ namespace Akavache.Tests;
 /// Tests for Akavache.Sqlite3.AkavacheBuilderExtensions (non-encrypted).
 /// </summary>
 [Category("Akavache")]
-[NotInParallel(["CacheDatabaseState", "NativeSqlite"])]
 public class Sqlite3BuilderExtensionsTests
 {
     /// <summary>
@@ -244,7 +243,7 @@ public class Sqlite3BuilderExtensionsTests
     public async Task SecureBlobCacheWrapperSerializerShouldThrowWhenNull()
     {
         FakeNullSerializerBlobCache fakeInner = new();
-        var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(fakeInner);
+        var wrapper = new Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(fakeInner);
 
         await Assert.That(() => _ = wrapper.Serializer)
             .Throws<InvalidOperationException>();
@@ -263,7 +262,7 @@ public class Sqlite3BuilderExtensionsTests
             SystemJsonSerializer serializer = new();
             SqliteBlobCache inner = new(
                 Path.Combine(path, "async-dispose-test.db"), serializer);
-            var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
+            var wrapper = new Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
 
             await Assert.That(async () => await wrapper.DisposeAsyncCore()).ThrowsNothing();
         }
@@ -278,7 +277,7 @@ public class Sqlite3BuilderExtensionsTests
     public async Task SecureBlobCacheWrapperDisposeAsyncShouldWork()
     {
         InMemoryBlobCache inner = new(new SystemJsonSerializer());
-        var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
+        var wrapper = new Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
 
         await Assert.That(async () => await wrapper.DisposeAsync()).ThrowsNothing();
 
@@ -295,7 +294,7 @@ public class Sqlite3BuilderExtensionsTests
     public async Task SecureBlobCacheWrapperDisposeShouldDisposeInner()
     {
         InMemoryBlobCache inner = new(new SystemJsonSerializer());
-        var wrapper = new Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
+        var wrapper = new Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper(inner);
 
         wrapper.Dispose();
 

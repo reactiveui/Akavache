@@ -14,7 +14,6 @@ namespace Akavache.Tests;
 /// Tests for AkavacheBuilderExtensions.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class AkavacheBuilderExtensionsTests
 {
     /// <summary>

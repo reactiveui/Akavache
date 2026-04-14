@@ -14,7 +14,6 @@ namespace Akavache.Tests;
 /// Tests for serializer extension methods.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel(nameof(SerializerExtensionsTests))]
 public class SerializerExtensionsTests
 {
     /// <summary>

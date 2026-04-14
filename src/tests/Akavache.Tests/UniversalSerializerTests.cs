@@ -23,7 +23,6 @@ namespace Akavache.Tests;
 /// static stores, and <c>Splat.AppLocator</c>.
 /// </remarks>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class UniversalSerializerTests
 {
     /// <summary>

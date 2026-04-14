@@ -16,7 +16,6 @@ namespace Akavache.Tests;
 /// </summary>
 [Category("Akavache")]
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA1001:Types that own disposable fields should be disposable", Justification = "Cleanup is handled via test hooks")]
-[NotInParallel("CacheDatabaseState")]
 public class DownloadUrlExtensionsTests
 {
     /// <summary>Local HTTP server used by the tests.</summary>

@@ -15,7 +15,6 @@ namespace Akavache.Settings.Tests;
 /// <c>Dispose</c> / <c>Dispose(bool)</c> code paths.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsStorageTests
 {

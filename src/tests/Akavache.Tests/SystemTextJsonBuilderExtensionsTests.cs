@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for Akavache.SystemTextJson.AkavacheBuilderExtensions.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class SystemTextJsonBuilderExtensionsTests
 {
     /// <summary>

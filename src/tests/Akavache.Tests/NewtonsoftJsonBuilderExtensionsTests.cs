@@ -13,7 +13,6 @@ namespace Akavache.Tests;
 /// Tests for NewtonsoftJson.AkavacheBuilderExtensions.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel("CacheDatabaseState")]
 public class NewtonsoftJsonBuilderExtensionsTests
 {
     /// <summary>

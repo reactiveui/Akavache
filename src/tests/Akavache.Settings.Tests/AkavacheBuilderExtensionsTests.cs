@@ -16,7 +16,6 @@ namespace Akavache.Settings.Tests;
 /// and the IBlobCache-based settings store overloads.
 /// </summary>
 [Category("Akavache")]
-[NotInParallel(["CacheDatabaseState", "NativeSqlite"])]
 [TestExecutor<AkavacheTestExecutor>]
 public class AkavacheBuilderExtensionsTests
 {
