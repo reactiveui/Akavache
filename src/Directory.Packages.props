@@ -11,7 +11,7 @@
     <SplatVersion>19.3.1</SplatVersion>
     <ReactiveUIVersion>23.2.1</ReactiveUIVersion>
     <MauiVersion>10.0.51</MauiVersion>
-    <TUnitVersion>1.28.7</TUnitVersion>
+    <TUnitVersion>1.32.0</TUnitVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>

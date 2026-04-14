@@ -1,0 +1,26 @@
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+namespace AkavacheTodoMaui.Extensions;
+
+/// <summary>
+/// Extension methods for Task to Observable conversion.
+/// </summary>
+public static class TaskExtensions
+{
+    /// <summary>
+    /// Converts a Task{T} to IObservable{T}.
+    /// </summary>
+    /// <typeparam name="T">The type of the task result.</typeparam>
+    /// <param name="task">The task to convert.</param>
+    /// <returns>An observable that produces the task result.</returns>
+    public static IObservable<T> ToObservable<T>(this Task<T> task) => Observable.FromAsync(() => task);
+
+    /// <summary>
+    /// Converts a Task to IObservable{Unit}.
+    /// </summary>
+    /// <param name="task">The task to convert.</param>
+    /// <returns>An observable that completes when the task completes.</returns>
+    public static IObservable<Unit> ToObservable(this Task task) => Observable.FromAsync(() => task);
+}

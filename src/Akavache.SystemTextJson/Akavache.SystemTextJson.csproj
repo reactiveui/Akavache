@@ -1,12 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Description>System.Text.Json serialization support for Akavache with optional BSON compatibility</Description>
+    <Description>System.Text.Json serialization support for Akavache</Description>
 
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.SystemTextJson.Bson" />
+    <InternalsVisibleTo Include="Akavache.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
@@ -14,8 +19,6 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" />
-    <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="Newtonsoft.Json.Bson" />
   </ItemGroup>
 
 </Project>

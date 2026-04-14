@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -15,7 +14,15 @@ namespace Akavache.NewtonsoftJson;
 /// </summary>
 public class NewtonsoftSerializer : ISerializer
 {
+    /// <summary>The contract resolver used to enforce Akavache DateTime handling.</summary>
     private readonly NewtonsoftDateTimeContractResolver _contractResolver = new();
+#if NET9_0_OR_GREATER
+    /// <summary>Synchronisation primitive guarding access to <see cref="Options"/>.</summary>
+    private readonly Lock _serializerLock = new();
+#else
+    /// <summary>Synchronisation primitive guarding access to <see cref="Options"/>.</summary>
+    private readonly object _serializerLock = new();
+#endif
 
     /// <summary>
     /// Gets or sets the JSON serializer settings for customizing serialization behavior.
@@ -48,40 +55,31 @@ public class NewtonsoftSerializer : ISerializer
             return false;
         }
 
-        try
-        {
-            // BSON documents start with a 4-byte length field
-            var documentLength = BitConverter.ToInt32(data, 0);
+        // BSON documents start with a 4-byte length field.
+        var documentLength = BitConverter.ToInt32(data, 0);
 
-            // Basic sanity check: document length should be reasonable and match actual data length
-            if (documentLength <= 4 || documentLength > data.Length + 100)
-            {
-                return false;
-            }
-
-            // Check if this looks like JSON instead
-            var firstChar = data[4];
-            if (firstChar is (byte)'{' or (byte)'[' or (byte)'"')
-            {
-                // This looks more like JSON
-                return false;
-            }
-
-            // Additional check: try to identify JSON by looking for common JSON patterns in the data
-            var dataString = Encoding.UTF8.GetString(data);
-            return !(dataString.TrimStart().StartsWith("{") || dataString.TrimStart().StartsWith("["));
-        }
-        catch
+        // Basic sanity check: document length should be reasonable and match actual data length.
+        if (documentLength <= 4 || documentLength > data.Length + 100)
         {
             return false;
         }
+
+        // Check if this looks like JSON instead.
+        var firstChar = data[4];
+        if (firstChar is (byte)'{' or (byte)'[' or (byte)'"')
+        {
+            return false;
+        }
+
+        // Additional check: try to identify JSON by looking for common JSON patterns in the data.
+        var dataString = Encoding.UTF8.GetString(data);
+        return !(dataString.TrimStart().StartsWith("{") || dataString.TrimStart().StartsWith("["));
     }
 
     /// <inheritdoc/>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
-#endif
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
     public T? Deserialize<T>(byte[] bytes)
     {
         if (bytes == null || bytes.Length == 0)
@@ -89,28 +87,23 @@ public class NewtonsoftSerializer : ISerializer
             return default;
         }
 
-        // Automatic format detection - try the expected format first
+        // Automatic format detection - try the expected format first.
+        // DeserializeBsonFormat is exception-safe and returns default on failure, so no
+        // wrapping try/catch is needed here.
         if (UseBsonFormat || IsPotentialBsonData(bytes))
         {
-            try
+            var bsonResult = DeserializeBsonFormat<T>(bytes);
+            if (bsonResult != null || typeof(T).IsValueType)
             {
-                var bsonResult = DeserializeBsonFormat<T>(bytes);
-                if (bsonResult != null || typeof(T).IsValueType)
-                {
-                    return bsonResult;
-                }
-            }
-            catch
-            {
-                // Fall back to JSON if BSON fails
+                return bsonResult;
             }
         }
 
         // Try JSON format
         try
         {
-            using var stream = new MemoryStream(bytes);
-            using var textReader = new StreamReader(stream);
+            using MemoryStream stream = new(bytes);
+            using StreamReader textReader = new(stream);
             var serializer = JsonSerializer.Create(GetEffectiveSettings());
             return (T?)serializer.Deserialize(textReader, typeof(T));
         }
@@ -122,10 +115,8 @@ public class NewtonsoftSerializer : ISerializer
     }
 
     /// <inheritdoc/>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
-#endif
     public byte[] Serialize<T>(T item)
     {
         if (UseBsonFormat)
@@ -139,22 +130,50 @@ public class NewtonsoftSerializer : ISerializer
     }
 
     /// <summary>
+    /// Attempts to decode <paramref name="jsonString"/> as a
+    /// <see cref="SimpleObjectWrapper{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The wrapped value type.</typeparam>
+    /// <param name="jsonString">The JSON string to decode.</param>
+    /// <param name="settings">The Newtonsoft.Json settings to use.</param>
+    /// <param name="value">When this method returns <see langword="true"/>, contains the unwrapped value; otherwise <c>default</c>.</param>
+    /// <returns><see langword="true"/> if a non-null wrapper was produced.</returns>
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
+    internal static bool TryUnwrapSimpleObjectWrapper<T>(string jsonString, JsonSerializerSettings settings, out T? value)
+    {
+        try
+        {
+            var wrapper = JsonConvert.DeserializeObject<SimpleObjectWrapper<T>>(jsonString, settings);
+            if (wrapper is not null)
+            {
+                value = wrapper.Value;
+                return true;
+            }
+        }
+        catch
+        {
+            // Fall through — caller will try direct deserialization.
+        }
+
+        value = default;
+        return false;
+    }
+
+    /// <summary>
     /// Serializes an object to BSON format.
     /// </summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="item">The item to serialize.</param>
     /// <returns>BSON bytes.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for serialization.")]
-#endif
-    private byte[] SerializeToBson<T>(T item)
+    internal byte[] SerializeToBson<T>(T item)
     {
         try
         {
             var serializer = GetSerializer();
-            using var ms = new MemoryStream();
-            using var writer = new BsonDataWriter(ms);
+            using MemoryStream ms = new();
+            using BsonDataWriter writer = new(ms);
 
             serializer.Serialize(writer, new ObjectWrapper<T>(item));
             return ms.ToArray();
@@ -174,16 +193,14 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="bytes">The BSON bytes.</param>
     /// <returns>The deserialized object.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
-#endif
-    private T? DeserializeBsonFormat<T>(byte[] bytes)
+    internal T? DeserializeBsonFormat<T>(byte[] bytes)
     {
         try
         {
             var serializer = GetSerializer();
-            using var reader = new BsonDataReader(new MemoryStream(bytes));
+            using BsonDataReader reader = new(new MemoryStream(bytes));
 
             var forcedDateTimeKind = ForcedDateTimeKind;
             if (forcedDateTimeKind.HasValue)
@@ -200,14 +217,13 @@ public class NewtonsoftSerializer : ISerializer
             {
                 // Reset stream and try direct deserialization
                 reader.Close();
-                using var reader2 = new BsonDataReader(new MemoryStream(bytes));
+                using BsonDataReader reader2 = new(new MemoryStream(bytes));
                 if (forcedDateTimeKind.HasValue)
                 {
                     reader2.DateTimeKindHandling = forcedDateTimeKind.Value;
                 }
 
-                var result = serializer.Deserialize<T>(reader2);
-                return result;
+                return serializer.Deserialize<T>(reader2);
             }
         }
         catch
@@ -223,26 +239,22 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="bytes">The data bytes.</param>
     /// <returns>The deserialized object or default.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
     [RequiresDynamicCode("Using Newtonsoft.Json requires types to be preserved for deserialization.")]
-#endif
-    private T? TryDeserializeFromOtherFormats<T>(byte[] bytes)
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "Akavache honours caller-supplied JsonSerializerSettings — including TypeNameHandling — because forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs. Callers deserializing untrusted blobs are responsible for supplying a SerializationBinder via Options.")]
+    internal T? TryDeserializeFromOtherFormats<T>(byte[] bytes)
     {
         // First try BSON format if not already attempted
+        // DeserializeBsonFormat is exception-safe and returns default on failure, so no
+        // wrapping try/catch is needed here.
         if (!UseBsonFormat)
         {
-            try
+            var bsonResult = DeserializeBsonFormat<T>(bytes);
+            if (typeof(T).IsValueType
+                ? !EqualityComparer<T>.Default.Equals(bsonResult!, default!)
+                : bsonResult != null)
             {
-                var bsonResult = DeserializeBsonFormat<T>(bytes);
-                if (bsonResult != null || (typeof(T).IsValueType && !Equals(bsonResult, default(T))))
-                {
-                    return bsonResult;
-                }
-            }
-            catch
-            {
-                // Continue to next attempt
+                return bsonResult;
             }
         }
 
@@ -260,31 +272,17 @@ public class NewtonsoftSerializer : ISerializer
 
             var settings = GetEffectiveSettings();
 
-            // Try ObjectWrapper format first (from BSON serializers)
-            if (jsonString.Contains("\"Value\":"))
+            // Try ObjectWrapper format first (from BSON serializers).
+            if (jsonString.Contains("\"Value\":") &&
+                TryUnwrapSimpleObjectWrapper<T>(jsonString, settings, out var wrappedValue))
             {
-                try
-                {
-                    var wrapper = JsonConvert.DeserializeObject<SimpleObjectWrapper<T>>(jsonString, settings);
-                    if (wrapper is not null)
-                    {
-                        return wrapper.Value;
-                    }
-                }
-                catch
-                {
-                    // Continue to direct deserialization
-                }
+                return wrappedValue;
             }
 
-            // Try direct JSON deserialization with Newtonsoft.Json
-            var result = JsonConvert.DeserializeObject<T>(jsonString, settings);
-            if (result != null || (typeof(T).IsValueType && !Equals(result, default(T))))
-            {
-                return result;
-            }
-
-            return result; // Return the Newtonsoft result even if it's default
+            // Try direct JSON deserialization with Newtonsoft.Json. Both arms of the
+            // earlier non-null/value-type check returned the same result, so the unified
+            // return below handles success and default-fall-through identically.
+            return JsonConvert.DeserializeObject<T>(jsonString, settings);
         }
         catch
         {
@@ -292,29 +290,38 @@ public class NewtonsoftSerializer : ISerializer
         }
     }
 
-    private JsonSerializer GetSerializer()
+    /// <summary>
+    /// Creates a <see cref="JsonSerializer"/> instance configured with the current options and contract resolver.
+    /// </summary>
+    /// <returns>A configured <see cref="JsonSerializer"/>.</returns>
+    internal JsonSerializer GetSerializer()
     {
         var settings = Options ?? new JsonSerializerSettings();
 
-        lock (settings)
+        lock (_serializerLock)
         {
             _contractResolver.ExistingContractResolver = settings.ContractResolver;
             _contractResolver.ForceDateTimeKind = ForcedDateTimeKind;
             settings.ContractResolver = _contractResolver;
             var serializer = JsonSerializer.Create(settings);
             settings.ContractResolver = _contractResolver.ExistingContractResolver;
-            Options = settings; // Update the options to the new settings with the resolver.
+            Options = settings;
 
             return serializer;
         }
     }
 
-    private JsonSerializerSettings GetEffectiveSettings()
+    /// <summary>
+    /// Returns a copy of the current <see cref="JsonSerializerSettings"/> with the Akavache contract resolver applied.
+    /// </summary>
+    /// <returns>The effective <see cref="JsonSerializerSettings"/> used for serialization.</returns>
+    [SuppressMessage("Security", "CA2328:Ensure that JsonSerializerSettings are secure", Justification = "We honour caller-supplied JsonSerializerSettings — including TypeNameHandling — because Akavache is a generic serialization layer and forcing TypeNameHandling.None would silently break consumers that round-trip polymorphic graphs (a documented Newtonsoft.Json feature). Callers who deserialize untrusted blobs are responsible for restricting the binder via Options.SerializationBinder before they hand the settings to us.")]
+    internal JsonSerializerSettings GetEffectiveSettings()
     {
         var settings = Options ?? new JsonSerializerSettings();
 
         // Create a copy to avoid modifying the original settings
-        settings = new JsonSerializerSettings
+        settings = new()
         {
             ContractResolver = _contractResolver,
             DateTimeZoneHandling = settings.DateTimeZoneHandling,
@@ -338,6 +345,7 @@ public class NewtonsoftSerializer : ISerializer
             MetadataPropertyHandling = settings.MetadataPropertyHandling,
             TypeNameAssemblyFormatHandling = settings.TypeNameAssemblyFormatHandling,
             ConstructorHandling = settings.ConstructorHandling,
+            SerializationBinder = settings.SerializationBinder,
             Error = settings.Error
         };
 
@@ -353,8 +361,11 @@ public class NewtonsoftSerializer : ISerializer
     /// </summary>
     /// <typeparam name="T">The wrapped type.</typeparam>
     [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Used for JSON deserialization")]
-    private class SimpleObjectWrapper<T>
+    internal class SimpleObjectWrapper<T>
     {
+        /// <summary>
+        /// Gets or sets the wrapped value.
+        /// </summary>
         public T? Value { get; set; }
     }
 
@@ -364,12 +375,22 @@ public class NewtonsoftSerializer : ISerializer
     /// <typeparam name="T">The type of the wrapped value.</typeparam>
     private class ObjectWrapper<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class.
+        /// </summary>
         public ObjectWrapper()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class with the supplied value.
+        /// </summary>
+        /// <param name="value">The value to wrap.</param>
         public ObjectWrapper(T? value) => Value = value;
 
+        /// <summary>
+        /// Gets or sets the wrapped value.
+        /// </summary>
         public T? Value { get; set; }
     }
 }

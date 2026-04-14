@@ -1,9 +1,9 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using Akavache.Helpers;
 
 namespace Akavache.Core;
 
@@ -12,6 +12,7 @@ namespace Akavache.Core;
 /// </summary>
 internal static class RequestCache
 {
+    /// <summary>The set of currently in-flight requests, keyed by type-qualified cache key.</summary>
     private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new();
 
     /// <summary>
@@ -29,31 +30,27 @@ internal static class RequestCache
     /// <returns>An observable that represents the shared fetch operation.</returns>
     public static IObservable<T> GetOrCreateRequest<T>(string key, Func<IObservable<T>> fetchFunc)
     {
-        if (fetchFunc is null)
-        {
-            throw new ArgumentNullException(nameof(fetchFunc));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(fetchFunc);
 
         var requestKey = $"{typeof(T).FullName}:{key}";
 
-        return _inflightRequests.GetOrAdd(requestKey, _ =>
-        {
-            return fetchFunc().Select(x => (object)x!)
+        return _inflightRequests.GetOrAdd(
+            requestKey,
+            cacheKey => fetchFunc().Select(x => (object)x!)
                 .Do(
-                    onNext: _ => { },
+                    onNext: static _ => { },
                     onError: _ =>
                     {
                         // Remove from cache on error to allow retry
-                        RemoveRequestInternal(requestKey);
+                        RemoveRequestInternal(cacheKey);
                     },
                     onCompleted: () =>
                     {
                         // Remove from cache on completion to ensure future requests are fresh
-                        RemoveRequestInternal(requestKey);
+                        RemoveRequestInternal(cacheKey);
                     })
                 .Replay(1)
-                .RefCount();
-        }).Select(x => (T)x);
+                .RefCount()).Select(x => (T)x);
     }
 
     /// <summary>
@@ -68,10 +65,7 @@ internal static class RequestCache
     /// <param name="type">The type of object.</param>
     public static void RemoveRequest(string key, Type type)
     {
-        if (type is null)
-        {
-            throw new ArgumentNullException(nameof(type));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(type);
 
         var requestKey = $"{type.FullName}:{key}";
         RemoveRequestInternal(requestKey);
@@ -91,15 +85,8 @@ internal static class RequestCache
         }
 
         var keySuffix = $":{key}";
-        var keysToRemove = new List<string>();
-
-        foreach (var requestKey in _inflightRequests.Keys)
-        {
-            if (requestKey.EndsWith(keySuffix, StringComparison.Ordinal))
-            {
-                keysToRemove.Add(requestKey);
-            }
-        }
+        List<string> keysToRemove = [];
+        keysToRemove.AddRange(_inflightRequests.Keys.Where(requestKey => requestKey.EndsWith(keySuffix, StringComparison.Ordinal)));
 
         foreach (var requestKey in keysToRemove)
         {
@@ -115,14 +102,15 @@ internal static class RequestCache
     /// <returns>True if a request is in flight, false otherwise.</returns>
     public static bool HasInFlightRequest(string key, Type type)
     {
-        if (type is null)
-        {
-            throw new ArgumentNullException(nameof(type));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(type);
 
         var requestKey = $"{type.FullName}:{key}";
         return _inflightRequests.ContainsKey(requestKey);
     }
 
-    private static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out var _);
+    /// <summary>
+    /// Removes the entry identified by <paramref name="requestKey"/> from the in-flight cache.
+    /// </summary>
+    /// <param name="requestKey">The fully-qualified request key.</param>
+    internal static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out _);
 }

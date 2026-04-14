@@ -1,12 +1,13 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 #if NET462_OR_GREATER
 using System.Net.Http;
 #endif
+using Akavache.Helpers;
 
 namespace Akavache;
 
@@ -20,14 +21,17 @@ public class HttpService : IHttpService
     /// </summary>
     public HttpService()
     {
-        var handler = new HttpClientHandler();
+        HttpClientHandler handler = new()
+        {
+            CheckCertificateRevocationList = true,
+        };
         if (handler.SupportsAutomaticDecompression)
         {
             handler.AutomaticDecompression = DecompressionMethods.GZip |
                                              DecompressionMethods.Deflate;
         }
 
-        HttpClient = new HttpClient(handler);
+        HttpClient = new(handler);
     }
 
     /// <summary>
@@ -36,25 +40,24 @@ public class HttpService : IHttpService
     public HttpClient HttpClient { get; set; }
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) =>
         blobCache.DownloadUrl(url, url, method, headers, fetchAlways, absoluteExpiration);
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => url is null
-            ? throw new ArgumentNullException(nameof(url))
-            : blobCache.DownloadUrl(url.ToString(), url, method, headers, fetchAlways, absoluteExpiration);
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(url);
+        return blobCache.DownloadUrl(url.ToString(), url, method, headers, fetchAlways, absoluteExpiration);
+    }
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         method ??= HttpMethod.Get;
 
-        var doFetch = MakeWebRequest(new Uri(url), method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
+        var doFetch = MakeWebRequest(new(url), method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
         var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
 
         IObservable<byte[]?> ret;
@@ -73,12 +76,9 @@ public class HttpService : IHttpService
     }
 
     /// <inheritdoc />
-    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = default, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
+    public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         method ??= HttpMethod.Get;
 
@@ -101,6 +101,50 @@ public class HttpService : IHttpService
     }
 
     /// <summary>
+    /// Builds an <see cref="HttpRequestMessage"/> for the specified URI, method, and headers.
+    /// </summary>
+    /// <param name="uri">The target URI.</param>
+    /// <param name="method">The HTTP method.</param>
+    /// <param name="headers">Optional request headers.</param>
+    /// <returns>A configured request message.</returns>
+    internal static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)
+    {
+        HttpRequestMessage request = new(method, uri);
+
+        if (headers is not null)
+        {
+            foreach (var x in headers)
+            {
+                request.Headers.TryAddWithoutValidation(x.Key, x.Value);
+            }
+        }
+
+        return request;
+    }
+
+    /// <summary>
+    /// Reads the response body as a byte array, throwing if the response status indicates failure.
+    /// </summary>
+    /// <param name="responseMessage">The HTTP response to process.</param>
+    /// <param name="url">The original request URL, used in error messages.</param>
+    /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
+    /// <returns>An observable that emits the response bytes.</returns>
+    [SuppressMessage("Style", "IDE0200:Remove unnecessary lambda expression", Justification = "Method-group conversion of ReadAsByteArrayAsync is ambiguous on net6+ where an overload accepting a CancellationToken exists.")]
+    internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration) =>
+        !responseMessage.IsSuccessStatusCode
+            ? Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode}] Http Failure to {url} with expiry {absoluteExpiration}: {responseMessage.ReasonPhrase}"))
+            : Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
+
+    /// <summary>
+    /// Reads the response body as a byte array, throwing if the response status indicates failure.
+    /// </summary>
+    /// <param name="responseMessage">The HTTP response to process.</param>
+    /// <param name="url">The original request URI, used in error messages.</param>
+    /// <param name="absoluteExpiration">The requested absolute expiration, used in error messages.</param>
+    /// <returns>An observable that emits the response bytes.</returns>
+    internal static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
+
+    /// <summary>
     /// Makes a web request to the specified URI.
     /// </summary>
     /// <param name="uri">The URI to make the request to.</param>
@@ -110,7 +154,7 @@ public class HttpService : IHttpService
     /// <param name="retries">The number of retry attempts for failed requests.</param>
     /// <param name="timeout">The timeout duration for the request.</param>
     /// <returns>An observable that emits the HTTP response message.</returns>
-    protected virtual IObservable<HttpResponseMessage> MakeWebRequest(
+    protected internal virtual IObservable<HttpResponseMessage> MakeWebRequest(
         Uri uri,
         HttpMethod method,
         IEnumerable<KeyValuePair<string, string>>? headers = null,
@@ -135,39 +179,15 @@ public class HttpService : IHttpService
         return request.Timeout(timeout ?? TimeSpan.FromSeconds(15), CacheDatabase.TaskpoolScheduler).Retry(retries);
     }
 
-    private static HttpRequestMessage CreateWebRequest(Uri uri, HttpMethod method, IEnumerable<KeyValuePair<string, string>>? headers)
-    {
-        var request = new HttpRequestMessage(method, uri);
-
-        if (headers is not null)
-        {
-            foreach (var x in headers)
-            {
-                request.Headers.TryAddWithoutValidation(x.Key, x.Value);
-            }
-        }
-
-        return request;
-    }
-
-    private static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, string url, DateTimeOffset? absoluteExpiration)
-    {
-        if (!responseMessage.IsSuccessStatusCode)
-        {
-            return Observable.Throw<byte[]>(new HttpRequestException($"[{responseMessage.StatusCode.ToString()}] Http Failure to {url} with expiry {absoluteExpiration.ToString()}: {responseMessage.ReasonPhrase}"));
-        }
-
-        return Observable.FromAsync(() => responseMessage.Content.ReadAsByteArrayAsync());
-    }
-
-    private static IObservable<byte[]> ProcessWebResponse(HttpResponseMessage responseMessage, Uri url, DateTimeOffset? absoluteExpiration) => ProcessWebResponse(responseMessage, url.ToString(), absoluteExpiration);
-
     /// <summary>
     /// Provides a fast-failing HTTP service that reduces retries and timeouts to speed up tests.
     /// </summary>
     public class FastHttpService : HttpService
     {
+        /// <summary>The number of retry attempts configured for outgoing requests.</summary>
         private readonly int _retries;
+
+        /// <summary>The request timeout configured for outgoing requests.</summary>
         private readonly TimeSpan _timeout;
 
         /// <summary>
@@ -192,7 +212,7 @@ public class HttpService : IHttpService
         }
 
         /// <inheritdoc />
-        protected override IObservable<HttpResponseMessage> MakeWebRequest(
+        protected internal override IObservable<HttpResponseMessage> MakeWebRequest(
             Uri uri,
             HttpMethod method,
             IEnumerable<KeyValuePair<string, string>>? headers = null,

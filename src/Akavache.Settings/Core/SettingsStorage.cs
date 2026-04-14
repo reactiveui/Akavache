@@ -1,12 +1,13 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Akavache.Helpers;
 
 namespace Akavache.Settings.Core;
 
@@ -16,10 +17,16 @@ namespace Akavache.Settings.Core;
 /// </summary>
 public abstract class SettingsStorage : ISettingsStorage
 {
+    /// <summary>The underlying blob cache used for persistent storage of settings values.</summary>
     private readonly IBlobCache _blobCache;
-    private readonly Dictionary<string, object?> _cache;
-    private readonly ReaderWriterLockSlim _cacheLock;
+
+    /// <summary>In-memory cache of settings values keyed by property name.</summary>
+    private readonly ConcurrentDictionary<string, object?> _cache;
+
+    /// <summary>Prefix prepended to every settings key in the blob cache to avoid collisions.</summary>
     private readonly string _keyPrefix;
+
+    /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>
     private bool _disposedValue;
 
     /// <summary>
@@ -30,16 +37,12 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <exception cref="ArgumentException">Thrown when <paramref name="keyPrefix"/> is null, empty, or whitespace.</exception>
     protected SettingsStorage(string keyPrefix, IBlobCache cache)
     {
-        if (string.IsNullOrWhiteSpace(keyPrefix))
-        {
-            throw new ArgumentException("Invalid key prefix", nameof(keyPrefix));
-        }
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(keyPrefix);
 
         _keyPrefix = keyPrefix;
         _blobCache = cache;
 
-        _cache = [];
-        _cacheLock = new();
+        _cache = new();
     }
 
     /// <summary>
@@ -49,21 +52,19 @@ public abstract class SettingsStorage : ISettingsStorage
 
     /// <summary>
     /// Initializes all settings properties by loading them from storage or setting them to their default values.
-    /// This method uses reflection to enumerate properties and is useful for preloading settings at startup.
     /// </summary>
+    /// <remarks>
+    /// Reflection is required here: the base class cannot know which properties a derived
+    /// settings type defines without enumerating them at runtime. The enumeration calls
+    /// each property getter, which routes through <see cref="GetOrCreate{T}(T, string?)"/>
+    /// and primes the in-memory cache. The actual loop is delegated to
+    /// <see cref="EagerLoadProperties"/> so it can be unit-tested in isolation.
+    /// </remarks>
     /// <returns>A task representing the asynchronous initialization operation.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-#endif
     public Task InitializeAsync() =>
-        Task.Run(() =>
-            {
-                foreach (var property in GetType().GetRuntimeProperties())
-                {
-                    property.GetValue(this);
-                }
-            });
+        Task.Run(() => EagerLoadProperties(this, GetType().GetRuntimeProperties()));
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -88,6 +89,25 @@ public abstract class SettingsStorage : ISettingsStorage
     }
 
     /// <summary>
+    /// Iterates <paramref name="properties"/> and invokes each getter against
+    /// <paramref name="target"/>, ignoring the returned values. Used by
+    /// <see cref="InitializeAsync"/> to prime the in-memory cache for every settings
+    /// property on a subclass.
+    /// </summary>
+    /// <param name="target">The instance to read property values from.</param>
+    /// <param name="properties">The properties to enumerate.</param>
+    internal static void EagerLoadProperties(object target, IEnumerable<PropertyInfo> properties)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(target);
+        ArgumentExceptionHelper.ThrowIfNull(properties);
+
+        foreach (var property in properties)
+        {
+            property.GetValue(target);
+        }
+    }
+
+    /// <summary>
     /// Gets the value for the specified key from cache or storage, or creates and stores the default value if not found.
     /// This method provides efficient property access with automatic caching and storage persistence.
     /// </summary>
@@ -96,40 +116,23 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <param name="key">The property name, automatically inferred from the calling member.</param>
     /// <returns>The setting value from cache, storage, or the provided default value.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("GetOrCreate requires types to be preserved for serialization.")]
     [RequiresDynamicCode("GetOrCreate requires types to be preserved for serialization.")]
-#endif
     protected T? GetOrCreate<T>(T defaultValue, [CallerMemberName] string? key = null)
     {
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(key);
 
-        _cacheLock.EnterReadLock();
-
-        try
-        {
-            if (_cache.TryGetValue(key, out var value))
-            {
-                return (T?)value;
-            }
-        }
-        finally
-        {
-            _cacheLock.ExitReadLock();
-        }
-
-        return _blobCache.GetOrCreateObject($"{_keyPrefix}:{key}", () => defaultValue)
-            .Do(x => AddToInternalCache(key, x)).Wait();
+        return _cache.TryGetValue(key, out var value)
+            ? (T?)value
+            : _blobCache.GetOrCreateObject($"{_keyPrefix}:{key}", () => defaultValue)
+                .Do(x => _cache[key] = x).Wait();
     }
 
     /// <summary>
     /// Raises the <see cref="PropertyChanged"/> event for the specified property name.
     /// </summary>
     /// <param name="propertyName">The name of the property that changed, automatically inferred from the calling member.</param>
-    protected void OnPropertyChanged(string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    protected void OnPropertyChanged(string? propertyName = null) => PropertyChanged?.Invoke(this, new(propertyName));
 
     /// <summary>
     /// Sets or creates a setting value, updating both the in-memory cache and persistent storage.
@@ -138,18 +141,13 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <typeparam name="T">The type of the setting value.</typeparam>
     /// <param name="value">The value to store for this setting.</param>
     /// <param name="key">The property name, automatically inferred from the calling member.</param>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("SetOrCreate requires types to be preserved for serialization.")]
     [RequiresDynamicCode("SetOrCreate requires types to be preserved for serialization.")]
-#endif
     protected void SetOrCreate<T>(T value, [CallerMemberName] string? key = null)
     {
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(key);
 
-        AddToInternalCache(key, value);
+        _cache[key] = value;
 
         // Fire and forget, we retrieve the value from the in-memory cache from now on
         _blobCache.InsertObject($"{_keyPrefix}:{key}", value).Subscribe();
@@ -163,26 +161,16 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposedValue)
+        if (_disposedValue)
         {
-            if (disposing)
-            {
-                _cacheLock.Dispose();
-                _blobCache.Dispose();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
-            _disposedValue = true;
+            return;
         }
-    }
 
-    private void AddToInternalCache(string key, object? value)
-    {
-        _cacheLock.EnterWriteLock();
+        if (disposing)
+        {
+            _blobCache.Dispose();
+        }
 
-        _cache[key] = value;
-
-        _cacheLock.ExitWriteLock();
+        _disposedValue = true;
     }
 }

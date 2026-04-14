@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if NET462_OR_GREATER
 using System.Net.Http;
 #endif
+using Akavache.Helpers;
 
 namespace Akavache;
 
@@ -24,12 +24,9 @@ public static class HttpExtensions
     /// <returns>An observable that signals when the write operation has completed.</returns>
     public static IObservable<Unit> WriteAsyncRx(this Stream blobCache, byte[] data, int start, int length)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        var ret = new AsyncSubject<Unit>();
+        AsyncSubject<Unit> ret = new();
 
         try
         {
@@ -74,20 +71,8 @@ public static class HttpExtensions
     /// <returns>An observable that emits the data downloaded from the URL.</returns>
     public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        if (url is null)
-        {
-            throw new ArgumentNullException(nameof(url));
-        }
-
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new ArgumentException("URL cannot be empty or whitespace.", nameof(url));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(url);
 
         return blobCache.HttpService.DownloadUrl(blobCache, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
     }
@@ -107,15 +92,8 @@ public static class HttpExtensions
     /// <returns>The data downloaded from the URL.</returns>
     public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        if (url is null)
-        {
-            throw new ArgumentNullException(nameof(url));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
+        ArgumentExceptionHelper.ThrowIfNull(url);
 
         return blobCache.HttpService.DownloadUrl(blobCache, url, method, headers, fetchAlways, absoluteExpiration);
     }
@@ -136,30 +114,9 @@ public static class HttpExtensions
     /// <returns>The data downloaded from the URL.</returns>
     public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException("Key cannot be empty or whitespace.", nameof(key));
-        }
-
-        if (url is null)
-        {
-            throw new ArgumentNullException(nameof(url));
-        }
-
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new ArgumentException("URL cannot be empty or whitespace.", nameof(url));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(key);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(url);
 
         return blobCache.HttpService.DownloadUrl(blobCache, key, new Uri(url), method, headers, fetchAlways, absoluteExpiration);
     }
@@ -180,25 +137,9 @@ public static class HttpExtensions
     /// <returns>The data downloaded from the URL.</returns>
     public static IObservable<byte[]> DownloadUrl(this IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
-
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new ArgumentException("Key cannot be empty or whitespace.", nameof(key));
-        }
-
-        if (url is null)
-        {
-            throw new ArgumentNullException(nameof(url));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
+        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(key);
+        ArgumentExceptionHelper.ThrowIfNull(url);
 
         return blobCache.HttpService.DownloadUrl(blobCache, key, url, method, headers, fetchAlways, absoluteExpiration);
     }

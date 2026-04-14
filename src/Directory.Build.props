@@ -24,15 +24,20 @@
     <WarningsAsErrors>CS860*;CS861*;CS862*;CS8630;CS8634;CS8766;CS8767</WarningsAsErrors>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- Runs IDE* style analyzers during `dotnet build` so editorconfig severities for IDExxxx rules fire at compile time instead of only in the IDE. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
 
-    <!-- Base TFMs that build on any OS (but excluding net9.0 for Windows to avoid conflicts) -->
+    <!-- Enable building Windows-specific targets (net462/net472/net481 and netX.0-windows) on non-Windows platforms -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <!-- Base TFMs that build on any OS -->
     <AkavacheBaseTargets>net8.0;net9.0;net10.0</AkavacheBaseTargets>
 
-    <!-- Windows-specific desktop TFMs (includes Windows-specific .NET 9) -->
-    <AkavacheWindowsDesktopTargets>net462;net472;net481;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
+    <!-- Windows-specific desktop TFMs (includes .NET Framework and Windows-specific .NET 9/10) -->
+    <AkavacheWindowsDesktopTargets>net462;net472;net481;net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
 
     <!-- Mobile TFMs separated by platform -->
     <AkavacheMobileAndroidTargets>net9.0-android;net10.0-android</AkavacheMobileAndroidTargets>
@@ -43,16 +48,13 @@
     <!-- Start with base TFMs that are always included -->
     <AkavacheFinalTargetFrameworks>$(AkavacheBaseTargets)</AkavacheFinalTargetFrameworks>
 
-    <!-- Add cross-platform .NET 9 only when NOT building on Windows -->
-    <AkavacheFinalTargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks)</AkavacheFinalTargetFrameworks>
-
     <!-- Add Android targets (Linux, macOS, Windows can all compile Android) -->
     <AkavacheFinalTargetFrameworks>$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAndroidTargets)</AkavacheFinalTargetFrameworks>
 
-    <!-- Add Windows Desktop TFMs only when building on Windows (includes net9.0-windows) -->
-    <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheWindowsDesktopTargets)</AkavacheFinalTargetFrameworks>
+    <!-- Add Windows Desktop TFMs. EnableWindowsTargeting above lets these build on non-Windows. -->
+    <AkavacheFinalTargetFrameworks>$(AkavacheFinalTargetFrameworks);$(AkavacheWindowsDesktopTargets)</AkavacheFinalTargetFrameworks>
 
-    <!-- Add Apple Mobile TFMs when building on macOS or Windows (both can compile Apple frameworks) -->
+    <!-- Add Apple Mobile TFMs when building on macOS or Windows (Linux cannot compile Apple frameworks) -->
     <AkavacheFinalTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX')) OR $([MSBuild]::IsOsPlatform('Windows'))">$(AkavacheFinalTargetFrameworks);$(AkavacheMobileAppleTargets)</AkavacheFinalTargetFrameworks>
   </PropertyGroup>
 

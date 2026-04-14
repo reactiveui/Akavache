@@ -1,7 +1,8 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using Akavache.Helpers;
 
 using Splat;
 
@@ -22,10 +23,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable sequence of key-bitmap pairs.</returns>
     public static IObservable<KeyValuePair<string, IBitmap>> LoadImages(this IBlobCache blobCache, IEnumerable<string> keys, float? desiredWidth = null, float? desiredHeight = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return keys.ToObservable()
             .SelectMany(key => blobCache.LoadImage(key, desiredWidth, desiredHeight)
@@ -42,10 +40,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable that completes when all images are cached.</returns>
     public static IObservable<Unit> PreloadImagesFromUrls(this IBlobCache blobCache, IEnumerable<string> urls, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return urls.ToObservable()
             .SelectMany(url => blobCache.DownloadUrl(url, absoluteExpiration: absoluteExpiration)
@@ -66,15 +61,9 @@ public static class ImageCacheExtensions
     /// <returns>The loaded image or the fallback image.</returns>
     public static IObservable<IBitmap> LoadImageWithFallback(this IBlobCache blobCache, string key, byte[] fallbackImageBytes, float? desiredWidth = null, float? desiredHeight = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (fallbackImageBytes is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackImageBytes));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
         return blobCache.LoadImage(key, desiredWidth, desiredHeight)
             .Catch<IBitmap, Exception>(_ => BytesToImage(fallbackImageBytes, desiredWidth, desiredHeight));
@@ -93,15 +82,9 @@ public static class ImageCacheExtensions
     /// <returns>The loaded image or the fallback image.</returns>
     public static IObservable<IBitmap> LoadImageFromUrlWithFallback(this IBlobCache blobCache, string url, byte[] fallbackImageBytes, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (fallbackImageBytes is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackImageBytes));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
         return blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, desiredHeight, absoluteExpiration)
             .Catch<IBitmap, Exception>(_ => BytesToImage(fallbackImageBytes, desiredWidth, desiredHeight));
@@ -119,10 +102,7 @@ public static class ImageCacheExtensions
     /// <returns>An observable that completes when the thumbnail is created and cached.</returns>
     public static IObservable<Unit> CreateAndCacheThumbnail(this IBlobCache blobCache, string sourceKey, string thumbnailKey, float thumbnailWidth, float thumbnailHeight, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.LoadImage(sourceKey, thumbnailWidth, thumbnailHeight)
             .SelectMany(thumbnail => blobCache.SaveImage(thumbnailKey, thumbnail, absoluteExpiration));
@@ -136,22 +116,22 @@ public static class ImageCacheExtensions
     /// <returns>An observable containing the image size information.</returns>
     public static IObservable<Size> GetImageSize(this IBlobCache blobCache, string key)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.Get(key)
-            .SelectMany(bytes => bytes != null ? BitmapImageExtensions.ThrowOnBadImageBuffer(bytes) : Observable.Throw<byte[]>(new InvalidOperationException("Image data is null")))
+            .SelectMany(static bytes => BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(bytes))
             .SelectMany(bytes =>
-            {
-                using var ms = new MemoryStream(bytes);
-                return Observable.FromAsync(async () =>
+                Observable.FromAsync(async () =>
                 {
+#if NETFRAMEWORK
+                    using var ms = new MemoryStream(bytes);
+#else
+                    await using var ms = new MemoryStream(bytes);
+#endif
                     var bitmap = await BitmapLoader.Current.Load(ms, null, null);
                     return bitmap != null ? new Size(bitmap.Width, bitmap.Height) : throw new InvalidOperationException("Failed to load image for size detection");
-                });
-            });
+                }))
+            .SelectMany(static size => Observable.Return(size));
     }
 
     /// <summary>
@@ -162,30 +142,34 @@ public static class ImageCacheExtensions
     /// <returns>An observable that completes when all matching images are cleared.</returns>
     public static IObservable<Unit> ClearImageCache(this IBlobCache blobCache, Func<string, bool> keyPattern)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
-        if (keyPattern is null)
-        {
-            throw new ArgumentNullException(nameof(keyPattern));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(keyPattern);
 
         return blobCache.GetAllKeys()
             .Where(keyPattern)
-            .SelectMany(key => blobCache.Invalidate(key))
+            .SelectMany(blobCache.Invalidate)
             .DefaultIfEmpty(Unit.Default)
             .TakeLast(1);
     }
 
-    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
+    /// <summary>
+    /// Decodes <paramref name="compressedImage"/> into an <see cref="IBitmap"/> via the
+    /// ambient <see cref="BitmapLoader.Current"/>. Pulled out as an <c>internal static</c>
+    /// helper so the bitmap-decode path can be unit-tested in isolation against a mocked
+    /// loader without needing a full blob-cache pipeline.
+    /// </summary>
+    /// <param name="compressedImage">The encoded image bytes.</param>
+    /// <param name="desiredWidth">Optional target width for the decoded bitmap.</param>
+    /// <param name="desiredHeight">Optional target height for the decoded bitmap.</param>
+    /// <returns>An observable that emits the decoded bitmap or fails with <see cref="IOException"/>.</returns>
+    internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
+#if NETFRAMEWORK
             using var ms = new MemoryStream(compressedImage);
 #else
-            await using var ms = new MemoryStream(compressedImage);
+            await using MemoryStream ms = new(compressedImage);
 #endif
             var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");

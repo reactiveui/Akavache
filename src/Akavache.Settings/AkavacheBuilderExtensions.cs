@@ -1,10 +1,10 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
 using Akavache.EncryptedSqlite3;
+using Akavache.Helpers;
 using Akavache.Sqlite3;
 
 namespace Akavache.Settings;
@@ -23,10 +23,7 @@ public static class AkavacheBuilderExtensions
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSettingsCachePath(this IAkavacheBuilder builder, string path)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         builder.SettingsCachePath = path;
         return builder;
@@ -41,10 +38,7 @@ public static class AkavacheBuilderExtensions
     /// <returns>A task representing the asynchronous deletion operation.</returns>
     public static async Task DeleteSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         await builder.DisposeSettingsStore<T>(overrideDatabaseName).ConfigureAwait(false);
 
@@ -86,12 +80,7 @@ public static class AkavacheBuilderExtensions
         }
 
         var key = overrideDatabaseName ?? typeof(T).Name;
-        if (AkavacheBuilder.SettingsStores.TryGetValue(key, out var settings))
-        {
-            return settings;
-        }
-
-        return null;
+        return AkavacheBuilder.SettingsStores.TryGetValue(key, out var store) ? store : null;
     }
 
     /// <summary>
@@ -116,15 +105,17 @@ public static class AkavacheBuilderExtensions
             AkavacheBuilder.SettingsStores.Remove(key);
         }
 
-        if (AkavacheBuilder.BlobCaches.TryGetValue(key, out var cache))
+        if (!AkavacheBuilder.BlobCaches.TryGetValue(key, out var cache))
         {
-            if (cache != null)
-            {
-                await cache.DisposeAsync().ConfigureAwait(false);
-            }
-
-            AkavacheBuilder.BlobCaches.Remove(key);
+            return;
         }
+
+        if (cache != null)
+        {
+            await cache.DisposeAsync().ConfigureAwait(false);
+        }
+
+        AkavacheBuilder.BlobCaches.Remove(key);
     }
 
     /// <summary>
@@ -138,12 +129,9 @@ public static class AkavacheBuilderExtensions
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSecureSettingsStore<T>(this IAkavacheBuilder builder, string password, Action<T?> settings, string? overrideDatabaseName = null)
-        where T : ISettingsStorage?, new()
+        where T : class, ISettingsStorage?, new()
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         var settingsDb = builder.GetSecureSettingsStore<T>(password, overrideDatabaseName);
         settings?.Invoke(settingsDb);
@@ -160,13 +148,10 @@ public static class AkavacheBuilderExtensions
     /// <returns>The settings store instance configured for secure storage.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
-    public static T? GetSecureSettingsStore<T>(this IAkavacheInstance builder, string password, string? overrideDatabaseName = null)
-        where T : ISettingsStorage?, new()
+    public static T GetSecureSettingsStore<T>(this IAkavacheInstance builder, string password, string? overrideDatabaseName = null)
+        where T : class, ISettingsStorage?, new()
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         if (builder.Serializer == null)
         {
@@ -186,7 +171,7 @@ public static class AkavacheBuilderExtensions
         Directory.CreateDirectory(builder.SettingsCachePath!);
         AkavacheBuilder.BlobCaches[validatedKey] = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db"), password, builder.Serializer);
 
-        var viewSettings = new T();
+        T viewSettings = new();
         AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }
@@ -201,12 +186,9 @@ public static class AkavacheBuilderExtensions
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     public static IAkavacheBuilder WithSettingsStore<T>(this IAkavacheBuilder builder, Action<T?> settings, string? overrideDatabaseName = null)
-        where T : ISettingsStorage?, new()
+        where T : class, ISettingsStorage?, new()
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         var settingsDb = builder.GetSettingsStore<T>(overrideDatabaseName);
         settings?.Invoke(settingsDb);
@@ -222,13 +204,10 @@ public static class AkavacheBuilderExtensions
     /// <returns>The settings store instance configured for standard storage.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized or serializer is not configured.</exception>
-    public static T? GetSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
-        where T : ISettingsStorage?, new()
+    public static T GetSettingsStore<T>(this IAkavacheInstance builder, string? overrideDatabaseName = null)
+        where T : class, ISettingsStorage?, new()
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
         if (builder.Serializer == null)
         {
@@ -248,7 +227,7 @@ public static class AkavacheBuilderExtensions
         Directory.CreateDirectory(builder.SettingsCachePath!);
         AkavacheBuilder.BlobCaches[validatedKey] = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db"), builder.Serializer);
 
-        var viewSettings = new T();
+        T viewSettings = new();
         AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }
@@ -265,17 +244,11 @@ public static class AkavacheBuilderExtensions
     /// <returns>The builder instance for fluent configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="cache"/> is null.</exception>
     public static IAkavacheBuilder WithSettingsStore<T>(this IAkavacheBuilder builder, IBlobCache cache, Action<T?> settings, string? overrideDatabaseName = null)
-        where T : ISettingsStorage?, new()
+        where T : class, ISettingsStorage?, new()
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
-        if (cache == null)
-        {
-            throw new ArgumentNullException(nameof(cache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(cache);
 
         var settingsDb = builder.GetSettingsStore<T>(cache, overrideDatabaseName);
         settings?.Invoke(settingsDb);
@@ -293,18 +266,12 @@ public static class AkavacheBuilderExtensions
     /// <returns>The settings store instance configured with the custom cache.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> or <paramref name="cache"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when AkavacheBuilder has not been initialized.</exception>
-    public static T? GetSettingsStore<T>(this IAkavacheInstance builder, IBlobCache cache, string? overrideDatabaseName = null)
-        where T : ISettingsStorage?, new()
+    public static T GetSettingsStore<T>(this IAkavacheInstance builder, IBlobCache cache, string? overrideDatabaseName = null)
+        where T : class, ISettingsStorage?, new()
     {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(builder);
 
-        if (cache == null)
-        {
-            throw new ArgumentNullException(nameof(cache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(cache);
 
         if (AkavacheBuilder.SettingsStores == null || AkavacheBuilder.BlobCaches == null)
         {
@@ -318,7 +285,7 @@ public static class AkavacheBuilderExtensions
 
         AkavacheBuilder.BlobCaches[validatedKey] = cache;
 
-        var viewSettings = new T();
+        T viewSettings = new();
         AkavacheBuilder.SettingsStores[validatedKey] = viewSettings;
         return viewSettings;
     }

@@ -1,7 +1,8 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using Akavache.Helpers;
 
 using Splat;
 
@@ -23,13 +24,10 @@ public static class BitmapImageExtensions
     /// Observable is guaranteed to be returned on the UI thread.</returns>
     public static IObservable<IBitmap> LoadImage(this IBlobCache blobCache, string key, float? desiredWidth = null, float? desiredHeight = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.Get(key)
-            .SelectMany(bytes => bytes != null ? ThrowOnBadImageBuffer(bytes) : Observable.Throw<byte[]>(new InvalidOperationException("Image data is null")))
+            .SelectMany(static bytes => ThrowOnNullOrBadImageBuffer(bytes))
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
@@ -48,13 +46,10 @@ public static class BitmapImageExtensions
     /// Observable is guaranteed to be returned on the UI thread.</returns>
     public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(ThrowOnBadImageBuffer)
+            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
@@ -73,13 +68,10 @@ public static class BitmapImageExtensions
     /// Observable is guaranteed to be returned on the UI thread.</returns>
     public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(ThrowOnBadImageBuffer)
+            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
@@ -99,13 +91,10 @@ public static class BitmapImageExtensions
     /// Observable is guaranteed to be returned on the UI thread.</returns>
     public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, string url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(ThrowOnBadImageBuffer)
+            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
@@ -125,26 +114,12 @@ public static class BitmapImageExtensions
     /// Observable is guaranteed to be returned on the UI thread.</returns>
     public static IObservable<IBitmap> LoadImageFromUrl(this IBlobCache blobCache, string key, Uri url, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(ThrowOnBadImageBuffer)
+            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
             .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
     }
-
-    /// <summary>
-    /// Converts bad image buffers into an exception.
-    /// </summary>
-    /// <param name="compressedImage">The compressed image buffer to check.</param>
-    /// <returns>The byte[], or OnError if the buffer is corrupt (empty or
-    /// too small).</returns>
-    public static IObservable<byte[]> ThrowOnBadImageBuffer(this byte[] compressedImage) =>
-        (compressedImage is null || compressedImage.Length < 64) ?
-            Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image")) :
-            Observable.Return(compressedImage);
 
     /// <summary>
     /// Save an image to the blob cache.
@@ -156,17 +131,10 @@ public static class BitmapImageExtensions
     /// <returns>A Future result representing the completion of the save operation.</returns>
     public static IObservable<Unit> SaveImage(this IBlobCache blobCache, string key, IBitmap image, DateTimeOffset? absoluteExpiration = null)
     {
-        if (blobCache is null)
-        {
-            throw new ArgumentNullException(nameof(blobCache));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(blobCache);
+        ArgumentExceptionHelper.ThrowIfNull(image);
 
-        if (image is null)
-        {
-            throw new ArgumentNullException(nameof(image));
-        }
-
-        return ImageToBytes(image)
+        return image.ImageToBytes()
             .SelectMany(bytes => blobCache.Insert(key, bytes, absoluteExpiration));
     }
 
@@ -177,30 +145,63 @@ public static class BitmapImageExtensions
     /// <returns>A Future result representing the byte array.</returns>
     public static IObservable<byte[]> ImageToBytes(this IBitmap image)
     {
-        if (image is null)
-        {
-            throw new ArgumentNullException(nameof(image));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(image);
 
         return Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
+#if NETFRAMEWORK
             using var stream = new MemoryStream();
 #else
-            await using var stream = new MemoryStream();
+            await using MemoryStream stream = new();
 #endif
             await image.Save(CompressedBitmapFormat.Png, 1.0f, stream);
             return stream.ToArray();
         });
     }
 
-    private static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
+    /// <summary>
+    /// Emits <paramref name="compressedImage"/> through an observable, or signals
+    /// an <see cref="InvalidOperationException"/> when the buffer is corrupt
+    /// (<see langword="null"/> or smaller than the 64-byte minimum).
+    /// </summary>
+    /// <param name="compressedImage">The compressed image buffer to check.</param>
+    /// <returns>An observable emitting the buffer, or signalling an error when invalid.</returns>
+    internal static IObservable<byte[]> ThrowOnBadImageBuffer(byte[]? compressedImage) =>
+        compressedImage is null || compressedImage.Length < 64 ?
+            Observable.Throw<byte[]>(new InvalidOperationException("Invalid Image")) :
+            Observable.Return(compressedImage);
+
+    /// <summary>
+    /// Routes a potentially null byte buffer from a blob cache through the
+    /// bad-image guard, emitting a descriptive <c>"Image data is null"</c> error
+    /// when the buffer itself is <see langword="null"/>.
+    /// </summary>
+    /// <param name="bytes">The bytes returned by the blob cache, possibly <see langword="null"/>.</param>
+    /// <returns>An observable emitting <paramref name="bytes"/>, or an error.</returns>
+    internal static IObservable<byte[]> ThrowOnNullOrBadImageBuffer(byte[]? bytes) =>
+        bytes is null
+            ? Observable.Throw<byte[]>(new InvalidOperationException("Image data is null"))
+            : ThrowOnBadImageBuffer(bytes);
+
+    /// <summary>
+    /// Converts a compressed image byte array into an <see cref="IBitmap"/> using
+    /// Splat's ambient <see cref="BitmapLoader.Current"/>.
+    /// </summary>
+    /// <remarks>
+    /// Throws <see cref="IOException"/> when the loader returns
+    /// <see langword="null"/>.
+    /// </remarks>
+    /// <param name="compressedImage">The compressed image bytes.</param>
+    /// <param name="desiredWidth">Optional desired width.</param>
+    /// <param name="desiredHeight">Optional desired height.</param>
+    /// <returns>An observable emitting the decoded bitmap.</returns>
+    internal static IObservable<IBitmap> BytesToImage(byte[] compressedImage, float? desiredWidth, float? desiredHeight) =>
         Observable.FromAsync(async () =>
         {
-#if NETSTANDARD2_0 || NET462_OR_GREATER
+#if NETFRAMEWORK
             using var ms = new MemoryStream(compressedImage);
 #else
-            await using var ms = new MemoryStream(compressedImage);
+            await using MemoryStream ms = new(compressedImage);
 #endif
             var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");

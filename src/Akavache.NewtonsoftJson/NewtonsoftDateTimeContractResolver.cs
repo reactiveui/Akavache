@@ -1,6 +1,5 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using Newtonsoft.Json.Serialization;
@@ -27,8 +26,14 @@ internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractRes
     {
     }
 
+    /// <summary>
+    /// Gets or sets an existing contract resolver to delegate to before applying the DateTime overrides.
+    /// </summary>
     public IContractResolver? ExistingContractResolver { get; set; } = contractResolver;
 
+    /// <summary>
+    /// Gets or sets the <see cref="DateTimeKind"/> that resolved DateTime values should be forced to, if any.
+    /// </summary>
     public DateTimeKind? ForceDateTimeKind { get; set; } = forceDateTimeKind;
 
     /// <inheritdoc />
@@ -36,8 +41,8 @@ internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractRes
     {
         // Check if we have an existing contract resolver and it's not another instance of this class
         // to prevent infinite recursion
-        var contract = (ExistingContractResolver is not null &&
-                       ExistingContractResolver.GetType() != typeof(NewtonsoftDateTimeContractResolver))
+        var contract = ExistingContractResolver is not null &&
+                       ExistingContractResolver.GetType() != typeof(NewtonsoftDateTimeContractResolver)
                        ? ExistingContractResolver.ResolveContract(type)
                        : null;
 

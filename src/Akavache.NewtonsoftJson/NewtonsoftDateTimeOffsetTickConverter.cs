@@ -1,9 +1,10 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Helpers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Akavache.NewtonsoftJson;
 
@@ -24,47 +25,28 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
     /// <inheritdoc/>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
-        if (reader is null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(reader);
 
         if (reader.TokenType is not JsonToken.StartObject and not JsonToken.Date and not JsonToken.Integer)
         {
             return null;
         }
 
-        if (reader.TokenType == JsonToken.Date && reader.Value is not null)
+        if (reader is { TokenType: JsonToken.Date, Value: not null })
         {
             return (DateTimeOffset)(DateTime)reader.Value;
         }
 
-        // Handle the case where we stored it as an object with ticks and offset
+        // Handle the case where we stored it as an object with ticks and offset.
+        // JObject.Load fully materialises the object so the Ticks / OffsetTicks
+        // properties can be looked up directly via the ReadLongProperty helper.
         if (reader.TokenType == JsonToken.StartObject)
         {
-            long ticks = 0;
-            long offsetTicks = 0;
+            var jobject = JObject.Load(reader);
+            var ticks = ReadLongProperty(jobject, "Ticks");
+            var offsetTicks = ReadLongProperty(jobject, "OffsetTicks");
 
-            while (reader.Read() && reader.TokenType != JsonToken.EndObject)
-            {
-                if (reader.TokenType == JsonToken.PropertyName)
-                {
-                    var propertyName = reader.Value?.ToString();
-                    reader.Read();
-
-                    switch (propertyName)
-                    {
-                        case "Ticks":
-                            ticks = (long)reader.Value!;
-                            break;
-                        case "OffsetTicks":
-                            offsetTicks = (long)reader.Value!;
-                            break;
-                    }
-                }
-            }
-
-            var offset = new TimeSpan(offsetTicks);
+            TimeSpan offset = new(offsetTicks);
             return new DateTimeOffset(ticks, offset);
         }
 
@@ -81,15 +63,30 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
     /// <inheritdoc/>
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
-        if (value is DateTimeOffset dateTimeOffset)
+        if (value is not DateTimeOffset dateTimeOffset)
         {
-            // Store both ticks and offset to preserve full DateTimeOffset information
-            writer.WriteStartObject();
-            writer.WritePropertyName("Ticks");
-            writer.WriteValue(dateTimeOffset.Ticks);
-            writer.WritePropertyName("OffsetTicks");
-            writer.WriteValue(dateTimeOffset.Offset.Ticks);
-            writer.WriteEndObject();
+            return;
         }
+
+        // Store both ticks and offset to preserve full DateTimeOffset information
+        writer.WriteStartObject();
+        writer.WritePropertyName("Ticks");
+        writer.WriteValue(dateTimeOffset.Ticks);
+        writer.WritePropertyName("OffsetTicks");
+        writer.WriteValue(dateTimeOffset.Offset.Ticks);
+        writer.WriteEndObject();
+    }
+
+    /// <summary>
+    /// Reads a long-valued property from <paramref name="jobject"/>, returning
+    /// <c>0</c> when the property is missing.
+    /// </summary>
+    /// <param name="jobject">The JObject to read from.</param>
+    /// <param name="propertyName">The property name to look up.</param>
+    /// <returns>The long value, or <c>0</c> when the property is not present.</returns>
+    internal static long ReadLongProperty(JObject jobject, string propertyName)
+    {
+        var token = jobject[propertyName];
+        return token?.Value<long>() ?? 0;
     }
 }

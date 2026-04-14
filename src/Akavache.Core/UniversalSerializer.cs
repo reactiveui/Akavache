@@ -1,9 +1,9 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using Akavache.Helpers;
 
 namespace Akavache.Core;
 
@@ -13,7 +13,10 @@ namespace Akavache.Core;
 /// </summary>
 public static class UniversalSerializer
 {
-    private static readonly Dictionary<string, Type> _serializerTypeCache = [];
+    /// <summary>The list of factories registered for fallback serializer creation.</summary>
+    private static readonly List<Func<ISerializer>> _registeredSerializerFactories = [];
+
+    /// <summary>Cached list of alternative serializer instances, invalidated on registration.</summary>
     private static List<ISerializer>? _alternativeSerializers;
 
     /// <summary>
@@ -24,21 +27,16 @@ public static class UniversalSerializer
     /// <param name="primarySerializer">The primary serializer to try first.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The deserialized object.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Universal deserialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal deserialization requires types to be preserved.")]
-#endif
     public static T? Deserialize<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind = null)
     {
-        if (data == null || data.Length == 0)
+        if (data is null or { Length: 0 })
         {
             return default;
         }
 
-        if (primarySerializer == null)
-        {
-            throw new ArgumentNullException(nameof(primarySerializer));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(primarySerializer);
 
         try
         {
@@ -51,31 +49,22 @@ public static class UniversalSerializer
             // First, try the primary serializer
             var result = primarySerializer.Deserialize<T>(data);
 
-            // Special handling for DateTime edge cases that may return problematic values
-            if (typeof(T) == typeof(DateTime) && result is DateTime dateTime)
+            // Special handling for DateTime edge cases that may return problematic values.
+            if (typeof(T) == typeof(DateTime))
             {
-                var validatedDateTime = ValidateDeserializedDateTime(dateTime, null, forcedDateTimeKind);
+                var dateTime = CastAsDateTime(result);
+                var validatedDateTime = DateTimeHelpers.ValidateDeserializedDateTime(dateTime, null, forcedDateTimeKind);
                 return (T)(object)validatedDateTime;
             }
 
             return result;
         }
-        catch (Exception primaryException)
+        catch (Exception)
         {
-            // If the primary serializer fails, try fallback mechanisms
-            try
-            {
-                return TryFallbackDeserialization<T>(data, primarySerializer, forcedDateTimeKind);
-            }
-            catch (Exception fallbackException)
-            {
-                // If all fallbacks fail, throw the original exception with context
-                throw new InvalidOperationException(
-                    $"Failed to deserialize data using {primarySerializer.GetType().Name} and all fallback mechanisms. " +
-                    $"Data length: {data.Length} bytes. Primary error: {primaryException.Message}. " +
-                    $"Fallback error: {fallbackException.Message}",
-                    primaryException);
-            }
+            // If the primary serializer fails, try fallback mechanisms.
+            // TryFallbackDeserialization swallows all exceptions internally and returns
+            // default on total failure, so no rethrow path is needed here.
+            return TryFallbackDeserialization<T>(data, primarySerializer, forcedDateTimeKind);
         }
     }
 
@@ -87,21 +76,16 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Universal serialization requires types to be preserved.")]
     [RequiresDynamicCode("Universal serialization requires types to be preserved.")]
-#endif
     public static byte[] Serialize<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind = null)
     {
-        if (value == null)
+        if (value is null)
         {
             return [];
         }
 
-        if (targetSerializer == null)
-        {
-            throw new ArgumentNullException(nameof(targetSerializer));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(targetSerializer);
 
         try
         {
@@ -110,9 +94,10 @@ public static class UniversalSerializer
                 targetSerializer.ForcedDateTimeKind = forcedDateTimeKind;
             }
 
-            // Special preprocessing for DateTime values to ensure compatibility
-            if (typeof(T) == typeof(DateTime) && value is DateTime dateTime)
+            // Special preprocessing for DateTime values to ensure compatibility.
+            if (typeof(T) == typeof(DateTime))
             {
+                var dateTime = CastAsDateTime(value);
                 var processedDateTime = PreprocessDateTimeForSerialization(dateTime, targetSerializer, forcedDateTimeKind);
                 return targetSerializer.Serialize((T)(object)processedDateTime);
             }
@@ -145,16 +130,14 @@ public static class UniversalSerializer
     /// <param name="requestedKey">The original key that was requested.</param>
     /// <param name="primarySerializer">The primary serializer being used.</param>
     /// <returns>The data if found using alternative key formats, otherwise default.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Universal key compatibility requires types to be preserved.")]
     [RequiresDynamicCode("Universal key compatibility requires types to be preserved.")]
-#endif
     public static async Task<T?> TryFindDataWithAlternativeKeys<T>(
         IBlobCache cache,
         string requestedKey,
         ISerializer primarySerializer)
     {
-        if (cache == null || string.IsNullOrEmpty(requestedKey) || primarySerializer == null)
+        if (cache is null || string.IsNullOrEmpty(requestedKey) || primarySerializer is null)
         {
             return default;
         }
@@ -169,41 +152,25 @@ public static class UniversalSerializer
                 return default; // No data in cache at all
             }
 
-            // Try different possible key formats that might contain our data
-            var possibleKeys = new List<string>
+            foreach (var candidateKey in FindKeyCandidates<T>(allKeys, requestedKey))
             {
-                requestedKey, // Original key
-                $"{typeof(T).FullName}___{requestedKey}", // Type-prefixed key
-                $"{typeof(T).Name}___{requestedKey}", // Short type name prefixed
-                $"{typeof(T).Assembly.GetName().Name}.{typeof(T).Name}___{requestedKey}" // Assembly-qualified type name
-            };
-
-            // Also check if there are any keys that end with our requested key
-            var matchingKeys = allKeys.Where(k =>
-                possibleKeys.Contains(k) ||
-                k.EndsWith($"___{requestedKey}") ||
-                k.EndsWith(requestedKey)).ToList();
-
-            foreach (var candidateKey in matchingKeys)
-            {
+                byte[]? rawData;
                 try
                 {
-                    // Try to get the raw data first
-                    var rawData = await cache.Get(candidateKey);
-                    if (rawData?.Length > 0)
-                    {
-                        // Try to deserialize using the universal deserializer
-                        var result = Deserialize<T>(rawData, primarySerializer);
-                        if (result != null && !EqualityComparer<T>.Default.Equals(result, default!))
-                        {
-                            return result;
-                        }
-                    }
+                    rawData = await cache.Get(candidateKey);
                 }
                 catch
                 {
-                    // Continue to next key
+                    // Continue to next key.
+                    continue;
                 }
+
+                if (!TryDeserializeCandidate<T>(rawData, primarySerializer, out var result))
+                {
+                    continue;
+                }
+
+                return result;
             }
         }
         catch
@@ -215,6 +182,229 @@ public static class UniversalSerializer
     }
 
     /// <summary>
+    /// Registers a serializer factory for use as a fallback when the primary serializer fails.
+    /// Serializer packages should call this during initialization to make themselves available
+    /// for cross-serializer compatibility.
+    /// </summary>
+    /// <param name="factory">A factory function that creates a new instance of the serializer.</param>
+    public static void RegisterSerializer(Func<ISerializer> factory)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(factory);
+
+        _registeredSerializerFactories.Add(factory);
+        _alternativeSerializers = null; // Invalidate cache
+    }
+
+    /// <summary>
+    /// Attempts to deserialize the candidate bytes <paramref name="rawData"/> via
+    /// <see cref="Deserialize{T}"/> and reports whether the result is a usable
+    /// value.
+    /// </summary>
+    /// <remarks>
+    /// A "usable" result is one that is non-null and not equal to
+    /// <c>default(T)</c>. Empty or null <paramref name="rawData"/> short-circuits
+    /// to <see langword="false"/> without invoking the serializer.
+    /// </remarks>
+    /// <typeparam name="T">The expected value type.</typeparam>
+    /// <param name="rawData">The raw bytes retrieved from the blob cache, or <see langword="null"/>.</param>
+    /// <param name="primarySerializer">The primary serializer to pass to <see cref="Deserialize{T}"/>.</param>
+    /// <param name="result">When this method returns <see langword="true"/>, the deserialized value; otherwise <c>default</c>.</param>
+    /// <returns><see langword="true"/> if the deserialized value is usable.</returns>
+    [RequiresUnreferencedCode("Calls Deserialize<T>.")]
+    [RequiresDynamicCode("Calls Deserialize<T>.")]
+    internal static bool TryDeserializeCandidate<T>(byte[]? rawData, ISerializer primarySerializer, out T? result)
+    {
+        result = default;
+
+        if (rawData is null || rawData.Length == 0)
+        {
+            return false;
+        }
+
+        // Deserialize<T> is exception-safe: it catches every serializer failure and
+        // routes into TryFallbackDeserialization, which itself swallows exceptions
+        // and returns default. Callers guarantee primarySerializer is non-null, so
+        // no try/catch is needed here.
+        var deserialized = Deserialize<T>(rawData, primarySerializer);
+
+        if (deserialized is null || EqualityComparer<T>.Default.Equals(deserialized, default!))
+        {
+            return false;
+        }
+
+        result = deserialized;
+        return true;
+    }
+
+    /// <summary>
+    /// Coerces a generic <typeparamref name="T"/> value to a <see cref="DateTime"/>.
+    /// </summary>
+    /// <remarks>
+    /// Returns the value when it is a <see cref="DateTime"/>, otherwise returns
+    /// <c>default</c> (<see cref="DateTime.MinValue"/>).
+    /// </remarks>
+    /// <typeparam name="T">The generic type being deserialized.</typeparam>
+    /// <param name="value">The deserialized value.</param>
+    /// <returns>The coerced <see cref="DateTime"/>, or <c>default</c>.</returns>
+    internal static DateTime CastAsDateTime<T>(T? value) => value is DateTime dateTime ? dateTime : default;
+
+    /// <summary>
+    /// Coerces a generic <typeparamref name="T"/> value to a
+    /// <see cref="DateTimeOffset"/>.
+    /// </summary>
+    /// <remarks>
+    /// Returns the value when it is a <see cref="DateTimeOffset"/>, otherwise
+    /// returns <c>default</c> (<see cref="DateTimeOffset.MinValue"/>).
+    /// </remarks>
+    /// <typeparam name="T">The generic type being deserialized.</typeparam>
+    /// <param name="value">The deserialized value.</param>
+    /// <returns>The coerced <see cref="DateTimeOffset"/>, or <c>default</c>.</returns>
+    internal static DateTimeOffset CastAsDateTimeOffset<T>(T? value) => value is DateTimeOffset dateTimeOffset ? dateTimeOffset : default;
+
+    /// <summary>
+    /// Filters <paramref name="allKeys"/> down to the subset that could plausibly
+    /// hold a value for <paramref name="requestedKey"/>.
+    /// </summary>
+    /// <remarks>
+    /// A key is considered a candidate if it is the exact requested key, one of
+    /// the type-prefixed forms (<c>Namespace.Type___requestedKey</c>,
+    /// <c>ShortType___requestedKey</c>,
+    /// <c>AssemblyName.Type___requestedKey</c>), any key ending with
+    /// <c>___{requestedKey}</c>, or any key simply ending with
+    /// <paramref name="requestedKey"/>.
+    /// </remarks>
+    /// <typeparam name="T">The value type whose type-prefixed key forms should be considered.</typeparam>
+    /// <param name="allKeys">The full set of keys present in the cache.</param>
+    /// <param name="requestedKey">The key the caller asked for.</param>
+    /// <returns>The candidate subset of <paramref name="allKeys"/>.</returns>
+    internal static List<string> FindKeyCandidates<T>(IEnumerable<string> allKeys, string requestedKey)
+    {
+        HashSet<string> possibleKeys =
+        [
+            requestedKey,
+            $"{typeof(T).FullName}___{requestedKey}",
+            $"{typeof(T).Name}___{requestedKey}",
+            $"{typeof(T).Assembly.GetName().Name}.{typeof(T).Name}___{requestedKey}"
+        ];
+
+        var prefixSuffix = $"___{requestedKey}";
+        List<string> candidates = [];
+        foreach (var key in allKeys)
+        {
+            if (possibleKeys.Contains(key) || key.EndsWith(prefixSuffix, StringComparison.Ordinal))
+            {
+                candidates.Add(key);
+                continue;
+            }
+
+            if (key.EndsWith(requestedKey, StringComparison.Ordinal))
+            {
+                candidates.Add(key);
+            }
+        }
+
+        return candidates;
+    }
+
+    /// <summary>
+    /// Checks if data might be BSON format.
+    /// </summary>
+    /// <param name="data">The data to check.</param>
+    /// <returns>True if data might be BSON.</returns>
+    internal static bool IsPotentialBsonData(byte[] data)
+    {
+        if (data.Length < 5)
+        {
+            return false;
+        }
+
+        // BSON documents start with a 4-byte little-endian length field. The length check
+        // above guarantees the read is safe; BinaryHelpers is endian-explicit (BSON is
+        // little-endian regardless of platform) and inlines on net6+ to BinaryPrimitives.
+        var documentLength = BinaryHelpers.ReadInt32LittleEndian(data);
+
+        // Basic sanity check: document length should be reasonable and within tolerance of the actual data length.
+        return documentLength > 4 && documentLength <= data.Length + 100;
+    }
+
+    /// <summary>
+    /// Checks if data might be JSON format.
+    /// </summary>
+    /// <param name="data">The data to check.</param>
+    /// <returns>True if data might be JSON.</returns>
+    internal static bool IsPotentialJsonData(byte[] data)
+    {
+        if (data.Length == 0)
+        {
+            return false;
+        }
+
+        // Skip any leading whitespace.
+        var startIndex = 0;
+        while (startIndex < data.Length && data[startIndex] is 0x20 or 0x09 or 0x0A or 0x0D)
+        {
+            startIndex++;
+        }
+
+        if (startIndex >= data.Length)
+        {
+            return false;
+        }
+
+        // Check for typical JSON starting characters.
+        var firstChar = data[startIndex];
+
+        return IsJsonObjectOrArray(firstChar) ||
+               IsJsonString(firstChar) ||
+               IsJsonNumber(firstChar) ||
+               IsJsonBoolean(data, startIndex) ||
+               IsJsonNull(data, startIndex);
+    }
+
+    /// <summary>
+    /// Checks if the character represents the start of a JSON object '{' or array '['.
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>True if the character is '{' or '['.</returns>
+    internal static bool IsJsonObjectOrArray(byte c) => c is 0x7B or 0x5B;
+
+    /// <summary>
+    /// Checks if the character represents the start of a JSON string '"'.
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>True if the character is '"'.</returns>
+    internal static bool IsJsonString(byte c) => c == 0x22;
+
+    /// <summary>
+    /// Checks if the character represents the start of a JSON number ('0'-'9' or '-').
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>True if the character is '0'-'9' or '-'.</returns>
+    internal static bool IsJsonNumber(byte c) => c is (>= 0x30 and <= 0x39) or 0x2D;
+
+    /// <summary>
+    /// Checks if the data at the specified index represents a JSON boolean ('true' or 'false').
+    /// </summary>
+    /// <param name="data">The data buffer to check.</param>
+    /// <param name="index">The index at which to start the check.</param>
+    /// <returns>True if the data starting at the index matches 'true' or 'false'.</returns>
+    internal static bool IsJsonBoolean(byte[] data, int index) =>
+        (data.Length >= index + 4 &&
+         data[index] == 0x74 && data[index + 1] == 0x72 && data[index + 2] == 0x75 && data[index + 3] == 0x65) || // 'true'
+        (data.Length >= index + 5 &&
+         data[index] == 0x66 && data[index + 1] == 0x61 && data[index + 2] == 0x6C && data[index + 3] == 0x73 && data[index + 4] == 0x65); // 'false'
+
+    /// <summary>
+    /// Checks if the data at the specified index represents a JSON null ('null').
+    /// </summary>
+    /// <param name="data">The data buffer to check.</param>
+    /// <param name="index">The index at which to start the check.</param>
+    /// <returns>True if the data starting at the index matches 'null'.</returns>
+    internal static bool IsJsonNull(byte[] data, int index) =>
+        data.Length >= index + 4 &&
+        data[index] == 0x6E && data[index + 1] == 0x75 && data[index + 2] == 0x6C && data[index + 3] == 0x6C;
+
+    /// <summary>
     /// Attempts fallback deserialization strategies.
     /// </summary>
     /// <typeparam name="T">The type todeserialize to.</typeparam>
@@ -222,11 +412,9 @@ public static class UniversalSerializer
     /// <param name="primarySerializer">The primary serializer that failed.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind.</param>
     /// <returns>The deserialized object or default.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Fallback deserialization requires types to be preserved.")]
-    [RequiresDynamicCode("Fallback deserialization requires types to be preserved.")]
-#endif
-    private static T? TryFallbackDeserialization<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind)
+    [RequiresUnreferencedCode("Calls ISerializer.Deserialize<T>.")]
+    [RequiresDynamicCode("Calls ISerializer.Deserialize<T>.")]
+    internal static T? TryFallbackDeserialization<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind)
     {
         // Strategy 1: Try to detect and handle different data formats
         if (IsPotentialBsonData(data))
@@ -259,11 +447,9 @@ public static class UniversalSerializer
     /// <param name="targetSerializer">The target serializer that failed.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind for consistent handling.</param>
     /// <returns>The serialized data.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Fallback serialization requires types to be preserved.")]
-    [RequiresDynamicCode("Fallback serialization requires types to be preserved.")]
-#endif
-    private static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
+    [RequiresUnreferencedCode("Calls ISerializer.Serialize<T>.")]
+    [RequiresDynamicCode("Calls ISerializer.Serialize<T>.")]
+    internal static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
     {
         // Try to find and use an alternative serializer
         _alternativeSerializers ??= GetAvailableAlternativeSerializers(targetSerializer);
@@ -296,11 +482,9 @@ public static class UniversalSerializer
     /// <param name="primarySerializer">The primary serializer that failed.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind.</param>
     /// <returns>The deserialized object or default.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Alternative serializer deserialization requires types to be preserved.")]
-    [RequiresDynamicCode("Alternative serializer deserialization requires types to be preserved.")]
-#endif
-    private static T? TryAlternativeSerializers<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind)
+    [RequiresUnreferencedCode("Calls ISerializer.Deserialize<T>.")]
+    [RequiresDynamicCode("Calls ISerializer.Deserialize<T>.")]
+    internal static T? TryAlternativeSerializers<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind)
     {
         _alternativeSerializers ??= GetAvailableAlternativeSerializers(primarySerializer);
 
@@ -315,27 +499,28 @@ public static class UniversalSerializer
 
                 var result = altSerializer.Deserialize<T>(data);
 
-                // Enhanced DateTime handling for cross-serializer compatibility
-                if (typeof(T) == typeof(DateTime) && result is DateTime dateTime)
+                // Enhanced DateTime handling for cross-serializer compatibility.
+                if (typeof(T) == typeof(DateTime))
                 {
-                    // Additional validation for alternative serializer results
+                    var dateTime = CastAsDateTime(result);
                     if (dateTime == DateTime.MinValue)
                     {
-                        // Check if this is a legitimate MinValue or a deserialization error
-                        // If the data suggests it should be a different value, try to detect and correct
-                        var correctedDateTime = AttemptDateTimeRecovery(data, dateTime);
+                        // Check if this is a legitimate MinValue or a deserialization error.
+                        // If the data suggests it should be a different value, try to detect and correct.
+                        var correctedDateTime = DateTimeHelpers.AttemptDateTimeRecovery(data, dateTime);
                         if (correctedDateTime != DateTime.MinValue)
                         {
-                            return (T)(object)HandleDateTimeWithCrossSerializerSupport<DateTime>(correctedDateTime, forcedDateTimeKind);
+                            return (T)(object)DateTimeHelpers.HandleDateTimeWithCrossSerializerSupport<DateTime>(correctedDateTime, forcedDateTimeKind);
                         }
                     }
 
-                    return HandleDateTimeWithCrossSerializerSupport<T>(dateTime, forcedDateTimeKind);
+                    return DateTimeHelpers.HandleDateTimeWithCrossSerializerSupport<T>(dateTime, forcedDateTimeKind);
                 }
 
-                if (typeof(T) == typeof(DateTimeOffset) && result is DateTimeOffset dateTimeOffset)
+                if (typeof(T) == typeof(DateTimeOffset))
                 {
-                    return HandleDateTimeOffsetWithCrossSerializerSupport<T>(dateTimeOffset);
+                    var dateTimeOffset = CastAsDateTimeOffset(result);
+                    return DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<T>(dateTimeOffset);
                 }
 
                 return result;
@@ -350,128 +535,21 @@ public static class UniversalSerializer
     }
 
     /// <summary>
-    /// Attempts to recover a DateTime value from data when deserialization returns unexpected results.
-    /// </summary>
-    /// <param name="data">The serialized data.</param>
-    /// <param name="problematicResult">The problematic DateTime result from deserialization.</param>
-    /// <returns>A recovered DateTime or the original problematic result.</returns>
-    private static DateTime AttemptDateTimeRecovery(byte[] data, DateTime problematicResult)
-    {
-        try
-        {
-            // If the result is DateTime.MinValue but the data suggests otherwise
-            if (problematicResult == DateTime.MinValue && data.Length > 10)
-            {
-                // Strategy 1: Try to parse the data as a string to see if it contains date information
-                try
-                {
-                    var dataAsString = Encoding.UTF8.GetString(data);
-
-                    // Look for year patterns that suggest modern dates
-                    if (dataAsString.Contains("2025") || dataAsString.Contains("2024") || dataAsString.Contains("2026"))
-                    {
-                        // Return a reasonable fallback based on the year found
-                        return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
-                    }
-
-                    // Try to find ISO date patterns
-                    const string iso8601Pattern = @"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}";
-                    if (System.Text.RegularExpressions.Regex.IsMatch(dataAsString, iso8601Pattern))
-                    {
-                        return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
-                    }
-                }
-                catch
-                {
-                    // String parsing failed, try other strategies
-                }
-
-                // Strategy 2: Check if data contains typical BSON DateTime binary patterns
-                try
-                {
-                    // BSON stores DateTime as 64-bit milliseconds since Unix epoch
-                    if (data.Length >= 8)
-                    {
-                        // Try to find sequences that might be DateTime values in various positions
-                        for (var offset = 0; offset <= data.Length - 8; offset += 4)
-                        {
-                            try
-                            {
-                                var ticks = BitConverter.ToInt64(data, offset);
-
-                                // Check if this could be a reasonable DateTime (between 1900 and 2100)
-                                var baseDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                                var candidateDateTime = baseDateTime.AddMilliseconds(ticks);
-
-                                if (candidateDateTime.Year is >= 2000 and <= 2100)
-                                {
-                                    return candidateDateTime;
-                                }
-                            }
-                            catch
-                            {
-                                // Continue searching
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Binary parsing failed
-                }
-
-                // Strategy 3: If we still haven't found anything reasonable, check data size
-                // Large data size for a DateTime suggests complex serialization - use a safe fallback
-                if (data.Length > 50)
-                {
-                    return new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
-                }
-            }
-        }
-        catch
-        {
-            // If all recovery attempts fail, return the original problematic result
-        }
-
-        return problematicResult;
-    }
-
-    /// <summary>
     /// Gets available alternative serializers to try as fallbacks.
     /// </summary>
     /// <param name="excludeSerializer">The serializer to exclude from the list.</param>
     /// <returns>A list of alternative serializers.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("Alternative serializer deserialization requires types to be preserved.")]
-    [RequiresDynamicCode("Alternative serializer deserialization requires types to be preserved.")]
-#endif
-    private static List<ISerializer> GetAvailableAlternativeSerializers(ISerializer excludeSerializer)
+    internal static List<ISerializer> GetAvailableAlternativeSerializers(ISerializer excludeSerializer)
     {
-        var alternatives = new List<ISerializer>();
-        var excludeTypeName = excludeSerializer.GetType().Name;
+        List<ISerializer> alternatives = [];
+        var excludeType = excludeSerializer.GetType();
 
-        string[] knownSerializerTypes =
-        [
-            "Akavache.SystemTextJson.SystemJsonSerializer",
-            "Akavache.SystemTextJson.SystemJsonBsonSerializer",
-            "Akavache.NewtonsoftJson.NewtonsoftSerializer",
-            "Akavache.NewtonsoftJson.NewtonsoftBsonSerializer"
-        ];
-
-        foreach (var typeName in knownSerializerTypes)
+        foreach (var factory in _registeredSerializerFactories)
         {
             try
             {
-                if (!_serializerTypeCache.TryGetValue(typeName, out var type))
-                {
-                    type = Type.GetType(typeName);
-                    if (type != null)
-                    {
-                        _serializerTypeCache[typeName] = type;
-                    }
-                }
-
-                if (type != null && type.Name != excludeTypeName && Activator.CreateInstance(type) is ISerializer instance)
+                var instance = factory();
+                if (instance.GetType() != excludeType)
                 {
                     alternatives.Add(instance);
                 }
@@ -492,93 +570,59 @@ public static class UniversalSerializer
     /// <param name="data">The data to deserialize.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind.</param>
     /// <returns>The deserialized object or default.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("BSON deserialization requires types to be preserved.")]
-    [RequiresDynamicCode("BSON deserialization requires types to be preserved.")]
-#endif
-    private static T? TryDeserializeBsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
+    [RequiresUnreferencedCode("Calls ISerializer.Deserialize<T>.")]
+    [RequiresDynamicCode("Calls ISerializer.Deserialize<T>.")]
+    internal static T? TryDeserializeBsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
     {
-        try
+        // Try registered BSON-capable serializers
+        foreach (var factory in _registeredSerializerFactories)
         {
-            string[] bsonSerializerTypes =
-            [
-                "Akavache.NewtonsoftJson.NewtonsoftBsonSerializer",
-                "Akavache.SystemTextJson.SystemJsonBsonSerializer"
-            ];
-
-            foreach (var typeName in bsonSerializerTypes)
+            try
             {
-                try
+                var serializer = factory();
+
+                // Only use serializers that look like BSON serializers
+                if (!serializer.GetType().Name.Contains("Bson", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!_serializerTypeCache.TryGetValue(typeName, out var type))
+                    continue;
+                }
+
+                if (forcedDateTimeKind.HasValue)
+                {
+                    serializer.ForcedDateTimeKind = forcedDateTimeKind;
+                }
+
+                var result = serializer.Deserialize<T>(data);
+
+                // Enhanced handling for DateTime types with BSON to prevent issues.
+                if (typeof(T) == typeof(DateTime))
+                {
+                    var dateTime = CastAsDateTime(result);
+
+                    // Special handling for problematic DateTime values from BSON.
+                    if (dateTime == DateTime.MinValue && data.Length > 20)
                     {
-                        type = Type.GetType(typeName);
-                        if (type != null)
-                        {
-                            _serializerTypeCache[typeName] = type;
-                        }
+                        var recoveredDateTime = DateTimeHelpers.AttemptDateTimeRecovery(data, dateTime);
+                        dateTime = recoveredDateTime != DateTime.MinValue
+                            ? recoveredDateTime
+                            : new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
                     }
 
-                    if (type != null && Activator.CreateInstance(type) is ISerializer serializer)
+                    // Ensure proper DateTimeKind via the shared converter helper.
+                    if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
                     {
-                        if (forcedDateTimeKind.HasValue)
-                        {
-                            serializer.ForcedDateTimeKind = forcedDateTimeKind;
-                        }
-
-                        var result = serializer.Deserialize<T>(data);
-
-                        // Enhanced handling for DateTime types with BSON to prevent issues
-                        if (typeof(T) == typeof(DateTime) && result is DateTime dateTime)
-                        {
-                            // Special handling for problematic DateTime values from BSON
-                            if (dateTime == DateTime.MinValue)
-                            {
-                                // Check if the data is larger than expected for MinValue
-                                // If so, this might be a deserialization issue rather than real MinValue
-                                if (data.Length > 20)
-                                {
-                                    // Try to extract a reasonable DateTime from the data
-                                    var recoveredDateTime = AttemptDateTimeRecovery(data, dateTime);
-                                    if (recoveredDateTime != DateTime.MinValue)
-                                    {
-                                        dateTime = recoveredDateTime;
-                                    }
-                                    else
-                                    {
-                                        // Use a safe fallback for BSON serialization issues
-                                        dateTime = new DateTime(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc);
-                                    }
-                                }
-                            }
-
-                            // Ensure proper DateTimeKind
-                            if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-                            {
-                                dateTime = forcedDateTimeKind.Value switch
-                                {
-                                    DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
-                                    DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
-                                    DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified),
-                                    _ => dateTime
-                                };
-                            }
-
-                            return (T)(object)dateTime;
-                        }
-
-                        return result;
+                        dateTime = DateTimeHelpers.ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value);
                     }
+
+                    return (T)(object)dateTime;
                 }
-                catch
-                {
-                    // Continue to next BSON serializer
-                }
+
+                return result;
             }
-        }
-        catch
-        {
-            // BSON deserialization failed
+            catch
+            {
+                // Continue to next BSON serializer
+            }
         }
 
         return default;
@@ -591,56 +635,37 @@ public static class UniversalSerializer
     /// <param name="data">The data to deserialize.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind.</param>
     /// <returns>The deserialized object or default.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("JSON deserialization requires types to be preserved.")]
-    [RequiresDynamicCode("JSON deserialization requires types to be preserved.")]
-#endif
-    private static T? TryDeserializeJsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
+    [RequiresUnreferencedCode("Calls ISerializer.Deserialize<T>.")]
+    [RequiresDynamicCode("Calls ISerializer.Deserialize<T>.")]
+    internal static T? TryDeserializeJsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
     {
-        try
+        // Try registered JSON-capable serializers (non-BSON)
+        foreach (var factory in _registeredSerializerFactories)
         {
-            // Try JSON-capable serializers
-            string[] jsonSerializerTypes =
-            [
-                "Akavache.SystemTextJson.SystemJsonSerializer",
-                "Akavache.NewtonsoftJson.NewtonsoftSerializer"
-            ];
-
-            foreach (var typeName in jsonSerializerTypes)
+            try
             {
-                try
-                {
-                    if (!_serializerTypeCache.TryGetValue(typeName, out var type))
-                    {
-                        type = Type.GetType(typeName);
-                        if (type != null)
-                        {
-                            _serializerTypeCache[typeName] = type;
-                        }
-                    }
+                var serializer = factory();
 
-                    if (type != null && Activator.CreateInstance(type) is ISerializer serializer)
-                    {
-                        if (forcedDateTimeKind.HasValue)
-                        {
-                            serializer.ForcedDateTimeKind = forcedDateTimeKind;
-                        }
-
-                        return serializer.Deserialize<T>(data);
-                    }
-                }
-                catch
+                // Skip BSON serializers - we want JSON ones
+                if (serializer.GetType().Name.Contains("Bson", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Continue to next JSON serializer
+                    continue;
                 }
+
+                if (forcedDateTimeKind.HasValue)
+                {
+                    serializer.ForcedDateTimeKind = forcedDateTimeKind;
+                }
+
+                return serializer.Deserialize<T>(data);
             }
+            catch
+            {
+                // Continue to next JSON serializer
+            }
+        }
 
-            return TryBasicJsonDeserialization<T>(data);
-        }
-        catch
-        {
-            return default;
-        }
+        return TryBasicJsonDeserialization<T>(data);
     }
 
     /// <summary>
@@ -649,201 +674,22 @@ public static class UniversalSerializer
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
     /// <returns>The deserialized object or default.</returns>
-    private static T? TryBasicJsonDeserialization<T>(byte[] data)
+    internal static T? TryBasicJsonDeserialization<T>(byte[] data)
     {
-        try
-        {
-            var jsonString = Encoding.UTF8.GetString(data);
+        var jsonString = Encoding.UTF8.GetString(data).Trim();
 
-            // Basic JSON structure validation
-            if (string.IsNullOrWhiteSpace(jsonString))
+        // Basic JSON structure validation.
+        return string.IsNullOrWhiteSpace(jsonString)
+            ? default
+            : typeof(T) switch
             {
-                return default;
-            }
-
-            // Handle simple types
-            if (typeof(T) == typeof(string))
-            {
-                // Remove quotes if present
-                var trimmed = jsonString.Trim();
-                return trimmed.StartsWith("\"") && trimmed.EndsWith("\"")
-                    ? (T)(object)trimmed.Substring(1, trimmed.Length - 2)
-                    : (T)(object)jsonString;
-            }
-
-            if (typeof(T) == typeof(int) && int.TryParse(jsonString.Trim(), out var intValue))
-            {
-                return (T)(object)intValue;
-            }
-
-            if (typeof(T) == typeof(bool) && bool.TryParse(jsonString.Trim(), out var boolValue))
-            {
-                return (T)(object)boolValue;
-            }
-
-            return default;
-        }
-        catch
-        {
-            return default;
-        }
-    }
-
-    /// <summary>
-    /// Checks if data might be BSON format.
-    /// </summary>
-    /// <param name="data">The data to check.</param>
-    /// <returns>True if data might be BSON.</returns>
-    private static bool IsPotentialBsonData(byte[] data)
-    {
-        if (data.Length < 5)
-        {
-            return false;
-        }
-
-        try
-        {
-            // BSON documents start with a 4-byte length field
-            var documentLength = BitConverter.ToInt32(data, 0);
-
-            // Basic sanity check: document length should be reasonable and match or be close to actual data length
-            return documentLength > 4 && documentLength <= data.Length + 100; // Allow some tolerance
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Checks if data might be JSON format.
-    /// </summary>
-    /// <param name="data">The data to check.</param>
-    /// <returns>True if data might be JSON.</returns>
-    private static bool IsPotentialJsonData(byte[] data)
-    {
-        if (data.Length == 0)
-        {
-            return false;
-        }
-
-        try
-        {
-            // Skip any leading whitespace
-            var startIndex = 0;
-            while (startIndex < data.Length && (data[startIndex] == 0x20 || data[startIndex] == 0x09 || data[startIndex] == 0x0A || data[startIndex] == 0x0D))
-            {
-                startIndex++;
-            }
-
-            if (startIndex >= data.Length)
-            {
-                return false;
-            }
-
-            // Check for typical JSON starting characters
-            var firstChar = data[startIndex];
-            return firstChar == 0x7B || // '{'
-                   firstChar == 0x5B || // '['
-                   firstChar == 0x22 || // '"'
-                   (firstChar >= 0x30 && firstChar <= 0x39) || // '0'-'9'
-                   firstChar == 0x2D || // '-'
-                   (data.Length >= startIndex + 4 &&
-                    data[startIndex] == 0x74 && data[startIndex + 1] == 0x72 && data[startIndex + 2] == 0x75 && data[startIndex + 3] == 0x65) || // 'true'
-                   (data.Length >= startIndex + 5 &&
-                    data[startIndex] == 0x66 && data[startIndex + 1] == 0x61 && data[startIndex + 2] == 0x6C && data[startIndex + 3] == 0x73 && data[startIndex + 4] == 0x65) || // 'false'
-                   (data.Length >= startIndex + 4 &&
-                    data[startIndex] == 0x6E && data[startIndex + 1] == 0x75 && data[startIndex + 2] == 0x6C && data[startIndex + 3] == 0x6C); // 'null'
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Handles DateTime edge cases that may arise from serialization/deserialization.
-    /// </summary>
-    /// <typeparam name="T">The type (should be DateTime).</typeparam>
-    /// <param name="dateTime">The DateTime value to check.</param>
-    /// <param name="forcedDateTimeKind">The forced DateTime kind if any.</param>
-    /// <returns>The processed DateTime value.</returns>
-    private static T HandleDateTimeEdgeCase<T>(DateTime dateTime, DateTimeKind? forcedDateTimeKind)
-    {
-        // Handle problematic DateTime values that may result from BSON serialization issues
-        if (dateTime == DateTime.MinValue && forcedDateTimeKind == DateTimeKind.Utc)
-        {
-            // BSON serializers sometimes return DateTime.MinValue for serialization errors
-            // Check if this is a legitimate MinValue or a deserialization artifact
-            // For now, we'll allow it but ensure it has the correct Kind
-            var correctedDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
-            return (T)(object)correctedDateTime;
-        }
-
-        // Ensure proper DateTimeKind if forced
-        if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-        {
-            var adjustedDateTime = forcedDateTimeKind.Value switch
-            {
-                DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : dateTime,
-                DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : dateTime,
-                _ => dateTime
+                var t when t == typeof(string) => (T)(object)(jsonString.Length >= 2 && jsonString[0] == '"' && jsonString[jsonString.Length - 1] == '"'
+                    ? jsonString.Substring(1, jsonString.Length - 2)
+                    : jsonString),
+                var t when t == typeof(int) && int.TryParse(jsonString, out var intValue) => (T)(object)intValue,
+                var t when t == typeof(bool) && bool.TryParse(jsonString, out var boolValue) => (T)(object)boolValue,
+                _ => default
             };
-
-            return (T)(object)DateTime.SpecifyKind(adjustedDateTime, forcedDateTimeKind.Value);
-        }
-
-        return (T)(object)dateTime;
-    }
-
-    /// <summary>
-    /// Handles DateTime cross-serializer compatibility issues.
-    /// </summary>
-    /// <typeparam name="T">The type (should be DateTime).</typeparam>
-    /// <param name="dateTime">The DateTime value to process.</param>
-    /// <param name="forcedDateTimeKind">The forced DateTime kind if any.</param>
-    /// <returns>The processed DateTime value.</returns>
-    private static T HandleDateTimeWithCrossSerializerSupport<T>(DateTime dateTime, DateTimeKind? forcedDateTimeKind)
-    {
-        // Apply basic edge case handling first
-        var processed = HandleDateTimeEdgeCase<DateTime>(dateTime, forcedDateTimeKind);
-
-        // Additional cross-serializer specific handling
-        if (processed == DateTime.MinValue && dateTime != DateTime.MinValue)
-        {
-            // This might be a BSON serialization issue - try to preserve the intent
-            // Convert to a reasonable fallback value in UTC
-            var fallbackDateTime = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            return (T)(object)fallbackDateTime;
-        }
-
-        return (T)(object)processed;
-    }
-
-    /// <summary>
-    /// Handles DateTimeOffset cross-serializer compatibility issues.
-    /// </summary>
-    /// <typeparam name="T">The type (should be DateTimeOffset).</typeparam>
-    /// <param name="dateTimeOffset">The DateTimeOffset value to process.</param>
-    /// <returns>The processed DateTimeOffset value.</returns>
-    private static T HandleDateTimeOffsetWithCrossSerializerSupport<T>(DateTimeOffset dateTimeOffset)
-    {
-        // Handle edge cases where different serializers might normalize offsets differently
-        if (dateTimeOffset == DateTimeOffset.MinValue)
-        {
-            // Ensure MinValue is properly handled
-            return (T)(object)DateTimeOffset.MinValue;
-        }
-
-        if (dateTimeOffset == DateTimeOffset.MaxValue)
-        {
-            // Ensure MaxValue is properly handled
-            return (T)(object)DateTimeOffset.MaxValue;
-        }
-
-        // For other values, ensure they're in a consistent format
-        // Some serializers might change the offset but preserve the UTC time
-        return (T)(object)dateTimeOffset;
     }
 
     /// <summary>
@@ -853,7 +699,7 @@ public static class UniversalSerializer
     /// <param name="serializer">The serializer that will be used.</param>
     /// <param name="forcedDateTimeKind">The forced DateTime kind if any.</param>
     /// <returns>The preprocessed DateTime value.</returns>
-    private static DateTime PreprocessDateTimeForSerialization(DateTime dateTime, ISerializer serializer, DateTimeKind? forcedDateTimeKind)
+    internal static DateTime PreprocessDateTimeForSerialization(DateTime dateTime, ISerializer serializer, DateTimeKind? forcedDateTimeKind)
     {
         var serializerTypeName = serializer.GetType().Name;
 
@@ -864,7 +710,7 @@ public static class UniversalSerializer
             if (serializerTypeName.Contains("Newtonsoft") && !serializerTypeName.Contains("Bson"))
             {
                 // Use a safer minimum date for regular Newtonsoft serializer
-                return new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                return new(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             }
         }
 
@@ -874,57 +720,22 @@ public static class UniversalSerializer
             if (serializerTypeName.Contains("Newtonsoft") && !serializerTypeName.Contains("Bson"))
             {
                 // Use a safer maximum date for regular Newtonsoft serializer
-                return new DateTime(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                return new(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc);
             }
         }
 
-        // Apply forced DateTime kind if specified
-        if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-        {
-            return forcedDateTimeKind.Value switch
-            {
-                DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
-                DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
-                DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified),
-                _ => dateTime
-            };
-        }
-
-        return dateTime;
+        // Apply forced DateTime kind via the shared converter helper.
+        return forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value
+            ? DateTimeHelpers.ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value)
+            : dateTime;
     }
 
     /// <summary>
-    /// Validates and potentially corrects a DateTime value after deserialization.
+    /// Resets internal caches. Used for test isolation.
     /// </summary>
-    /// <param name="dateTime">The DateTime value to validate.</param>
-    /// <param name="originalValue">The original value that was serialized, if known.</param>
-    /// <param name="forcedDateTimeKind">The forced DateTime kind if any.</param>
-    /// <returns>The validated/corrected DateTime value.</returns>
-    private static DateTime ValidateDeserializedDateTime(DateTime dateTime, DateTime? originalValue, DateTimeKind? forcedDateTimeKind)
+    internal static void ResetCaches()
     {
-        // Check for problematic deserialization results
-        if (dateTime == DateTime.MinValue && originalValue.HasValue && originalValue.Value != DateTime.MinValue)
-        {
-            // This suggests a deserialization issue - try to recover
-            // Use the original value if it seems reasonable
-            if (originalValue.Value.Year is >= 1900 and <= 2100)
-            {
-                return originalValue.Value;
-            }
-        }
-
-        // Apply forced DateTime kind
-        if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-        {
-            return forcedDateTimeKind.Value switch
-            {
-                DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local ? dateTime.ToUniversalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
-                DateTimeKind.Local => dateTime.Kind == DateTimeKind.Utc ? dateTime.ToLocalTime() : DateTime.SpecifyKind(dateTime, DateTimeKind.Local),
-                DateTimeKind.Unspecified => DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified),
-                _ => dateTime
-            };
-        }
-
-        return dateTime;
+        _registeredSerializerFactories.Clear();
+        _alternativeSerializers = null;
     }
 }

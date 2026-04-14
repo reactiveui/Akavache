@@ -1,6 +1,5 @@
-﻿// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -23,10 +22,8 @@ public static class LoginExtensions
     /// <param name="host">The host identifier to associate with the login data.</param>
     /// <param name="absoluteExpiration">An optional expiration date for the cached login data.</param>
     /// <returns>An observable that signals when the login data is saved.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using SaveLogin requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using SaveLogin requires types to be preserved for serialization")]
-#endif
     public static IObservable<Unit> SaveLogin(this ISecureBlobCache blobCache, string user, string password, string host = "default", DateTimeOffset? absoluteExpiration = null) =>
         blobCache.InsertObject("login:" + host, new LoginInfo(user, password), absoluteExpiration);
 
@@ -38,10 +35,8 @@ public static class LoginExtensions
     /// <param name="blobCache">The secure blob cache to retrieve the login data from.</param>
     /// <param name="host">The host identifier associated with the login data.</param>
     /// <returns>An observable that emits the cached login information.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using GetLogin requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using GetLogin requires types to be preserved for serialization")]
-#endif
     public static IObservable<LoginInfo> GetLogin(this ISecureBlobCache blobCache, string host = "default") =>
         blobCache.GetObject<LoginInfo>("login:" + host).Select(x => x ?? throw new KeyNotFoundException($"Login for host '{host}' not found in cache."));
 

@@ -1,10 +1,10 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
+using Akavache.Helpers;
 using Splat;
 
 namespace Akavache;
@@ -20,20 +20,21 @@ namespace Akavache;
 /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
 public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : ISecureBlobCache
 {
+    /// <summary>The in-memory key to cache entry mapping.</summary>
     private readonly Dictionary<string, CacheEntry> _cache = [];
-    private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
-    private readonly object _lock = new();
-    private bool _disposed;
-    private IHttpService? _httpService;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCacheBase"/> class with default scheduler.
-    /// </summary>
-    /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
-    protected InMemoryBlobCacheBase(ISerializer? serializer)
-        : this(CacheDatabase.TaskpoolScheduler, serializer)
-    {
-    }
+    /// <summary>Per-type index of keys for fast type-scoped lookups.</summary>
+    private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
+#if NET9_0_OR_GREATER
+    /// <summary>Synchronization primitive guarding mutations of the cache and type index.</summary>
+    private readonly Lock _lock = new();
+#else
+    /// <summary>Synchronization primitive guarding mutations of the cache and type index.</summary>
+    private readonly object _lock = new();
+#endif
+
+    /// <summary>Tracks whether the instance has been disposed.</summary>
+    private bool _disposed;
 
     /// <inheritdoc />
     public IScheduler Scheduler { get; } = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
@@ -42,7 +43,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public ISerializer Serializer { get; } = serializer ?? throw new ArgumentNullException(nameof(serializer));
 
     /// <inheritdoc/>
-    public IHttpService HttpService { get => _httpService ??= new HttpService(); set => _httpService = value; }
+    public IHttpService HttpService { get => field ??= new HttpService(); set; }
 
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind
@@ -55,199 +56,166 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             // Also update the global serializer to ensure extension methods use the same setting
             // This ensures GetOrFetchObject and other extension methods respect the cache's DateTime handling
             var serializer = AppLocator.Current.GetService<ISerializer>();
-            if (serializer != null)
-            {
-                serializer.ForcedDateTimeKind = value;
-            }
+
+            serializer?.ForcedDateTimeKind = value;
         }
     }
 
     /// <inheritdoc />
     public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null)
     {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        if (keyValuePairs is null)
-        {
-            throw new ArgumentNullException(nameof(keyValuePairs));
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                foreach (var pair in keyValuePairs)
+        ArgumentExceptionHelper.ThrowIfNull(keyValuePairs);
+        return _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    _cache[pair.Key] = new CacheEntry
+                    lock (_lock)
                     {
-                        Id = pair.Key,
-                        Value = pair.Value,
-                        CreatedAt = Scheduler.Now,
-                        ExpiresAt = absoluteExpiration
-                    };
-                }
-            }
-
-            return Unit.Default;
-        },
-            Scheduler);
-    }
-
-    /// <inheritdoc />
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                _cache[key] = new CacheEntry
-                {
-                    Id = key,
-                    Value = data,
-                    CreatedAt = Scheduler.Now,
-                    ExpiresAt = absoluteExpiration
-                };
-            }
-
-            return Unit.Default;
-        },
-            Scheduler);
-    }
-
-    /// <inheritdoc />
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                if (!_typeIndex.TryGetValue(type, out var value))
-                {
-                    value = [];
-                    _typeIndex[type] = value;
-                }
-
-                foreach (var pair in keyValuePairs)
-                {
-                    _cache[pair.Key] = new CacheEntry
-                    {
-                        Id = pair.Key,
-                        TypeName = type.FullName,
-                        Value = pair.Value,
-                        CreatedAt = Scheduler.Now,
-                        ExpiresAt = absoluteExpiration
-                    };
-                    value.Add(pair.Key);
-                }
-            }
-
-            return Unit.Default;
-        },
-            Scheduler);
-    }
-
-    /// <inheritdoc />
-    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                if (!_typeIndex.TryGetValue(type, out var value))
-                {
-                    value = [];
-                    _typeIndex[type] = value;
-                }
-
-                _cache[key] = new CacheEntry
-                {
-                    Id = key,
-                    TypeName = type.FullName,
-                    Value = data,
-                    CreatedAt = Scheduler.Now,
-                    ExpiresAt = absoluteExpiration
-                };
-                value.Add(key);
-            }
-
-            return Unit.Default;
-        },
-            Scheduler);
-    }
-
-    /// <inheritdoc />
-    public IObservable<byte[]?> Get(string key)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]?>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                if (!_cache.TryGetValue(key, out var entry))
-                {
-                    throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
-                }
-
-                // Check if the entry has expired
-                if (entry.ExpiresAt <= Scheduler.Now)
-                {
-                    _cache.Remove(key);
-
-                    // Also remove from type indexes
-                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                    foreach (var kvp in _typeIndex)
-                    {
-                        kvp.Value.Remove(key);
+                        foreach (var pair in keyValuePairs)
+                        {
+                            _cache[pair.Key] = new()
+                            {
+                                Id = pair.Key,
+                                Value = pair.Value,
+                                CreatedAt = Scheduler.Now,
+                                ExpiresAt = absoluteExpiration,
+                            };
+                        }
                     }
 
-                    throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
-                }
-
-                return entry.Value;
-            }
-        },
-            Scheduler);
+                    return Unit.Default;
+                },
+                Scheduler);
     }
 
     /// <inheritdoc />
-    public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(GetType().Name);
-        }
+    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
+                {
+                    lock (_lock)
+                    {
+                        _cache[key] = new()
+                        {
+                            Id = key,
+                            Value = data,
+                            CreatedAt = Scheduler.Now,
+                            ExpiresAt = absoluteExpiration,
+                        };
+                    }
 
-        return keys.ToObservable()
-            .SelectMany(key => Get(key).Select(value => new KeyValuePair<string, byte[]>(key, value!))
-                .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, byte[]>>()));
-    }
+                    return Unit.Default;
+                },
+                Scheduler);
+
+    /// <inheritdoc />
+    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
+                {
+                    lock (_lock)
+                    {
+                        if (!_typeIndex.TryGetValue(type, out var value))
+                        {
+                            value = [];
+                            _typeIndex[type] = value;
+                        }
+
+                        foreach (var pair in keyValuePairs)
+                        {
+                            _cache[pair.Key] = new()
+                            {
+                                Id = pair.Key,
+                                TypeName = type.FullName,
+                                Value = pair.Value,
+                                CreatedAt = Scheduler.Now,
+                                ExpiresAt = absoluteExpiration,
+                            };
+                            value.Add(pair.Key);
+                        }
+                    }
+
+                    return Unit.Default;
+                },
+                Scheduler);
+
+    /// <inheritdoc />
+    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
+                {
+                    lock (_lock)
+                    {
+                        if (!_typeIndex.TryGetValue(type, out var value))
+                        {
+                            value = [];
+                            _typeIndex[type] = value;
+                        }
+
+                        _cache[key] = new()
+                        {
+                            Id = key,
+                            TypeName = type.FullName,
+                            Value = data,
+                            CreatedAt = Scheduler.Now,
+                            ExpiresAt = absoluteExpiration,
+                        };
+                        value.Add(key);
+                    }
+
+                    return Unit.Default;
+                },
+                Scheduler);
+
+    /// <inheritdoc />
+    public IObservable<byte[]?> Get(string key) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]?>(GetType().Name)
+            : Observable.Start(
+                () =>
+                {
+                    lock (_lock)
+                    {
+                        if (!_cache.TryGetValue(key, out var entry))
+                        {
+                            throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+                        }
+
+                        // Check if the entry has expired
+                        if (entry.ExpiresAt <= Scheduler.Now)
+                        {
+                            _cache.Remove(key);
+
+                            // Also remove from type indexes
+                            // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                            foreach (var kvp in _typeIndex)
+                            {
+                                kvp.Value.Remove(key);
+                            }
+
+                            throw new KeyNotFoundException($"The given key '{key}' was not present in the cache.");
+                        }
+
+                        return entry.Value;
+                    }
+                },
+                Scheduler);
+
+    /// <inheritdoc />
+    public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(GetType().Name)
+            : keys.ToObservable()
+                .SelectMany(key => Get(key)
+                    .Select(value => new KeyValuePair<string, byte[]>(key, value!))
+                    .Catch<KeyValuePair<string, byte[]>, KeyNotFoundException>(_ => Observable.Empty<KeyValuePair<string, byte[]>>()));
 
     /// <inheritdoc />
     public IObservable<byte[]?> Get(string key, Type type) => Get(key);
@@ -256,182 +224,159 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => Get(keys);
 
     /// <inheritdoc />
-    public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                if (!_typeIndex.TryGetValue(type, out var keys))
+    public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    return Enumerable.Empty<KeyValuePair<string, byte[]>>();
-                }
-
-                var now = Scheduler.Now;
-                var result = new List<KeyValuePair<string, byte[]>>();
-                var expiredKeys = new List<string>();
-
-                foreach (var key in keys)
-                {
-                    if (_cache.TryGetValue(key, out var entry))
+                    lock (_lock)
                     {
-                        if (entry.ExpiresAt <= now)
+                        if (!_typeIndex.TryGetValue(type, out var keys))
                         {
-                            expiredKeys.Add(key);
+                            return Enumerable.Empty<KeyValuePair<string, byte[]>>();
                         }
-                        else
+
+                        var now = Scheduler.Now;
+                        List<KeyValuePair<string, byte[]>> result = [];
+                        List<string> expiredKeys = [];
+
+                        foreach (var key in keys)
                         {
-                            result.Add(new KeyValuePair<string, byte[]>(key, entry.Value!));
+                            if (_cache.TryGetValue(key, out var entry))
+                            {
+                                if (entry.ExpiresAt <= now)
+                                {
+                                    expiredKeys.Add(key);
+                                }
+                                else
+                                {
+                                    result.Add(new(key, entry.Value!));
+                                }
+                            }
                         }
+
+                        // Clean up expired keys
+                        foreach (var expiredKey in expiredKeys)
+                        {
+                            _cache.Remove(expiredKey);
+                            keys.Remove(expiredKey);
+                        }
+
+                        return result;
                     }
-                }
-
-                // Clean up expired keys
-                foreach (var expiredKey in expiredKeys)
-                {
-                    _cache.Remove(expiredKey);
-                    keys.Remove(expiredKey);
-                }
-
-                return result;
-            }
-        },
-            Scheduler).SelectMany(x => x);
-    }
+                },
+                Scheduler).SelectMany(x => x);
 
     /// <inheritdoc />
-    public IObservable<string> GetAllKeys()
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                var now = Scheduler.Now;
-                var expiredKeys = new List<string>();
-                var validKeys = new List<string>();
-
-                foreach (var kvp in _cache)
+    public IObservable<string> GetAllKeys() =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    if (kvp.Value.ExpiresAt <= now)
+                    lock (_lock)
                     {
-                        expiredKeys.Add(kvp.Key);
-                    }
-                    else
-                    {
-                        validKeys.Add(kvp.Key);
-                    }
-                }
+                        var now = Scheduler.Now;
+                        List<string> expiredKeys = [];
+                        List<string> validKeys = [];
 
-                // Clean up expired keys
-                foreach (var expiredKey in expiredKeys)
-                {
-                    _cache.Remove(expiredKey);
-                }
-
-                return validKeys;
-            }
-        },
-            Scheduler).SelectMany(x => x);
-    }
-
-    /// <inheritdoc />
-    public IObservable<string> GetAllKeys(Type type)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                if (!_typeIndex.TryGetValue(type, out var keys))
-                {
-                    return Enumerable.Empty<string>();
-                }
-
-                var now = Scheduler.Now;
-                var expiredKeys = new List<string>();
-                var validKeys = new List<string>();
-
-                foreach (var key in keys)
-                {
-                    if (_cache.TryGetValue(key, out var entry))
-                    {
-                        if (entry.ExpiresAt <= now)
+                        foreach (var kvp in _cache)
                         {
-                            expiredKeys.Add(key);
+                            if (kvp.Value.ExpiresAt <= now)
+                            {
+                                expiredKeys.Add(kvp.Key);
+                            }
+                            else
+                            {
+                                validKeys.Add(kvp.Key);
+                            }
                         }
-                        else
+
+                        // Clean up expired keys
+                        foreach (var expiredKey in expiredKeys)
                         {
-                            validKeys.Add(key);
+                            _cache.Remove(expiredKey);
                         }
+
+                        return validKeys;
                     }
-                }
-
-                // Clean up expired keys
-                foreach (var expiredKey in expiredKeys)
-                {
-                    _cache.Remove(expiredKey);
-                    keys.Remove(expiredKey);
-                }
-
-                return validKeys;
-            }
-        },
-            Scheduler).SelectMany(x => x);
-    }
+                },
+                Scheduler).SelectMany(x => x);
 
     /// <inheritdoc />
-    public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<(string Key, DateTimeOffset? Time)>(GetType().Name);
-        }
-
-        return keys.ToObservable()
-            .Select(key =>
-            {
-                lock (_lock)
+    public IObservable<string> GetAllKeys(Type type) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    return _cache.TryGetValue(key, out var entry) ? (key, (DateTimeOffset?)entry.CreatedAt) : (key, null);
-                }
-            });
-    }
+                    lock (_lock)
+                    {
+                        if (!_typeIndex.TryGetValue(type, out var keys))
+                        {
+                            return Enumerable.Empty<string>();
+                        }
+
+                        var now = Scheduler.Now;
+                        List<string> expiredKeys = [];
+                        List<string> validKeys = [];
+
+                        foreach (var key in keys)
+                        {
+                            if (_cache.TryGetValue(key, out var entry))
+                            {
+                                if (entry.ExpiresAt <= now)
+                                {
+                                    expiredKeys.Add(key);
+                                }
+                                else
+                                {
+                                    validKeys.Add(key);
+                                }
+                            }
+                        }
+
+                        // Clean up expired keys
+                        foreach (var expiredKey in expiredKeys)
+                        {
+                            _cache.Remove(expiredKey);
+                            keys.Remove(expiredKey);
+                        }
+
+                        return validKeys;
+                    }
+                },
+                Scheduler).SelectMany(x => x);
 
     /// <inheritdoc />
-    public IObservable<DateTimeOffset?> GetCreatedAt(string key)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(GetType().Name);
-        }
+    public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<(string Key, DateTimeOffset? Time)>(GetType().Name)
+            : keys.ToObservable()
+                .Select(key =>
+                {
+                    lock (_lock)
+                    {
+                        return _cache.TryGetValue(key, out var entry)
+                            ? (key, (DateTimeOffset?)entry.CreatedAt)
+                            : (key, null);
+                    }
+                });
 
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                return _cache.TryGetValue(key, out var entry) ? (DateTimeOffset?)entry.CreatedAt : null;
-            }
-        },
-            Scheduler);
-    }
+    /// <inheritdoc />
+    public IObservable<DateTimeOffset?> GetCreatedAt(string key) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(GetType().Name)
+            : Observable.Start(
+                () =>
+                {
+                    lock (_lock)
+                    {
+                        return _cache.TryGetValue(key, out var entry) ? (DateTimeOffset?)entry.CreatedAt : null;
+                    }
+                },
+                Scheduler);
 
     /// <inheritdoc />
     public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) =>
@@ -447,322 +392,240 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(string key)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                _cache.Remove(key);
-
-                // Remove from type indexes
-                // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                foreach (var kvp in _typeIndex)
+    public IObservable<Unit> Invalidate(string key) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    kvp.Value.Remove(key);
-                }
-            }
+                    lock (_lock)
+                    {
+                        _cache.Remove(key);
 
-            // Clear any pending requests for this key to ensure GetOrFetchObject
-            // will actually fetch fresh data instead of returning cached request results
-            RequestCache.RemoveRequestsForKey(key);
+                        // Remove from type indexes
+                        // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                        foreach (var kvp in _typeIndex)
+                        {
+                            kvp.Value.Remove(key);
+                        }
+                    }
 
-            return Unit.Default;
-        },
-            Scheduler);
-    }
+                    // Clear any pending requests for this key to ensure GetOrFetchObject
+                    // will actually fetch fresh data instead of returning cached request results
+                    RequestCache.RemoveRequestsForKey(key);
+
+                    return Unit.Default;
+                },
+                Scheduler);
 
     /// <inheritdoc />
     public IObservable<Unit> Invalidate(string key, Type type) => Invalidate(key);
 
     /// <inheritdoc />
-    public IObservable<Unit> Invalidate(IEnumerable<string> keys)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            var keysToInvalidate = keys.ToList(); // Materialize the enumerable
-
-            lock (_lock)
-            {
-                foreach (var key in keysToInvalidate)
+    public IObservable<Unit> Invalidate(IEnumerable<string> keys) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    _cache.Remove(key);
+                    var keysToInvalidate = keys.ToList(); // Materialize the enumerable
 
-                    // Remove from type indexes
-                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                    foreach (var kvp in _typeIndex)
+                    lock (_lock)
                     {
-                        kvp.Value.Remove(key);
+                        foreach (var key in keysToInvalidate)
+                        {
+                            _cache.Remove(key);
+
+                            // Remove from type indexes
+                            // Iterate directly over the dictionary to avoid concurrent HashSet access issues
+                            foreach (var kvp in _typeIndex)
+                            {
+                                kvp.Value.Remove(key);
+                            }
+                        }
                     }
-                }
-            }
 
-            // Clear any pending requests for these keys to ensure GetOrFetchObject
-            // will actually fetch fresh data instead of returning cached request results
-            foreach (var key in keysToInvalidate)
-            {
-                RequestCache.RemoveRequestsForKey(key);
-            }
+                    // Clear any pending requests for these keys to ensure GetOrFetchObject
+                    // will actually fetch fresh data instead of returning cached request results
+                    foreach (var key in keysToInvalidate)
+                    {
+                        RequestCache.RemoveRequestsForKey(key);
+                    }
 
-            return Unit.Default;
-        },
-            Scheduler);
-    }
+                    return Unit.Default;
+                },
+                Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> InvalidateAll(Type type)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            var keysToInvalidate = new List<string>();
-
-            lock (_lock)
-            {
-                if (_typeIndex.TryGetValue(type, out var keys))
+    public IObservable<Unit> InvalidateAll(Type type) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    keysToInvalidate.AddRange(keys); // Capture keys before clearing
+                    List<string> keysToInvalidate = [];
 
-                    foreach (var key in keys)
+                    lock (_lock)
                     {
-                        _cache.Remove(key);
+                        if (_typeIndex.TryGetValue(type, out var keys))
+                        {
+                            keysToInvalidate.AddRange(keys); // Capture keys before clearing
+
+                            foreach (var key in keys)
+                            {
+                                _cache.Remove(key);
+                            }
+
+                            keys.Clear();
+                        }
                     }
 
-                    keys.Clear();
-                }
-            }
+                    // Clear any pending requests for these keys and type to ensure GetOrFetchObject
+                    // will actually fetch fresh data instead of returning cached request results
+                    foreach (var key in keysToInvalidate)
+                    {
+                        RequestCache.RemoveRequest(key, type);
+                    }
 
-            // Clear any pending requests for these keys and type to ensure GetOrFetchObject
-            // will actually fetch fresh data instead of returning cached request results
-            foreach (var key in keysToInvalidate)
-            {
-                RequestCache.RemoveRequest(key, type);
-            }
-
-            return Unit.Default;
-        },
-            Scheduler);
-    }
+                    return Unit.Default;
+                },
+                Scheduler);
 
     /// <inheritdoc />
     public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => Invalidate(keys);
 
     /// <inheritdoc />
-    public IObservable<Unit> InvalidateAll()
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-        {
-            lock (_lock)
-            {
-                _cache.Clear();
-                _typeIndex.Clear();
-            }
-
-            // Clear all pending requests to ensure GetOrFetchObject
-            // will actually fetch fresh data instead of returning cached request results
-            RequestCache.Clear();
-
-            return Unit.Default;
-        },
-            Scheduler);
-    }
-
-    /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
-        }
-
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-            {
-                lock (_lock)
+    public IObservable<Unit> InvalidateAll() =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    if (_cache.TryGetValue(key, out var entry))
+                    lock (_lock)
                     {
-                        entry.ExpiresAt = absoluteExpiration;
+                        _cache.Clear();
+                        _typeIndex.Clear();
                     }
-                }
 
-                return Unit.Default;
-            },
-            Scheduler);
-    }
+                    // Clear all pending requests to ensure GetOrFetchObject
+                    // will actually fetch fresh data instead of returning cached request results
+                    RequestCache.Clear();
+
+                    return Unit.Default;
+                },
+                Scheduler);
 
     /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration)
-    {
-        if (string.IsNullOrWhiteSpace(key))
+    public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>
+        (string.IsNullOrWhiteSpace(key), _disposed) switch
         {
-            return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
-        }
-
-        if (type is null)
-        {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
-        }
-
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-            {
-                lock (_lock)
+            (true, _) => Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))),
+            (_, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
+            _ => Observable.Start(
+                () =>
                 {
-                    if (_cache.TryGetValue(key, out var entry) && entry.TypeName == type.FullName)
-                    {
-                        entry.ExpiresAt = absoluteExpiration;
-                    }
-                }
-
-                return Unit.Default;
-            },
-            Scheduler);
-    }
-
-    /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration)
-    {
-        if (keys is null)
-        {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
-        }
-
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-            {
-                lock (_lock)
-                {
-                    foreach (var key in keys)
+                    lock (_lock)
                     {
                         if (_cache.TryGetValue(key, out var entry))
                         {
                             entry.ExpiresAt = absoluteExpiration;
                         }
                     }
-                }
 
-                return Unit.Default;
-            },
-            Scheduler);
-    }
+                    return Unit.Default;
+                },
+                Scheduler),
+        };
 
     /// <inheritdoc />
-    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration)
-    {
-        if (keys is null)
+    public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) =>
+        (string.IsNullOrWhiteSpace(key), type is null, _disposed) switch
         {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
-        }
-
-        if (type is null)
-        {
-            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
-        }
-
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        return Observable.Start(
-            () =>
-            {
-                lock (_lock)
+            (true, _, _) => Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))),
+            (_, true, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(type))),
+            (_, _, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
+            _ => Observable.Start(
+                () =>
                 {
-                    foreach (var key in keys)
+                    lock (_lock)
                     {
-                        if (_cache.TryGetValue(key, out var entry) && entry.TypeName == type.FullName)
+                        if (_cache.TryGetValue(key, out var entry) && entry.TypeName == type!.FullName)
                         {
                             entry.ExpiresAt = absoluteExpiration;
                         }
                     }
-                }
 
-                return Unit.Default;
-            },
-            Scheduler);
-    }
+                    return Unit.Default;
+                },
+                Scheduler),
+        };
 
     /// <inheritdoc />
-    public IObservable<Unit> Vacuum()
-    {
-        if (_disposed)
+    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) =>
+        (keys is null, _disposed) switch
         {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
+            (true, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(keys))),
+            (_, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
+            _ => Observable.Start(
+                () =>
+                {
+                    lock (_lock)
+                    {
+                        foreach (var key in keys!)
+                        {
+                            if (_cache.TryGetValue(key, out var entry))
+                            {
+                                entry.ExpiresAt = absoluteExpiration;
+                            }
+                        }
+                    }
 
-        return Observable.Start(
-            () =>
+                    return Unit.Default;
+                },
+                Scheduler),
+        };
+
+    /// <inheritdoc />
+    public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) =>
+        (keys is null, type is null, _disposed) switch
         {
-            lock (_lock)
-            {
-                var now = Scheduler.Now;
-                var expiredKeys = new List<string>();
-
-                foreach (var kvp in _cache)
+            (true, _, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(keys))),
+            (_, true, _) => Observable.Throw<Unit>(new ArgumentNullException(nameof(type))),
+            (_, _, true) => IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name),
+            _ => Observable.Start(
+                () =>
                 {
-                    if (kvp.Value.ExpiresAt <= now)
+                    lock (_lock)
                     {
-                        expiredKeys.Add(kvp.Key);
+                        foreach (var key in keys!)
+                        {
+                            if (_cache.TryGetValue(key, out var entry) && entry.TypeName == type!.FullName)
+                            {
+                                entry.ExpiresAt = absoluteExpiration;
+                            }
+                        }
                     }
-                }
 
-                foreach (var expiredKey in expiredKeys)
+                    return Unit.Default;
+                },
+                Scheduler),
+        };
+
+    /// <inheritdoc />
+    public IObservable<Unit> Vacuum() =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Observable.Start(
+                () =>
                 {
-                    _cache.Remove(expiredKey);
-
-                    // Remove from type indexes
-                    // Iterate directly over the dictionary to avoid concurrent HashSet access issues
-                    foreach (var kvp in _typeIndex)
+                    lock (_lock)
                     {
-                        kvp.Value.Remove(expiredKey);
+                        VacuumExpiredEntries(_cache, _typeIndex, Scheduler.Now);
                     }
-                }
-            }
 
-            return Unit.Default;
-        },
-            Scheduler);
-    }
+                    return Unit.Default;
+                },
+                Scheduler);
 
     /// <inheritdoc />
     public void Dispose()
@@ -773,7 +636,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
 
     /// <inheritdoc />
     [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Dispose already calls SuppressFinalize")]
-    public async ValueTask DisposeAsync() => await Task.Run(() => Dispose());
+    public async ValueTask DisposeAsync() => await Task.Run(Dispose);
 
     /// <summary>
     /// Insert an object into the cache using the configured serializer.
@@ -783,20 +646,12 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// <param name="value">The object to serialize.</param>
     /// <param name="absoluteExpiration">An optional expiration date.</param>
     /// <returns>A Future result representing the completion of the insert.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using InsertObject requires types to be preserved for serialization")]
     [RequiresDynamicCode("Using InsertObject requires types to be preserved for serialization")]
-#endif
-    public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name);
-        }
-
-        var data = Serializer.Serialize(value);
-        return Insert(key, data, typeof(T), absoluteExpiration);
-    }
+    public IObservable<Unit> InsertObject<T>(string key, T value, DateTimeOffset? absoluteExpiration = null) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(GetType().Name)
+            : Insert(key, Serializer.Serialize(value), typeof(T), absoluteExpiration);
 
     /// <summary>
     /// Get an object from the cache and deserialize it using the configured serializer.
@@ -804,44 +659,30 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     /// <typeparam name="T">The type of object to retrieve.</typeparam>
     /// <param name="key">The key to look up in the cache.</param>
     /// <returns>A Future result representing the object in the cache.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using GetObject requires types to be preserved for deserialization")]
     [RequiresDynamicCode("Using GetObject requires types to be preserved for deserialization")]
-#endif
-    public IObservable<T?> GetObject<T>(string key)
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T?>(GetType().Name);
-        }
-
-        return Get(key, typeof(T))
-            .Select(data => data == null ? default : Serializer.Deserialize<T>(data));
-    }
+    public IObservable<T?> GetObject<T>(string key) =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<T?>(GetType().Name)
+            : Get(key, typeof(T))
+                .Select(data => data == null ? default : Serializer.Deserialize<T>(data));
 
     /// <summary>
     /// Return all objects of a specific Type in the cache.
     /// </summary>
     /// <typeparam name="T">The type of object to retrieve.</typeparam>
     /// <returns>A Future result representing all objects in the cache with the specified Type.</returns>
-#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Using GetAllObjects requires types to be preserved for deserialization")]
     [RequiresDynamicCode("Using GetAllObjects requires types to be preserved for deserialization")]
-#endif
-    public IObservable<IEnumerable<T>> GetAllObjects<T>()
-    {
-        if (_disposed)
-        {
-            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<IEnumerable<T>>(GetType().Name);
-        }
-
-        return GetAll(typeof(T))
-            .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
-            .Where(obj => obj is not null)
-            .Select(obj => obj!)
-            .ToList()
-            .Select(list => (IEnumerable<T>)list);
-    }
+    public IObservable<IEnumerable<T>> GetAllObjects<T>() =>
+        _disposed
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<IEnumerable<T>>(GetType().Name)
+            : GetAll(typeof(T))
+                .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
+                .Where(obj => obj is not null)
+                .Select(obj => obj!)
+                .ToList()
+                .Select(list => (IEnumerable<T>)list);
 
     /// <summary>
     /// Returns the time that the object with the key was added to the cache, or returns
@@ -868,23 +709,87 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
     public IObservable<Unit> InvalidateAllObjects<T>() => InvalidateAll(typeof(T));
 
     /// <summary>
+    /// Removes any entries from <paramref name="cache"/> whose <c>ExpiresAt</c> is at or
+    /// before <paramref name="now"/>, and prunes those keys out of every set in
+    /// <paramref name="typeIndex"/>. Static so the logic is testable in isolation without
+    /// constructing a full <see cref="InMemoryBlobCacheBase"/> and without the coverage
+    /// instrumentation hazards of running inside an <c>Observable.Start</c> lambda.
+    /// </summary>
+    /// <param name="cache">The key-to-entry dictionary to vacuum.</param>
+    /// <param name="typeIndex">The per-type key index to prune.</param>
+    /// <param name="now">The current time used to determine expiration.</param>
+    internal static void VacuumExpiredEntries(
+        Dictionary<string, CacheEntry> cache,
+        Dictionary<Type, HashSet<string>> typeIndex,
+        DateTimeOffset now)
+    {
+        foreach (var expiredKey in CollectExpiredKeys(cache, now))
+        {
+            cache.Remove(expiredKey);
+            RemoveKeyFromAllTypeIndexes(typeIndex, expiredKey);
+        }
+    }
+
+    /// <summary>
+    /// Returns the list of keys in <paramref name="cache"/> whose <c>ExpiresAt</c> is at or
+    /// before <paramref name="now"/>. Static so the iteration is directly testable.
+    /// </summary>
+    /// <param name="cache">The cache dictionary to scan.</param>
+    /// <param name="now">The cutoff time.</param>
+    /// <returns>A list of expired keys.</returns>
+    internal static List<string> CollectExpiredKeys(
+        Dictionary<string, CacheEntry> cache,
+        DateTimeOffset now)
+    {
+        List<string> expiredKeys = [];
+        foreach (var kvp in cache)
+        {
+            if (kvp.Value.ExpiresAt <= now)
+            {
+                expiredKeys.Add(kvp.Key);
+            }
+        }
+
+        return expiredKeys;
+    }
+
+    /// <summary>
+    /// Removes <paramref name="key"/> from every set in <paramref name="typeIndex"/>.
+    /// Iterates the dictionary directly to avoid concurrent <see cref="HashSet{T}"/> access
+    /// issues. Static so the loop body is directly testable.
+    /// </summary>
+    /// <param name="typeIndex">The per-type key index to prune.</param>
+    /// <param name="key">The key to remove from each type's set.</param>
+    internal static void RemoveKeyFromAllTypeIndexes(
+        Dictionary<Type, HashSet<string>> typeIndex,
+        string key)
+    {
+        foreach (var kvp in typeIndex)
+        {
+            kvp.Value.Remove(key);
+        }
+    }
+
+    /// <summary>
     /// Releases the unmanaged resources used by the <see cref="InMemoryBlobCacheBase"/> and optionally releases the managed resources.
     /// </summary>
     /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                lock (_lock)
-                {
-                    _cache.Clear();
-                    _typeIndex.Clear();
-                }
-            }
-
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            lock (_lock)
+            {
+                _cache.Clear();
+                _typeIndex.Clear();
+            }
+        }
+
+        _disposed = true;
     }
 }

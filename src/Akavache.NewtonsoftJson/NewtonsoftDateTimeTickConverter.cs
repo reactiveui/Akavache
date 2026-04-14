@@ -1,8 +1,8 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Helpers;
 using Newtonsoft.Json;
 
 namespace Akavache.NewtonsoftJson;
@@ -33,17 +33,14 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
     /// <inheritdoc/>
     public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
-        if (reader is null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(reader);
 
         if (reader.TokenType is not JsonToken.Integer and not JsonToken.Date)
         {
             return null;
         }
 
-        if (reader.TokenType == JsonToken.Date && reader.Value is not null)
+        if (reader is { TokenType: JsonToken.Date, Value: not null })
         {
             var dateTime = (DateTime)reader.Value;
 
@@ -74,19 +71,20 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
     /// <inheritdoc/>
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
-        if (value is DateTime dateTime)
+        if (value is not DateTime dateTime)
         {
-            // Store ticks in a way that preserves the intent while allowing proper deserialization
-            // Convert to UTC for consistent storage, but handle each kind appropriately
-            var ticksToStore = dateTime.Kind switch
-            {
-                DateTimeKind.Utc => dateTime.Ticks,
-                DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
-                DateTimeKind.Unspecified => dateTime.Ticks, // Preserve original ticks for unspecified
-                _ => dateTime.Ticks
-            };
-
-            writer.WriteValue(ticksToStore);
+            return;
         }
+
+        // Store ticks in a way that preserves the intent while allowing proper deserialization.
+        // Convert to UTC for consistent storage, but handle each kind appropriately.
+        var ticksToStore = dateTime.Kind switch
+        {
+            DateTimeKind.Utc => dateTime.Ticks,
+            DateTimeKind.Local => dateTime.ToUniversalTime().Ticks,
+            _ => dateTime.Ticks, // Unspecified — preserve original ticks
+        };
+
+        writer.WriteValue(ticksToStore);
     }
 }

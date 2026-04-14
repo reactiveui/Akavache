@@ -1,0 +1,89 @@
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Security.Cryptography;
+
+namespace Akavache.Benchmarks.V10;
+
+/// <summary>
+/// Helper utilities for V10 benchmark fixtures — generates random keys and payloads
+/// to populate a cache before measuring read/write throughput.
+/// </summary>
+internal static class PerfHelper
+{
+    /// <summary>
+    /// Tests generating a database.
+    /// </summary>
+    /// <param name="targetCache">The target blob cache.</param>
+    /// <param name="size">The number of items to generate.</param>
+    /// <returns>A list of generated items.</returns>
+    public static async Task<List<string>> GenerateDatabase(IBlobCache targetCache, int size)
+    {
+        List<string> ret = [];
+
+        // Write out in groups of 4096
+        while (size > 0)
+        {
+            var toWriteSize = Math.Min(4096, size);
+            var toWrite = GenerateRandomDatabaseContents(toWriteSize);
+
+            foreach (var kvp in toWrite)
+            {
+                await targetCache.Insert(kvp.Key, kvp.Value);
+                ret.Add(kvp.Key);
+            }
+
+            size -= toWrite.Count;
+            Console.WriteLine(size);
+        }
+
+        return ret;
+    }
+
+    /// <summary>
+    /// Generate the contents of the database.
+    /// </summary>
+    /// <param name="toWriteSize">The size of the database to write.</param>
+    /// <returns>A dictionary of the contents.</returns>
+    public static Dictionary<string, byte[]> GenerateRandomDatabaseContents(int toWriteSize) =>
+        Enumerable.Range(0, toWriteSize)
+            .Select(static _ => GenerateRandomKey())
+            .Distinct()
+            .ToDictionary(static k => k, static _ => GenerateRandomBytes());
+
+    /// <summary>
+    /// Generate random bytes for a value.
+    /// </summary>
+    /// <returns>The generated random bytes.</returns>
+    public static byte[] GenerateRandomBytes()
+    {
+        var ret = new byte[RandomNumberGenerator.GetInt32(1, 256)];
+        RandomNumberGenerator.Fill(ret);
+        return ret;
+    }
+
+    /// <summary>
+    /// Generates a random key for the database.
+    /// </summary>
+    /// <returns>The random key.</returns>
+    public static string GenerateRandomKey()
+    {
+        var bytes = GenerateRandomBytes();
+
+        // NB: Mask off the MSB and set bit 5 so we always end up with
+        // valid UTF-8 characters that aren't control characters
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            bytes[i] = (byte)((bytes[i] & 0x7F) | 0x20);
+        }
+
+        return Encoding.UTF8.GetString(bytes, 0, Math.Min(256, bytes.Length));
+    }
+
+    /// <summary>
+    /// Gets a series of size values to use in generating performance tests.
+    /// </summary>
+    /// <returns>The range of sizes.</returns>
+    public static int[] GetPerfRanges() => [1, 10, 100, 1000, 10000, 100000,];
+}

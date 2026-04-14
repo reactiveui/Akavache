@@ -1,11 +1,9 @@
-// Copyright (c) 2025 .NET Foundation and Contributors. All rights reserved.
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Akavache.Helpers;
 using Akavache.Settings;
 using Splat;
 
@@ -16,50 +14,40 @@ namespace Akavache.Core;
 /// </summary>
 internal class AkavacheBuilder : IAkavacheBuilder
 {
+#if NET9_0_OR_GREATER
+    /// <summary>Synchronization primitive guarding serializer registration.</summary>
+    private static readonly Lock _lock = new();
+#else
+    /// <summary>Synchronization primitive guarding serializer registration.</summary>
     private static readonly object _lock = new();
-    private string? _settingsCachePath;
-    private FileLocationOption _fileLocationOption;
+#endif
 
-    [SuppressMessage("ExecutingAssembly.Location", "IL3000:String may be null", Justification = "Handled.")]
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AkavacheBuilder"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Sets <see cref="ApplicationRootPath"/> to the parent of
+    /// <see cref="AppContext.BaseDirectory"/> and leaves
+    /// <see cref="IAkavacheInstance.ExecutingAssembly"/>,
+    /// <see cref="IAkavacheInstance.ExecutingAssemblyName"/>, and
+    /// <see cref="IAkavacheInstance.Version"/> at their sentinel defaults. Callers
+    /// that need assembly metadata must call
+    /// <see cref="WithExecutingAssembly(Assembly)"/> with a caller-owned
+    /// <see cref="Assembly"/> reference — the AOT-safe path.
+    /// </remarks>
+    /// <param name="fileLocationOption">The file location strategy.</param>
     public AkavacheBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default)
     {
-        _fileLocationOption = fileLocationOption;
-        try
-        {
-            ExecutingAssemblyName = ExecutingAssembly.FullName!.Split(',')[0];
-            string? fileLocation = null;
-            try
-            {
-                fileLocation = ExecutingAssembly.Location;
-            }
-            catch
-            {
-            }
-
-            if (string.IsNullOrWhiteSpace(fileLocation))
-            {
-                fileLocation = AppContext.BaseDirectory;
-            }
-
-            ApplicationRootPath = Path.Combine(Path.GetDirectoryName(fileLocation)!, "..");
-
-            // Additional validation before calling FileVersionInfo.GetVersionInfo to prevent Android crashes
-            if (!string.IsNullOrWhiteSpace(fileLocation) && File.Exists(fileLocation))
-            {
-                var fileVersionInfo = FileVersionInfo.GetVersionInfo(fileLocation);
-                Version = new(fileVersionInfo.ProductMajorPart, fileVersionInfo.ProductMinorPart, fileVersionInfo.ProductBuildPart, fileVersionInfo.ProductPrivatePart);
-            }
-        }
-        catch
-        {
-            // Ignore exceptions and leave Version and ApplicationRootPath as null
-        }
-
-        // SettingsCachePath will be computed lazily when first accessed to ensure ApplicationName is properly set
+        FileLocationOption = fileLocationOption;
+        ApplicationRootPath = Path.Combine(AppContext.BaseDirectory, "..");
     }
 
     /// <inheritdoc />
-    public Assembly ExecutingAssembly => Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+    public Assembly ExecutingAssembly
+    {
+        get => field ?? typeof(AkavacheBuilder).Assembly;
+        private set;
+    }
 
     /// <inheritdoc />
     public string ApplicationName { get; private set; } = "Akavache";
@@ -70,25 +58,20 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public string? SettingsCachePath
     {
-        get
+        // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
+        get => field ??= FileLocationOption switch
         {
-            // Lazy computation to ensure ApplicationName is properly set via WithApplicationName()
-            _settingsCachePath ??= _fileLocationOption switch
-                {
-                    FileLocationOption.Legacy => this.GetLegacyCacheDirectory("SettingsCache"),
-                    _ => this.GetIsolatedCacheDirectory("SettingsCache"),
-                };
-
-            return _settingsCachePath;
-        }
-        set => _settingsCachePath = value;
+            FileLocationOption.Legacy => this.GetLegacyCacheDirectory("SettingsCache"),
+            _ => this.GetIsolatedCacheDirectory("SettingsCache"),
+        };
+        set;
     }
 
     /// <inheritdoc />
-    public string? ExecutingAssemblyName { get; }
+    public string? ExecutingAssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public Version? Version { get; }
+    public Version? Version { get; private set; }
 
     /// <inheritdoc />
     public IBlobCache? InMemory { get; private set; }
@@ -128,35 +111,60 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <value>
     /// The file location option.
     /// </value>
-    public FileLocationOption FileLocationOption => _fileLocationOption;
+    public FileLocationOption FileLocationOption { get; private set; }
 
+    /// <summary>
+    /// Gets or sets the registry of named blob caches created by builders.
+    /// </summary>
     internal static Dictionary<string, IBlobCache?>? BlobCaches { get; set; } = [];
 
+    /// <summary>
+    /// Gets or sets the registry of named settings stores created by builders.
+    /// </summary>
     internal static Dictionary<string, ISettingsStorage?>? SettingsStores { get; set; } = [];
 
     /// <inheritdoc />
     public IAkavacheBuilder WithLegacyFileLocation()
     {
-        _fileLocationOption = FileLocationOption.Legacy;
+        FileLocationOption = FileLocationOption.Legacy;
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithApplicationName(string? applicationName)
     {
-        if (string.IsNullOrWhiteSpace(applicationName))
+        // Null or whitespace is treated as a no-op so the default "Akavache" value
+        // (set by the constructor) stays in place. The strict path — require a real
+        // application name — lives on CacheDatabase.CreateBuilder(string) /
+        // CacheDatabase.Initialize<T>(string), which throw on null/whitespace.
+        // The null check is split out from the whitespace check so the compiler
+        // flow-tracks non-nullness on every TFM (string.IsNullOrWhiteSpace only
+        // carries [NotNullWhen(false)] on net6+).
+        if (applicationName is null || string.IsNullOrWhiteSpace(applicationName))
         {
             return this;
         }
 
-        ApplicationName = applicationName ?? throw new ArgumentNullException(nameof(applicationName));
+        ApplicationName = applicationName;
+        return this;
+    }
+
+    /// <inheritdoc />
+    public IAkavacheBuilder WithExecutingAssembly(Assembly assembly)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(assembly);
+
+        ExecutingAssembly = assembly;
+        ExecutingAssemblyName = assembly.GetName().Name;
+        Version = ReadFileVersion(assembly);
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithInMemory(IBlobCache cache)
     {
-        InMemory = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        InMemory = cache;
         return this;
     }
 
@@ -179,39 +187,37 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheBuilder WithLocalMachine(IBlobCache cache)
     {
-        LocalMachine = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        LocalMachine = cache;
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithSecure(ISecureBlobCache cache)
     {
-        Secure = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        Secure = cache;
         return this;
     }
 
     /// <inheritdoc />
     public IAkavacheBuilder WithUserAccount(IBlobCache cache)
     {
-        UserAccount = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
+        UserAccount = cache;
         return this;
     }
 
     /// <inheritdoc />
-#if NET6_0_OR_GREATER
-    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public IAkavacheBuilder WithSerializer<T>()
-#else
-    public IAkavacheBuilder WithSerializer<T>()
-#endif
-        where T : ISerializer, new()
+        where T : class, ISerializer, new()
     {
         var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
         lock (_lock)
         {
             // Register the serializer if not already registered, we only want one instance of each serializer type
-            if (!AppLocator.CurrentMutable.HasRegistration(typeof(ISerializer), contract: SerializerTypeName))
+            if (!AppLocator.CurrentMutable.HasRegistration<ISerializer>(contract: SerializerTypeName))
             {
                 AppLocator.CurrentMutable.RegisterLazySingleton<ISerializer>(static () => new T(), contract: SerializerTypeName);
             }
@@ -221,13 +227,8 @@ internal class AkavacheBuilder : IAkavacheBuilder
     }
 
     /// <inheritdoc />
-#if NET6_0_OR_GREATER
-    [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-#else
-    public IAkavacheBuilder WithSerializer<T>(Func<T> configure)
-#endif
-        where T : ISerializer
+        where T : class, ISerializer
     {
         var serializerType = typeof(T);
         SerializerTypeName = serializerType.AssemblyQualifiedName;
@@ -267,15 +268,42 @@ internal class AkavacheBuilder : IAkavacheBuilder
         return this;
     }
 
-    private void ApplyForcedDateTimeKind(IBlobCache cache)
+    /// <summary>
+    /// Reads and parses the <see cref="AssemblyFileVersionAttribute"/> from
+    /// <paramref name="assembly"/> into a <see cref="System.Version"/>.
+    /// </summary>
+    /// <remarks>
+    /// Returns <see langword="null"/> if the attribute is missing or its value
+    /// cannot be parsed. The assembly reference is caller-owned so there is no
+    /// reflection-based discovery involved.
+    /// </remarks>
+    /// <param name="assembly">The caller-supplied assembly.</param>
+    /// <returns>The parsed version, or <see langword="null"/>.</returns>
+    internal static Version? ReadFileVersion(Assembly assembly) =>
+        assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version } &&
+            Version.TryParse(version, out var parsed)
+                ? parsed
+                : null;
+
+    /// <summary>
+    /// Applies the configured <see cref="ForcedDateTimeKind"/> (if any) to the supplied cache.
+    /// </summary>
+    /// <param name="cache">The cache to configure.</param>
+    internal void ApplyForcedDateTimeKind(IBlobCache cache)
     {
-        if (ForcedDateTimeKind.HasValue)
+        if (!ForcedDateTimeKind.HasValue)
         {
-            cache.ForcedDateTimeKind = ForcedDateTimeKind.Value;
+            return;
         }
+
+        cache.ForcedDateTimeKind = ForcedDateTimeKind.Value;
     }
 
-    private InMemoryBlobCache CreateInMemoryCache()
+    /// <summary>
+    /// Creates a new <see cref="InMemoryBlobCache"/> using the registered serializer.
+    /// </summary>
+    /// <returns>The newly created in-memory cache instance.</returns>
+    internal InMemoryBlobCache CreateInMemoryCache()
     {
         if (Serializer == null)
         {
@@ -283,7 +311,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         }
 
         // Always use Akavache.InMemoryBlobCache from Akavache.Core and pass the serializer
-        var cache = new InMemoryBlobCache(Serializer);
+        InMemoryBlobCache cache = new(Serializer);
         ApplyForcedDateTimeKind(cache);
         return cache;
     }
@@ -291,102 +319,121 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <summary>
     /// A wrapper that implements ISecureBlobCache by delegating to an IBlobCache.
     /// </summary>
+    /// <param name="inner">The underlying blob cache to delegate to.</param>
     private class SecureBlobCacheWrapper(IBlobCache inner) : ISecureBlobCache
     {
+        /// <inheritdoc />
         public DateTimeKind? ForcedDateTimeKind
         {
             get => inner.ForcedDateTimeKind;
             set => inner.ForcedDateTimeKind = value;
         }
 
+        /// <inheritdoc />
         public IScheduler Scheduler => inner.Scheduler;
 
+        /// <inheritdoc />
         public ISerializer Serializer => inner.Serializer;
 
+        /// <inheritdoc />
         public IHttpService HttpService
         {
             get => inner.HttpService;
             set => inner.HttpService = value;
         }
 
-        public void Dispose()
-        {
-            if (inner is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
+        /// <inheritdoc />
+        public void Dispose() => inner.Dispose();
 
-        public async ValueTask DisposeAsync()
-        {
-            if (inner is IAsyncDisposable asyncDisposable)
-            {
-                await asyncDisposable.DisposeAsync();
-            }
-            else if (inner is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync() => await inner.DisposeAsync();
 
+        /// <inheritdoc />
         public IObservable<Unit> Flush() => inner.Flush();
 
+        /// <inheritdoc />
         public IObservable<Unit> Flush(Type type) => inner.Flush(type);
 
+        /// <inheritdoc />
         public IObservable<byte[]?> Get(string key) => inner.Get(key);
 
+        /// <inheritdoc />
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys) => inner.Get(keys);
 
+        /// <inheritdoc />
         public IObservable<byte[]?> Get(string key, Type type) => inner.Get(key, type);
 
+        /// <inheritdoc />
         public IObservable<KeyValuePair<string, byte[]>> Get(IEnumerable<string> keys, Type type) => inner.Get(keys, type);
 
+        /// <inheritdoc />
         public IObservable<KeyValuePair<string, byte[]>> GetAll(Type type) => inner.GetAll(type);
 
+        /// <inheritdoc />
         public IObservable<string> GetAllKeys() => inner.GetAllKeys();
 
+        /// <inheritdoc />
         public IObservable<string> GetAllKeys(Type type) => inner.GetAllKeys(type);
 
+        /// <inheritdoc />
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => inner.GetCreatedAt(keys);
 
+        /// <inheritdoc />
         public IObservable<DateTimeOffset?> GetCreatedAt(string key) => inner.GetCreatedAt(key);
 
+        /// <inheritdoc />
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => inner.GetCreatedAt(keys, type);
 
+        /// <inheritdoc />
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => inner.GetCreatedAt(key, type);
 
+        /// <inheritdoc />
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
                                                                                                                                     inner.Insert(keyValuePairs, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
             inner.Insert(key, data, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
             inner.Insert(keyValuePairs, type, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
             inner.Insert(key, data, type, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> Invalidate(string key) => inner.Invalidate(key);
 
+        /// <inheritdoc />
         public IObservable<Unit> Invalidate(string key, Type type) => inner.Invalidate(key, type);
 
+        /// <inheritdoc />
         public IObservable<Unit> Invalidate(IEnumerable<string> keys) => inner.Invalidate(keys);
 
+        /// <inheritdoc />
         public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => inner.Invalidate(keys, type);
 
+        /// <inheritdoc />
         public IObservable<Unit> InvalidateAll(Type type) => inner.InvalidateAll(type);
 
+        /// <inheritdoc />
         public IObservable<Unit> InvalidateAll() => inner.InvalidateAll();
 
+        /// <inheritdoc />
         public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(key, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(key, type, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(keys, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => inner.UpdateExpiration(keys, type, absoluteExpiration);
 
+        /// <inheritdoc />
         public IObservable<Unit> Vacuum() => inner.Vacuum();
     }
 }

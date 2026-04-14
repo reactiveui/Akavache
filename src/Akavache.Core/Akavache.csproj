@@ -19,9 +19,11 @@
     <InternalsVisibleTo Include="Akavache.EncryptedSqlite3" />
     <InternalsVisibleTo Include="Akavache.NewtonsoftJson" />
     <InternalsVisibleTo Include="Akavache.SystemTextJson" />
+    <InternalsVisibleTo Include="Akavache.SystemTextJson.Bson" />
     <InternalsVisibleTo Include="Akavache.Drawing" />
     <InternalsVisibleTo Include="Akavache.Settings" />
     <InternalsVisibleTo Include="Akavache.Tests" />
     <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+    <InternalsVisibleTo Include="Akavache.V10toV11" />
   </ItemGroup>
 </Project>
