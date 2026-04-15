@@ -718,6 +718,42 @@ public class SqliteAkavacheConnectionTests
     }
 
     /// <summary>
+    /// Verifies the encrypted compilation of <c>SqliteAkavacheConnection</c>'s
+    /// <c>TryReadLegacyV10ValueAsync</c> matches a row whose TypeName column holds the
+    /// <see cref="Type.AssemblyQualifiedName"/> form — drives the first (AQN) query path
+    /// to a successful hit on the encrypted compilation.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task EncryptedConnectionTryReadLegacyV10ValueShouldReturnRowMatchedByAssemblyQualifiedName()
+    {
+        using (Utility.WithEmptyDirectory(out var path))
+        {
+            var dbPath = Path.Combine(path, "encrypted-legacy-aqn.db");
+
+            using (SQLiteConnection raw = new(new(dbPath, true, key: "test123")))
+            {
+                raw.Execute(
+                    "CREATE TABLE CacheElement (Key varchar PRIMARY KEY, TypeName varchar, Value blob, Expiration bigint, CreatedAt bigint)");
+                raw.Execute(
+                    "INSERT INTO CacheElement (Key, TypeName, Value, Expiration, CreatedAt) VALUES (?, ?, ?, ?, ?)",
+                    "aqnKey",
+                    typeof(string).AssemblyQualifiedName,
+                    new byte[] { 8, 8, 8, 8 },
+                    0L,
+                    DateTime.UtcNow.Ticks);
+            }
+
+            await using EncryptedSqlite3.SqliteAkavacheConnection connection = new(
+                new(dbPath, true, key: "test123"));
+
+            var result = await connection.TryReadLegacyV10ValueAsync("aqnKey", DateTimeOffset.UtcNow, typeof(string));
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result!).IsEquivalentTo(new byte[] { 8, 8, 8, 8 });
+        }
+    }
+
+    /// <summary>
     /// Verifies the encrypted compilation of <c>SqliteAkavacheConnection</c>'s read-only
     /// open-flags constructor opens an existing SQLCipher database.
     /// </summary>

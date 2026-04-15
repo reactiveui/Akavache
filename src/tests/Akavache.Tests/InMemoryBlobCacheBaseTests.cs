@@ -1572,6 +1572,35 @@ public class InMemoryBlobCacheBaseTests
     }
 
     /// <summary>
+    /// Verifies <see cref="InMemoryBlobCacheBase.Invalidate(IEnumerable{string})"/> still
+    /// removes entries when handed an iterator-based <see cref="IEnumerable{T}"/> that is not
+    /// an <see cref="ICollection{T}"/> — drives the false branch of the fast-path
+    /// <c>ICollection</c> type-pattern guard and exercises the regular materialisation loop.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task InvalidateIEnumerableShouldHandleNonICollectionSource()
+    {
+        await using var cache = CreateCache();
+        await cache.Insert("drop-1", [1]);
+        await cache.Insert("drop-2", [2]);
+        await cache.Insert("keep", [3]);
+
+        await cache.Invalidate(IteratorKeys());
+
+        var keys = (await cache.GetAllKeys().ToList()).ToList();
+        await Assert.That(keys).Contains("keep");
+        await Assert.That(keys).DoesNotContain("drop-1");
+        await Assert.That(keys).DoesNotContain("drop-2");
+
+        static IEnumerable<string> IteratorKeys()
+        {
+            yield return "drop-1";
+            yield return "drop-2";
+        }
+    }
+
+    /// <summary>
     /// Verifies the bulk typed <see cref="InMemoryBlobCacheBase.Insert(IEnumerable{KeyValuePair{string, byte[]}}, Type, DateTimeOffset?)"/>
     /// evicts a key from its previous type bucket when it is re-inserted under a new type,
     /// preserving the "one type per key" invariant that the O(1) reverse index depends on.
