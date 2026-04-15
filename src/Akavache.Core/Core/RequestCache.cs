@@ -12,8 +12,9 @@ namespace Akavache.Core;
 /// </summary>
 internal static class RequestCache
 {
-    /// <summary>The set of currently in-flight requests, keyed by type-qualified cache key.</summary>
-    private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new();
+    /// <summary>The set of currently in-flight requests, keyed by type-qualified cache key.
+    /// Ordinal comparison — request keys are opaque identifiers, not user-facing text.</summary>
+    private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Gets the number of currently in-flight requests (primarily for testing/debugging).
@@ -36,7 +37,7 @@ internal static class RequestCache
 
         return _inflightRequests.GetOrAdd(
             requestKey,
-            cacheKey => fetchFunc().Select(x => (object)x!)
+            cacheKey => fetchFunc().Select(static x => (object)x!)
                 .Do(
                     onNext: static _ => { },
                     onError: _ =>
@@ -50,7 +51,7 @@ internal static class RequestCache
                         RemoveRequestInternal(cacheKey);
                     })
                 .Replay(1)
-                .RefCount()).Select(x => (T)x);
+                .RefCount()).Select(static x => (T)x);
     }
 
     /// <summary>
@@ -85,8 +86,14 @@ internal static class RequestCache
         }
 
         var keySuffix = $":{key}";
-        List<string> keysToRemove = [];
-        keysToRemove.AddRange(_inflightRequests.Keys.Where(requestKey => requestKey.EndsWith(keySuffix, StringComparison.Ordinal)));
+        List<string> keysToRemove = new(_inflightRequests.Count);
+        foreach (var requestKey in _inflightRequests.Keys)
+        {
+            if (requestKey.EndsWith(keySuffix, StringComparison.Ordinal))
+            {
+                keysToRemove.Add(requestKey);
+            }
+        }
 
         foreach (var requestKey in keysToRemove)
         {

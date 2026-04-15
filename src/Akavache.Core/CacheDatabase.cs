@@ -88,7 +88,7 @@ public static class CacheDatabase
     {
         if (!IsInitialized || Builder == null)
         {
-            return Observable.Return(Unit.Default);
+            return CachedObservables.UnitDefault;
         }
 
         List<IObservable<Unit>> shutdownTasks = [];
@@ -100,9 +100,9 @@ public static class CacheDatabase
             {
                 List<Task> tasks = [.. AkavacheBuilder.BlobCaches
                 .Where(static cachePair => cachePair.Value != null)
-                .Select(static async cache => await cache.Value!.DisposeAsync())];
-                await Task.WhenAll(tasks);
-            }).Select(static _ => Unit.Default);
+                .Select(static async cache => await cache.Value!.DisposeAsync().ConfigureAwait(false))];
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }).SelectUnit();
             shutdownTasks.Add(shutdownSettingsBlobs);
         }
 
@@ -112,18 +112,18 @@ public static class CacheDatabase
             {
                 List<Task> tasks = [.. AkavacheBuilder.SettingsStores
                 .Where(static cachePair => cachePair.Value != null)
-                .Select(static async cache => await cache.Value!.DisposeAsync())];
-                await Task.WhenAll(tasks);
-            }).Select(static _ => Unit.Default);
+                .Select(static async cache => await cache.Value!.DisposeAsync().ConfigureAwait(false))];
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }).SelectUnit();
             shutdownTasks.Add(shutdownSettingsStores);
         }
 
         try
         {
-            shutdownTasks.Add(Builder.UserAccount?.Flush() ?? Observable.Return(Unit.Default));
-            shutdownTasks.Add(Builder.LocalMachine?.Flush() ?? Observable.Return(Unit.Default));
-            shutdownTasks.Add(Builder.Secure?.Flush() ?? Observable.Return(Unit.Default));
-            shutdownTasks.Add(Builder.InMemory?.Flush() ?? Observable.Return(Unit.Default));
+            shutdownTasks.Add(Builder.UserAccount?.Flush() ?? CachedObservables.UnitDefault);
+            shutdownTasks.Add(Builder.LocalMachine?.Flush() ?? CachedObservables.UnitDefault);
+            shutdownTasks.Add(Builder.Secure?.Flush() ?? CachedObservables.UnitDefault);
+            shutdownTasks.Add(Builder.InMemory?.Flush() ?? CachedObservables.UnitDefault);
         }
         catch (Exception ex)
         {

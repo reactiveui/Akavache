@@ -291,4 +291,58 @@ public class BinaryHelpersTests
             await Assert.That(actual).IsEqualTo(expected);
         }
     }
+
+    /// <summary>
+    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/>
+    /// for a null input without throwing.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task StartsWithJsonOpenerShouldReturnFalseForNullInput() =>
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener(null!)).IsFalse();
+
+    /// <summary>
+    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/>
+    /// for an empty buffer (no non-whitespace byte to classify).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task StartsWithJsonOpenerShouldReturnFalseForEmptyBuffer() =>
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([])).IsFalse();
+
+    /// <summary>
+    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/>
+    /// for a buffer containing only ASCII whitespace (no JSON opener to find).
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task StartsWithJsonOpenerShouldReturnFalseForWhitespaceOnly() =>
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)' ', (byte)'\t', (byte)'\n', (byte)'\r'])).IsFalse();
+
+    /// <summary>
+    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> recognises the two JSON
+    /// opener bytes after skipping leading ASCII whitespace.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task StartsWithJsonOpenerShouldRecogniseJsonOpenersAfterWhitespace()
+    {
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)'{', (byte)'}'])).IsTrue();
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)'[', (byte)']'])).IsTrue();
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)' ', (byte)' ', (byte)'{'])).IsTrue();
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)'\t', (byte)'\n', (byte)'\r', (byte)'['])).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> rejects a non-JSON payload
+    /// whose first non-whitespace byte is neither <c>{</c> nor <c>[</c>.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task StartsWithJsonOpenerShouldRejectNonJsonPayloads()
+    {
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([0x05, 0x00, 0x00, 0x00])).IsFalse();
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)'"'])).IsFalse();
+        await Assert.That(BinaryHelpers.StartsWithJsonOpener([(byte)' ', (byte)'x'])).IsFalse();
+    }
 }

@@ -5,6 +5,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Akavache.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
@@ -56,8 +57,9 @@ public partial class SystemJsonBsonSerializer : ISerializer
             return false;
         }
 
-        var dataString = Encoding.UTF8.GetString(data);
-        return !(dataString.TrimStart().StartsWith("{") || dataString.TrimStart().StartsWith("["));
+        // If the payload starts with a JSON opener (after whitespace), it's probably JSON,
+        // not BSON. Byte-level probe — zero allocations.
+        return !BinaryHelpers.StartsWithJsonOpener(data);
     }
 
     /// <summary>
@@ -217,7 +219,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
             var jsonString = System.Text.Json.JsonSerializer.Serialize(wrapper, options);
             var token = Newtonsoft.Json.Linq.JToken.Parse(jsonString);
 
-            using MemoryStream ms = new();
+            using MemoryStream ms = new(capacity: 256);
             using BsonDataWriter writer = new(ms);
             token.WriteTo(writer);
             return ms.ToArray();
@@ -243,7 +245,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     {
         try
         {
-            using BsonDataReader reader = new(new MemoryStream(bytes));
+            using BsonDataReader reader = new(new MemoryStream(bytes, writable: false));
 
             if (ForcedDateTimeKind.HasValue)
             {

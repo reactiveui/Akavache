@@ -149,12 +149,15 @@ public static class BitmapImageExtensions
 
         return Observable.FromAsync(async () =>
         {
+            // Pre-size the buffer to a typical small-PNG worst case so a sequence of regrowths
+            // (starting at 256 and doubling) is avoided for anything under ~16 KB.
+            const int InitialCapacity = 16 * 1024;
 #if NETFRAMEWORK
-            using var stream = new MemoryStream();
+            using var stream = new MemoryStream(InitialCapacity);
 #else
-            await using MemoryStream stream = new();
+            await using MemoryStream stream = new(InitialCapacity);
 #endif
-            await image.Save(CompressedBitmapFormat.Png, 1.0f, stream);
+            await image.Save(CompressedBitmapFormat.Png, 1.0f, stream).ConfigureAwait(false);
             return stream.ToArray();
         });
     }
@@ -199,11 +202,11 @@ public static class BitmapImageExtensions
         Observable.FromAsync(async () =>
         {
 #if NETFRAMEWORK
-            using var ms = new MemoryStream(compressedImage);
+            using var ms = new MemoryStream(compressedImage, writable: false);
 #else
-            await using MemoryStream ms = new(compressedImage);
+            await using MemoryStream ms = new(compressedImage, writable: false);
 #endif
-            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight);
+            var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ConfigureAwait(false);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");
         });
 }

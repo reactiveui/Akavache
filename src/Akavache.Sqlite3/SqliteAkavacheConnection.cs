@@ -116,47 +116,33 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
     {
         // V10 schema columns: Key (varchar), TypeName (varchar), Value (BLOB), Expiration (bigint), CreatedAt (bigint).
         // Expiration is ticks (bigint). NULL or 0 means unexpired; otherwise require Expiration > nowTicks.
-        // Box nowTicks once and reuse the same boxed reference across every parameter array
-        // — sqlite-net's parameter API takes object[], so a long would otherwise box per array.
+        // Box nowTicks once and reuse the same boxed reference across every parameter array —
+        // sqlite-net's parameter API takes object[], so a long would otherwise box per array.
         object boxedNowTicks = now.UtcTicks;
-        const string expiryPredicate = "(Expiration IS NULL OR Expiration = 0 OR Expiration > ?)";
+        const string TypedSql = "SELECT Value FROM CacheElement WHERE Key = ? AND (Expiration IS NULL OR Expiration = 0 OR Expiration > ?) AND TypeName = ?";
+        const string UntypedSql = "SELECT Value FROM CacheElement WHERE Key = ? AND (Expiration IS NULL OR Expiration = 0 OR Expiration > ?)";
 
-        var sqlStatements = new List<(string Sql, object[] Args)>(3);
+        // Try each legacy form inline instead of materialising a List<(string, object[])> —
+        // keeps the cold-path allocation footprint to the per-query parameter arrays only.
         if (type is not null)
         {
             if (!string.IsNullOrWhiteSpace(type.AssemblyQualifiedName))
             {
-                sqlStatements.Add((
-                    $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
-                    [key, boxedNowTicks, type.AssemblyQualifiedName!]));
-            }
-
-            sqlStatements.Add((
-                $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate} AND TypeName = ?",
-                [key, boxedNowTicks, type.FullName!]));
-        }
-
-        sqlStatements.Add((
-            $"SELECT Value FROM CacheElement WHERE Key = ? AND {expiryPredicate}",
-            [key, boxedNowTicks]));
-
-        foreach (var (sql, args) in sqlStatements)
-        {
-            try
-            {
-                var value = await _connection.ExecuteScalarAsync<byte[]?>(sql, args).ConfigureAwait(false);
-                if (value != null)
+                var hit = await TryExecuteLegacyAsync(TypedSql, [key, boxedNowTicks, type.AssemblyQualifiedName!]).ConfigureAwait(false);
+                if (hit is not null)
                 {
-                    return value;
+                    return hit;
                 }
             }
-            catch
+
+            var fullNameHit = await TryExecuteLegacyAsync(TypedSql, [key, boxedNowTicks, type.FullName!]).ConfigureAwait(false);
+            if (fullNameHit is not null)
             {
-                // Try next form — table/columns may not exist in newer DBs.
+                return fullNameHit;
             }
         }
 
-        return null;
+        return await TryExecuteLegacyAsync(UntypedSql, [key, boxedNowTicks]).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -166,6 +152,28 @@ internal sealed class SqliteAkavacheConnection : IAkavacheConnection
     /// <inheritdoc/>
     public ValueTask DisposeAsync() =>
         new(CloseAsync());
+
+    /// <summary>
+    /// Executes a single legacy SELECT statement, swallowing sqlite-net schema errors (missing
+    /// table / missing column, typical when the DB is already on the v11 schema) so the caller
+    /// can fall through to the next query form. Non-SQLite failures (e.g. disposed connection,
+    /// cancellation) propagate unchanged so real bugs aren't masked.
+    /// </summary>
+    /// <param name="sql">The legacy SQL statement.</param>
+    /// <param name="args">Bound parameters.</param>
+    /// <returns>The matching blob, or <see langword="null"/> if the legacy schema isn't present.</returns>
+    private async Task<byte[]?> TryExecuteLegacyAsync(string sql, object[] args)
+    {
+        try
+        {
+            return await _connection.ExecuteScalarAsync<byte[]?>(sql, args).ConfigureAwait(false);
+        }
+        catch (SQLiteException)
+        {
+            // Table/columns may not exist in newer DBs — caller falls through to the next form.
+            return null;
+        }
+    }
 
     /// <summary>
     /// Row shape used to drain the result of <c>PRAGMA wal_checkpoint(...)</c>, which returns

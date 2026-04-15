@@ -408,32 +408,61 @@ public static class AkavacheBuilderExtensions
         });
 
     /// <summary>
-    /// Splits the full path of the supplied <see cref="DirectoryInfo"/> into its individual path components.
+    /// Splits the full path of the supplied <see cref="DirectoryInfo"/> into its individual
+    /// path components in root-down order. Uses <c>yield return</c> so the common
+    /// <see cref="Enumerable.Aggregate{TSource}"/> consumer never sees a materialised list.
     /// </summary>
     /// <param name="directoryInfo">The directory whose full path will be split.</param>
     /// <returns>The ordered path components, beginning with the root.</returns>
     internal static IEnumerable<string> SplitFullPath(this DirectoryInfo directoryInfo)
     {
-        var root = Path.GetPathRoot(directoryInfo.FullName);
-        List<string> components = [];
-        for (var path = directoryInfo.FullName; path != root && path is not null; path = Path.GetDirectoryName(path))
+        var fullName = directoryInfo.FullName;
+        var root = Path.GetPathRoot(fullName);
+
+        // Walk once from leaf to root to know the depth — cheap (just string comparisons +
+        // GetDirectoryName) and lets us pre-size a stack-like char-sized cursor below.
+        var depth = 0;
+        for (var path = fullName; path != root && path is not null; path = Path.GetDirectoryName(path))
         {
             var filename = Path.GetFileName(path);
-            if (string.IsNullOrEmpty(filename))
+            if (!string.IsNullOrEmpty(filename))
             {
-                continue;
+                depth++;
+            }
+        }
+
+        return SplitFullPathIterator(fullName, root, depth);
+
+        static IEnumerable<string> SplitFullPathIterator(string fullName, string? root, int depth)
+        {
+            if (root is not null)
+            {
+                yield return root;
             }
 
-            components.Add(filename);
-        }
+            if (depth == 0)
+            {
+                yield break;
+            }
 
-        if (root is not null)
-        {
-            components.Add(root);
-        }
+            // Second pass materialises components leaf-to-root into a local buffer so we can
+            // emit them root-to-leaf without the old List allocation + Reverse step.
+            var components = new string[depth];
+            var index = depth - 1;
+            for (var path = fullName; path != root && path is not null && index >= 0; path = Path.GetDirectoryName(path))
+            {
+                var filename = Path.GetFileName(path);
+                if (!string.IsNullOrEmpty(filename))
+                {
+                    components[index--] = filename;
+                }
+            }
 
-        components.Reverse();
-        return components;
+            for (var i = 0; i < components.Length; i++)
+            {
+                yield return components[i];
+            }
+        }
     }
 
 #if IOS || MACCATALYST

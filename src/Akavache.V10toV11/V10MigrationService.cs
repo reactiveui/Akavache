@@ -270,7 +270,7 @@ internal static class V10MigrationService
                     return null;
                 }
             })
-            .FirstOrDefault(t => t != null);
+            .FirstOrDefault(static t => t != null);
     }
 
     /// <summary>
