@@ -318,7 +318,10 @@ public class SqliteReplyObservableTests
         IObserver<int>? observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToSuccess(
-            ref state, ref value, ref observer, 42);
+            ref state,
+            ref value,
+            ref observer,
+            42);
 
         await Assert.That(result).IsNull();
         await Assert.That(value).IsEqualTo(0);
@@ -336,7 +339,10 @@ public class SqliteReplyObservableTests
         IObserver<int>? observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToSuccess(
-            ref state, ref value, ref observer, 42);
+            ref state,
+            ref value,
+            ref observer,
+            42);
 
         await Assert.That(result).IsNotNull();
         await Assert.That(state).IsEqualTo(SqliteReplyObservable<int>.StateSuccess);
@@ -356,7 +362,10 @@ public class SqliteReplyObservableTests
         IObserver<int>? observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var result = SqliteReplyObservable<int>.TryTransitionToError(
-            ref state, ref error, ref observer, new InvalidOperationException("late"));
+            ref state,
+            ref error,
+            ref observer,
+            new InvalidOperationException("late"));
 
         await Assert.That(result).IsNull();
         await Assert.That(error).IsNull();
@@ -375,7 +384,10 @@ public class SqliteReplyObservableTests
         var expected = new InvalidOperationException("boom");
 
         var result = SqliteReplyObservable<int>.TryTransitionToError(
-            ref state, ref error, ref observer, expected);
+            ref state,
+            ref error,
+            ref observer,
+            expected);
 
         await Assert.That(result).IsNotNull();
         await Assert.That(state).IsEqualTo(SqliteReplyObservable<int>.StateError);
@@ -398,7 +410,12 @@ public class SqliteReplyObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         await Assert.That(() => SqliteReplyObservable<int>.CaptureAndSubscribe(
-            ref subscribed, ref state, ref value, ref error, ref observerSlot, observer))
+            ref subscribed,
+            ref state,
+            ref value,
+            ref error,
+            ref observerSlot,
+            observer))
             .Throws<InvalidOperationException>();
     }
 
@@ -417,7 +434,12 @@ public class SqliteReplyObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var (s, v, e) = SqliteReplyObservable<int>.CaptureAndSubscribe(
-            ref subscribed, ref state, ref value, ref error, ref observerSlot, observer);
+            ref subscribed,
+            ref state,
+            ref value,
+            ref error,
+            ref observerSlot,
+            observer);
 
         await Assert.That(s).IsEqualTo(SqliteReplyObservable<int>.StatePending);
         await Assert.That(subscribed).IsTrue();
@@ -439,7 +461,12 @@ public class SqliteReplyObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var (s, v, e) = SqliteReplyObservable<int>.CaptureAndSubscribe(
-            ref subscribed, ref state, ref value, ref error, ref observerSlot, observer);
+            ref subscribed,
+            ref state,
+            ref value,
+            ref error,
+            ref observerSlot,
+            observer);
 
         await Assert.That(s).IsEqualTo(SqliteReplyObservable<int>.StateSuccess);
         await Assert.That(v).IsEqualTo(99);

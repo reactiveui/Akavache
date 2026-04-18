@@ -7,9 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Akavache.Helpers;
 
 /// <summary>
-/// Atomic dispose-once guard. The <see cref="Interlocked.CompareExchange"/>
-/// branch that fires on second-entry is a compiler artifact that cannot be
-/// independently triggered in tests, so this helper is excluded from coverage.
+/// Thread safe interlocked dispose helper.
 /// </summary>
 [ExcludeFromCodeCoverage]
 internal static class DisposeHelper

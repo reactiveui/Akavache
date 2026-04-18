@@ -325,9 +325,9 @@ public class SettingsBaseHelperTests
             await Assert.That(cache).IsNotNull();
         }
 
-        // After disposal, the ambient cache is restored (we can't directly observe it,
-        // but we verify no exception is thrown)
-        await Assert.That(true).IsTrue();
+        // After disposal, the ambient cache is restored — reaching this point without
+        // an exception is the assertion.
+        await Task.CompletedTask;
     }
 
     /// <summary>

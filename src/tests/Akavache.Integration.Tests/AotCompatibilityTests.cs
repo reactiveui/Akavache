@@ -116,20 +116,19 @@ public class AotCompatibilityTests
             cache.InsertObject("datetime", localDateTime).SubscribeAndComplete();
             var retrieved = cache.GetObject<DateTime>("datetime").SubscribeGetValue();
 
-            // Assert - Different serializers may handle DateTime.Kind differently
-            // Just ensure the time value is preserved correctly
-            var originalUtc = localDateTime.ToUniversalTime();
-            var retrievedUtc = retrieved.ToUniversalTime();
-            var timeDifference = Math.Abs((originalUtc - retrievedUtc).TotalSeconds);
+            // ForcedDateTimeKind stamps the Kind flag without converting the value,
+            // so compare raw ticks (not ToUniversalTime which applies timezone offset).
+            var tickDifference = Math.Abs(localDateTime.Ticks - retrieved.Ticks);
 
             using (Assert.Multiple())
             {
-                await Assert.That(timeDifference).IsLessThan(2);
+                await Assert.That(tickDifference).IsLessThan(TimeSpan.TicksPerSecond * 2);
 
-                // If ForcedDateTimeKind is working, retrieved should be UTC or Unspecified
-                // But some serializers may preserve the original kind
-                await Assert.That(retrieved.Kind).IsEqualTo(DateTimeKind.Utc).Or.IsEqualTo(DateTimeKind.Unspecified).Or
-                    .IsEqualTo(DateTimeKind.Local);
+                // Some serializers (e.g. System.Text.Json) preserve the original Kind on
+                // round-trip; others apply ForcedDateTimeKind. Accept any valid Kind.
+                await Assert.That(retrieved.Kind).IsEqualTo(DateTimeKind.Utc)
+                    .Or.IsEqualTo(DateTimeKind.Local)
+                    .Or.IsEqualTo(DateTimeKind.Unspecified);
             }
         }
     }

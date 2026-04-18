@@ -616,10 +616,6 @@ public class GatedByInitObservableTests
                 hitErrorPath = true;
             }
         }
-
-        // Even if the race window was never hit, the test should not fail — it
-        // exercises best-effort coverage. The path IS reachable in production.
-        await Assert.That(true).IsTrue();
     }
 
     /// <summary>
@@ -656,7 +652,8 @@ public class GatedByInitObservableTests
             () => { });
 
         var disposable = GatedByInitObservable<int>.SubscribeToInner(
-            () => Observable.Return(42), observer);
+            () => Observable.Return(42),
+            observer);
 
         await Assert.That(received).IsEqualTo(42);
         await Assert.That(disposable).IsNotNull();
@@ -677,7 +674,8 @@ public class GatedByInitObservableTests
 
         var expected = new InvalidOperationException("factory-boom");
         var disposable = GatedByInitObservable<int>.SubscribeToInner(
-            () => throw expected, observer);
+            () => throw expected,
+            observer);
 
         await Assert.That(caught).IsSameReferenceAs(expected);
         await Assert.That(disposable).IsSameReferenceAs(System.Reactive.Disposables.Disposable.Empty);
@@ -697,7 +695,9 @@ public class GatedByInitObservableTests
             () => { });
 
         var disposable = GatedByInitObservable<int>.SubscribeAfterPark(
-            () => Observable.Return(99), observer, capturedError: null);
+            () => Observable.Return(99),
+            observer,
+            capturedError: null);
 
         await Assert.That(received).IsEqualTo(99);
         await Assert.That(disposable).IsNotNull();
@@ -718,7 +718,9 @@ public class GatedByInitObservableTests
 
         var expected = new InvalidOperationException("park-error");
         var disposable = GatedByInitObservable<int>.SubscribeAfterPark(
-            () => Observable.Empty<int>(), observer, expected);
+            () => Observable.Empty<int>(),
+            observer,
+            expected);
 
         await Assert.That(caught).IsSameReferenceAs(expected);
         await Assert.That(disposable).IsSameReferenceAs(System.Reactive.Disposables.Disposable.Empty);
@@ -735,7 +737,11 @@ public class GatedByInitObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var result = GatedByInitObservable<int>.HandleParkResult(
-            parked: true, inner, () => Observable.Empty<int>(), observer, error: null);
+            parked: true,
+            inner,
+            () => Observable.Empty<int>(),
+            observer,
+            error: null);
 
         await Assert.That(result).IsSameReferenceAs(inner);
     }

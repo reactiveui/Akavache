@@ -532,7 +532,7 @@ public class RelativeTimeExtensionsTests
     }
 
     /// <summary>
-    /// Tests <see cref="RelativeTimeExtensions.DownloadUrl(IBlobCache, string, HttpMethod, TimeSpan, IEnumerable{KeyValuePair{string, string}}, bool)"/>
+    /// Tests <see cref="RelativeTimeDownloadExtensions.DownloadUrl(IBlobCache, string, HttpMethod, TimeSpan, IEnumerable{KeyValuePair{string, string}}, bool)"/>
     /// happy-path by pre-populating the cache so the download is served from cache (avoiding network).
     /// </summary>
     /// <returns>A task.</returns>
@@ -557,7 +557,7 @@ public class RelativeTimeExtensionsTests
     }
 
     /// <summary>
-    /// Tests <see cref="RelativeTimeExtensions.DownloadUrl(IBlobCache, Uri, HttpMethod, TimeSpan, IEnumerable{KeyValuePair{string, string}}, bool)"/>
+    /// Tests <see cref="RelativeTimeDownloadExtensions.DownloadUrl(IBlobCache, Uri, HttpMethod, TimeSpan, IEnumerable{KeyValuePair{string, string}}, bool)"/>
     /// happy-path by pre-populating the cache so the download is served from cache (avoiding network).
     /// </summary>
     /// <returns>A task.</returns>

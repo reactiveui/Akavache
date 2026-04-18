@@ -52,7 +52,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
     /// On net9+ this is a first-class <c>System.Threading.Lock</c>.
     /// </summary>
 #if NET9_0_OR_GREATER
-    private readonly System.Threading.Lock _gate = new();
+    private readonly Lock _gate = new();
 #else
     private readonly object _gate = new();
 #endif
@@ -119,7 +119,12 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
         lock (_gate)
         {
             (capturedState, capturedValue, capturedError) = CaptureAndSubscribe(
-                ref _subscribed, ref _state, ref _value, ref _error, ref _observer, observer);
+                ref _subscribed,
+                ref _state,
+                ref _value,
+                ref _error,
+                ref _observer,
+                observer);
         }
 
         if (capturedState == StatePending)

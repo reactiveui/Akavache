@@ -179,7 +179,10 @@ public static class AkavacheBuilderExtensions
         var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
 
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        var cache = new EncryptedSqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db"), password, builder.Serializer, scheduler);
+        var dbPath = Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db");
+        var cache = scheduler is not null
+            ? new EncryptedSqliteBlobCache(dbPath, password, builder.Serializer, scheduler)
+            : new EncryptedSqliteBlobCache(dbPath, password, builder.Serializer);
         builder.BlobCaches[validatedKey] = cache;
 
         T viewSettings;
@@ -267,7 +270,10 @@ public static class AkavacheBuilderExtensions
         var validatedKey = SecurityUtilities.ValidateDatabaseName(key, nameof(overrideDatabaseName));
 
         Directory.CreateDirectory(builder.SettingsCachePath!);
-        var cache = new SqliteBlobCache(Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db"), builder.Serializer, scheduler);
+        var dbPath = Path.Combine(builder.SettingsCachePath!, $"{validatedKey}.db");
+        var cache = scheduler is not null
+            ? new SqliteBlobCache(dbPath, builder.Serializer, scheduler)
+            : new SqliteBlobCache(dbPath, builder.Serializer);
         builder.BlobCaches[validatedKey] = cache;
 
         // Publish the just-created cache as the ambient cache while we construct the

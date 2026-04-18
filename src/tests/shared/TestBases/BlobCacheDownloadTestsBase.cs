@@ -9,7 +9,7 @@ using Akavache.Tests.Helpers;
 namespace Akavache.Tests;
 
 /// <summary>
-/// Download tests extracted from <see cref="BlobCacheTestsBase"/> so they run in
+/// Download tests extracted from BlobCacheTestsBase so they run in
 /// a dedicated assembly that does not compete with other parallel assemblies for
 /// TCP sockets. Each test spins up its own <see cref="TestHttpServer"/> on an
 /// ephemeral port.

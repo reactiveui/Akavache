@@ -1885,15 +1885,7 @@ public class SqliteOperationQueueCoverageTests
     }
 
     /// <summary>
-    /// An <see cref="ISqliteOperation"/> whose <see cref="Execute"/> throws,
-    /// enabling tests to trigger the batch-level catch in
-    /// <see cref="SqliteOperationQueue.ExecuteBatchInTransaction"/>.
-    /// <see cref="SqliteOperation{T}.Execute"/> catches internally and never
-    /// rethrows, so a custom implementation is needed.
-    /// </summary>
-    /// <summary>
-    /// Exercises the non-injectable ExecuteBatchInTransaction overload with a
-    /// ThrowingOperation to trigger the real rollback lambda at line 176.
+    /// ExecuteBatchInTransaction with a failing op in the batch throws.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]

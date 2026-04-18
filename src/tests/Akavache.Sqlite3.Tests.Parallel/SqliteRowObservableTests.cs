@@ -476,7 +476,10 @@ public class SqliteRowObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
-            ref state, ref buffer, ref observerSlot, observer);
+            ref state,
+            ref buffer,
+            ref observerSlot,
+            observer);
 
         await Assert.That(terminal).IsFalse();
         await Assert.That(gap).IsNull();
@@ -496,7 +499,10 @@ public class SqliteRowObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
-            ref state, ref buffer, ref observerSlot, observer);
+            ref state,
+            ref buffer,
+            ref observerSlot,
+            observer);
 
         await Assert.That(terminal).IsFalse();
         await Assert.That(gap).IsNotNull();
@@ -518,7 +524,10 @@ public class SqliteRowObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
-            ref state, ref buffer, ref observerSlot, observer);
+            ref state,
+            ref buffer,
+            ref observerSlot,
+            observer);
 
         await Assert.That(terminal).IsFalse();
         await Assert.That(gap).IsNull();
@@ -538,7 +547,10 @@ public class SqliteRowObservableTests
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
-            ref state, ref buffer, ref observerSlot, observer);
+            ref state,
+            ref buffer,
+            ref observerSlot,
+            observer);
 
         await Assert.That(terminal).IsTrue();
         await Assert.That(gap).IsNotNull();

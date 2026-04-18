@@ -35,6 +35,8 @@ internal sealed class SqliteOperationQueue : IDisposable
     private readonly Thread _worker;
 
     /// <summary>Signalled by the worker thread as it exits so <see cref="ShutdownAndWait"/> can block the caller until the worker is fully done.</summary>
+    /// <remarks>Not disposed explicitly: concurrent <see cref="ShutdownAndWait"/> callers may still be blocking on <see cref="ManualResetEventSlim.Wait()"/> when the winner returns.</remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Concurrent ShutdownAndWait callers may still be blocking on Wait when the winner disposes the inbox.")]
     private readonly ManualResetEventSlim _workerExited = new(initialState: false);
 
     /// <summary>Reusable buffer for collecting coalescable operations in the worker loop. Only accessed from the worker thread.</summary>
@@ -133,7 +135,6 @@ internal sealed class SqliteOperationQueue : IDisposable
         _inbox.CompleteAdding();
         _workerExited.Wait();
         _inbox.Dispose();
-        _workerExited.Dispose();
     }
 
     /// <inheritdoc/>

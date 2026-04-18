@@ -11,7 +11,7 @@ using Akavache.Helpers;
 namespace Akavache;
 
 /// <summary>
-/// Relative-time convenience overloads for <see cref="HttpExtensions.DownloadUrl"/>.
+/// Provides extension methods for downloading data from URLs with expiration based on relative time intervals from the current time.
 /// </summary>
 public static class RelativeTimeDownloadExtensions
 {

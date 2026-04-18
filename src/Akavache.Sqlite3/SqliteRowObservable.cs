@@ -210,7 +210,10 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         lock (_gate)
         {
             (terminal, gap) = CaptureGapAndSetObserver(
-                ref _state, ref _buffer, ref _observer, observer);
+                ref _state,
+                ref _buffer,
+                ref _observer,
+                observer);
         }
 
         DrainBuffer(observer, gap);
