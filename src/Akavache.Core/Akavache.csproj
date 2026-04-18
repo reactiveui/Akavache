@@ -11,19 +11,19 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="Splat.Builder" />
     <PackageReference Include="System.Reactive" />
-    <PackageReference Include="sqlite-net-pcl" />
-    <PackageReference Include="System.Net.Http" Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net481'" />
+    <PackageReference Include="System.Memory" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Sqlite3" />
-    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3" />
-    <InternalsVisibleTo Include="Akavache.NewtonsoftJson" />
-    <InternalsVisibleTo Include="Akavache.SystemTextJson" />
-    <InternalsVisibleTo Include="Akavache.SystemTextJson.Bson" />
-    <InternalsVisibleTo Include="Akavache.Drawing" />
-    <InternalsVisibleTo Include="Akavache.Settings" />
-    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
+    <InternalsVisibleTo Include="Akavache.Core.Tests" />
+    <InternalsVisibleTo Include="Akavache.Core.Tests.Parallel" />
+    <InternalsVisibleTo Include="Akavache.Sqlite3.Tests" />
+    <InternalsVisibleTo Include="Akavache.Sqlite3.Tests.Parallel" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests.Parallel" />
     <InternalsVisibleTo Include="Akavache.Settings.Tests" />
-    <InternalsVisibleTo Include="Akavache.V10toV11" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel" />
   </ItemGroup>
 </Project>

@@ -19,29 +19,18 @@
 
 Akavache is an *asynchronous*, *persistent* (i.e., writes to disk) key-value store created for writing desktop and mobile applications in C#, based on SQLite3. Akavache is great for both storing important data (i.e., user settings) as well as cached local data that expires.
 
-## What's New
+## What's New in V12
 
-Akavache V11.1 introduced a new **Builder Pattern** for initialization, improved serialization support, and enhanced cross-serializer compatibility:
+Akavache V12 rewrites the SQLite backend for direct SQLitePCLRaw 3.x access, replacing the sqlite-net-pcl ORM layer entirely. The result is lower per-operation allocations, dedicated worker-thread serialization of all native handle access, and commit coalescing for concurrent writes.
 
-- 🏗️ **Builder Pattern**: New fluent API for configuring cache instances
-- 🔄 **Multiple Serializer Support**: Choose between System.Text.Json, Newtonsoft.Json, each with a BSON variant
-- 🔗 **Cross-Serializer Compatibility**: Read data written by different serializers
-- 🧩 **Modular Design**: Install only the packages you need
-- 📱 **Enhanced .NET MAUI Support**: First-class support for .NET 9 cross-platform development
-- 🔒 **Improved Security**: Better encrypted cache implementation
+- **SQLitePCLRaw direct access**: Prepared statements cached and reused, parameters bound positionally — no ORM overhead
+- **SQLite3MultipleCiphers**: Encrypted databases use SQLite3MC instead of sqlcipher
+- **Observable-first settings**: `SettingsBase` properties are `IObservable<T>` — no more `.Wait()` deadlocks
+- **AOT-safe serialization**: `JsonTypeInfo<T>` overloads for System.Text.Json, trim-safe out of the box
+- **System.Text.Json package split**: Pure JSON package no longer pulls in Newtonsoft.Json
+- **Thread-safe disposal**: All cache types use lock-free `Interlocked` patterns for idempotent dispose
 
-### Development History
-
-Akavache V11.1+ represents a significant evolution in the library's architecture, developed through extensive testing and community feedback in our incubator project. The new features and improvements in V11.1 were first prototyped and battle-tested in the [ReactiveMarbles.CacheDatabase](https://github.com/reactivemarbles/CacheDatabase) repository, which served as an experimental ground for exploring new caching concepts and architectural patterns.
-
-**Key Development Milestones:**
-
-- **🧪 Incubation Phase**: The builder pattern, modular serialization system, and enhanced API were first developed and tested in ReactiveMarbles.CacheDatabase
-- **🔬 Community Testing**: Early adopters and contributors provided valuable feedback on the new architecture through real-world usage scenarios
-- **🚀 Production Validation**: The incubator project allowed us to validate performance improvements, API ergonomics, and cross-platform compatibility before integrating into Akavache
-- **📈 Iterative Refinement**: Multiple iterations based on community feedback helped shape the final V11.1 API design and feature set
-
-This careful incubation process ensured that V11.1 delivers not just new features, but a more robust, flexible, and maintainable caching solution that builds upon years of community experience and testing.
+See the **[Migration Guide: V11 to V12](docs/migration-v11-to-v12.md)** for upgrade instructions.
 
 ## Quick Start
 
@@ -206,28 +195,16 @@ Akavache.Settings provides a specialized settings database for application confi
 ```csharp
 using Akavache.Settings;
 
-// 1. Create a settings class
+// 1. Create a settings class — properties are IObservable<T>
 public class AppSettings : SettingsBase
 {
     public AppSettings() : base(nameof(AppSettings)) { }
 
-    public bool EnableNotifications
-    {
-        get => GetOrCreate(true);  // Default: true
-        set => SetOrCreate(value);
-    }
+    public IObservable<bool> EnableNotifications => GetOrCreateObservable(true);
+    public IObservable<Unit> SetEnableNotifications(bool value) => SetObservable(value, nameof(EnableNotifications));
 
-    public string UserName
-    {
-        get => GetOrCreate("DefaultUser");
-        set => SetOrCreate(value);
-    }
-
-    public int MaxRetries
-    {
-        get => GetOrCreate(3);
-        set => SetOrCreate(value);
-    }
+    public IObservable<string> UserName => GetOrCreateObservable("DefaultUser");
+    public IObservable<Unit> SetUserName(string value) => SetObservable(value, nameof(UserName));
 }
 
 // 2. Initialize with your app
@@ -239,13 +216,12 @@ AppBuilder.CreateSplatBuilder()
                .WithSqliteProvider()
                .WithSettingsStore<AppSettings>(settings => appSettings = settings));
 
-// 3. Use the settings
-appSettings.EnableNotifications = false;
-appSettings.UserName = "John Doe";
-appSettings.MaxRetries = 5;
+// 3. Use the settings — subscribe for live updates or read once
+await appSettings.SetUserName("John Doe");
+await appSettings.SetEnableNotifications(false);
 
-Console.WriteLine($"User: {appSettings.UserName}");
-Console.WriteLine($"Notifications: {appSettings.EnableNotifications}");
+var name = await appSettings.UserName.FirstAsync();
+Console.WriteLine($"User: {name}");
 ```
 
 Settings are automatically persisted and will survive app updates, making them perfect for user preferences and application configuration.
@@ -282,7 +258,7 @@ We want to thank the following contributors and libraries that help make Akavach
 
 ### Core Libraries
 
-- **SQLite**: [sqlite-net-pcl](https://github.com/praeclarum/sqlite-net) and [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw) - Essential SQLite support for .NET
+- **SQLite**: [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw) and [SQLite3MultipleCiphers](https://github.com/nicola-decao/SQLite3MultipleCiphers) - SQLite access and encryption for .NET
 - **System.Reactive**: [Reactive Extensions for .NET](https://github.com/dotnet/reactive) - The foundation of Akavache's asynchronous API
 - **Splat**: [Splat](https://github.com/reactiveui/splat) - Cross-platform utilities and service location
 - **System.Text.Json**: Microsoft's high-performance JSON serializer

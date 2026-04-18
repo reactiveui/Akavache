@@ -30,6 +30,7 @@
     <File Path="stylecop.json" />
     <File Path="tests.runsettings" />
   </Folder>
+  <Folder Name="/Akavache.Core/" />
   <Folder Name="/Benchmarks/">
     <Project Path="benchmarks/Akavache.Benchmarks/Akavache.Benchmarks.csproj" />
     <Project Path="benchmarks/Akavache.Benchmarks.V10/Akavache.Benchmarks.V10.csproj" />
@@ -38,10 +39,20 @@
     <File Path="tests\.editorconfig" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj" />
+    <Project Path="tests/Akavache.Core.Tests.Parallel/Akavache.Core.Tests.Parallel.csproj" />
+    <Project Path="tests/Akavache.EncryptedSqlite3.Tests/Akavache.EncryptedSqlite3.Tests.csproj" />
+    <Project Path="tests/Akavache.EncryptedSqlite3.Tests.Parallel/Akavache.EncryptedSqlite3.Tests.Parallel.csproj" />
     <Project Path="tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj" />
-    <Project Path="tests/Akavache.Tests/Akavache.Tests.csproj" />
+    <Project Path="tests/Akavache.Settings.Tests.Parallel/Akavache.Settings.Tests.Parallel.csproj" />
+    <Project Path="tests/Akavache.Sqlite3.Tests/Akavache.Sqlite3.Tests.csproj" />
+    <Project Path="tests/Akavache.Sqlite3.Tests.Parallel/Akavache.Sqlite3.Tests.Parallel.csproj" />
+    <Project Path="tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj" />
+    <Project Path="tests/Akavache.Http.Tests/Akavache.Http.Tests.csproj" />
+    <Project Path="tests/Akavache.Integration.Tests.Parallel/Akavache.Integration.Tests.Parallel.csproj" />
   </Folder>
   <Project Path="Akavache.Core/Akavache.csproj" />
+  <Project Path="Akavache.Http/Akavache.Http.csproj" />
   <Project Path="Akavache.Drawing/Akavache.Drawing.csproj" />
   <Project Path="Akavache.EncryptedSqlite3/Akavache.EncryptedSqlite3.csproj" />
   <Project Path="Akavache.NewtonsoftJson/Akavache.NewtonsoftJson.csproj" />

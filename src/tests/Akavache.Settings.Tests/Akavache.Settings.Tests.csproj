@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <TargetFrameworks>$(AkavacheBaseTargets)</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
     <IsPackable>false</IsPackable>
-    <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,8 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlcipher" />
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
+    <Compile Include="..\shared\Helpers\ObservableTestExtensions.cs" Link="Helpers\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

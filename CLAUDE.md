@@ -4,7 +4,13 @@
 
 - **Primary working directory for build/test:** `./src`
 - **Main solution:** `src/Akavache.slnx`
-- **Test projects:** `src/tests/Akavache.Tests/Akavache.Tests.csproj`, `src/tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj`
+- **Test projects:**
+  - `src/tests/Akavache.Core.Tests/` — Core library unit tests
+  - `src/tests/Akavache.Sqlite3.Tests/` — SQLite cache tests
+  - `src/tests/Akavache.EncryptedSqlite3.Tests/` — Encrypted SQLite cache tests
+  - `src/tests/Akavache.Integration.Tests/` — Cross-package integration tests (serializers, HTTP, Drawing)
+  - `src/tests/Akavache.Settings.Tests/` — Settings tests
+  - `src/tests/shared/` — Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each assembly via `<Compile Include>`
 - **Sample apps:** `src/samples/`
 - **Benchmarks:** `src/benchmarks/`
 - **Compatibility writers/readers:** `src/compat/`
@@ -37,32 +43,27 @@ This repo uses **Microsoft Testing Platform (MTP)** with **TUnit** (not VSTest).
 ```bash
 cd src
 
-# Run all tests
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj
+# Run each test assembly
+dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj
+dotnet test --project tests/Akavache.Sqlite3.Tests/Akavache.Sqlite3.Tests.csproj
+dotnet test --project tests/Akavache.EncryptedSqlite3.Tests/Akavache.EncryptedSqlite3.Tests.csproj
+dotnet test --project tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj
+dotnet test --project tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj
 
 # Detailed output (place BEFORE --)
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj -- --output Detailed
+dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj -- --output Detailed
 
 # List tests
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj -- --list-tests
+dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj -- --list-tests
 
 # Fail fast
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj -- --fail-fast
+dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj -- --fail-fast
 
 # Run specific test by filter
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj -- --treenode-filter "/*/*/*/MyTestMethod"
+dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj -- --treenode-filter "/*/*/*/MyTestMethod"
 
 # All tests in a class
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj -- --treenode-filter "/*/*/MyClassName/*"
-```
-
-### Running Settings Tests
-
-```bash
-cd src
-
-# Run all settings tests
-dotnet test --project tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj
+dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj -- --treenode-filter "/*/*/MyClassName/*"
 ```
 
 ### Testing Best Practices
@@ -76,7 +77,7 @@ Code coverage uses **Microsoft.Testing.Extensions.CodeCoverage** configured in `
 
 ```bash
 # Run tests with code coverage (from src/ folder)
-dotnet test --project tests/Akavache.Tests/Akavache.Tests.csproj -- --coverage --coverage-output-format cobertura
+dotnet test --project tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj -- --coverage --coverage-output-format cobertura
 dotnet test --project tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj -- --coverage --coverage-output-format cobertura
 
 # Generate HTML report using ReportGenerator (install if needed: dotnet tool install -g dotnet-reportgenerator-globaltool)

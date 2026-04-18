@@ -15,6 +15,9 @@ namespace Akavache;
 /// </summary>
 public static class CacheDatabase
 {
+    /// <summary>The currently configured Akavache instance.</summary>
+    private static IAkavacheInstance? _instance;
+
     /// <summary>
     /// Gets or sets the Scheduler used for task pools.
     /// </summary>
@@ -33,7 +36,7 @@ public static class CacheDatabase
     /// <summary>
     /// Gets a value indicating whether CacheDatabase has been initialized.
     /// </summary>
-    public static bool IsInitialized { get; private set; }
+    public static bool IsInitialized => Volatile.Read(ref _instance) is not null;
 
     /// <summary>
     /// Gets the forced DateTime kind for DateTime serialization.
@@ -74,9 +77,10 @@ public static class CacheDatabase
         throw new InvalidOperationException("UserAccount cache has not been configured on the current Akavache instance.");
 
     /// <summary>
-    /// Gets or sets the currently configured Akavache instance.
+    /// Gets the current instance of the Akavache cache database.
+    /// This instance provides access to blob caches and settings stores managed by Akavache.
     /// </summary>
-    private static IAkavacheInstance? Builder { get; set; }
+    public static IAkavacheInstance? CurrentInstance => Volatile.Read(ref _instance);
 
     /// <summary>
     /// Shuts down all cache instances and flushes any pending operations.
@@ -86,54 +90,42 @@ public static class CacheDatabase
     /// <returns>An observable that completes when shutdown is finished.</returns>
     public static IObservable<Unit> Shutdown()
     {
-        if (!IsInitialized || Builder == null)
+        // Snapshot to avoid concurrent modification issues during shutdown.
+        var instance = Volatile.Read(ref _instance);
+        if (instance is null)
         {
             return CachedObservables.UnitDefault;
         }
 
-        List<IObservable<Unit>> shutdownTasks = [];
-
-        // dispose of the settings store
-        if (AkavacheBuilder.BlobCaches != null)
+        // Dispose registered blob caches and settings stores synchronously.
+        // Observable.Start would schedule on the threadpool and deadlock when
+        // callers block with WaitForCompletion under threadpool saturation.
+        foreach (var cache in instance.BlobCaches.Values)
         {
-            var shutdownSettingsBlobs = Observable.Start(static async () =>
-            {
-                List<Task> tasks = [.. AkavacheBuilder.BlobCaches
-                .Where(static cachePair => cachePair.Value != null)
-                .Select(static async cache => await cache.Value!.DisposeAsync().ConfigureAwait(false))];
-                await Task.WhenAll(tasks).ConfigureAwait(false);
-            }).SelectUnit();
-            shutdownTasks.Add(shutdownSettingsBlobs);
+            cache.Dispose();
         }
 
-        if (AkavacheBuilder.SettingsStores != null)
+        foreach (var store in instance.SettingsStores.Values)
         {
-            var shutdownSettingsStores = Observable.Start(static async () =>
-            {
-                List<Task> tasks = [.. AkavacheBuilder.SettingsStores
-                .Where(static cachePair => cachePair.Value != null)
-                .Select(static async cache => await cache.Value!.DisposeAsync().ConfigureAwait(false))];
-                await Task.WhenAll(tasks).ConfigureAwait(false);
-            }).SelectUnit();
-            shutdownTasks.Add(shutdownSettingsStores);
+            store.Dispose();
         }
 
         try
         {
-            shutdownTasks.Add(Builder.UserAccount?.Flush() ?? CachedObservables.UnitDefault);
-            shutdownTasks.Add(Builder.LocalMachine?.Flush() ?? CachedObservables.UnitDefault);
-            shutdownTasks.Add(Builder.Secure?.Flush() ?? CachedObservables.UnitDefault);
-            shutdownTasks.Add(Builder.InMemory?.Flush() ?? CachedObservables.UnitDefault);
+            List<IObservable<Unit>> flushTasks =
+            [
+                instance.UserAccount?.Flush() ?? CachedObservables.UnitDefault,
+                instance.LocalMachine?.Flush() ?? CachedObservables.UnitDefault,
+                instance.Secure?.Flush() ?? CachedObservables.UnitDefault,
+                instance.InMemory?.Flush() ?? CachedObservables.UnitDefault,
+            ];
+
+            return flushTasks.Merge().TakeLast(1).Select(static _ => Unit.Default);
         }
         catch (Exception ex)
         {
             return Observable.Throw<Unit>(ex);
         }
-
-        // The try block above unconditionally appends UserAccount/LocalMachine/Secure/InMemory
-        // flush observables (each defaulting to Observable.Return on null), so the task list
-        // is guaranteed to have at least four entries by this point.
-        return shutdownTasks.Merge().TakeLast(1).Select(static _ => Unit.Default);
     }
 
     /// <summary>
@@ -238,54 +230,35 @@ public static class CacheDatabase
     [Obsolete("Use CreateBuilder(string applicationName, ...) which requires an explicit application name.", false)]
     public static IAkavacheBuilder CreateBuilder(FileLocationOption fileLocationOption = FileLocationOption.Default) => new AkavacheBuilder(fileLocationOption);
 
-    /// <summary>
-    /// Resets all CacheDatabase state for testing purposes.
-    /// Calls Shutdown first, then clears the builder and initialization flag.
-    /// </summary>
-    /// <returns>A task that completes once shutdown and reset are done.</returns>
-    internal static async Task ResetForTestsAsync()
+    /// <summary>Resets all CacheDatabase state for testing purposes.</summary>
+    /// <returns>An observable that completes once shutdown and reset are done.</returns>
+    internal static IObservable<Unit> ResetForTests()
     {
-        if (IsInitialized)
+        var shutdown = Volatile.Read(ref _instance) is not null
+            ? Shutdown().Catch<Unit, Exception>(static _ => Observable.Return(Unit.Default))
+            : Observable.Return(Unit.Default);
+
+        return shutdown.Do(static _ =>
         {
-            try
-            {
-                await Shutdown().LastOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                // Best-effort: shutdown may fail if caches are already disposed
-                System.Diagnostics.Debug.WriteLine($"CacheDatabase.ResetForTests shutdown failed: {ex.Message}");
-            }
-        }
-
-        Builder = null;
-        IsInitialized = false;
-        TaskpoolScheduler = null!;
+            Volatile.Write(ref _instance, null);
+            TaskpoolScheduler = null!;
+        });
     }
 
-    /// <summary>
-    /// Internal method to set the builder instance. Used by the builder pattern.
-    /// </summary>
-    /// <param name="builder">The configured builder instance.</param>
-    internal static void SetBuilder(IAkavacheInstance builder)
-    {
-        Builder = builder;
-        IsInitialized = true;
-    }
+    /// <summary>Internal method to set the instance.</summary>
+    /// <param name="builder">The configured instance.</param>
+    internal static void SetBuilder(IAkavacheInstance builder) =>
+        Volatile.Write(ref _instance, builder);
 
     /// <summary>
-    /// Returns the configured <see cref="IAkavacheInstance"/>, throwing
-    /// <see cref="InvalidOperationException"/> if CacheDatabase has not been initialized.
-    /// The return value is guaranteed non-null on success because <see cref="SetBuilder"/>
-    /// always assigns a non-null instance and is the only writer for <c>Builder</c>.
+    /// Returns the configured <see cref="IAkavacheInstance"/>, throwing if not initialized.
     /// </summary>
     /// <returns>The configured Akavache instance.</returns>
     internal static IAkavacheInstance GetOrThrowIfNotInitialized() =>
-        !IsInitialized || Builder is null
-            ? throw new InvalidOperationException(
+        Volatile.Read(ref _instance)
+            ?? throw new InvalidOperationException(
                 "CacheDatabase has not been initialized. " +
                 "Call CacheDatabase.Initialize<TSerializer>(\"MyApp\") or " +
                 "CacheDatabase.Initialize<TSerializer>(builder => { ... }, \"MyApp\") first. " +
-                "For advanced scenarios, use CacheDatabase.CreateBuilder(\"MyApp\") to configure custom cache implementations.")
-            : Builder;
+                "For advanced scenarios, use CacheDatabase.CreateBuilder(\"MyApp\") to configure custom cache implementations.");
 }

@@ -47,13 +47,7 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
             // Apply the DateTimeKind override even for direct DateTime values
             var targetKind = forceDateTimeKindOverride ?? DateTimeKind.Utc;
 
-            // Convert to the target kind if necessary, ensuring we always return DateTime
-            return targetKind switch
-            {
-                DateTimeKind.Utc => DateTime.SpecifyKind(dateTime.ToUniversalTime(), DateTimeKind.Utc),
-                DateTimeKind.Local => DateTime.SpecifyKind(dateTime.ToLocalTime(), DateTimeKind.Local),
-                _ => DateTime.SpecifyKind(dateTime, targetKind)
-            };
+            return ConvertDateTimeKind(dateTime, targetKind);
         }
 
         if ((objectType == typeof(DateTime) || objectType == typeof(DateTime?)) && reader.Value is not null)
@@ -86,5 +80,26 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
         };
 
         writer.WriteValue(ticksToStore);
+    }
+
+    /// <summary>
+    /// Converts a <see cref="DateTime"/> to the specified <see cref="DateTimeKind"/>.
+    /// </summary>
+    /// <param name="dateTime">The source DateTime.</param>
+    /// <param name="targetKind">The target kind.</param>
+    /// <returns>A DateTime with the specified kind.</returns>
+    internal static DateTime ConvertDateTimeKind(DateTime dateTime, DateTimeKind targetKind)
+    {
+        if (targetKind == DateTimeKind.Utc)
+        {
+            return DateTime.SpecifyKind(dateTime.ToUniversalTime(), DateTimeKind.Utc);
+        }
+
+        if (targetKind == DateTimeKind.Local)
+        {
+            return DateTime.SpecifyKind(dateTime.ToLocalTime(), DateTimeKind.Local);
+        }
+
+        return DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
     }
 }

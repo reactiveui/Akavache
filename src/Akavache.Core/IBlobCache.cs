@@ -8,7 +8,7 @@ namespace Akavache;
 /// IBlobCache is the core database interface, it is an
 /// interface describing an asynchronous persistent key-value store.
 /// </summary>
-public interface IBlobCache : IDisposable, IAsyncDisposable
+public interface IBlobCache : IDisposable
 {
     /// <summary>
     /// Gets the serializer.
@@ -23,14 +23,6 @@ public interface IBlobCache : IDisposable, IAsyncDisposable
     /// BlobCache.TaskpoolScheduler.
     /// </summary>
     IScheduler Scheduler { get; }
-
-    /// <summary>
-    /// Gets or sets the HTTP service.
-    /// </summary>
-    /// <value>
-    /// The HTTP service.
-    /// </value>
-    IHttpService HttpService { get; set; }
 
     /// <summary>
     /// Gets or sets the DateTimeKind handling for BSON readers to be forced.

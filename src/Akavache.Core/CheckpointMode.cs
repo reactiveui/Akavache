@@ -5,27 +5,28 @@
 namespace Akavache;
 
 /// <summary>
-/// Describes the durability level of a <see cref="IAkavacheConnection.CheckpointAsync"/> request.
-/// Backends that do not have a concept of a write-ahead log should treat all values the same
-/// (or as a no-op).
+/// Defines the durability and performance characteristics of a checkpoint operation.
+/// A checkpoint synchronizes the data between the write-ahead log (WAL) and the main database file.
 /// </summary>
 public enum CheckpointMode
 {
     /// <summary>
-    /// A best-effort checkpoint that does not block concurrent readers/writers.
-    /// Maps to <c>PRAGMA wal_checkpoint(PASSIVE)</c> on SQLite.
+    /// A lightweight checkpoint that processes as much data as possible without blocking current database operations.
+    /// This mode does not wait for existing readers or writers to finish and is mapped to the SQLite passive checkpoint mode.
     /// </summary>
     Passive,
 
     /// <summary>
-    /// A stronger checkpoint that waits for writers and ensures all committed data is
-    /// flushed to the main database file. Maps to <c>PRAGMA wal_checkpoint(FULL)</c> on SQLite.
+    /// A comprehensive checkpoint that ensures all committed transactions are fully merged into the main database.
+    /// This mode waits for all active writers to complete and ensures the main database file is updated and flushed to disk.
+    /// It maps to the SQLite full checkpoint mode.
     /// </summary>
     Full,
 
     /// <summary>
-    /// The strongest checkpoint that additionally truncates the write-ahead log file.
-    /// Maps to <c>PRAGMA wal_checkpoint(TRUNCATE)</c> on SQLite.
+    /// The most extensive checkpoint that performs a full synchronization and then resets the write-ahead log.
+    /// In addition to completing all pending writes, this mode waits for all readers to finish so it can truncate the log file back to its starting size.
+    /// It maps to the SQLite truncate checkpoint mode.
     /// </summary>
     Truncate,
 }

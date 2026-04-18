@@ -61,6 +61,32 @@ internal static class ArgumentExceptionHelper
     }
 
     /// <summary>
+    /// Validates that <paramref name="argument"/> is not null and returns it.
+    /// Suitable for field initializers and expression contexts where a return value is needed.
+    /// </summary>
+    /// <typeparam name="T">The type of the argument.</typeparam>
+    /// <param name="argument">The argument to validate.</param>
+    /// <param name="paramName">The name of the parameter.</param>
+    /// <returns>The validated non-null argument.</returns>
+    [return: NotNull]
+    public static T EnsureNotNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+        where T : class =>
+        argument ?? throw new ArgumentNullException(paramName);
+
+    /// <summary>
+    /// Validates that <paramref name="argument"/> is not null and returns it, with a custom message.
+    /// </summary>
+    /// <typeparam name="T">The type of the argument.</typeparam>
+    /// <param name="argument">The argument to validate.</param>
+    /// <param name="message">The error message.</param>
+    /// <param name="paramName">The name of the parameter.</param>
+    /// <returns>The validated non-null argument.</returns>
+    [return: NotNull]
+    public static T EnsureNotNull<T>([NotNull] T? argument, string message, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+        where T : class =>
+        argument ?? throw new InvalidOperationException(message);
+
+    /// <summary>
     /// Throws an <see cref="ArgumentException"/> with the supplied message and parameter name.
     /// Centralises the throw site so call-sites read as a single statement instead of an
     /// inline <c>throw new ArgumentException(...)</c>.

@@ -1,10 +1,9 @@
-﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
+using Akavache.Core.Observables;
 using Akavache.Helpers;
-using SQLite;
 
 #if ENCRYPTED
 using System.Diagnostics.CodeAnalysis;
@@ -25,177 +24,149 @@ public class EncryptedSqliteBlobCache : ISecureBlobCache
 public class SqliteBlobCache : IBlobCache
 #endif
 {
+    /// <summary>Runtime class name.</summary>
 #if ENCRYPTED
-    /// <summary>The runtime class name used in diagnostics and disposed exceptions.</summary>
     private const string ClassName = nameof(EncryptedSqliteBlobCache);
 #else
-    /// <summary>The runtime class name used in diagnostics and disposed exceptions.</summary>
     private const string ClassName = nameof(SqliteBlobCache);
 #endif
 
-    /// <summary>Observable that completes once the underlying database schema is initialized.</summary>
-    private readonly IObservable<Unit> _initialized;
+    /// <summary>One-shot schema-initialization gate.</summary>
+    private readonly InitSignal _initialized = new();
 
-    /// <summary>Indicates whether <see cref="Dispose(bool)"/> has been invoked.</summary>
-    private bool _disposed;
+    /// <summary>Tracks whether the instance has been disposed.</summary>
+    private int _disposed;
 
 #if ENCRYPTED
     /// <summary>
-    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache" /> class.
+    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache"/> class.
     /// </summary>
     /// <param name="fileName">The database file name.</param>
-    /// <param name="password">The password.</param>
+    /// <param name="password">The encryption key (applied via <c>PRAGMA key</c>).</param>
     /// <param name="serializer">The serializer.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <param name="storeDateTimeAsTicks">Specifies whether to store DateTime properties as ticks (true) or strings (false).
-    /// You absolutely do want to store them as Ticks in all new projects. The value
-    /// of false is only here for backwards compatibility. There is a *significant* speed
-    /// advantage, with no down sides, when setting storeDateTimeAsTicks = true. If you
-    /// use DateTimeOffset properties, it will be always stored as ticks regardingless
-    /// the storeDateTimeAsTicks parameter.</param>
-    public EncryptedSqliteBlobCache(string fileName, string password, ISerializer serializer, IScheduler? scheduler = null, bool storeDateTimeAsTicks = true)
-        : this(
-              new SQLiteConnectionString(fileName ?? throw new ArgumentNullException(nameof(fileName)), storeDateTimeAsTicks, key: password ?? throw new ArgumentNullException(nameof(password))),
-              serializer,
-              scheduler)
+    public EncryptedSqliteBlobCache(string fileName, string password, ISerializer serializer)
     {
+        ArgumentExceptionHelper.ThrowIfNull(fileName);
+        ArgumentExceptionHelper.ThrowIfNull(password);
+        Init(new SqlitePclRawConnection(fileName, password, readOnly: false), serializer, null);
     }
-#else
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class.
+    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache"/> class.
     /// </summary>
     /// <param name="fileName">The database file name.</param>
+    /// <param name="password">The encryption key (applied via <c>PRAGMA key</c>).</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    /// <param name="storeDateTimeAsTicks">
-    /// Specifies whether to store DateTime properties as ticks (true) or strings (false).
-    /// You absolutely do want to store them as Ticks in all new projects. The value
-    /// of false is only here for backwards compatibility. There is a *significant* speed
-    /// advantage, with no down sides, when setting storeDateTimeAsTicks = true. If you
-    /// use DateTimeOffset properties, it will be always stored as ticks regardingless
-    /// the storeDateTimeAsTicks parameter.
-    /// </param>
-    public SqliteBlobCache(string fileName, ISerializer serializer, IScheduler? scheduler = null, bool storeDateTimeAsTicks = true)
-        : this(
-              new SQLiteConnectionString(fileName ?? throw new ArgumentNullException(nameof(fileName)), storeDateTimeAsTicks),
-              serializer,
-              scheduler)
+    public EncryptedSqliteBlobCache(string fileName, string password, ISerializer serializer, IScheduler scheduler)
     {
-    }
-#endif
-
-#if ENCRYPTED
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache" /> class.
-    /// </summary>
-    /// <param name="connectionString">The connection string.</param>
-    /// <param name="serializer">The serializer.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <exception cref="ArgumentNullException">connectionString.</exception>
-    public EncryptedSqliteBlobCache(SQLiteConnectionString connectionString, ISerializer serializer, IScheduler? scheduler = null)
-#else
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class.
-    /// </summary>
-    /// <param name="connectionString">The connection string.</param>
-    /// <param name="serializer">The serializer.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    public SqliteBlobCache(SQLiteConnectionString connectionString, ISerializer serializer, IScheduler? scheduler = null)
-#endif
-        : this(
-              new SqliteAkavacheConnection(connectionString ?? throw new ArgumentNullException(nameof(connectionString))),
-              serializer,
-              scheduler)
-    {
+        ArgumentExceptionHelper.ThrowIfNull(fileName);
+        ArgumentExceptionHelper.ThrowIfNull(password);
+        Init(new SqlitePclRawConnection(fileName, password, readOnly: false), serializer, scheduler);
     }
 
-#if ENCRYPTED
     /// <summary>
     /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache"/> class
-    /// with an abstracted database connection, enabling custom or test storage backends.
+    /// with an abstracted database connection.
+    /// </summary>
+    /// <param name="connection">The database connection abstraction.</param>
+    /// <param name="serializer">The serializer.</param>
+    public EncryptedSqliteBlobCache(IAkavacheConnection connection, ISerializer serializer)
+        => Init(connection, serializer, null);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EncryptedSqliteBlobCache"/> class
+    /// with an abstracted database connection.
     /// </summary>
     /// <param name="connection">The database connection abstraction.</param>
     /// <param name="serializer">The serializer.</param>
     /// <param name="scheduler">The scheduler.</param>
-    public EncryptedSqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, IScheduler? scheduler = null)
+    public EncryptedSqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, IScheduler scheduler)
+        => Init(connection, serializer, scheduler);
 #else
     /// <summary>
-    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class
-    /// with an abstracted database connection, enabling custom or test storage backends.
+    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class.
     /// </summary>
-    /// <param name="connection">The database connection abstraction.</param>
+    /// <param name="fileName">The database file name.</param>
     /// <param name="serializer">The serializer.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    public SqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, IScheduler? scheduler = null)
-#endif
+    public SqliteBlobCache(string fileName, ISerializer serializer)
     {
-        ArgumentExceptionHelper.ThrowIfNull(connection);
-        ArgumentExceptionHelper.ThrowIfNull(serializer);
-
-        Serializer = serializer;
-        Connection = connection;
-        Scheduler = scheduler ?? CacheDatabase.TaskpoolScheduler;
-        _initialized = InitializeDatabase(Connection, Scheduler);
+        ArgumentExceptionHelper.ThrowIfNull(fileName);
+        Init(new SqlitePclRawConnection(fileName, password: null, readOnly: false), serializer, null);
     }
 
     /// <summary>
-    /// Gets the connection.
+    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class.
     /// </summary>
-    public IAkavacheConnection Connection { get; }
+    /// <param name="fileName">The database file name.</param>
+    /// <param name="serializer">The serializer.</param>
+    /// <param name="scheduler">The scheduler.</param>
+    public SqliteBlobCache(string fileName, ISerializer serializer, IScheduler scheduler)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(fileName);
+        Init(new SqlitePclRawConnection(fileName, password: null, readOnly: false), serializer, scheduler);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class
+    /// with an abstracted database connection.
+    /// </summary>
+    /// <param name="connection">The database connection abstraction.</param>
+    /// <param name="serializer">The serializer.</param>
+    public SqliteBlobCache(IAkavacheConnection connection, ISerializer serializer)
+        => Init(connection, serializer, null);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqliteBlobCache"/> class
+    /// with an abstracted database connection.
+    /// </summary>
+    /// <param name="connection">The database connection abstraction.</param>
+    /// <param name="serializer">The serializer.</param>
+    /// <param name="scheduler">The scheduler.</param>
+    public SqliteBlobCache(IAkavacheConnection connection, ISerializer serializer, IScheduler scheduler)
+        => Init(connection, serializer, scheduler);
+#endif
+
+    /// <summary>Gets the underlying <see cref="IAkavacheConnection"/>.</summary>
+    public IAkavacheConnection Connection { get; private set; }
 
     /// <inheritdoc/>
-    public IScheduler Scheduler { get; }
+    public IScheduler Scheduler { get; private set; }
 
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind { get; set; }
 
     /// <inheritdoc/>
-    public ISerializer Serializer { get; }
-
-    /// <inheritdoc/>
-    public IHttpService HttpService
-    {
-        get => field ??= new HttpService();
-        set;
-    }
+    public ISerializer Serializer { get; private set; }
 
     /// <inheritdoc/>
     public IObservable<Unit> Flush() =>
-        _disposed
+        Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : _initialized.SelectMany(async (_, _, _) =>
-            {
-                // For SQLite, perform a WAL checkpoint to ensure data is persisted to the main database file.
-                try
-                {
-                    await Connection.CheckpointAsync().ConfigureAwait(false);
-                }
-                catch
-                {
-                    // If WAL checkpoint fails, the data is still safe in the transaction log
-                    // Continue without error as this is not critical for data integrity
-                }
 
-                return Unit.Default;
-            });
+            // Passive checkpoint nudges data out of the WAL; a failure is non-fatal
+            // because the WAL itself is durable.
+            : _initialized.Gate(() =>
+                Connection.Checkpoint(CheckpointMode.Passive)
+                    .CatchReturnUnit());
 
     /// <inheritdoc/>
     public IObservable<Unit> Flush(Type type) =>
-        _disposed
+        Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : Akavache.Core.CachedObservables.UnitDefault;
+            : Core.CachedObservables.UnitDefault;
 
     /// <inheritdoc/>
     public IObservable<byte[]?> Get(string key)
     {
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>(ClassName);
         }
 
         return string.IsNullOrWhiteSpace(key)
             ? Observable.Throw<byte[]>(new ArgumentNullException(nameof(key)))
-            : _initialized.SelectMany((_, _, _) => ReadValueWithLegacyFallbackAsync(key, type: null));
+            : _initialized.Gate(() => ReadValueWithLegacyFallback(key, type: null));
     }
 
     /// <inheritdoc/>
@@ -206,17 +177,19 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(keys)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
+        var keyList = MaterializeKeys(keys);
 
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)))
-            .SelectMany(static x => x)
-            .Where(static x => x.Value is not null && x.Id is not null)
-            .Select(static x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
+        return _initialized.Gate(() =>
+            Connection.GetMany(keyList, typeFullName: null, now)
+                .WhereSelect(
+                    static entry => entry.Value is not null && entry.Id is not null,
+                    static entry => new KeyValuePair<string, byte[]>(entry.Id!, entry.Value!)));
     }
 
     /// <inheritdoc/>
@@ -232,12 +205,12 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<byte[]>(new ArgumentNullException(nameof(type)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>(ClassName);
         }
 
-        return _initialized.SelectMany((_, _, _) => ReadValueWithLegacyFallbackAsync(key, type));
+        return _initialized.Gate(() => ReadValueWithLegacyFallback(key, type));
     }
 
     /// <inheritdoc/>
@@ -253,16 +226,20 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(type)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName))
-            .SelectMany(static x => x)
-            .Where(static x => x.Value is not null && x.Id is not null)
-            .Select(static x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
+        var now = DateTimeOffset.UtcNow;
+        var keyList = MaterializeKeys(keys);
+        var typeName = type.FullName;
+
+        return _initialized.Gate(() =>
+            Connection.GetMany(keyList, typeName, now)
+                .WhereSelect(
+                    static entry => entry.Value is not null && entry.Id is not null,
+                    static entry => new KeyValuePair<string, byte[]>(entry.Id!, entry.Value!)));
     }
 
     /// <inheritdoc/>
@@ -273,31 +250,31 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<KeyValuePair<string, byte[]>>(new ArgumentNullException(nameof(type)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<KeyValuePair<string, byte[]>>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName))
-            .SelectMany(static x => x)
-            .Where(static x => x.Value is not null && x.Id is not null)
-            .Select(static x => new KeyValuePair<string, byte[]>(x.Id!, x.Value!));
+        var now = DateTimeOffset.UtcNow;
+        var typeName = type.FullName;
+
+        return _initialized.Gate(() =>
+            Connection.GetAll(typeName, now)
+                .WhereSelect(
+                    static entry => entry.Value is not null && entry.Id is not null,
+                    static entry => new KeyValuePair<string, byte[]>(entry.Id!, entry.Value!)));
     }
 
     /// <inheritdoc/>
     public IObservable<string> GetAllKeys()
     {
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time)))
-            .SelectMany(static x => x)
-            .Where(static x => x.Id is not null)
-            .Select(static x => x.Id!);
+        var now = DateTimeOffset.UtcNow;
+        return _initialized.Gate(() => Connection.GetAllKeys(typeFullName: null, now));
     }
 
     /// <inheritdoc/>
@@ -308,16 +285,15 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<string>(new ArgumentNullException(nameof(type)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<string>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.TypeName == type.FullName))
-            .SelectMany(static x => x)
-            .Where(static x => x.Id is not null)
-            .Select(static x => x.Id!);
+        var now = DateTimeOffset.UtcNow;
+        var typeName = type.FullName;
+
+        return _initialized.Gate(() => Connection.GetAllKeys(typeName, now));
     }
 
     /// <inheritdoc/>
@@ -328,16 +304,19 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(keys)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<(string Key, DateTimeOffset? Time)>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id)))
-            .SelectMany(static x => x)
-            .Where(static x => x.Id is not null)
-            .Select(static x => (Key: x.Id!, Time: (DateTimeOffset?)x.CreatedAt));
+        var now = DateTimeOffset.UtcNow;
+        var keyList = MaterializeKeys(keys);
+
+        return _initialized.Gate(() =>
+            Connection.GetMany(keyList, typeFullName: null, now)
+                .WhereSelect(
+                    static entry => entry.Id is not null,
+                    static entry => (Key: entry.Id!, Time: (DateTimeOffset?)entry.CreatedAt)));
     }
 
     /// <inheritdoc/>
@@ -348,28 +327,21 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-
-        // Single async projection replaces the 4-operator Rx chain (SelectMany/SelectMany/Where/Select/DefaultIfEmpty).
-        // Defensive null-Id filter is preserved because backends with BypassPredicate=true can return null-Id rows.
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            var results = await Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key).ConfigureAwait(false);
-            for (var i = 0; i < results.Count; i++)
-            {
-                if (results[i].Id is not null)
-                {
-                    return (DateTimeOffset?)results[i].CreatedAt;
-                }
-            }
-
-            return null;
-        });
+        // Defensive null-Id filter: mock connections (and potentially corrupt rows)
+        // can surface an entry whose Id is null. Treat that as "not found" rather than
+        // returning a timestamp for a row that would fail every subsequent lookup. Real
+        // SqlitePclRawConnection never returns such entries because CacheEntry.Id is
+        // NOT NULL in the schema, but the contract check keeps the layer above robust
+        // against buggy IAkavacheConnection implementations.
+        var now = DateTimeOffset.UtcNow;
+        return _initialized.Gate(() =>
+            Connection.Get(key, typeFullName: null, now)
+                .Select(static entry => entry is null || entry.Id is null ? (DateTimeOffset?)null : entry.CreatedAt));
     }
 
     /// <inheritdoc/>
@@ -385,16 +357,20 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<(string Key, DateTimeOffset? Time)>(new ArgumentNullException(nameof(keys)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<(string Key, DateTimeOffset? Time)>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
-        return _initialized.SelectMany((_, _, _) => Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && keys.Contains(x.Id) && x.TypeName == type.FullName))
-            .SelectMany(static x => x)
-            .Where(static x => x.Id is not null)
-            .Select(static x => (Key: x.Id!, Time: (DateTimeOffset?)x.CreatedAt));
+        var now = DateTimeOffset.UtcNow;
+        var keyList = MaterializeKeys(keys);
+        var typeName = type.FullName;
+
+        return _initialized.Gate(() =>
+            Connection.GetMany(keyList, typeName, now)
+                .WhereSelect(
+                    static entry => entry.Id is not null,
+                    static entry => (Key: entry.Id!, Time: (DateTimeOffset?)entry.CreatedAt)));
     }
 
     /// <inheritdoc/>
@@ -410,28 +386,18 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<DateTimeOffset?>(new ArgumentNullException(nameof(key)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<DateTimeOffset?>(ClassName);
         }
 
-        var time = DateTimeOffset.UtcNow;
+        // See GetCreatedAt(string) for the null-Id rationale.
+        var now = DateTimeOffset.UtcNow;
+        var typeName = type.FullName;
 
-        // Single async projection replaces the 4-operator Rx chain (SelectMany/SelectMany/Where/Select/DefaultIfEmpty).
-        // Defensive null-Id filter is preserved because backends with BypassPredicate=true can return null-Id rows.
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            var results = await Connection.QueryAsync<CacheEntry>(x => x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName).ConfigureAwait(false);
-            for (var i = 0; i < results.Count; i++)
-            {
-                if (results[i].Id is not null)
-                {
-                    return (DateTimeOffset?)results[i].CreatedAt;
-                }
-            }
-
-            return null;
-        });
+        return _initialized.Gate(() =>
+            Connection.Get(key, typeName, now)
+                .Select(static entry => entry is null || entry.Id is null ? (DateTimeOffset?)null : entry.CreatedAt));
     }
 
     /// <inheritdoc/>
@@ -442,35 +408,26 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        var expiry = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
+        var expiry = absoluteExpiration;
+        var createdAt = DateTimeOffset.Now;
 
-        // Hoist DateTime.Now out of the per-entry projection — a single wall-clock read per
-        // batch is what the old code intended anyway, and this avoids a syscall per item.
-        var createdAt = DateTime.Now;
-
-        return _initialized.SelectMany(
-            async (_, _, _) =>
-            {
-                await Connection.RunInTransactionAsync(tx =>
-                {
-                    foreach (var kvp in keyValuePairs)
-                    {
-                        tx.InsertOrReplace(new CacheEntry(kvp.Key, typeName: null, kvp.Value, createdAt, expiry));
-                    }
-                }).ConfigureAwait(false);
-
-                return Unit.Default;
-            })
-            .SelectUnit();
+        return _initialized.Gate(() =>
+        {
+            var entries = BuildCacheEntries(keyValuePairs, typeName: null, createdAt, expiry);
+            return entries.Count > 0
+                ? Connection.Upsert(entries)
+                : Observable.Return(Unit.Default);
+        });
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) => Insert([new KeyValuePair<string, byte[]>(key, data)], absoluteExpiration);
+    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+        Insert([new KeyValuePair<string, byte[]>(key, data)], absoluteExpiration);
 
     /// <inheritdoc/>
     public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null)
@@ -485,64 +442,31 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(keyValuePairs)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        var expiry = (absoluteExpiration ?? DateTimeOffset.MaxValue).UtcDateTime;
-
-        // Hoist DateTime.Now and the reflected type-name string out of the per-entry projection.
-        var createdAt = DateTime.Now;
+        var expiry = absoluteExpiration;
+        var createdAt = DateTimeOffset.Now;
         var typeName = type.FullName;
 
-        return _initialized.SelectMany(async (_, _, _) =>
+        return _initialized.Gate(() =>
+        {
+            var entries = BuildCacheEntries(keyValuePairs, typeName, createdAt, expiry);
+            if (entries.Count == 0)
             {
-                try
-                {
-                    await Connection.RunInTransactionAsync(tx =>
-                    {
-                        if (!tx.IsValid)
-                        {
-                            return;
-                        }
+                return Observable.Return(Unit.Default);
+            }
 
-                        foreach (var kvp in keyValuePairs)
-                        {
-                            try
-                            {
-                                if (!tx.IsValid)
-                                {
-                                    return;
-                                }
-
-                                tx.InsertOrReplace(new CacheEntry(kvp.Key, typeName, kvp.Value, createdAt, expiry));
-                            }
-                            catch (Exception)
-                            {
-                                return;
-                            }
-                        }
-                    }).ConfigureAwait(false);
-                }
-                catch
-                {
-                    return Unit.Default;
-                }
-
-                // Ensure data is immediately persisted to disk for multi-instance scenarios
-                try
-                {
-                    await Connection.CheckpointAsync().ConfigureAwait(false);
-                }
-                catch
-                {
-                    // If WAL checkpoint fails, continue - the data is still in the transaction log
-                }
-
-                return Unit.Default;
-            })
-            .SelectUnit();
+            // Upsert then best-effort checkpoint. Both failures are non-fatal:
+            // the WAL is durable and a transient upsert error should not crash
+            // the caller's observable chain.
+            return Connection.Upsert(entries)
+                .SelectMany(_ => Connection.Checkpoint(CheckpointMode.Passive)
+                    .CatchReturnUnit())
+                .CatchReturnUnit();
+        });
     }
 
     /// <inheritdoc/>
@@ -564,7 +488,10 @@ public class SqliteBlobCache : IBlobCache
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> Invalidate(string key) => string.IsNullOrWhiteSpace(key) ? Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key))) : Invalidate([key]);
+    public IObservable<Unit> Invalidate(string key) =>
+        string.IsNullOrWhiteSpace(key)
+            ? Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)))
+            : Invalidate([key]);
 
     /// <inheritdoc/>
     public IObservable<Unit> Invalidate(string key, Type type)
@@ -574,7 +501,9 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
-        return type is null ? Observable.Throw<Unit>(new ArgumentNullException(nameof(type))) : Invalidate([key], type);
+        return type is null
+            ? Observable.Throw<Unit>(new ArgumentNullException(nameof(type)))
+            : Invalidate([key], type);
     }
 
     /// <inheritdoc/>
@@ -585,24 +514,17 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        return _initialized.SelectMany(
-            async _ =>
-            {
-                await Connection.RunInTransactionAsync(tx =>
-                {
-                    foreach (var key in keys)
-                    {
-                        tx.Delete<CacheEntry>(key);
-                    }
-                }).ConfigureAwait(false);
+        var keyList = MaterializeKeys(keys);
 
-                return Unit.Default;
-            });
+        return _initialized.Gate(() =>
+            keyList.Count > 0
+                ? Connection.Invalidate(keyList, typeFullName: null)
+                : Observable.Return(Unit.Default));
     }
 
     /// <inheritdoc/>
@@ -618,75 +540,48 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        return _initialized.SelectMany(
-            async _ =>
-            {
-                await Connection.RunInTransactionAsync(tx =>
-                {
-                    foreach (var key in tx.Query<CacheEntry>(x => keys.Contains(x.Id) && x.TypeName == type.FullName))
-                    {
-                        tx.Delete<CacheEntry>(key.Id!);
-                    }
-                }).ConfigureAwait(false);
+        var keyList = MaterializeKeys(keys);
+        var typeName = type.FullName;
 
-                return Unit.Default;
-            });
+        return _initialized.Gate(() =>
+            keyList.Count > 0
+                ? Connection.Invalidate(keyList, typeName)
+                : Observable.Return(Unit.Default));
     }
 
     /// <inheritdoc/>
     public IObservable<Unit> InvalidateAll(Type type)
     {
-        return _disposed
-            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : _initialized.SelectMany(async _ =>
-            {
-                await Connection.RunInTransactionAsync(tx =>
-                {
-                    foreach (var key in tx.Query<CacheEntry>(x => x.TypeName == type.FullName))
-                    {
-                        tx.Delete<CacheEntry>(key.Id!);
-                    }
-                }).ConfigureAwait(false);
+        if (type is null)
+        {
+            return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
+        }
 
-                return Unit.Default;
-            });
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
+        }
+
+        var typeName = type.FullName;
+        return _initialized.Gate(() => Connection.InvalidateAll(typeName));
     }
 
     /// <inheritdoc/>
-    public IObservable<Unit> InvalidateAll()
-    {
-        return _disposed
+    public IObservable<Unit> InvalidateAll() =>
+        Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : _initialized.SelectMany(async _ =>
-            {
-                await Connection.RunInTransactionAsync(tx =>
-                {
-                    foreach (var key in tx.Query<CacheEntry>(_ => true))
-                    {
-                        tx.Delete<CacheEntry>(key.Id!);
-                    }
-                }).ConfigureAwait(false);
-
-                return Unit.Default;
-            });
-    }
+            : _initialized.Gate(() => Connection.InvalidateAll(typeFullName: null));
 
     /// <inheritdoc/>
-    public IObservable<Unit> Vacuum()
-    {
-        return _disposed
+    public IObservable<Unit> Vacuum() =>
+        Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName)
-            : _initialized.SelectMany(async (_, _, _) =>
-            {
-                await Connection.CompactAsync().ConfigureAwait(false);
-                return Unit.Default;
-            });
-    }
+            : _initialized.Gate(Connection.Compact);
 
     /// <inheritdoc/>
     public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration)
@@ -696,17 +591,13 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentException($"'{nameof(key)}' cannot be null or whitespace.", nameof(key)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        var expiryValue = ToExpiryValue(absoluteExpiration);
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            await Connection.RunInTransactionAsync(tx => tx.SetExpiry(key, null, expiryValue)).ConfigureAwait(false);
-            return Unit.Default;
-        });
+        var expiry = absoluteExpiration;
+        return _initialized.Gate(() => Connection.SetExpiry(key, typeFullName: null, expiry));
     }
 
     /// <inheritdoc/>
@@ -722,17 +613,14 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        var expiryValue = ToExpiryValue(absoluteExpiration);
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            await Connection.RunInTransactionAsync(tx => tx.SetExpiry(key, type.FullName, expiryValue)).ConfigureAwait(false);
-            return Unit.Default;
-        });
+        var expiry = absoluteExpiration;
+        var typeName = type.FullName;
+        return _initialized.Gate(() => Connection.SetExpiry(key, typeName, expiry));
     }
 
     /// <inheritdoc/>
@@ -743,23 +631,17 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(keys)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        var expiryValue = ToExpiryValue(absoluteExpiration);
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            await Connection.RunInTransactionAsync(tx =>
-            {
-                foreach (var key in keys)
-                {
-                    tx.SetExpiry(key, null, expiryValue);
-                }
-            }).ConfigureAwait(false);
-            return Unit.Default;
-        });
+        var expiry = absoluteExpiration;
+        var keyList = MaterializeKeys(keys);
+        return _initialized.Gate(() =>
+            keyList.Select(k => Connection.SetExpiry(k, typeFullName: null, expiry))
+                .Concat()
+                .LastOrDefaultAsync());
     }
 
     /// <inheritdoc/>
@@ -775,23 +657,18 @@ public class SqliteBlobCache : IBlobCache
             return Observable.Throw<Unit>(new ArgumentNullException(nameof(type)));
         }
 
-        if (_disposed)
+        if (Volatile.Read(ref _disposed) != 0)
         {
             return IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<Unit>(ClassName);
         }
 
-        var expiryValue = ToExpiryValue(absoluteExpiration);
-        return _initialized.SelectMany(async (_, _, _) =>
-        {
-            await Connection.RunInTransactionAsync(tx =>
-            {
-                foreach (var key in keys)
-                {
-                    tx.SetExpiry(key, type.FullName, expiryValue);
-                }
-            }).ConfigureAwait(false);
-            return Unit.Default;
-        });
+        var expiry = absoluteExpiration;
+        var keyList = MaterializeKeys(keys);
+        var typeName = type.FullName;
+        return _initialized.Gate(() =>
+            keyList.Select(k => Connection.SetExpiry(k, typeName, expiry))
+                .Concat()
+                .LastOrDefaultAsync());
     }
 
     /// <inheritdoc/>
@@ -801,214 +678,145 @@ public class SqliteBlobCache : IBlobCache
         GC.SuppressFinalize(this);
     }
 
-    /// <inheritdoc/>
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-
-        Dispose(false);
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
-    /// Returns <paramref name="existing"/> when it is non-null, otherwise a freshly
-    /// constructed default <see cref="HttpService"/>. Used by tests that exercise the
-    /// lazy-init semantics of the <see cref="HttpService"/> property directly.
+    /// Converts an optional offset to UTC time.
     /// </summary>
-    /// <param name="existing">The currently cached <see cref="IHttpService"/>, or <see langword="null"/>.</param>
-    /// <returns>A non-null <see cref="IHttpService"/>.</returns>
-    internal static IHttpService GetOrCreateHttpService(IHttpService? existing) =>
-        existing ?? new HttpService();
-
-    /// <summary>
-    /// Converts an optional <see cref="DateTimeOffset"/> into the nullable
-    /// <see cref="DateTime"/> form consumed by the transaction layer.
-    /// </summary>
-    /// <param name="absoluteExpiration">The expiration, or <see langword="null"/> to clear it.</param>
-    /// <returns>The UTC <see cref="DateTime"/>, or <see langword="null"/>.</returns>
+    /// <param name="absoluteExpiration">The expiration, or null.</param>
+    /// <returns>The UTC time, or null.</returns>
     internal static DateTime? ToExpiryValue(DateTimeOffset? absoluteExpiration) =>
         absoluteExpiration?.UtcDateTime;
 
     /// <summary>
-    /// Reads a value from the legacy V10 <c>CacheElement</c> table via the
-    /// supplied <paramref name="connection"/>.
+    /// Reads a value from the legacy V10 <c>CacheElement</c> table.
     /// </summary>
-    /// <param name="connection">The Akavache SQLite connection to read through.</param>
-    /// <param name="key">The cache key to look up.</param>
-    /// <param name="now">The current time used for expiry checks.</param>
-    /// <param name="type">The type filter, or <see langword="null"/> to read untyped entries.</param>
-    /// <returns>The raw legacy bytes, or <see langword="null"/> when the key is absent.</returns>
-    internal static Task<byte[]?> TryGetLegacyValueAsync(IAkavacheConnection connection, string key, DateTimeOffset now, Type? type) =>
-        connection.TryReadLegacyV10ValueAsync(key, now, type);
+    /// <param name="connection">The Akavache SQLite connection.</param>
+    /// <param name="key">The cache key.</param>
+    /// <param name="now">Current time for expiry checks.</param>
+    /// <param name="type">Type filter.</param>
+    /// <returns>The raw legacy bytes, or <see langword="null"/>.</returns>
+    internal static IObservable<byte[]?> TryGetLegacyValue(IAkavacheConnection connection, string key, DateTimeOffset now, Type? type) =>
+        connection.TryReadLegacyV10Value(key, now, type);
 
     /// <summary>
-    /// Builds the initialization observable that creates the <c>CacheEntry</c>
-    /// table on <paramref name="connection"/> and completes once the schema is
-    /// ready.
+    /// Initializes the database schema.
     /// </summary>
-    /// <param name="connection">The Akavache SQLite connection to initialize.</param>
-    /// <param name="scheduler">The scheduler the subscription runs on.</param>
-    /// <returns>An observable that emits once and completes on successful initialization, or errors on failure.</returns>
-    internal static IObservable<Unit> InitializeDatabase(IAkavacheConnection connection, IScheduler scheduler)
+    /// <param name="connection">The Akavache SQLite connection.</param>
+    /// <param name="gate">The initialization signal.</param>
+    /// <param name="scheduler">The scheduler.</param>
+    internal static void InitializeDatabase(IAkavacheConnection connection, InitSignal gate, IScheduler scheduler) =>
+        connection.CreateSchema()
+            .SubscribeOn(scheduler)
+            .Subscribe(
+                onNext: static _ => { },
+                onError: gate.Fail,
+                onCompleted: gate.Complete);
+
+    /// <summary>
+    /// Materializes keys into a concrete list.
+    /// </summary>
+    /// <param name="keys">The key sequence.</param>
+    /// <returns>An read-only view of the keys.</returns>
+    internal static IReadOnlyList<string> MaterializeKeys(IEnumerable<string> keys)
     {
-        var obs = Observable.Create<Unit>(async (observer, _) =>
+        if (keys is IReadOnlyList<string> alreadyList)
         {
-            try
-            {
-                await connection.CreateTableAsync<CacheEntry>().ConfigureAwait(false);
-                observer.OnNext(Unit.Default);
-                observer.OnCompleted();
-            }
-            catch (Exception ex)
-            {
-                observer.OnError(ex);
-            }
-        });
+            return alreadyList;
+        }
 
-        var connected = obs.PublishLast();
-        connected.Connect();
+        if (keys is ICollection<string> collection)
+        {
+            var buffer = new string[collection.Count];
+            collection.CopyTo(buffer, 0);
+            return buffer;
+        }
 
-        return connected.SubscribeOn(scheduler);
+        return [.. keys];
     }
 
     /// <summary>
-    /// Reads a single value from the V11 <c>CacheEntry</c> table, falling back
-    /// to the legacy V10 <c>CacheElement</c> store, and finally throwing
-    /// <see cref="KeyNotFoundException"/> when neither store has the key.
+    /// Constructs a list of cache entry rows.
     /// </summary>
-    /// <remarks>
-    /// Shared by <see cref="Get(string)"/> and <see cref="Get(string, Type)"/>;
-    /// <paramref name="type"/> is <see langword="null"/> for the untyped overload
-    /// and a concrete type for the typed overload (which scopes the V11 lookup to
-    /// rows whose <c>TypeName</c> column matches <paramref name="type"/>'s full name).
-    /// Marked <c>internal</c> so unit tests can drive this method directly against
-    /// an <c>InMemoryAkavacheConnection</c> without going through the full
-    /// <see cref="Get(string)"/> observable plumbing.
-    /// </remarks>
-    /// <param name="key">The cache key to read.</param>
-    /// <param name="type">The optional type filter; <see langword="null"/> for untyped reads.</param>
-    /// <returns>The stored bytes for the key.</returns>
-    internal async Task<byte[]> ReadValueWithLegacyFallbackAsync(string key, Type? type)
+    /// <param name="keyValuePairs">The source key/value pairs.</param>
+    /// <param name="typeName">Optional type discriminator.</param>
+    /// <param name="createdAt">Creation timestamp.</param>
+    /// <param name="expiry">Optional absolute expiration.</param>
+    /// <returns>A materialized list of rows.</returns>
+    internal static List<CacheEntry> BuildCacheEntries(
+        IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
+        string? typeName,
+        DateTimeOffset createdAt,
+        DateTimeOffset? expiry)
     {
-        var time = DateTimeOffset.UtcNow;
+        var entries = new List<CacheEntry>(keyValuePairs is ICollection<KeyValuePair<string, byte[]>> c ? c.Count : 4);
+        foreach (var kvp in keyValuePairs)
+        {
+            entries.Add(new CacheEntry(kvp.Key, typeName, kvp.Value, createdAt, expiry));
+        }
 
-        var rows = type is null
-            ? await Connection.QueryAsync<CacheEntry>(x =>
-                    x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key)
-                .ConfigureAwait(false)
-            : await Connection.QueryAsync<CacheEntry>(x =>
-                    x.Id != null && (x.ExpiresAt == null || x.ExpiresAt > time) && x.Id == key && x.TypeName == type.FullName)
-                .ConfigureAwait(false);
-
-        return rows.FirstOrDefault()?.Value
-            ?? await TryGetLegacyValueAsync(Connection, key, time, type).ConfigureAwait(false)
-            ?? throw new KeyNotFoundException(
-                type is null
-                    ? $"The given key '{key}' was not present in the cache."
-                    : $"The given key '{key}' (type '{type.FullName}') was not present in the cache.");
+        return entries;
     }
 
     /// <summary>
-    /// This method is called immediately before writing any data to disk.
-    /// Override this in encrypting data stores in order to encrypt the
-    /// data.
+    /// Reads a single value with legacy fallback.
     /// </summary>
-    /// <param name="data">The byte data about to be written to disk.</param>
-    /// <param name="scheduler">The scheduler to use if an operation has
-    /// to be deferred. If the operation can be done immediately, use
-    /// Observable.Return and ignore this parameter.</param>
+    /// <param name="key">The cache key.</param>
+    /// <param name="type">Optional type filter.</param>
+    /// <returns>The stored bytes or errors if not found.</returns>
+    internal IObservable<byte[]> ReadValueWithLegacyFallback(string key, Type? type) =>
+        new ReadWithLegacyFallbackObservable(Connection, key, type);
+
+    /// <summary>
+    /// Shared constructor body. Validates arguments, assigns properties, and starts the
+    /// database initialization observable.
+    /// </summary>
+    /// <param name="connection">The database connection.</param>
+    /// <param name="serializer">The serializer.</param>
+    /// <param name="scheduler">The scheduler, or <see langword="null"/> for the default task-pool scheduler.</param>
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(Connection), nameof(Serializer), nameof(Scheduler))]
+    internal void Init(IAkavacheConnection connection, ISerializer serializer, IScheduler? scheduler)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(connection);
+        ArgumentExceptionHelper.ThrowIfNull(serializer);
+
+        Serializer = serializer;
+        Connection = connection;
+        Scheduler = scheduler ?? CacheDatabase.TaskpoolScheduler;
+        InitializeDatabase(Connection, _initialized, Scheduler);
+    }
+
+    /// <summary>
+    /// Hook for encrypting data before writing to disk.
+    /// </summary>
+    /// <param name="data">The byte data to encrypt.</param>
+    /// <param name="scheduler">The scheduler.</param>
     /// <returns>A Future result representing the encrypted data.</returns>
-    protected internal virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler) => _disposed
-        ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache")
-        : Observable.Return(data, scheduler);
+    protected internal virtual IObservable<byte[]> BeforeWriteToDiskFilter(byte[] data, IScheduler scheduler) =>
+        Volatile.Read(ref _disposed) != 0
+            ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<byte[]>("SqlitePersistentBlobCache")
+            : Observable.Return(data, scheduler);
 
     /// <summary>
-    /// Disposes of the async resources.
+    /// Releases the resources used by the instance.
     /// </summary>
-    /// <returns>The value task to monitor.</returns>
-    protected virtual async ValueTask DisposeAsyncCore()
-    {
-        // Ensure all pending operations are completed and data is persisted.
-        try
-        {
-            // Force a full checkpoint to flush all data to the main store. Crucial for
-            // multi-instance scenarios where one instance writes and another reads.
-            await Connection.CheckpointAsync(CheckpointMode.Full).ConfigureAwait(false);
-        }
-        catch
-        {
-            // If checkpoint fails, fall back to compaction to ensure data persistence.
-            try
-            {
-                await Connection.CompactAsync().ConfigureAwait(false);
-            }
-            catch
-            {
-                // If both fail, we'll rely on the normal connection close.
-            }
-        }
-
-        // Release auxiliary resources (e.g. SQLite -wal/-shm files) as soon as possible.
-        try
-        {
-            await Connection.ReleaseAuxiliaryResourcesAsync().ConfigureAwait(false);
-        }
-        catch
-        {
-        }
-
-        // Final close
-        try
-        {
-            await Connection.CloseAsync().ConfigureAwait(false);
-        }
-        catch
-        {
-        }
-
-        // Small delay to allow OS to release file handles on Windows
-        await Task.Delay(50).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Disposes the object.
-    /// </summary>
-    /// <param name="isDisposing">If being called via the dispose method.</param>
+    /// <param name="isDisposing">true to release managed resources.</param>
     protected virtual void Dispose(bool isDisposing)
     {
-        if (_disposed)
+        if (!DisposeHelper.TryClaimDispose(isDisposing, ref _disposed))
         {
             return;
         }
 
-        if (isDisposing)
+        try
         {
-            // Best-effort synchronous cleanup for cases where async dispose isn't used.
-            try
-            {
-                Connection.CheckpointAsync(CheckpointMode.Truncate).ConfigureAwait(false).GetAwaiter().GetResult();
-            }
-            catch
-            {
-            }
-
-            try
-            {
-                Connection.ReleaseAuxiliaryResourcesAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            }
-            catch
-            {
-            }
-
-            try
-            {
-                Connection.CloseAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            }
-            catch
-            {
-            }
+            Connection.Checkpoint(CheckpointMode.Full).Subscribe(
+                static _ => { },
+                static _ => { });
+        }
+        catch
+        {
+            // Connection may already be partially torn down.
         }
 
-        _disposed = true;
+        Connection.Dispose();
     }
 }

@@ -57,7 +57,7 @@ internal static class BinaryHelpers
 #else
         BitConverter.IsLittleEndian
             ? BitConverter.ToInt64(data, offset)
-            : ((long)data[offset]
+            : (data[offset]
                 | ((long)data[offset + 1] << 8)
                 | ((long)data[offset + 2] << 16)
                 | ((long)data[offset + 3] << 24)
@@ -88,9 +88,8 @@ internal static class BinaryHelpers
         return !trimmed.IsEmpty && (trimmed[0] is (byte)'{' or (byte)'[');
 #else
         // Scalar fallback for net462 / netstandard2.0 targets without span TrimStart(span).
-        for (var i = 0; i < data.Length; i++)
+        foreach (var b in data)
         {
-            var b = data[i];
             if (b is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r')
             {
                 continue;

@@ -5,23 +5,24 @@
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
-    <SqlitePclRawVersion>2.1.11</SqlitePclRawVersion>
-    <SqliteNetVersion>1.9.172</SqliteNetVersion>
+    <MicrosoftExtensionsVersion>10.0.6</MicrosoftExtensionsVersion>
+    <SqlitePclRawVersion>3.0.2</SqlitePclRawVersion>
+    <Sqlite3MultipleCiphersVersion>2.3.3</Sqlite3MultipleCiphersVersion>
     <SplatVersion>19.3.1</SplatVersion>
     <ReactiveUIVersion>23.2.1</ReactiveUIVersion>
     <MauiVersion>10.0.51</MauiVersion>
-    <TUnitVersion>1.32.0</TUnitVersion>
+    <TUnitVersion>1.33.0</TUnitVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <PackageVersion Include="stylecop.analyzers" Version="1.2.0-beta.556" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
+    <PackageVersion Include="Blazor.Common.Analyzers" Version="1.0.28" />
   </ItemGroup>
   <!-- Non-test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.202" />
   </ItemGroup>
   <!-- Test projects only -->
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
@@ -38,23 +39,17 @@
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Splat.Builder" Version="$(SplatVersion)" />
     <PackageVersion Include="System.Reactive" Version="6.1.0" />
-    <PackageVersion Include="sqlite-net-pcl" Version="$(SqliteNetVersion)" />
-    <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="$(SqlitePclRawVersion)" />
+    <PackageVersion Include="SQLitePCLRaw.core" Version="$(SqlitePclRawVersion)" />
+    <PackageVersion Include="SQLite3MC.PCLRaw.bundle" Version="$(Sqlite3MultipleCiphersVersion)" />
     <PackageVersion Include="System.Text.Json" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Newtonsoft.Json.Bson" Version="1.0.3" />
-    <PackageVersion Include="sqlite-net-sqlcipher" Version="$(SqliteNetVersion)" />
-    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="$(SqlitePclRawVersion)" />
     <PackageVersion Include="Splat.Drawing" Version="$(SplatVersion)" />
   </ItemGroup>
   <!-- .NET Framework-specific packages -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net481'">
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
-  </ItemGroup>
-  <!-- Test-specific packages -->
-  <ItemGroup>
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlcipher" Version="$(SqlitePclRawVersion)" />
-    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="$(SqlitePclRawVersion)" />
+    <PackageVersion Include="System.Memory" Version="4.6.3" />
   </ItemGroup>
   <!-- Benchmark packages -->
   <ItemGroup>

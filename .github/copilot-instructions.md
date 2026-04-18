@@ -81,7 +81,11 @@ Always reference these instructions first and fallback to search or bash command
 - **Linux/macOS**: Test execution with explicit .NET 9 targeting:
   ```bash
   cd src
-  dotnet test Akavache.Tests/Akavache.Tests.csproj -p:TargetFramework=net9.0
+  dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj
+  dotnet test --project tests/Akavache.Sqlite3.Tests/Akavache.Sqlite3.Tests.csproj
+  dotnet test --project tests/Akavache.EncryptedSqlite3.Tests/Akavache.EncryptedSqlite3.Tests.csproj
+  dotnet test --project tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj
+  dotnet test --project tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj
   ```
   Test time: **3-10 minutes**. Works reliably with proper setup.
 
@@ -215,9 +219,13 @@ Always reference these instructions first and fallback to search or bash command
 - **Samples/README.md** - Comprehensive usage examples and patterns
 
 ### Testing and Benchmarks
-- **Akavache.Tests** - Main test suite (168 C# files, comprehensive coverage)
+- **Akavache.Core.Tests** - Core library unit tests (InMemoryBlobCache, CacheEntry, helpers, observables)
+- **Akavache.Sqlite3.Tests** - SQLite cache tests (blob cache, builder extensions, backward compatibility)
+- **Akavache.EncryptedSqlite3.Tests** - Encrypted SQLite cache tests
+- **Akavache.Integration.Tests** - Cross-package integration tests (serializers, HTTP, Drawing, builder interop)
 - **Akavache.Settings.Tests** - Settings-specific tests
-- **Akavache.Benchmarks** - V11 performance benchmarks
+- **tests/shared/** - Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each test assembly via `<Compile Include>`
+- **Akavache.Benchmarks** - V12 performance benchmarks
 - **Akavache.Benchmarks.V10** - V10 comparison benchmarks
 
 ## Common Development Tasks

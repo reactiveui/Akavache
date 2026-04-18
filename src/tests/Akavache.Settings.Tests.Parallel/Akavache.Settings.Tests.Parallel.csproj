@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheBaseTargets)</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\shared\Helpers\ObservableTestExtensions.cs" Link="Helpers\%(Filename)%(Extension)" />
+    <Compile Include="..\shared\Helpers\Utility.cs" Link="Helpers\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Akavache.Settings.Tests\Mocks\*.cs" Link="Mocks\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Settings.Tests\TestHelper.cs" Link="TestHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
+    <ProjectReference Include="..\..\Akavache.Settings\Akavache.Settings.csproj" />
+  </ItemGroup>
+
+</Project>

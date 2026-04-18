@@ -137,9 +137,9 @@ public partial class MainViewModel : ReactiveObject, IActivatableViewModel
     public bool IsLoading => _isLoading.Value;
 
     /// <summary>
-    /// Gets the current todo statistics.
+    /// Gets the current statistics.
     /// </summary>
-    public TodoStats? TodoStats => _todoStats?.Value ?? default;
+    public TodoStats? TodoStats => _todoStats.Value;
 
     /// <summary>
     /// Gets the current cache information.

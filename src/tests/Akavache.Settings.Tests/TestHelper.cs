@@ -122,7 +122,7 @@ internal static class TestHelper
             {
                 try
                 {
-                    await s.DisposeAsync().ConfigureAwait(false);
+                    s.Dispose();
                 }
                 catch (Exception ex)
                 {

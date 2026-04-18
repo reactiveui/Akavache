@@ -44,12 +44,9 @@ public static class GlobalTestHooks
     /// <returns>A task representing the asynchronous reset operation.</returns>
     private static async Task ResetGlobalStateAsync()
     {
-        await CacheDatabase.ResetForTestsAsync().ConfigureAwait(false);
+        await CacheDatabase.ResetForTests();
 
         RequestCache.Clear();
-
-        AkavacheBuilder.SettingsStores = [];
-        AkavacheBuilder.BlobCaches = [];
 
         UniversalSerializer.ResetCaches();
 
