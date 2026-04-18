@@ -306,7 +306,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionGetMissingShouldThrowKeyNotFound()
     {
         using InMemoryAkavacheConnection connection = new();
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
 
         var error = cache.Get("missing").SubscribeGetError();
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
@@ -324,7 +324,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionFlushSwallowsCheckpointFailure()
     {
         using InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
-        EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         try
         {
             cache.Flush().SubscribeAndComplete();
