@@ -12,7 +12,7 @@ using AkavacheTodoWpf.Services;
 using AkavacheTodoWpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Splat.Builder;
+using ReactiveUI.Builder;
 
 namespace AkavacheTodoWpf;
 
@@ -113,13 +113,15 @@ public partial class App
     /// Use the builder pattern to configure Akavache with SQLite persistence.
     /// </summary>
     /// <summary>Configures Akavache using the builder pattern with SQLite persistence.</summary>
-    private static void ConfigureAkavache() => AppBuilder.CreateSplatBuilder()
+    private static void ConfigureAkavache() => RxAppBuilder.CreateReactiveUIBuilder()
+            .WithWpf()
             .WithAkavacheCacheDatabase<SystemJsonSerializer>(
                 static builder => builder
                     .WithSqliteProvider()
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
                     .WithSqliteDefaults(),
-                "AkavacheTodoWpf");
+                "AkavacheTodoWpf")
+            .BuildApp();
 
     /// <summary>Creates the host builder used to register application services.</summary>
     /// <returns>The configured <see cref="IHostBuilder"/>.</returns>
