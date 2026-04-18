@@ -72,7 +72,7 @@ public abstract class BlobCacheTestsBase : IDisposable
             try
             {
                 var result = fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance)
-                    .Timeout(TimeSpan.FromSeconds(5)).SubscribeGetValue();
+                    .WaitForValue(TimeSpan.FromSeconds(5));
 
                 await Assert.That(result).IsNotNull();
                 using (Assert.Multiple())
@@ -85,7 +85,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
                 var initialFetchCount = fetchCount;
                 result = fixture.GetOrFetchObject("Test", fetcher).ObserveOn(ImmediateScheduler.Instance)
-                    .Timeout(TimeSpan.FromSeconds(5)).SubscribeGetValue();
+                    .WaitForValue(TimeSpan.FromSeconds(5));
                 await Assert.That(result).IsNotNull();
                 using (Assert.Multiple())
                 {
@@ -143,8 +143,7 @@ public abstract class BlobCacheTestsBase : IDisposable
 
             var result = fixture.GetAndFetchLatest("Test", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Timeout(TimeSpan.FromSeconds(5))
-                .SubscribeGetValue();
+                .WaitForValue(TimeSpan.FromSeconds(5));
 
             using (Assert.Multiple())
             {
@@ -159,7 +158,6 @@ public abstract class BlobCacheTestsBase : IDisposable
             var initialFetchCount = fetchCount;
             await fixture.GetAndFetchLatest("Test", fetcher)
                 .ObserveOn(ImmediateScheduler.Instance)
-                .Timeout(TimeSpan.FromSeconds(5))
                 .Take(2) // Take at most 2 values (cached + latest)
                 .ForEachAsync(results.Add);
 

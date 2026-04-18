@@ -108,7 +108,7 @@ public class AotCompatibilityTests
         using (Utility.WithEmptyDirectory(out _))
         {
             using InMemoryBlobCache cache =
-                new(new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
+                new(ImmediateScheduler.Instance, new SystemJsonSerializer()) { ForcedDateTimeKind = DateTimeKind.Utc };
 
             DateTime localDateTime = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
 

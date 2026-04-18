@@ -17,11 +17,6 @@ namespace Akavache.Integration.Tests;
 public class ImageCacheExtensionsTests
 {
     /// <summary>
-    /// Default timeout applied to observable operations in this test fixture.
-    /// </summary>
-    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
-
-    /// <summary>
     /// Tests that LoadImages throws ArgumentNullException when cache is null.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
@@ -339,7 +334,6 @@ public class ImageCacheExtensionsTests
 
             // Act - Try to load non-existent image
             var bitmap = cache.LoadImageWithFallback("nonexistent_key", fallbackBytes)
-                .Timeout(TestTimeout)
                 .SubscribeGetValue();
 
             // Assert
@@ -375,7 +369,6 @@ public class ImageCacheExtensionsTests
 
             // Act - Any URL will do since HTTP service throws immediately
             var bitmap = cache.LoadImageFromUrlWithFallback("http://example.invalid/image.png", fallbackBytes)
-                .Timeout(TestTimeout)
                 .SubscribeGetValue();
 
             // Assert
@@ -397,7 +390,6 @@ public class ImageCacheExtensionsTests
 
         // Act & Assert
         var error = cache.GetImageSize("nonexistent_image")
-            .Timeout(TestTimeout)
             .SubscribeGetError();
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
     }
@@ -424,15 +416,13 @@ public class ImageCacheExtensionsTests
         {
             // Insert valid image data
             cache.Insert(key, validImageData)
-                .Timeout(TestTimeout)
-                .Subscribe();
+                .SubscribeAndComplete();
 
             // Set up mock bitmap loader for testing
             SetupMockBitmapLoader();
 
             // Act
             var size = cache.GetImageSize(key)
-                .Timeout(TestTimeout)
                 .SubscribeGetValue();
 
             using (Assert.Multiple())
@@ -457,23 +447,18 @@ public class ImageCacheExtensionsTests
 
         // Insert some test data
         cache.Insert("image_1", [1, 2, 3])
-            .Timeout(TestTimeout)
-            .Subscribe();
+            .SubscribeAndComplete();
         cache.Insert("image_2", [4, 5, 6])
-            .Timeout(TestTimeout)
-            .Subscribe();
+            .SubscribeAndComplete();
         cache.Insert("other_data", [7, 8, 9])
-            .Timeout(TestTimeout)
-            .Subscribe();
+            .SubscribeAndComplete();
 
         // Act - Clear only keys starting with "image_"
         cache.ClearImageCache(static key => key.StartsWith("image_"))
-            .Timeout(TestTimeout)
             .SubscribeAndComplete();
 
         // Assert - Only "other_data" should remain
         var remainingKeys = cache.GetAllKeys().ToList()
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
         await Assert.That(remainingKeys).Count().IsEqualTo(1);
         await Assert.That(remainingKeys).Contains("other_data");
@@ -492,17 +477,14 @@ public class ImageCacheExtensionsTests
 
         // Insert some test data
         cache.Insert("test_key", [1, 2, 3])
-            .Timeout(TestTimeout)
-            .Subscribe();
+            .SubscribeAndComplete();
 
         // Act - Use pattern that matches nothing
         cache.ClearImageCache(static key => key.StartsWith("nonexistent_"))
-            .Timeout(TestTimeout)
             .SubscribeAndComplete();
 
         // Assert - All data should remain
         var remainingKeys = cache.GetAllKeys().ToList()
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
         await Assert.That(remainingKeys).Count().IsEqualTo(1);
         await Assert.That(remainingKeys).Contains("test_key");
@@ -522,7 +504,6 @@ public class ImageCacheExtensionsTests
 
         // Act
         var results = cache.LoadImages(keys, 100f, 200f).ToList()
-            .Timeout(TestTimeout)
             .WaitForValue();
 
         // Assert - Should be empty due to missing keys being filtered out
@@ -544,7 +525,6 @@ public class ImageCacheExtensionsTests
 
         // Act
         var result = cache.PreloadImagesFromUrls(urls, expiration)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert - Should complete gracefully
@@ -567,8 +547,8 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("img1", imageData).Timeout(TestTimeout).Subscribe();
-        cache.Insert("img2", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("img1", imageData).SubscribeAndComplete();
+        cache.Insert("img2", imageData).SubscribeAndComplete();
 
         var originalLoader = GetCurrentBitmapLoader();
         try
@@ -577,7 +557,6 @@ public class ImageCacheExtensionsTests
 
             // Act
             var results = cache.LoadImages(["img1", "img2"]).ToList()
-                .Timeout(TestTimeout)
                 .WaitForValue();
 
             // Assert
@@ -613,7 +592,6 @@ public class ImageCacheExtensionsTests
 
         // Act
         var result = cache.PreloadImagesFromUrls(urls)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert
@@ -636,7 +614,7 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("source", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("source", imageData).SubscribeAndComplete();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -647,11 +625,10 @@ public class ImageCacheExtensionsTests
 
                 // Act
                 cache.CreateAndCacheThumbnail("source", "thumb", 50f, 50f)
-                    .Timeout(TestTimeout)
-                    .Subscribe();
+                    .SubscribeAndComplete();
 
                 // Assert - Thumbnail key should now exist in the cache
-                var keys = cache.GetAllKeys().ToList().Timeout(TestTimeout).SubscribeGetValue();
+                var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(keys).Contains("thumb");
             }
             catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") ||
@@ -678,7 +655,7 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("source2", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("source2", imageData).SubscribeAndComplete();
         var expiration = DateTimeOffset.Now.AddHours(1);
 
         var originalLoader = GetCurrentBitmapLoader();
@@ -688,11 +665,10 @@ public class ImageCacheExtensionsTests
 
             // Act
             cache.CreateAndCacheThumbnail("source2", "thumb2", 25f, 25f, expiration)
-                .Timeout(TestTimeout)
                 .SubscribeAndComplete();
 
             // Assert
-            var keys = cache.GetAllKeys().ToList().Timeout(TestTimeout).SubscribeGetValue();
+            var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys).Contains("thumb2");
         }
     }
@@ -713,7 +689,7 @@ public class ImageCacheExtensionsTests
             validImageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("null_bitmap_key", validImageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("null_bitmap_key", validImageData).SubscribeAndComplete();
 
         var originalLoader = GetCurrentBitmapLoader();
         try
@@ -722,7 +698,6 @@ public class ImageCacheExtensionsTests
 
             // Act & Assert
             var error = cache.GetImageSize("null_bitmap_key")
-                .Timeout(TestTimeout)
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
@@ -760,7 +735,6 @@ public class ImageCacheExtensionsTests
 
             // Act & Assert - missing key forces fallback path, then NullBitmapLoader causes IOException
             var error = cache.LoadImageWithFallback("missing", fallbackBytes)
-                .Timeout(TestTimeout)
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<IOException>();
         }
@@ -800,7 +774,6 @@ public class ImageCacheExtensionsTests
         {
             // Act
             var results = cache.LoadImages(["cover_img_a", "cover_img_b"]).ToList()
-                .Timeout(TestTimeout)
                 .WaitForValue();
 
             // Assert
@@ -832,7 +805,6 @@ public class ImageCacheExtensionsTests
 
         // Act
         var result = cache.PreloadImagesFromUrls(urls)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert
@@ -855,7 +827,7 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("thumbnail_source_direct", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("thumbnail_source_direct", imageData).SubscribeAndComplete();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new MockBitmapLoader();
@@ -863,11 +835,10 @@ public class ImageCacheExtensionsTests
         {
             // Act
             cache.CreateAndCacheThumbnail("thumbnail_source_direct", "thumbnail_dest_direct", 32f, 32f)
-                .Timeout(TestTimeout)
                 .SubscribeAndComplete();
 
             // Assert
-            var keys = cache.GetAllKeys().ToList().Timeout(TestTimeout).SubscribeGetValue();
+            var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys).Contains("thumbnail_dest_direct");
         }
         finally
@@ -892,7 +863,7 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("thumbnail_source_exp", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("thumbnail_source_exp", imageData).SubscribeAndComplete();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new MockBitmapLoader();
@@ -904,11 +875,11 @@ public class ImageCacheExtensionsTests
                 "thumbnail_dest_exp",
                 16f,
                 16f,
-                DateTimeOffset.Now.AddMinutes(5)).Timeout(TestTimeout)
-                .Subscribe();
+                DateTimeOffset.Now.AddMinutes(5))
+                .SubscribeAndComplete();
 
             // Assert
-            var keys = cache.GetAllKeys().ToList().Timeout(TestTimeout).SubscribeGetValue();
+            var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys).Contains("thumbnail_dest_exp");
         }
         finally
@@ -933,7 +904,7 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("size_valid_key", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("size_valid_key", imageData).SubscribeAndComplete();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new MockBitmapLoader();
@@ -941,7 +912,6 @@ public class ImageCacheExtensionsTests
         {
             // Act
             var size = cache.GetImageSize("size_valid_key")
-                .Timeout(TestTimeout)
                 .SubscribeGetValue();
 
             // Assert
@@ -970,7 +940,7 @@ public class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % 256);
         }
 
-        cache.Insert("size_null_bitmap_key", imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert("size_null_bitmap_key", imageData).SubscribeAndComplete();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new NullBitmapLoader();
@@ -978,7 +948,6 @@ public class ImageCacheExtensionsTests
         {
             // Act & Assert
             var error = cache.GetImageSize("size_null_bitmap_key")
-                .Timeout(TestTimeout)
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
@@ -1010,7 +979,6 @@ public class ImageCacheExtensionsTests
         {
             // Act & Assert - missing key forces fallback, NullBitmapLoader triggers the IOException
             var error = cache.LoadImageWithFallback("missing_fallback_key", fallbackBytes)
-                .Timeout(TestTimeout)
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<IOException>();
         }
@@ -1042,7 +1010,6 @@ public class ImageCacheExtensionsTests
         {
             // Act - missing key forces fallback, MockBitmapLoader returns a valid bitmap
             var bitmap = cache.LoadImageWithFallback("missing_fallback_success_key", fallbackBytes)
-                .Timeout(TestTimeout)
                 .SubscribeGetValue();
 
             // Assert

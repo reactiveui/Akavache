@@ -16,9 +16,6 @@ namespace Akavache.Integration.Tests;
 [Category("Akavache")]
 public class BitmapImageExtensionsTests
 {
-    /// <summary>The default timeout applied to observable-based test operations.</summary>
-    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
-
     /// <summary>The bitmap loader captured prior to each test so it can be restored during teardown.</summary>
     private IBitmapLoader? _originalLoader;
 
@@ -279,7 +276,6 @@ public class BitmapImageExtensionsTests
 
         // Act
         var result = BitmapImageExtensions.ThrowOnBadImageBuffer(validImageData)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert
@@ -345,12 +341,10 @@ public class BitmapImageExtensionsTests
 
         // Act - Save image (should serialize the bitmap data)
         cache.SaveImage(key, mockBitmap)
-            .Timeout(TestTimeout)
             .SubscribeAndComplete();
 
         // Act - Load image (should deserialize and recreate bitmap)
         var loadedBitmap = cache.LoadImage(key)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert
@@ -376,7 +370,6 @@ public class BitmapImageExtensionsTests
 
         // Act
         var bytes = mockBitmap.ImageToBytes()
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert
@@ -410,7 +403,6 @@ public class BitmapImageExtensionsTests
         {
             // Act
             var result = BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
-                .Timeout(TestTimeout)
                 .SubscribeGetValue();
 
             // Assert
@@ -420,7 +412,6 @@ public class BitmapImageExtensionsTests
         {
             // Act & Assert
             var error = BitmapImageExtensions.ThrowOnBadImageBuffer(buffer)
-                .Timeout(TestTimeout)
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
@@ -445,12 +436,10 @@ public class BitmapImageExtensionsTests
 
         // Insert valid image data
         cache.Insert(key, validImageData)
-            .Timeout(TestTimeout)
             .SubscribeAndComplete();
 
         // Act - Load with dimensions
         var loadedBitmap = cache.LoadImage(key, 100f, 200f)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         // Assert
@@ -472,7 +461,6 @@ public class BitmapImageExtensionsTests
 
         // Act
         cache.SaveImage(key, mockBitmap, expiration)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
     }
 
@@ -493,9 +481,9 @@ public class BitmapImageExtensionsTests
         var imageData = CreateValidImageBytes();
 
         // Seed cache with the URL as the key — DownloadUrl(string url) uses `url` as key.
-        cache.Insert(url, imageData).Timeout(TestTimeout).Subscribe();
+        cache.Insert(url, imageData).SubscribeAndComplete();
 
-        var loaded = cache.LoadImageFromUrl(url).Timeout(TestTimeout).SubscribeGetValue();
+        var loaded = cache.LoadImageFromUrl(url).SubscribeGetValue();
 
         await Assert.That(loaded).IsNotNull();
     }
@@ -513,9 +501,9 @@ public class BitmapImageExtensionsTests
         var imageData = CreateValidImageBytes();
 
         // HttpService.DownloadUrl(Uri) uses url.ToString() as the cache key.
-        cache.Insert(uri.ToString(), imageData).Timeout(TestTimeout).SubscribeAndComplete();
+        cache.Insert(uri.ToString(), imageData).SubscribeAndComplete();
 
-        var loaded = cache.LoadImageFromUrl(uri).Timeout(TestTimeout).SubscribeGetValue();
+        var loaded = cache.LoadImageFromUrl(uri).SubscribeGetValue();
 
         await Assert.That(loaded).IsNotNull();
     }
@@ -537,9 +525,9 @@ public class BitmapImageExtensionsTests
         const string url = "http://example.com/keyed_string_url.png";
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(key, imageData).Timeout(TestTimeout).SubscribeAndComplete();
+        cache.Insert(key, imageData).SubscribeAndComplete();
 
-        var loaded = cache.LoadImageFromUrl(key, url).Timeout(TestTimeout).SubscribeGetValue();
+        var loaded = cache.LoadImageFromUrl(key, url).SubscribeGetValue();
 
         await Assert.That(loaded).IsNotNull();
     }
@@ -557,9 +545,9 @@ public class BitmapImageExtensionsTests
         Uri uri = new("http://example.com/keyed_uri.png");
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(key, imageData).Timeout(TestTimeout).SubscribeAndComplete();
+        cache.Insert(key, imageData).SubscribeAndComplete();
 
-        var loaded = cache.LoadImageFromUrl(key, uri).Timeout(TestTimeout).SubscribeGetValue();
+        var loaded = cache.LoadImageFromUrl(key, uri).SubscribeGetValue();
 
         await Assert.That(loaded).IsNotNull();
     }
@@ -580,10 +568,9 @@ public class BitmapImageExtensionsTests
         const string url = "http://example.com/dimensioned.png";
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(url, imageData).Timeout(TestTimeout).SubscribeAndComplete();
+        cache.Insert(url, imageData).SubscribeAndComplete();
 
         var loaded = cache.LoadImageFromUrl(url, fetchAlways: false, desiredWidth: 320f, desiredHeight: 240f)
-            .Timeout(TestTimeout)
             .SubscribeGetValue();
 
         await Assert.That(loaded).IsNotNull();
@@ -603,7 +590,7 @@ public class BitmapImageExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "null_bitmap_key";
 
-        cache.Insert(key, CreateValidImageBytes()).Timeout(TestTimeout).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
 
         var error = cache.LoadImage(key).SubscribeGetError();
         await Assert.That(error).IsTypeOf<IOException>();
