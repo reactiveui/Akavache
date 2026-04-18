@@ -373,7 +373,7 @@ public class RequestCacheTests
         {
             var key = $"memory_test_{i}";
             var currentIndex = i;
-            var result = RequestCache.GetOrCreateRequest(key, () => Observable.Return(currentIndex)).SubscribeGetValue();
+            RequestCache.GetOrCreateRequest(key, () => Observable.Return(currentIndex)).SubscribeGetValue();
         }
 
         // Clear to free memory

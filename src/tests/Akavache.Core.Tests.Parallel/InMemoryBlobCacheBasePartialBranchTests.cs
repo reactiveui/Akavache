@@ -130,6 +130,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
 
         // A Select() projection is IEnumerable but not ICollection, so the
         // pattern match `keyValuePairs is ICollection { Count: 0 }` is false.
+        // .Select(x => x) intentionally wraps the array in a non-ICollection IEnumerable to bypass the Count guard.
         var source = new[] { new KeyValuePair<string, byte[]>("k1", [1, 2]) }
             .Select(x => x);
 
@@ -151,6 +152,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         SystemJsonSerializer serializer = new();
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
+        // .Select(x => x) intentionally wraps the array in a non-ICollection IEnumerable to bypass the Count guard.
         var source = new[] { new KeyValuePair<string, byte[]>("k1", [1, 2]) }
             .Select(x => x);
 

@@ -298,7 +298,7 @@ public class IBlobCacheInterfaceTests
         // GetCreatedAt may not always throw for null - InMemoryBlobCache might handle this differently
         try
         {
-            var createdAtResult = cache.GetCreatedAt((string)null!).SubscribeGetValue();
+            cache.GetCreatedAt((string)null!).SubscribeGetValue();
 
             // If it doesn't throw, that's also acceptable for some cache implementations
         }
@@ -320,7 +320,7 @@ public class IBlobCacheInterfaceTests
             cache.Insert(string.Empty, [1, 2, 3]).SubscribeAndComplete();
 
             // If it succeeds, that's also acceptable for some cache implementations
-            var emptyKeyResult = cache.Get(string.Empty).SubscribeGetValue();
+            cache.Get(string.Empty).SubscribeGetValue();
         }
         catch (ArgumentException)
         {
@@ -336,7 +336,7 @@ public class IBlobCacheInterfaceTests
             // Test whitespace string - similar flexibility
             cache.Insert("   ", [1, 2, 3]).SubscribeAndComplete();
 
-            var whitespaceResult = cache.Get("   ").SubscribeGetValue();
+            cache.Get("   ").SubscribeGetValue();
         }
         catch (ArgumentException)
         {

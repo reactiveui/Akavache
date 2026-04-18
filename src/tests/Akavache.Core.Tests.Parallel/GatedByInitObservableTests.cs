@@ -490,8 +490,8 @@ public class GatedByInitObservableTests
         var signal = new InitSignal();
         var expected = new InvalidOperationException("race-fail-error");
         Exception? caught = null;
-        var subscribeStarted = new ManualResetEventSlim(false);
-        var signalFailed = new ManualResetEventSlim(false);
+        using var subscribeStarted = new ManualResetEventSlim(false);
+        using var signalFailed = new ManualResetEventSlim(false);
 
         // We can't perfectly time the race, but we can test the SubscribeAfterPark
         // error path by setting up a scenario where TryPark returns false with error.
@@ -588,7 +588,7 @@ public class GatedByInitObservableTests
             var signal = new InitSignal();
             var expected = new InvalidOperationException("race-error-" + i);
             Exception? caught = null;
-            var barrier = new ManualResetEventSlim(false);
+            using var barrier = new ManualResetEventSlim(false);
 
             // Start a thread that fails the signal as soon as the barrier is released.
             var failThread = new Thread(() =>
@@ -731,7 +731,7 @@ public class GatedByInitObservableTests
     [Test]
     internal async Task HandleParkResult_Parked_ReturnsInner()
     {
-        var inner = new System.Reactive.Disposables.SingleAssignmentDisposable();
+        using var inner = new System.Reactive.Disposables.SingleAssignmentDisposable();
         var observer = System.Reactive.Observer.Create<int>(_ => { });
 
         var result = GatedByInitObservable<int>.HandleParkResult(
