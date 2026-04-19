@@ -75,7 +75,8 @@ public class SystemJsonSerializer : ISerializer
     /// Gets the effective JsonSerializerOptions for this serializer.
     /// </summary>
     /// <returns>The configured JsonSerializerOptions.</returns>
-    internal JsonSerializerOptions GetEffectiveOptions()
+    [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "This is deliberately a method to allow for customization and extension.")]
+    public JsonSerializerOptions GetEffectiveOptions()
     {
         var options = Options ?? new JsonSerializerOptions();
 

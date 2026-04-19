@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using Akavache.Settings;
 
 namespace Akavache;
 
@@ -37,7 +38,7 @@ public interface IAkavacheInstance
     /// <summary>
     /// Gets or sets the settings cache path.
     /// </summary>
-    string? SettingsCachePath { get; internal set; }
+    string? SettingsCachePath { get; set; }
 
     /// <summary>
     /// Gets the short name of the executing assembly.
@@ -81,11 +82,6 @@ public interface IAkavacheInstance
     IBlobCache? UserAccount { get; }
 
     /// <summary>
-    /// Gets or sets the HTTP service for web-based cache operations.
-    /// </summary>
-    IHttpService? HttpService { get; set; }
-
-    /// <summary>
     /// Gets the serializer used for object serialization and deserialization.
     /// </summary>
     ISerializer? Serializer { get; }
@@ -100,4 +96,22 @@ public interface IAkavacheInstance
     /// Gets the name of the serializer type.
     /// </summary>
     string? SerializerTypeName { get; }
+
+    /// <summary>
+    /// Gets the per-instance registry of named blob caches — this is where
+    /// <c>SettingsBase</c> looks up its backing cache and where settings-store
+    /// builder extensions write new caches. Instance-scoped so every Akavache
+    /// instance owns its own registry, which is the foundation for running tests in
+    /// parallel without cross-contamination and for hosting multiple independent
+    /// Akavache configurations side-by-side in a single process.
+    /// </summary>
+    IDictionary<string, IBlobCache> BlobCaches { get; }
+
+    /// <summary>
+    /// Gets the per-instance registry of named settings stores — the typed
+    /// <see cref="ISettingsStorage"/> wrappers created by <c>WithSettingsStore</c>
+    /// and <c>GetSettingsStore</c>. Instance-scoped for the same reasons as
+    /// <see cref="BlobCaches"/>.
+    /// </summary>
+    IDictionary<string, ISettingsStorage> SettingsStores { get; }
 }

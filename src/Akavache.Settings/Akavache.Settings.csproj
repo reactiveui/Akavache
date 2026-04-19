@@ -10,13 +10,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
     <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.EncryptedSqlite3\Akavache.EncryptedSqlite3.csproj" />
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+  </ItemGroup>
+
+  <!-- Shared internals from Akavache.Core (see Akavache.Sqlite3.csproj for rationale). -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecurityUtilities.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\*.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

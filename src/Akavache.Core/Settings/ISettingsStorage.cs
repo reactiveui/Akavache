@@ -12,16 +12,15 @@ namespace Akavache.Settings;
 /// </summary>
 /// <seealso cref="INotifyPropertyChanged" />
 /// <seealso cref="IDisposable" />
-/// <seealso cref="IAsyncDisposable" />
-public interface ISettingsStorage : INotifyPropertyChanged, IDisposable, IAsyncDisposable
+public interface ISettingsStorage : INotifyPropertyChanged, IDisposable
 {
     /// <summary>
     /// Loads all settings in this storage into the internal cache, initializing missing values with their defaults.
     /// While calling this method is optional, it is useful for applications with many settings where you want to
     /// load all settings at startup rather than loading them individually on first access.
     /// </summary>
-    /// <returns>A task that represents the asynchronous initialization operation.</returns>
+    /// <returns>A one-shot observable that completes once every property's cold load from disk has finished.</returns>
     [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
     [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-    Task InitializeAsync();
+    IObservable<Unit> Initialize();
 }

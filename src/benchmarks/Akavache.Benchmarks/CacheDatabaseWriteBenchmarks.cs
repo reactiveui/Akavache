@@ -2,12 +2,11 @@ using System;
 using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-
+using Akavache.Sqlite3;
+using Akavache.SystemTextJson;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
-using Akavache.SystemTextJson;
-using Akavache.Sqlite3;
 
 namespace Akavache.Benchmarks;
 

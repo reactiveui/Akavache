@@ -276,7 +276,7 @@ public static class AkavacheBuilderExtensions
         ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(builder.ApplicationName);
 
         // Validate input to prevent path traversal attacks
-        var validatedCacheName = SecurityUtilities.ValidateCacheName(cacheName, nameof(cacheName));
+        var validatedCacheName = SecurityUtilities.ValidateCacheName(cacheName);
         var validatedApplicationName = SecurityUtilities.ValidateApplicationName(builder.ApplicationName, nameof(builder.ApplicationName));
 
         string? cachePath = null;

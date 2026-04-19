@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,10 +18,20 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
+    <ProjectReference Include="..\Akavache.Http\Akavache.Http.csproj" />
   </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Splat.Drawing" />
+  </ItemGroup>
+
+  <!-- Shared internals from Akavache.Core (see Akavache.Sqlite3.csproj for rationale). -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\ObservableUnitExtensions.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\SelectConstantObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\SelectManyThenObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

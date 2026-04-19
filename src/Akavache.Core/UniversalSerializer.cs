@@ -4,6 +4,8 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Reactive.Threading.Tasks;
+using Akavache.Core.Observables;
 using Akavache.Helpers;
 
 namespace Akavache.Core;
@@ -14,29 +16,28 @@ namespace Akavache.Core;
 /// </summary>
 public static class UniversalSerializer
 {
-    /// <summary>The list of factories registered for fallback serializer creation.</summary>
-    private static readonly List<Func<ISerializer>> _registeredSerializerFactories = [];
+#if NET9_0_OR_GREATER
+    /// <summary>Synchronization primitive for serializer registration and alternative serializer list management.</summary>
+    private static readonly System.Threading.Lock _serializerLock = new();
+#else
+    /// <summary>Synchronization primitive for serializer registration and alternative serializer list management.</summary>
+    private static readonly object _serializerLock = new();
+#endif
 
-    /// <summary>
-    /// Per-serializer-type cache for the "does the type name contain 'Bson'" check. The check
-    /// runs on every fallback deserialize attempt and previously materialized the type name
-    /// plus ran a substring probe on every call; caching by <see cref="Type"/> keeps the hot
-    /// path allocation-free.
-    /// </summary>
+    /// <summary>Cache for identifying BSON serializers by type to avoid repeated string probes.</summary>
     private static readonly ConcurrentDictionary<Type, bool> _isBsonSerializerByType = new();
 
-    /// <summary>
-    /// Per-serializer-type cache for the "is this the plain (non-BSON) Newtonsoft serializer"
-    /// check used by <see cref="PreprocessDateTimeForSerialization"/> to work around
-    /// Newtonsoft.Json's DateTime.MinValue/MaxValue quirks.
-    /// </summary>
+    /// <summary>Cache for identifying plain Newtonsoft serializers to handle DateTime quirks.</summary>
     private static readonly ConcurrentDictionary<Type, bool> _isPlainNewtonsoftSerializerByType = new();
 
-    /// <summary>Cached list of alternative serializer instances, invalidated on registration.</summary>
+    /// <summary>Registered factories for fallback serializer creation.</summary>
+    private static Func<ISerializer>[] _registeredSerializerFactories = [];
+
+    /// <summary>Cached list of alternative serializer instances.</summary>
     private static List<ISerializer>? _alternativeSerializers;
 
     /// <summary>
-    /// Attempts to deserialize data using fallback mechanisms when the primary serializer fails.
+    /// Attempts to deserialize data using fallback mechanisms if the primary serializer fails.
     /// </summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The serialized data.</param>
@@ -85,7 +86,7 @@ public static class UniversalSerializer
     }
 
     /// <summary>
-    /// Attempts to serialize data using fallback mechanisms when the primary serializer fails.
+    /// Attempts to serialize data using fallback mechanisms if the primary serializer fails.
     /// </summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="value">The value to serialize.</param>
@@ -138,95 +139,91 @@ public static class UniversalSerializer
     }
 
     /// <summary>
-    /// Attempts enhanced cross-serializer compatibility with key consistency checks.
-    /// This method should be called when a GetObject operation fails to ensure data is properly accessible.
+    /// Attempts to find data using alternative keys if the primary key look-up fails.
+    /// Useful for cross-serializer compatibility.
     /// </summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="cache">The cache to search in.</param>
     /// <param name="requestedKey">The original key that was requested.</param>
     /// <param name="primarySerializer">The primary serializer being used.</param>
-    /// <returns>The data if found using alternative key formats, otherwise default.</returns>
+    /// <returns>A one-shot observable that emits the resolved value, or <see langword="default"/> if no matching key was found.</returns>
     [RequiresUnreferencedCode("Universal key compatibility requires types to be preserved.")]
     [RequiresDynamicCode("Universal key compatibility requires types to be preserved.")]
-    public static async Task<T?> TryFindDataWithAlternativeKeys<T>(
+    public static Task<T?> TryFindDataWithAlternativeKeysAsync<T>(
+        IBlobCache cache,
+        string requestedKey,
+        ISerializer primarySerializer) =>
+        TryFindDataWithAlternativeKeys<T>(cache, requestedKey, primarySerializer).ToTask();
+
+    /// <summary>
+    /// Attempts to find data using alternative keys if the primary key look-up fails.
+    /// Useful for cross-serializer compatibility.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="cache">The cache to search in.</param>
+    /// <param name="requestedKey">The original key that was requested.</param>
+    /// <param name="primarySerializer">The primary serializer being used.</param>
+    /// <returns>A one-shot observable that emits the resolved value, or <see langword="default"/> if no matching key was found.</returns>
+    [RequiresUnreferencedCode("Universal key compatibility requires types to be preserved.")]
+    [RequiresDynamicCode("Universal key compatibility requires types to be preserved.")]
+    public static IObservable<T?> TryFindDataWithAlternativeKeys<T>(
         IBlobCache cache,
         string requestedKey,
         ISerializer primarySerializer)
     {
         if (cache is null || string.IsNullOrEmpty(requestedKey) || primarySerializer is null)
         {
-            return default;
+            return Observable.Return<T?>(default);
         }
 
-        try
-        {
-            // Get all available keys from the cache. Awaiting the Rx observable already takes
-            // the last (and only) emission, so FirstAsync() on top of ToList() was redundant.
-            var allKeys = await cache.GetAllKeys().ToList();
-
-            if (allKeys.Count == 0)
+        return cache.GetAllKeys()
+            .ToList()
+            .SelectMany(allKeys =>
             {
-                return default; // No data in cache at all
-            }
-
-            foreach (var candidateKey in FindKeyCandidates<T>(allKeys, requestedKey))
-            {
-                byte[]? rawData;
-                try
+                if (allKeys.Count == 0)
                 {
-                    rawData = await cache.Get(candidateKey);
-                }
-                catch
-                {
-                    // Continue to next key.
-                    continue;
+                    return Observable.Return<T?>(default);
                 }
 
-                if (!TryDeserializeCandidate<T>(rawData, primarySerializer, out var result))
-                {
-                    continue;
-                }
+                var candidates = FindKeyCandidates<T>(allKeys, requestedKey);
 
-                return result;
-            }
-        }
-        catch
-        {
-            // If key enumeration fails, fall back to default
-        }
-
-        return default;
+                return new FirstMatchFromCandidatesObservable<string, byte[]?, T?>(
+                    candidates,
+                    candidateKey => cache.Get(candidateKey),
+                    rawData => TryDeserializeCandidate<T>(rawData, primarySerializer, out var result) ? result : default,
+                    static value => value is not null && !EqualityComparer<T>.Default.Equals(value, default!),
+                    default);
+            })
+            .Catch<T?, Exception>(static _ => Observable.Return<T?>(default));
     }
 
     /// <summary>
     /// Registers a serializer factory for use as a fallback when the primary serializer fails.
-    /// Serializer packages should call this during initialization to make themselves available
-    /// for cross-serializer compatibility.
     /// </summary>
     /// <param name="factory">A factory function that creates a new instance of the serializer.</param>
     public static void RegisterSerializer(Func<ISerializer> factory)
     {
         ArgumentExceptionHelper.ThrowIfNull(factory);
 
-        _registeredSerializerFactories.Add(factory);
-        _alternativeSerializers = null; // Invalidate cache
+        lock (_serializerLock)
+        {
+            var old = _registeredSerializerFactories;
+            var updated = new Func<ISerializer>[old.Length + 1];
+            old.CopyTo(updated, 0);
+            updated[old.Length] = factory;
+            Volatile.Write(ref _registeredSerializerFactories, updated);
+            Volatile.Write(ref _alternativeSerializers, null);
+        }
     }
 
     /// <summary>
-    /// Attempts to deserialize the candidate bytes <paramref name="rawData"/> via
-    /// <see cref="Deserialize{T}"/> and reports whether the result is a usable
-    /// value.
+    /// Attempts to deserialize a candidate blob and returns whether it was successful.
     /// </summary>
-    /// <remarks>
-    /// A "usable" result is one that is non-null and not equal to
-    /// <c>default(T)</c>. Empty or null <paramref name="rawData"/> short-circuits
-    /// to <see langword="false"/> without invoking the serializer.
-    /// </remarks>
     /// <typeparam name="T">The expected value type.</typeparam>
-    /// <param name="rawData">The raw bytes retrieved from the blob cache, or <see langword="null"/>.</param>
-    /// <param name="primarySerializer">The primary serializer to pass to <see cref="Deserialize{T}"/>.</param>
-    /// <param name="result">When this method returns <see langword="true"/>, the deserialized value; otherwise <c>default</c>.</param>
-    /// <returns><see langword="true"/> if the deserialized value is usable.</returns>
+    /// <param name="rawData">The raw bytes from the cache.</param>
+    /// <param name="primarySerializer">The primary serializer.</param>
+    /// <param name="result">The deserialized value if successful.</param>
+    /// <returns>True if deserialization succeeded.</returns>
     [RequiresUnreferencedCode("Calls Deserialize<T>.")]
     [RequiresDynamicCode("Calls Deserialize<T>.")]
     internal static bool TryDeserializeCandidate<T>(byte[]? rawData, ISerializer primarySerializer, out T? result)
@@ -254,46 +251,28 @@ public static class UniversalSerializer
     }
 
     /// <summary>
-    /// Coerces a generic <typeparamref name="T"/> value to a <see cref="DateTime"/>.
+    /// Casts a value to <see cref="DateTime"/>, returning default if it's not a DateTime.
     /// </summary>
-    /// <remarks>
-    /// Returns the value when it is a <see cref="DateTime"/>, otherwise returns
-    /// <c>default</c> (<see cref="DateTime.MinValue"/>).
-    /// </remarks>
     /// <typeparam name="T">The generic type being deserialized.</typeparam>
     /// <param name="value">The deserialized value.</param>
     /// <returns>The coerced <see cref="DateTime"/>, or <c>default</c>.</returns>
     internal static DateTime CastAsDateTime<T>(T? value) => value is DateTime dateTime ? dateTime : default;
 
     /// <summary>
-    /// Coerces a generic <typeparamref name="T"/> value to a
-    /// <see cref="DateTimeOffset"/>.
+    /// Casts a value to <see cref="DateTimeOffset"/>, returning default if it's not a DateTimeOffset.
     /// </summary>
-    /// <remarks>
-    /// Returns the value when it is a <see cref="DateTimeOffset"/>, otherwise
-    /// returns <c>default</c> (<see cref="DateTimeOffset.MinValue"/>).
-    /// </remarks>
     /// <typeparam name="T">The generic type being deserialized.</typeparam>
     /// <param name="value">The deserialized value.</param>
     /// <returns>The coerced <see cref="DateTimeOffset"/>, or <c>default</c>.</returns>
     internal static DateTimeOffset CastAsDateTimeOffset<T>(T? value) => value is DateTimeOffset dateTimeOffset ? dateTimeOffset : default;
 
     /// <summary>
-    /// Filters <paramref name="allKeys"/> down to the subset that could plausibly
-    /// hold a value for <paramref name="requestedKey"/>.
+    /// Finds keys in <paramref name="allKeys"/> that are candidates for <paramref name="requestedKey"/>.
     /// </summary>
-    /// <remarks>
-    /// A key is considered a candidate if it is the exact requested key, one of
-    /// the type-prefixed forms (<c>Namespace.Type___requestedKey</c>,
-    /// <c>ShortType___requestedKey</c>,
-    /// <c>AssemblyName.Type___requestedKey</c>), any key ending with
-    /// <c>___{requestedKey}</c>, or any key simply ending with
-    /// <paramref name="requestedKey"/>.
-    /// </remarks>
-    /// <typeparam name="T">The value type whose type-prefixed key forms should be considered.</typeparam>
-    /// <param name="allKeys">The full set of keys present in the cache.</param>
-    /// <param name="requestedKey">The key the caller asked for.</param>
-    /// <returns>The candidate subset of <paramref name="allKeys"/>.</returns>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="allKeys">All available keys.</param>
+    /// <param name="requestedKey">The requested key.</param>
+    /// <returns>A list of candidate keys.</returns>
     internal static List<string> FindKeyCandidates<T>(IEnumerable<string> allKeys, string requestedKey)
     {
         // Cached per-T reflection strings avoid re-walking typeof(T).FullName / .Name /
@@ -326,9 +305,7 @@ public static class UniversalSerializer
         return candidates;
     }
 
-    /// <summary>
-    /// Checks if data might be BSON format.
-    /// </summary>
+    /// <summary>Checks if data might be BSON.</summary>
     /// <param name="data">The data to check.</param>
     /// <returns>True if data might be BSON.</returns>
     internal static bool IsPotentialBsonData(byte[] data)
@@ -341,15 +318,10 @@ public static class UniversalSerializer
         // BSON documents start with a 4-byte little-endian length field. The length check
         // above guarantees the read is safe; BinaryHelpers is endian-explicit (BSON is
         // little-endian regardless of platform) and inlines on net6+ to BinaryPrimitives.
-        var documentLength = BinaryHelpers.ReadInt32LittleEndian(data);
-
-        // Basic sanity check: document length should be reasonable and within tolerance of the actual data length.
-        return documentLength > 4 && documentLength <= data.Length + 100;
+        return BsonDataHelper.IsPotentialBsonData(data);
     }
 
-    /// <summary>
-    /// Checks if data might be JSON format.
-    /// </summary>
+    /// <summary>Checks if data might be JSON.</summary>
     /// <param name="data">The data to check.</param>
     /// <returns>True if data might be JSON.</returns>
     internal static bool IsPotentialJsonData(byte[] data)
@@ -381,30 +353,22 @@ public static class UniversalSerializer
                IsJsonNull(data, startIndex);
     }
 
-    /// <summary>
-    /// Checks if the character represents the start of a JSON object '{' or array '['.
-    /// </summary>
+    /// <summary>Checks if the byte is a JSON object or array start.</summary>
     /// <param name="c">The character to check.</param>
     /// <returns>True if the character is '{' or '['.</returns>
     internal static bool IsJsonObjectOrArray(byte c) => c is 0x7B or 0x5B;
 
-    /// <summary>
-    /// Checks if the character represents the start of a JSON string '"'.
-    /// </summary>
+    /// <summary>Checks if the byte is a JSON string start.</summary>
     /// <param name="c">The character to check.</param>
     /// <returns>True if the character is '"'.</returns>
     internal static bool IsJsonString(byte c) => c == 0x22;
 
-    /// <summary>
-    /// Checks if the character represents the start of a JSON number ('0'-'9' or '-').
-    /// </summary>
+    /// <summary>Checks if the byte is a JSON number start.</summary>
     /// <param name="c">The character to check.</param>
     /// <returns>True if the character is '0'-'9' or '-'.</returns>
     internal static bool IsJsonNumber(byte c) => c is (>= 0x30 and <= 0x39) or 0x2D;
 
-    /// <summary>
-    /// Checks if the data at the specified index represents a JSON boolean ('true' or 'false').
-    /// </summary>
+    /// <summary>Checks if the data at the index is a JSON boolean.</summary>
     /// <param name="data">The data buffer to check.</param>
     /// <param name="index">The index at which to start the check.</param>
     /// <returns>True if the data starting at the index matches 'true' or 'false'.</returns>
@@ -414,9 +378,7 @@ public static class UniversalSerializer
         (data.Length >= index + 5 &&
          data[index] == 0x66 && data[index + 1] == 0x61 && data[index + 2] == 0x6C && data[index + 3] == 0x73 && data[index + 4] == 0x65); // 'false'
 
-    /// <summary>
-    /// Checks if the data at the specified index represents a JSON null ('null').
-    /// </summary>
+    /// <summary>Checks if the data at the index is a JSON null.</summary>
     /// <param name="data">The data buffer to check.</param>
     /// <param name="index">The index at which to start the check.</param>
     /// <returns>True if the data starting at the index matches 'null'.</returns>
@@ -424,9 +386,7 @@ public static class UniversalSerializer
         data.Length >= index + 4 &&
         data[index] == 0x6E && data[index + 1] == 0x75 && data[index + 2] == 0x6C && data[index + 3] == 0x6C;
 
-    /// <summary>
-    /// Attempts fallback deserialization strategies.
-    /// </summary>
+    /// <summary>Attempts fallback deserialization.</summary>
     /// <typeparam name="T">The type todeserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
     /// <param name="primarySerializer">The primary serializer that failed.</param>
@@ -459,9 +419,7 @@ public static class UniversalSerializer
         return TryAlternativeSerializers<T>(data, primarySerializer, forcedDateTimeKind);
     }
 
-    /// <summary>
-    /// Attempts fallback serialization strategies.
-    /// </summary>
+    /// <summary>Attempts fallback serialization.</summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="value">The value to serialize.</param>
     /// <param name="targetSerializer">The target serializer that failed.</param>
@@ -471,10 +429,24 @@ public static class UniversalSerializer
     [RequiresDynamicCode("Calls ISerializer.Serialize<T>.")]
     internal static byte[] TryFallbackSerialization<T>(T value, ISerializer targetSerializer, DateTimeKind? forcedDateTimeKind)
     {
-        // Try to find and use an alternative serializer
-        _alternativeSerializers ??= GetAvailableAlternativeSerializers(targetSerializer);
+        // Try to find and use an alternative serializer.
+        // Fast path for established list; fallback to lock-protected initialization
+        // if null. Registration and reset invalidate the list under the same lock.
+        var alts = Volatile.Read(ref _alternativeSerializers);
+        if (alts is null)
+        {
+            lock (_serializerLock)
+            {
+                alts = _alternativeSerializers;
+                if (alts is null)
+                {
+                    alts = GetAvailableAlternativeSerializers(targetSerializer);
+                    Volatile.Write(ref _alternativeSerializers, alts);
+                }
+            }
+        }
 
-        foreach (var altSerializer in _alternativeSerializers)
+        foreach (var altSerializer in alts)
         {
             try
             {
@@ -494,9 +466,7 @@ public static class UniversalSerializer
         throw new InvalidOperationException("No fallback serialization strategy succeeded");
     }
 
-    /// <summary>
-    /// Attempts to deserialize data using alternative serializers.
-    /// </summary>
+    /// <summary>Attempts deserialization using alternative serializers.</summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
     /// <param name="primarySerializer">The primary serializer that failed.</param>
@@ -506,9 +476,23 @@ public static class UniversalSerializer
     [RequiresDynamicCode("Calls ISerializer.Deserialize<T>.")]
     internal static T? TryAlternativeSerializers<T>(byte[] data, ISerializer primarySerializer, DateTimeKind? forcedDateTimeKind)
     {
-        _alternativeSerializers ??= GetAvailableAlternativeSerializers(primarySerializer);
+        // Fast path for established list; fallback to lock-protected initialization
+        // if null. Registration and reset invalidate the list under the same lock.
+        var alts = Volatile.Read(ref _alternativeSerializers);
+        if (alts is null)
+        {
+            lock (_serializerLock)
+            {
+                alts = _alternativeSerializers;
+                if (alts is null)
+                {
+                    alts = GetAvailableAlternativeSerializers(primarySerializer);
+                    Volatile.Write(ref _alternativeSerializers, alts);
+                }
+            }
+        }
 
-        foreach (var altSerializer in _alternativeSerializers)
+        foreach (var altSerializer in alts)
         {
             try
             {
@@ -554,9 +538,7 @@ public static class UniversalSerializer
         return default;
     }
 
-    /// <summary>
-    /// Gets available alternative serializers to try as fallbacks.
-    /// </summary>
+    /// <summary>Gets available alternative serializers.</summary>
     /// <param name="excludeSerializer">The serializer to exclude from the list.</param>
     /// <returns>A list of alternative serializers.</returns>
     internal static List<ISerializer> GetAvailableAlternativeSerializers(ISerializer excludeSerializer)
@@ -564,7 +546,7 @@ public static class UniversalSerializer
         List<ISerializer> alternatives = [];
         var excludeType = excludeSerializer.GetType();
 
-        foreach (var factory in _registeredSerializerFactories)
+        foreach (var factory in Volatile.Read(ref _registeredSerializerFactories))
         {
             try
             {
@@ -583,9 +565,7 @@ public static class UniversalSerializer
         return alternatives;
     }
 
-    /// <summary>
-    /// Attempts to deserialize data assuming it's in BSON format.
-    /// </summary>
+    /// <summary>Attempts to deserialize data as BSON.</summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind.</param>
@@ -595,7 +575,7 @@ public static class UniversalSerializer
     internal static T? TryDeserializeBsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
     {
         // Try registered BSON-capable serializers
-        foreach (var factory in _registeredSerializerFactories)
+        foreach (var factory in Volatile.Read(ref _registeredSerializerFactories))
         {
             try
             {
@@ -648,9 +628,7 @@ public static class UniversalSerializer
         return default;
     }
 
-    /// <summary>
-    /// Attempts to deserialize data assuming it's in JSON format.
-    /// </summary>
+    /// <summary>Attempts to deserialize data as JSON.</summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
     /// <param name="forcedDateTimeKind">Optional DateTime kind.</param>
@@ -660,7 +638,7 @@ public static class UniversalSerializer
     internal static T? TryDeserializeJsonFormat<T>(byte[] data, DateTimeKind? forcedDateTimeKind)
     {
         // Try registered JSON-capable serializers (non-BSON)
-        foreach (var factory in _registeredSerializerFactories)
+        foreach (var factory in Volatile.Read(ref _registeredSerializerFactories))
         {
             try
             {
@@ -688,9 +666,7 @@ public static class UniversalSerializer
         return TryBasicJsonDeserialization<T>(data);
     }
 
-    /// <summary>
-    /// Attempts basic JSON deserialization for simple types.
-    /// </summary>
+    /// <summary>Attempts basic JSON deserialization for simple types.</summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="data">The data to deserialize.</param>
     /// <returns>The deserialized object or default.</returns>
@@ -712,9 +688,7 @@ public static class UniversalSerializer
             };
     }
 
-    /// <summary>
-    /// Preprocesses a DateTime value before serialization to ensure cross-serializer compatibility.
-    /// </summary>
+    /// <summary>Preprocesses a DateTime value before serialization.</summary>
     /// <param name="dateTime">The DateTime value to preprocess.</param>
     /// <param name="serializer">The serializer that will be used.</param>
     /// <param name="forcedDateTimeKind">The forced DateTime kind if any.</param>
@@ -741,21 +715,20 @@ public static class UniversalSerializer
             : dateTime;
     }
 
-    /// <summary>
-    /// Resets internal caches. Used for test isolation.
-    /// </summary>
+    /// <summary>Resets internal caches (test isolation).</summary>
     internal static void ResetCaches()
     {
-        _registeredSerializerFactories.Clear();
-        _alternativeSerializers = null;
+        lock (_serializerLock)
+        {
+            Volatile.Write(ref _registeredSerializerFactories, []);
+            Volatile.Write(ref _alternativeSerializers, null);
+        }
+
         _isBsonSerializerByType.Clear();
         _isPlainNewtonsoftSerializerByType.Clear();
     }
 
-    /// <summary>
-    /// Returns <see langword="true"/> if <paramref name="serializer"/>'s runtime type name contains
-    /// "Bson". Result is cached per <see cref="Type"/>.
-    /// </summary>
+    /// <summary>Checks if the serializer is a BSON variant.</summary>
     /// <param name="serializer">The serializer instance to probe.</param>
     /// <returns><see langword="true"/> if the serializer is a BSON variant.</returns>
     internal static bool IsBsonSerializer(ISerializer serializer) =>
@@ -763,10 +736,7 @@ public static class UniversalSerializer
             serializer.GetType(),
             static t => t.Name.Contains("Bson", StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>
-    /// Returns <see langword="true"/> if <paramref name="serializer"/> is the plain (non-BSON)
-    /// Newtonsoft.Json serializer. Result is cached per <see cref="Type"/>.
-    /// </summary>
+    /// <summary>Checks if the serializer is the plain Newtonsoft.Json serializer.</summary>
     /// <param name="serializer">The serializer instance to probe.</param>
     /// <returns><see langword="true"/> if the serializer is Newtonsoft.Json (not the BSON variant).</returns>
     internal static bool IsPlainNewtonsoftSerializer(ISerializer serializer) =>

@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.Settings.Core;
 using Splat; // AppLocator
 
@@ -15,12 +14,21 @@ namespace Akavache.Settings;
 public abstract class SettingsBase : SettingsStorage
 {
     /// <summary>
+    /// Ambient cache slot set by <c>GetSettingsStore&lt;T&gt;</c> immediately before it
+    /// constructs the settings type. The <see cref="SettingsBase"/> ctor consults this
+    /// first so it doesn't have to discover its cache via the global
+    /// <see cref="CacheDatabase.CurrentInstance"/>, which is still pointing at the
+    /// previous build (or null) while the in-progress builder is still being configured.
+    /// </summary>
+    private static readonly AsyncLocal<IBlobCache?> _ambientCache = new();
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="SettingsBase"/> class that resolves
     /// its backing cache from the ambient <see cref="CacheDatabase"/>.
     /// </summary>
     /// <param name="className">Name of the class — used as the settings key prefix.</param>
     protected SettingsBase(string className)
-        : base($"__{className}__", GetBlobCacheForClass(className))
+        : base($"__{className}__", _ambientCache.Value ?? GetBlobCacheForClass(className))
     {
     }
 
@@ -46,6 +54,21 @@ public abstract class SettingsBase : SettingsStorage
             $"__{className}__",
             GetBlobCacheForClass(className, userAccountResolver, localMachineResolver, inMemoryResolver))
     {
+    }
+
+    /// <summary>
+    /// Sets the ambient cache consulted by the parameterless <see cref="SettingsBase(string)"/>
+    /// constructor, returning an <see cref="IDisposable"/> that restores the previous value.
+    /// Call from a <c>using</c> block immediately before <c>new T()</c> to hand the
+    /// just-created cache to the settings ctor without touching global state.
+    /// </summary>
+    /// <param name="cache">The cache to publish as ambient for the duration of the scope.</param>
+    /// <returns>A disposable that restores the previous ambient cache on disposal.</returns>
+    internal static IDisposable PushAmbientCache(IBlobCache cache)
+    {
+        var previous = _ambientCache.Value;
+        _ambientCache.Value = cache;
+        return new AmbientCacheScope(previous);
     }
 
     /// <summary>
@@ -108,29 +131,37 @@ public abstract class SettingsBase : SettingsStorage
     internal static IBlobCache ReadAmbientInMemory() => CacheDatabase.InMemory;
 
     /// <summary>
-    /// Looks up <paramref name="className"/> in <see cref="AkavacheBuilder.BlobCaches"/>.
+    /// Looks up <paramref name="className"/> in the current
+    /// <see cref="IAkavacheInstance.BlobCaches"/> registry — the one belonging to
+    /// whichever instance <see cref="CacheDatabase"/> currently points at. Returns
+    /// <see langword="null"/> when there is no configured instance (the ambient
+    /// fallback path in <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
+    /// handles that case).
     /// </summary>
     /// <remarks>
-    /// Falls back to the first registered non-null entry when the exact class name is
-    /// missing — this keeps consumers that rename their settings store database working
-    /// without a custom registration step.
+    /// Falls back to the first registered entry when the exact class name is missing —
+    /// this keeps consumers that rename their settings store database working without
+    /// a custom registration step.
     /// </remarks>
     /// <param name="className">The class name to look up.</param>
     /// <returns>The matching cache, or <see langword="null"/> when nothing is registered.</returns>
     internal static IBlobCache? TryGetFromBlobCacheRegistry(string className)
     {
-        if (AkavacheBuilder.BlobCaches is null)
+        var registry = CacheDatabase.CurrentInstance?.BlobCaches;
+        if (registry is null || registry.Count == 0)
         {
             return null;
         }
 
-        if (AkavacheBuilder.BlobCaches.TryGetValue(className, out var cache) && cache != null)
+        if (registry.TryGetValue(className, out var cache))
         {
             return cache;
         }
 
-        var firstPair = AkavacheBuilder.BlobCaches.FirstOrDefault(static kvp => kvp.Value != null);
-        return string.IsNullOrEmpty(firstPair.Key) ? null : firstPair.Value;
+        // Fall back to the first registered entry — keeps consumers that rename
+        // their settings store database working without a custom registration step.
+        // Count > 0 is guaranteed by the guard above, so First() is safe.
+        return registry.Values.First();
     }
 
     /// <summary>
@@ -198,15 +229,30 @@ public abstract class SettingsBase : SettingsStorage
     /// Builds the descriptive <see cref="InvalidOperationException"/> thrown by
     /// <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
     /// when no cache can be resolved. The message lists every key currently registered
-    /// in <see cref="AkavacheBuilder.BlobCaches"/> to make diagnosis easier.
+    /// in the current instance's <see cref="IAkavacheInstance.BlobCaches"/> to make
+    /// diagnosis easier.
     /// </summary>
     /// <param name="className">The class name that failed resolution.</param>
     /// <returns>A new <see cref="InvalidOperationException"/>.</returns>
     internal static InvalidOperationException CreateNoCacheFoundException(string className)
     {
-        var available = AkavacheBuilder.BlobCaches is null || AkavacheBuilder.BlobCaches.Count == 0
+        var registry = CacheDatabase.CurrentInstance?.BlobCaches;
+        var available = registry is null || registry.Count == 0
             ? "<none>"
-            : string.Join(", ", AkavacheBuilder.BlobCaches.Keys);
+            : string.Join(", ", registry.Keys);
         return new($"No blob cache found for class '{className}'. Available caches: {available}");
+    }
+
+    /// <summary>
+    /// <see cref="IDisposable"/> scope returned by <see cref="PushAmbientCache"/> that
+    /// restores the previous ambient cache value on disposal. Used by
+    /// <c>GetSettingsStore&lt;T&gt;</c> to publish the just-created cache for the
+    /// duration of the <c>new T()</c> call without leaking the value to callers.
+    /// </summary>
+    /// <param name="previous">The ambient cache that was present before the scope was pushed.</param>
+    private sealed class AmbientCacheScope(IBlobCache? previous) : IDisposable
+    {
+        /// <inheritdoc/>
+        public void Dispose() => _ambientCache.Value = previous;
     }
 }

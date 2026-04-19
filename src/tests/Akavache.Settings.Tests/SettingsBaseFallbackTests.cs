@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.NewtonsoftJson;
+using Akavache.Settings.Core;
 using Akavache.Sqlite3;
-using Akavache.SystemTextJson;
-
+using Akavache.Tests;
 using Splat.Builder;
 
 namespace Akavache.Settings.Tests;
@@ -92,14 +92,11 @@ public class SettingsBaseFallbackTests
             await TestHelper.EventuallyAsync(() => settings is not null).ConfigureAwait(false);
 
             await Assert.That(settings).IsNotNull();
-            await Assert.That(settings.TestValue).IsEqualTo(42);
+            await Assert.That((int)settings.TestValue).IsEqualTo(42);
         }
         finally
         {
-            if (settings is not null)
-            {
-                await settings.DisposeAsync().ConfigureAwait(false);
-            }
+            settings?.Dispose();
         }
     }
 
@@ -108,72 +105,56 @@ public class SettingsBaseFallbackTests
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately uses synchronous Rx Subscribe patterns to avoid sync-over-async deadlocks.")]
     public async Task TestSettingsPersistenceAcrossInstances()
     {
         var appName = NewName("persistence_test");
         const int expectedValue = 999;
-        TestSettings? settings1 = null;
-        TestSettings? settings2 = null;
 
-        RunWithAkavache<NewtonsoftSerializer>(
-            appName,
-            async builder =>
-            {
-                await builder.DeleteSettingsStore<TestSettings>().ConfigureAwait(false);
-                builder.WithSettingsStore<TestSettings>(s =>
-                {
-                    if (settings1 == null)
-                    {
-                        settings1 = s;
-                    }
-                    else
-                    {
-                        settings2 = s;
-                    }
-                });
-            },
-            async instance =>
-            {
-                try
-                {
-                    // First, set a value
-                    await TestHelper.EventuallyAsync(() => settings1 is not null).ConfigureAwait(false);
-                    settings1!.TestValue = expectedValue;
-                    await TestHelper.EventuallyAsync(() => settings1.TestValue == expectedValue).ConfigureAwait(false);
+        // Set up Akavache directly — capture instance from the callback
+        // to avoid relying on CacheDatabase.CurrentInstance (which the test
+        // executor may have reset).
+        IAkavacheInstance? instance = null;
+        _appBuilder
+            .WithAkavache<NewtonsoftSerializer>(
+                appName,
+                builder => builder
+                    .WithSqliteProvider()
+                    .WithSettingsCachePath(_cacheRoot),
+                i => instance = i)
+            .Build();
 
-                    // Dispose the first instance
-                    await settings1.DisposeAsync().ConfigureAwait(false);
-                    settings1 = null;
+        try
+        {
+            // Delete any leftover store from prior runs.
+            instance!.DeleteSettingsStore<TestSettings>().WaitForCompletion();
 
-                    // Get a new instance
-                    settings2 = instance.GetSettingsStore<TestSettings>();
-                    await TestHelper.EventuallyAsync(() => settings2 is not null).ConfigureAwait(false);
+            // Create the first settings instance.
+            var settings1 = instance!.GetSettingsStore<TestSettings>(
+                overrideDatabaseName: null,
+                scheduler: ImmediateScheduler.Instance);
+            settings1.TestValue.Set(expectedValue).SubscribeAndComplete();
 
-                    // Verify the value persisted
-                    await Assert.That(settings2).IsNotNull();
-                    await Assert.That(settings2!.TestValue).IsEqualTo(expectedValue);
-                }
-                finally
-                {
-                    try
-                    {
-                        if (settings1 is not null)
-                        {
-                            await settings1.DisposeAsync().ConfigureAwait(false);
-                        }
+            // Verify the value was set.
+            await Assert.That((int)settings1.TestValue).IsEqualTo(expectedValue);
 
-                        if (settings2 is not null)
-                        {
-                            await settings2.DisposeAsync().ConfigureAwait(false);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Best-effort cleanup
-                        System.Diagnostics.Debug.WriteLine(ex.Message);
-                    }
-                }
-            });
+            // Dispose the first instance.
+            settings1.Dispose();
+
+            // Create a second instance and verify the value persisted.
+            var settings2 = instance!.GetSettingsStore<TestSettings>(
+                overrideDatabaseName: null,
+                scheduler: ImmediateScheduler.Instance);
+            settings2.Initialize().WaitForCompletion();
+
+            await Assert.That((int)settings2.TestValue).IsEqualTo(expectedValue);
+
+            settings2.Dispose();
+        }
+        finally
+        {
+            CacheDatabase.ResetForTests().SubscribeAndComplete();
+        }
 
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
@@ -186,58 +167,17 @@ public class SettingsBaseFallbackTests
     private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
 
     /// <summary>
-    /// Creates, configures and builds an Akavache instance using the per-test path and SQLite provider, then executes the test body.
-    /// This version blocks on async delegates to avoid async-void and ensure assertion scopes close before the test ends.
-    /// </summary>
-    /// <typeparam name="TSerializer">The serializer type to use (e.g., <see cref="NewtonsoftSerializer"/> or <see cref="SystemJsonSerializer"/>).</typeparam>
-    /// <param name="applicationName">Optional application name to scope the store; may be <see langword="null"/>.</param>
-    /// <param name="configureAsync">An async configuration callback to register stores and/or delete existing stores before the body runs.</param>
-    /// <param name="bodyAsync">The asynchronous test body that uses the configured <see cref="IAkavacheInstance"/>.</param>
-    private void RunWithAkavache<TSerializer>(
-        string? applicationName,
-        Func<IAkavacheBuilder, Task> configureAsync,
-        Func<IAkavacheInstance, Task> bodyAsync)
-        where TSerializer : class, ISerializer, new() =>
-        _appBuilder
-            .WithAkavache<TSerializer>(
-                applicationName!,
-                builder =>
-                {
-                    // base config
-                    builder
-                        .WithSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-
-                    // IMPORTANT: block here so we don't create async-void
-                    configureAsync(builder).GetAwaiter().GetResult();
-                },
-                instance =>
-                {
-                    // IMPORTANT: block here so the body completes before Build() returns
-                    bodyAsync(instance).GetAwaiter().GetResult();
-                })
-            .Build();
-
-    /// <summary>
-    /// A simple test settings class for verifying fallback logic.
+    /// A simple test settings class for verifying fallback logic. Exercises the
+    /// <see cref="SettingsPropertyHelper{T}"/> pattern — sync <c>Value</c> via the
+    /// implicit conversion, <c>Set</c> method for writes.
     /// </summary>
     private sealed class TestSettings : SettingsBase
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TestSettings"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="TestSettings"/> class.</summary>
         public TestSettings()
-            : base(nameof(TestSettings))
-        {
-        }
+            : base(nameof(TestSettings)) => TestValue = CreateProperty(42, nameof(TestValue));
 
-        /// <summary>
-        /// Gets or sets the test value.
-        /// </summary>
-        public int TestValue
-        {
-            get => GetOrCreate(42);
-            set => SetOrCreate(value);
-        }
+        /// <summary>Gets the test value property helper.</summary>
+        public SettingsPropertyHelper<int> TestValue { get; }
     }
 }

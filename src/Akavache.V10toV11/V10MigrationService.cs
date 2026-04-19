@@ -5,8 +5,6 @@
 using Akavache.Core;
 using Akavache.Sqlite3;
 
-using SQLite;
-
 namespace Akavache.V10toV11;
 
 /// <summary>
@@ -26,16 +24,20 @@ internal static class V10MigrationService
     private const long MinValidTicks = 630822816000000000L; // Year 2000 as ticks
 
     /// <summary>
-    /// Migrates data from a V10 database file into a V11 SqliteBlobCache instance.
+    /// Migrates data from a V10 database file into a V11
+    /// <see cref="SqliteBlobCache"/> instance. Authored as a pure observable pipeline:
+    /// check-sentinel → probe-table → stream-rows → upsert → write-sentinel → close,
+    /// with each stage feeding the next via <c>SelectMany</c>. The returned observable
+    /// emits a single <see cref="Unit"/> on success or the first stage error.
     /// </summary>
     /// <param name="v10DbPath">Full path to the V10 database file.</param>
     /// <param name="v11Cache">The V11 cache instance to migrate data into.</param>
     /// <param name="serializer">The current serializer, used for optional re-serialization.</param>
     /// <param name="options">Migration options.</param>
-    /// <returns>A task representing the asynchronous migration operation.</returns>
+    /// <returns>A one-shot observable that fires when migration completes (or the file is absent / migration already ran).</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    internal static async Task MigrateAsync(
+    internal static IObservable<Unit> Migrate(
         string v10DbPath,
         SqliteBlobCache v11Cache,
         ISerializer serializer,
@@ -44,136 +46,148 @@ internal static class V10MigrationService
         if (!File.Exists(v10DbPath))
         {
             options.Logger?.Invoke($"V10 database not found at '{v10DbPath}', skipping.");
-            return;
+            return Observable.Return(Unit.Default);
         }
 
-        // Check if migration has already been completed
-        if (await IsMigrationCompleteAsync(v11Cache).ConfigureAwait(false))
-        {
-            options.Logger?.Invoke($"Migration already completed for '{v10DbPath}', skipping.");
-            return;
-        }
-
-        options.Logger?.Invoke($"Starting migration from '{v10DbPath}'...");
-
-        // Open the V10 database read-only
-        SqliteAkavacheConnection v10Connection = new(v10DbPath, SQLiteOpenFlags.ReadOnly | SQLiteOpenFlags.SharedCache);
-
-        try
-        {
-            // Check if the CacheElement table exists in the V10 database
-            var tableExists = await v10Connection.TableExistsAsync("CacheElement").ConfigureAwait(false);
-            if (!tableExists)
+        return IsMigrationComplete(v11Cache)
+            .SelectMany(alreadyMigrated =>
             {
-                options.Logger?.Invoke($"No CacheElement table found in '{v10DbPath}', skipping.");
-                return;
-            }
-
-            // Read all entries from the V10 database
-            var v10Entries = await v10Connection.QueryAsync<V10CacheElement>(static _ => true).ConfigureAwait(false);
-            options.Logger?.Invoke($"Found {v10Entries.Count} entries in V10 database.");
-
-            if (v10Entries.Count == 0)
-            {
-                await WriteMigrationSentinelAsync(v11Cache).ConfigureAwait(false);
-                return;
-            }
-
-            // Convert and insert entries in batches using transactions
-            List<CacheEntry> converted = new(v10Entries.Count);
-            var failedCount = 0;
-
-            foreach (var v10Entry in v10Entries)
-            {
-                try
+                if (alreadyMigrated)
                 {
-                    var v11Entry = ConvertEntry(v10Entry, serializer, options);
-                    converted.Add(v11Entry);
+                    options.Logger?.Invoke($"Migration already completed for '{v10DbPath}', skipping.");
+                    return Observable.Return(Unit.Default);
                 }
-                catch (Exception ex)
-                {
-                    failedCount++;
-                    LogConvertEntryFailure(options, v10Entry.Key, ex);
-                }
-            }
 
-            // Insert all converted entries in a single transaction
-            await v11Cache.Connection.RunInTransactionAsync(tx =>
+                options.Logger?.Invoke($"Starting migration from '{v10DbPath}'...");
+                return MigrateCore(v10DbPath, v11Cache, serializer, options);
+            });
+    }
+
+    /// <summary>
+    /// Inner migration pipeline — runs against an opened v10 connection, walks the
+    /// legacy rows, upserts into the v11 cache, writes the sentinel, and closes the
+    /// v10 connection in the <c>Finally</c> operator regardless of success or error.
+    /// Marked <c>internal</c> so tests can drive it without going through the
+    /// sentinel short-circuit in <see cref="Migrate"/>.
+    /// </summary>
+    /// <param name="v10DbPath">The legacy database path (captured for delete-on-success).</param>
+    /// <param name="v11Cache">The destination V11 cache.</param>
+    /// <param name="serializer">The current serializer.</param>
+    /// <param name="options">Migration options.</param>
+    /// <returns>A one-shot observable that fires on migration completion.</returns>
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+    internal static IObservable<Unit> MigrateCore(
+        string v10DbPath,
+        SqliteBlobCache v11Cache,
+        ISerializer serializer,
+        V10MigrationOptions options)
+    {
+        var v10Connection = new SqlitePclRawConnection(v10DbPath, password: null, readOnly: true);
+
+        return v10Connection.TableExists("CacheElement")
+            .SelectMany(tableExists =>
             {
-                foreach (var entry in converted)
+                if (!tableExists)
                 {
-                    tx.InsertOrReplace(entry);
+                    options.Logger?.Invoke($"No CacheElement table found in '{v10DbPath}', skipping.");
+                    return Observable.Return(Unit.Default);
                 }
-            }).ConfigureAwait(false);
 
-            options.Logger?.Invoke($"Migrated {converted.Count} entries ({failedCount} failed).");
+                return v10Connection.ReadAllLegacyV10Rows()
+                    .ToList()
+                    .SelectMany(v10Rows =>
+                    {
+                        options.Logger?.Invoke($"Found {v10Rows.Count} entries in V10 database.");
+                        if (v10Rows.Count == 0)
+                        {
+                            return WriteMigrationSentinel(v11Cache);
+                        }
 
-            // Write sentinel to prevent re-migration
-            await WriteMigrationSentinelAsync(v11Cache).ConfigureAwait(false);
-        }
-        finally
-        {
-            await v10Connection.CloseAsync().ConfigureAwait(false);
-        }
+                        var converted = new List<CacheEntry>(v10Rows.Count);
+                        var failedCount = 0;
+                        foreach (var row in v10Rows)
+                        {
+                            try
+                            {
+                                converted.Add(ConvertRow(row, serializer, options));
+                            }
+                            catch (Exception ex)
+                            {
+                                failedCount++;
+                                LogConvertEntryFailure(options, row.Key, ex);
+                            }
+                        }
 
-        // Optionally delete the old file
-        if (!options.DeleteOldFiles)
-        {
-            return;
-        }
+                        options.Logger?.Invoke($"Migrated {converted.Count} entries ({failedCount} failed).");
 
-        TryDeleteV10Database(v10DbPath, options);
+                        var upsert = converted.Count > 0
+                            ? v11Cache.Connection.Upsert(converted)
+                            : Observable.Return(Unit.Default);
+
+                        return upsert.SelectMany(_ => WriteMigrationSentinel(v11Cache));
+                    });
+            })
+            .Finally(v10Connection.Dispose)
+            .SelectMany(_ =>
+            {
+                if (options.DeleteOldFiles)
+                {
+                    TryDeleteV10Database(v10DbPath, options);
+                }
+
+                return Observable.Return(Unit.Default);
+            });
     }
 
     /// <summary>
     /// Checks whether migration has already been completed for the given V11 cache.
+    /// Emits <see langword="true"/> when the sentinel row is present,
+    /// <see langword="false"/> otherwise (including when the Get errors — treated as
+    /// "not yet migrated" rather than propagating).
     /// </summary>
     /// <param name="v11Cache">The V11 cache to check.</param>
-    /// <returns>True if migration has already been completed.</returns>
-    internal static async Task<bool> IsMigrationCompleteAsync(SqliteBlobCache v11Cache)
-    {
-        try
-        {
-            var sentinel = await v11Cache.Connection.FirstOrDefaultAsync<CacheEntry>(static e => e.Id == MigrationSentinelKey)
-                .ConfigureAwait(false);
-            return sentinel != null;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    /// <returns>A one-shot observable that emits the migration-complete flag.</returns>
+    internal static IObservable<bool> IsMigrationComplete(SqliteBlobCache v11Cache) =>
+        v11Cache.Connection
+            .Get(MigrationSentinelKey, typeFullName: null, DateTimeOffset.UtcNow)
+            .Select(static sentinel => sentinel is not null)
+            .Catch<bool, Exception>(static _ => Observable.Return(false));
 
     /// <summary>
-    /// Converts a V10 cache row into a V11 <see cref="CacheEntry"/>, optionally re-serializing the payload.
+    /// Converts a raw V10 legacy row into a V11 <see cref="CacheEntry"/>, optionally re-serializing the payload.
     /// </summary>
-    /// <param name="v10Entry">The source V10 row.</param>
+    /// <param name="row">The source V10 row.</param>
     /// <param name="serializer">The current serializer used for re-serialization.</param>
     /// <param name="options">The migration options controlling conversion behavior.</param>
     /// <returns>A new <see cref="CacheEntry"/> ready for insertion into the V11 cache.</returns>
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    internal static CacheEntry ConvertEntry(V10CacheElement v10Entry, ISerializer serializer, V10MigrationOptions options)
+    internal static CacheEntry ConvertRow(V10LegacyRow row, ISerializer serializer, V10MigrationOptions options)
     {
-        var createdAt = TicksToDateTimeOffset(v10Entry.CreatedAt);
-        var expiresAt = ConvertExpiration(v10Entry.Expiration);
-        var value = v10Entry.Value;
+        var createdAt = TicksToDateTimeOffset(row.CreatedAt);
+        var expiresAt = ConvertExpiration(row.Expiration);
+        var value = row.Value;
 
-        // Optionally re-serialize from BSON to current format
         if (options.ReserializeToCurrentFormat && value is { Length: > 0 })
         {
-            value = TryReserialize(value, v10Entry.TypeName, serializer, options);
+            value = TryReserialize(value, row.TypeName, serializer, options);
         }
 
-        return new()
-        {
-            Id = v10Entry.Key,
-            CreatedAt = createdAt,
-            ExpiresAt = expiresAt,
-            TypeName = v10Entry.TypeName,
-            Value = value,
-        };
+        return new(row.Key, row.TypeName, value, createdAt, expiresAt);
     }
+
+    /// <summary>
+    /// Legacy shim kept for existing unit tests that still operate on <see cref="V10CacheElement"/>.
+    /// </summary>
+    /// <param name="v10Entry">The V10 entry to convert.</param>
+    /// <param name="serializer">The current serializer used for re-serialization.</param>
+    /// <param name="options">The migration options controlling conversion behavior.</param>
+    /// <returns>A new <see cref="CacheEntry"/> ready for insertion into the V11 cache.</returns>
+    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+    internal static CacheEntry ConvertEntry(V10CacheElement v10Entry, ISerializer serializer, V10MigrationOptions options) =>
+        ConvertRow(new(v10Entry.Key, v10Entry.TypeName, v10Entry.Value, v10Entry.Expiration, v10Entry.CreatedAt), serializer, options);
 
     /// <summary>
     /// Attempts to re-serialize a V10 BSON payload using the current serializer for the given type.
@@ -188,16 +202,11 @@ internal static class V10MigrationService
     [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration uses reflection to dynamically resolve types and call generic Serialize/Deserialize methods.")]
     internal static byte[]? TryReserialize(byte[] value, string? typeName, ISerializer serializer, V10MigrationOptions options)
     {
-        // Only attempt re-serialization if the data looks like BSON
-        if (!UniversalSerializer.IsPotentialBsonData(value))
+        if (!BsonDataHelper.IsPotentialBsonData(value))
         {
             return value;
         }
 
-        // We need the type to properly deserialize/re-serialize. Split the null check
-        // out from the whitespace check so the compiler flow-tracks non-nullness on
-        // every TFM (string.IsNullOrWhiteSpace is annotated with [NotNullWhen(false)]
-        // on net6+ only).
         if (typeName is null)
         {
             return value;
@@ -217,7 +226,6 @@ internal static class V10MigrationService
                 return value;
             }
 
-            // Use reflection to call the generic UniversalSerializer.Deserialize<T> and Serialize<T>
             var deserializeMethod = typeof(UniversalSerializer)
                 .GetMethod(nameof(UniversalSerializer.Deserialize))!
                 .MakeGenericMethod(type);
@@ -249,14 +257,12 @@ internal static class V10MigrationService
     [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses Type.GetType and Assembly.GetType to resolve types dynamically.")]
     internal static Type? ResolveType(string typeName)
     {
-        // First, try the full assembly-qualified name
         var type = Type.GetType(typeName);
         if (type != null)
         {
             return type;
         }
 
-        // Try with just the full name (without assembly qualification)
         var fullNamePart = typeName.Split(',')[0].Trim();
         return AppDomain.CurrentDomain.GetAssemblies()
             .Select(a =>
@@ -302,13 +308,11 @@ internal static class V10MigrationService
     /// <returns>The expiration time, or <c>null</c> if the entry has no expiration.</returns>
     internal static DateTimeOffset? ConvertExpiration(long expirationTicks)
     {
-        // V10 stored 0 or very small values to mean "no expiration"
         if (expirationTicks is <= 0 or < MinValidTicks)
         {
             return null;
         }
 
-        // Check if already expired
         try
         {
             return new DateTimeOffset(new(expirationTicks, DateTimeKind.Utc));
@@ -320,22 +324,22 @@ internal static class V10MigrationService
     }
 
     /// <summary>
-    /// Writes the migration sentinel entry into the V11 cache to prevent re-migration on further runs.
+    /// Writes the migration sentinel entry into the V11 cache to prevent re-migration
+    /// on further runs. Returns the upsert observable directly so it composes into the
+    /// migration pipeline without an extra Task conversion.
     /// </summary>
     /// <param name="v11Cache">The V11 cache to mark as migrated.</param>
-    /// <returns>A task representing the asynchronous writer.</returns>
-    internal static async Task WriteMigrationSentinelAsync(SqliteBlobCache v11Cache)
+    /// <returns>A one-shot observable that fires when the sentinel is committed.</returns>
+    internal static IObservable<Unit> WriteMigrationSentinel(SqliteBlobCache v11Cache)
     {
-        CacheEntry sentinel = new()
-        {
-            Id = MigrationSentinelKey,
-            CreatedAt = DateTimeOffset.UtcNow,
-            ExpiresAt = null,
-            TypeName = null,
-            Value = [],
-        };
+        var sentinel = new CacheEntry(
+            MigrationSentinelKey,
+            TypeName: null,
+            Value: [],
+            CreatedAt: DateTimeOffset.UtcNow,
+            ExpiresAt: null);
 
-        await v11Cache.Connection.InsertOrReplaceAsync(sentinel).ConfigureAwait(false);
+        return v11Cache.Connection.Upsert([sentinel]);
     }
 
     /// <summary>

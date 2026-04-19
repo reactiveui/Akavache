@@ -7,7 +7,11 @@
     <RunAnalyzers>false</RunAnalyzers>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <IsPackable>false</IsPackable>
-
+    <!-- Fossilised v10-format writer: references the published Akavache 10.2.41 package, whose
+         transitive deps (sqlite-net-pcl 1.9.172, SQLitePCLRaw.bundle_green 2.1.11) are no longer
+         part of the main CPM set. Disable transitive pinning here so restore uses the versions
+         the v10 package itself requested. -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>

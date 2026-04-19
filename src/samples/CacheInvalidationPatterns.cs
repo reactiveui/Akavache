@@ -60,7 +60,7 @@ public static class CacheInvalidationPatterns
         }
         finally
         {
-            await cache.DisposeAsync();
+            cache.Dispose();
         }
     }
 
@@ -132,7 +132,7 @@ public static class CacheInvalidationPatterns
         }
         finally
         {
-            await cache.DisposeAsync();
+            cache.Dispose();
         }
     }
 
@@ -185,7 +185,7 @@ public static class CacheInvalidationPatterns
         }
         finally
         {
-            await cache.DisposeAsync();
+            cache.Dispose();
         }
     }
 
@@ -262,7 +262,7 @@ public static class CacheInvalidationPatterns
         }
         finally
         {
-            await cache.DisposeAsync();
+            cache.Dispose();
         }
     }
 
@@ -336,9 +336,9 @@ public static class CacheInvalidationPatterns
         }
         finally
         {
-            await userCache.DisposeAsync();
-            await localCache.DisposeAsync();
-            await memoryCache.DisposeAsync();
+            userCache.Dispose();
+            localCache.Dispose();
+            memoryCache.Dispose();
         }
     }
 
@@ -418,7 +418,7 @@ public static class CacheInvalidationPatterns
         }
         finally
         {
-            await cache.DisposeAsync();
+            cache.Dispose();
         }
     }
 

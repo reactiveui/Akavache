@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheBaseTargets)</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Akavache.Http\Akavache.Http.csproj" />
+    <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
+    <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
+    <ProjectReference Include="..\..\Akavache.SystemTextJson.Bson\Akavache.SystemTextJson.Bson.csproj" />
+    <ProjectReference Include="..\..\Akavache.NewtonsoftJson\Akavache.NewtonsoftJson.csproj" />
+  </ItemGroup>
+
+  <!-- Shared test infrastructure from tests/shared/. -->
+  <ItemGroup>
+    <Compile Include="..\shared\Helpers\*.cs" Link="Helpers\%(Filename)%(Extension)" />
+    <Compile Include="..\shared\Mocks\*.cs" Link="Mocks\%(Filename)%(Extension)" />
+    <Compile Include="..\shared\TestBases\*.cs" Exclude="..\shared\TestBases\BlobCacheDownloadTestsBase.cs" Link="TestBases\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

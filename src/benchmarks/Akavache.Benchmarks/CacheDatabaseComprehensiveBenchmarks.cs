@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
-
+using Akavache.Sqlite3;
+using Akavache.SystemTextJson;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
-using Akavache.SystemTextJson;
-using Akavache.Sqlite3;
-using System.Reactive.Threading.Tasks;
 using Splat.Builder;
 
 namespace Akavache.Benchmarks;

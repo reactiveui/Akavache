@@ -3,21 +3,44 @@
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="sqlite-net-pcl" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green" />
+    <PackageReference Include="SQLitePCLRaw.core" />
+    <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
   </ItemGroup>
 
+  <!--
+    Shared internals compiled from Akavache.Core. InternalsVisibleTo was removed for
+    non-test projects because it leaked Akavache.Core's private surface into every
+    consumer's symbol space and occasionally produced "type X is defined in multiple
+    assemblies" errors for external users who reference Akavache.Core directly. We
+    keep each package's footprint small by pulling in only the helpers the assembly
+    actually uses, via <Compile Include Link> so the files still appear in the IDE
+    under their original Akavache.Core location.
+  -->
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Tests" />
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\DisposeHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecurityUtilities.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\CachedObservables.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecureBlobCacheWrapper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\SqliteProviderGate.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\*.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
+    <InternalsVisibleTo Include="Akavache.Sqlite3.Tests" />
+    <InternalsVisibleTo Include="Akavache.Sqlite3.Tests.Parallel" />
     <InternalsVisibleTo Include="Akavache.Settings.Tests" />
-    <InternalsVisibleTo Include="Akavache.V10toV11" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel" />
   </ItemGroup>
 </Project>

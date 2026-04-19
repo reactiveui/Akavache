@@ -8,12 +8,17 @@
     <IsAotCompatible>false</IsAotCompatible>
     <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
     <EnableAotAnalyzer>false</EnableAotAnalyzer>
+    <!-- Fossilised v10 comparison benchmark: references the published Akavache.Sqlite3 10.2.41
+         whose transitive deps (sqlite-net-pcl, bundle_green) are no longer declared in the main
+         CPM set. Disable transitive pinning so restore uses the versions the v10 package itself
+         requested. -->
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
     <PackageReference Include="Akavache.Sqlite3" VersionOverride="10.2.41" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" VersionOverride="2.1.11" />
   </ItemGroup>
 
 </Project>

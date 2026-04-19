@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
+using Akavache.Tests;
 using Splat.Builder;
 using TUnit.Core.Interfaces;
 
@@ -51,14 +52,11 @@ public class AkavacheTestExecutorBase : ITestExecutor
     /// Override to reset additional state holders owned by a particular test class.
     /// </summary>
     /// <returns>A task representing the asynchronous reset operation.</returns>
-    protected virtual async Task ResetStateAsync()
+    protected virtual Task ResetStateAsync()
     {
-        await CacheDatabase.ResetForTestsAsync().ConfigureAwait(false);
+        CacheDatabase.ResetForTests().WaitForCompletion();
 
         RequestCache.Clear();
-
-        AkavacheBuilder.SettingsStores = [];
-        AkavacheBuilder.BlobCaches = [];
 
         // Clear UniversalSerializer's registered-factory list and cached alternatives
         // so a fake serializer registered by an earlier test cannot leak into the
@@ -72,6 +70,7 @@ public class AkavacheTestExecutorBase : ITestExecutor
         EncryptedSqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
 
         AppBuilder.ResetBuilderStateForTests();
+        return Task.CompletedTask;
     }
 
     /// <summary>

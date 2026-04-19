@@ -1,15 +1,42 @@
 # Migration from V11 to V12
 
-This guide covers the changes between Akavache V11 and V12.
+This guide covers the breaking changes and new features between Akavache V11 and V12.
+
+## SQLite backend rewrite
+
+V12 replaces the sqlite-net-pcl ORM with direct SQLitePCLRaw 3.x access. Every SQL statement is prepared once and cached, with parameters bound positionally. This eliminates expression-tree translation overhead and most per-operation allocations on the hot path. Encrypted databases now use SQLite3MultipleCiphers (SQLite3MC) instead of sqlcipher.
+
+No application code changes are required — `SqliteBlobCache` and `EncryptedSqliteBlobCache` retain their public API. The on-disk database format is compatible: V12 reads V11 databases directly.
 
 ## Breaking Changes
 
-#### System.Text.Json package split
+### Settings use observable-first API
+
+`SettingsBase` properties are now `IObservable<T>` backed by `SettingsStream<T>`. The earlier `GetOrCreate<T>`/`SetOrCreate<T>` sync-getter pattern has been removed — it called `.Wait()` on the underlying observable chain, which deadlocked against the worker-thread SQLite queue.
+
+```diff
+  public class AppSettings : SettingsBase
+  {
+      public AppSettings() : base(nameof(AppSettings)) { }
+
+-     public bool Enabled
+-     {
+-         get => GetOrCreate(true);
+-         set => SetOrCreate(value);
+-     }
++     public IObservable<bool> Enabled => GetOrCreateObservable(true);
++     public IObservable<Unit> SetEnabled(bool value) => SetObservable(value, nameof(Enabled));
+  }
+```
+
+Callers subscribe to `Enabled` to receive the current value plus any future updates, or call `await settings.Enabled.FirstAsync()` for a one-shot read.
+
+### System.Text.Json package split
 
 `Akavache.SystemTextJson` has been split into two packages:
 
-- **`Akavache.SystemTextJson`** - Pure System.Text.Json serializer (JSON only, no Newtonsoft dependency). AOT-compatible.
-- **`Akavache.SystemTextJson.Bson`** - BSON format support using Newtonsoft.Json.Bson for encoding. Use this if you need to read/write BSON data with STJ.
+- **`Akavache.SystemTextJson`** — Pure System.Text.Json serializer (JSON only, no Newtonsoft dependency). AOT-compatible.
+- **`Akavache.SystemTextJson.Bson`** — BSON format support using Newtonsoft.Json.Bson for encoding.
 
 **If you were using `SystemJsonBsonSerializer` or `UseSystemJsonBsonSerializer()`:**
 
@@ -21,73 +48,46 @@ This guide covers the changes between Akavache V11 and V12.
 + using Akavache.SystemTextJson.Bson;  // Builder extensions (UseSystemJsonBsonSerializer)
 ```
 
-Add a package/project reference to `Akavache.SystemTextJson.Bson`. The `SystemJsonBsonSerializer` class remains in the `Akavache.SystemTextJson` namespace so most code using the type directly won't need changes. Builder extension methods (`UseSystemJsonBsonSerializer`) moved to the `Akavache.SystemTextJson.Bson` namespace.
+**If you were using only `SystemJsonSerializer` or `WithSerializerSystemTextJson()`:** no changes needed. The `Akavache.SystemTextJson` package no longer pulls in Newtonsoft.Json.
 
-**If you were using only `SystemJsonSerializer` or `WithSerializerSystemTextJson()`:**
+### SystemJsonBsonSerializer uses composition instead of inheritance
 
-No changes needed. The `Akavache.SystemTextJson` package no longer pulls in Newtonsoft.Json.
+`SystemJsonBsonSerializer` now implements `ISerializer` directly and delegates JSON operations to an internal `SystemJsonSerializer` instance. Code that relied on `SystemJsonBsonSerializer is SystemJsonSerializer` will need updating.
 
-#### SystemJsonBsonSerializer no longer inherits SystemJsonSerializer
+### AOT-safe JsonTypeInfo overloads live in Akavache.SystemTextJson
 
-`SystemJsonBsonSerializer` now uses composition instead of inheritance. It implements `ISerializer` directly and delegates JSON operations to an internal `SystemJsonSerializer` instance. Code that relied on `SystemJsonBsonSerializer is SystemJsonSerializer` will need updating.
-
-#### AOT-safe `JsonTypeInfo` overloads live in Akavache.SystemTextJson, not ISerializer
-
-`ISerializer` in `Akavache.Core` stays deliberately serializer-agnostic — it knows nothing about `System.Text.Json` and does not expose any `JsonTypeInfo<T>` overloads. The base interface still defines just the two reflection-based members:
-
-```csharp
-[RequiresUnreferencedCode("...")]
-[RequiresDynamicCode("...")]
-T? Deserialize<T>(byte[] bytes);
-
-[RequiresUnreferencedCode("...")]
-[RequiresDynamicCode("...")]
-byte[] Serialize<T>(T item);
-```
-
-The AOT-safe `JsonTypeInfo<T>` path is provided by extension methods in the `Akavache.SystemTextJson.Bson` package (which transitively brings in `Akavache.SystemTextJson`). Importing the `Akavache.SystemTextJson` namespace gives you:
+`ISerializer` in `Akavache.Core` stays serializer-agnostic — it does not expose any `JsonTypeInfo<T>` overloads. The AOT-safe path is provided by extension methods in the `Akavache.SystemTextJson` namespace:
 
 ```csharp
 using Akavache.SystemTextJson;
 
-// At call sites, the call looks identical to an instance method:
 var bytes  = serializer.Serialize(myModel, AppJsonContext.Default.MyModel);
 var result = serializer.Deserialize<MyModel>(bytes, AppJsonContext.Default.MyModel);
 ```
 
-Under the hood the extension methods type-check the runtime serializer:
+## New Features
 
-- `SystemJsonSerializer` → routes to its static `DeserializeAot` / `SerializeAot` methods (pure `JsonTypeInfo` path, no reflection)
-- `SystemJsonBsonSerializer` → routes through the same path (BSON cannot be AOT-encoded, so the AOT overload emits plain JSON bytes)
-- Any other `ISerializer` (for example Newtonsoft-backed) → throws `NotSupportedException`, because those implementations do not have an AOT path. Use the non-typed `Deserialize<T>(byte[])` / `Serialize<T>(T)` overloads on Newtonsoft.
+### AOT-safe serialization with JsonTypeInfo
 
-This indirection keeps `Akavache.Core` free of a hard dependency on `System.Text.Json`, so Newtonsoft-only consumers do not transitively pull it in.
-
-#### Trim/AOT attributes still apply to the reflection path
-
-The `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]` attributes remain on the reflection-based `ISerializer.Deserialize<T>(byte[])` / `ISerializer.Serialize<T>(T)` members — they have not been removed. Callers that publish with trimming or NativeAOT will still see the analyzer warnings for those methods, which is intentional: the correct AOT-safe path is the `JsonTypeInfo<T>` extension method described above.
-
-### New Features
-
-#### AOT-safe serialization with JsonTypeInfo
-
-`SystemJsonSerializer` now implements the `JsonTypeInfo<T>` overloads for fully AOT-compatible serialization:
+`SystemJsonSerializer` implements `JsonTypeInfo<T>` overloads for fully AOT-compatible serialization:
 
 ```csharp
-// Define your serializer context
 [JsonSerializable(typeof(MyModel))]
 public partial class AppJsonContext : JsonSerializerContext { }
 
-// Use AOT-safe overloads
 var serializer = new SystemJsonSerializer();
 var bytes = serializer.Serialize(myModel, AppJsonContext.Default.MyModel);
 var result = serializer.Deserialize(bytes, AppJsonContext.Default.MyModel);
 ```
 
-#### Universal serializer registry
+### Universal serializer registry
 
-The `UniversalSerializer` fallback mechanism now uses an explicit registry instead of runtime type discovery. Serializer packages register themselves automatically when configured through builder methods. For manual registration:
+`UniversalSerializer` uses an explicit thread-safe registry instead of runtime type discovery. Serializer packages register themselves automatically when configured through builder methods. For manual registration:
 
 ```csharp
 UniversalSerializer.RegisterSerializer(() => new SystemJsonSerializer());
 ```
+
+### V10 to V11 migration shim
+
+The `Akavache.V10toV11` package provides a one-time migration path from V10 databases. This is a compatibility-only package — new applications should use `Akavache.Sqlite3` directly.

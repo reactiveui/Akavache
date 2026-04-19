@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <Description>HTTP download and caching service for Akavache</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.Http" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <PackageReference Include="System.Memory" Condition="$(TargetFramework.StartsWith('net4'))" />
+  </ItemGroup>
+
+  <!-- Shared internals from Akavache.Core (see Akavache.Sqlite3.csproj for rationale). -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\SelectConstantObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
+  </ItemGroup>
+
+</Project>

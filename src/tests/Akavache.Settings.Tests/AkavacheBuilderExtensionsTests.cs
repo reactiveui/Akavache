@@ -89,43 +89,6 @@ public class AkavacheBuilderExtensionsTests
     }
 
     /// <summary>
-    /// Verifies that GetLoadedSettingsStore returns null when SettingsStores is null.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
-    [Test]
-    public async Task GetLoadedSettingsStore_NullSettingsStores_ReturnsNullAsync()
-    {
-        IAkavacheInstance? instance = null;
-
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache",
-                builder =>
-                {
-                    builder
-                        .WithSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-                },
-                inst => instance = inst)
-            .Build();
-
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
-
-        var savedStores = AkavacheBuilder.SettingsStores;
-        AkavacheBuilder.SettingsStores = null;
-
-        try
-        {
-            var result = instance!.GetLoadedSettingsStore<ViewSettings>();
-            await Assert.That(result).IsNull();
-        }
-        finally
-        {
-            AkavacheBuilder.SettingsStores = savedStores;
-        }
-    }
-
-    /// <summary>
     /// Verifies that GetLoadedSettingsStore returns null when key is not found.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
@@ -153,45 +116,6 @@ public class AkavacheBuilderExtensionsTests
     }
 
     /// <summary>
-    /// Verifies that DisposeSettingsStore returns early when stores are null.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
-    [Test]
-    public async Task DisposeSettingsStore_NullStores_ReturnsEarlyAsync()
-    {
-        IAkavacheInstance? instance = null;
-
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache",
-                builder =>
-                {
-                    builder
-                        .WithSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-                },
-                inst => instance = inst)
-            .Build();
-
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
-
-        var savedStores = AkavacheBuilder.SettingsStores;
-        var savedCaches = AkavacheBuilder.BlobCaches;
-        AkavacheBuilder.SettingsStores = null;
-        AkavacheBuilder.BlobCaches = null;
-
-        try
-        {
-            await instance!.DisposeSettingsStore<ViewSettings>().ConfigureAwait(false);
-        }
-        finally
-        {
-            AkavacheBuilder.SettingsStores = savedStores;
-            AkavacheBuilder.BlobCaches = savedCaches;
-        }
-    }
-
-    /// <summary>
     /// Verifies that WithSecureSettingsStore throws when builder is null.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
@@ -211,46 +135,6 @@ public class AkavacheBuilderExtensionsTests
     {
         var action = static () => ((IAkavacheInstance)null!).GetSecureSettingsStore<ViewSettings>("password");
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
-    }
-
-    /// <summary>
-    /// Verifies that GetSecureSettingsStore throws when AkavacheBuilder has not been initialized.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
-    [Test]
-    public async Task GetSecureSettingsStore_NullBuilderState_ThrowsAsync()
-    {
-        IAkavacheInstance? instance = null;
-
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache",
-                builder =>
-                {
-                    builder
-                        .WithSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-                },
-                inst => instance = inst)
-            .Build();
-
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
-
-        var savedStores = AkavacheBuilder.SettingsStores;
-        var savedCaches = AkavacheBuilder.BlobCaches;
-        AkavacheBuilder.SettingsStores = null;
-        AkavacheBuilder.BlobCaches = null;
-
-        try
-        {
-            var action = () => instance!.GetSecureSettingsStore<ViewSettings>("password");
-            await Assert.That(action).ThrowsExactly<InvalidOperationException>();
-        }
-        finally
-        {
-            AkavacheBuilder.SettingsStores = savedStores;
-            AkavacheBuilder.BlobCaches = savedCaches;
-        }
     }
 
     /// <summary>
@@ -359,53 +243,13 @@ public class AkavacheBuilderExtensionsTests
     }
 
     /// <summary>
-    /// Verifies that GetSettingsStore throws when AkavacheBuilder has not been initialized.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
-    [Test]
-    public async Task GetSettingsStore_NullBuilderState_ThrowsAsync()
-    {
-        IAkavacheInstance? instance = null;
-
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache",
-                builder =>
-                {
-                    builder
-                        .WithSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-                },
-                inst => instance = inst)
-            .Build();
-
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
-
-        var savedStores = AkavacheBuilder.SettingsStores;
-        var savedCaches = AkavacheBuilder.BlobCaches;
-        AkavacheBuilder.SettingsStores = null;
-        AkavacheBuilder.BlobCaches = null;
-
-        try
-        {
-            var action = () => instance!.GetSettingsStore<ViewSettings>();
-            await Assert.That(action).ThrowsExactly<InvalidOperationException>();
-        }
-        finally
-        {
-            AkavacheBuilder.SettingsStores = savedStores;
-            AkavacheBuilder.BlobCaches = savedCaches;
-        }
-    }
-
-    /// <summary>
     /// Verifies that WithSettingsStore with IBlobCache throws when builder is null.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task WithSettingsStoreWithCache_NullBuilder_ThrowsAsync()
     {
-        InMemoryBlobCache cache = new(new NewtonsoftSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new NewtonsoftSerializer());
         var action = () => ((IAkavacheBuilder)null!).WithSettingsStore<ViewSettings>(cache, _ => { });
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
@@ -444,7 +288,7 @@ public class AkavacheBuilderExtensionsTests
     [Test]
     public async Task GetSettingsStoreWithCache_NullBuilder_ThrowsAsync()
     {
-        InMemoryBlobCache cache = new(new NewtonsoftSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new NewtonsoftSerializer());
         var action = () => ((IAkavacheInstance)null!).GetSettingsStore<ViewSettings>(cache);
         await Assert.That(action).ThrowsExactly<ArgumentNullException>();
     }
@@ -477,47 +321,6 @@ public class AkavacheBuilderExtensionsTests
     }
 
     /// <summary>
-    /// Verifies that GetSettingsStore with IBlobCache throws when AkavacheBuilder has not been initialized.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
-    [Test]
-    public async Task GetSettingsStoreWithCache_NullBuilderState_ThrowsAsync()
-    {
-        IAkavacheInstance? instance = null;
-
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache",
-                builder =>
-                {
-                    builder
-                        .WithSqliteProvider()
-                        .WithSettingsCachePath(_cacheRoot);
-                },
-                inst => instance = inst)
-            .Build();
-
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
-
-        var savedStores = AkavacheBuilder.SettingsStores;
-        var savedCaches = AkavacheBuilder.BlobCaches;
-        AkavacheBuilder.SettingsStores = null;
-        AkavacheBuilder.BlobCaches = null;
-
-        try
-        {
-            InMemoryBlobCache cache = new(new NewtonsoftSerializer());
-            var action = () => instance!.GetSettingsStore<ViewSettings>(cache);
-            await Assert.That(action).ThrowsExactly<InvalidOperationException>();
-        }
-        finally
-        {
-            AkavacheBuilder.SettingsStores = savedStores;
-            AkavacheBuilder.BlobCaches = savedCaches;
-        }
-    }
-
-    /// <summary>
     /// Verifies that a settings store can be created using a custom IBlobCache instance.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
@@ -540,18 +343,15 @@ public class AkavacheBuilderExtensionsTests
                 {
                     await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
                     await Assert.That(viewSettings).IsNotNull();
-                    await Assert.That(viewSettings!.IntTest).IsEqualTo(1);
+                    await Assert.That((int)viewSettings!.IntTest).IsEqualTo(1);
                 }
                 finally
                 {
                     try
                     {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync().ConfigureAwait(false);
-                        }
+                        viewSettings?.Dispose();
 
-                        await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+                        await instance.DeleteSettingsStore<ViewSettings>();
                     }
                     catch (Exception ex)
                     {
@@ -584,16 +384,13 @@ public class AkavacheBuilderExtensionsTests
                     viewSettings = instance.GetSettingsStore<ViewSettings>(cache, dbName);
 
                     await Assert.That(viewSettings).IsNotNull();
-                    await Assert.That(viewSettings!.IntTest).IsEqualTo(1);
+                    await Assert.That((int)viewSettings!.IntTest).IsEqualTo(1);
                 }
                 finally
                 {
                     try
                     {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync().ConfigureAwait(false);
-                        }
+                        viewSettings?.Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -631,7 +428,7 @@ public class AkavacheBuilderExtensionsTests
                 {
                     try
                     {
-                        await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+                        await instance.DeleteSettingsStore<ViewSettings>();
                     }
                     catch (Exception ex)
                     {
@@ -661,8 +458,8 @@ public class AkavacheBuilderExtensionsTests
             static async instance =>
             {
                 // Delete twice - second time the file won't exist
-                await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
-                await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+                await instance.DeleteSettingsStore<ViewSettings>();
+                await instance.DeleteSettingsStore<ViewSettings>();
             });
 
         await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
@@ -698,7 +495,7 @@ public class AkavacheBuilderExtensionsTests
         // A name containing ".." trips SecurityUtilities.ValidateDatabaseName, which
         // throws inside the try — the catch block must swallow the exception and the
         // call must complete without bubbling up.
-        await instance!.DeleteSettingsStore<ViewSettings>(overrideDatabaseName: "../evil").ConfigureAwait(false);
+        await instance!.DeleteSettingsStore<ViewSettings>(overrideDatabaseName: "../evil");
     }
 
     /// <summary>
@@ -725,7 +522,7 @@ public class AkavacheBuilderExtensionsTests
         await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
         // Should not throw even with empty cache path
-        await instance!.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+        await instance!.DeleteSettingsStore<ViewSettings>();
     }
 
     /// <summary>
@@ -761,12 +558,9 @@ public class AkavacheBuilderExtensionsTests
                 {
                     try
                     {
-                        if (viewSettings is not null)
-                        {
-                            await viewSettings.DisposeAsync().ConfigureAwait(false);
-                        }
+                        viewSettings?.Dispose();
 
-                        await instance.DeleteSettingsStore<ViewSettings>(customName).ConfigureAwait(false);
+                        await instance.DeleteSettingsStore<ViewSettings>(customName);
                     }
                     catch (Exception ex)
                     {
@@ -834,7 +628,7 @@ public class AkavacheBuilderExtensionsTests
                 {
                     try
                     {
-                        await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+                        await instance.DeleteSettingsStore<ViewSettings>();
                     }
                     catch (Exception ex)
                     {
@@ -873,7 +667,7 @@ public class AkavacheBuilderExtensionsTests
                 {
                     try
                     {
-                        await instance.DeleteSettingsStore<ViewSettings>().ConfigureAwait(false);
+                        await instance.DeleteSettingsStore<ViewSettings>();
                     }
                     catch (Exception ex)
                     {
@@ -907,7 +701,7 @@ public class AkavacheBuilderExtensionsTests
                 Directory.CreateDirectory(fakePath);
 
                 // Should not throw - the catch block in DeleteSettingsStore handles IO errors
-                await instance.DeleteSettingsStore<ViewSettings>(dbName).ConfigureAwait(false);
+                await instance.DeleteSettingsStore<ViewSettings>(dbName);
 
                 // Clean up the fake directory
                 try

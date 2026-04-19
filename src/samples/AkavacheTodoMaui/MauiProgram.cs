@@ -12,6 +12,7 @@ using AkavacheTodoMaui.ViewModels;
 using Microsoft.Extensions.Logging;
 #endif
 using ReactiveUI;
+using ReactiveUI.Builder;
 using Splat;
 using Splat.Builder;
 
@@ -62,11 +63,13 @@ public static class MauiProgram
     /// <returns>The application builder.</returns>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     private static IAppBuilder ConfigureAkavache() =>
-        AppBuilder.CreateSplatBuilder()
+        RxAppBuilder.CreateReactiveUIBuilder()
+            .WithMaui()
             .WithAkavacheCacheDatabase<SystemJsonSerializer>(
                 static builder => builder
                     .UseForcedDateTimeKind(DateTimeKind.Utc)
                     .WithSqliteProvider()
                     .WithSqliteDefaults(),
-                "AkavacheTodoMaui");
+                "AkavacheTodoMaui")
+            .BuildApp();
 }

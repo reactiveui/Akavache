@@ -27,61 +27,7 @@ var instance = CacheDatabase.CreateBuilder("AkavacheCompatTest")
     .Build();
 
 // Create a direct SQLite cache instance pointing at the exact db path used by v10
-await using SqliteBlobCache readerCache = new(dbPath, instance.Serializer!);
-
-// Debug: Inspect tables and basic counts
-try
-{
-    var tables = await readerCache.Connection.QueryAsync<NameRow>("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
-    Console.WriteLine("SQLite tables present:");
-    foreach (var t in tables)
-    {
-        try
-        {
-            var count = await readerCache.Connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM \"{t.Name}\"");
-            Console.WriteLine($" -{t.Name} (rows={count})");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($" -{t.Name} (count error: {ex.Message})");
-        }
-    }
-
-    var hasCacheElement = tables.Any(static x => string.Equals(x.Name, "CacheElement", StringComparison.OrdinalIgnoreCase));
-    if (hasCacheElement)
-    {
-        Console.WriteLine("PRAGMA table_info('CacheElement'):");
-        try
-        {
-            var cols = await readerCache.Connection.QueryAsync<PragmaRow>("PRAGMA table_info('CacheElement')");
-            foreach (var c in cols)
-            {
-                Console.WriteLine($" -{c.Name} (type={c.Type})");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error getting PRAGMA table_info: {ex.Message}");
-        }
-
-        try
-        {
-            var sample = await readerCache.Connection.QueryAsync<SampleRow>("SELECT Key, TypeName, length(Value) as LenValue, length(Data) as LenData, ExpiresAt FROM CacheElement ORDER BY Key");
-            foreach (var s in sample)
-            {
-                Console.WriteLine($"Row: Key={s.Key}, TypeName={s.TypeName}, Len(Value)={s.LenValue}, Len(Data)={s.LenData}, ExpiresAt={s.ExpiresAt}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error reading sample rows from CacheElement: {ex.Message}");
-        }
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"DB introspection error: {ex}");
-}
+using SqliteBlobCache readerCache = new(dbPath, instance.Serializer!);
 
 // Keys
 const string keyString = "compat:string";
@@ -155,7 +101,7 @@ try
 }
 finally
 {
-    await readerCache.DisposeAsync();
+    readerCache.Dispose();
     await CacheDatabase.Shutdown();
 }
 
@@ -183,60 +129,3 @@ public class Person
     public string Email { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Represents a row from the sqlite_master table containing a name.
-/// </summary>
-public class NameRow
-{
-    /// <summary>
-    /// Gets or sets the name value.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Represents a row from a PRAGMA query result.
-/// </summary>
-public class PragmaRow
-{
-    /// <summary>
-    /// Gets or sets the column name.
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the column type.
-    /// </summary>
-    public string Type { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Represents a sample row read from the cache database.
-/// </summary>
-public class SampleRow
-{
-    /// <summary>
-    /// Gets or sets the cache key.
-    /// </summary>
-    public string Key { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the stored type name.
-    /// </summary>
-    public string? TypeName { get; set; }
-
-    /// <summary>
-    /// Gets or sets the length of the value data.
-    /// </summary>
-    public long? LenValue { get; set; }
-
-    /// <summary>
-    /// Gets or sets the length of the blob data.
-    /// </summary>
-    public long? LenData { get; set; }
-
-    /// <summary>
-    /// Gets or sets the expiration timestamp.
-    /// </summary>
-    public string? ExpiresAt { get; set; }
-}

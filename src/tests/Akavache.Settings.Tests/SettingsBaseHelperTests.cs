@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Core;
 using Akavache.SystemTextJson;
 using Splat;
 
@@ -19,13 +18,27 @@ public class SettingsBaseHelperTests
 {
     /// <summary>
     /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
-    /// <see langword="null"/> when the registry has not been populated.
+    /// <see langword="null"/> when no Akavache instance has been initialized yet —
+    /// closes the <c>CurrentInstance is null</c> branch.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task TryGetFromBlobCacheRegistryShouldReturnNullWhenNoInstance()
+    {
+        var result = SettingsBase.TryGetFromBlobCacheRegistry("MissingClass");
+
+        await Assert.That(result).IsNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
+    /// <see langword="null"/> when the current instance's registry is empty.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldReturnNullWhenRegistryEmpty()
     {
-        AkavacheBuilder.BlobCaches = [];
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryEmpty");
 
         var result = SettingsBase.TryGetFromBlobCacheRegistry("MissingClass");
 
@@ -34,17 +47,15 @@ public class SettingsBaseHelperTests
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns the
-    /// matching cache when the class name is registered with a non-null entry.
+    /// matching cache when the class name is registered in the current instance.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldReturnExactMatch()
     {
-        InMemoryBlobCache cache = new(new SystemJsonSerializer());
-        AkavacheBuilder.BlobCaches = new()
-        {
-            ["KnownClass"] = cache,
-        };
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryExact");
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        CacheDatabase.CurrentInstance!.BlobCaches["KnownClass"] = cache;
 
         var result = SettingsBase.TryGetFromBlobCacheRegistry("KnownClass");
 
@@ -53,54 +64,19 @@ public class SettingsBaseHelperTests
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> falls back
-    /// to the first registered non-null entry when the class name does not match.
+    /// to the first registered entry when the class name does not match.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstNonNullEntry()
+    public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstEntry()
     {
-        InMemoryBlobCache fallback = new(new SystemJsonSerializer());
-        AkavacheBuilder.BlobCaches = new()
-        {
-            ["RenamedDatabase"] = fallback,
-        };
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryFallback");
+        InMemoryBlobCache fallback = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        CacheDatabase.CurrentInstance!.BlobCaches["RenamedDatabase"] = fallback;
 
         var result = SettingsBase.TryGetFromBlobCacheRegistry("DifferentClassName");
 
         await Assert.That(result).IsSameReferenceAs(fallback);
-    }
-
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
-    /// <see langword="null"/> when the registry exists but every entry is null.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryGetFromBlobCacheRegistryShouldReturnNullWhenAllEntriesNull()
-    {
-        AkavacheBuilder.BlobCaches = new()
-        {
-            ["NullEntry"] = null,
-        };
-
-        var result = SettingsBase.TryGetFromBlobCacheRegistry("NullEntry");
-
-        await Assert.That(result).IsNull();
-    }
-
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
-    /// <see langword="null"/> when the static registry itself is <see langword="null"/>.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryGetFromBlobCacheRegistryShouldReturnNullWhenRegistryIsNull()
-    {
-        AkavacheBuilder.BlobCaches = null;
-
-        var result = SettingsBase.TryGetFromBlobCacheRegistry("AnyClass");
-
-        await Assert.That(result).IsNull();
     }
 
     /// <summary>
@@ -125,7 +101,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldReturnUserAccountWhenResolverSucceeds()
     {
-        InMemoryBlobCache userAccount = new(new SystemJsonSerializer());
+        InMemoryBlobCache userAccount = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             () => userAccount,
@@ -143,7 +119,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldFallBackToLocalMachineWhenUserAccountThrows()
     {
-        InMemoryBlobCache localMachine = new(new SystemJsonSerializer());
+        InMemoryBlobCache localMachine = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             ThrowingResolver,
@@ -161,7 +137,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryGetFromCacheDatabaseShouldFallBackToInMemoryWhenOthersThrow()
     {
-        InMemoryBlobCache inMemory = new(new SystemJsonSerializer());
+        InMemoryBlobCache inMemory = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryGetFromCacheDatabase(
             ThrowingResolver,
@@ -195,7 +171,7 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task TryReadAmbientCacheShouldReturnValueFromSuccessfulResolver()
     {
-        InMemoryBlobCache cache = new(new SystemJsonSerializer());
+        InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.TryReadAmbientCache(() => cache);
 
@@ -223,8 +199,8 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task GetBlobCacheForClassShouldUseInjectedResolvers()
     {
-        AkavacheBuilder.BlobCaches = [];
-        InMemoryBlobCache userAccount = new(new SystemJsonSerializer());
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_InjectedResolvers");
+        InMemoryBlobCache userAccount = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         var result = SettingsBase.GetBlobCacheForClass(
             "AnyClass",
@@ -245,10 +221,10 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task InjectableResolverConstructorShouldUseFallbackResolvers()
     {
-        AkavacheBuilder.BlobCaches = [];
-        InMemoryBlobCache userAccount = new(new SystemJsonSerializer());
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_InjectableResolverCtor");
+        InMemoryBlobCache userAccount = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
-        await using ResolverInjectedSettings settings = new(
+        using ResolverInjectedSettings settings = new(
             nameof(ResolverInjectedSettings),
             () => userAccount,
             ThrowingResolver,
@@ -303,11 +279,10 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task CreateNoCacheFoundExceptionShouldListRegisteredKeys()
     {
-        AkavacheBuilder.BlobCaches = new()
-        {
-            ["AlphaCache"] = new InMemoryBlobCache(new SystemJsonSerializer()),
-            ["BetaCache"] = new InMemoryBlobCache(new SystemJsonSerializer()),
-        };
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_NoCacheFoundRegistered");
+        var registry = CacheDatabase.CurrentInstance!.BlobCaches;
+        registry["AlphaCache"] = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        registry["BetaCache"] = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         var exception = SettingsBase.CreateNoCacheFoundException("TargetClass");
 
@@ -318,13 +293,13 @@ public class SettingsBaseHelperTests
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports
-    /// <c>&lt;none&gt;</c> when the registry is empty.
+    /// <c>&lt;none&gt;</c> when the current instance's registry is empty.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateNoCacheFoundExceptionShouldReport_NoneWhenRegistryEmpty()
     {
-        AkavacheBuilder.BlobCaches = [];
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_NoCacheFoundEmpty");
 
         var exception = SettingsBase.CreateNoCacheFoundException("TargetClass");
 
@@ -333,14 +308,12 @@ public class SettingsBaseHelperTests
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports
-    /// <c>&lt;none&gt;</c> when the registry is <see langword="null"/>.
+    /// <c>&lt;none&gt;</c> when no Akavache instance has been initialized yet.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task CreateNoCacheFoundExceptionShouldReport_NoneWhenRegistryNull()
+    public async Task CreateNoCacheFoundExceptionShouldReport_NoneWhenNoInstance()
     {
-        AkavacheBuilder.BlobCaches = null;
-
         var exception = SettingsBase.CreateNoCacheFoundException("TargetClass");
 
         await Assert.That(exception.Message).Contains("<none>");
@@ -348,13 +321,17 @@ public class SettingsBaseHelperTests
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.GetBlobCacheForClass(string)"/> throws the
-    /// descriptive exception when every strategy returns <see langword="null"/>.
+    /// descriptive exception when every strategy returns <see langword="null"/>. This
+    /// deliberately does *not* initialize <see cref="CacheDatabase"/> — doing so would
+    /// register an <see cref="ISerializer"/> with Splat, which in turn lets
+    /// <see cref="SettingsBase.TryGetTransientFallback"/> build an
+    /// <see cref="InMemoryBlobCache"/> and mask the error path under test.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetBlobCacheForClassShouldThrowWhenNoStrategyResolves()
     {
-        AkavacheBuilder.BlobCaches = [];
+        AppLocator.CurrentMutable.UnregisterAll<ISerializer>();
 
         await Assert.That(static () => SettingsBase.GetBlobCacheForClass("UnresolvableClass"))
             .Throws<InvalidOperationException>();
@@ -369,11 +346,9 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task GetBlobCacheForClassShouldShortCircuitToRegistry()
     {
-        InMemoryBlobCache registered = new(new SystemJsonSerializer());
-        AkavacheBuilder.BlobCaches = new()
-        {
-            ["MyClass"] = registered,
-        };
+        CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_RegistryShortCircuit");
+        InMemoryBlobCache registered = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+        CacheDatabase.CurrentInstance!.BlobCaches["MyClass"] = registered;
 
         var result = SettingsBase.GetBlobCacheForClass("MyClass");
 
@@ -409,6 +384,24 @@ public class SettingsBaseHelperTests
     [Test]
     public async Task ReadAmbientInMemoryShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => SettingsBase.ReadAmbientInMemory()).Throws<InvalidOperationException>();
+
+    /// <summary>
+    /// Tests that <see cref="SettingsBase.GetBlobCacheForClass(string)"/> (default-resolver
+    /// overload) returns a cache when an <see cref="ISerializer"/> is registered — it falls
+    /// through to <see cref="SettingsBase.TryGetTransientFallback"/> and builds an
+    /// <see cref="InMemoryBlobCache"/>.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task GetBlobCacheForClassDefaultOverloadShouldResolveFallback()
+    {
+        SystemJsonSerializer serializer = new();
+        AppLocator.CurrentMutable.RegisterConstant<ISerializer>(serializer);
+
+        var result = SettingsBase.GetBlobCacheForClass("DefaultOverloadFallbackTest");
+
+        await Assert.That(result).IsNotNull();
+    }
 
     /// <summary>
     /// Resolver stub that always throws — mirrors the behaviour of

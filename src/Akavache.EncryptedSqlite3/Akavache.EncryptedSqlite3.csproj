@@ -8,20 +8,47 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Tests" />
+    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests" />
+    <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests.Parallel" />
     <InternalsVisibleTo Include="Akavache.Settings.Tests" />
+    <InternalsVisibleTo Include="Akavache.Settings.Tests.Parallel" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="sqlite-net-sqlcipher" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" />
+    <PackageReference Include="SQLitePCLRaw.core" />
+    <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
   </ItemGroup>
 
+  <!--
+    Shared sources from the unencrypted sibling package. The whole Akavache.Sqlite3
+    *.cs root directory is globbed in (its files toggle ENCRYPTED via #if to switch
+    namespace and behaviour) so a new file added there is automatically picked up
+    by both assemblies. bin/obj live in subdirectories so the single-* glob never
+    matches them.
+  -->
   <ItemGroup>
-    <Compile Include="../Akavache.Sqlite3/SqliteBlobCache.cs" />
-    <Compile Include="../Akavache.Sqlite3/AkavacheBuilderExtensions.cs" />
-    <Compile Include="../Akavache.Sqlite3/SqliteAkavacheConnection.cs" />
-    <Compile Include="../Akavache.Sqlite3/SqliteAkavacheTransaction.cs" />
+    <Compile Include="..\Akavache.Sqlite3\*.cs"
+             Exclude="..\Akavache.Sqlite3\AkavacheBuilderExtensions.cs"
+             Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!--
+    Shared internals compiled from Akavache.Core. Mirror of the Akavache.Sqlite3
+    csproj — same set of helpers + observables + polyfills, since the encrypted
+    assembly is its own compilation unit and can't see the unencrypted one's
+    private internals.
+  -->
+  <ItemGroup>
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\DisposeHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecurityUtilities.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\CachedObservables.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\SqliteProviderGate.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\*.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

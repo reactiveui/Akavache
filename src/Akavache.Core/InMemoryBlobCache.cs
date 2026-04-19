@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Helpers;
 using Splat;
 
 namespace Akavache;
@@ -23,7 +24,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? seriali
     /// </summary>
     /// <param name="serialzerType">Type of the serialzer.</param>
     public InMemoryBlobCache(string serialzerType)
-        : this(CacheDatabase.TaskpoolScheduler, AppLocator.Current.GetService<ISerializer>(contract: serialzerType) ?? throw new InvalidOperationException("No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
+        : this(CacheDatabase.TaskpoolScheduler, ArgumentExceptionHelper.EnsureNotNull(AppLocator.Current.GetService<ISerializer>(contract: serialzerType), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
     {
     }
 
@@ -32,7 +33,7 @@ public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? seriali
     /// </summary>
     /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
     public InMemoryBlobCache(ISerializer serializer)
-        : this(CacheDatabase.TaskpoolScheduler, serializer ?? throw new ArgumentNullException(nameof(serializer), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
+        : this(CacheDatabase.TaskpoolScheduler, ArgumentExceptionHelper.EnsureNotNull(serializer))
     {
     }
 }

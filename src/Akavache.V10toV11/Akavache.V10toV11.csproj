@@ -4,19 +4,35 @@
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackageReleaseNotes>Compatibility shim for one-time V10 to V11 database migration. New applications should use Akavache.Sqlite3 directly.</PackageReleaseNotes>
+    <PackageTags>akavache;cache;sqlite;migration;deprecated</PackageTags>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="sqlite-net-pcl" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
     <ProjectReference Include="..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
   </ItemGroup>
 
+  <!-- Shared internals from Akavache.Core (see Akavache.Sqlite3.csproj for rationale). -->
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Tests" />
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\BsonDataHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\SecureBlobCacheWrapper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\SqliteProviderGate.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\ISqliteOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteRowStreamOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteShutdownOperation.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteReplyObservable.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteRowObservable.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqliteOperationQueue.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\SqlitePclRawConnection.cs" Link="Shared\Sqlite3\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Sqlite3\V10LegacyRow.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Akavache.Integration.Tests" />
+    <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
   </ItemGroup>
 </Project>
