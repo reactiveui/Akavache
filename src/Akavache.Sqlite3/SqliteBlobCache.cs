@@ -640,8 +640,8 @@ public class SqliteBlobCache : IBlobCache
         var keyList = MaterializeKeys(keys);
         return _initialized.Gate(() =>
             keyList.Select(k => Connection.SetExpiry(k, typeFullName: null, expiry))
-                .Concat()
-                .LastOrDefaultAsync());
+                .ToList()
+                .RunAll());
     }
 
     /// <inheritdoc/>
@@ -667,8 +667,8 @@ public class SqliteBlobCache : IBlobCache
         var typeName = type.FullName;
         return _initialized.Gate(() =>
             keyList.Select(k => Connection.SetExpiry(k, typeName, expiry))
-                .Concat()
-                .LastOrDefaultAsync());
+                .ToList()
+                .RunAll());
     }
 
     /// <inheritdoc/>

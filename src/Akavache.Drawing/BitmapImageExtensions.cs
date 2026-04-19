@@ -27,8 +27,9 @@ public static class BitmapImageExtensions
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.Get(key)
-            .SelectMany(static bytes => ThrowOnNullOrBadImageBuffer(bytes))
-            .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+            .SelectManyThen(
+                static bytes => ThrowOnNullOrBadImageBuffer(bytes),
+                x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
     /// <summary>
@@ -49,8 +50,7 @@ public static class BitmapImageExtensions
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
-            .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+            .SelectManyThen(static bytes => ThrowOnBadImageBuffer(bytes), x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
     /// <summary>
@@ -71,8 +71,7 @@ public static class BitmapImageExtensions
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
-            .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+            .SelectManyThen(static bytes => ThrowOnBadImageBuffer(bytes), x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
     /// <summary>
@@ -94,8 +93,7 @@ public static class BitmapImageExtensions
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
-            .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+            .SelectManyThen(static bytes => ThrowOnBadImageBuffer(bytes), x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
     /// <summary>
@@ -117,8 +115,7 @@ public static class BitmapImageExtensions
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
 
         return blobCache.DownloadUrl(key, url, fetchAlways: fetchAlways, absoluteExpiration: absoluteExpiration)
-            .SelectMany(static bytes => ThrowOnBadImageBuffer(bytes))
-            .SelectMany(x => BytesToImage(x, desiredWidth, desiredHeight));
+            .SelectManyThen(static bytes => ThrowOnBadImageBuffer(bytes), x => BytesToImage(x, desiredWidth, desiredHeight));
     }
 
     /// <summary>

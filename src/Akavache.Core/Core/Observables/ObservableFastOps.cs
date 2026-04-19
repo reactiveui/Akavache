@@ -69,4 +69,47 @@ internal static class ObservableFastOps
     /// <returns>An observable that never produces an error terminal — errors are replaced with a single <see cref="Unit.Default"/>.</returns>
     public static IObservable<Unit> CatchReturnUnit(this IObservable<Unit> source) =>
         new CatchReturnObservable<Unit>(source, Unit.Default);
+
+    /// <summary>
+    /// Applies <paramref name="selector"/> and emits only non-null results.
+    /// Replaces <c>.Select(f).Where(x =&gt; x is not null).Select(x =&gt; x!)</c>
+    /// with a single operator allocation.
+    /// </summary>
+    /// <typeparam name="TIn">The source element type.</typeparam>
+    /// <typeparam name="TOut">The projected element type.</typeparam>
+    /// <param name="source">The source observable.</param>
+    /// <param name="selector">Projection that may return <see langword="null"/>.</param>
+    /// <returns>An observable that emits only non-null projected values.</returns>
+    public static IObservable<TOut> TrySelect<TIn, TOut>(
+        this IObservable<TIn> source,
+        Func<TIn, TOut?> selector) =>
+        new TrySelectObservable<TIn, TOut>(source, selector);
+
+    /// <summary>
+    /// Chains two one-shot <c>SelectMany</c> projections into
+    /// a single operator. Replaces <c>.SelectMany(a).SelectMany(b)</c> (2 operator
+    /// allocations) with 1.
+    /// </summary>
+    /// <typeparam name="TSource">The source element type.</typeparam>
+    /// <typeparam name="TMid">The intermediate element type.</typeparam>
+    /// <typeparam name="TResult">The final result type.</typeparam>
+    /// <param name="source">The source observable.</param>
+    /// <param name="first">First projection: source → intermediate observable.</param>
+    /// <param name="second">Second projection: intermediate → result observable.</param>
+    /// <returns>A fused two-stage SelectMany observable.</returns>
+    public static IObservable<TResult> SelectManyThen<TSource, TMid, TResult>(
+        this IObservable<TSource> source,
+        Func<TSource, IObservable<TMid>> first,
+        Func<TMid, IObservable<TResult>> second) =>
+        new SelectManyThenObservable<TSource, TMid, TResult>(source, first, second);
+
+    /// <summary>
+    /// Runs a list of one-shot <see cref="IObservable{Unit}"/> sequentially and emits
+    /// a single <see cref="Unit.Default"/> when all have completed. Replaces
+    /// <c>.Concat().LastOrDefaultAsync()</c> with a single operator.
+    /// </summary>
+    /// <param name="sources">The observables to run in order.</param>
+    /// <returns>A one-shot observable that completes after all sources.</returns>
+    public static IObservable<Unit> RunAll(this IReadOnlyList<IObservable<Unit>> sources) =>
+        new RunAllObservable(sources);
 }

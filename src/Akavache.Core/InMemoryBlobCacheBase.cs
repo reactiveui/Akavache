@@ -685,8 +685,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
         Volatile.Read(ref _disposed) != 0
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<IEnumerable<T>>(GetType().Name)
             : GetAll(typeof(T))
-                .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
-                .WhereSelect(static obj => obj is not null, static obj => obj!)
+                .TrySelect(kvp => Serializer.Deserialize<T>(kvp.Value))
                 .ToList()
                 .Select(static list => (IEnumerable<T>)list);
 

@@ -30,6 +30,7 @@
     <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Core\ObservableUnitExtensions.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Core\Observables\SelectConstantObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Core\Observables\SelectManyThenObservable.cs" Link="Shared\Observables\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Polyfills\*.cs" Link="Shared\Polyfills\%(Filename)%(Extension)" />
   </ItemGroup>
 

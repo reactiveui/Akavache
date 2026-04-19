@@ -149,9 +149,7 @@ public static class SerializerExtensions
 
         return blobCache
             .GetAll(typeof(T))
-            .Select(x => blobCache.Serializer.Deserialize<T>(x.Value))
-            .Where(static x => x is not null)
-            .Select(static x => x!);
+            .TrySelect(x => blobCache.Serializer.Deserialize<T>(x.Value));
     }
 
     /// <summary>
@@ -489,11 +487,7 @@ public static class SerializerExtensions
             .Select(kvp => blobCache.Insert(kvp.Key, blobCache.Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
             .ToList();
 
-        // Wait for all insert operations to complete by merging and taking the count
-        return insertOperations.Merge()
-            .TakeLast(insertOperations.Count)
-            .LastOrDefaultAsync()
-            .SelectUnit();
+        return insertOperations.RunAll();
     }
 
     /// <summary>
