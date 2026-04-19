@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
+using Akavache.Core.Observables;
 using Akavache.Helpers;
 
 namespace Akavache;
@@ -120,7 +121,7 @@ public static class CacheDatabase
                 instance.InMemory?.Flush() ?? CachedObservables.UnitDefault,
             ];
 
-            return flushTasks.Merge().TakeLast(1).Select(static _ => Unit.Default);
+            return flushTasks.RunAll();
         }
         catch (Exception ex)
         {

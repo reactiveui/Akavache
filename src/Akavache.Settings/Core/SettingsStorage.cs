@@ -107,7 +107,7 @@ public abstract class SettingsStorage : ISettingsStorage
                 return Observable.Return(Unit.Default);
             }
 
-            return loaders.Merge().LastOrDefaultAsync().Select(static _ => Unit.Default);
+            return loaders.Merge().IgnoreElements().Concat(Observable.Return(Unit.Default));
         });
 
     /// <summary>

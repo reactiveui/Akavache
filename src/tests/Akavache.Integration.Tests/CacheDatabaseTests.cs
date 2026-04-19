@@ -257,7 +257,7 @@ public class CacheDatabaseTests
     public async Task ShutdownAfterInitializeShouldComplete()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_ShutdownTest");
-        await CacheDatabase.Shutdown().LastOrDefaultAsync();
+        await CacheDatabase.Shutdown().FirstAsync();
 
         // After shutdown the data is flushed but state remains
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
@@ -305,7 +305,7 @@ public class CacheDatabaseTests
         instance.BlobCaches["live"] = liveBlob;
         instance.SettingsStores["live"] = liveStore;
 
-        await CacheDatabase.Shutdown().LastOrDefaultAsync();
+        await CacheDatabase.Shutdown().FirstAsync();
 
         using (Assert.Multiple())
         {
@@ -325,7 +325,7 @@ public class CacheDatabaseTests
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_ShutdownEmptyDicts");
 
-        await Assert.That(static async () => await CacheDatabase.Shutdown().LastOrDefaultAsync()).ThrowsNothing();
+        await Assert.That(static async () => await CacheDatabase.Shutdown().FirstAsync()).ThrowsNothing();
     }
 
     /// <summary>
@@ -340,7 +340,7 @@ public class CacheDatabaseTests
         FakeAkavacheInstance fakeInstance = new() { UserAccount = new ThrowingFlushBlobCache(), };
         CacheDatabase.SetBuilder(fakeInstance);
 
-        await Assert.That(static async () => await CacheDatabase.Shutdown().LastOrDefaultAsync())
+        await Assert.That(static async () => await CacheDatabase.Shutdown().FirstAsync())
             .Throws<InvalidOperationException>();
 
         // ResetForTests should swallow the exception from Shutdown.
@@ -384,7 +384,7 @@ public class CacheDatabaseTests
         };
         CacheDatabase.SetBuilder(fakeInstance);
 
-        await Assert.That(static async () => await CacheDatabase.Shutdown().LastOrDefaultAsync()).ThrowsNothing();
+        await Assert.That(static async () => await CacheDatabase.Shutdown().FirstAsync()).ThrowsNothing();
     }
 
     /// <summary>
@@ -413,7 +413,7 @@ public class CacheDatabaseTests
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_ShutdownMerge");
 
-        var result = await CacheDatabase.Shutdown().LastOrDefaultAsync();
+        var result = await CacheDatabase.Shutdown().FirstAsync();
         await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
@@ -457,7 +457,7 @@ public class CacheDatabaseTests
     {
         await CacheDatabase.ResetForTests();
 
-        var result = await CacheDatabase.Shutdown().LastOrDefaultAsync();
+        var result = await CacheDatabase.Shutdown().FirstAsync();
         await Assert.That(result).IsEqualTo(Unit.Default);
         await Assert.That(CacheDatabase.IsInitialized).IsFalse();
     }
