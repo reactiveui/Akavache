@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
 
 using Akavache.Core;
+using Akavache.Core.Observables;
 using Akavache.Helpers;
 
 namespace Akavache;
@@ -50,7 +51,7 @@ public static class SerializerExtensions
         return blobCache
             .Get(keys, typeof(T))
             .Select(x => (x.Key, Data: blobCache.Serializer.Deserialize<T>(x.Value)))
-            .Where(static x => x.Data is not null).Select(static x => new KeyValuePair<string, T>(x.Key, x.Data!));
+            .WhereSelect(static x => x.Data is not null, static x => new KeyValuePair<string, T>(x.Key, x.Data!));
     }
 
     /// <summary>
@@ -276,7 +277,7 @@ public static class SerializerExtensions
             return RequestCache.GetOrCreateRequest(key, () =>
                 fetchFunc().SelectMany(value =>
                     blobCache.InsertObject(key, value, absoluteExpiration)
-                        .Select(_ => value)
+                        .SelectConstant(value)
                         .Take(1))); // Ensure we only take one result
         });
     }
@@ -332,7 +333,7 @@ public static class SerializerExtensions
         return blobCache.GetObject<T>(key).Catch<T?, Exception>(_ =>
             {
                 var value = fetchFunc();
-                return blobCache.InsertObject(key, value).Select(_ => value);
+                return blobCache.InsertObject(key, value).SelectConstant(value);
             });
     }
 
@@ -400,11 +401,11 @@ public static class SerializerExtensions
                     .SelectMany(x =>
                         cacheValidationPredicate is not null && !cacheValidationPredicate(x)
                             ? Observable.Return(default(T))
-                            : blobCache.InvalidateObject<T>(key).Select(_ => x))
+                            : blobCache.InvalidateObject<T>(key).SelectConstant(x))
                     .SelectMany(x =>
                         cacheValidationPredicate is not null && !cacheValidationPredicate(x!)
                             ? Observable.Return(default(T))
-                            : blobCache.InsertObject(key, x, absoluteExpiration).Select(_ => x));
+                            : blobCache.InsertObject(key, x, absoluteExpiration).SelectConstant(x));
             });
 
         var result = blobCache.GetObject<T>(key).Select(static x => (x, true))

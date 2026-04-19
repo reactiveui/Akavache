@@ -7,6 +7,7 @@ using System.Net;
 #if NET462_OR_GREATER
 using System.Net.Http;
 #endif
+using Akavache.Core.Observables;
 using Akavache.Helpers;
 
 namespace Akavache;
@@ -63,7 +64,7 @@ public class HttpService : IHttpService, IDisposable
         method ??= HttpMethod.Get;
 
         var doFetch = MakeWebRequest(new(url), method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
-        var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
+        var fetchAndCache = doFetch.SelectMany(x => new SelectConstantObservable<Unit, byte[]>(blobCache.Insert(key, x, absoluteExpiration), x));
 
         var ret = !fetchAlways ? blobCache.Get(key).Catch(fetchAndCache) : fetchAndCache;
 
@@ -80,7 +81,7 @@ public class HttpService : IHttpService, IDisposable
         method ??= HttpMethod.Get;
 
         var doFetch = MakeWebRequest(url, method, headers).SelectMany(x => ProcessWebResponse(x, url, absoluteExpiration));
-        var fetchAndCache = doFetch.SelectMany(x => blobCache.Insert(key, x, absoluteExpiration).Select(_ => x));
+        var fetchAndCache = doFetch.SelectMany(x => new SelectConstantObservable<Unit, byte[]>(blobCache.Insert(key, x, absoluteExpiration), x));
 
         var ret = !fetchAlways ? blobCache.Get(key).Catch(fetchAndCache).Select(static x => x ?? []) : fetchAndCache;
 

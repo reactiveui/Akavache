@@ -2,6 +2,8 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core.Observables;
+
 namespace Akavache.Core;
 
 /// <summary>
@@ -22,5 +24,5 @@ internal static class ObservableUnitExtensions
     /// <param name="source">The observable whose emissions should be normalised to <see cref="Unit.Default"/>.</param>
     /// <returns>An observable that emits <see cref="Unit.Default"/> once per emission of <paramref name="source"/>.</returns>
     public static IObservable<Unit> SelectUnit<T>(this IObservable<T> source) =>
-        source.Select(static _ => Unit.Default);
+        new SelectConstantObservable<T, Unit>(source, Unit.Default);
 }

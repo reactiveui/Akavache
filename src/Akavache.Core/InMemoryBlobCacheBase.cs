@@ -4,6 +4,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Akavache.Core;
+using Akavache.Core.Observables;
 using Akavache.Helpers;
 using Splat;
 
@@ -685,8 +686,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
             ? IBlobCache.ExceptionHelpers.ObservableThrowObjectDisposedException<IEnumerable<T>>(GetType().Name)
             : GetAll(typeof(T))
                 .Select(kvp => Serializer.Deserialize<T>(kvp.Value))
-                .Where(static obj => obj is not null)
-                .Select(static obj => obj!)
+                .WhereSelect(static obj => obj is not null, static obj => obj!)
                 .ToList()
                 .Select(static list => (IEnumerable<T>)list);
 

@@ -45,6 +45,22 @@ internal static class ObservableFastOps
         new CatchReturnObservable<T>(source, fallback);
 
     /// <summary>
+    /// Projects every source element to a stored constant, avoiding the closure
+    /// allocation of <c>.Select(_ =&gt; value)</c>. Common in insert-then-return-value
+    /// chains: <c>blobCache.Insert(key, x).SelectConstant(x)</c>.
+    /// See <see cref="SelectConstantObservable{TSource, TResult}"/>.
+    /// </summary>
+    /// <typeparam name="TSource">The source element type (ignored).</typeparam>
+    /// <typeparam name="TResult">The result element type.</typeparam>
+    /// <param name="source">The source observable whose values are ignored.</param>
+    /// <param name="constant">The constant value emitted for each source element.</param>
+    /// <returns>An observable that emits <paramref name="constant"/> for each source element.</returns>
+    public static IObservable<TResult> SelectConstant<TSource, TResult>(
+        this IObservable<TSource> source,
+        TResult constant) =>
+        new SelectConstantObservable<TSource, TResult>(source, constant);
+
+    /// <summary>
     /// Convenience overload for the common <see cref="Unit"/>-returning dispose /
     /// checkpoint pipelines: <c>source.CatchReturnUnit()</c> is shorthand for
     /// <c>source.CatchReturn(Unit.Default)</c>.

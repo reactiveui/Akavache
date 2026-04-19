@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using Akavache.Core;
 using Akavache.Helpers;
 
 using Splat;
@@ -28,7 +29,7 @@ public static class ImageCacheExtensions
         return keys.ToObservable()
             .SelectMany(key => blobCache.LoadImage(key, desiredWidth, desiredHeight)
                 .Select(bitmap => new KeyValuePair<string, IBitmap>(key, bitmap))
-                .Catch<KeyValuePair<string, IBitmap>, Exception>(_ => Observable.Empty<KeyValuePair<string, IBitmap>>()));
+                .Catch<KeyValuePair<string, IBitmap>, Exception>(static _ => Observable.Empty<KeyValuePair<string, IBitmap>>()));
     }
 
     /// <summary>
@@ -45,7 +46,7 @@ public static class ImageCacheExtensions
         return urls.ToObservable()
             .SelectMany(url => blobCache.DownloadUrl(url, absoluteExpiration: absoluteExpiration)
                 .Catch<byte[], Exception>(static _ => Observable.Empty<byte[]>()))
-            .Select(static _ => Unit.Default)
+            .SelectUnit()
             .DefaultIfEmpty(Unit.Default)
             .TakeLast(1);
     }
@@ -62,7 +63,6 @@ public static class ImageCacheExtensions
     public static IObservable<IBitmap> LoadImageWithFallback(this IBlobCache blobCache, string key, byte[] fallbackImageBytes, float? desiredWidth = null, float? desiredHeight = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
         ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
         return blobCache.LoadImage(key, desiredWidth, desiredHeight)
@@ -83,7 +83,6 @@ public static class ImageCacheExtensions
     public static IObservable<IBitmap> LoadImageFromUrlWithFallback(this IBlobCache blobCache, string url, byte[] fallbackImageBytes, bool fetchAlways = false, float? desiredWidth = null, float? desiredHeight = null, DateTimeOffset? absoluteExpiration = null)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
         ArgumentExceptionHelper.ThrowIfNull(fallbackImageBytes);
 
         return blobCache.LoadImageFromUrl(url, fetchAlways, desiredWidth, desiredHeight, absoluteExpiration)
@@ -120,17 +119,7 @@ public static class ImageCacheExtensions
 
         return blobCache.Get(key)
             .SelectMany(static bytes => BitmapImageExtensions.ThrowOnNullOrBadImageBuffer(bytes))
-            .SelectMany(static bytes =>
-                Observable.FromAsync(async () =>
-                {
-#if NETFRAMEWORK
-                    using var ms = new MemoryStream(bytes, writable: false);
-#else
-                    await using var ms = new MemoryStream(bytes, writable: false);
-#endif
-                    var bitmap = await BitmapLoader.Current.Load(ms, null, null).ConfigureAwait(false);
-                    return bitmap != null ? new Size(bitmap.Width, bitmap.Height) : throw new InvalidOperationException("Failed to load image for size detection");
-                }));
+            .SelectMany(static bytes => LoadBitmapSize(bytes));
     }
 
     /// <summary>
@@ -142,7 +131,6 @@ public static class ImageCacheExtensions
     public static IObservable<Unit> ClearImageCache(this IBlobCache blobCache, Func<string, bool> keyPattern)
     {
         ArgumentExceptionHelper.ThrowIfNull(blobCache);
-
         ArgumentExceptionHelper.ThrowIfNull(keyPattern);
 
         return blobCache.GetAllKeys()
@@ -172,5 +160,22 @@ public static class ImageCacheExtensions
 #endif
             var bitmap = await BitmapLoader.Current.Load(ms, desiredWidth, desiredHeight).ConfigureAwait(false);
             return bitmap ?? throw new IOException("Failed to load the bitmap!");
+        });
+
+    /// <summary>
+    /// Loads a bitmap from raw bytes and returns its dimensions.
+    /// </summary>
+    /// <param name="bytes">The encoded image bytes.</param>
+    /// <returns>An observable that emits the image size.</returns>
+    internal static IObservable<Size> LoadBitmapSize(byte[] bytes) =>
+        Observable.FromAsync(async () =>
+        {
+#if NETFRAMEWORK
+            using var ms = new MemoryStream(bytes, writable: false);
+#else
+            await using var ms = new MemoryStream(bytes, writable: false);
+#endif
+            var bitmap = await BitmapLoader.Current.Load(ms, null, null).ConfigureAwait(false);
+            return bitmap != null ? new Size(bitmap.Width, bitmap.Height) : throw new InvalidOperationException("Failed to load image for size detection");
         });
 }
