@@ -30,7 +30,7 @@
     <PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
-    <PackageVersion Include="Verify.TUnit" Version="31.16.0" />
+    <PackageVersion Include="Verify.TUnit" Version="31.16.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.6.2" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.2.1" />
   </ItemGroup>
