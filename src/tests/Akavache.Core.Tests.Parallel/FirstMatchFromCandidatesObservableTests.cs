@@ -188,15 +188,10 @@ public class FirstMatchFromCandidatesObservableTests
     public async Task Dispose_StopsFurtherCandidates()
     {
         List<string> keys = ["a", "b", "c"];
-        var projected = new List<string>();
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            k =>
-            {
-                projected.Add(k);
-                return Observable.Return(k);
-            },
+            static k => Observable.Return(k),
             static x => x,
             static _ => false, // never match — would normally exhaust all candidates
             "fallback");
@@ -204,7 +199,7 @@ public class FirstMatchFromCandidatesObservableTests
         // Subscribe and immediately dispose after first candidate
         string? received = null;
         var completed = false;
-        var subscription = sut.Subscribe(
+        sut.Subscribe(
             v => received = v,
             _ => { },
             () => completed = true);

@@ -76,7 +76,7 @@ public class CatchReturnObservableTests
     [Test]
     public async Task AsyncError_ForwardsValuesThenFallback()
     {
-        var subject = new Subject<int>();
+        using var subject = new Subject<int>();
 
         var results = new List<int>();
         var completed = false;
@@ -100,7 +100,7 @@ public class CatchReturnObservableTests
     [Test]
     public async Task AsyncSuccess_ForwardsValues()
     {
-        var subject = new Subject<string>();
+        using var subject = new Subject<string>();
 
         var results = new List<string>();
         var completed = false;
