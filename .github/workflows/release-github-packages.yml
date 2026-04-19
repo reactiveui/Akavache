@@ -1,0 +1,26 @@
+name: Release to GitHub Packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    uses: reactiveui/actions-common/.github/workflows/workflow-common-release-unsigned.yml@main
+    with:
+      solutionFile: Akavache.slnx
+      installWorkloads: true
+
+  publish-github-packages:
+    needs: release
+    uses: reactiveui/actions-common/.github/workflows/workflow-common-publish-github-packages.yml@main
+
+  create-release:
+    needs: [release, publish-github-packages]
+    uses: reactiveui/actions-common/.github/workflows/workflow-common-create-release.yml@main
+    with:
+      version: ${{ needs.release.outputs.semver2 }}
+      artifactName: nuget-packages
