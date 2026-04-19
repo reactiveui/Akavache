@@ -4,12 +4,32 @@
 
 - **Primary working directory for build/test:** `./src`
 - **Main solution:** `src/Akavache.slnx`
-- **Test projects:**
-  - `src/tests/Akavache.Core.Tests/` — Core library unit tests
-  - `src/tests/Akavache.Sqlite3.Tests/` — SQLite cache tests
-  - `src/tests/Akavache.EncryptedSqlite3.Tests/` — Encrypted SQLite cache tests
-  - `src/tests/Akavache.Integration.Tests/` — Cross-package integration tests (serializers, HTTP, Drawing)
-  - `src/tests/Akavache.Settings.Tests/` — Settings tests
+- **Production libraries:**
+  - `src/Akavache.Core/` — Foundation interfaces (`IBlobCache`, `CacheDatabase`, `InMemoryBlobCacheBase`), helpers, serializer abstractions
+  - `src/Akavache.Sqlite3/` — SQLite-backed cache using direct SQLitePCLRaw interop (`SqlitePclRawConnection`, `SqliteOperationQueue`, `SqliteBlobCache`)
+  - `src/Akavache.EncryptedSqlite3/` — Encrypted SQLite cache (compiles Sqlite3 sources with `ENCRYPTED` define, uses SQLite3MC for encryption)
+  - `src/Akavache.SystemTextJson/` — System.Text.Json serializer
+  - `src/Akavache.SystemTextJson.Bson/` — System.Text.Json BSON serializer
+  - `src/Akavache.NewtonsoftJson/` — Newtonsoft.Json serializer
+  - `src/Akavache.Http/` — HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
+  - `src/Akavache.Drawing/` — Image/bitmap caching support
+  - `src/Akavache.Settings/` — Typed settings storage built on top of blob caches
+  - `src/Akavache.V10toV11/` — V10-to-V11 data migration utilities
+- **Test projects (11 assemblies):**
+  - Serial assemblies (use `[assembly: NotInParallel]` + custom `TestExecutor`):
+    - `src/tests/Akavache.Core.Tests/` — Tests touching global state (`CacheDatabase`, `AppLocator`, `UniversalSerializer`)
+    - `src/tests/Akavache.Sqlite3.Tests/` — SQLite builder extensions, backward compatibility, legacy file locations
+    - `src/tests/Akavache.EncryptedSqlite3.Tests/` — Encrypted builder extensions
+    - `src/tests/Akavache.Integration.Tests/` — Builder interop, AOT compatibility, universal serializer, Drawing/Image tests
+    - `src/tests/Akavache.Settings.Tests/` — Settings builder, ambient cache, fallback tests
+  - Parallel assemblies (no executor, TUnit default parallel):
+    - `src/tests/Akavache.Core.Tests.Parallel/` — Pure unit tests (CacheEntry, helpers, observables, concurrency)
+    - `src/tests/Akavache.Sqlite3.Tests.Parallel/` — SqliteBlobCache CRUD, bulk ops, operation queue, reply/row observables
+    - `src/tests/Akavache.EncryptedSqlite3.Tests.Parallel/` — Encrypted blob cache CRUD, bulk ops, direct tests
+    - `src/tests/Akavache.Integration.Tests.Parallel/` — Serializer tests (STJ, Newtonsoft, BSON), size tests, error handling
+    - `src/tests/Akavache.Settings.Tests.Parallel/` — Settings cache, encrypted settings, value subjects, storage
+  - HTTP-isolated assembly:
+    - `src/tests/Akavache.Http.Tests/` — HTTP download/extension tests (isolated to avoid TCP socket contention)
   - `src/tests/shared/` — Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each assembly via `<Compile Include>`
 - **Sample apps:** `src/samples/`
 - **Benchmarks:** `src/benchmarks/`
@@ -18,11 +38,11 @@
 ## Build
 
 ```bash
-# Restore & build
-dotnet build src/Akavache.slnx
+# Restore & build (from src/)
+dotnet build Akavache.slnx
 
 # Build specific project
-dotnet build src/Akavache.Core/Akavache.csproj
+dotnet build Akavache.Core/Akavache.csproj
 ```
 
 ## Testing: Microsoft Testing Platform (MTP) + TUnit
@@ -32,7 +52,9 @@ This repo uses **Microsoft Testing Platform (MTP)** with **TUnit** (not VSTest).
 - MTP is configured via `src/global.json`
 - Additional test settings in `src/testconfig.json`
 - `TestingPlatformDotnetTestSupport` is enabled in `src/Directory.Build.props`
-- Tests run **non-parallel** (`"parallel": false` in `testconfig.json`)
+- `IsTestProject` is auto-detected via `$(MSBuildProjectName.Contains('Tests'))` in `Directory.Build.props`
+- Serial assemblies enforce `[assembly: NotInParallel]` with a custom `AkavacheTestExecutor` that resets global state between tests
+- Parallel assemblies have no executor and run tests concurrently (TUnit default)
 
 **Key rule:** TUnit/MTP arguments go **after** `--`.
 
@@ -43,12 +65,8 @@ This repo uses **Microsoft Testing Platform (MTP)** with **TUnit** (not VSTest).
 ```bash
 cd src
 
-# Run each test assembly
+# Run a specific test assembly
 dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj
-dotnet test --project tests/Akavache.Sqlite3.Tests/Akavache.Sqlite3.Tests.csproj
-dotnet test --project tests/Akavache.EncryptedSqlite3.Tests/Akavache.EncryptedSqlite3.Tests.csproj
-dotnet test --project tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj
-dotnet test --project tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj
 
 # Detailed output (place BEFORE --)
 dotnet test --project tests/Akavache.Core.Tests/Akavache.Core.Tests.csproj -- --output Detailed
@@ -139,4 +157,6 @@ find src -name "*.cobertura.xml" -path "*/TestResults/*"
 - `.editorconfig` formatting/naming conventions enforced
 - StyleCop and Roslynator analyzers active
 - Public APIs require XML documentation
-- No `#pragma warning disable` in production code
+- No `#pragma warning disable` in production code — use `[SuppressMessage]` attribute instead
+- All production methods must be `internal` (not `private`) so they can be tested
+- No default parameter values on public interfaces/methods (binary-break hazard) — use explicit overloads

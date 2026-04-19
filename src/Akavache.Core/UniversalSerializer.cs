@@ -5,6 +5,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
+using Akavache.Core.Observables;
 using Akavache.Helpers;
 
 namespace Akavache.Core;
@@ -184,20 +185,14 @@ public static class UniversalSerializer
                     return Observable.Return<T?>(default);
                 }
 
-                // Walk the candidate keys sequentially via Concat (NOT Merge) so behaviour
-                // matches the prior foreach: we stop at the first hit and never touch keys
-                // further down the list. Each candidate read is wrapped in Catch so a
-                // throwing Get falls through to the next candidate without propagating.
-                return FindKeyCandidates<T>(allKeys, requestedKey)
-                    .Select(candidateKey => cache.Get(candidateKey)
-                        .Catch<byte[]?, Exception>(static _ => Observable.Return<byte[]?>(null))
-                        .Select(rawData => TryDeserializeCandidate<T>(rawData, primarySerializer, out var result)
-                            ? new(result, Found: true)
-                            : new Candidate<T>(default, Found: false)))
-                    .ToObservable()
-                    .Concat()
-                    .FirstOrDefaultAsync(static c => c.Found)
-                    .Select(static c => c.Value);
+                var candidates = FindKeyCandidates<T>(allKeys, requestedKey);
+
+                return new FirstMatchFromCandidatesObservable<string, byte[]?, T?>(
+                    candidates,
+                    candidateKey => cache.Get(candidateKey),
+                    rawData => TryDeserializeCandidate<T>(rawData, primarySerializer, out var result) ? result : default,
+                    static value => value is not null && !EqualityComparer<T>.Default.Equals(value, default!),
+                    default);
             })
             .Catch<T?, Exception>(static _ => Observable.Return<T?>(default));
     }
@@ -753,10 +748,4 @@ public static class UniversalSerializer
                 return name.Contains("Newtonsoft", StringComparison.OrdinalIgnoreCase)
                     && !name.Contains("Bson", StringComparison.OrdinalIgnoreCase);
             });
-
-    /// <summary>Internal result carrier for TryFindDataWithAlternativeKeys.</summary>
-    /// <typeparam name="T">The element type being deserialised.</typeparam>
-    /// <param name="Value">The deserialised value, or <see langword="default"/> when <paramref name="Found"/> is false.</param>
-    /// <param name="Found">Whether this candidate successfully produced a value.</param>
-    private readonly record struct Candidate<T>(T? Value, bool Found);
 }
