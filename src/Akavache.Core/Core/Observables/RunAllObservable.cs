@@ -19,6 +19,8 @@ namespace Akavache.Core.Observables;
 ///   <item><c>sources.SelectUnit().DefaultIfEmpty(Unit.Default).TakeLast(1)</c> — 3 operator allocations</item>
 /// </list>
 /// with a single operator that subscribes sequentially and signals completion.
+/// Uses an iterative loop with a sync-completion flag to avoid stack overflow
+/// when sources complete synchronously during <c>Subscribe</c>.
 /// </remarks>
 /// <param name="sources">The list of one-shot observables to run in order.</param>
 internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources) : IObservable<Unit>
@@ -43,6 +45,14 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
     /// values are ignored; on <c>OnCompleted</c> the next source is subscribed.
     /// When all sources have completed, emits <see cref="Unit.Default"/> and completes.
     /// </summary>
+    /// <remarks>
+    /// Synchronous completion is detected via a <c>_syncCompleted</c> flag so that
+    /// <see cref="RunNext"/> can loop instead of recursing through
+    /// <see cref="OnCompleted"/> → <see cref="RunNext"/> → <c>Subscribe</c> →
+    /// <see cref="OnCompleted"/> ad infinitum. This prevents stack overflow when
+    /// many sources complete inline (e.g. <c>Observable.Return</c>,
+    /// <c>ImmediateScheduler</c> caches).
+    /// </remarks>
     private sealed class Sink(
         IObserver<Unit> downstream,
         IReadOnlyList<IObservable<Unit>> sources) : IObserver<Unit>, IDisposable
@@ -55,6 +65,20 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
 
         /// <summary>Set once all sources have completed or we've been disposed.</summary>
         private bool _done;
+
+        /// <summary>
+        /// Set by <see cref="OnCompleted"/> to signal <see cref="RunNext"/> that the
+        /// current source completed synchronously during <c>Subscribe</c>, so the
+        /// loop should continue instead of returning.
+        /// </summary>
+        private bool _syncCompleted;
+
+        /// <summary>
+        /// Guards against re-entrant <see cref="RunNext"/> calls. When <c>true</c>,
+        /// <see cref="OnCompleted"/> sets <see cref="_syncCompleted"/> instead of
+        /// calling <see cref="RunNext"/> directly.
+        /// </summary>
+        private bool _looping;
 
         /// <inheritdoc/>
         public void OnNext(Unit value)
@@ -75,7 +99,23 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
         }
 
         /// <inheritdoc/>
-        public void OnCompleted() => RunNext();
+        public void OnCompleted()
+        {
+            if (_done)
+            {
+                return;
+            }
+
+            if (_looping)
+            {
+                // RunNext is already on the stack — signal it to continue the loop
+                // instead of recursing.
+                _syncCompleted = true;
+                return;
+            }
+
+            RunNext();
+        }
 
         /// <inheritdoc/>
         public void Dispose()
@@ -86,25 +126,45 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
 
         /// <summary>
         /// Subscribes to the next source, or emits Unit and completes if all are done.
+        /// Uses an iterative loop: after each <c>Subscribe</c>, checks whether
+        /// <see cref="OnCompleted"/> fired synchronously (via <see cref="_syncCompleted"/>)
+        /// and continues the loop if so, avoiding recursive stack growth.
         /// </summary>
         internal void RunNext()
         {
+            _looping = true;
+            try
+            {
+                while (!_done && _index < sources.Count)
+                {
+                    _syncCompleted = false;
+                    var source = sources[_index++];
+                    var sub = source.Subscribe(this);
+                    Interlocked.Exchange(ref _currentSubscription, sub);
+
+                    if (!_syncCompleted)
+                    {
+                        // Source didn't complete synchronously — it will call
+                        // OnCompleted asynchronously, which will call RunNext.
+                        return;
+                    }
+
+                    // Source completed synchronously — loop to the next one.
+                }
+            }
+            finally
+            {
+                _looping = false;
+            }
+
             if (_done)
             {
                 return;
             }
 
-            if (_index >= sources.Count)
-            {
-                _done = true;
-                downstream.OnNext(Unit.Default);
-                downstream.OnCompleted();
-                return;
-            }
-
-            var source = sources[_index++];
-            var sub = source.Subscribe(this);
-            Interlocked.Exchange(ref _currentSubscription, sub);
+            _done = true;
+            downstream.OnNext(Unit.Default);
+            downstream.OnCompleted();
         }
     }
 }

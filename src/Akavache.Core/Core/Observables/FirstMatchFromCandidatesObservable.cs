@@ -203,6 +203,12 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         /// <summary>Set once we've emitted a matching value or exhausted all candidates.</summary>
         private bool _done;
 
+        /// <summary>Set by OnCompleted/OnError to signal TryNext that the source completed synchronously.</summary>
+        private bool _syncCompleted;
+
+        /// <summary>Guards against re-entrant TryNext calls.</summary>
+        private bool _looping;
+
         /// <inheritdoc/>
         public void OnNext(TRaw value)
         {
@@ -240,6 +246,12 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
                 return;
             }
 
+            if (_looping)
+            {
+                _syncCompleted = true;
+                return;
+            }
+
             // Swallow the error and advance to the next candidate.
             TryNext();
         }
@@ -249,6 +261,12 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
         {
             if (_done)
             {
+                return;
+            }
+
+            if (_looping)
+            {
+                _syncCompleted = true;
                 return;
             }
 
@@ -265,46 +283,56 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
 
         /// <summary>
         /// Subscribes to the next candidate's projected observable, or emits the fallback
-        /// and completes if no candidates remain.
+        /// and completes if no candidates remain. Uses an iterative loop with a
+        /// sync-completion flag to avoid stack overflow when sources complete inline.
         /// </summary>
         internal void TryNext()
         {
-            while (true)
+            _looping = true;
+            try
             {
-                if (_done)
+                while (!_done && _index < candidates.Count)
                 {
-                    return;
+                    var key = candidates[_index++];
+
+                    IObservable<TRaw> projected;
+                    try
+                    {
+                        projected = project(key);
+                    }
+                    catch
+                    {
+                        // Projection itself threw — skip this candidate.
+                        continue;
+                    }
+
+                    _syncCompleted = false;
+                    var sub = projected.Subscribe(this);
+                    Interlocked.Exchange(ref _currentSubscription, sub);
+
+                    if (!_syncCompleted)
+                    {
+                        // Source didn't complete synchronously — async callback
+                        // will call TryNext when it does.
+                        return;
+                    }
+
+                    // Source completed synchronously — loop to the next candidate.
                 }
+            }
+            finally
+            {
+                _looping = false;
+            }
 
-                if (_index >= candidates.Count)
-                {
-                    _done = true;
-                    downstream.OnNext(fallback);
-                    downstream.OnCompleted();
-                    return;
-                }
-
-                var key = candidates[_index++];
-
-                IObservable<TRaw> projected;
-                try
-                {
-                    projected = project(key);
-                }
-                catch
-                {
-                    // Projection itself threw — skip this candidate.
-                    continue;
-                }
-
-                var sub = projected.Subscribe(this);
-                Interlocked.Exchange(ref _currentSubscription, sub);
-
-                // If the projected observable completed synchronously, _done may
-                // already be set (match found) or OnCompleted may have called
-                // TryNext recursively. If neither, the subscription is async.
+            if (_done)
+            {
                 return;
             }
+
+            _done = true;
+            downstream.OnNext(fallback);
+            downstream.OnCompleted();
         }
     }
 }
