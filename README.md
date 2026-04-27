@@ -129,6 +129,63 @@ await CacheDatabase.Secure.SaveLogin("john.doe", "secretPassword", "myapp.com");
 await CacheDatabase.InMemory.InsertObject("current_session", sessionData);
 ```
 
+## NuGet Packages
+
+Install the packages that match your needs. At minimum you need the core package plus a storage backend and a serializer.
+
+| Purpose | Package | NuGet |
+| ------- | ------- | ----- |
+| Core (in-memory cache) | [Akavache][AkavacheDoc] | [![AkavacheBadge]][AkavacheNuGet] |
+| SQLite persistence | [Akavache.Sqlite3][Sqlite3Doc] | [![Sqlite3Badge]][Sqlite3NuGet] |
+| Encrypted SQLite persistence | [Akavache.EncryptedSqlite3][EncryptedDoc] | [![EncryptedBadge]][EncryptedNuGet] |
+| System.Text.Json serializer (recommended) | [Akavache.SystemTextJson][STJDoc] | [![STJBadge]][STJNuGet] |
+| System.Text.Json BSON serializer | [Akavache.SystemTextJson.Bson][STJBsonDoc] | [![STJBsonBadge]][STJBsonNuGet] |
+| Newtonsoft.Json serializer | [Akavache.NewtonsoftJson][NewtonsoftDoc] | [![NewtonsoftBadge]][NewtonsoftNuGet] |
+| HTTP download and caching extensions | [Akavache.HttpDownloader][HttpDoc] | [![HttpBadge]][HttpNuGet] |
+| Image/bitmap caching | [Akavache.Drawing][DrawingDoc] | [![DrawingBadge]][DrawingNuGet] |
+| Application settings helpers | [Akavache.Settings][SettingsDoc] | [![SettingsBadge]][SettingsNuGet] |
+| V10 → V11 data migration | [Akavache.V10toV11][MigrationDoc] | [![MigrationBadge]][MigrationNuGet] |
+
+[AkavacheNuGet]: https://www.nuget.org/packages/Akavache/
+[AkavacheBadge]: https://img.shields.io/nuget/v/Akavache.svg
+[AkavacheDoc]: https://github.com/reactiveui/Akavache
+
+[Sqlite3NuGet]: https://www.nuget.org/packages/Akavache.Sqlite3/
+[Sqlite3Badge]: https://img.shields.io/nuget/v/Akavache.Sqlite3.svg
+[Sqlite3Doc]: https://github.com/reactiveui/Akavache
+
+[EncryptedNuGet]: https://www.nuget.org/packages/Akavache.EncryptedSqlite3/
+[EncryptedBadge]: https://img.shields.io/nuget/v/Akavache.EncryptedSqlite3.svg
+[EncryptedDoc]: https://github.com/reactiveui/Akavache
+
+[STJNuGet]: https://www.nuget.org/packages/Akavache.SystemTextJson/
+[STJBadge]: https://img.shields.io/nuget/v/Akavache.SystemTextJson.svg
+[STJDoc]: https://github.com/reactiveui/Akavache
+
+[STJBsonNuGet]: https://www.nuget.org/packages/Akavache.SystemTextJson.Bson/
+[STJBsonBadge]: https://img.shields.io/nuget/v/Akavache.SystemTextJson.Bson.svg
+[STJBsonDoc]: https://github.com/reactiveui/Akavache
+
+[NewtonsoftNuGet]: https://www.nuget.org/packages/Akavache.NewtonsoftJson/
+[NewtonsoftBadge]: https://img.shields.io/nuget/v/Akavache.NewtonsoftJson.svg
+[NewtonsoftDoc]: https://github.com/reactiveui/Akavache
+
+[HttpNuGet]: https://www.nuget.org/packages/Akavache.HttpDownloader/
+[HttpBadge]: https://img.shields.io/nuget/v/Akavache.HttpDownloader.svg
+[HttpDoc]: https://github.com/reactiveui/Akavache
+
+[DrawingNuGet]: https://www.nuget.org/packages/Akavache.Drawing/
+[DrawingBadge]: https://img.shields.io/nuget/v/Akavache.Drawing.svg
+[DrawingDoc]: https://github.com/reactiveui/Akavache
+
+[SettingsNuGet]: https://www.nuget.org/packages/Akavache.Settings/
+[SettingsBadge]: https://img.shields.io/nuget/v/Akavache.Settings.svg
+[SettingsDoc]: https://github.com/reactiveui/Akavache
+
+[MigrationNuGet]: https://www.nuget.org/packages/Akavache.V10toV11/
+[MigrationBadge]: https://img.shields.io/nuget/v/Akavache.V10toV11.svg
+[MigrationDoc]: https://github.com/reactiveui/Akavache/blob/main/docs/migration-v10-to-v11.md
+
 ## Installation
 
 Akavache uses a modular package structure. Choose the packages that match your needs:
