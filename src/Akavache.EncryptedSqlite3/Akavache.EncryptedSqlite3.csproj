@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.HttpDownloader.Tests" />
     <InternalsVisibleTo Include="Akavache.Integration.Tests" />
     <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
     <InternalsVisibleTo Include="Akavache.EncryptedSqlite3.Tests" />

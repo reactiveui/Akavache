@@ -11,7 +11,7 @@
   - `src/Akavache.SystemTextJson/` — System.Text.Json serializer
   - `src/Akavache.SystemTextJson.Bson/` — System.Text.Json BSON serializer
   - `src/Akavache.NewtonsoftJson/` — Newtonsoft.Json serializer
-  - `src/Akavache.Http/` — HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
+  - `src/Akavache.HttpDownloader/` — HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
   - `src/Akavache.Drawing/` — Image/bitmap caching support
   - `src/Akavache.Settings/` — Typed settings storage built on top of blob caches
   - `src/Akavache.V10toV11/` — V10-to-V11 data migration utilities
@@ -29,7 +29,7 @@
     - `src/tests/Akavache.Integration.Tests.Parallel/` — Serializer tests (STJ, Newtonsoft, BSON), size tests, error handling
     - `src/tests/Akavache.Settings.Tests.Parallel/` — Settings cache, encrypted settings, value subjects, storage
   - HTTP-isolated assembly:
-    - `src/tests/Akavache.Http.Tests/` — HTTP download/extension tests (isolated to avoid TCP socket contention)
+    - `src/tests/Akavache.HttpDownloader.Tests/` — HTTP download/extension tests (isolated to avoid TCP socket contention)
   - `src/tests/shared/` — Shared test infrastructure (Helpers, Mocks, TestBases) compiled into each assembly via `<Compile Include>`
 - **Sample apps:** `src/samples/`
 - **Benchmarks:** `src/benchmarks/`

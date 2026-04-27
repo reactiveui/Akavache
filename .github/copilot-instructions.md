@@ -75,7 +75,7 @@ Always reference these instructions first and fallback to search or bash command
   dotnet test --project tests/Akavache.EncryptedSqlite3.Tests/Akavache.EncryptedSqlite3.Tests.csproj
   dotnet test --project tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj
   dotnet test --project tests/Akavache.Settings.Tests/Akavache.Settings.Tests.csproj
-  dotnet test --project tests/Akavache.Http.Tests/Akavache.Http.Tests.csproj
+  dotnet test --project tests/Akavache.HttpDownloader.Tests/Akavache.HttpDownloader.Tests.csproj
 
   # Parallel assemblies
   dotnet test --project tests/Akavache.Core.Tests.Parallel/Akavache.Core.Tests.Parallel.csproj
@@ -91,7 +91,7 @@ Tests are split into **serial** and **parallel** assemblies:
 
 - **Serial assemblies** (`*.Tests`): Use `[assembly: NotInParallel]` with a custom `AkavacheTestExecutor` that resets global state (`CacheDatabase`, `AppLocator`, `UniversalSerializer`) between tests. Tests that touch shared singletons live here.
 - **Parallel assemblies** (`*.Tests.Parallel`): No executor, TUnit default parallel execution. Tests that create isolated cache instances and don't touch global state live here.
-- **HTTP-isolated assembly** (`Akavache.Http.Tests`): Dedicated assembly for HTTP download tests to avoid TCP socket contention when MTP runs assemblies simultaneously.
+- **HTTP-isolated assembly** (`Akavache.HttpDownloader.Tests`): Dedicated assembly for HTTP download tests to avoid TCP socket contention when MTP runs assemblies simultaneously.
 - **Shared infrastructure** (`tests/shared/`): Helpers, Mocks, and TestBases compiled into each assembly via `<Compile Include>` in csproj files.
 - `IsTestProject` is auto-detected via `$(MSBuildProjectName.Contains('Tests'))` in `Directory.Build.props`.
 
@@ -226,7 +226,7 @@ Tests are split into **serial** and **parallel** assemblies:
 4. **Akavache.SystemTextJson** - Modern JSON serialization (recommended for new projects)
 5. **Akavache.SystemTextJson.Bson** - System.Text.Json BSON serializer
 6. **Akavache.NewtonsoftJson** - Legacy JSON serialization (for compatibility)
-7. **Akavache.Http** - HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
+7. **Akavache.HttpDownloader** - HTTP download extensions (`HttpService`, `HttpExtensions`, `RelativeTimeDownloadExtensions`)
 8. **Akavache.Settings** - Configuration and settings management (typed settings storage on blob caches)
 9. **Akavache.Drawing** - Image/bitmap caching support
 10. **Akavache.V10toV11** - V10-to-V11 data migration utilities

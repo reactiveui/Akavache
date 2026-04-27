@@ -48,11 +48,11 @@
     <Project Path="tests/Akavache.Sqlite3.Tests/Akavache.Sqlite3.Tests.csproj" />
     <Project Path="tests/Akavache.Sqlite3.Tests.Parallel/Akavache.Sqlite3.Tests.Parallel.csproj" />
     <Project Path="tests/Akavache.Integration.Tests/Akavache.Integration.Tests.csproj" />
-    <Project Path="tests/Akavache.Http.Tests/Akavache.Http.Tests.csproj" />
+    <Project Path="tests/Akavache.HttpDownloader.Tests/Akavache.HttpDownloader.Tests.csproj" />
     <Project Path="tests/Akavache.Integration.Tests.Parallel/Akavache.Integration.Tests.Parallel.csproj" />
   </Folder>
   <Project Path="Akavache.Core/Akavache.csproj" />
-  <Project Path="Akavache.Http/Akavache.Http.csproj" />
+  <Project Path="Akavache.HttpDownloader/Akavache.HttpDownloader.csproj" />
   <Project Path="Akavache.Drawing/Akavache.Drawing.csproj" />
   <Project Path="Akavache.EncryptedSqlite3/Akavache.EncryptedSqlite3.csproj" />
   <Project Path="Akavache.NewtonsoftJson/Akavache.NewtonsoftJson.csproj" />
