@@ -158,6 +158,9 @@ Akavache uses a modular package structure. Choose the packages that match your n
 
 ### Optional Extensions
 ```xml
+<!-- HTTP download and caching extensions -->
+<PackageReference Include="Akavache.HttpDownloader" Version="*" />
+
 <!-- Image/Bitmap support -->
 <PackageReference Include="Akavache.Drawing" Version="*" />
 
