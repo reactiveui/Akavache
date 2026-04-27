@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akavache.Core\Akavache.csproj" />
-    <ProjectReference Include="..\Akavache.Http\Akavache.Http.csproj" />
+    <ProjectReference Include="..\Akavache.HttpDownloader\Akavache.HttpDownloader.csproj" />
   </ItemGroup>
   
   <ItemGroup>

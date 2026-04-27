@@ -14,7 +14,7 @@
     <PackageReference Include="System.Memory" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.HttpDownloader.Tests" />
     <InternalsVisibleTo Include="Akavache.Integration.Tests" />
     <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
     <InternalsVisibleTo Include="Akavache.Core.Tests" />

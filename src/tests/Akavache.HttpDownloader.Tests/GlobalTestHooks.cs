@@ -6,7 +6,7 @@
 // Run sequentially to avoid TCP resource contention across simultaneous MTP assemblies.
 [assembly: NotInParallel]
 
-namespace Akavache.Http.Tests;
+namespace Akavache.HttpDownloader.Tests;
 
 /// <summary>
 /// One-time assembly setup for HTTP tests.

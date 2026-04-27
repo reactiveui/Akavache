@@ -4,7 +4,7 @@
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <Description>HTTP download and caching service for Akavache</Description>
+    <Description>HTTP download and caching extensions for Akavache</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Akavache.Http.Tests" />
+    <InternalsVisibleTo Include="Akavache.HttpDownloader.Tests" />
     <InternalsVisibleTo Include="Akavache.Integration.Tests" />
     <InternalsVisibleTo Include="Akavache.Integration.Tests.Parallel" />
   </ItemGroup>

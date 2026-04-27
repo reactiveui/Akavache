@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Akavache.Http\Akavache.Http.csproj" />
+    <ProjectReference Include="..\..\Akavache.HttpDownloader\Akavache.HttpDownloader.csproj" />
     <ProjectReference Include="..\..\Akavache.Sqlite3\Akavache.Sqlite3.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson\Akavache.SystemTextJson.csproj" />
     <ProjectReference Include="..\..\Akavache.SystemTextJson.Bson\Akavache.SystemTextJson.Bson.csproj" />
