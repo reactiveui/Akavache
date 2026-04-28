@@ -240,7 +240,7 @@ Akavache supports:
 ### Serializer Compatibility
 
 | Serializer | .NET Framework 4.6.2+ | .NET 8.0+ | Mobile | Performance |
-|------------|------------------------|-------------------|------------|--------|-------------|
+|------------|------------------------|-------------------|------------|--------|
 | **System.Text.Json** | ✅ Via NuGet | ✅ | ✅ | **Fastest** |
 | **Newtonsoft.Json** | ✅ Built-in | ✅ | ✅ | Compatible |
 
