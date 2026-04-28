@@ -55,9 +55,9 @@ using Splat.Builder;
 // Initialize with the builder pattern
 AppBuilder.CreateSplatBuilder()
     .WithAkavacheCacheDatabase<SystemJsonSerializer>(builder =>
-        builder.WithApplicationName("MyApp")
-               .WithSqliteProvider() // REQUIRED: Explicitly initialize SQLite provider
-               .WithSqliteDefaults());
+        builder.WithSqliteProvider() // REQUIRED: Explicitly initialize SQLite provider
+               .WithSqliteDefaults(),
+            "MyApp");
 ```
 
 > **Important:** Always call `WithSqliteProvider()` explicitly before `WithSqliteDefaults()`. While `WithSqliteDefaults()` will automatically call `WithSqliteProvider()` if not already initialized (for backward compatibility), this automatic behavior is **deprecated and may be removed in future versions**. Explicit provider initialization is the recommended pattern for forward compatibility with other DI containers.
