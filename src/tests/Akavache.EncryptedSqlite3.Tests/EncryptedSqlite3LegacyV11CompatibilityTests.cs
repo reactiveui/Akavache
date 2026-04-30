@@ -77,11 +77,15 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         SeedSqlCipher4Database(path, correctPassword, key: "k", value: [1]);
 
         SystemJsonSerializer serializer = new();
-        await Assert.That(() =>
+        var ex = Assert.Throws<AkavacheSqliteException>(() =>
         {
             using EncryptedSqliteBlobCache cache = new(path, wrongPassword, serializer, ImmediateScheduler.Instance);
             cache.Get("k").WaitForValue();
-        }).Throws<Exception>();
+        });
+
+        // The legacy fallback re-validates page 1 with the supplied password and
+        // surfaces the same SQLITE_NOTADB the modern path would have raised.
+        await Assert.That(ex.ResultCode).IsEqualTo(SQLITE_NOTADB);
     }
 
     /// <summary>
