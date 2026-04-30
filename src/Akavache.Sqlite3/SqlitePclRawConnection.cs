@@ -309,13 +309,16 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             ? SQLITE_OPEN_READONLY
             : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
+        // Quote the password by doubling any single-quotes.
+        var quotedPassword = !string.IsNullOrEmpty(password)
+            ? "'" + password!.Replace("'", "''") + "'"
+            : null;
+
         CheckRc(sqlite3_open_v2(databasePath, out var db, openFlags, null), db, "open " + databasePath);
         Db = db;
 
-        if (password is not null && !string.IsNullOrEmpty(password))
+        if (quotedPassword is not null)
         {
-            // Quote the password by doubling any single-quotes.
-            var quotedPassword = "'" + password.Replace("'", "''") + "'";
             ExecuteNonQuery("PRAGMA key = " + quotedPassword);
         }
 
@@ -328,6 +331,31 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                 ExecuteNonQuery("PRAGMA journal_mode=WAL");
                 ExecuteNonQuery("PRAGMA synchronous=NORMAL");
             }
+#if ENCRYPTED
+            catch (AkavacheSqliteException ex) when (quotedPassword is not null && ex.ResultCode == SQLITE_NOTADB)
+            {
+                // The file isn't readable with SQLite3MC's default cipher. Most likely it
+                // was written by Akavache 11.x, which used the SQLCipher-4 bundle. Re-open
+                // with SQLite3MC's SQLCipher-4 compatibility mode, then re-encrypt forward
+                // to the modern cipher so subsequent opens take the fast native path.
+                Db.Dispose();
+                Db = OpenLegacySqlCipher4(databasePath, openFlags, quotedPassword);
+                try
+                {
+                    // Switch the page cipher back to the SQLite3MC default and rewrite every
+                    // page in place. Use the same password so callers don't need to know.
+                    ExecuteNonQuery("PRAGMA cipher = 'chacha20'");
+                    ExecuteNonQuery("PRAGMA rekey = " + quotedPassword);
+                    ExecuteNonQuery("PRAGMA journal_mode=WAL");
+                    ExecuteNonQuery("PRAGMA synchronous=NORMAL");
+                }
+                catch
+                {
+                    Db.Dispose();
+                    throw;
+                }
+            }
+#endif
             catch
             {
                 Db.Dispose();
@@ -341,7 +369,15 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     }
 
     /// <summary>Gets the native SQLite database handle.</summary>
+#if ENCRYPTED
+    // Reassigned by the constructor when the SQLCipher-4 → modern-cipher
+    // backward-compatibility retry path opens a second handle.
+#pragma warning disable RCS1170 // Use read-only auto-implemented property — setter is used by the retry path above.
+    internal sqlite3 Db { get; private set; }
+#pragma warning restore RCS1170
+#else
     internal sqlite3 Db { get; }
+#endif
 
     /// <summary>Gets the operation queue that serializes all database interactions.</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -894,60 +930,60 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             switch (character)
             {
                 case '"':
-                {
-                    jsonBuilder.Append("\\\"");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\\"");
+                        break;
+                    }
 
                 case '\\':
-                {
-                    jsonBuilder.Append("\\\\");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\\\");
+                        break;
+                    }
 
                 case '\b':
-                {
-                    jsonBuilder.Append("\\b");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\b");
+                        break;
+                    }
 
                 case '\f':
-                {
-                    jsonBuilder.Append("\\f");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\f");
+                        break;
+                    }
 
                 case '\n':
-                {
-                    jsonBuilder.Append("\\n");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\n");
+                        break;
+                    }
 
                 case '\r':
-                {
-                    jsonBuilder.Append("\\r");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\r");
+                        break;
+                    }
 
                 case '\t':
-                {
-                    jsonBuilder.Append("\\t");
-                    break;
-                }
+                    {
+                        jsonBuilder.Append("\\t");
+                        break;
+                    }
 
                 default:
-                {
-                    if (character < FirstPrintableChar)
                     {
-                        jsonBuilder.Append("\\u").Append(((int)character).ToString("X4"));
-                    }
-                    else
-                    {
-                        jsonBuilder.Append(character);
-                    }
+                        if (character < FirstPrintableChar)
+                        {
+                            jsonBuilder.Append("\\u").Append(((int)character).ToString("X4"));
+                        }
+                        else
+                        {
+                            jsonBuilder.Append(character);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
             }
         }
 
@@ -1278,4 +1314,37 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             stmt = null;
         }
     }
+
+#if ENCRYPTED
+    /// <summary>
+    /// Opens <paramref name="databasePath"/> with SQLite3MC's SQLCipher-4 compatibility
+    /// mode engaged so a database produced by the Akavache 11.x encrypted provider
+    /// (which used the SQLCipher-4 native bundle) can be read.
+    /// </summary>
+    /// <param name="databasePath">The full file system path to the SQLite database.</param>
+    /// <param name="openFlags">The flags used for <c>sqlite3_open_v2</c>.</param>
+    /// <param name="quotedPassword">The password, already wrapped in single-quotes for PRAGMA use.</param>
+    /// <returns>An open <see cref="sqlite3"/> handle on which page 1 has been successfully decrypted.</returns>
+    private static sqlite3 OpenLegacySqlCipher4(string databasePath, int openFlags, string quotedPassword)
+    {
+        CheckRc(sqlite3_open_v2(databasePath, out var db, openFlags, null), db, "open " + databasePath + " (sqlcipher-4 compat)");
+        try
+        {
+            CheckRc(sqlite3_exec(db, "PRAGMA cipher = 'sqlcipher'"), db, "exec: PRAGMA cipher = 'sqlcipher'");
+            CheckRc(sqlite3_exec(db, "PRAGMA legacy = 4"), db, "exec: PRAGMA legacy = 4");
+            CheckRc(sqlite3_exec(db, "PRAGMA key = " + quotedPassword), db, "exec: PRAGMA key (sqlcipher-4)");
+
+            // Touch page 1 to confirm the key is correct in legacy mode. This raises
+            // SQLITE_NOTADB if the password is genuinely wrong, distinguishing that
+            // case from "wrote with v11" (which now succeeds).
+            CheckRc(sqlite3_exec(db, "SELECT count(*) FROM sqlite_master"), db, "verify legacy key");
+            return db;
+        }
+        catch
+        {
+            db.Dispose();
+            throw;
+        }
+    }
+#endif
 }
