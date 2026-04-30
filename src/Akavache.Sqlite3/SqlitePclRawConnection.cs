@@ -370,11 +370,11 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
 
     /// <summary>Gets the native SQLite database handle.</summary>
 #if ENCRYPTED
-    // Reassigned by the constructor when the SQLCipher-4 → modern-cipher
-    // backward-compatibility retry path opens a second handle.
-#pragma warning disable RCS1170 // Use read-only auto-implemented property — setter is used by the retry path above.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Roslynator",
+        "RCS1170:Use read-only auto-implemented property",
+        Justification = "Reassigned by the constructor when the SQLCipher-4 → modern-cipher backward-compatibility retry path opens a second handle.")]
     internal sqlite3 Db { get; private set; }
-#pragma warning restore RCS1170
 #else
     internal sqlite3 Db { get; }
 #endif
