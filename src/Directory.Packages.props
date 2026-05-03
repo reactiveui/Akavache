@@ -32,7 +32,7 @@
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
     <PackageVersion Include="Verify.TUnit" Version="31.16.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.6.2" />
-    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.2.1" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.2.2" />
   </ItemGroup>
   <!-- Core library packages -->
   <ItemGroup>
