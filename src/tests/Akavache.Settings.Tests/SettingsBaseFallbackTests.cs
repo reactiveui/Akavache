@@ -134,6 +134,7 @@ public class SettingsBaseFallbackTests
             var settings1 = instance!.GetSettingsStore<TestSettings>(
                 overrideDatabaseName: databaseName,
                 scheduler: ImmediateScheduler.Instance);
+            settings1.Initialize().WaitForCompletion();
             settings1.TestValue.Set(expectedValue).SubscribeAndComplete();
 
             // Verify the value was set.
