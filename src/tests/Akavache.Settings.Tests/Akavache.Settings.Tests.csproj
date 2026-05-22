@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheBaseTargets)</TargetFrameworks>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

@@ -109,6 +109,7 @@ public class SettingsBaseFallbackTests
     public async Task TestSettingsPersistenceAcrossInstances()
     {
         var appName = NewName("persistence_test");
+        var databaseName = NewName("persistence_store");
         const int expectedValue = 999;
 
         // Set up Akavache directly — capture instance from the callback
@@ -127,32 +128,33 @@ public class SettingsBaseFallbackTests
         try
         {
             // Delete any leftover store from prior runs.
-            instance!.DeleteSettingsStore<TestSettings>().WaitForCompletion();
+            instance!.DeleteSettingsStore<TestSettings>(databaseName).WaitForCompletion();
 
             // Create the first settings instance.
             var settings1 = instance!.GetSettingsStore<TestSettings>(
-                overrideDatabaseName: null,
+                overrideDatabaseName: databaseName,
                 scheduler: ImmediateScheduler.Instance);
             settings1.TestValue.Set(expectedValue).SubscribeAndComplete();
 
             // Verify the value was set.
             await Assert.That((int)settings1.TestValue).IsEqualTo(expectedValue);
 
-            // Dispose the first instance.
-            settings1.Dispose();
+            // Dispose the first store and its registered SQLite cache before reopening it.
+            instance!.DisposeSettingsStore<TestSettings>(databaseName).WaitForCompletion();
 
             // Create a second instance and verify the value persisted.
             var settings2 = instance!.GetSettingsStore<TestSettings>(
-                overrideDatabaseName: null,
+                overrideDatabaseName: databaseName,
                 scheduler: ImmediateScheduler.Instance);
             settings2.Initialize().WaitForCompletion();
 
             await Assert.That((int)settings2.TestValue).IsEqualTo(expectedValue);
 
-            settings2.Dispose();
+            instance!.DisposeSettingsStore<TestSettings>(databaseName).WaitForCompletion();
         }
         finally
         {
+            instance?.DisposeSettingsStore<TestSettings>(databaseName).WaitForCompletion();
             CacheDatabase.ResetForTests().SubscribeAndComplete();
         }
 

@@ -1439,7 +1439,7 @@ public class InMemoryBlobCacheBaseTests
         };
         Dictionary<Type, HashSet<string>> typeIndex = new()
         {
-            [typeof(string)] = [with(StringComparer.Ordinal), "expired", "valid"],
+            [typeof(string)] = new HashSet<string>(StringComparer.Ordinal) { "expired", "valid" },
         };
         Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
         {
@@ -1472,7 +1472,7 @@ public class InMemoryBlobCacheBaseTests
         };
         Dictionary<Type, HashSet<string>> typeIndex = new()
         {
-            [typeof(string)] = [with(StringComparer.Ordinal), "valid"],
+            [typeof(string)] = new HashSet<string>(StringComparer.Ordinal) { "valid" },
         };
         Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
         {
@@ -1501,7 +1501,7 @@ public class InMemoryBlobCacheBaseTests
             ["expired-untyped"] = new("expired-untyped", TypeName: null, Value: null, default, now.AddMinutes(-1).UtcDateTime),
         };
         Dictionary<Type, HashSet<string>> typeIndex = [];
-        Dictionary<string, Type> keyToType = [with(StringComparer.Ordinal)];
+        Dictionary<string, Type> keyToType = new(StringComparer.Ordinal);
 
         InMemoryBlobCacheBase.VacuumExpiredEntriesFast(cache, typeIndex, keyToType, now);
 

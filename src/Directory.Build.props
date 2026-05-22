@@ -28,7 +28,7 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
 
     <!-- Enable building Windows-specific targets (net462/net472/net481 and netX.0-windows) on non-Windows platforms -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>

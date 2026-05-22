@@ -22,13 +22,13 @@ namespace Akavache;
 public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? serializer) : ISecureBlobCache
 {
     /// <summary>The in-memory key to cache entry mapping.</summary>
-    private readonly Dictionary<string, CacheEntry> _cache = [with(StringComparer.Ordinal)];
+    private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.Ordinal);
 
     /// <summary>Per-type index of keys for fast type-scoped lookups.</summary>
     private readonly Dictionary<Type, HashSet<string>> _typeIndex = [];
 
     /// <summary>Reverse map from cache key to the <see cref="Type"/> bucket it currently lives in.</summary>
-    private readonly Dictionary<string, Type> _keyToType = [with(StringComparer.Ordinal)];
+    private readonly Dictionary<string, Type> _keyToType = new(StringComparer.Ordinal);
 #if NET9_0_OR_GREATER
     /// <summary>Synchronization primitive guarding mutations.</summary>
     private readonly Lock _lock = new();
@@ -131,7 +131,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                 {
                     if (!_typeIndex.TryGetValue(type, out var value))
                     {
-                        value = [with(StringComparer.Ordinal)];
+                        value = new(StringComparer.Ordinal);
                         _typeIndex[type] = value;
                     }
 
@@ -168,7 +168,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     {
                         if (!_typeIndex.TryGetValue(type, out var value))
                         {
-                            value = [with(StringComparer.Ordinal)];
+                            value = new(StringComparer.Ordinal);
                             _typeIndex[type] = value;
                         }
 
@@ -251,8 +251,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         }
 
                         var now = Scheduler.Now;
-                        List<KeyValuePair<string, byte[]>> result = [with(keys.Count)];
-                        List<string> expiredKeys = [with(keys.Count)];
+                        List<KeyValuePair<string, byte[]>> result = new(keys.Count);
+                        List<string> expiredKeys = new(keys.Count);
 
                         foreach (var key in keys)
                         {
@@ -291,8 +291,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                     lock (_lock)
                     {
                         var now = Scheduler.Now;
-                        List<string> expiredKeys = [with(_cache.Count)];
-                        List<string> validKeys = [with(_cache.Count)];
+                        List<string> expiredKeys = new(_cache.Count);
+                        List<string> validKeys = new(_cache.Count);
 
                         foreach (var kvp in _cache)
                         {
@@ -332,8 +332,8 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
                         }
 
                         var now = Scheduler.Now;
-                        List<string> expiredKeys = [with(keys.Count)];
-                        List<string> validKeys = [with(keys.Count)];
+                        List<string> expiredKeys = new(keys.Count);
+                        List<string> validKeys = new(keys.Count);
 
                         foreach (var key in keys)
                         {
@@ -785,7 +785,7 @@ public abstract class InMemoryBlobCacheBase(IScheduler scheduler, ISerializer? s
         Dictionary<string, CacheEntry> cache,
         DateTimeOffset now)
     {
-        List<string> expiredKeys = [with(cache.Count)];
+        List<string> expiredKeys = new(cache.Count);
         foreach (var kvp in cache)
         {
             if (kvp.Value.ExpiresAt <= now)

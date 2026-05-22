@@ -287,7 +287,7 @@ public static class UniversalSerializer
         ];
 
         var prefixSuffix = $"___{requestedKey}";
-        List<string> candidates = [with(8)];
+        List<string> candidates = new(8);
         foreach (var key in allKeys)
         {
             if (possibleKeys.Contains(key) || key.EndsWith(prefixSuffix, StringComparison.Ordinal))

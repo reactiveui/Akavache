@@ -7,7 +7,7 @@
     <IsPackable>false</IsPackable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
     <AssemblyTitle>Akavache Todo WPF</AssemblyTitle>
     <AssemblyDescription>Demonstrates Akavache features in a WPF application</AssemblyDescription>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
