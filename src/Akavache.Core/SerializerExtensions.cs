@@ -482,10 +482,14 @@ public static class SerializerExtensions
             return Core.CachedObservables.UnitDefault;
         }
 
-        // For mixed object types, we need to serialize each one individually and use its specific type
-        var insertOperations = keyValuePairs
-            .Select(kvp => blobCache.Insert(kvp.Key, blobCache.Serializer.Serialize(kvp.Value), kvp.Value?.GetType() ?? typeof(object), absoluteExpiration))
-            .ToList();
+        // For mixed object types, we need to serialize each one individually and use its specific type.
+        var insertOperations = new IObservable<Unit>[keyValuePairs.Count];
+        var index = 0;
+        foreach (var kvp in keyValuePairs)
+        {
+            var value = kvp.Value;
+            insertOperations[index++] = blobCache.Insert(kvp.Key, blobCache.Serializer.Serialize(value), value?.GetType() ?? typeof(object), absoluteExpiration);
+        }
 
         return insertOperations.RunAll();
     }

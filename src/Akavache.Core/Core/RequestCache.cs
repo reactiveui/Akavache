@@ -86,7 +86,7 @@ internal static class RequestCache
         }
 
         var keySuffix = $":{key}";
-        List<string> keysToRemove = new(_inflightRequests.Count);
+        List<string> keysToRemove = [with(_inflightRequests.Count)];
         foreach (var requestKey in _inflightRequests.Keys)
         {
             if (requestKey.EndsWith(keySuffix, StringComparison.Ordinal))
