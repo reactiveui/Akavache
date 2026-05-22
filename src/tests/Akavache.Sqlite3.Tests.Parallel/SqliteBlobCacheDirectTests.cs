@@ -2713,6 +2713,62 @@ public class SqliteBlobCacheDirectTests
         }
     }
 
+    // ── UpdateExpiration with empty keys via ICollection path ─────────
+
+    /// <summary>
+    /// UpdateExpiration with an empty HashSet exercises the MaterializeKeys ICollection path
+    /// plus the empty-key-list early return in the untyped overload.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    internal async Task UpdateExpiration_WithEmptyHashSet_IsNoop()
+    {
+        InMemoryAkavacheConnection connection = new();
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        try
+        {
+            cache.Insert("keep", [1], DateTimeOffset.Now.AddMinutes(5)).SubscribeAndComplete();
+            cache.UpdateExpiration(new HashSet<string>(), DateTimeOffset.Now.AddMinutes(10)).SubscribeAndComplete();
+
+            var value = cache.Get("keep").SubscribeGetValue();
+            await Assert.That(value).IsNotNull();
+            await Assert.That(value!.Length).IsEqualTo(1);
+            await Assert.That(value[0]).IsEqualTo((byte)1);
+        }
+        finally
+        {
+            cache.Dispose();
+        }
+    }
+
+    // ── UpdateExpiration typed with empty keys via ICollection path ───
+
+    /// <summary>
+    /// UpdateExpiration typed with an empty HashSet exercises the MaterializeKeys ICollection
+    /// path plus the empty-key-list early return in the typed overload.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    internal async Task UpdateExpirationTyped_WithEmptyHashSet_IsNoop()
+    {
+        InMemoryAkavacheConnection connection = new();
+        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
+        try
+        {
+            cache.Insert("keep", [1], typeof(string), DateTimeOffset.Now.AddMinutes(5)).SubscribeAndComplete();
+            cache.UpdateExpiration(new HashSet<string>(), typeof(string), DateTimeOffset.Now.AddMinutes(10)).SubscribeAndComplete();
+
+            var value = cache.Get("keep", typeof(string)).SubscribeGetValue();
+            await Assert.That(value).IsNotNull();
+            await Assert.That(value!.Length).IsEqualTo(1);
+            await Assert.That(value[0]).IsEqualTo((byte)1);
+        }
+        finally
+        {
+            cache.Dispose();
+        }
+    }
+
     // ── Dispose(isDisposing: false) path (line 761) ──────────────────
 
     /// <summary>
