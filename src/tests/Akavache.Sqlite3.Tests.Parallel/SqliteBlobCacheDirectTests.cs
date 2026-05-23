@@ -2724,21 +2724,15 @@ public class SqliteBlobCacheDirectTests
     internal async Task UpdateExpiration_WithEmptyHashSet_IsNoop()
     {
         InMemoryAkavacheConnection connection = new();
-        SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        try
-        {
-            cache.Insert("keep", [1], DateTimeOffset.Now.AddMinutes(5)).SubscribeAndComplete();
-            cache.UpdateExpiration(new HashSet<string>(), DateTimeOffset.Now.AddMinutes(10)).SubscribeAndComplete();
+        using SqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
 
-            var value = cache.Get("keep").SubscribeGetValue();
-            await Assert.That(value).IsNotNull();
-            await Assert.That(value!.Length).IsEqualTo(1);
-            await Assert.That(value[0]).IsEqualTo((byte)1);
-        }
-        finally
-        {
-            cache.Dispose();
-        }
+        cache.Insert("keep", [1], DateTimeOffset.Now.AddMinutes(5)).SubscribeAndComplete();
+        cache.UpdateExpiration(new HashSet<string>(), DateTimeOffset.Now.AddMinutes(10)).SubscribeAndComplete();
+
+        var value = cache.Get("keep").SubscribeGetValue();
+        await Assert.That(value).IsNotNull();
+        await Assert.That(value!.Length).IsEqualTo(1);
+        await Assert.That(value[0]).IsEqualTo((byte)1);
     }
 
     // ── UpdateExpiration typed with empty keys via ICollection path ───
