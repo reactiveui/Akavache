@@ -15,7 +15,7 @@
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
-    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
+    <PackageVersion Include="MinVer" Version="7.0.0" />
     <PackageVersion Include="stylecop.analyzers" Version="1.2.0-beta.556" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
     <PackageVersion Include="Blazor.Common.Analyzers" Version="2.0.0" />

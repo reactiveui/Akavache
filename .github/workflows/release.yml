@@ -15,6 +15,7 @@ on:
 permissions:
   contents: write
   id-token: write
+  packages: read
 
 jobs:
   release:
@@ -22,6 +23,8 @@ jobs:
     with:
       solutionFile: Akavache.slnx
       installWorkloads: true
+      versioningTool: minver
+      minverMinimumMajorMinor: '12.1'
       bump: ${{ inputs.bump }}
     secrets:
       CERTUM_USER_ID: ${{ secrets.CERTUM_USER_ID }}
