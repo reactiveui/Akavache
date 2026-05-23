@@ -421,7 +421,7 @@ public class SqliteBlobCache : IBlobCache
             var entries = BuildCacheEntries(keyValuePairs, typeName: null, createdAt, expiry);
             return entries.Count > 0
                 ? Connection.Upsert(entries)
-                : Observable.Return(Unit.Default);
+                : Core.CachedObservables.UnitDefault;
         });
     }
 
@@ -456,7 +456,7 @@ public class SqliteBlobCache : IBlobCache
             var entries = BuildCacheEntries(keyValuePairs, typeName, createdAt, expiry);
             if (entries.Count == 0)
             {
-                return Observable.Return(Unit.Default);
+                return Core.CachedObservables.UnitDefault;
             }
 
             // Upsert then best-effort checkpoint. Both failures are non-fatal:
@@ -524,7 +524,7 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.Gate(() =>
             keyList.Count > 0
                 ? Connection.Invalidate(keyList, typeFullName: null)
-                : Observable.Return(Unit.Default));
+                : Core.CachedObservables.UnitDefault);
     }
 
     /// <inheritdoc/>
@@ -551,7 +551,7 @@ public class SqliteBlobCache : IBlobCache
         return _initialized.Gate(() =>
             keyList.Count > 0
                 ? Connection.Invalidate(keyList, typeName)
-                : Observable.Return(Unit.Default));
+                : Core.CachedObservables.UnitDefault);
     }
 
     /// <inheritdoc/>
@@ -639,9 +639,20 @@ public class SqliteBlobCache : IBlobCache
         var expiry = absoluteExpiration;
         var keyList = MaterializeKeys(keys);
         return _initialized.Gate(() =>
-            keyList.Select(k => Connection.SetExpiry(k, typeFullName: null, expiry))
-                .ToList()
-                .RunAll());
+        {
+            if (keyList.Count == 0)
+            {
+                return Core.CachedObservables.UnitDefault;
+            }
+
+            var setExpiryOperations = new IObservable<Unit>[keyList.Count];
+            for (var i = 0; i < keyList.Count; i++)
+            {
+                setExpiryOperations[i] = Connection.SetExpiry(keyList[i], typeFullName: null, expiry);
+            }
+
+            return setExpiryOperations.RunAll();
+        });
     }
 
     /// <inheritdoc/>
@@ -666,9 +677,20 @@ public class SqliteBlobCache : IBlobCache
         var keyList = MaterializeKeys(keys);
         var typeName = type.FullName;
         return _initialized.Gate(() =>
-            keyList.Select(k => Connection.SetExpiry(k, typeName, expiry))
-                .ToList()
-                .RunAll());
+        {
+            if (keyList.Count == 0)
+            {
+                return Core.CachedObservables.UnitDefault;
+            }
+
+            var setExpiryOperations = new IObservable<Unit>[keyList.Count];
+            for (var i = 0; i < keyList.Count; i++)
+            {
+                setExpiryOperations[i] = Connection.SetExpiry(keyList[i], typeName, expiry);
+            }
+
+            return setExpiryOperations.RunAll();
+        });
     }
 
     /// <inheritdoc/>

@@ -1439,7 +1439,7 @@ public class InMemoryBlobCacheBaseTests
         };
         Dictionary<Type, HashSet<string>> typeIndex = new()
         {
-            [typeof(string)] = new(StringComparer.Ordinal) { "expired", "valid" },
+            [typeof(string)] = new HashSet<string>(StringComparer.Ordinal) { "expired", "valid" },
         };
         Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
         {
@@ -1472,7 +1472,7 @@ public class InMemoryBlobCacheBaseTests
         };
         Dictionary<Type, HashSet<string>> typeIndex = new()
         {
-            [typeof(string)] = new(StringComparer.Ordinal) { "valid" },
+            [typeof(string)] = new HashSet<string>(StringComparer.Ordinal) { "valid" },
         };
         Dictionary<string, Type> keyToType = new(StringComparer.Ordinal)
         {

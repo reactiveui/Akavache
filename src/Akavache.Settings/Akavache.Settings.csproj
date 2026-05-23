@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Akavache.Settings</RootNamespace>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
 
   </PropertyGroup>
 

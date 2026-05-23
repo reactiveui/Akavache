@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Description>Newtonsoft.Json serialization support for Akavache with optional BSON compatibility</Description>
 
     <!-- Newtonsoft.Json is inherently reflection-based and not AOT/trim compatible -->

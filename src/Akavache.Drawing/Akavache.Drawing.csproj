@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Description>Drawing and bitmap support for Akavache using Splat.Drawing</Description>
   </PropertyGroup>
 

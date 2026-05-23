@@ -12,7 +12,7 @@
     <SingleProject>true</SingleProject>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
     <AssemblyTitle>Akavache Todo MAUI</AssemblyTitle>
     <AssemblyDescription>Demonstrates Akavache features in a .NET MAUI application</AssemblyDescription>
 

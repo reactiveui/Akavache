@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>latest</LangVersion>
     <DefineConstants>$(DefineConstants);ENCRYPTED</DefineConstants>
   </PropertyGroup>
 
