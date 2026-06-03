@@ -5,13 +5,13 @@
   </PropertyGroup>
   <!-- Version groups for packages that share the same version -->
   <PropertyGroup>
-    <MicrosoftExtensionsVersion>10.0.6</MicrosoftExtensionsVersion>
-    <SqlitePclRawVersion>3.0.2</SqlitePclRawVersion>
-    <Sqlite3MultipleCiphersVersion>2.3.3</Sqlite3MultipleCiphersVersion>
-    <SplatVersion>19.3.1</SplatVersion>
-    <ReactiveUIVersion>23.2.1</ReactiveUIVersion>
-    <MauiVersion>10.0.51</MauiVersion>
-    <TUnitVersion>1.33.0</TUnitVersion>
+    <MicrosoftExtensionsVersion>10.0.8</MicrosoftExtensionsVersion>
+    <SqlitePclRawVersion>3.0.3</SqlitePclRawVersion>
+    <Sqlite3MultipleCiphersVersion>2.3.4</Sqlite3MultipleCiphersVersion>
+    <SplatVersion>19.4.1</SplatVersion>
+    <ReactiveUIVersion>23.2.28</ReactiveUIVersion>
+    <MauiVersion>10.0.70</MauiVersion>
+    <TUnitVersion>1.48.6</TUnitVersion>
   </PropertyGroup>
   <!-- All projects -->
   <ItemGroup>
@@ -30,7 +30,7 @@
     <PackageVersion Include="ReactiveUI.Testing" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="TUnit" Version="$(TUnitVersion)" />
     <PackageVersion Include="TUnit.Core" Version="$(TUnitVersion)" />
-    <PackageVersion Include="Verify.TUnit" Version="31.18.0" />
+    <PackageVersion Include="Verify.TUnit" Version="31.19.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.7.0" />
     <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.2.3" />
   </ItemGroup>
@@ -59,7 +59,7 @@
   </ItemGroup>
   <!-- Sample application packages -->
   <ItemGroup>
-    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.6.30" />
+    <PackageVersion Include="ReactiveUI.SourceGenerators" Version="3.0.0" />
     <PackageVersion Include="ReactiveUI.WPF" Version="$(ReactiveUIVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsVersion)" />
