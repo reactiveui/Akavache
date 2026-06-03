@@ -39,9 +39,10 @@
     <!-- Windows-specific desktop TFMs (includes .NET Framework and Windows-specific .NET 9/10) -->
     <AkavacheWindowsDesktopTargets>net462;net472;net481;net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</AkavacheWindowsDesktopTargets>
 
-    <!-- Mobile TFMs separated by platform -->
-    <AkavacheMobileAndroidTargets>net9.0-android;net10.0-android</AkavacheMobileAndroidTargets>
-    <AkavacheMobileAppleTargets>net9.0-ios;net9.0-macos;net9.0-maccatalyst;net10.0-ios;net10.0-macos;net10.0-maccatalyst</AkavacheMobileAppleTargets>
+    <!-- Mobile TFMs separated by platform. net9 mobile TFMs dropped: the MAUI net9
+         (android/ios/maccatalyst) workloads are end of support (NETSDK1202). -->
+    <AkavacheMobileAndroidTargets>net10.0-android</AkavacheMobileAndroidTargets>
+    <AkavacheMobileAppleTargets>net10.0-ios;net10.0-macos;net10.0-maccatalyst</AkavacheMobileAppleTargets>
   </PropertyGroup>
 
   <PropertyGroup>
