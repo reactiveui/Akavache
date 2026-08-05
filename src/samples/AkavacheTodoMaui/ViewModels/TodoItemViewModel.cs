@@ -11,13 +11,14 @@ using ReactiveUI;
 
 namespace AkavacheTodoMaui.ViewModels;
 
-/// <summary>
-/// View model for individual todo items with reactive behaviors.
-/// </summary>
+/// <summary>View model for individual todo items with reactive behaviors.</summary>
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
-public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
+public sealed class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 {
+    /// <summary>How long editing settles before the todo is written back to the cache.</summary>
+    private const int AutoSaveThrottleMilliseconds = 500;
+
     /// <summary>The notification service used for scheduling reminders.</summary>
     private readonly NotificationService _notificationService;
 
@@ -33,15 +34,13 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
     /// <summary>OAPH exposing whether the todo is due soon.</summary>
     private readonly ObservableAsPropertyHelper<bool> _isDueSoon;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TodoItemViewModel"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="TodoItemViewModel"/> class.</summary>
     /// <param name="todoItem">The todo item model.</param>
     /// <param name="notificationService">The notification service.</param>
-    /// <param name="deleteAction">Action to call when deleting this item.</param>
+    /// <param name="deleteAction">Action to call when deleting this item, or null when the item cannot be deleted.</param>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    public TodoItemViewModel(TodoItem todoItem, NotificationService notificationService, Action<TodoItemViewModel>? deleteAction = null)
+    public TodoItemViewModel(TodoItem todoItem, NotificationService notificationService, Action<TodoItemViewModel>? deleteAction)
     {
         TodoItem = todoItem;
         _notificationService = notificationService;
@@ -55,11 +54,11 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
         // Setup computed properties
         _dueDateDisplay = this.WhenAnyValue(x => x.TodoItem.DueDate)
-            .Select(dueDate => dueDate?.ToString("MMM dd, yyyy HH:mm") ?? "No due date")
+            .Select(static dueDate => dueDate?.ToString("MMM dd, yyyy HH:mm") ?? "No due date")
             .ToProperty(this, x => x.DueDateDisplay);
 
         _priorityDisplay = this.WhenAnyValue(x => x.TodoItem.Priority)
-            .Select(priority => priority.ToString())
+            .Select(static priority => priority.ToString())
             .ToProperty(this, x => x.PriorityDisplay);
 
         _isOverdue = this.WhenAnyValue(x => x.TodoItem.DueDate, x => x.TodoItem.IsCompleted)
@@ -74,77 +73,50 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         Activator = new();
 
         this.WhenActivated(disposables =>
-        {
-            // Auto-save when properties change
-            this.WhenAnyValue(x => x.TodoItem.IsCompleted)
+            _ = this.WhenAnyValue(x => x.TodoItem.IsCompleted)
                 .Skip(1) // Skip initial value
-                .Throttle(TimeSpan.FromMilliseconds(500))
+                .Throttle(TimeSpan.FromMilliseconds(AutoSaveThrottleMilliseconds))
                 .SelectMany(_ => SaveTodoItem())
                 .Subscribe(
-                    _ => { },
-                    ex => System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex}"))
-                .DisposeWith(disposables);
-        });
+                    static _ => { },
+                    static ex => System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex}"))
+                .DisposeWith(disposables));
     }
 
-    /// <summary>
-    /// Gets the view model activator.
-    /// </summary>
+    /// <summary>Gets the view model activator.</summary>
     public ViewModelActivator Activator { get; }
 
-    /// <summary>
-    /// Gets the todo item model.
-    /// </summary>
+    /// <summary>Gets the todo item model.</summary>
     public TodoItem TodoItem { get; }
 
-    /// <summary>
-    /// Gets or sets the delete action to call when deleting this item.
-    /// </summary>
+    /// <summary>Gets or sets the delete action to call when deleting this item.</summary>
     public Action<TodoItemViewModel>? DeleteAction { get; set; }
 
-    /// <summary>
-    /// Gets the formatted due date display.
-    /// </summary>
+    /// <summary>Gets the formatted due date display.</summary>
     public string DueDateDisplay => _dueDateDisplay.Value;
 
-    /// <summary>
-    /// Gets the priority display string.
-    /// </summary>
+    /// <summary>Gets the priority display string.</summary>
     public string PriorityDisplay => _priorityDisplay.Value;
 
-    /// <summary>
-    /// Gets a value indicating whether the todo is overdue.
-    /// </summary>
+    /// <summary>Gets a value indicating whether the todo is overdue.</summary>
     public bool IsOverdue => _isOverdue.Value;
 
-    /// <summary>
-    /// Gets a value indicating whether the todo is due soon.
-    /// </summary>
+    /// <summary>Gets a value indicating whether the todo is due soon.</summary>
     public bool IsDueSoon => _isDueSoon.Value;
 
-    /// <summary>
-    /// Gets the command to toggle completion status.
-    /// </summary>
+    /// <summary>Gets the command to toggle completion status.</summary>
     public ReactiveCommand<Unit, Unit> ToggleCompletedCommand { get; }
 
-    /// <summary>
-    /// Gets the command to delete the todo.
-    /// </summary>
+    /// <summary>Gets the command to delete the todo.</summary>
     public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
 
-    /// <summary>
-    /// Gets the command to edit the todo.
-    /// </summary>
+    /// <summary>Gets the command to edit the todo.</summary>
     public ReactiveCommand<Unit, Unit> EditCommand { get; }
 
-    /// <summary>
-    /// Gets the command to schedule a reminder.
-    /// </summary>
+    /// <summary>Gets the command to schedule a reminder.</summary>
     public ReactiveCommand<Unit, Unit> ScheduleReminderCommand { get; }
 
-    /// <summary>
-    /// Gets the background color based on todo status.
-    /// </summary>
+    /// <summary>Gets the background color based on todo status.</summary>
     public string BackgroundColor
     {
         get
@@ -159,18 +131,11 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 return "#FFEBEE"; // Light red background for overdue
             }
 
-            if (IsDueSoon)
-            {
-                return "#FFF3E0"; // Light orange background for due soon
-            }
-
-            return "White"; // Clean white background for normal todos
+            return IsDueSoon ? "#FFF3E0" : "White";
         }
     }
 
-    /// <summary>
-    /// Gets the text color based on todo status.
-    /// </summary>
+    /// <summary>Gets the text color based on todo status.</summary>
     public string TextColor
     {
         get
@@ -185,18 +150,11 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 return "#C62828"; // Dark red text for overdue
             }
 
-            if (IsDueSoon)
-            {
-                return "#E65100"; // Dark orange text for due soon
-            }
-
-            return "#212121"; // Dark text for normal todos
+            return IsDueSoon ? "#E65100" : "#212121";
         }
     }
 
-    /// <summary>
-    /// Gets the priority color indicator.
-    /// </summary>
+    /// <summary>Gets the priority color indicator.</summary>
     public string PriorityColor => TodoItem.Priority switch
     {
         TodoPriority.Critical => "#D32F2F",
@@ -206,9 +164,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         _ => "#666666"
     };
 
-    /// <summary>
-    /// Gets formatted tags as a single string.
-    /// </summary>
+    /// <summary>Gets formatted tags as a single string.</summary>
     public string TagsDisplay => TodoItem.Tags.Count > 0 ? string.Join(", ", TodoItem.Tags) : string.Empty;
 
     /// <summary>Command handler that toggles the todo's completion status.</summary>
@@ -221,12 +177,12 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 TodoItem.IsCompleted = !TodoItem.IsCompleted;
 
                 // Trigger property notifications for UI updates
-                this.RaisePropertyChanged(nameof(TodoItem));
-                this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
-                this.RaisePropertyChanged(nameof(IsOverdue));
-                this.RaisePropertyChanged(nameof(IsDueSoon));
-                this.RaisePropertyChanged(nameof(BackgroundColor));
-                this.RaisePropertyChanged(nameof(TextColor));
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
 
                 // Refresh time-based properties
                 TodoItem.RefreshTimeBasedProperties();
@@ -236,8 +192,8 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         .Do(_ =>
         {
             // Ensure the TodoItem property change is properly propagated
-            this.RaisePropertyChanged(nameof(TodoItem));
-            this.RaisePropertyChanged(nameof(TodoItem.IsCompleted));
+            this.RaisePropertyChanged();
+            this.RaisePropertyChanged();
         });
 
     /// <summary>Command handler that deletes the todo and invalidates its cache entry.</summary>
@@ -265,7 +221,7 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
         // Subscribe to the page disappearing to check if changes were made
         editPage.Disappearing += async (_, _) =>
         {
-            if (!editViewModel.WasSaved || editViewModel.UpdatedTodo == null)
+            if (!editViewModel.WasSaved || editViewModel.UpdatedTodo is null)
             {
                 return;
             }
@@ -280,17 +236,17 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
                 TodoItem.Tags = editViewModel.UpdatedTodo.Tags;
 
                 // Trigger property notifications
-                this.RaisePropertyChanged(nameof(TodoItem));
-                this.RaisePropertyChanged(nameof(DueDateDisplay));
-                this.RaisePropertyChanged(nameof(PriorityDisplay));
-                this.RaisePropertyChanged(nameof(TagsDisplay));
-                this.RaisePropertyChanged(nameof(IsOverdue));
-                this.RaisePropertyChanged(nameof(IsDueSoon));
-                this.RaisePropertyChanged(nameof(BackgroundColor));
-                this.RaisePropertyChanged(nameof(TextColor));
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged();
 
                 // Save the updated todo
-                SaveTodoItem().Subscribe();
+                _ = SaveTodoItem().Subscribe();
             });
         };
 
@@ -301,26 +257,32 @@ public class TodoItemViewModel : ReactiveObject, IActivatableViewModel
 
     /// <summary>Command handler that schedules a reminder for this todo.</summary>
     /// <returns>An observable that completes when scheduling is done.</returns>
-    private IObservable<Unit> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue ?
-        Observable.Return(Unit.Default) :
-        _notificationService.ScheduleReminder(TodoItem);
+    private IObservable<Unit> ExecuteScheduleReminder() => !TodoItem.DueDate.HasValue
+        ? Observable.Return(Unit.Default)
+        : _notificationService.ScheduleReminder(TodoItem);
 
     /// <summary>Persists the current todo item by merging it into the cached todo list.</summary>
     /// <returns>An observable that completes when the save is done.</returns>
     private IObservable<Unit> SaveTodoItem() =>
-
-        // Use individual cache key for this todo
         TodoCacheService.GetAllTodos()
             .Take(1)
             .SelectMany(todos =>
             {
                 todos ??= [];
 
-                // Update the todo in the list
-                var existingTodo = todos.FirstOrDefault(t => t.Id == TodoItem.Id);
-                if (existingTodo != null)
+                // Replace the matching todo in the cached list, or append it when it is new
+                var index = -1;
+                for (var i = 0; i < todos.Count; i++)
                 {
-                    var index = todos.IndexOf(existingTodo);
+                    if (todos[i].Id == TodoItem.Id)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index >= 0)
+                {
                     todos[index] = TodoItem;
                 }
                 else

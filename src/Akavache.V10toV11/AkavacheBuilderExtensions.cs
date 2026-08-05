@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using Akavache.Core;
-using Akavache.Helpers;
 using Akavache.Sqlite3;
 
 using Splat;
@@ -25,82 +24,99 @@ public static class AkavacheBuilderExtensions
     /// <summary>The cache name used for the secure cache.</summary>
     private const string Secure = "Secure";
 
-    /// <summary>
-    /// Configures the builder to use V10-era database filenames (blobs.db, userblobs.db, secret.db)
-    /// at the legacy directory locations. This allows V11 to find and read existing V10 databases in-place.
-    /// New writes will use the V11 CacheEntry table within the same database file, while old data
-    /// in the V10 CacheElement table is read transparently via the built-in legacy shim.
-    /// </summary>
+    /// <summary>Extension members for <c>IAkavacheBuilder</c>.</summary>
     /// <param name="builder">The Akavache builder to configure.</param>
-    /// <returns>The builder instance for fluent configuration.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when no serializer has been registered.</exception>
-    public static IAkavacheBuilder WithV10FileNames(this IAkavacheBuilder builder)
+    extension(IAkavacheBuilder builder)
     {
-        ArgumentExceptionHelper.ThrowIfNull(builder);
-
-        if (builder.Serializer == null)
+        /// <summary>
+        /// Configures the builder to use V10-era database filenames (blobs.db, userblobs.db, secret.db)
+        /// at the legacy directory locations. This allows V11 to find and read existing V10 databases in-place.
+        /// New writes will use the V11 CacheEntry table within the same database file, while old data
+        /// in the V10 CacheElement table is read transparently via the built-in legacy shim.
+        /// </summary>
+        /// <returns>The builder instance for fluent configuration.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when no serializer has been registered.</exception>
+        public IAkavacheBuilder WithV10FileNames()
         {
-            throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using V10 file names.");
+            ArgumentExceptionHelper.ThrowIfNull(builder);
+
+            if (builder.Serializer is null)
+            {
+                throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using V10 file names.");
+            }
+
+            ValidateApplicationName(builder.ApplicationName);
+
+            // Ensure legacy file location is set so directories resolve to V10 paths
+            if (builder.FileLocationOption != FileLocationOption.Legacy)
+            {
+                _ = builder.WithLegacyFileLocation();
+            }
+
+            // Create caches using V10 filenames at legacy directory locations
+            _ = builder.WithUserAccount(CreateV10Cache(UserAccount, builder))
+                   .WithLocalMachine(CreateV10Cache(LocalMachine, builder))
+                   .WithInMemory()
+                   .WithSecure(new SecureBlobCacheWrapper(CreateV10Cache(Secure, builder)));
+
+            return builder;
         }
 
-        ValidateApplicationName(builder.ApplicationName);
+        /// <summary>
+        /// Performs a one-time migration of data from V10 database files into the current V11 databases.
+        /// This method should be called AFTER <c>WithSqliteDefaults()</c> so that V11 databases have been created.
+        /// The migration reads all entries from the V10 CacheElement table, converts them to V11 CacheEntry format,
+        /// and inserts them into the V11 databases. A sentinel key prevents re-migration on subsequent runs.
+        /// </summary>
+        /// <returns>The builder instance for fluent configuration.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when V11 caches have not been configured yet.</exception>
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        public IAkavacheBuilder MigrateFromV10() =>
+            builder.MigrateFromV10((Action<V10MigrationOptions>?)null);
 
-        // Ensure legacy file location is set so directories resolve to V10 paths
-        if (builder.FileLocationOption != FileLocationOption.Legacy)
+        /// <summary>
+        /// Performs a one-time migration of data from V10 database files into the current V11 databases.
+        /// This method should be called AFTER <c>WithSqliteDefaults()</c> so that V11 databases have been created.
+        /// The migration reads all entries from the V10 CacheElement table, converts them to V11 CacheEntry format,
+        /// and inserts them into the V11 databases. A sentinel key prevents re-migration on subsequent runs.
+        /// </summary>
+        /// <param name="configure">Optional configuration for migration behavior.</param>
+        /// <returns>The builder instance for fluent configuration.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when V11 caches have not been configured yet.</exception>
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
+        public IAkavacheBuilder MigrateFromV10(Action<V10MigrationOptions>? configure)
         {
-            builder.WithLegacyFileLocation();
+            ArgumentExceptionHelper.ThrowIfNull(builder);
+
+            if (builder.Serializer is null)
+            {
+                throw new InvalidOperationException("No serializer has been registered.");
+            }
+
+            V10MigrationOptions options = new();
+            configure?.Invoke(options);
+
+            var serializer = builder.Serializer;
+
+            // Build the migration pipeline as a single observable chain, then block on it
+            // exactly once at the bottom. The builder extension's outer API is synchronous
+            // by contract — it returns the builder for continued fluent configuration — so
+            // the blocking bridge lives here rather than inside V10MigrationService. Each
+            // BuildMigration call returns Observable.Return(Unit.Default) when its cache
+            // kind is disabled or unavailable, so Concat runs exactly the enabled ones.
+            var pipeline = BuildMigration(builder, UserAccount, options.MigrateUserAccount, builder.UserAccount as SqliteBlobCache, serializer, options)
+                .Concat(BuildMigration(builder, LocalMachine, options.MigrateLocalMachine, builder.LocalMachine as SqliteBlobCache, serializer, options))
+                .Concat(BuildMigration(builder, Secure, options.MigrateSecure, GetUnderlyingBlobCache(builder.Secure) as SqliteBlobCache, serializer, options));
+
+            _ = pipeline.Wait();
+
+            return builder;
         }
-
-        // Create caches using V10 filenames at legacy directory locations
-        builder.WithUserAccount(CreateV10Cache(UserAccount, builder))
-               .WithLocalMachine(CreateV10Cache(LocalMachine, builder))
-               .WithInMemory()
-               .WithSecure(new SecureBlobCacheWrapper(CreateV10Cache(Secure, builder)));
-
-        return builder;
-    }
-
-    /// <summary>
-    /// Performs a one-time migration of data from V10 database files into the current V11 databases.
-    /// This method should be called AFTER <c>WithSqliteDefaults()</c> so that V11 databases have been created.
-    /// The migration reads all entries from the V10 CacheElement table, converts them to V11 CacheEntry format,
-    /// and inserts them into the V11 databases. A sentinel key prevents re-migration on subsequent runs.
-    /// </summary>
-    /// <param name="builder">The Akavache builder with V11 caches already configured.</param>
-    /// <param name="configure">Optional configuration for migration behavior.</param>
-    /// <returns>The builder instance for fluent configuration.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="builder"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when V11 caches have not been configured yet.</exception>
-    [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    [System.Diagnostics.CodeAnalysis.RequiresDynamicCode("V10 migration may use reflection to re-serialize entries with their original type.")]
-    public static IAkavacheBuilder MigrateFromV10(this IAkavacheBuilder builder, Action<V10MigrationOptions>? configure = null)
-    {
-        ArgumentExceptionHelper.ThrowIfNull(builder);
-
-        if (builder.Serializer == null)
-        {
-            throw new InvalidOperationException("No serializer has been registered.");
-        }
-
-        V10MigrationOptions options = new();
-        configure?.Invoke(options);
-
-        var serializer = builder.Serializer;
-
-        // Build the migration pipeline as a single observable chain, then block on it
-        // exactly once at the bottom. The builder extension's outer API is synchronous
-        // by contract — it returns the builder for continued fluent configuration — so
-        // the blocking bridge lives here rather than inside V10MigrationService. Each
-        // BuildMigration call returns Observable.Return(Unit.Default) when its cache
-        // kind is disabled or unavailable, so Concat runs exactly the enabled ones.
-        var pipeline = BuildMigration(builder, UserAccount, options.MigrateUserAccount, builder.UserAccount as SqliteBlobCache, serializer, options)
-            .Concat(BuildMigration(builder, LocalMachine, options.MigrateLocalMachine, builder.LocalMachine as SqliteBlobCache, serializer, options))
-            .Concat(BuildMigration(builder, Secure, options.MigrateSecure, GetUnderlyingBlobCache(builder.Secure) as SqliteBlobCache, serializer, options));
-
-        pipeline.Wait();
-
-        return builder;
     }
 
     /// <summary>
@@ -113,7 +129,7 @@ public static class AkavacheBuilderExtensions
     /// </summary>
     /// <remarks>
     /// Marked <c>internal</c> so tests can drive each branch in isolation without
-    /// spinning up the full <see cref="MigrateFromV10"/> entry point. Every
+    /// spinning up the full <c>MigrateFromV10</c> entry point. Every
     /// observable branch returns one item then completes, which makes it trivial to
     /// assert on the result sequence in a unit test.
     /// </remarks>
@@ -145,9 +161,7 @@ public static class AkavacheBuilderExtensions
             : V10MigrationService.Migrate(v10Path, sqliteCache, serializer, options);
     }
 
-    /// <summary>
-    /// Creates a <see cref="SqliteBlobCache"/> rooted at the legacy V10 directory and filename for the given cache name.
-    /// </summary>
+    /// <summary>Creates a <see cref="SqliteBlobCache"/> rooted at the legacy V10 directory and filename for the given cache name.</summary>
     /// <param name="cacheName">The logical V11 cache name (e.g., "UserAccount").</param>
     /// <param name="builder">The Akavache builder used to resolve directories and the serializer.</param>
     /// <returns>A <see cref="SqliteBlobCache"/> bound to the legacy V10 file path.</returns>
@@ -162,7 +176,7 @@ public static class AkavacheBuilderExtensions
         // Ensure the cache directory exists
         if (!Directory.Exists(directory))
         {
-            Directory.CreateDirectory(directory);
+            _ = Directory.CreateDirectory(directory);
         }
 
         // Use the V10 filename instead of the V11 name
@@ -181,9 +195,7 @@ public static class AkavacheBuilderExtensions
         return cache;
     }
 
-    /// <summary>
-    /// Gets the absolute path to the V10 database file for the given cache name, or <c>null</c> if no legacy directory is available.
-    /// </summary>
+    /// <summary>Gets the absolute path to the V10 database file for the given cache name, or <c>null</c> if no legacy directory is available.</summary>
     /// <param name="builder">The Akavache builder used to resolve directories.</param>
     /// <param name="cacheName">The logical V11 cache name.</param>
     /// <returns>The full path to the V10 database file, or <c>null</c> if it cannot be determined.</returns>
@@ -193,9 +205,7 @@ public static class AkavacheBuilderExtensions
         return directory is null || string.IsNullOrWhiteSpace(directory) ? null : Path.Combine(directory, V10FileNameMap.GetV10FileName(cacheName));
     }
 
-    /// <summary>
-    /// Unwraps known secure cache wrappers to retrieve the underlying <see cref="IBlobCache"/>.
-    /// </summary>
+    /// <summary>Unwraps known secure cache wrappers to retrieve the underlying <see cref="IBlobCache"/>.</summary>
     /// <param name="secureBlobCache">The secure cache to unwrap.</param>
     /// <returns>The underlying blob cache, or <c>null</c> if none can be resolved.</returns>
     internal static IBlobCache? GetUnderlyingBlobCache(ISecureBlobCache? secureBlobCache) => secureBlobCache switch
@@ -205,9 +215,7 @@ public static class AkavacheBuilderExtensions
         _ => null,
     };
 
-    /// <summary>
-    /// Validates that an application name has been configured on the builder.
-    /// </summary>
+    /// <summary>Validates that an application name has been configured on the builder.</summary>
     /// <param name="applicationName">The application name to validate.</param>
     /// <exception cref="InvalidOperationException">Thrown when the name is null, empty, or whitespace.</exception>
     internal static void ValidateApplicationName(string? applicationName)

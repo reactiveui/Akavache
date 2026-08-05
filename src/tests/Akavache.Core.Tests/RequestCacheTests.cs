@@ -2,19 +2,64 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
 using Akavache.Core;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for RequestCache functionality.
-/// </summary>
+/// <summary>Tests for RequestCache functionality.</summary>
 [Category("Akavache")]
 public class RequestCacheTests
 {
-    /// <summary>
-    /// Tests that RequestCache properly deduplicates concurrent requests.
-    /// </summary>
+    /// <summary>Key reused across the RemoveRequest assertions.</summary>
+    private const string RemoveRequestKey = "remove_test";
+
+    /// <summary>Key registered under two element types so RemoveRequestsForKey has more than one bucket to clear.</summary>
+    private const string MultiTypeRequestKey = "multitype_key";
+
+    /// <summary>Number of simultaneous subscribers used to prove overlapping requests collapse onto one factory call.</summary>
+    private const int ConcurrentRequestCount = 5;
+
+    /// <summary>Number of simultaneous subscribers used by the high-concurrency stress scenario.</summary>
+    private const int HighConcurrencyRequestCount = 50;
+
+    /// <summary>Delay applied to the factory result so the concurrent subscriptions are guaranteed to overlap.</summary>
+    private const int FactoryOverlapDelayMilliseconds = 50;
+
+    /// <summary>Shorter factory delay for the high-concurrency scenario, keeping the overlap without slowing the test.</summary>
+    private const int HighConcurrencyFactoryDelayMilliseconds = 10;
+
+    /// <summary>Duration of the simulated asynchronous work performed inside the FromAsync factory.</summary>
+    private const int SimulatedAsyncWorkMilliseconds = 100;
+
+    /// <summary>Upper bound on factory invocations once deduplication has collapsed the concurrent requests.</summary>
+    private const int MaxDeduplicatedFactoryCalls = 2;
+
+    /// <summary>Upper bound on factory invocations under the high-concurrency stress scenario.</summary>
+    private const int MaxHighConcurrencyFactoryCalls = 3;
+
+    /// <summary>Factory invocations expected when a key is requested a second time, because completed requests are not retained.</summary>
+    private const int FactoryCallsForSecondRequest = 2;
+
+    /// <summary>Factory invocations expected when the first request faulted and the caller retries, because failures are not cached.</summary>
+    private const int FactoryCallsAfterFailedRequest = 2;
+
+    /// <summary>Number of distinct keys left in flight when the Count assertion runs.</summary>
+    private const int InFlightRequestCount = 2;
+
+    /// <summary>Number of short-lived requests created by the unbounded-growth regression scan.</summary>
+    private const int MemoryProbeRequestCount = 1000;
+
+    /// <summary>Value emitted by the int-typed request, proving the cache keys on element type as well as key.</summary>
+    private const int IntRequestValue = 42;
+
+    /// <summary>Value carried by the composite-typed request, proving the cache round-trips non-primitive payloads.</summary>
+    private const int CompositeRequestValue = 123;
+
+    /// <summary>Values the multi-element cached sequence emits, in order.</summary>
+    private static readonly int[] ExpectedSequence = [1, 2, 3];
+
+    /// <summary>Tests that RequestCache properly deduplicates concurrent requests.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldDeduplicateConcurrentRequests()
@@ -27,19 +72,19 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             var currentCount = Interlocked.Increment(ref callCount);
-            return Observable.Return($"result_{currentCount}").Delay(TimeSpan.FromMilliseconds(50)); // Add delay to ensure overlap
+            return Observable.Return($"result_{currentCount}").Delay(TimeSpan.FromMilliseconds(FactoryOverlapDelayMilliseconds)); // Add delay to ensure overlap
         }
 
         // Act - Make truly concurrent requests by starting them simultaneously
-        var observables = Enumerable.Range(0, 5)
+        var observables = Enumerable.Range(0, ConcurrentRequestCount)
             .Select(_ => RequestCache.GetOrCreateRequest(key, Factory))
             .ToArray();
 
         // Convert to tasks simultaneously to ensure concurrency
-        var tasks = observables.Select(obs =>
+        var tasks = observables.Select(static obs =>
         {
-            var tcs = new TaskCompletionSource<string>();
-            obs.Subscribe(v => tcs.TrySetResult(v), ex => tcs.TrySetException(ex));
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _ = obs.Subscribe(v => tcs.TrySetResult(v), ex => tcs.TrySetException(ex));
             return tcs.Task;
         }).ToArray();
 
@@ -48,14 +93,12 @@ public class RequestCacheTests
         // Assert - All should return the same result, factory called at most twice
         using (Assert.Multiple())
         {
-            await Assert.That(results.All(r => r == results[0])).IsTrue();
-            await Assert.That(callCount).IsLessThanOrEqualTo(2);
+            await Assert.That(Array.TrueForAll(results, r => r == results[0])).IsTrue();
+            await Assert.That(callCount).IsLessThanOrEqualTo(MaxDeduplicatedFactoryCalls);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles different keys separately.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles different keys separately.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleDifferentKeysSeparately()
@@ -66,13 +109,8 @@ public class RequestCacheTests
 
         IObservable<string> Factory(string key)
         {
-            if (!callCounts.TryGetValue(key, out var value))
-            {
-                value = 0;
-                callCounts[key] = value;
-            }
-
-            callCounts[key] = ++value;
+            ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(callCounts, key, out _);
+            value++;
             return Observable.Return($"result_{key}_{value}");
         }
 
@@ -95,14 +133,12 @@ public class RequestCacheTests
 
         using (Assert.Multiple())
         {
-            await Assert.That(callCounts["key1"]).IsEqualTo(2); // Called twice for key1
+            await Assert.That(callCounts["key1"]).IsEqualTo(FactoryCallsForSecondRequest); // Called twice for key1
             await Assert.That(callCounts["key2"]).IsEqualTo(1); // Called once for key2
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache.Clear removes all cached requests.
-    /// </summary>
+    /// <summary>Tests that RequestCache.Clear removes all cached requests.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheClearShouldRemoveAllCachedRequests()
@@ -130,13 +166,11 @@ public class RequestCacheTests
             // Assert - Factory should be called twice (once before clear, once after)
             await Assert.That(result1).IsEqualTo("result_1");
             await Assert.That(result2).IsEqualTo("result_2");
-            await Assert.That(callCount).IsEqualTo(2);
+            await Assert.That(callCount).IsEqualTo(FactoryCallsForSecondRequest);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles exceptions in factory functions.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles exceptions in factory functions.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleFactoryExceptions()
@@ -149,9 +183,9 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             callCount++;
-            return callCount == 1 ?
-                Observable.Throw<string>(new InvalidOperationException("First call fails")) :
-                Observable.Return($"success_{callCount}");
+            return callCount == 1
+                ? Observable.Throw<string>(new InvalidOperationException("First call fails"))
+                : Observable.Return($"success_{callCount}");
         }
 
         // Act & Assert - First call should throw
@@ -163,13 +197,11 @@ public class RequestCacheTests
         using (Assert.Multiple())
         {
             await Assert.That(result).IsEqualTo("success_2");
-            await Assert.That(callCount).IsEqualTo(2);
+            await Assert.That(callCount).IsEqualTo(FactoryCallsAfterFailedRequest);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache works with different return types.
-    /// </summary>
+    /// <summary>Tests that RequestCache works with different return types.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldWorkWithDifferentReturnTypes()
@@ -179,28 +211,20 @@ public class RequestCacheTests
 
         // Act - Test with different types
         var stringResult = RequestCache.GetOrCreateRequest("string_key", static () => Observable.Return("test_string")).SubscribeGetValue();
-        var intResult = RequestCache.GetOrCreateRequest("int_key", static () => Observable.Return(42)).SubscribeGetValue();
-        var objectResult = RequestCache.GetOrCreateRequest("object_key", static () => Observable.Return(new { Name = "Test", Value = 123 })).SubscribeGetValue();
+        var intResult = RequestCache.GetOrCreateRequest("int_key", static () => Observable.Return(IntRequestValue)).SubscribeGetValue();
+        var compositeResult = RequestCache.GetOrCreateRequest("object_key", static () => Observable.Return((Name: "Test", Value: CompositeRequestValue))).SubscribeGetValue();
 
         using (Assert.Multiple())
         {
             // Assert
             await Assert.That(stringResult).IsEqualTo("test_string");
-            await Assert.That(intResult).IsEqualTo(42);
-            await Assert.That(objectResult).IsNotNull();
-        }
-
-        var typedResult = (dynamic)objectResult!;
-        using (Assert.Multiple())
-        {
-            await Assert.That((string)typedResult.Name).IsEqualTo("Test");
-            await Assert.That((int)typedResult.Value).IsEqualTo(123);
+            await Assert.That(intResult).IsEqualTo(IntRequestValue);
+            await Assert.That(compositeResult.Name).IsEqualTo("Test");
+            await Assert.That(compositeResult.Value).IsEqualTo(CompositeRequestValue);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles null keys gracefully.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles null keys gracefully.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleNullKeys()
@@ -213,9 +237,7 @@ public class RequestCacheTests
         await Assert.That(result).IsEqualTo("null_key_result");
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles empty keys.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles empty keys.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleEmptyKeys()
@@ -239,13 +261,11 @@ public class RequestCacheTests
             // Assert - Since RequestCache doesn't persist completed results, each call creates a new request
             await Assert.That(result1).IsEqualTo("empty_key_result_1");
             await Assert.That(result2).IsEqualTo("empty_key_result_2");
-            await Assert.That(callCount).IsEqualTo(2);
+            await Assert.That(callCount).IsEqualTo(FactoryCallsForSecondRequest);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache properly handles async operations.
-    /// </summary>
+    /// <summary>Tests that RequestCache properly handles async operations.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleAsyncOperations()
@@ -260,7 +280,7 @@ public class RequestCacheTests
             callCount++;
             return Observable.FromAsync(async () =>
             {
-                await Task.Delay(100); // Simulate async work
+                await Task.Delay(SimulatedAsyncWorkMilliseconds); // Simulate async work
                 return $"async_result_{callCount}";
             });
         }
@@ -279,14 +299,12 @@ public class RequestCacheTests
         var uniqueResults = results.Distinct().ToList();
         using (Assert.Multiple())
         {
-            await Assert.That(uniqueResults).Count().IsLessThanOrEqualTo(2);
-            await Assert.That(callCount).IsLessThanOrEqualTo(2);
+            await Assert.That(uniqueResults).Count().IsLessThanOrEqualTo(MaxDeduplicatedFactoryCalls);
+            await Assert.That(callCount).IsLessThanOrEqualTo(MaxDeduplicatedFactoryCalls);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles high concurrency scenarios.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles high concurrency scenarios.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleHighConcurrency()
@@ -299,11 +317,11 @@ public class RequestCacheTests
         IObservable<string> Factory()
         {
             var currentCount = Interlocked.Increment(ref callCount);
-            return Observable.Return($"concurrent_result_{currentCount}").Delay(TimeSpan.FromMilliseconds(10));
+            return Observable.Return($"concurrent_result_{currentCount}").Delay(TimeSpan.FromMilliseconds(HighConcurrencyFactoryDelayMilliseconds));
         }
 
         // Act - Create all observables first, then convert to tasks to ensure true concurrency
-        var observables = Enumerable.Range(0, 50)
+        var observables = Enumerable.Range(0, HighConcurrencyRequestCount)
             .Select(_ => RequestCache.GetOrCreateRequest(key, Factory))
             .ToArray();
 
@@ -314,14 +332,12 @@ public class RequestCacheTests
         var uniqueResults = results.Distinct().ToList();
         using (Assert.Multiple())
         {
-            await Assert.That(uniqueResults).Count().IsLessThanOrEqualTo(3);
-            await Assert.That(callCount).IsLessThanOrEqualTo(3);
+            await Assert.That(uniqueResults).Count().IsLessThanOrEqualTo(MaxHighConcurrencyFactoryCalls);
+            await Assert.That(callCount).IsLessThanOrEqualTo(MaxHighConcurrencyFactoryCalls);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles Observable sequences correctly.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles Observable sequences correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleObservableSequences()
@@ -333,8 +349,8 @@ public class RequestCacheTests
 
         IObservable<int> Factory()
         {
-            Interlocked.Increment(ref callCount);
-            return Observable.Range(1, 3); // Emits 1, 2, 3
+            _ = Interlocked.Increment(ref callCount);
+            return Observable.Range(1, ExpectedSequence.Length); // Emits 1, 2, 3
         }
 
         // Act - Get the observable sequence with proper replay behavior
@@ -350,17 +366,15 @@ public class RequestCacheTests
         using (Assert.Multiple())
         {
             // Assert - Both should return the same sequence values
-            await Assert.That(list1).IsEquivalentTo([1, 2, 3]);
-            await Assert.That(list2).IsEquivalentTo([1, 2, 3]);
+            await Assert.That(list1).IsEquivalentTo(ExpectedSequence);
+            await Assert.That(list2).IsEquivalentTo(ExpectedSequence);
 
             // Factory will be called twice since RequestCache doesn't persist completed observables
-            await Assert.That(callCount).IsEqualTo(2);
+            await Assert.That(callCount).IsEqualTo(FactoryCallsForSecondRequest);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache memory usage doesn't grow unbounded.
-    /// </summary>
+    /// <summary>Tests that RequestCache memory usage doesn't grow unbounded.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldNotGrowUnbounded()
@@ -369,11 +383,11 @@ public class RequestCacheTests
         RequestCache.Clear();
 
         // Act - Create many requests with different keys
-        for (var i = 0; i < 1000; i++)
+        for (var i = 0; i < MemoryProbeRequestCount; i++)
         {
             var key = $"memory_test_{i}";
             var currentIndex = i;
-            RequestCache.GetOrCreateRequest(key, () => Observable.Return(currentIndex)).SubscribeGetValue();
+            _ = RequestCache.GetOrCreateRequest(key, () => Observable.Return(currentIndex)).SubscribeGetValue();
         }
 
         // Clear to free memory
@@ -384,9 +398,7 @@ public class RequestCacheTests
         await Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Tests that RequestCache works correctly with null factory results.
-    /// </summary>
+    /// <summary>Tests that RequestCache works correctly with null factory results.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task RequestCacheShouldHandleNullFactoryResults()
@@ -409,9 +421,7 @@ public class RequestCacheTests
         }
     }
 
-    /// <summary>
-    /// Tests GetOrCreateRequest throws on null fetch func.
-    /// </summary>
+    /// <summary>Tests GetOrCreateRequest throws on null fetch func.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetOrCreateRequestShouldThrowOnNullFetchFunc()
@@ -421,9 +431,7 @@ public class RequestCacheTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests GetOrCreateRequest removes entry from cache after error.
-    /// </summary>
+    /// <summary>Tests GetOrCreateRequest removes entry from cache after error.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetOrCreateRequestShouldRemoveOnError()
@@ -439,9 +447,7 @@ public class RequestCacheTests
         await Assert.That(RequestCache.HasInFlightRequest("error_key", typeof(string))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests GetOrCreateRequest removes entry from cache after completion.
-    /// </summary>
+    /// <summary>Tests GetOrCreateRequest removes entry from cache after completion.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetOrCreateRequestShouldRemoveOnCompletion()
@@ -457,18 +463,14 @@ public class RequestCacheTests
         await Assert.That(RequestCache.HasInFlightRequest("complete_key", typeof(string))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests RemoveRequest throws on null type.
-    /// </summary>
+    /// <summary>Tests RemoveRequest throws on null type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RemoveRequestShouldThrowOnNullType() =>
         await Assert.That(static () => RequestCache.RemoveRequest("k", null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests RemoveRequest removes a specific request.
-    /// </summary>
+    /// <summary>Tests RemoveRequest removes a specific request.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RemoveRequestShouldRemoveEntry()
@@ -476,17 +478,15 @@ public class RequestCacheTests
         RequestCache.Clear();
 
         // Use a never-completing observable to keep the request in flight
-        _ = RequestCache.GetOrCreateRequest("remove_test", static () => Observable.Never<string>());
-        await Assert.That(RequestCache.HasInFlightRequest("remove_test", typeof(string))).IsTrue();
+        _ = RequestCache.GetOrCreateRequest(RemoveRequestKey, static () => Observable.Never<string>());
+        await Assert.That(RequestCache.HasInFlightRequest(RemoveRequestKey, typeof(string))).IsTrue();
 
-        RequestCache.RemoveRequest("remove_test", typeof(string));
+        RequestCache.RemoveRequest(RemoveRequestKey, typeof(string));
 
-        await Assert.That(RequestCache.HasInFlightRequest("remove_test", typeof(string))).IsFalse();
+        await Assert.That(RequestCache.HasInFlightRequest(RemoveRequestKey, typeof(string))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests RemoveRequestsForKey returns immediately for empty key.
-    /// </summary>
+    /// <summary>Tests RemoveRequestsForKey returns immediately for empty key.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RemoveRequestsForKeyShouldReturnForEmptyKey()
@@ -496,38 +496,32 @@ public class RequestCacheTests
         await Assert.That(static () => RequestCache.RemoveRequestsForKey(null!)).ThrowsNothing();
     }
 
-    /// <summary>
-    /// Tests RemoveRequestsForKey removes all matching entries.
-    /// </summary>
+    /// <summary>Tests RemoveRequestsForKey removes all matching entries.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RemoveRequestsForKeyShouldRemoveMatchingEntries()
     {
         RequestCache.Clear();
-        _ = RequestCache.GetOrCreateRequest("multitype_key", static () => Observable.Never<string>());
-        _ = RequestCache.GetOrCreateRequest("multitype_key", static () => Observable.Never<int>());
+        _ = RequestCache.GetOrCreateRequest(MultiTypeRequestKey, static () => Observable.Never<string>());
+        _ = RequestCache.GetOrCreateRequest(MultiTypeRequestKey, static () => Observable.Never<int>());
 
-        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(string))).IsTrue();
-        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(int))).IsTrue();
+        await Assert.That(RequestCache.HasInFlightRequest(MultiTypeRequestKey, typeof(string))).IsTrue();
+        await Assert.That(RequestCache.HasInFlightRequest(MultiTypeRequestKey, typeof(int))).IsTrue();
 
-        RequestCache.RemoveRequestsForKey("multitype_key");
+        RequestCache.RemoveRequestsForKey(MultiTypeRequestKey);
 
-        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(string))).IsFalse();
-        await Assert.That(RequestCache.HasInFlightRequest("multitype_key", typeof(int))).IsFalse();
+        await Assert.That(RequestCache.HasInFlightRequest(MultiTypeRequestKey, typeof(string))).IsFalse();
+        await Assert.That(RequestCache.HasInFlightRequest(MultiTypeRequestKey, typeof(int))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests HasInFlightRequest throws on null type.
-    /// </summary>
+    /// <summary>Tests HasInFlightRequest throws on null type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HasInFlightRequestShouldThrowOnNullType() =>
         await Assert.That(static () => RequestCache.HasInFlightRequest("k", null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests HasInFlightRequest returns false for non-existent entry.
-    /// </summary>
+    /// <summary>Tests HasInFlightRequest returns false for non-existent entry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HasInFlightRequestShouldReturnFalseForNonExistent()
@@ -536,9 +530,7 @@ public class RequestCacheTests
         await Assert.That(RequestCache.HasInFlightRequest("nonexistent", typeof(string))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests Count returns the number of in-flight requests.
-    /// </summary>
+    /// <summary>Tests Count returns the number of in-flight requests.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CountShouldReturnInFlightCount()
@@ -549,22 +541,20 @@ public class RequestCacheTests
         _ = RequestCache.GetOrCreateRequest("count_test_1", static () => Observable.Never<string>());
         _ = RequestCache.GetOrCreateRequest("count_test_2", static () => Observable.Never<string>());
 
-        await Assert.That(RequestCache.Count).IsEqualTo(2);
+        await Assert.That(RequestCache.Count).IsEqualTo(InFlightRequestCount);
 
         RequestCache.Clear();
         await Assert.That(RequestCache.Count).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// Bridges an observable to a Task for async scenarios where Subscribe is not synchronous.
-    /// </summary>
+    /// <summary>Bridges an observable to a Task for async scenarios where Subscribe is not synchronous.</summary>
     /// <typeparam name="T">The element type.</typeparam>
     /// <param name="observable">The observable to subscribe to.</param>
     /// <returns>A task that completes with the first emitted value.</returns>
     private static Task<T> SubscribeToTask<T>(IObservable<T> observable)
     {
-        var tcs = new TaskCompletionSource<T>();
-        observable.Subscribe(v => tcs.TrySetResult(v), ex => tcs.TrySetException(ex));
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _ = observable.Subscribe(v => tcs.TrySetResult(v), ex => tcs.TrySetException(ex));
         return tcs.Task;
     }
 }

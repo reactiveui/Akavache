@@ -4,23 +4,25 @@
 
 namespace AkavacheTodoMaui.Extensions;
 
-/// <summary>
-/// Extension methods for Task to Observable conversion.
-/// </summary>
+/// <summary>Extension methods for Task to Observable conversion.</summary>
 public static class TaskExtensions
 {
-    /// <summary>
-    /// Converts a Task{T} to IObservable{T}.
-    /// </summary>
+    /// <summary>Observable conversions for a task that produces no result.</summary>
+    /// <param name="task">The task to convert.</param>
+    extension(Task task)
+    {
+        /// <summary>Converts a Task to IObservable{Unit}.</summary>
+        /// <returns>An observable that completes when the task completes.</returns>
+        public IObservable<Unit> ToObservable() => Observable.FromAsync(() => task);
+    }
+
+    /// <summary>Observable conversions for a task that produces a result.</summary>
     /// <typeparam name="T">The type of the task result.</typeparam>
     /// <param name="task">The task to convert.</param>
-    /// <returns>An observable that produces the task result.</returns>
-    public static IObservable<T> ToObservable<T>(this Task<T> task) => Observable.FromAsync(() => task);
-
-    /// <summary>
-    /// Converts a Task to IObservable{Unit}.
-    /// </summary>
-    /// <param name="task">The task to convert.</param>
-    /// <returns>An observable that completes when the task completes.</returns>
-    public static IObservable<Unit> ToObservable(this Task task) => Observable.FromAsync(() => task);
+    extension<T>(Task<T> task)
+    {
+        /// <summary>Converts a Task{T} to IObservable{T}.</summary>
+        /// <returns>An observable that produces the task result.</returns>
+        public IObservable<T> ToObservable() => Observable.FromAsync(() => task);
+    }
 }

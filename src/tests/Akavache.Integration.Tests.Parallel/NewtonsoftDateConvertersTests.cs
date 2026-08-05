@@ -8,15 +8,26 @@ using Newtonsoft.Json.Linq;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for NewtonsoftDateTimeTickConverter and NewtonsoftDateTimeOffsetTickConverter.
-/// </summary>
+/// <summary>Tests for NewtonsoftDateTimeTickConverter and NewtonsoftDateTimeOffsetTickConverter.</summary>
 [Category("Akavache")]
 public class NewtonsoftDateConvertersTests
 {
-    /// <summary>
-    /// Tests DateTime tick converter CanConvert.
-    /// </summary>
+    /// <summary>Year of every sample instant in this fixture; asserted after each round trip to prove the date survived.</summary>
+    private const int SampleYear = 2025;
+
+    /// <summary>Month of the sample encoded in the date-token payload, which differs from the tick-based samples.</summary>
+    private const int DateTokenSampleMonth = 3;
+
+    /// <summary>Non-zero offset carried by the sample the round-trip test writes and reads back.</summary>
+    private const int RoundTripOffsetHours = 5;
+
+    /// <summary>Non-zero offset carried by the payload that also contains properties the converter must ignore.</summary>
+    private const int UnknownPropertyOffsetHours = 2;
+
+    /// <summary>The tick count the sample JSON object exposes under its <c>Ticks</c> property.</summary>
+    private const long PresentTicksValue = 42;
+
+    /// <summary>Tests DateTime tick converter CanConvert.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterCanConvertShouldReturnTrueForDateTime()
@@ -27,9 +38,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(converter.CanConvert(typeof(string))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson with null reader throws.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson with null reader throws.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldThrowOnNullReader()
@@ -39,9 +48,7 @@ public class NewtonsoftDateConvertersTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests DateTime round-trip with default UTC handling.
-    /// </summary>
+    /// <summary>Tests DateTime round-trip with default UTC handling.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterShouldRoundTripUtc()
@@ -54,13 +61,11 @@ public class NewtonsoftDateConvertersTests
         var json = JsonConvert.SerializeObject(date, settings);
         var result = JsonConvert.DeserializeObject<DateTime>(json, settings);
 
-        await Assert.That(result.Year).IsEqualTo(2025);
+        await Assert.That(result.Year).IsEqualTo(SampleYear);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests DateTime round-trip with Local kind override.
-    /// </summary>
+    /// <summary>Tests DateTime round-trip with Local kind override.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterShouldRoundTripLocal()
@@ -73,13 +78,11 @@ public class NewtonsoftDateConvertersTests
         var json = JsonConvert.SerializeObject(date, settings);
         var result = JsonConvert.DeserializeObject<DateTime>(json, settings);
 
-        await Assert.That(result.Year).IsEqualTo(2025);
+        await Assert.That(result.Year).IsEqualTo(SampleYear);
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests DateTime round-trip with Unspecified kind.
-    /// </summary>
+    /// <summary>Tests DateTime round-trip with Unspecified kind.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterShouldHandleUnspecifiedKind()
@@ -95,9 +98,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(json).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset converter CanConvert.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset converter CanConvert.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterCanConvertShouldReturnTrueForDateTimeOffset()
@@ -108,9 +109,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(converter.CanConvert(typeof(string))).IsFalse();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset ReadJson with null reader throws.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset ReadJson with null reader throws.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterReadJsonShouldThrowOnNullReader()
@@ -120,9 +119,7 @@ public class NewtonsoftDateConvertersTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset round-trip preserves ticks and offset.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset round-trip preserves ticks and offset.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterShouldRoundTrip()
@@ -131,17 +128,15 @@ public class NewtonsoftDateConvertersTests
         JsonSerializerSettings settings = new();
         settings.Converters.Add(converter);
 
-        DateTimeOffset dto = new(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(5));
+        DateTimeOffset dto = new(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(RoundTripOffsetHours));
         var json = JsonConvert.SerializeObject(dto, settings);
         var result = JsonConvert.DeserializeObject<DateTimeOffset>(json, settings);
 
-        await Assert.That(result.Year).IsEqualTo(2025);
-        await Assert.That(result.Offset).IsEqualTo(TimeSpan.FromHours(5));
+        await Assert.That(result.Year).IsEqualTo(SampleYear);
+        await Assert.That(result.Offset).IsEqualTo(TimeSpan.FromHours(RoundTripOffsetHours));
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset converter handles legacy integer-only format.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset converter handles legacy integer-only format.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterShouldHandleLegacyIntegerFormat()
@@ -155,12 +150,10 @@ public class NewtonsoftDateConvertersTests
         var json = ticks.ToString();
 
         var result = JsonConvert.DeserializeObject<DateTimeOffset>(json, settings);
-        await Assert.That(result.Year).IsEqualTo(2025);
+        await Assert.That(result.Year).IsEqualTo(SampleYear);
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset converter handles direct date format.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset converter handles direct date format.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterShouldHandleDirectDate()
@@ -171,12 +164,10 @@ public class NewtonsoftDateConvertersTests
 
         const string json = "\"2025-06-15T12:00:00Z\"";
         var result = JsonConvert.DeserializeObject<DateTimeOffset>(json, settings);
-        await Assert.That(result.Year).IsEqualTo(2025);
+        await Assert.That(result.Year).IsEqualTo(SampleYear);
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson returns null for unsupported token types (e.g. string).
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson returns null for unsupported token types (e.g. string).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldReturnNullForStringToken()
@@ -190,9 +181,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson returns null for Boolean token type.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson returns null for Boolean token type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldReturnNullForBooleanToken()
@@ -206,9 +195,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson handles a Date token with Local kind override.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson handles a Date token with Local kind override.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldHandleDateTokenWithLocalOverride()
@@ -223,9 +210,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson handles a Date token with Unspecified kind override.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson handles a Date token with Unspecified kind override.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldHandleDateTokenWithUnspecifiedOverride()
@@ -240,9 +225,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Unspecified);
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson with Integer token but an unrelated objectType falls through to null.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson with Integer token but an unrelated objectType falls through to null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldReturnNullForIntegerWithUnrelatedObjectType()
@@ -256,9 +239,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson reads ticks with the Local kind override.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson reads ticks with the Local kind override.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldReadTicksWithLocalOverride()
@@ -274,9 +255,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests DateTime WriteJson with a Local kind value stores UTC-equivalent ticks.
-    /// </summary>
+    /// <summary>Tests DateTime WriteJson with a Local kind value stores UTC-equivalent ticks.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterWriteJsonShouldHandleLocalKind()
@@ -292,9 +271,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That((long)writer.Token!).IsEqualTo(local.ToUniversalTime().Ticks);
     }
 
-    /// <summary>
-    /// Tests DateTime WriteJson with an Unspecified kind value stores raw ticks.
-    /// </summary>
+    /// <summary>Tests DateTime WriteJson with an Unspecified kind value stores raw ticks.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterWriteJsonShouldHandleUnspecifiedKind()
@@ -309,9 +286,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That((long)writer.Token!).IsEqualTo(unspecified.Ticks);
     }
 
-    /// <summary>
-    /// Tests DateTime WriteJson with a non-DateTime value is a no-op.
-    /// </summary>
+    /// <summary>Tests DateTime WriteJson with a non-DateTime value is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterWriteJsonShouldNoOpForNonDateTimeValue()
@@ -324,9 +299,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(writer.Token).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTime WriteJson with a null value is a no-op.
-    /// </summary>
+    /// <summary>Tests DateTime WriteJson with a null value is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterWriteJsonShouldNoOpForNullValue()
@@ -339,9 +312,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(writer.Token).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTime converter handles DateTime.MinValue ticks edge case.
-    /// </summary>
+    /// <summary>Tests DateTime converter handles DateTime.MinValue ticks edge case.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterShouldHandleMinValue()
@@ -357,10 +328,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result.Ticks).IsEqualTo(0L);
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson returns null for a Null token type,
-    /// covering the remaining branch of the token type check.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson returns null for a Null token type, covering the remaining branch of the token type check.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldReturnNullForNullToken()
@@ -374,10 +342,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTime ReadJson returns null for a Float token type,
-    /// covering an additional branch of the token type check.
-    /// </summary>
+    /// <summary>Tests DateTime ReadJson returns null for a Float token type, covering an additional branch of the token type check.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeConverterReadJsonShouldReturnNullForFloatToken()
@@ -411,8 +376,8 @@ public class NewtonsoftDateConvertersTests
         var result = JsonConvert.DeserializeObject<DateTime>(json, settings);
 
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Unspecified);
-        await Assert.That(result.Year).IsEqualTo(2025);
-        await Assert.That(result.Month).IsEqualTo(3);
+        await Assert.That(result.Year).IsEqualTo(SampleYear);
+        await Assert.That(result.Month).IsEqualTo(DateTokenSampleMonth);
     }
 
     /// <summary>
@@ -438,9 +403,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result!.Value.Kind).IsEqualTo(DateTimeKind.Unspecified);
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset ReadJson returns null for unsupported token types (e.g. string).
-    /// </summary>
+    /// <summary>Tests DateTimeOffset ReadJson returns null for unsupported token types (e.g. string).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterReadJsonShouldReturnNullForStringToken()
@@ -454,9 +417,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset ReadJson returns null for Boolean token type.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset ReadJson returns null for Boolean token type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterReadJsonShouldReturnNullForBooleanToken()
@@ -470,9 +431,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset ReadJson with Integer token but an unrelated objectType falls through to null.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset ReadJson with Integer token but an unrelated objectType falls through to null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterReadJsonShouldReturnNullForIntegerWithUnrelatedObjectType()
@@ -486,31 +445,27 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset ReadJson handles a StartObject payload that contains unknown properties.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset ReadJson handles a StartObject payload that contains unknown properties.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterReadJsonShouldIgnoreUnknownObjectProperties()
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
-        var ticks = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(2)).Ticks;
-        var offsetTicks = TimeSpan.FromHours(2).Ticks;
-        var json = "{\"Ticks\":" + ticks.ToString(System.Globalization.CultureInfo.InvariantCulture) +
-                   ",\"Extra\":\"ignored\",\"OffsetTicks\":" + offsetTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}";
+        var ticks = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(UnknownPropertyOffsetHours)).Ticks;
+        var offsetTicks = TimeSpan.FromHours(UnknownPropertyOffsetHours).Ticks;
+        var json = "{\"Ticks\":" + ticks.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                   + ",\"Extra\":\"ignored\",\"OffsetTicks\":" + offsetTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}";
         using StringReader stringReader = new(json);
         await using JsonTextReader reader = new(stringReader);
         await reader.ReadAsync();
 
         var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
-        await Assert.That(result.Value.Offset).IsEqualTo(TimeSpan.FromHours(2));
+        await Assert.That(result!.Value.Year).IsEqualTo(SampleYear);
+        await Assert.That(result.Value.Offset).IsEqualTo(TimeSpan.FromHours(UnknownPropertyOffsetHours));
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset WriteJson with a non-DateTimeOffset value is a no-op.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset WriteJson with a non-DateTimeOffset value is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterWriteJsonShouldNoOpForNonDateTimeOffsetValue()
@@ -523,9 +478,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(writer.Token).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset WriteJson with a null value is a no-op.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset WriteJson with a null value is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterWriteJsonShouldNoOpForNullValue()
@@ -538,9 +491,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(writer.Token).IsNull();
     }
 
-    /// <summary>
-    /// Tests DateTimeOffset converter handles MinValue edge case.
-    /// </summary>
+    /// <summary>Tests DateTimeOffset converter handles MinValue edge case.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DateTimeOffsetConverterShouldHandleMinValue()
@@ -586,7 +537,7 @@ public class NewtonsoftDateConvertersTests
     {
         var converter = NewtonsoftDateTimeOffsetTickConverter.Default;
         var ticks = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero).Ticks;
-        var json = "{\"Ticks\":" + ticks.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",\"OffsetTicks\":0}";
+        var json = $"{{\"Ticks\":{ticks.ToString(System.Globalization.CultureInfo.InvariantCulture)},\"OffsetTicks\":0}}";
 
         using StringReader stringReader = new(json);
 
@@ -597,13 +548,10 @@ public class NewtonsoftDateConvertersTests
         var result = (DateTimeOffset?)converter.ReadJson(reader, typeof(DateTimeOffset), null, new());
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(SampleYear);
     }
 
-    /// <summary>
-    /// Tests <see cref="NewtonsoftDateTimeOffsetTickConverter.ReadLongProperty"/> returns
-    /// the long value when the property is present.
-    /// </summary>
+    /// <summary>Tests <see cref="NewtonsoftDateTimeOffsetTickConverter.ReadLongProperty"/> returns the long value when the property is present.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadLongPropertyShouldReturnValueWhenPresent()
@@ -612,13 +560,10 @@ public class NewtonsoftDateConvertersTests
 
         var result = NewtonsoftDateTimeOffsetTickConverter.ReadLongProperty(jobject, "Ticks");
 
-        await Assert.That(result).IsEqualTo(42L);
+        await Assert.That(result).IsEqualTo(PresentTicksValue);
     }
 
-    /// <summary>
-    /// Tests <see cref="NewtonsoftDateTimeOffsetTickConverter.ReadLongProperty"/> returns
-    /// <c>0</c> when the property is missing.
-    /// </summary>
+    /// <summary>Tests <see cref="NewtonsoftDateTimeOffsetTickConverter.ReadLongProperty"/> returns <c>0</c> when the property is missing.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadLongPropertyShouldReturnZeroWhenMissing()
@@ -631,10 +576,7 @@ public class NewtonsoftDateConvertersTests
     }
 
     // ── ConvertDateTimeKind ─────────────────────────────────────────────
-
-    /// <summary>
-    /// ConvertDateTimeKind with Utc returns a UTC DateTime.
-    /// </summary>
+    /// <summary>ConvertDateTimeKind with Utc returns a UTC DateTime.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConvertDateTimeKind_Utc_ReturnsUtc()
@@ -645,9 +587,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// ConvertDateTimeKind with Local returns a Local DateTime.
-    /// </summary>
+    /// <summary>ConvertDateTimeKind with Local returns a Local DateTime.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConvertDateTimeKind_Local_ReturnsLocal()
@@ -658,9 +598,7 @@ public class NewtonsoftDateConvertersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// ConvertDateTimeKind with Unspecified returns an Unspecified DateTime.
-    /// </summary>
+    /// <summary>ConvertDateTimeKind with Unspecified returns an Unspecified DateTime.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConvertDateTimeKind_Unspecified_ReturnsUnspecified()

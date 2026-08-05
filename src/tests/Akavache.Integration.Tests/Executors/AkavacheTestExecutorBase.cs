@@ -15,15 +15,15 @@ namespace Akavache.Tests.Executors;
 public class AkavacheTestExecutorBase : ITestExecutor
 {
     /// <inheritdoc />
-    public async ValueTask ExecuteTest(TestContext context, Func<ValueTask> testAction)
+    public async ValueTask ExecuteTest(TestContext context, Func<ValueTask> action)
     {
-        ArgumentNullException.ThrowIfNull(testAction);
+        ArgumentNullException.ThrowIfNull(action);
 
         try
         {
             await ResetStateAsync().ConfigureAwait(false);
             ConfigureBuilder();
-            await testAction().ConfigureAwait(false);
+            await action().ConfigureAwait(false);
         }
         finally
         {
@@ -31,15 +31,11 @@ public class AkavacheTestExecutorBase : ITestExecutor
         }
     }
 
-    /// <summary>
-    /// Runs in the <c>finally</c> block regardless of test outcome.
-    /// </summary>
+    /// <summary>Runs in the <c>finally</c> block regardless of test outcome.</summary>
     /// <returns>A task representing the asynchronous cleanup operation.</returns>
     protected virtual Task Clean() => ResetStateAsync();
 
-    /// <summary>
-    /// Resets every piece of Akavache static state.
-    /// </summary>
+    /// <summary>Resets every piece of Akavache static state.</summary>
     /// <returns>A task representing the asynchronous reset operation.</returns>
     protected virtual Task ResetStateAsync()
     {
@@ -52,9 +48,7 @@ public class AkavacheTestExecutorBase : ITestExecutor
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Bootstraps per-test-class configuration after state reset.
-    /// </summary>
+    /// <summary>Bootstraps per-test-class configuration after state reset.</summary>
     protected virtual void ConfigureBuilder()
     {
     }

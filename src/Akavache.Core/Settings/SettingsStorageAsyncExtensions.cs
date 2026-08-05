@@ -4,7 +4,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Threading.Tasks;
-using Akavache.Helpers;
 
 namespace Akavache.Settings;
 
@@ -14,16 +13,18 @@ namespace Akavache.Settings;
 /// </summary>
 public static class SettingsStorageAsyncExtensions
 {
-    /// <summary>
-    /// Initializes the settings storage asynchronously.
-    /// </summary>
+    /// <summary>Extension members for <c>ISettingsStorage</c>.</summary>
     /// <param name="storage">The settings storage to initialize.</param>
-    /// <returns>A task that completes once every property's cold load from disk has finished.</returns>
-    [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
-    [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
-    public static Task InitializeAsync(this ISettingsStorage storage)
+    extension(ISettingsStorage storage)
     {
-        ArgumentExceptionHelper.ThrowIfNull(storage);
-        return storage.Initialize().ToTask();
+        /// <summary>Initializes the settings storage asynchronously.</summary>
+        /// <returns>A task that completes once every property's cold load from disk has finished.</returns>
+        [RequiresUnreferencedCode("Settings initialization requires types to be preserved for reflection.")]
+        [RequiresDynamicCode("Settings initialization requires types to be preserved for reflection.")]
+        public Task InitializeAsync()
+        {
+            ArgumentExceptionHelper.ThrowIfNull(storage);
+            return storage.Initialize().ToTask();
+        }
     }
 }

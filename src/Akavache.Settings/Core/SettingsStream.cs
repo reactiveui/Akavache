@@ -42,23 +42,13 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     /// <summary>Live value + broadcast primitive. One per stream, seeded with the default at construction.</summary>
     private readonly SettingsValueSubject<T> _current;
 
-#if NET9_0_OR_GREATER
     /// <summary>Synchronizes lazy construction of <see cref="_coldLoad"/>. Uses <c>System.Threading.Lock</c> on net9+, monitor-on-object on older TFMs.</summary>
-    private readonly System.Threading.Lock _gate = new();
-#else
-    /// <summary>
-    /// Synchronization gate used to control access to critical sections, ensuring thread safety for operations
-    /// that interact with the underlying storage and observable state.
-    /// </summary>
-    private readonly object _gate = new();
-#endif
+    private readonly Lock _gate = new();
 
     /// <summary>Cached single-fire cold-load observable — created on first <c>EnsureLoaded</c>/<c>Subscribe</c> so every subsequent caller sees the same completion.</summary>
     private IObservable<Unit>? _coldLoad;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsStream{T}"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="SettingsStream{T}"/> class.</summary>
     /// <param name="cache">The blob cache this stream reads from and writes to.</param>
     /// <param name="storageKey">The fully-qualified (prefix + property name) key used in <paramref name="cache"/>.</param>
     /// <param name="defaultValue">The default value emitted to subscribers before any persisted value has been loaded from disk.</param>
@@ -105,11 +95,14 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
                 .CatchReturnUnit();
 
             var published = load.PublishLast();
-            published.Connect();
+            _ = published.Connect();
             _coldLoad = published;
             return _coldLoad;
         }
     }
+
+    /// <inheritdoc/>
+    public void Dispose() => _current.Dispose();
 
     /// <summary>
     /// Updates the current value: pushes it to every live subscriber via the backing
@@ -119,7 +112,7 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
     /// </summary>
     /// <param name="value">The new value.</param>
     /// <returns>A one-shot observable that fires when the persistent write completes.</returns>
-    public IObservable<Unit> Set(T value)
+    internal IObservable<Unit> Set(T value)
     {
         // Mark the cold load as satisfied so a future subscribe doesn't overwrite the
         // just-set value with whatever was on disk before (common ctor-then-set pattern).
@@ -131,7 +124,4 @@ internal sealed class SettingsStream<T> : ISettingsStream, IObservable<T>
         _current.OnNext(value);
         return _cache.InsertObject(_storageKey, value).Select(static _ => Unit.Default);
     }
-
-    /// <inheritdoc/>
-    public void Dispose() => _current.Dispose();
 }

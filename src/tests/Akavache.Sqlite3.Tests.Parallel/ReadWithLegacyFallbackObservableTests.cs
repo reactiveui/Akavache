@@ -8,15 +8,17 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="ReadWithLegacyFallbackObservable"/> covering the primary OnError
-/// path (line 99) and the legacy OnError path (line 146).
-/// </summary>
+/// <summary>Tests for <see cref="ReadWithLegacyFallbackObservable"/> covering the primary OnError path (line 99) and the legacy OnError path (line 146).</summary>
 [Category("Akavache")]
 public class ReadWithLegacyFallbackObservableTests
 {
-    // ── PrimaryObserver.OnError (line 99) ────────────────────────────
+    /// <summary>The key handed to the not-found factory, which must survive into the exception message.</summary>
+    private const string NotFoundKey = "mykey";
 
+    /// <summary>Bytes parked in the legacy store so a fallback read has something to hand back.</summary>
+    private static readonly byte[] LegacyPayload = [1, 2];
+
+    // ── PrimaryObserver.OnError (line 99) ────────────────────────────
     /// <summary>
     /// When the primary V11 Get call errors, the error propagates to the downstream
     /// observer via PrimaryObserver.OnError (line 99).
@@ -30,7 +32,7 @@ public class ReadWithLegacyFallbackObservableTests
         try
         {
             Exception? ex = null;
-            cache.Get("somekey").Subscribe(_ => { }, e => ex = e);
+            _ = cache.Get("somekey").Subscribe(static _ => { }, e => ex = e);
 
             await Assert.That(ex).IsTypeOf<InvalidOperationException>();
             await Assert.That(ex!.Message).Contains("Simulated Get failure");
@@ -55,7 +57,7 @@ public class ReadWithLegacyFallbackObservableTests
         try
         {
             Exception? ex = null;
-            cache.Get("somekey", typeof(string)).Subscribe(_ => { }, e => ex = e);
+            _ = cache.Get("somekey", typeof(string)).Subscribe(static _ => { }, e => ex = e);
 
             await Assert.That(ex).IsTypeOf<InvalidOperationException>();
         }
@@ -67,11 +69,7 @@ public class ReadWithLegacyFallbackObservableTests
     }
 
     // ── LegacyObserver.OnError (line 146) ────────────────────────────
-
-    /// <summary>
-    /// When the V10 legacy read errors, the error propagates to the downstream
-    /// observer via LegacyObserver.OnError (line 146).
-    /// </summary>
+    /// <summary>When the V10 legacy read errors, the error propagates to the downstream observer via LegacyObserver.OnError (line 146).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task LegacyObserver_OnError_PropagatesDownstream()
@@ -83,7 +81,7 @@ public class ReadWithLegacyFallbackObservableTests
         try
         {
             Exception? ex = null;
-            cache.Get("missing").Subscribe(_ => { }, e => ex = e);
+            _ = cache.Get("missing").Subscribe(static _ => { }, e => ex = e);
 
             await Assert.That(ex).IsTypeOf<InvalidOperationException>();
             await Assert.That(ex!.Message).Contains("Simulated legacy read failure");
@@ -108,7 +106,7 @@ public class ReadWithLegacyFallbackObservableTests
         try
         {
             Exception? ex = null;
-            cache.Get("missing", typeof(string)).Subscribe(_ => { }, e => ex = e);
+            _ = cache.Get("missing", typeof(string)).Subscribe(static _ => { }, e => ex = e);
 
             await Assert.That(ex).IsTypeOf<InvalidOperationException>();
         }
@@ -120,35 +118,29 @@ public class ReadWithLegacyFallbackObservableTests
     }
 
     // ── CreateNotFound format ────────────────────────────────────────
-
-    /// <summary>
-    /// CreateNotFound with null type produces a message without type info.
-    /// </summary>
+    /// <summary>CreateNotFound with null type produces a message without type info.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CreateNotFound_NullType_MessageWithoutTypeName()
     {
-        var ex = ReadWithLegacyFallbackObservable.CreateNotFound("mykey", null);
+        var ex = ReadWithLegacyFallbackObservable.CreateNotFound(NotFoundKey, null);
 
-        await Assert.That(ex.Message).Contains("mykey");
+        await Assert.That(ex.Message).Contains(NotFoundKey);
         await Assert.That(ex.Message).DoesNotContain("type");
     }
 
-    /// <summary>
-    /// CreateNotFound with a type produces a message including the type's FullName.
-    /// </summary>
+    /// <summary>CreateNotFound with a type produces a message including the type's FullName.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CreateNotFound_WithType_MessageIncludesTypeName()
     {
-        var ex = ReadWithLegacyFallbackObservable.CreateNotFound("mykey", typeof(string));
+        var ex = ReadWithLegacyFallbackObservable.CreateNotFound(NotFoundKey, typeof(string));
 
-        await Assert.That(ex.Message).Contains("mykey");
+        await Assert.That(ex.Message).Contains(NotFoundKey);
         await Assert.That(ex.Message).Contains("System.String");
     }
 
     // ── Subscription disposal ────────────────────────────────────────
-
     /// <summary>
     /// Disposing the subscription returned by ReadWithLegacyFallbackObservable
     /// before the primary read completes does not throw.
@@ -158,14 +150,14 @@ public class ReadWithLegacyFallbackObservableTests
     internal async Task Subscribe_ThenDispose_DoesNotThrow()
     {
         InMemoryAkavacheConnection connection = new();
-        connection.LegacyV10Store["k"] = [1, 2];
-        var observable = new ReadWithLegacyFallbackObservable(connection, "k", null);
+        connection.LegacyV10Store["k"] = LegacyPayload;
+        var observable = new ReadWithLegacyFallbackObservable(connection, "k", null, TimeProvider.System);
 
         byte[]? received = null;
         var sub = observable.Subscribe(
             v => received = v,
-            _ => { },
-            () => { });
+            static _ => { },
+            static () => { });
         sub.Dispose();
 
         // Whether or not data was received depends on timing,

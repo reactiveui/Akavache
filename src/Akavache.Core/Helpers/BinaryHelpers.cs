@@ -17,6 +17,11 @@ namespace Akavache.Helpers;
 /// </summary>
 internal static class BinaryHelpers
 {
+#if !NET6_0_OR_GREATER
+    /// <summary>Number of bits shifted per byte when assembling a little-endian value.</summary>
+    private const int BitsPerByte = 8;
+#endif
+
 #if NET5_0_OR_GREATER
     /// <summary>Gets the ASCII whitespace byte set used by <see cref="StartsWithJsonOpener"/>'s
     /// fast-path span trim — space, tab, LF, CR. Stored as a <c>u8</c> literal so the bytes
@@ -33,13 +38,13 @@ internal static class BinaryHelpers
     /// <param name="offset">The starting offset.</param>
     /// <returns>The decoded little-endian 32-bit integer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int ReadInt32LittleEndian(byte[] data, int offset = 0) =>
+    internal static int ReadInt32LittleEndian(byte[] data, int offset = 0) =>
 #if NET6_0_OR_GREATER
         BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(offset));
 #else
         BitConverter.IsLittleEndian
             ? BitConverter.ToInt32(data, offset)
-            : (data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16) | (data[offset + 3] << 24));
+            : (int)ReadLittleEndianBytes(data, offset, sizeof(int));
 #endif
 
     /// <summary>
@@ -51,20 +56,13 @@ internal static class BinaryHelpers
     /// <param name="offset">The starting offset.</param>
     /// <returns>The decoded little-endian 64-bit integer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long ReadInt64LittleEndian(byte[] data, int offset = 0) =>
+    internal static long ReadInt64LittleEndian(byte[] data, int offset = 0) =>
 #if NET6_0_OR_GREATER
         BinaryPrimitives.ReadInt64LittleEndian(data.AsSpan(offset));
 #else
         BitConverter.IsLittleEndian
             ? BitConverter.ToInt64(data, offset)
-            : (data[offset]
-                | ((long)data[offset + 1] << 8)
-                | ((long)data[offset + 2] << 16)
-                | ((long)data[offset + 3] << 24)
-                | ((long)data[offset + 4] << 32)
-                | ((long)data[offset + 5] << 40)
-                | ((long)data[offset + 6] << 48)
-                | ((long)data[offset + 7] << 56));
+            : ReadLittleEndianBytes(data, offset, sizeof(long));
 #endif
 
     /// <summary>
@@ -74,7 +72,7 @@ internal static class BinaryHelpers
     /// </summary>
     /// <param name="data">The raw payload bytes.</param>
     /// <returns><see langword="true"/> if the first non-whitespace byte is <c>{</c> or <c>[</c>.</returns>
-    public static bool StartsWithJsonOpener(byte[] data)
+    internal static bool StartsWithJsonOpener(byte[] data)
     {
         if (data is null)
         {
@@ -101,4 +99,22 @@ internal static class BinaryHelpers
         return false;
 #endif
     }
+
+#if !NET6_0_OR_GREATER
+    /// <summary>Assembles a little-endian value from <paramref name="byteCount"/> bytes on a big-endian machine, where <see cref="BitConverter"/> would read them in the wrong order.</summary>
+    /// <param name="data">The source byte array.</param>
+    /// <param name="offset">The starting offset.</param>
+    /// <param name="byteCount">How many bytes make up the value.</param>
+    /// <returns>The decoded little-endian value.</returns>
+    private static long ReadLittleEndianBytes(byte[] data, int offset, int byteCount)
+    {
+        long value = 0;
+        for (var i = byteCount - 1; i >= 0; i--)
+        {
+            value = (value << BitsPerByte) | data[offset + i];
+        }
+
+        return value;
+    }
+#endif
 }

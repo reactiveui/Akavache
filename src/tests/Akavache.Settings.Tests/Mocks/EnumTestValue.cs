@@ -4,33 +4,21 @@
 
 namespace Akavache.Settings.Tests;
 
-/// <summary>
-/// EnumTestValue.
-/// </summary>
+/// <summary>Enumeration values stored and round-tripped by the settings test fixtures.</summary>
 public enum EnumTestValue
 {
-    /// <summary>
-    /// The default.
-    /// </summary>
+    /// <summary>The default.</summary>
     Default,
 
-    /// <summary>
-    /// The option1.
-    /// </summary>
+    /// <summary>The option1.</summary>
     Option1,
 
-    /// <summary>
-    /// The option2.
-    /// </summary>
+    /// <summary>The option2.</summary>
     Option2,
 
-    /// <summary>
-    /// The option3.
-    /// </summary>
+    /// <summary>The option3.</summary>
     Option3,
 
-    /// <summary>
-    /// The option4.
-    /// </summary>
+    /// <summary>The option4.</summary>
     Option4
 }

@@ -23,6 +23,6 @@ internal static class SqliteProviderGate
     /// <see langword="false"/>.
     /// </summary>
     /// <returns><see langword="true"/> if the caller should perform native provider init.</returns>
-    public static bool TryClaimInit() =>
+    internal static bool TryClaimInit() =>
         System.Threading.Interlocked.Exchange(ref _initialized, 1) == 0;
 }

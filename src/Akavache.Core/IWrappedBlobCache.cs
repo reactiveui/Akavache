@@ -4,13 +4,9 @@
 
 namespace Akavache;
 
-/// <summary>
-/// Exposes the underlying blob cache used by a secure-cache wrapper.
-/// </summary>
+/// <summary>Exposes the underlying blob cache used by a secure-cache wrapper.</summary>
 public interface IWrappedBlobCache
 {
-    /// <summary>
-    /// Gets the underlying blob cache.
-    /// </summary>
+    /// <summary>Gets the underlying blob cache.</summary>
     IBlobCache InnerCache { get; }
 }

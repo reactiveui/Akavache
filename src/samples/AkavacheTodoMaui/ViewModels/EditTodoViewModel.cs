@@ -9,9 +9,7 @@ using ReactiveUI.SourceGenerators;
 
 namespace AkavacheTodoMaui.ViewModels;
 
-/// <summary>
-/// View model for editing existing todo items.
-/// </summary>
+/// <summary>View model for editing existing todo items.</summary>
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class EditTodoViewModel : ReactiveObject
@@ -33,7 +31,7 @@ public partial class EditTodoViewModel : ReactiveObject
 
     /// <summary>Backing field for the reactive DueDate property.</summary>
     [Reactive]
-    private DateTime _dueDate = DateTime.Today;
+    private DateTime _dueDate = DateOnly.FromDateTime(TimeProvider.System.GetUtcNow().UtcDateTime).ToDateTime(TimeOnly.MinValue);
 
     /// <summary>Backing field for the reactive DueTime property.</summary>
     [Reactive]
@@ -43,9 +41,7 @@ public partial class EditTodoViewModel : ReactiveObject
     [Reactive]
     private TodoPriority _priority;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EditTodoViewModel"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="EditTodoViewModel"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
@@ -73,30 +69,44 @@ public partial class EditTodoViewModel : ReactiveObject
         PriorityOptions = Enum.GetValues<TodoPriority>();
     }
 
-    /// <summary>
-    /// Gets the priority options.
-    /// </summary>
+    /// <summary>Gets the priority options.</summary>
     public TodoPriority[] PriorityOptions { get; }
 
-    /// <summary>
-    /// Gets the save command.
-    /// </summary>
+    /// <summary>Gets the save command.</summary>
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
 
-    /// <summary>
-    /// Gets the cancel command.
-    /// </summary>
+    /// <summary>Gets the cancel command.</summary>
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether the todo was saved.
-    /// </summary>
+    /// <summary>Gets a value indicating whether the todo was saved.</summary>
     public bool WasSaved { get; private set; }
 
-    /// <summary>
-    /// Gets the updated todo item if saved.
-    /// </summary>
+    /// <summary>Gets the updated todo item if saved.</summary>
     public TodoItem? UpdatedTodo { get; private set; }
+
+    /// <summary>Splits a comma-separated tag list into trimmed, non-empty tags.</summary>
+    /// <param name="tagsString">The raw comma-separated text typed by the user.</param>
+    /// <returns>The parsed tags, which is empty when nothing usable was entered.</returns>
+    private static List<string> ParseTags(string tagsString)
+    {
+        List<string> tags = [];
+
+        if (string.IsNullOrWhiteSpace(tagsString))
+        {
+            return tags;
+        }
+
+        foreach (var rawTag in tagsString.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var tag = rawTag.Trim();
+            if (tag.Length > 0)
+            {
+                tags.Add(tag);
+            }
+        }
+
+        return tags;
+    }
 
     /// <summary>Validates input, constructs the updated todo and navigates back.</summary>
     /// <returns>A task representing the asynchronous save operation.</returns>
@@ -111,35 +121,29 @@ public partial class EditTodoViewModel : ReactiveObject
         try
         {
             // Parse due date and time
-            var date = DueDate.Date;
+            var dueDay = DateOnly.FromDateTime(DueDate);
+            var dueTimeOfDay = !string.IsNullOrWhiteSpace(DueTime) && TimeOnly.TryParse(DueTime, out var time)
+                ? time
+                : TimeOnly.MinValue;
 
-            if (!string.IsNullOrWhiteSpace(DueTime) && TimeSpan.TryParse(DueTime, out var time))
-            {
-                date = date.Add(time);
-            }
+            DateTimeOffset? dueDate = new DateTimeOffset(dueDay.ToDateTime(dueTimeOfDay));
 
-            DateTimeOffset? dueDate = new DateTimeOffset(date);
+            // Create updated todo. The edited values are copied into locals first so the object
+            // initializer never reads like it is assigning a property to itself.
+            var editedTitle = Title;
+            var editedDescription = Description;
+            var editedPriority = Priority;
 
-            // Parse tags
-            List<string> tags = [];
-            if (!string.IsNullOrWhiteSpace(TagsString))
-            {
-                tags = [.. TagsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                .Select(static tag => tag.Trim())
-                                .Where(static tag => !string.IsNullOrEmpty(tag))];
-            }
-
-            // Create updated todo
             UpdatedTodo = new()
             {
                 Id = _originalTodo.Id,
-                Title = Title,
-                Description = Description,
+                Title = editedTitle,
+                Description = editedDescription,
                 DueDate = dueDate,
-                Priority = Priority,
+                Priority = editedPriority,
                 CreatedAt = _originalTodo.CreatedAt,
                 IsCompleted = _originalTodo.IsCompleted,
-                Tags = tags
+                Tags = ParseTags(TagsString)
             };
 
             WasSaved = true;

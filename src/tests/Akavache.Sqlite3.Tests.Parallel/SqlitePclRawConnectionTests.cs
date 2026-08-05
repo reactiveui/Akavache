@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using Akavache.Sqlite3;
 using Akavache.SystemTextJson;
 using Akavache.Tests.Helpers;
@@ -10,17 +9,51 @@ using SQLitePCL;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="SqlitePclRawConnection"/> covering static helpers and typed query paths.
-/// </summary>
+/// <summary>Tests for <see cref="SqlitePclRawConnection"/> covering static helpers and typed query paths.</summary>
 [Category("Akavache")]
 public class SqlitePclRawConnectionTests
 {
-    // ── AppendJsonString individual escape branches ────────────────────────
+    /// <summary>The SQLite result code for a successful call.</summary>
+    private const int SqliteOk = 0;
 
-    /// <summary>
-    /// A backslash character is escaped as <c>\\</c>.
-    /// </summary>
+    /// <summary>The SQLite result code returned by <c>sqlite3_step</c> when a row is available.</summary>
+    private const int SqliteRow = 100;
+
+    /// <summary>The SQLite result code returned by <c>sqlite3_step</c> when the statement is exhausted.</summary>
+    private const int SqliteDone = 101;
+
+    /// <summary>The generic SQLite failure code.</summary>
+    private const int SqliteError = 1;
+
+    /// <summary>Payload of the first entry a test stores, distinct so a swapped row shows in the assertion.</summary>
+    private static readonly byte[] FirstEntryPayload = [1];
+
+    /// <summary>Payload of the second entry a test stores.</summary>
+    private static readonly byte[] SecondEntryPayload = [2];
+
+    /// <summary>Payload of the third entry a test stores.</summary>
+    private static readonly byte[] ThirdEntryPayload = [3];
+
+    /// <summary>Multi-byte payload of the first entry, for tests that assert the whole blob round-trips.</summary>
+    private static readonly byte[] FirstMultiBytePayload = [1, 2, 3];
+
+    /// <summary>Multi-byte payload of the second entry.</summary>
+    private static readonly byte[] SecondMultiBytePayload = [4, 5, 6];
+
+    /// <summary>Multi-byte payload of the third entry.</summary>
+    private static readonly byte[] ThirdMultiBytePayload = [7, 8, 9];
+
+    /// <summary>Payload of the entry that is stored without a type discriminator.</summary>
+    private static readonly byte[] TypelessEntryPayload = [42];
+
+    /// <summary>How long a test waits for a racing disposer thread before declaring a deadlock.</summary>
+    private static readonly TimeSpan ConcurrentDisposeTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>How long a test waits for the first row of a scan before giving up.</summary>
+    private static readonly TimeSpan FirstScannedRowTimeout = TimeSpan.FromSeconds(10);
+
+    // ── AppendJsonString individual escape branches ────────────────────────
+    /// <summary>A backslash character is escaped as <c>\\</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_Backslash_IsEscaped()
@@ -30,9 +63,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"a\\\\b\"");
     }
 
-    /// <summary>
-    /// A backspace character is escaped as <c>\b</c>.
-    /// </summary>
+    /// <summary>A backspace character is escaped as <c>\b</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_Backspace_IsEscaped()
@@ -42,9 +73,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"a\\bb\"");
     }
 
-    /// <summary>
-    /// A form-feed character is escaped as <c>\f</c>.
-    /// </summary>
+    /// <summary>A form-feed character is escaped as <c>\f</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_FormFeed_IsEscaped()
@@ -54,9 +83,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"a\\fb\"");
     }
 
-    /// <summary>
-    /// A newline character is escaped as <c>\n</c>.
-    /// </summary>
+    /// <summary>A newline character is escaped as <c>\n</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_Newline_IsEscaped()
@@ -66,9 +93,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"a\\nb\"");
     }
 
-    /// <summary>
-    /// A carriage-return character is escaped as <c>\r</c>.
-    /// </summary>
+    /// <summary>A carriage-return character is escaped as <c>\r</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_CarriageReturn_IsEscaped()
@@ -78,9 +103,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"a\\rb\"");
     }
 
-    /// <summary>
-    /// A tab character is escaped as <c>\t</c>.
-    /// </summary>
+    /// <summary>A tab character is escaped as <c>\t</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_Tab_IsEscaped()
@@ -90,9 +113,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"a\\tb\"");
     }
 
-    /// <summary>
-    /// A control character below 0x20 (not one of the named escapes) is encoded as <c>\uXXXX</c>.
-    /// </summary>
+    /// <summary>A control character below 0x20 (not one of the named escapes) is encoded as <c>\uXXXX</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_ControlChar_IsUnicodeEscaped()
@@ -102,9 +123,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"\\u0003\"");
     }
 
-    /// <summary>
-    /// A double-quote character is escaped as <c>\"</c>.
-    /// </summary>
+    /// <summary>A double-quote character is escaped as <c>\"</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_DoubleQuote_IsEscaped()
@@ -114,9 +133,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"say \\\"hi\\\"\"");
     }
 
-    /// <summary>
-    /// A plain printable string is emitted unchanged (only wrapped in quotes).
-    /// </summary>
+    /// <summary>A plain printable string is emitted unchanged (only wrapped in quotes).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_PlainText_IsUnchanged()
@@ -126,9 +143,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(sb.ToString()).IsEqualTo("\"hello\"");
     }
 
-    /// <summary>
-    /// A string containing multiple different escape types is correctly escaped in sequence.
-    /// </summary>
+    /// <summary>A string containing multiple different escape types is correctly escaped in sequence.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_MixedEscapes_AllHandled()
@@ -139,25 +154,19 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── CheckRc ────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// CheckRc with a non-zero code and null db produces an exception whose message contains the operation name.
-    /// </summary>
+    /// <summary>CheckRc with a non-zero code and null db produces an exception whose message contains the operation name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CheckRc_ErrorWithNullDb_MessageContainsOperation()
     {
-        var ex = Assert.Throws<AkavacheSqliteException>(() =>
+        var ex = Assert.Throws<AkavacheSqliteException>(static () =>
             SqlitePclRawConnection.CheckRc(1, db: null, "my-operation"));
         await Assert.That(ex.Message).Contains("my-operation");
         await Assert.That(ex.Message).Contains("1");
     }
 
     // ── TableExists ───────────────────────────────────────────────────────
-
-    /// <summary>
-    /// TableExists returns true for the CacheEntry table after schema creation.
-    /// </summary>
+    /// <summary>TableExists returns true for the CacheEntry table after schema creation.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TableExists_KnownTable_ReturnsTrue()
@@ -165,13 +174,11 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var exists = cache.Connection.TableExists("CacheEntry").WaitForValue();
+        var exists = cache.Connection.TableExists(nameof(CacheEntry)).WaitForValue();
         await Assert.That(exists).IsTrue();
     }
 
-    /// <summary>
-    /// TableExists returns false for a table that does not exist.
-    /// </summary>
+    /// <summary>TableExists returns false for a table that does not exist.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TableExists_UnknownTable_ReturnsFalse()
@@ -184,10 +191,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── GetMany with typeFullName ─────────────────────────────────────────
-
-    /// <summary>
-    /// GetMany with a type discriminator returns only entries matching that type.
-    /// </summary>
+    /// <summary>GetMany with a type discriminator returns only entries matching that type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetMany_WithTypeName_ReturnsOnlyMatchingType()
@@ -195,25 +199,25 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const string QueriedTypeName = "MyType";
+        const int MatchingEntryCount = 2;
+
+        var now = TimeProvider.System.GetUtcNow();
         var entries = new[]
         {
-            new CacheEntry("k1", "MyType", [1, 2, 3], now, null),
-            new CacheEntry("k2", "OtherType", [4, 5, 6], now, null),
-            new CacheEntry("k3", "MyType", [7, 8, 9], now, null),
+            new CacheEntry("k1", QueriedTypeName, FirstMultiBytePayload, now, null),
+            new CacheEntry("k2", "OtherType", SecondMultiBytePayload, now, null),
+            new CacheEntry("k3", QueriedTypeName, ThirdMultiBytePayload, now, null),
         };
         cache.Connection.Upsert(entries).WaitForCompletion();
 
-        var results = cache.Connection.GetMany(["k1", "k2", "k3"], "MyType", now).ToList().WaitForValue()!;
-        await Assert.That(results.Count).IsEqualTo(2);
-        await Assert.That(results.Select(e => e.Id!).Order()).IsEquivalentTo(["k1", "k3"]);
+        var results = cache.Connection.GetMany(["k1", "k2", "k3"], QueriedTypeName, now).ToList().WaitForValue()!;
+        await Assert.That(results.Count).IsEqualTo(MatchingEntryCount);
+        await Assert.That(results.Select(static e => e.Id!).Order()).IsEquivalentTo(["k1", "k3"]);
     }
 
     // ── GetAll with typeFullName ──────────────────────────────────────────
-
-    /// <summary>
-    /// GetAll with a type discriminator returns only entries matching that type.
-    /// </summary>
+    /// <summary>GetAll with a type discriminator returns only entries matching that type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAll_WithTypeName_ReturnsOnlyMatchingType()
@@ -221,25 +225,26 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const string QueriedTypeName = "TypeA";
+        const string SkippedTypeName = "TypeB";
+        const int MatchingEntryCount = 2;
+
+        var now = TimeProvider.System.GetUtcNow();
         var entries = new[]
         {
-            new CacheEntry("a1", "TypeA", [1], now, null),
-            new CacheEntry("b1", "TypeB", [2], now, null),
-            new CacheEntry("a2", "TypeA", [3], now, null),
+            new CacheEntry("a1", QueriedTypeName, FirstEntryPayload, now, null),
+            new CacheEntry("b1", SkippedTypeName, SecondEntryPayload, now, null),
+            new CacheEntry("a2", QueriedTypeName, ThirdEntryPayload, now, null),
         };
         cache.Connection.Upsert(entries).WaitForCompletion();
 
-        var results = cache.Connection.GetAll("TypeA", now).ToList().WaitForValue()!;
-        await Assert.That(results.Count).IsEqualTo(2);
-        await Assert.That(results.Select(e => e.Id!).Order()).IsEquivalentTo(["a1", "a2"]);
+        var results = cache.Connection.GetAll(QueriedTypeName, now).ToList().WaitForValue()!;
+        await Assert.That(results.Count).IsEqualTo(MatchingEntryCount);
+        await Assert.That(results.Select(static e => e.Id!).Order()).IsEquivalentTo(["a1", "a2"]);
     }
 
     // ── GetAllKeys with typeFullName ──────────────────────────────────────
-
-    /// <summary>
-    /// GetAllKeys with a type discriminator returns only keys matching that type.
-    /// </summary>
+    /// <summary>GetAllKeys with a type discriminator returns only keys matching that type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeys_WithTypeName_ReturnsOnlyMatchingType()
@@ -247,25 +252,25 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const string QueriedTypeName = "FooType";
+        const int MatchingKeyCount = 2;
+
+        var now = TimeProvider.System.GetUtcNow();
         var entries = new[]
         {
-            new CacheEntry("x1", "FooType", [1], now, null),
-            new CacheEntry("x2", "BarType", [2], now, null),
-            new CacheEntry("x3", "FooType", [3], now, null),
+            new CacheEntry("x1", QueriedTypeName, FirstEntryPayload, now, null),
+            new CacheEntry("x2", "BarType", SecondEntryPayload, now, null),
+            new CacheEntry("x3", QueriedTypeName, ThirdEntryPayload, now, null),
         };
         cache.Connection.Upsert(entries).WaitForCompletion();
 
-        var keys = cache.Connection.GetAllKeys("FooType", now).ToList().WaitForValue()!;
-        await Assert.That(keys.Count).IsEqualTo(2);
+        var keys = cache.Connection.GetAllKeys(QueriedTypeName, now).ToList().WaitForValue()!;
+        await Assert.That(keys.Count).IsEqualTo(MatchingKeyCount);
         await Assert.That(keys.Order()).IsEquivalentTo(["x1", "x3"]);
     }
 
     // ── Invalidate with typeFullName ──────────────────────────────────────
-
-    /// <summary>
-    /// Invalidate with a type discriminator deletes only entries matching that type.
-    /// </summary>
+    /// <summary>Invalidate with a type discriminator deletes only entries matching that type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Invalidate_WithTypeName_DeletesOnlyMatchingType()
@@ -273,11 +278,11 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         var entries = new[]
         {
-            new CacheEntry("d1", "TypeX", [1], now, null),
-            new CacheEntry("d2", "TypeY", [2], now, null),
+            new CacheEntry("d1", "TypeX", FirstEntryPayload, now, null),
+            new CacheEntry("d2", "TypeY", SecondEntryPayload, now, null),
         };
         cache.Connection.Upsert(entries).WaitForCompletion();
 
@@ -288,9 +293,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(remaining[0].Id).IsEqualTo("d2");
     }
 
-    /// <summary>
-    /// Invalidate with a mismatched type does not delete the entry.
-    /// </summary>
+    /// <summary>Invalidate with a mismatched type does not delete the entry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Invalidate_WithWrongTypeName_DoesNotDelete()
@@ -298,8 +301,8 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("e1", "TypeA", [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("e1", "TypeA", FirstEntryPayload, now, null)]).WaitForCompletion();
 
         cache.Connection.Invalidate(["e1"], "TypeB").WaitForCompletion();
 
@@ -308,10 +311,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── InvalidateAll with typeFullName ───────────────────────────────────
-
-    /// <summary>
-    /// InvalidateAll with a type discriminator removes only matching entries.
-    /// </summary>
+    /// <summary>InvalidateAll with a type discriminator removes only matching entries.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InvalidateAll_WithTypeName_RemovesOnlyMatchingType()
@@ -319,29 +319,29 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const string RetainedTypeName = "Keep";
+        const string InvalidatedTypeName = "Remove";
+
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([
-            new CacheEntry("f1", "Keep", [1], now, null),
-            new CacheEntry("f2", "Remove", [2], now, null),
-            new CacheEntry("f3", "Remove", [3], now, null),
+            new CacheEntry("f1", RetainedTypeName, FirstEntryPayload, now, null),
+            new CacheEntry("f2", InvalidatedTypeName, SecondEntryPayload, now, null),
+            new CacheEntry("f3", InvalidatedTypeName, ThirdEntryPayload, now, null),
         ]).WaitForCompletion();
 
         // Test both typed and untyped GetAll
-        var typedResults = cache.Connection.GetAll("Keep", now).ToList().WaitForValue()!;
+        var typedResults = cache.Connection.GetAll(RetainedTypeName, now).ToList().WaitForValue()!;
         await Assert.That(typedResults.Count).IsEqualTo(1);
 
-        cache.Connection.InvalidateAll("Remove").WaitForCompletion();
+        cache.Connection.InvalidateAll(InvalidatedTypeName).WaitForCompletion();
 
-        var remaining = cache.Connection.GetAll("Keep", now).ToList().WaitForValue()!;
+        var remaining = cache.Connection.GetAll(RetainedTypeName, now).ToList().WaitForValue()!;
         await Assert.That(remaining.Count).IsEqualTo(1);
         await Assert.That(remaining[0].Id).IsEqualTo("f1");
     }
 
     // ── SetExpiry with typeFullName ───────────────────────────────────────
-
-    /// <summary>
-    /// SetExpiry with a type discriminator updates only the matching entry.
-    /// </summary>
+    /// <summary>SetExpiry with a type discriminator updates only the matching entry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SetExpiry_WithTypeName_UpdatesOnlyMatchingEntry()
@@ -349,12 +349,14 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        var farFuture = now.AddYears(10);
+        const int FarFutureYears = 10;
+
+        var now = TimeProvider.System.GetUtcNow();
+        var farFuture = now.AddYears(FarFutureYears);
         var entries = new[]
         {
-            new CacheEntry("g1", "TypeM", [1], now, null),
-            new CacheEntry("g2", "TypeN", [2], now, null),
+            new CacheEntry("g1", "TypeM", FirstEntryPayload, now, null),
+            new CacheEntry("g2", "TypeN", SecondEntryPayload, now, null),
         };
         cache.Connection.Upsert(entries).WaitForCompletion();
 
@@ -369,9 +371,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(entry2!.ExpiresAt).IsNull();
     }
 
-    /// <summary>
-    /// SetExpiry with null expiration clears the expiry (binds null ticks).
-    /// </summary>
+    /// <summary>SetExpiry with null expiration clears the expiry (binds null ticks).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SetExpiry_NullExpiration_ClearsExpiry()
@@ -379,9 +379,9 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         var expiry = now.AddHours(1);
-        cache.Connection.Upsert([new CacheEntry("h1", null, [1], now, expiry)]).WaitForCompletion();
+        cache.Connection.Upsert([new CacheEntry("h1", null, FirstEntryPayload, now, expiry)]).WaitForCompletion();
 
         cache.Connection.SetExpiry("h1", null, null).WaitForCompletion();
 
@@ -391,10 +391,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── VacuumExpired ────────────────────────────────────────────────────
-
-    /// <summary>
-    /// VacuumExpired removes expired entries and keeps unexpired ones.
-    /// </summary>
+    /// <summary>VacuumExpired removes expired entries and keeps unexpired ones.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task VacuumExpired_RemovesExpiredEntries()
@@ -402,29 +399,27 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         var past = now.AddHours(-1);
         var future = now.AddHours(1);
+        const int SurvivingEntryCount = 2;
         var entries = new[]
         {
-            new CacheEntry("expired1", null, [1], now, past),
-            new CacheEntry("valid1", null, [2], now, future),
-            new CacheEntry("noexpiry", null, [3], now, null),
+            new CacheEntry("expired1", null, FirstEntryPayload, now, past),
+            new CacheEntry("valid1", null, SecondEntryPayload, now, future),
+            new CacheEntry("noexpiry", null, ThirdEntryPayload, now, null),
         };
         cache.Connection.Upsert(entries).WaitForCompletion();
 
         cache.Connection.VacuumExpired(now).WaitForCompletion();
 
         var remaining = cache.Connection.GetAll(null, now).ToList().WaitForValue()!;
-        await Assert.That(remaining.Count).IsEqualTo(2);
-        await Assert.That(remaining.Select(e => e.Id!).Order()).IsEquivalentTo(["noexpiry", "valid1"]);
+        await Assert.That(remaining.Count).IsEqualTo(SurvivingEntryCount);
+        await Assert.That(remaining.Select(static e => e.Id!).Order()).IsEquivalentTo(["noexpiry", "valid1"]);
     }
 
     // ── Upsert with null Value ───────────────────────────────────────────
-
-    /// <summary>
-    /// Upserting an entry with null Value stores the entry and ReadCacheEntry returns null Value.
-    /// </summary>
+    /// <summary>Upserting an entry with null Value stores the entry and ReadCacheEntry returns null Value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Upsert_NullValue_RoundTripsAsNull()
@@ -432,7 +427,7 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([new CacheEntry("nullval", null, null, now, null)]).WaitForCompletion();
 
         var entry = cache.Connection.Get("nullval", null, now).WaitForValue();
@@ -441,10 +436,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── Upsert with null ExpiresAt ───────────────────────────────────────
-
-    /// <summary>
-    /// Upserting an entry with null ExpiresAt stores the entry with no expiration.
-    /// </summary>
+    /// <summary>Upserting an entry with null ExpiresAt stores the entry with no expiration.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Upsert_NullExpiresAt_RoundTripsAsNull()
@@ -452,8 +444,8 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("noexp", "SomeType", [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("noexp", "SomeType", FirstEntryPayload, now, null)]).WaitForCompletion();
 
         var entry = cache.Connection.Get("noexp", null, now).WaitForValue();
         await Assert.That(entry).IsNotNull();
@@ -461,10 +453,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── Upsert with null TypeName ────────────────────────────────────────
-
-    /// <summary>
-    /// Upserting an entry with null TypeName stores the entry and retrieves it with null TypeName.
-    /// </summary>
+    /// <summary>Upserting an entry with null TypeName stores the entry and retrieves it with null TypeName.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Upsert_NullTypeName_RoundTripsAsNull()
@@ -472,8 +461,8 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("notype", null, [42], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("notype", null, TypelessEntryPayload, now, null)]).WaitForCompletion();
 
         var entry = cache.Connection.Get("notype", null, now).WaitForValue();
         await Assert.That(entry).IsNotNull();
@@ -481,7 +470,6 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── Upsert empty list ────────────────────────────────────────────────
-
     /// <summary>
     /// Upserting an empty list is a no-op and returns Unit without touching the database.
     /// Covers line 547-548 (early return for empty entries).
@@ -495,16 +483,12 @@ public class SqlitePclRawConnectionTests
 
         cache.Connection.Upsert([]).WaitForCompletion();
 
-        var all = cache.Connection.GetAll(null, DateTimeOffset.UtcNow).ToList().WaitForValue()!;
+        var all = cache.Connection.GetAll(null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(all.Count).IsEqualTo(0);
     }
 
     // ── Invalidate empty list ────────────────────────────────────────────
-
-    /// <summary>
-    /// Invalidating an empty key list is a no-op.
-    /// Covers lines 623-625 (early return for empty keys).
-    /// </summary>
+    /// <summary>Invalidating an empty key list is a no-op. Covers lines 623-625 (early return for empty keys).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Invalidate_EmptyList_IsNoop()
@@ -512,8 +496,8 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("keep", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("keep", null, FirstEntryPayload, now, null)]).WaitForCompletion();
 
         cache.Connection.Invalidate([], null).WaitForCompletion();
 
@@ -522,11 +506,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── GetMany empty list ───────────────────────────────────────────────
-
-    /// <summary>
-    /// GetMany with an empty key list returns an empty sequence.
-    /// Covers lines 436-438 (early return for empty keys).
-    /// </summary>
+    /// <summary>GetMany with an empty key list returns an empty sequence. Covers lines 436-438 (early return for empty keys).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetMany_EmptyList_ReturnsEmpty()
@@ -534,16 +514,12 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var results = cache.Connection.GetMany([], null, DateTimeOffset.UtcNow).ToList().WaitForValue()!;
+        var results = cache.Connection.GetMany([], null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(results.Count).IsEqualTo(0);
     }
 
     // ── Get with typeFullName ────────────────────────────────────────────
-
-    /// <summary>
-    /// Get with a type discriminator returns the entry only if the type matches.
-    /// Covers the typed query path (SqlGetOneTyped).
-    /// </summary>
+    /// <summary>Get with a type discriminator returns the entry only if the type matches. Covers the typed query path (SqlGetOneTyped).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Get_WithTypeName_ReturnsOnlyMatchingType()
@@ -551,22 +527,22 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("typed1", "MyType", [1], now, null)]).WaitForCompletion();
+        const string StoredKey = "typed1";
+        const string StoredTypeName = "MyType";
 
-        var match = cache.Connection.Get("typed1", "MyType", now).WaitForValue();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry(StoredKey, StoredTypeName, FirstEntryPayload, now, null)]).WaitForCompletion();
+
+        var match = cache.Connection.Get(StoredKey, StoredTypeName, now).WaitForValue();
         await Assert.That(match).IsNotNull();
-        await Assert.That(match!.Id).IsEqualTo("typed1");
+        await Assert.That(match!.Id).IsEqualTo(StoredKey);
 
-        var noMatch = cache.Connection.Get("typed1", "OtherType", now).WaitForValue();
+        var noMatch = cache.Connection.Get(StoredKey, "OtherType", now).WaitForValue();
         await Assert.That(noMatch).IsNull();
     }
 
     // ── Get returns null for missing key ─────────────────────────────────
-
-    /// <summary>
-    /// Get with a key that does not exist returns null.
-    /// </summary>
+    /// <summary>Get with a key that does not exist returns null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Get_MissingKey_ReturnsNull()
@@ -574,15 +550,12 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var result = cache.Connection.Get("nonexistent", null, DateTimeOffset.UtcNow).WaitForValue();
+        var result = cache.Connection.Get("nonexistent", null, TimeProvider.System.GetUtcNow()).WaitForValue();
         await Assert.That(result).IsNull();
     }
 
     // ── Get returns null for expired entry ───────────────────────────────
-
-    /// <summary>
-    /// Get with a key whose entry has expired returns null.
-    /// </summary>
+    /// <summary>Get with a key whose entry has expired returns null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Get_ExpiredEntry_ReturnsNull()
@@ -590,20 +563,16 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         var past = now.AddHours(-1);
-        cache.Connection.Upsert([new CacheEntry("expired", null, [1], now, past)]).WaitForCompletion();
+        cache.Connection.Upsert([new CacheEntry("expired", null, FirstEntryPayload, now, past)]).WaitForCompletion();
 
         var result = cache.Connection.Get("expired", null, now).WaitForValue();
         await Assert.That(result).IsNull();
     }
 
     // ── Checkpoint modes ────────────────────────────────────────────────
-
-    /// <summary>
-    /// Checkpoint with Full mode executes without error.
-    /// Covers line 757 (CheckpointMode.Full branch).
-    /// </summary>
+    /// <summary>Checkpoint with Full mode executes without error. Covers line 757 (CheckpointMode.Full branch).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Checkpoint_FullMode_Succeeds()
@@ -611,18 +580,15 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("cp1", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("cp1", null, FirstEntryPayload, now, null)]).WaitForCompletion();
         cache.Connection.Checkpoint(CheckpointMode.Full).WaitForCompletion();
 
         var entry = cache.Connection.Get("cp1", null, now).WaitForValue();
         await Assert.That(entry).IsNotNull();
     }
 
-    /// <summary>
-    /// Checkpoint with Truncate mode executes without error.
-    /// Covers line 758 (CheckpointMode.Truncate branch).
-    /// </summary>
+    /// <summary>Checkpoint with Truncate mode executes without error. Covers line 758 (CheckpointMode.Truncate branch).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Checkpoint_TruncateMode_Succeeds()
@@ -630,18 +596,15 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("cp2", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("cp2", null, FirstEntryPayload, now, null)]).WaitForCompletion();
         cache.Connection.Checkpoint(CheckpointMode.Truncate).WaitForCompletion();
 
         var entry = cache.Connection.Get("cp2", null, now).WaitForValue();
         await Assert.That(entry).IsNotNull();
     }
 
-    /// <summary>
-    /// Checkpoint with Passive (default) mode executes without error.
-    /// Covers line 759 (default/Passive branch).
-    /// </summary>
+    /// <summary>Checkpoint with Passive (default) mode executes without error. Covers line 759 (default/Passive branch).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Checkpoint_PassiveMode_Succeeds()
@@ -649,8 +612,8 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("cp3", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("cp3", null, FirstEntryPayload, now, null)]).WaitForCompletion();
         cache.Connection.Checkpoint(CheckpointMode.Passive).WaitForCompletion();
 
         var entry = cache.Connection.Get("cp3", null, now).WaitForValue();
@@ -658,7 +621,6 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── Compact ──────────────────────────────────────────────────────────
-
     /// <summary>
     /// Compact (VACUUM) executes without error and the database remains functional.
     /// Covers lines 766-774 (DisposeStatements + VACUUM).
@@ -670,8 +632,8 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("c1", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry("c1", null, FirstEntryPayload, now, null)]).WaitForCompletion();
 
         cache.Connection.Compact().WaitForCompletion();
 
@@ -681,18 +643,14 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── Dispose idempotent ──────────────────────────────────────────────
-
-    /// <summary>
-    /// Disposing the connection twice does not throw.
-    /// Covers lines 850-851 (idempotent _disposed check in CloseCore callback).
-    /// </summary>
+    /// <summary>Disposing the connection twice does not throw. Covers lines 850-851 (idempotent _disposed check in CloseCore callback).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Dispose_Twice_IsIdempotent()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
         conn.Dispose();
@@ -703,41 +661,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(fileExists).IsTrue();
     }
 
-    // ── TryReadLegacyV10Value on a non-v10 database ─────────────────────
-
-    /// <summary>
-    /// TryReadLegacyV10Value returns null when the database has no legacy CacheElement table.
-    /// Covers the AkavacheSqliteException catch paths in TryLegacyTyped and TryLegacyUntyped
-    /// (lines 876-879, 915-918).
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_NoLegacyTable_ReturnsNull()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using var cache = CreateCache(path);
-
-        var result = cache.Connection.TryReadLegacyV10Value("somekey", DateTimeOffset.UtcNow, typeof(string)).WaitForValue();
-        await Assert.That(result).IsNull();
-    }
-
-    /// <summary>
-    /// TryReadLegacyV10Value with a null type falls back to untyped search only.
-    /// Covers the null type-name branch (lines 790-791).
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_NullType_ReturnsNull()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        using var cache = CreateCache(path);
-
-        var result = cache.Connection.TryReadLegacyV10Value("somekey", DateTimeOffset.UtcNow, null).WaitForValue();
-        await Assert.That(result).IsNull();
-    }
-
     // ── TryRollback ─────────────────────────────────────────────────────
-
     /// <summary>
     /// TryRollback does not throw even when there is no active transaction.
     /// Covers lines 1088-1097 (best-effort rollback, catch swallows errors).
@@ -748,38 +672,34 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
         // TryRollback should not throw even when there is no active transaction.
         SqlitePclRawConnection.TryRollback(null!);
 
         // Verify the connection is still functional after rollback attempt.
-        var exists = conn.TableExists("CacheEntry").WaitForValue();
+        var exists = conn.TableExists(nameof(CacheEntry)).WaitForValue();
         await Assert.That(exists).IsTrue();
     }
 
     // ── CheckRc success codes ────────────────────────────────────────────
-
-    /// <summary>
-    /// CheckRc does not throw for SQLITE_OK (0).
-    /// </summary>
+    /// <summary>CheckRc does not throw for SQLITE_OK (0).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CheckRc_SuccessCodes_DoNotThrow()
     {
-        // SQLITE_OK (0), SQLITE_DONE (101), SQLITE_ROW (100) should not throw.
-        var codes = new[] { 0, 100, 101 };
+        const int SuccessCodeCount = 3;
+        int[] codes = [SqliteOk, SqliteRow, SqliteDone];
         foreach (var code in codes)
         {
             SqlitePclRawConnection.CheckRc(code, db: null, "op");
         }
 
-        await Assert.That(codes.Length).IsEqualTo(3);
+        await Assert.That(codes.Length).IsEqualTo(SuccessCodeCount);
     }
 
     // ── CheckRc with non-null db ────────────────────────────────────────
-
     /// <summary>
     /// CheckRc with a non-null db and error code includes sqlite3_errmsg detail.
     /// Covers lines 1118-1121 (non-null db path with error detail).
@@ -790,7 +710,7 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
 
         // EnsurePrepared with invalid SQL triggers CheckRc with a real db handle.
         sqlite3_stmt? slot = null;
@@ -800,10 +720,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── GetMany with expired entries ────────────────────────────────────
-
-    /// <summary>
-    /// GetMany filters out expired entries.
-    /// </summary>
+    /// <summary>GetMany filters out expired entries.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetMany_WithExpiredEntries_FiltersExpired()
@@ -811,24 +728,22 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         var past = now.AddHours(-1);
         var future = now.AddHours(1);
+        const string UnexpiredKey = "fresh";
         cache.Connection.Upsert([
-            new CacheEntry("fresh", null, [1], now, future),
-            new CacheEntry("stale", null, [2], now, past),
+            new CacheEntry(UnexpiredKey, null, FirstEntryPayload, now, future),
+            new CacheEntry("stale", null, SecondEntryPayload, now, past),
         ]).WaitForCompletion();
 
-        var results = cache.Connection.GetMany(["fresh", "stale"], null, now).ToList().WaitForValue()!;
+        var results = cache.Connection.GetMany([UnexpiredKey, "stale"], null, now).ToList().WaitForValue()!;
         await Assert.That(results.Count).IsEqualTo(1);
-        await Assert.That(results[0].Id).IsEqualTo("fresh");
+        await Assert.That(results[0].Id).IsEqualTo(UnexpiredKey);
     }
 
     // ── GetAll with no entries ───────────────────────────────────────────
-
-    /// <summary>
-    /// GetAll on an empty database returns an empty sequence.
-    /// </summary>
+    /// <summary>GetAll on an empty database returns an empty sequence.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAll_EmptyDatabase_ReturnsEmpty()
@@ -836,15 +751,12 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var results = cache.Connection.GetAll(null, DateTimeOffset.UtcNow).ToList().WaitForValue()!;
+        var results = cache.Connection.GetAll(null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(results.Count).IsEqualTo(0);
     }
 
     // ── GetAllKeys with no entries ───────────────────────────────────────
-
-    /// <summary>
-    /// GetAllKeys on an empty database returns an empty sequence.
-    /// </summary>
+    /// <summary>GetAllKeys on an empty database returns an empty sequence.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeys_EmptyDatabase_ReturnsEmpty()
@@ -852,16 +764,12 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var keys = cache.Connection.GetAllKeys(null, DateTimeOffset.UtcNow).ToList().WaitForValue()!;
+        var keys = cache.Connection.GetAllKeys(null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue()!;
         await Assert.That(keys.Count).IsEqualTo(0);
     }
 
     // ── InvalidateAll without type ──────────────────────────────────────
-
-    /// <summary>
-    /// InvalidateAll without a type discriminator removes all entries.
-    /// Covers the null typeFullName path in InvalidateAll.
-    /// </summary>
+    /// <summary>InvalidateAll without a type discriminator removes all entries. Covers the null typeFullName path in InvalidateAll.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InvalidateAll_NoType_RemovesAllEntries()
@@ -869,10 +777,10 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([
-            new CacheEntry("ia1", "T1", [1], now, null),
-            new CacheEntry("ia2", "T2", [2], now, null),
+            new CacheEntry("ia1", "T1", FirstEntryPayload, now, null),
+            new CacheEntry("ia2", "T2", SecondEntryPayload, now, null),
         ]).WaitForCompletion();
 
         cache.Connection.InvalidateAll(null).WaitForCompletion();
@@ -882,10 +790,7 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── SerializeKeysAsJson ─────────────────────────────────────────────
-
-    /// <summary>
-    /// SerializeKeysAsJson with a single key produces a valid JSON array.
-    /// </summary>
+    /// <summary>SerializeKeysAsJson with a single key produces a valid JSON array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeKeysAsJson_SingleKey_ProducesValidJson()
@@ -894,9 +799,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(result).IsEqualTo("[\"hello\"]");
     }
 
-    /// <summary>
-    /// SerializeKeysAsJson with multiple keys produces a valid JSON array.
-    /// </summary>
+    /// <summary>SerializeKeysAsJson with multiple keys produces a valid JSON array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeKeysAsJson_MultipleKeys_ProducesValidJson()
@@ -906,7 +809,6 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── ReadOnly connection ─────────────────────────────────────────────
-
     /// <summary>
     /// A read-only connection opens without applying WAL/SYNCHRONOUS pragmas.
     /// Covers lines 347-361 (readOnly=true skips the WAL pragma block).
@@ -919,19 +821,18 @@ public class SqlitePclRawConnectionTests
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
 
         // First create a writable database so the file exists.
-        using (var writableConn = new SqlitePclRawConnection(dbPath, null, readOnly: false))
+        using (var writableConn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false))
         {
             writableConn.CreateSchema().WaitForCompletion();
         }
 
         // Open read-only — should not throw.
-        using var readOnlyConn = new SqlitePclRawConnection(dbPath, null, readOnly: true);
-        var exists = readOnlyConn.TableExists("CacheEntry").WaitForValue();
+        using var readOnlyConn = SqlitePclRawConnection.Create(dbPath, null, readOnly: true);
+        var exists = readOnlyConn.TableExists(nameof(CacheEntry)).WaitForValue();
         await Assert.That(exists).IsTrue();
     }
 
     // ── Password quoting ─────────────────────────────────────────────────
-
     /// <summary>
     /// A password containing single quotes is correctly escaped and applied via PRAGMA key.
     /// Covers lines 341-345 (password quoting path with single-quote replacement).
@@ -946,11 +847,11 @@ public class SqlitePclRawConnectionTests
         // A password containing single quotes exercises the Replace("'", "''") path.
         // On an unencrypted SQLite build, PRAGMA key is a no-op but the quoting
         // logic still runs. We verify the connection opens and functions normally.
-        using var conn = new SqlitePclRawConnection(dbPath, "it's a te'st", readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, "it's a te'st", readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        var now = DateTimeOffset.UtcNow;
-        conn.Upsert([new CacheEntry("q1", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        conn.Upsert([new CacheEntry("q1", null, FirstEntryPayload, now, null)]).WaitForCompletion();
         var entry = conn.Get("q1", null, now).WaitForValue();
         await Assert.That(entry).IsNotNull();
         await Assert.That(entry!.Id).IsEqualTo("q1");
@@ -967,170 +868,14 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
 
-        using var conn = new SqlitePclRawConnection(dbPath, string.Empty, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, string.Empty, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        var exists = conn.TableExists("CacheEntry").WaitForValue();
+        var exists = conn.TableExists(nameof(CacheEntry)).WaitForValue();
         await Assert.That(exists).IsTrue();
     }
 
-    // ── Legacy V10 table paths ──────────────────────────────────────────
-
-    /// <summary>
-    /// TryReadLegacyV10Value reads data from a manually created legacy CacheElement table
-    /// using an assembly-qualified type name match.
-    /// Covers lines 794-795 (assemblyQualifiedName match path).
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_WithLegacyTable_ReturnsValueByAssemblyQualifiedName()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-
-        // Pre-create the legacy table before opening the connection.
-        CreateLegacyV10Table(dbPath);
-        InsertLegacyV10Row(dbPath, "legacyKey", typeof(string).AssemblyQualifiedName!, [42, 43, 44], expiration: 0);
-
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
-        conn.CreateSchema().WaitForCompletion();
-
-        var result = conn.TryReadLegacyV10Value("legacyKey", DateTimeOffset.UtcNow, typeof(string)).WaitForValue();
-        await Assert.That(result).IsNotNull();
-        await Assert.That(result!).IsEquivalentTo([.. "*+,"u8]);
-    }
-
-    /// <summary>
-    /// TryReadLegacyV10Value falls back to FullName match when AssemblyQualifiedName does not match.
-    /// Covers lines 798-800 (typeFullNameMatch path).
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_WithLegacyTable_FallsBackToFullName()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-
-        // Store the entry with FullName (not AQN) so the AQN probe misses and the FQN probe hits.
-        CreateLegacyV10Table(dbPath);
-        InsertLegacyV10Row(dbPath, "fqnKey", typeof(string).FullName!, [10, 20], expiration: 0);
-
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
-        conn.CreateSchema().WaitForCompletion();
-
-        var result = conn.TryReadLegacyV10Value("fqnKey", DateTimeOffset.UtcNow, typeof(string)).WaitForValue();
-        await Assert.That(result).IsNotNull();
-        await Assert.That(result!).IsEquivalentTo((byte[])[10, 20]);
-    }
-
-    /// <summary>
-    /// TryReadLegacyV10Value falls back to untyped search when type is null.
-    /// Covers TryLegacyUntyped path (lines 915-937).
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_WithLegacyTable_UntypedFallback()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-
-        CreateLegacyV10Table(dbPath);
-        InsertLegacyV10Row(dbPath, "untypedKey", typeName: null, [99], expiration: 0);
-
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
-        conn.CreateSchema().WaitForCompletion();
-
-        var result = conn.TryReadLegacyV10Value("untypedKey", DateTimeOffset.UtcNow, type: null).WaitForValue();
-        await Assert.That(result).IsNotNull();
-        await Assert.That(result!).IsEquivalentTo((byte[])[99]);
-    }
-
-    /// <summary>
-    /// TryReadLegacyV10Value returns null for an expired legacy row.
-    /// Covers the expiration check in TryLegacyUntyped.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_ExpiredRow_ReturnsNull()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-
-        CreateLegacyV10Table(dbPath);
-        var pastTicks = DateTimeOffset.UtcNow.AddHours(-1).UtcTicks;
-        InsertLegacyV10Row(dbPath, "expiredLegacy", typeName: null, [1], expiration: pastTicks);
-
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
-        conn.CreateSchema().WaitForCompletion();
-
-        var result = conn.TryReadLegacyV10Value("expiredLegacy", DateTimeOffset.UtcNow, type: null).WaitForValue();
-        await Assert.That(result).IsNull();
-    }
-
-    /// <summary>
-    /// TryReadLegacyV10Value with a typed query returns the value via untyped fallback
-    /// when the legacy row's type does not match the requested type.
-    /// Covers the typed search miss then untyped hit path in TryLegacyTyped/TryLegacyUntyped.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task TryReadLegacyV10Value_TypeMismatch_FallsBackToUntyped()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-
-        CreateLegacyV10Table(dbPath);
-        InsertLegacyV10Row(dbPath, "typedKey", typeof(int).FullName!, [1, 2], expiration: 0);
-
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
-        conn.CreateSchema().WaitForCompletion();
-
-        // Search for typeof(string) which won't match the stored typeof(int).
-        // Both AQN and FQN typed probes miss, but the untyped probe succeeds.
-        var result = conn.TryReadLegacyV10Value("typedKey", DateTimeOffset.UtcNow, typeof(string)).WaitForValue();
-        await Assert.That(result).IsNotNull();
-    }
-
-    // ── ReadAllLegacyV10Rows ────────────────────────────────────────────
-
-    /// <summary>
-    /// ReadAllLegacyV10Rows reads all rows from a manually created legacy CacheElement table.
-    /// Covers lines 810-834.
-    /// </summary>
-    /// <returns>A task.</returns>
-    [Test]
-    public async Task ReadAllLegacyV10Rows_ReturnsAllLegacyRows()
-    {
-        using var tempDir = Utility.WithEmptyDirectory(out var path);
-        var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-
-        var nowTicks = DateTimeOffset.UtcNow.UtcTicks;
-        CreateLegacyV10Table(dbPath);
-        InsertLegacyV10Row(dbPath, "row1", "MyType", [1, 2], expiration: 0, createdAt: nowTicks);
-        InsertLegacyV10Row(dbPath, "row2", typeName: null, [3, 4, 5], expiration: nowTicks + 1000, createdAt: nowTicks);
-        InsertLegacyV10Row(dbPath, "row3", "OtherType", value: null, expiration: 0, createdAt: nowTicks);
-
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
-        conn.CreateSchema().WaitForCompletion();
-
-        var rows = conn.ReadAllLegacyV10Rows().ToList().WaitForValue()!;
-        await Assert.That(rows.Count).IsEqualTo(3);
-
-        var row1 = rows.First(r => r.Key == "row1");
-        await Assert.That(row1.TypeName).IsEqualTo("MyType");
-        await Assert.That(row1.Value).IsEquivalentTo((byte[])[1, 2]);
-
-        var row2 = rows.First(r => r.Key == "row2");
-        await Assert.That(row2.TypeName).IsNull();
-        await Assert.That(row2.Value).IsEquivalentTo((byte[])[3, 4, 5]);
-
-        var row3 = rows.First(r => r.Key == "row3");
-        await Assert.That(row3.TypeName).IsEqualTo("OtherType");
-        await Assert.That(row3.Value).IsNull();
-    }
-
     // ── EnsurePrepared cache miss ───────────────────────────────────────
-
     /// <summary>
     /// EnsurePrepared caches the statement after first preparation, returning the same
     /// instance on subsequent calls. Covers line 1153 (cache miss then hit).
@@ -1141,13 +886,13 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
         // The first Get call prepares the statement (cache miss).
         // The second Get call reuses it (cache hit).
-        var now = DateTimeOffset.UtcNow;
-        conn.Upsert([new CacheEntry("ep1", null, [1], now, null)]).WaitForCompletion();
+        var now = TimeProvider.System.GetUtcNow();
+        conn.Upsert([new CacheEntry("ep1", null, FirstEntryPayload, now, null)]).WaitForCompletion();
         var entry1 = conn.Get("ep1", null, now).WaitForValue();
         var entry2 = conn.Get("ep1", null, now).WaitForValue();
 
@@ -1157,20 +902,17 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── TryRollback with null db ────────────────────────────────────────
-
     /// <summary>
-    /// TryRollback with a null db handle does not throw.
+    /// TryRollback with a null db handle does not throw: it catches everything, so a null
+    /// handle exercises the catch path.
     /// Covers line 1092 (catch swallows NullReferenceException from sqlite3_exec).
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRollback_NullDb_DoesNotThrow() =>
-
-        // TryRollback catches all exceptions; passing null exercises the catch path.
         SqlitePclRawConnection.TryRollback(null!);
 
     // ── CloseCore second-entry via concurrent threads ─────────────────
-
     /// <summary>
     /// CloseCore's second-entry check (lines 850-851) returns early when the callback
     /// detects <c>_disposed != 0</c>. Exercised by disposing from two dedicated threads.
@@ -1181,17 +923,19 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        using var go = new ManualResetEventSlim(false);
-        var threads = new Thread[3];
-        var completed = new bool[3];
+        const int ConcurrentDisposerCount = 3;
 
-        for (var i = 0; i < 3; i++)
+        using var go = new ManualResetEventSlim(false);
+        var threads = new Thread[ConcurrentDisposerCount];
+        var completed = new bool[ConcurrentDisposerCount];
+
+        for (var i = 0; i < ConcurrentDisposerCount; i++)
         {
             var idx = i;
-            threads[i] = new Thread(() =>
+            threads[i] = new(() =>
             {
                 go.Wait();
                 conn.CloseCore();
@@ -1205,18 +949,17 @@ public class SqlitePclRawConnectionTests
 
         foreach (var t in threads)
         {
-            t.Join(TimeSpan.FromSeconds(30));
+            _ = t.Join(ConcurrentDisposeTimeout);
         }
 
         // All threads completed without deadlock or exception.
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < ConcurrentDisposerCount; i++)
         {
             await Assert.That(completed[i]).IsTrue();
         }
     }
 
     // ── Upsert rollback on error (lines 603-610) ─────────────────────
-
     /// <summary>
     /// Upsert with an invalid entry triggers the rollback catch block (lines 603-610).
     /// Exercised by closing the connection then attempting an upsert through the queue.
@@ -1227,28 +970,25 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
         conn.Dispose();
 
         // After dispose, all operations should produce ObjectDisposedException.
-        var error = conn.Upsert([new CacheEntry("k1", null, [1], DateTimeOffset.UtcNow, null)])
+        var error = conn.Upsert([new CacheEntry("k1", null, FirstEntryPayload, TimeProvider.System.GetUtcNow(), null)])
             .SubscribeGetError();
         await Assert.That(error).IsTypeOf<ObjectDisposedException>();
     }
 
     // ── Invalidate rollback on error (lines 660-667) ─────────────────
-
-    /// <summary>
-    /// Invalidate with a closed connection triggers the rollback catch block (lines 660-667).
-    /// </summary>
+    /// <summary>Invalidate with a closed connection triggers the rollback catch block (lines 660-667).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Invalidate_AfterConnectionClosed_PropagatesError()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
         conn.Dispose();
 
@@ -1257,7 +997,6 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── EnsurePrepared error code handling (lines 1194-1197) ─────────
-
     /// <summary>
     /// EnsurePrepared with malformed SQL disposes the partial statement and throws
     /// AkavacheSqliteException, exercising lines 1149-1153 (dispose + CheckRc).
@@ -1268,7 +1007,7 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
         sqlite3_stmt? slot = null;
@@ -1280,43 +1019,38 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── RunInOwnedTransaction ────────────────────────────────────────
-
-    /// <summary>
-    /// RunInOwnedTransaction commits when the body succeeds.
-    /// </summary>
+    /// <summary>RunInOwnedTransaction commits when the body succeeds.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RunInOwnedTransaction_BodySucceeds_Commits()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
 
         // Run a body that upserts inside RunInOwnedTransaction.
-        conn.Upsert([new CacheEntry("txn1", null, [1], now, null)]).WaitForCompletion();
+        conn.Upsert([new CacheEntry("txn1", null, FirstEntryPayload, now, null)]).WaitForCompletion();
 
         var entry = conn.Get("txn1", null, now).WaitForValue();
         await Assert.That(entry).IsNotNull();
-        await Assert.That(entry!.Value).IsEquivalentTo((byte[])[1]);
+        await Assert.That(entry!.Value).IsEquivalentTo(FirstEntryPayload);
     }
 
-    /// <summary>
-    /// RunInOwnedTransaction rolls back when the body throws.
-    /// </summary>
+    /// <summary>RunInOwnedTransaction rolls back when the body throws.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RunInOwnedTransaction_BodyThrows_RollsBackAndRethrows()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
         // Seed data via the queue so it's committed.
-        conn.Upsert([new CacheEntry("keep", null, [42], DateTimeOffset.UtcNow, null)]).WaitForCompletion();
+        conn.Upsert([new CacheEntry("keep", null, TypelessEntryPayload, TimeProvider.System.GetUtcNow(), null)]).WaitForCompletion();
 
         // Dispose to stop the worker — then we can call RunInOwnedTransaction
         // directly from the test thread. CloseCore disposes statements but the
@@ -1328,7 +1062,7 @@ public class SqlitePclRawConnectionTests
         Exception? caught = null;
         try
         {
-            SqlitePclRawConnection.RunInOwnedTransaction(conn, () => throw new InvalidOperationException("body-boom"));
+            SqlitePclRawConnection.RunInOwnedTransaction(conn, static () => throw new InvalidOperationException("body-boom"));
         }
         catch (InvalidOperationException ex)
         {
@@ -1340,7 +1074,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
 
         // Data seeded before the failed transaction should survive the rollback.
-        var entry = conn.Get("keep", null, DateTimeOffset.UtcNow).WaitForValue();
+        var entry = conn.Get("keep", null, TimeProvider.System.GetUtcNow()).WaitForValue();
         await Assert.That(entry).IsNotNull();
         conn.Dispose();
     }
@@ -1355,13 +1089,13 @@ public class SqlitePclRawConnectionTests
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"test_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
 
         // Seed data.
-        conn.Upsert([new CacheEntry("pre", null, [1], now, null)]).WaitForCompletion();
+        conn.Upsert([new CacheEntry("pre", null, FirstEntryPayload, now, null)]).WaitForCompletion();
 
         // Invalidate with an entry that exists and one that doesn't.
         conn.Invalidate(["pre", "nonexistent"], null).WaitForCompletion();
@@ -1371,13 +1105,12 @@ public class SqlitePclRawConnectionTests
         await Assert.That(entry).IsNull();
 
         // Connection should still be usable after the transaction.
-        conn.Upsert([new CacheEntry("post", null, [2], now, null)]).WaitForCompletion();
+        conn.Upsert([new CacheEntry("post", null, SecondEntryPayload, now, null)]).WaitForCompletion();
         var postEntry = conn.Get("post", null, now).WaitForValue();
         await Assert.That(postEntry).IsNotNull();
     }
 
     // ── Partial branches: typeFullName is null ternaries ─────────────
-
     /// <summary>
     /// Get with null typeFullName exercises the untyped query path.
     /// Get with non-null typeFullName exercises the typed query path.
@@ -1390,20 +1123,23 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
-        cache.Connection.Upsert([new CacheEntry("typed", "SomeType", [1], now, null)]).WaitForCompletion();
+        const string StoredKey = "typed";
+        const string StoredTypeName = "SomeType";
+
+        var now = TimeProvider.System.GetUtcNow();
+        cache.Connection.Upsert([new CacheEntry(StoredKey, StoredTypeName, FirstEntryPayload, now, null)]).WaitForCompletion();
 
         // Untyped path (typeFullName = null).
-        var untypedResult = cache.Connection.Get("typed", null, now).WaitForValue();
+        var untypedResult = cache.Connection.Get(StoredKey, null, now).WaitForValue();
         await Assert.That(untypedResult).IsNotNull();
 
         // Typed path (typeFullName = non-null).
-        var typedResult = cache.Connection.Get("typed", "SomeType", now).WaitForValue();
+        var typedResult = cache.Connection.Get(StoredKey, StoredTypeName, now).WaitForValue();
         await Assert.That(typedResult).IsNotNull();
-        await Assert.That(typedResult!.TypeName).IsEqualTo("SomeType");
+        await Assert.That(typedResult!.TypeName).IsEqualTo(StoredTypeName);
 
         // Typed path with wrong type returns null.
-        var wrongType = cache.Connection.Get("typed", "WrongType", now).WaitForValue();
+        var wrongType = cache.Connection.Get(StoredKey, "WrongType", now).WaitForValue();
         await Assert.That(wrongType).IsNull();
     }
 
@@ -1418,18 +1154,21 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const string QueriedTypeName = "TypeA";
+        const int StoredEntryCount = 2;
+
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([
-            new CacheEntry("m1", "TypeA", [1], now, null),
-            new CacheEntry("m2", "TypeB", [2], now, null),
+            new CacheEntry("m1", QueriedTypeName, FirstEntryPayload, now, null),
+            new CacheEntry("m2", "TypeB", SecondEntryPayload, now, null),
         ]).WaitForCompletion();
 
         // Untyped.
         var untyped = cache.Connection.GetMany(["m1", "m2"], null, now).ToList().WaitForValue()!;
-        await Assert.That(untyped.Count).IsEqualTo(2);
+        await Assert.That(untyped.Count).IsEqualTo(StoredEntryCount);
 
         // Typed.
-        var typed = cache.Connection.GetMany(["m1", "m2"], "TypeA", now).ToList().WaitForValue()!;
+        var typed = cache.Connection.GetMany(["m1", "m2"], QueriedTypeName, now).ToList().WaitForValue()!;
         await Assert.That(typed.Count).IsEqualTo(1);
         await Assert.That(typed[0].Id).IsEqualTo("m1");
     }
@@ -1445,15 +1184,17 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const int StoredEntryCount = 2;
+
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([
-            new CacheEntry("a1", "TypeP", [1], now, null),
-            new CacheEntry("a2", "TypeQ", [2], now, null),
+            new CacheEntry("a1", "TypeP", FirstEntryPayload, now, null),
+            new CacheEntry("a2", "TypeQ", SecondEntryPayload, now, null),
         ]).WaitForCompletion();
 
         // Untyped.
         var untyped = cache.Connection.GetAll(null, now).ToList().WaitForValue()!;
-        await Assert.That(untyped.Count).IsEqualTo(2);
+        await Assert.That(untyped.Count).IsEqualTo(StoredEntryCount);
 
         // Typed.
         var typed = cache.Connection.GetAll("TypeP", now).ToList().WaitForValue()!;
@@ -1471,15 +1212,17 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        const int StoredKeyCount = 2;
+
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([
-            new CacheEntry("k1", "TypeR", [1], now, null),
-            new CacheEntry("k2", "TypeS", [2], now, null),
+            new CacheEntry("k1", "TypeR", FirstEntryPayload, now, null),
+            new CacheEntry("k2", "TypeS", SecondEntryPayload, now, null),
         ]).WaitForCompletion();
 
         // Untyped.
         var untyped = cache.Connection.GetAllKeys(null, now).ToList().WaitForValue()!;
-        await Assert.That(untyped.Count).IsEqualTo(2);
+        await Assert.That(untyped.Count).IsEqualTo(StoredKeyCount);
 
         // Typed.
         var typed = cache.Connection.GetAllKeys("TypeR", now).ToList().WaitForValue()!;
@@ -1487,10 +1230,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(typed[0]).IsEqualTo("k1");
     }
 
-    /// <summary>
-    /// Invalidate with null and non-null typeFullName exercises both ternary paths
-    /// in the Invalidate method.
-    /// </summary>
+    /// <summary>Invalidate with null and non-null typeFullName exercises both ternary paths in the Invalidate method.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Invalidate_BothNullAndNonNullType_ExercisesBothPaths()
@@ -1498,11 +1238,11 @@ public class SqlitePclRawConnectionTests
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         using var cache = CreateCache(path);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = TimeProvider.System.GetUtcNow();
         cache.Connection.Upsert([
-            new CacheEntry("i1", "TypeU", [1], now, null),
-            new CacheEntry("i2", "TypeV", [2], now, null),
-            new CacheEntry("i3", null, [3], now, null),
+            new CacheEntry("i1", "TypeU", FirstEntryPayload, now, null),
+            new CacheEntry("i2", "TypeV", SecondEntryPayload, now, null),
+            new CacheEntry("i3", null, ThirdEntryPayload, now, null),
         ]).WaitForCompletion();
 
         // Typed invalidate.
@@ -1517,35 +1257,25 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── HandlePrepareResult ───────────────────────────────────────────
-
-    /// <summary>
-    /// HandlePrepareResult with SQLITE_OK is a no-op.
-    /// </summary>
+    /// <summary>HandlePrepareResult with SQLITE_OK is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandlePrepareResult_Ok_IsNoop()
     {
-        SqlitePclRawConnection.HandlePrepareResult(0 /* SQLITE_OK */, null, null!, "SELECT 1");
+        SqlitePclRawConnection.HandlePrepareResult(SqliteOk, null, null!, "SELECT 1");
         await Task.CompletedTask;
     }
 
-    /// <summary>
-    /// HandlePrepareResult with error code disposes mapping and throws.
-    /// </summary>
+    /// <summary>HandlePrepareResult with error code disposes mapping and throws.</summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task HandlePrepareResult_Error_DisposesAndThrows()
-    {
-        await Assert.That(() =>
-            SqlitePclRawConnection.HandlePrepareResult(1 /* SQLITE_ERROR */, null, null!, "BAD SQL"))
+    public async Task HandlePrepareResult_Error_DisposesAndThrows() =>
+        await Assert.That(static () =>
+            SqlitePclRawConnection.HandlePrepareResult(SqliteError, null, null!, "BAD SQL"))
             .Throws<AkavacheSqliteException>();
-    }
 
     // ── TryRollbackAmbient static ───────────────────────────────────────
-
-    /// <summary>
-    /// TryRollbackAmbient clears the transaction flag and calls TryRollback.
-    /// </summary>
+    /// <summary>TryRollbackAmbient clears the transaction flag and calls TryRollback.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRollbackAmbient_ClearsFlag()
@@ -1557,51 +1287,47 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── Null Id upsert ───────────────────────────────────────────────
-
-    /// <summary>
-    /// Upserting a CacheEntry with null Id exercises the Id ?? string.Empty branch.
-    /// </summary>
+    /// <summary>Upserting a CacheEntry with null Id exercises the Id ?? string.Empty branch.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Upsert_NullId_UsesEmptyString()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"nullid_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        conn.Upsert([new CacheEntry(null, null, [1, 2], DateTimeOffset.UtcNow, null)]).WaitForCompletion();
+        conn.Upsert([new CacheEntry(null, null, FirstMultiBytePayload, TimeProvider.System.GetUtcNow(), null)]).WaitForCompletion();
 
         // The null Id was coalesced to empty string — verify it can be retrieved.
-        var entry = conn.Get(string.Empty, null, DateTimeOffset.UtcNow).WaitForValue();
+        var entry = conn.Get(string.Empty, null, TimeProvider.System.GetUtcNow()).WaitForValue();
         await Assert.That(entry).IsNotNull();
     }
 
     // ── ScanRows cancellation ───────────────────────────────────────────
-
-    /// <summary>
-    /// Disposing a GetAll subscription mid-scan exercises the isCancelled branch in ScanRows.
-    /// </summary>
+    /// <summary>Disposing a GetAll subscription mid-scan exercises the isCancelled branch in ScanRows.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ScanRows_DisposeMidScan_StopsEmitting()
     {
+        const int SeededRowCount = 10;
+
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"scan_cancel_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
         // Insert several rows so the scan has multiple to iterate.
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < SeededRowCount; i++)
         {
-            conn.Upsert([new CacheEntry($"k{i}", null, [(byte)i], DateTimeOffset.UtcNow, null)]).WaitForCompletion();
+            conn.Upsert([new CacheEntry($"k{i}", null, [(byte)i], TimeProvider.System.GetUtcNow(), null)]).WaitForCompletion();
         }
 
         var received = new List<string>();
         using var done = new ManualResetEventSlim(false);
 
         // Subscribe and dispose after receiving the first row.
-        var subscription = conn.GetAllKeys(null, DateTimeOffset.UtcNow).Subscribe(
+        var subscription = conn.GetAllKeys(null, TimeProvider.System.GetUtcNow()).Subscribe(
             key =>
             {
                 received.Add(key);
@@ -1615,7 +1341,7 @@ public class SqlitePclRawConnectionTests
             _ => done.Set(),
             () => done.Set());
 
-        done.Wait(TimeSpan.FromSeconds(10));
+        _ = done.Wait(FirstScannedRowTimeout);
         subscription.Dispose();
 
         // We should have received at least 1 row but possibly fewer than 10
@@ -1624,41 +1350,33 @@ public class SqlitePclRawConnectionTests
     }
 
     // ── MapStepResult ────────────────────────────────────────────────────
-
-    /// <summary>
-    /// MapStepResult with SQLITE_DONE returns SQLITE_OK.
-    /// </summary>
+    /// <summary>MapStepResult with SQLITE_DONE returns SQLITE_OK.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MapStepResult_Done_ReturnsOk()
     {
-        var result = SqlitePclRawConnection.MapStepResult(101 /* SQLITE_DONE */, null!);
-        await Assert.That(result).IsEqualTo(0 /* SQLITE_OK */);
+        var result = SqlitePclRawConnection.MapStepResult(SqliteDone, null!);
+        await Assert.That(result).IsEqualTo(SqliteOk);
     }
 
-    /// <summary>
-    /// MapStepResult with non-DONE returns the error code from the db handle.
-    /// </summary>
+    /// <summary>MapStepResult with non-DONE returns the error code from the db handle.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MapStepResult_NotDone_ReturnsErrorCode()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
         var dbPath = Path.Combine(path, $"mapstep_{Guid.NewGuid():N}.db");
-        using var conn = new SqlitePclRawConnection(dbPath, null, readOnly: false);
+        using var conn = SqlitePclRawConnection.Create(dbPath, null, readOnly: false);
         conn.CreateSchema().WaitForCompletion();
 
-        var result = SqlitePclRawConnection.MapStepResult(1 /* SQLITE_ERROR */, conn.Db);
+        var result = SqlitePclRawConnection.MapStepResult(SqliteError, conn.Db);
 
-        // sqlite3_errcode returns the last error — not SQLITE_OK.
-        await Assert.That(result).IsNotEqualTo(101 /* not SQLITE_DONE mapped to OK */);
+        // sqlite3_errcode returns the last error, so the step result is not the mapped SQLITE_DONE.
+        await Assert.That(result).IsNotEqualTo(SqliteDone);
     }
 
     // ── RunShutdownCleanup ──────────────────────────────────────────────
-
-    /// <summary>
-    /// RunShutdownCleanup disposes statements and handle when not already disposed.
-    /// </summary>
+    /// <summary>RunShutdownCleanup disposes statements and handle when not already disposed.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RunShutdownCleanup_NotDisposed_DisposesStatementsAndHandle()
@@ -1677,9 +1395,7 @@ public class SqlitePclRawConnectionTests
         await Assert.That(disposed).IsEqualTo(1);
     }
 
-    /// <summary>
-    /// RunShutdownCleanup is a no-op when already disposed.
-    /// </summary>
+    /// <summary>RunShutdownCleanup is a no-op when already disposed.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task RunShutdownCleanup_AlreadyDisposed_IsNoop()
@@ -1702,99 +1418,4 @@ public class SqlitePclRawConnectionTests
     /// <returns>A new <see cref="SqliteBlobCache"/>.</returns>
     private static SqliteBlobCache CreateCache(string path) =>
         new(Path.Combine(path, $"test_{Guid.NewGuid():N}.db"), new SystemJsonSerializer(), ImmediateScheduler.Instance);
-
-    /// <summary>
-    /// Creates the legacy V10 CacheElement table using a direct SQLite connection.
-    /// </summary>
-    /// <param name="dbPath">The database file path.</param>
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Multi line sql statement. Needs the span.")]
-    private static void CreateLegacyV10Table(string dbPath)
-    {
-        Batteries_V2.Init();
-        raw.sqlite3_open_v2(
-            dbPath,
-            out var db,
-            raw.SQLITE_OPEN_READWRITE | raw.SQLITE_OPEN_CREATE,
-            null);
-        try
-        {
-            raw.sqlite3_exec(
-                db,
-                """
-                CREATE TABLE IF NOT EXISTS "CacheElement" (
-                "Key" TEXT PRIMARY KEY, 
-                "TypeName" TEXT, 
-                "Value" BLOB, 
-                "Expiration" INTEGER, 
-                "CreatedAt" INTEGER)
-                """);
-        }
-        finally
-        {
-            db.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Inserts a row into the legacy V10 CacheElement table using a direct SQLite connection.
-    /// </summary>
-    /// <param name="dbPath">The database file path.</param>
-    /// <param name="key">The cache key.</param>
-    /// <param name="typeName">The type name, or null.</param>
-    /// <param name="value">The value blob, or null.</param>
-    /// <param name="expiration">The expiration ticks (0 = never expires).</param>
-    /// <param name="createdAt">The creation ticks.</param>
-    private static void InsertLegacyV10Row(
-        string dbPath,
-        string key,
-        string? typeName,
-        byte[]? value,
-        long expiration,
-        long createdAt = 0)
-    {
-        Batteries_V2.Init();
-        raw.sqlite3_open_v2(
-            dbPath,
-            out var db,
-            raw.SQLITE_OPEN_READWRITE,
-            null);
-        try
-        {
-            const string sql = "INSERT INTO \"CacheElement\" (\"Key\", \"TypeName\", \"Value\", \"Expiration\", \"CreatedAt\") VALUES (?, ?, ?, ?, ?)";
-            raw.sqlite3_prepare_v2(db, sql, out var stmt);
-            try
-            {
-                raw.sqlite3_bind_text(stmt, 1, key);
-                if (typeName is null)
-                {
-                    raw.sqlite3_bind_null(stmt, 2);
-                }
-                else
-                {
-                    raw.sqlite3_bind_text(stmt, 2, typeName);
-                }
-
-                if (value is null)
-                {
-                    raw.sqlite3_bind_null(stmt, 3);
-                }
-                else
-                {
-                    raw.sqlite3_bind_blob(stmt, 3, value);
-                }
-
-                raw.sqlite3_bind_int64(stmt, 4, expiration);
-                raw.sqlite3_bind_int64(stmt, 5, createdAt);
-                raw.sqlite3_step(stmt);
-            }
-            finally
-            {
-                stmt.Dispose();
-            }
-        }
-        finally
-        {
-            db.Dispose();
-        }
-    }
 }

@@ -6,44 +6,24 @@ using System.Globalization;
 
 namespace AkavacheTodoMaui.Converters;
 
-/// <summary>
-/// Converts DateTimeOffset to DateTime for DatePicker binding.
-/// </summary>
+/// <summary>Converts DateTimeOffset to DateTime for DatePicker binding.</summary>
 public class DateTimeOffsetToDateTimeConverter : IValueConverter
 {
-    /// <summary>
-    /// Converts DateTimeOffset to DateTime.
-    /// </summary>
+    /// <summary>Converts DateTimeOffset to DateTime.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>The converted value.</returns>
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is DateTimeOffset dateTimeOffset)
-        {
-            return dateTimeOffset.DateTime;
-        }
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is DateTimeOffset dateTimeOffset ? dateTimeOffset.DateTime : DateTime.Today;
 
-        return DateTime.Today;
-    }
-
-    /// <summary>
-    /// Converts DateTime back to DateTimeOffset.
-    /// </summary>
+    /// <summary>Converts DateTime back to DateTimeOffset.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>The converted value.</returns>
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not DateTime dateTime)
-        {
-            return null;
-        }
-
-        return new DateTimeOffset(dateTime);
-    }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is not DateTime dateTime ? null : new DateTimeOffset(dateTime);
 }

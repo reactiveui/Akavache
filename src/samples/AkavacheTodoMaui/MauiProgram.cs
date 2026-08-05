@@ -18,48 +18,42 @@ using Splat.Builder;
 
 namespace AkavacheTodoMaui;
 
-/// <summary>
-/// MAUI program startup configuration.
-/// </summary>
+/// <summary>MAUI program startup configuration.</summary>
 public static class MauiProgram
 {
-    /// <summary>
-    /// Creates and configures the MAUI application.
-    /// </summary>
+    /// <summary>Creates and configures the MAUI application.</summary>
     /// <returns>The configured MAUI app.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
-        builder
+        _ = builder
             .UseMauiApp<App>()
             .ConfigureFonts(static fonts =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                _ = fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                _ = fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
         // Register services
-        builder.Services.AddSingleton<NotificationService>();
-        builder.Services.AddTransient<MainViewModel>();
+        _ = builder.Services.AddSingleton<NotificationService>();
+        _ = builder.Services.AddTransient<MainViewModel>();
 
         // Configure Akavache
-        ConfigureAkavache();
+        _ = ConfigureAkavache();
 
         // Configure ReactiveUI
         Locator.CurrentMutable.RegisterViewsForViewModels(typeof(MauiProgram).Assembly);
 
 #if DEBUG
-        builder.Logging.AddDebug();
+        _ = builder.Logging.AddDebug();
 #endif
 
         return builder.Build();
     }
 
-    /// <summary>
-    /// Initialize SQLite support - use the new V11 initialization pattern.
-    /// </summary>
+    /// <summary>Initialize SQLite support - use the new V11 initialization pattern.</summary>
     /// <returns>The application builder.</returns>
     [RequiresUnreferencedCode("Serializers require types to be preserved for serialization.")]
     private static IAppBuilder ConfigureAkavache() =>

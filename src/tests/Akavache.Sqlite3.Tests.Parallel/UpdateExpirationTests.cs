@@ -9,17 +9,19 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for the UpdateExpiration functionality across all IBlobCache implementations.
-/// </summary>
+/// <summary>Tests for the UpdateExpiration functionality across all IBlobCache implementations.</summary>
 public class UpdateExpirationTests : IDisposable
 {
+    /// <summary>How far ahead a value's expiration is stamped when it is first inserted.</summary>
+    private static readonly TimeSpan OriginalExpiration = TimeSpan.FromMinutes(30);
+
+    /// <summary>How far ahead the expiration is pushed once <c>UpdateExpiration</c> has run.</summary>
+    private static readonly TimeSpan UpdatedExpiration = TimeSpan.FromHours(2);
+
     /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>
     private bool _disposed;
 
-    /// <summary>
-    /// Tests to make sure UpdateExpiration updates the expiration date without reading or writing data.
-    /// </summary>
+    /// <summary>Tests to make sure UpdateExpiration updates the expiration date without reading or writing data.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -37,8 +39,8 @@ public class UpdateExpirationTests : IDisposable
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
-            var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
-            var newExpiration = DateTimeOffset.Now.AddHours(2);
+            var originalExpiration = TimeProvider.System.GetLocalNow().Add(OriginalExpiration);
+            var newExpiration = TimeProvider.System.GetLocalNow().Add(UpdatedExpiration);
 
             // Insert the data with initial expiration
             fixture.InsertObject(key, originalData, originalExpiration).WaitForCompletion();
@@ -52,9 +54,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure UpdateExpiration with Type parameter works correctly.
-    /// </summary>
+    /// <summary>Tests to make sure UpdateExpiration with Type parameter works correctly.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -72,8 +72,8 @@ public class UpdateExpirationTests : IDisposable
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
-            var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
-            var newExpiration = DateTimeOffset.Now.AddHours(2);
+            var originalExpiration = TimeProvider.System.GetLocalNow().Add(OriginalExpiration);
+            var newExpiration = TimeProvider.System.GetLocalNow().Add(UpdatedExpiration);
 
             // Insert the data with initial expiration
             fixture.InsertObject(key, originalData, originalExpiration).WaitForCompletion();
@@ -87,9 +87,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure UpdateExpiration with multiple keys works correctly.
-    /// </summary>
+    /// <summary>Tests to make sure UpdateExpiration with multiple keys works correctly.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -107,8 +105,8 @@ public class UpdateExpirationTests : IDisposable
             // Arrange
             string[] keys = ["test-key-1", "test-key-2", "test-key-3"];
             string[] originalData = ["value-1", "value-2", "value-3"];
-            var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
-            var newExpiration = DateTimeOffset.Now.AddHours(2);
+            var originalExpiration = TimeProvider.System.GetLocalNow().Add(OriginalExpiration);
+            var newExpiration = TimeProvider.System.GetLocalNow().Add(UpdatedExpiration);
 
             // Insert the data with initial expiration
             for (var i = 0; i < keys.Length; i++)
@@ -128,9 +126,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure UpdateExpiration with TimeSpan extension method works correctly.
-    /// </summary>
+    /// <summary>Tests to make sure UpdateExpiration with TimeSpan extension method works correctly.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -148,7 +144,7 @@ public class UpdateExpirationTests : IDisposable
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
-            var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
+            var originalExpiration = TimeProvider.System.GetLocalNow().Add(OriginalExpiration);
             var extensionTime = TimeSpan.FromHours(1);
 
             // Insert the data with initial expiration
@@ -163,9 +159,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure UpdateExpiration doesn't affect non-existent keys.
-    /// </summary>
+    /// <summary>Tests to make sure UpdateExpiration doesn't affect non-existent keys.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -182,7 +176,7 @@ public class UpdateExpirationTests : IDisposable
         {
             // Arrange
             const string nonExistentKey = "non-existent-key";
-            var newExpiration = DateTimeOffset.Now.AddHours(1);
+            var newExpiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
             // Act - Should not throw when updating expiration for non-existent key
             fixture.UpdateExpiration(nonExistentKey, newExpiration).WaitForCompletion();
@@ -193,9 +187,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure UpdateExpiration can remove expiration (set to null).
-    /// </summary>
+    /// <summary>Tests to make sure UpdateExpiration can remove expiration (set to null).</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>A task to monitor the progress.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -213,7 +205,7 @@ public class UpdateExpirationTests : IDisposable
             // Arrange
             const string key = "test-key";
             const string originalData = "test-value";
-            var originalExpiration = DateTimeOffset.Now.AddMinutes(30);
+            var originalExpiration = TimeProvider.System.GetLocalNow().Add(OriginalExpiration);
 
             // Insert the data with initial expiration
             fixture.InsertObject(key, originalData, originalExpiration).WaitForCompletion();
@@ -242,7 +234,7 @@ public class UpdateExpirationTests : IDisposable
         using (var fixture = CreateBlobCache(path, serializer))
         {
             const string key = "typed-null-exp-key";
-            fixture.InsertObject(key, "value", DateTimeOffset.Now.AddMinutes(30)).WaitForCompletion();
+            fixture.InsertObject(key, "value", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
             fixture.UpdateExpiration(key, typeof(string), null).SubscribeAndComplete();
 
@@ -251,11 +243,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests that the multi-key
-    /// <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/>
-    /// accepts a null absolute expiration.
-    /// </summary>
+    /// <summary>Tests that the multi-key <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, DateTimeOffset?)"/> accepts a null absolute expiration.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task UpdateExpirationKeysWithNullExpirationShouldSucceed()
@@ -266,8 +254,8 @@ public class UpdateExpirationTests : IDisposable
         using (var fixture = CreateBlobCache(path, serializer))
         {
             string[] keys = ["multi-null-1", "multi-null-2"];
-            fixture.InsertObject(keys[0], "v1", DateTimeOffset.Now.AddMinutes(30)).WaitForCompletion();
-            fixture.InsertObject(keys[1], "v2", DateTimeOffset.Now.AddMinutes(30)).WaitForCompletion();
+            fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
+            fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
             fixture.UpdateExpiration(keys, null).SubscribeAndComplete();
 
@@ -278,11 +266,7 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests that the type-scoped multi-key
-    /// <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/>
-    /// accepts a null absolute expiration.
-    /// </summary>
+    /// <summary>Tests that the type-scoped multi-key <see cref="Sqlite3.SqliteBlobCache.UpdateExpiration(IEnumerable{string}, Type, DateTimeOffset?)"/> accepts a null absolute expiration.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task UpdateExpirationKeysWithTypeNullExpirationShouldSucceed()
@@ -293,8 +277,8 @@ public class UpdateExpirationTests : IDisposable
         using (var fixture = CreateBlobCache(path, serializer))
         {
             string[] keys = ["typed-multi-null-1", "typed-multi-null-2"];
-            fixture.InsertObject(keys[0], "v1", DateTimeOffset.Now.AddMinutes(30)).WaitForCompletion();
-            fixture.InsertObject(keys[1], "v2", DateTimeOffset.Now.AddMinutes(30)).WaitForCompletion();
+            fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
+            fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
             fixture.UpdateExpiration(keys, typeof(string), null).SubscribeAndComplete();
 
@@ -305,18 +289,14 @@ public class UpdateExpirationTests : IDisposable
         }
     }
 
-    /// <summary>
-    /// Dispose method for cleanup.
-    /// </summary>
+    /// <summary>Dispose method for cleanup.</summary>
     public void Dispose()
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Protected virtual dispose method.
-    /// </summary>
+    /// <summary>Protected virtual dispose method.</summary>
     /// <param name="disposing">Whether we're disposing.</param>
     protected virtual void Dispose(bool disposing)
     {
@@ -328,9 +308,7 @@ public class UpdateExpirationTests : IDisposable
         _disposed = true;
     }
 
-    /// <summary>
-    /// Creates a SqliteBlobCache for testing with given serializer.
-    /// </summary>
+    /// <summary>Creates a SqliteBlobCache for testing with given serializer.</summary>
     /// <param name="path">The path for the cache.</param>
     /// <param name="serializer">The serializer to use.</param>
     /// <returns>A new SqliteBlobCache instance.</returns>
@@ -346,9 +324,7 @@ public class UpdateExpirationTests : IDisposable
         return new(Path.Combine(path, fileName), serializer);
     }
 
-    /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
+    /// <summary>Sets up the test with the specified serializer type.</summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>
     /// <returns>The configured serializer instance.</returns>
     private static ISerializer SetupTestSerializer(Type? serializerType)
@@ -374,12 +350,6 @@ public class UpdateExpirationTests : IDisposable
             return new NewtonsoftSerializer();
         }
 
-        if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-
-        return null!;
+        return serializerType == typeof(SystemJsonSerializer) ? new SystemJsonSerializer() : null!;
     }
 }

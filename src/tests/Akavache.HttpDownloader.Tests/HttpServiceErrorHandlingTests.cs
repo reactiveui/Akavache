@@ -6,15 +6,11 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Skeleton tests for HttpService error handling.
-/// </summary>
+/// <summary>Skeleton tests for HttpService error handling.</summary>
 [Category("HTTP")]
 public class HttpServiceErrorHandlingTests
 {
-    /// <summary>
-    /// Ensures DownloadUrl surfaces failure via observable error channel.
-    /// </summary>
+    /// <summary>Ensures DownloadUrl surfaces failure via observable error channel.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task HttpExtensions_FetchUrl_HandlesFailure()
@@ -23,26 +19,137 @@ public class HttpServiceErrorHandlingTests
         SystemJsonSerializer serializer = new();
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         Exception? captured = null;
-        service.DownloadUrl(cache, "http://invalid").Subscribe(_ => { }, ex => captured = ex);
+        _ = service.DownloadUrl(cache, "http://invalid").Subscribe(static _ => { }, ex => captured = ex);
         await Assert.That(captured).IsNotNull();
         await Assert.That(captured).IsTypeOf<HttpRequestException>();
     }
 
-    /// <summary>
-    /// Fake implementation throwing for all calls.
-    /// </summary>
+    /// <summary>Fake implementation throwing for all calls.</summary>
     private sealed class FakeHttpService : IHttpService
     {
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => Observable.Throw<byte[]>(new HttpRequestException("Simulated failure"));
+        /// <summary>The message carried by the <see cref="HttpRequestException"/> that every download raises.</summary>
+        private const string FailureMessage = "Simulated failure";
 
         /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => Observable.Throw<byte[]>(new HttpRequestException("Simulated failure"));
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url) =>
+            DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => Observable.Throw<byte[]>(new HttpRequestException("Simulated failure"));
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method) =>
+            DownloadUrl(blobCache, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method = null, IEnumerable<KeyValuePair<string, string>>? headers = null, bool fetchAlways = false, DateTimeOffset? absoluteExpiration = null) => Observable.Throw<byte[]>(new HttpRequestException("Simulated failure"));
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
+            DownloadUrl(blobCache, url, method, headers, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
+            DownloadUrl(blobCache, url, method, headers, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(
+            IBlobCache blobCache,
+            string url,
+            HttpMethod? method,
+            IEnumerable<KeyValuePair<string, string>>? headers,
+            bool fetchAlways,
+            DateTimeOffset? absoluteExpiration) =>
+            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string url, bool fetchAlways) =>
+            DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url) =>
+            DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method) =>
+            DownloadUrl(blobCache, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
+            DownloadUrl(blobCache, url, method, headers, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
+            DownloadUrl(blobCache, url, method, headers, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(
+            IBlobCache blobCache,
+            Uri url,
+            HttpMethod? method,
+            IEnumerable<KeyValuePair<string, string>>? headers,
+            bool fetchAlways,
+            DateTimeOffset? absoluteExpiration) =>
+            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, Uri url, bool fetchAlways) =>
+            DownloadUrl(blobCache, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url) =>
+            DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method) =>
+            DownloadUrl(blobCache, key, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
+            DownloadUrl(blobCache, key, url, method, headers, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
+            DownloadUrl(blobCache, key, url, method, headers, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(
+            IBlobCache blobCache,
+            string key,
+            string url,
+            HttpMethod? method,
+            IEnumerable<KeyValuePair<string, string>>? headers,
+            bool fetchAlways,
+            DateTimeOffset? absoluteExpiration) =>
+            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, string url, bool fetchAlways) =>
+            DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url) =>
+            DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method) =>
+            DownloadUrl(blobCache, key, url, method, (IEnumerable<KeyValuePair<string, string>>?)null, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers) =>
+            DownloadUrl(blobCache, key, url, method, headers, false, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, HttpMethod? method, IEnumerable<KeyValuePair<string, string>>? headers, bool fetchAlways) =>
+            DownloadUrl(blobCache, key, url, method, headers, fetchAlways, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(
+            IBlobCache blobCache,
+            string key,
+            Uri url,
+            HttpMethod? method,
+            IEnumerable<KeyValuePair<string, string>>? headers,
+            bool fetchAlways,
+            DateTimeOffset? absoluteExpiration) =>
+            Observable.Throw<byte[]>(new HttpRequestException(FailureMessage));
+
+        /// <inheritdoc/>
+        public IObservable<byte[]> DownloadUrl(IBlobCache blobCache, string key, Uri url, bool fetchAlways) =>
+            DownloadUrl(blobCache, key, url, (HttpMethod?)null, (IEnumerable<KeyValuePair<string, string>>?)null, fetchAlways, (DateTimeOffset?)null);
     }
 }

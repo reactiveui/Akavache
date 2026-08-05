@@ -6,16 +6,11 @@ using Akavache.Core.Observables;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="WhereSelectObservable{TIn, TOut}"/> covering OnError and
-/// OnCompleted pass-through paths.
-/// </summary>
+/// <summary>Tests for <see cref="WhereSelectObservable{TIn, TOut}"/> covering OnError and OnCompleted pass-through paths.</summary>
 [Category("Akavache")]
 public class WhereSelectObservableTests
 {
-    /// <summary>
-    /// OnError from the source observable is passed through to the downstream observer.
-    /// </summary>
+    /// <summary>OnError from the source observable is passed through to the downstream observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task OnError_FromSource_IsPassedThrough()
@@ -31,8 +26,8 @@ public class WhereSelectObservableTests
             static _ => true,
             static x => x.ToString());
 
-        observable.Subscribe(Observer.Create<string>(
-            _ => { },
+        _ = observable.Subscribe(Observer.Create<string>(
+            static _ => { },
             ex => caught = ex,
             () => completed = true));
 
@@ -40,9 +35,7 @@ public class WhereSelectObservableTests
         await Assert.That(completed).IsFalse();
     }
 
-    /// <summary>
-    /// OnCompleted from the source observable is passed through to the downstream observer.
-    /// </summary>
+    /// <summary>OnCompleted from the source observable is passed through to the downstream observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task OnCompleted_FromSource_IsPassedThrough()
@@ -56,17 +49,15 @@ public class WhereSelectObservableTests
             static _ => true,
             static x => x.ToString());
 
-        observable.Subscribe(Observer.Create<string>(
-            _ => { },
-            _ => { },
+        _ = observable.Subscribe(Observer.Create<string>(
+            static _ => { },
+            static _ => { },
             () => completed = true));
 
         await Assert.That(completed).IsTrue();
     }
 
-    /// <summary>
-    /// Predicate exception routes to OnError on the downstream observer (lines 59-62).
-    /// </summary>
+    /// <summary>Predicate exception routes to OnError on the downstream observer (lines 59-62).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task OnNext_PredicateThrows_RoutesToOnError()
@@ -80,18 +71,16 @@ public class WhereSelectObservableTests
             static _ => throw new InvalidOperationException("pred-boom"),
             static x => x);
 
-        observable.Subscribe(Observer.Create<int>(
-            _ => { },
+        _ = observable.Subscribe(Observer.Create<int>(
+            static _ => { },
             ex => caught = ex,
-            () => { }));
+            static () => { }));
 
         await Assert.That(caught).IsNotNull();
         await Assert.That(caught!.Message).IsEqualTo("pred-boom");
     }
 
-    /// <summary>
-    /// Selector exception routes to OnError on the downstream observer (lines 70-73).
-    /// </summary>
+    /// <summary>Selector exception routes to OnError on the downstream observer (lines 70-73).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task OnNext_SelectorThrows_RoutesToOnError()
@@ -105,10 +94,10 @@ public class WhereSelectObservableTests
             static _ => true,
             static _ => throw new InvalidOperationException("sel-boom"));
 
-        observable.Subscribe(Observer.Create<int>(
-            _ => { },
+        _ = observable.Subscribe(Observer.Create<int>(
+            static _ => { },
             ex => caught = ex,
-            () => { }));
+            static () => { }));
 
         await Assert.That(caught).IsNotNull();
         await Assert.That(caught!.Message).IsEqualTo("sel-boom");

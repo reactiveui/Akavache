@@ -8,10 +8,7 @@ using Akavache.Tests.TestBases;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for object bulk operations associated with the <see cref="SqliteBlobCache"/> class.
-/// Uses <see cref="InMemoryAkavacheConnection"/> so native SQLite is not touched.
-/// </summary>
+/// <summary>Tests for object bulk operations associated with the <see cref="SqliteBlobCache"/> class. Uses <see cref="InMemoryAkavacheConnection"/> so native SQLite is not touched.</summary>
 [InheritsTests]
 public class SqliteBlobCacheObjectBulkOperationsTests : ObjectBulkOperationsTestBase
 {

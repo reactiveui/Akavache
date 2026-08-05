@@ -15,22 +15,15 @@ namespace Akavache.Sqlite3;
 /// SQLite statement internally.
 /// </summary>
 /// <typeparam name="T">The row type.</typeparam>
-internal sealed class SqliteRowStreamOperation<T> : ISqliteOperation
+/// <param name="body">The scan body.</param>
+/// <param name="stream">The stream to emit into.</param>
+internal sealed class SqliteRowStreamOperation<T>(Action<SqlitePclRawConnection, Action<T>, Func<bool>> body, SqliteRowObservable<T> stream) : ISqliteOperation
 {
     /// <summary>The caller-supplied scan body.</summary>
-    private readonly Action<SqlitePclRawConnection, Action<T>, Func<bool>> _body;
+    private readonly Action<SqlitePclRawConnection, Action<T>, Func<bool>> _body = body;
 
     /// <summary>The row-streaming observable the worker emits into.</summary>
-    private readonly SqliteRowObservable<T> _stream;
-
-    /// <summary>Initializes a new instance of the <see cref="SqliteRowStreamOperation{T}"/> class.</summary>
-    /// <param name="body">The scan body.</param>
-    /// <param name="stream">The stream to emit into.</param>
-    public SqliteRowStreamOperation(Action<SqlitePclRawConnection, Action<T>, Func<bool>> body, SqliteRowObservable<T> stream)
-    {
-        _body = body;
-        _stream = stream;
-    }
+    private readonly SqliteRowObservable<T> _stream = stream;
 
     /// <inheritdoc/>
     public bool IsCoalescable => false;

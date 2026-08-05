@@ -81,6 +81,9 @@
 
   <ItemGroup>
     <Using Remove="Foundation" />
+    <!-- System.Linq is not implicitly imported: LINQ on a cache hot path should be a deliberate,
+         visible `using`, not something that compiles because the SDK imported it for you. -->
+    <Using Remove="System.Linq" />
     <Using Include="System.Reactive"/>
     <Using Include="System.Reactive.Concurrency"/>
     <Using Include="System.Reactive.Linq"/>
@@ -88,8 +91,36 @@
     <Using Include="System.Text"/>
   </ItemGroup>
 
+  <!-- Alias Lock to the dedicated System.Threading.Lock on .NET 9+ (faster EnterScope fast path),
+       and to a plain object elsewhere (the lock statement falls back to Monitor). Declaration sites
+       stay identical across TFMs; only the bound type changes. -->
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+    <Using Include="System.Threading.Lock" Alias="Lock" />
+  </ItemGroup>
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+    <Using Include="System.Object" Alias="Lock" />
+  </ItemGroup>
+
+  <!-- ArgumentExceptionHelper.ThrowIfNull(...) resolves straight to the runtime's optimized
+       ArgumentNullException.ThrowIfNull on .NET 8.0+, and to the inline ArgumentValidation polyfill on
+       older targets. Call sites stay identical across TFMs; only the bound symbol changes. Guards that
+       ArgumentNullException does not carry (ThrowIfNullOrWhiteSpace/ThrowIf/EnsureNotNull/...) name
+       ArgumentValidation directly; it forwards to the framework throw-helpers where they exist. -->
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <Using Include="System.ArgumentNullException" Alias="ArgumentExceptionHelper" />
+  </ItemGroup>
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <Using Include="Akavache.Helpers.ArgumentValidation" Alias="ArgumentExceptionHelper" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- TimeProvider ships in the framework from net8.0; .NET Framework needs the backport so the
+       cache can take an injectable clock instead of reading the machine clock directly. -->
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <PackageReference Include="Microsoft.Bcl.TimeProvider" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
@@ -122,11 +153,28 @@
 
   <ItemGroup>
     <PackageReference Include="MinVer" PrivateAssets="all" />
-    <PackageReference Include="stylecop.analyzers" PrivateAssets="all" />
+    <PackageReference Include="StyleSharp.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="PerformanceSharp.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="SecuritySharp.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
+    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
     <PackageReference Include="Blazor.Common.Analyzers" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+
+  <PropertyGroup>
+    <!-- Public-API tracking: one always-current PublicAPI.txt per TFM. Regenerate by running
+         `dotnet format analyzers` over the project for a single target framework, restricted to the
+         PAS0001 and PAS0003 diagnostics at severity info. -->
+    <TrackPublicApi Condition="'$(TrackPublicApi)' == ''">true</TrackPublicApi>
+    <TrackPublicApi Condition="'$(IsTestProject)' == 'true'">false</TrackPublicApi>
+    <!-- The WPF markup pass generates '<Project>_<hash>_wpftmp.csproj' in the real project's
+         directory, so it resolves the same baseline path and would overwrite it. -->
+    <TrackPublicApi Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">false</TrackPublicApi>
+    <EnablePublicApiBaseline>$(TrackPublicApi)</EnablePublicApiBaseline>
+  </PropertyGroup>
+  <!-- The package's own targets resolve PublicAPI/$(TargetFramework)/PublicAPI.txt per inner build
+       and add it to @(AdditionalFiles), so multi-targeting needs no wiring here. -->
+  <ItemGroup Condition="'$(TrackPublicApi)' == 'true'">
+    <PackageReference Include="PublicApiSharp.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 </Project>

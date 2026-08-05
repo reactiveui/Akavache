@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
-using Akavache.Helpers;
 
 #if ENCRYPTED
 namespace Akavache.EncryptedSqlite3;
@@ -51,11 +50,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
     /// / <see cref="SetError"/>, so every read-modify-write happens under this lock.
     /// On net9+ this is a first-class <c>System.Threading.Lock</c>.
     /// </summary>
-#if NET9_0_OR_GREATER
     private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
 
     /// <summary>The active subscriber, or <see langword="null"/> if nobody is waiting.</summary>
     private IObserver<T>? _observer;
@@ -71,41 +66,6 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
 
     /// <summary>Set to <see langword="true"/> once <see cref="Subscribe"/> has been called — enforces the single-subscriber contract.</summary>
     private bool _subscribed;
-
-    /// <summary>
-    /// Signals success. Invoked by the producer (the sqlite worker thread) with the
-    /// result of the work item. If a subscriber is already waiting it receives
-    /// <c>OnNext</c>+<c>OnCompleted</c> inline; otherwise the value is stashed for the
-    /// next <see cref="Subscribe"/> call to replay.
-    /// </summary>
-    /// <param name="value">The result value to publish.</param>
-    public void SetResult(T value)
-    {
-        IObserver<T>? observer;
-        lock (_gate)
-        {
-            observer = TryTransitionToSuccess(ref _state, ref _value, ref _observer, value);
-        }
-
-        DeliverResult(observer, value);
-    }
-
-    /// <summary>
-    /// Signals failure. Invoked by the producer when the work item throws. If a
-    /// subscriber is already waiting it receives <c>OnError</c> inline; otherwise the
-    /// exception is stashed for the next <see cref="Subscribe"/> call to replay.
-    /// </summary>
-    /// <param name="error">The exception to publish.</param>
-    public void SetError(Exception error)
-    {
-        IObserver<T>? observer;
-        lock (_gate)
-        {
-            observer = TryTransitionToError(ref _state, ref _error, ref _observer, error);
-        }
-
-        observer?.OnError(error);
-    }
 
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<T> observer)
@@ -214,7 +174,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
         if (subscribed)
         {
             throw new InvalidOperationException(
-                $"{nameof(SqliteReplyObservable<T>)} only supports a single subscriber.");
+                $"{nameof(SqliteReplyObservable<>)} only supports a single subscriber.");
         }
 
         subscribed = true;
@@ -230,9 +190,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
         return (s, v, e);
     }
 
-    /// <summary>
-    /// Delivers a success result to the observer if it is not null.
-    /// </summary>
+    /// <summary>Delivers a success result to the observer if it is not null.</summary>
     /// <param name="observer">The observer, or null if no subscriber was attached.</param>
     /// <param name="value">The result value.</param>
     internal static void DeliverResult(IObserver<T>? observer, T value)
@@ -246,9 +204,7 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
         observer.OnCompleted();
     }
 
-    /// <summary>
-    /// Replays the already-captured terminal state to <paramref name="observer"/>.
-    /// </summary>
+    /// <summary>Replays the already-captured terminal state to <paramref name="observer"/>.</summary>
     /// <param name="observer">The subscriber to notify.</param>
     /// <param name="state">The terminal state (<see cref="StateSuccess"/> or <see cref="StateError"/>).</param>
     /// <param name="value">The captured value, valid when <paramref name="state"/> is <see cref="StateSuccess"/>.</param>
@@ -263,5 +219,40 @@ internal sealed class SqliteReplyObservable<T> : IObservable<T>
         }
 
         observer.OnError(error!);
+    }
+
+    /// <summary>
+    /// Signals success. Invoked by the producer (the sqlite worker thread) with the
+    /// result of the work item. If a subscriber is already waiting it receives
+    /// <c>OnNext</c>+<c>OnCompleted</c> inline; otherwise the value is stashed for the
+    /// next <see cref="Subscribe"/> call to replay.
+    /// </summary>
+    /// <param name="value">The result value to publish.</param>
+    internal void SetResult(T value)
+    {
+        IObserver<T>? observer;
+        lock (_gate)
+        {
+            observer = TryTransitionToSuccess(ref _state, ref _value, ref _observer, value);
+        }
+
+        DeliverResult(observer, value);
+    }
+
+    /// <summary>
+    /// Signals failure. Invoked by the producer when the work item throws. If a
+    /// subscriber is already waiting it receives <c>OnError</c> inline; otherwise the
+    /// exception is stashed for the next <see cref="Subscribe"/> call to replay.
+    /// </summary>
+    /// <param name="error">The exception to publish.</param>
+    internal void SetError(Exception error)
+    {
+        IObserver<T>? observer;
+        lock (_gate)
+        {
+            observer = TryTransitionToError(ref _state, ref _error, ref _observer, error);
+        }
+
+        observer?.OnError(error);
     }
 }

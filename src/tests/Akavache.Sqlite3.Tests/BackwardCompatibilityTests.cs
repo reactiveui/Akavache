@@ -7,9 +7,7 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for backward compatibility scenarios, especially for mobile platforms.
-/// </summary>
+/// <summary>Tests for backward compatibility scenarios, especially for mobile platforms.</summary>
 [Category("Akavache")]
 public class BackwardCompatibilityTests
 {
@@ -44,9 +42,7 @@ public class BackwardCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Verifies that the new pattern with explicit WithSqliteProvider() works.
-    /// </summary>
+    /// <summary>Verifies that the new pattern with explicit WithSqliteProvider() works.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task WithSqliteProvider_ThenDefaults_ShouldWork()
@@ -64,8 +60,8 @@ public class BackwardCompatibilityTests
                 CacheDatabase.Initialize<SystemJsonSerializer>(
                     static builder =>
                     {
-                        builder.WithSqliteProvider();
-                        builder.WithSqliteDefaults();
+                        _ = builder.WithSqliteProvider();
+                        _ = builder.WithSqliteDefaults();
                     },
                     testAppName);
             }).ThrowsNothing();
@@ -77,14 +73,10 @@ public class BackwardCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Test helper extension to expose internal state for testing.
-    /// </summary>
+    /// <summary>Test helper extension to expose internal state for testing.</summary>
     private static class AkavacheBuilderTestExtensions
     {
-        /// <summary>
-        /// Reset the SQLite provider state for testing purposes.
-        /// </summary>
+        /// <summary>Reset the SQLite provider state for testing purposes.</summary>
         public static void ResetSqliteProvider() =>
             Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
     }

@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,10 +13,8 @@ namespace Akavache.NewtonsoftJson;
 /// </summary>
 internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
 {
-    /// <summary>
-    /// Gets the default instance of the DateTimeOffsetConverter.
-    /// </summary>
-    public static NewtonsoftDateTimeOffsetTickConverter Default { get; } = new();
+    /// <summary>Gets the default instance of the DateTimeOffsetConverter.</summary>
+    internal static NewtonsoftDateTimeOffsetTickConverter Default { get; } = new();
 
     /// <inheritdoc/>
     public override bool CanConvert(Type objectType) => objectType == typeof(DateTimeOffset) || objectType == typeof(DateTimeOffset?);
@@ -77,10 +74,7 @@ internal class NewtonsoftDateTimeOffsetTickConverter : JsonConverter
         writer.WriteEndObject();
     }
 
-    /// <summary>
-    /// Reads a long-valued property from <paramref name="jobject"/>, returning
-    /// <c>0</c> when the property is missing.
-    /// </summary>
+    /// <summary>Reads a long-valued property from <paramref name="jobject"/>, returning <c>0</c> when the property is missing.</summary>
     /// <param name="jobject">The JObject to read from.</param>
     /// <param name="propertyName">The property name to look up.</param>
     /// <returns>The long value, or <c>0</c> when the property is not present.</returns>

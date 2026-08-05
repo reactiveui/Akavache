@@ -18,6 +18,21 @@ namespace Akavache.Tests.Helpers;
 /// </summary>
 public sealed class TestHttpServer : IDisposable
 {
+    /// <summary>Content type served when a caller does not name one.</summary>
+    private const string DefaultContentType = "text/html";
+
+    /// <summary>Content type used for plain-text canned responses.</summary>
+    private const string PlainTextContentType = "text/plain";
+
+    /// <summary>How long dispose waits for the accept loop to unwind, in milliseconds.</summary>
+    private const int ServerShutdownTimeoutMilliseconds = 5_000;
+
+    /// <summary>Read and write timeout applied to each accepted connection, in milliseconds.</summary>
+    private const int ConnectionIoTimeoutMilliseconds = 5_000;
+
+    /// <summary>Size of the buffer used to read a single request's header block.</summary>
+    private const int RequestBufferSize = 4096;
+
     /// <summary>The TCP listener accepting incoming test connections.</summary>
     private readonly TcpListener _listener;
 
@@ -33,10 +48,7 @@ public sealed class TestHttpServer : IDisposable
     /// <summary>Indicates whether the server has already been disposed.</summary>
     private bool _disposed;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestHttpServer"/> class,
-    /// binding to an ephemeral port on the loopback interface.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="TestHttpServer"/> class, binding to an ephemeral port on the loopback interface.</summary>
     public TestHttpServer()
     {
         _cancellationTokenSource = new();
@@ -48,35 +60,46 @@ public sealed class TestHttpServer : IDisposable
         var port = ((IPEndPoint)_listener.LocalEndpoint).Port;
         BaseUrl = $"http://localhost:{port}/";
 
-        _serverTask = Task.Run(() => AcceptLoopAsync(_cancellationTokenSource.Token));
+        var cancellationToken = _cancellationTokenSource.Token;
+        _serverTask = Task.Run(() => AcceptLoopAsync(cancellationToken), cancellationToken);
     }
 
-    /// <summary>
-    /// Gets the base URL of the test server.
-    /// </summary>
+    /// <summary>Gets the base URL of the test server.</summary>
     public string BaseUrl { get; }
 
-    /// <summary>
-    /// Sets up a response for a specific path.
-    /// </summary>
+    /// <summary>Gets the blank-line byte sequence that terminates an HTTP header block.</summary>
+    private static ReadOnlySpan<byte> HeaderTerminator => "\r\n\r\n"u8;
+
+    /// <summary>Sets up an HTML response for a specific path.</summary>
+    /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
+    /// <param name="content">The content to return.</param>
+    public void SetupResponse(string path, string content) =>
+        SetupResponse(path, content, HttpStatusCode.OK, DefaultContentType);
+
+    /// <summary>Sets up an HTML response with an explicit status code for a specific path.</summary>
+    /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
+    /// <param name="content">The content to return.</param>
+    /// <param name="statusCode">The HTTP status code to return.</param>
+    public void SetupResponse(string path, string content, HttpStatusCode statusCode) =>
+        SetupResponse(path, content, statusCode, DefaultContentType);
+
+    /// <summary>Sets up a response for a specific path.</summary>
     /// <param name="path">The path to respond to (e.g., "/html", "/json").</param>
     /// <param name="content">The content to return.</param>
     /// <param name="statusCode">The HTTP status code to return.</param>
     /// <param name="contentType">The content type header.</param>
-    public void SetupResponse(string path, string content, HttpStatusCode statusCode = HttpStatusCode.OK, string contentType = "text/html") =>
+    public void SetupResponse(string path, string content, HttpStatusCode statusCode, string contentType) =>
         _responses[path] = new(content, statusCode, contentType);
 
-    /// <summary>
-    /// Sets up default responses that mimic httpbin.org behaviour.
-    /// </summary>
+    /// <summary>Sets up default responses that mimic httpbin.org behaviour.</summary>
     public void SetupDefaultResponses()
     {
         SetupResponse("/html", "<html><head><title>Test HTML</title></head><body><h1>Test Content</h1></body></html>");
         SetupResponse("/json", "{\"key\": \"value\", \"test\": true}", HttpStatusCode.OK, "application/json");
         SetupResponse("/user-agent", "{\"user-agent\": \"test-client\"}", HttpStatusCode.OK, "application/json");
-        SetupResponse("/status/200", "OK", HttpStatusCode.OK, "text/plain");
-        SetupResponse("/status/404", "Not Found", HttpStatusCode.NotFound, "text/plain");
-        SetupResponse("/status/500", "Internal Server Error", HttpStatusCode.InternalServerError, "text/plain");
+        SetupResponse("/status/200", "OK", HttpStatusCode.OK, PlainTextContentType);
+        SetupResponse("/status/404", "Not Found", HttpStatusCode.NotFound, PlainTextContentType);
+        SetupResponse("/status/500", "Internal Server Error", HttpStatusCode.InternalServerError, PlainTextContentType);
     }
 
     /// <inheritdoc/>
@@ -95,16 +118,22 @@ public sealed class TestHttpServer : IDisposable
         {
             _listener.Stop();
         }
-        catch
+        catch (SocketException)
         {
-            // Best-effort: listener may already be in a tearing-down state.
+            // Best-effort: the listening socket is already tearing down.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Best-effort: the listener has already released its socket.
         }
 
         _listener.Dispose();
 
         try
         {
-            _serverTask.Wait(TimeSpan.FromSeconds(5));
+            // CancellationToken.None: this wait exists to observe the cancellation already
+            // requested above, so cancelling the wait itself would defeat the purpose.
+            _ = _serverTask.Wait(ServerShutdownTimeoutMilliseconds, CancellationToken.None);
         }
         catch (AggregateException)
         {
@@ -122,11 +151,11 @@ public sealed class TestHttpServer : IDisposable
     /// <returns>The request path, or null if the request could not be parsed.</returns>
     private static async Task<string?> ReadRequestPathAsync(NetworkStream stream, CancellationToken cancellationToken)
     {
-        var buffer = new byte[4096];
+        var buffer = new byte[RequestBufferSize];
         var total = 0;
         while (total < buffer.Length)
         {
-            var read = await stream.ReadAsync(buffer.AsMemory(total, buffer.Length - total), cancellationToken).ConfigureAwait(false);
+            var read = await stream.ReadAsync(buffer.AsMemory(total), cancellationToken).ConfigureAwait(false);
             if (read == 0)
             {
                 break;
@@ -147,7 +176,7 @@ public sealed class TestHttpServer : IDisposable
                 return null;
             }
 
-            var firstLine = request.Substring(0, firstLineEnd);
+            var firstLine = request[..firstLineEnd];
             var parts = firstLine.Split(' ');
             if (parts.Length < 2)
             {
@@ -156,7 +185,7 @@ public sealed class TestHttpServer : IDisposable
 
             var target = parts[1];
             var queryStart = target.IndexOf('?');
-            return queryStart >= 0 ? target.Substring(0, queryStart) : target;
+            return queryStart >= 0 ? target[..queryStart] : target;
         }
 
         return null;
@@ -166,18 +195,8 @@ public sealed class TestHttpServer : IDisposable
     /// <param name="buffer">The buffer to scan.</param>
     /// <param name="length">The valid length of the buffer.</param>
     /// <returns>The index of the double CRLF, or -1 if not found.</returns>
-    private static int IndexOfDoubleCrlf(byte[] buffer, int length)
-    {
-        for (var i = 0; i + 3 < length; i++)
-        {
-            if (buffer[i] == (byte)'\r' && buffer[i + 1] == (byte)'\n' && buffer[i + 2] == (byte)'\r' && buffer[i + 3] == (byte)'\n')
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
+    private static int IndexOfDoubleCrlf(byte[] buffer, int length) =>
+        buffer.AsSpan(0, length).IndexOf(HeaderTerminator);
 
     /// <summary>Writes a canned HTTP response to the stream.</summary>
     /// <param name="stream">The network stream to write to.</param>
@@ -190,11 +209,7 @@ public sealed class TestHttpServer : IDisposable
         var statusCode = (int)response.StatusCode;
         var reasonPhrase = response.StatusCode.ToString();
         var headers =
-            $"HTTP/1.1 {statusCode} {reasonPhrase}\r\n" +
-            $"Content-Type: {response.ContentType}; charset=utf-8\r\n" +
-            $"Content-Length: {body.Length}\r\n" +
-            "Connection: close\r\n" +
-            "\r\n";
+            $"{$"HTTP/1.1 {statusCode} {reasonPhrase}\r\n"}{$"Content-Type: {response.ContentType}; charset=utf-8\r\n"}{$"Content-Length: {body.Length}\r\n"}Connection: close\r\n\r\n";
         var headerBytes = Encoding.ASCII.GetBytes(headers);
 
         await stream.WriteAsync(headerBytes, cancellationToken).ConfigureAwait(false);
@@ -243,8 +258,8 @@ public sealed class TestHttpServer : IDisposable
             {
                 client.NoDelay = true;
                 await using var stream = client.GetStream();
-                stream.ReadTimeout = 5_000;
-                stream.WriteTimeout = 5_000;
+                stream.ReadTimeout = ConnectionIoTimeoutMilliseconds;
+                stream.WriteTimeout = ConnectionIoTimeoutMilliseconds;
 
                 var path = await ReadRequestPathAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (path is null)
@@ -254,15 +269,30 @@ public sealed class TestHttpServer : IDisposable
 
                 var response = _responses.TryGetValue(path, out var configured)
                     ? configured
-                    : new("Not Found", HttpStatusCode.NotFound, "text/plain");
+                    : new("Not Found", HttpStatusCode.NotFound, PlainTextContentType);
 
                 await WriteResponseAsync(stream, response, cancellationToken).ConfigureAwait(false);
             }
         }
-        catch
+        catch (IOException)
         {
-            // Tests don't care about per-connection failures; the unit under test
-            // will surface the resulting HTTP error.
+            // The peer hung up or timed out mid-exchange; the unit under test surfaces the resulting HTTP error.
+        }
+        catch (SocketException)
+        {
+            // Same, when the failure surfaces from the socket rather than the stream wrapper.
+        }
+        catch (ObjectDisposedException)
+        {
+            // The server was disposed while this connection was still being serviced.
+        }
+        catch (OperationCanceledException)
+        {
+            // Shutdown was requested; abandoning this connection is the correct response.
+        }
+        catch (InvalidOperationException)
+        {
+            // The client disconnected before a stream could be obtained from it.
         }
     }
 

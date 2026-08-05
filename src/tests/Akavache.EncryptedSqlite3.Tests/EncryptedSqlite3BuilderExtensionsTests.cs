@@ -11,24 +11,27 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for EncryptedSqlite3.AkavacheBuilderExtensions.
-/// </summary>
+/// <summary>Tests for EncryptedSqlite3.AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]
 public class EncryptedSqlite3BuilderExtensionsTests
 {
-    /// <summary>
-    /// Tests WithEncryptedSqliteProvider() throws on null builder.
-    /// </summary>
+    /// <summary>Password supplied to argument-validation tests, where the value never reaches a database.</summary>
+    private const string PlaceholderPassword = "password";
+
+    /// <summary>Password used when a test actually opens an encrypted database file.</summary>
+    private const string DatabasePassword = "test_password";
+
+    /// <summary>Name of the user-account cache created through the encrypted builder extensions.</summary>
+    private const string UserAccountCacheName = "UserAccount";
+
+    /// <summary>Tests WithEncryptedSqliteProvider() throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithEncryptedSqliteProviderShouldThrowOnNullBuilder() =>
         await Assert.That(static () => EncryptedSqlite3.AkavacheBuilderExtensions.WithEncryptedSqliteProvider(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithEncryptedSqliteProvider() initializes the SQLite provider.
-    /// </summary>
+    /// <summary>Tests WithEncryptedSqliteProvider() initializes the SQLite provider.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithEncryptedSqliteProviderShouldInitialize()
@@ -39,45 +42,37 @@ public class EncryptedSqlite3BuilderExtensionsTests
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Tests WithEncryptedSqliteProvider() is idempotent (second call is a no-op).
-    /// </summary>
+    /// <summary>Tests WithEncryptedSqliteProvider() is idempotent (second call is a no-op).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithEncryptedSqliteProviderShouldBeIdempotent()
     {
         EncryptedSqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("WithEncryptedSqliteProviderIdempotent");
-        builder.WithEncryptedSqliteProvider();
+        _ = builder.WithEncryptedSqliteProvider();
         var result = builder.WithEncryptedSqliteProvider();
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Tests WithSqliteDefaults(password) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults(password) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => EncryptedSqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(null!, "password"))
+        await Assert.That(static () => EncryptedSqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(null!, PlaceholderPassword))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSqliteDefaults(password) throws when no serializer is registered.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults(password) throws when no serializer is registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldThrowWhenNoSerializer()
     {
         EncryptedSqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("WithSqliteDefaultsNoSerializer");
-        await Assert.That(() => builder.WithSqliteDefaults("password"))
+        await Assert.That(() => builder.WithSqliteDefaults(PlaceholderPassword))
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests WithSqliteDefaults(password) creates encrypted caches.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults(password) creates encrypted caches.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldCreateEncryptedCaches()
@@ -89,7 +84,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
                 .WithApplicationName($"WithSqliteDefaultsEncryptedTest_{Guid.NewGuid():N}")
                 .WithSerializer<SystemJsonSerializer>();
 
-            var result = builder.WithSqliteDefaults("test_password");
+            var result = builder.WithSqliteDefaults(DatabasePassword);
 
             await Assert.That(result).IsSameReferenceAs(builder);
             await Assert.That(builder.UserAccount).IsNotNull();
@@ -114,9 +109,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests CreateEncryptedSqliteCache throws on empty cache name.
-    /// </summary>
+    /// <summary>Tests CreateEncryptedSqliteCache throws on empty cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldThrowOnEmptyName()
@@ -125,13 +118,11 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithApplicationName("CreateEncryptedSqliteCacheEmptyName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(string.Empty, builder, "password"))
+        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(string.Empty, builder, PlaceholderPassword))
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests CreateEncryptedSqliteCache throws when no serializer.
-    /// </summary>
+    /// <summary>Tests CreateEncryptedSqliteCache throws when no serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldThrowWhenNoSerializer()
@@ -139,13 +130,11 @@ public class EncryptedSqlite3BuilderExtensionsTests
         var builder = CacheDatabase.CreateBuilder()
             .WithApplicationName("CreateEncryptedSqliteCacheNoSerializer");
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("UserAccount", builder, "password"))
+        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, PlaceholderPassword))
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests CreateEncryptedSqliteCache throws on whitespace cache name.
-    /// </summary>
+    /// <summary>Tests CreateEncryptedSqliteCache throws on whitespace cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldThrowOnWhitespaceName()
@@ -155,13 +144,11 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithApplicationName("CreateEncryptedSqliteCacheWhitespaceName")
             .WithSerializer<SystemJsonSerializer>();
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("   ", builder, "password"))
+        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("   ", builder, PlaceholderPassword))
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests CreateEncryptedSqliteCache happy path returns a valid encrypted cache.
-    /// </summary>
+    /// <summary>Tests CreateEncryptedSqliteCache happy path returns a valid encrypted cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldReturnValidCache()
@@ -172,7 +159,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithSerializer<SystemJsonSerializer>()
             .WithEncryptedSqliteProvider();
 
-        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("UserAccount", builder, "test_password");
+        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -185,9 +172,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests CreateEncryptedSqliteCache propagates ForcedDateTimeKind from the builder.
-    /// </summary>
+    /// <summary>Tests CreateEncryptedSqliteCache propagates ForcedDateTimeKind from the builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldPropagateForcedDateTimeKind()
@@ -199,7 +184,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithEncryptedSqliteProvider()
             .UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("UserAccount", builder, "test_password");
+        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -211,9 +196,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests CreateEncryptedSqliteCache with the Legacy file location option.
-    /// </summary>
+    /// <summary>Tests CreateEncryptedSqliteCache with the Legacy file location option.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldSupportLegacyFileLocation()
@@ -225,7 +208,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithEncryptedSqliteProvider()
             .WithLegacyFileLocation();
 
-        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("UserAccount", builder, "test_password");
+        var cache = EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, DatabasePassword);
 
         try
         {
@@ -237,9 +220,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests WithSqliteDefaults(password) propagates ForcedDateTimeKind to every cache it creates.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults(password) propagates ForcedDateTimeKind to every cache it creates.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldPropagateForcedDateTimeKindToAllCaches()
@@ -250,7 +231,7 @@ public class EncryptedSqlite3BuilderExtensionsTests
             .WithSerializer<SystemJsonSerializer>()
             .UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        builder.WithSqliteDefaults("test_password");
+        _ = builder.WithSqliteDefaults(DatabasePassword);
 
         try
         {
@@ -290,34 +271,21 @@ public class EncryptedSqlite3BuilderExtensionsTests
     {
         EncryptedSqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         SystemJsonSerializer serializer = new();
-        FakeBuilder builder = new()
-        {
-            ApplicationName = string.Empty,
-            Serializer = serializer,
-            SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName,
-        };
+        FakeBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
         await Assert.That(() => builder.WithSqliteDefaults("test123"))
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Verifies that <c>CreateEncryptedSqliteCache</c> throws <see cref="ArgumentException"/>
-    /// when the builder reports an empty application name.
-    /// </summary>
+    /// <summary>Verifies that <c>CreateEncryptedSqliteCache</c> throws <see cref="ArgumentException"/> when the builder reports an empty application name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateEncryptedSqliteCacheShouldThrowWhenApplicationNameEmpty()
     {
         SystemJsonSerializer serializer = new();
-        FakeBuilder builder = new()
-        {
-            ApplicationName = string.Empty,
-            Serializer = serializer,
-            SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName,
-        };
+        FakeBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
-        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache("UserAccount", builder, "test123"))
+        await Assert.That(() => EncryptedSqlite3.AkavacheBuilderExtensions.CreateEncryptedSqliteCache(UserAccountCacheName, builder, "test123"))
             .Throws<ArgumentException>();
     }
 
@@ -410,7 +378,8 @@ public class EncryptedSqlite3BuilderExtensionsTests
         }
 
         /// <inheritdoc/>
-        public IAkavacheBuilder WithInMemoryDefaults() => this;
+        public IAkavacheBuilder WithInMemoryDefaults() =>
+            throw new NotSupportedException("The stub builder never materialises caches; tests that need one use the real builder.");
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithLegacyFileLocation()

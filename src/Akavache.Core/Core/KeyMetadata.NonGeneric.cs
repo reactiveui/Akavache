@@ -30,6 +30,6 @@ internal static class KeyMetadata
     /// <returns>The assembly-qualified short name, or just the short name when the assembly has no simple name.</returns>
     internal static string BuildAssemblyQualifiedShortName(Type type) =>
         type.Assembly.GetName().Name is { } asmName
-            ? asmName + "." + type.Name
+            ? $"{asmName}.{type.Name}"
             : type.Name;
 }

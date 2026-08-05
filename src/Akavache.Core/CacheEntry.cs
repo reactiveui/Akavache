@@ -23,14 +23,14 @@ public sealed record CacheEntry(
 {
     /// <inheritdoc />
     public bool Equals(CacheEntry? other) =>
-        other is not null &&
-        (ReferenceEquals(this, other) ||
-         (string.Equals(Id, other.Id, StringComparison.Ordinal) &&
-          CreatedAt.Equals(other.CreatedAt) &&
-          Nullable.Equals(ExpiresAt, other.ExpiresAt) &&
-          string.Equals(TypeName, other.TypeName, StringComparison.Ordinal) &&
-          (ReferenceEquals(Value, other.Value) ||
-           (Value is not null && other.Value is not null && Value.AsSpan().SequenceEqual(other.Value)))));
+        other is not null
+        && (ReferenceEquals(this, other)
+         || (string.Equals(Id, other.Id, StringComparison.Ordinal)
+          && CreatedAt.Equals(other.CreatedAt)
+          && Nullable.Equals(ExpiresAt, other.ExpiresAt)
+          && string.Equals(TypeName, other.TypeName, StringComparison.Ordinal)
+          && (ReferenceEquals(Value, other.Value)
+           || (Value is not null && other.Value is not null && Value.AsSpan().SequenceEqual(other.Value)))));
 
     /// <inheritdoc />
     public override int GetHashCode()

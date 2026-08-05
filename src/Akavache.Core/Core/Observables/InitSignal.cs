@@ -24,7 +24,7 @@ namespace Akavache.Core.Observables;
 /// Contract: <see cref="Complete"/> / <see cref="Fail"/> are idempotent and may be
 /// called at most once each — the first call wins; subsequent calls are no-ops. The
 /// error path poisons the signal permanently so every subsequent <see cref="Gate{T}"/>
-/// call short-circuits to <see cref="Observable.Throw{TResult}(System.Exception)"/>
+/// call short-circuits to <see cref="Observable.Throw{TResult}(Exception)"/>
 /// with the captured exception.
 /// </para>
 /// </remarks>
@@ -36,22 +36,14 @@ internal sealed class InitSignal
     /// <summary>Completed successfully: <see cref="Gate{T}"/> fast-paths to the factory.</summary>
     private const int StateReady = 1;
 
-    /// <summary>Completed with error: <see cref="Gate{T}"/> fast-paths to <see cref="Observable.Throw{TResult}(System.Exception)"/>.</summary>
+    /// <summary>Completed with error: <see cref="Gate{T}"/> fast-paths to <see cref="Observable.Throw{TResult}(Exception)"/>.</summary>
     private const int StateFailed = 2;
 
-#if NET9_0_OR_GREATER
     /// <summary>
     /// Synchronization object used to coordinate access to shared resources within the state machine.
     /// Ensures thread safety for operations that alter or query the internal state.
     /// </summary>
-    private readonly System.Threading.Lock _gate = new();
-#else
-    /// <summary>
-    /// Synchronization object used to coordinate access to shared resources within the state machine.
-    /// Ensures thread safety for operations that alter or query the internal state.
-    /// </summary>
-    private readonly object _gate = new();
-#endif
+    private readonly Lock _gate = new();
 
     /// <summary>Parked subscription callbacks waiting for the signal. Allocated lazily on the first cold subscription.</summary>
     private List<Action<Exception?>>? _pending;
@@ -64,17 +56,17 @@ internal sealed class InitSignal
 
     /// <summary>Gets a value indicating whether the signal has already completed successfully.</summary>
     /// <remarks>Lock-free — backed by a volatile read of <see cref="_state"/>. Safe to call from the hot path.</remarks>
-    public bool IsReady => _state == StateReady;
+    internal bool IsReady => _state == StateReady;
 
     /// <summary>Gets a value indicating whether the signal has reached a terminal state (success or error).</summary>
-    public bool IsCompleted => _state != StatePending;
+    internal bool IsCompleted => _state != StatePending;
 
     /// <summary>
     /// Signals successful completion. Any pending gated subscriptions are released to
     /// their factory observables. Idempotent — a second call (or a call after
     /// <see cref="Fail"/>) is a no-op.
     /// </summary>
-    public void Complete()
+    internal void Complete()
     {
         List<Action<Exception?>>? snapshot;
         lock (_gate)
@@ -103,11 +95,11 @@ internal sealed class InitSignal
     /// <summary>
     /// Signals failure. Any pending gated subscriptions receive <see cref="IObserver{T}.OnError"/>
     /// with <paramref name="error"/>, and every subsequent <see cref="Gate{T}"/> call
-    /// short-circuits to <see cref="Observable.Throw{TResult}(System.Exception)"/>.
+    /// short-circuits to <see cref="Observable.Throw{TResult}(Exception)"/>.
     /// Idempotent — a second call (or a call after <see cref="Complete"/>) is a no-op.
     /// </summary>
     /// <param name="error">The terminal error to publish.</param>
-    public void Fail(Exception error)
+    internal void Fail(Exception error)
     {
         List<Action<Exception?>>? snapshot;
         lock (_gate)
@@ -144,9 +136,13 @@ internal sealed class InitSignal
     /// returns a cached throwing observable carrying the captured error.
     /// </summary>
     /// <typeparam name="T">The element type of the gated observable.</typeparam>
-    /// <param name="factory">Factory that produces the inner observable. Invoked lazily (never before the signal is ready) so call sites can capture state from the enclosing method without doing the work eagerly.</param>
+    /// <param name="factory">
+    /// Factory that produces the inner observable. Invoked lazily (never before the signal
+    /// is ready) so call sites can capture state from the enclosing method without doing
+    /// the work eagerly.
+    /// </param>
     /// <returns>A gated observable.</returns>
-    public IObservable<T> Gate<T>(Func<IObservable<T>> factory)
+    internal IObservable<T> Gate<T>(Func<IObservable<T>> factory)
     {
         // Fast path: lock-free volatile read. The overwhelming majority of calls against
         // a configured cache take this branch and skip every Rx wrapper entirely.
@@ -156,12 +152,7 @@ internal sealed class InitSignal
             return factory();
         }
 
-        if (state == StateFailed)
-        {
-            return Observable.Throw<T>(_error!);
-        }
-
-        return new GatedByInitObservable<T>(this, factory);
+        return state == StateFailed ? Observable.Throw<T>(_error!) : new GatedByInitObservable<T>(this, factory);
     }
 
     /// <summary>

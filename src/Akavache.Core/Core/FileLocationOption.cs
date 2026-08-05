@@ -1,21 +1,15 @@
-﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 namespace Akavache.Core;
 
-/// <summary>
-/// File Location Option.
-/// </summary>
+/// <summary>File Location Option.</summary>
 public enum FileLocationOption
 {
-    /// <summary>
-    /// Use the default location for the platform.
-    /// </summary>
+    /// <summary>Use the default location for the platform.</summary>
     Default,
 
-    /// <summary>
-    /// Use the legacy location, if available on the platform.
-    /// </summary>
+    /// <summary>Use the legacy location, if available on the platform.</summary>
     Legacy,
 }

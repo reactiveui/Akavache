@@ -7,14 +7,10 @@ using AkavacheTodoWpf.Models;
 
 namespace AkavacheTodoWpf.Views;
 
-/// <summary>
-/// EditTodoDialog for comprehensive todo editing.
-/// </summary>
+/// <summary>EditTodoDialog for comprehensive todo editing.</summary>
 public partial class EditTodoDialog : Window
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EditTodoDialog"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="EditTodoDialog"/> class.</summary>
     /// <param name="todoItem">The todo item to edit.</param>
     public EditTodoDialog(TodoItem todoItem)
     {
@@ -39,26 +35,20 @@ public partial class EditTodoDialog : Window
         OriginalTodo = todoItem;
     }
 
-    /// <summary>
-    /// Gets the original todo item.
-    /// </summary>
+    /// <summary>Gets the original todo item.</summary>
     public TodoItem OriginalTodo { get; }
 
-    /// <summary>
-    /// Gets the updated todo item if changes were made.
-    /// </summary>
+    /// <summary>Gets the updated todo item if changes were made.</summary>
     public TodoItem? UpdatedTodo { get; private set; }
 
-    /// <summary>
-    /// Handles the OK button click.
-    /// </summary>
+    /// <summary>Handles the OK button click.</summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
     private void BtnOK_Click(object sender, RoutedEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(txtTitle.Text))
         {
-            MessageBox.Show("Title is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _ = MessageBox.Show("Title is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -90,9 +80,7 @@ public partial class EditTodoDialog : Window
         DialogResult = true;
     }
 
-    /// <summary>
-    /// Handles the Cancel button click.
-    /// </summary>
+    /// <summary>Handles the Cancel button click.</summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
     private void BtnCancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;

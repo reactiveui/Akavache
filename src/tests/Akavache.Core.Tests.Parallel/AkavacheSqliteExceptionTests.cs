@@ -4,15 +4,14 @@
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="AkavacheSqliteException"/> covering all constructor overloads.
-/// </summary>
+/// <summary>Tests for <see cref="AkavacheSqliteException"/> covering all constructor overloads.</summary>
 [Category("Akavache")]
 public class AkavacheSqliteExceptionTests
 {
-    /// <summary>
-    /// The parameterless constructor creates an exception with a default message and zero result code.
-    /// </summary>
+    /// <summary>The SQLite result code for SQLITE_BUSY, used to prove the code is round-tripped verbatim.</summary>
+    private const int SqliteBusyResultCode = 5;
+
+    /// <summary>The parameterless constructor creates an exception with a default message and zero result code.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Ctor_Parameterless_CreatesExceptionWithDefaults()
@@ -24,9 +23,7 @@ public class AkavacheSqliteExceptionTests
         await Assert.That(ex.ResultCode).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// The message-only constructor stores the supplied message.
-    /// </summary>
+    /// <summary>The message-only constructor stores the supplied message.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Ctor_WithMessage_StoresMessage()
@@ -38,9 +35,7 @@ public class AkavacheSqliteExceptionTests
         await Assert.That(ex.ResultCode).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// The message-and-inner constructor stores both the message and inner exception.
-    /// </summary>
+    /// <summary>The message-and-inner constructor stores both the message and inner exception.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Ctor_WithMessageAndInner_StoresBoth()
@@ -53,17 +48,15 @@ public class AkavacheSqliteExceptionTests
         await Assert.That(ex.ResultCode).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// The result-code-and-message constructor stores both the result code and message.
-    /// </summary>
+    /// <summary>The result-code-and-message constructor stores both the result code and message.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Ctor_WithResultCodeAndMessage_StoresBoth()
     {
-        var ex = new AkavacheSqliteException(5, "SQLITE_BUSY");
+        var ex = new AkavacheSqliteException(SqliteBusyResultCode, "SQLITE_BUSY");
 
         await Assert.That(ex.Message).IsEqualTo("SQLITE_BUSY");
-        await Assert.That(ex.ResultCode).IsEqualTo(5);
+        await Assert.That(ex.ResultCode).IsEqualTo(SqliteBusyResultCode);
         await Assert.That(ex.InnerException).IsNull();
     }
 }

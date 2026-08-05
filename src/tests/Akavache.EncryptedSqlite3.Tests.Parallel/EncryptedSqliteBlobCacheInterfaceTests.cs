@@ -7,10 +7,7 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for the <see cref="EncryptedSqliteBlobCache"/> class interface implementation.
-/// Uses <see cref="InMemoryAkavacheConnection"/> so native SQLCipher is not touched.
-/// </summary>
+/// <summary>Tests for the <see cref="EncryptedSqliteBlobCache"/> class interface implementation. Uses <see cref="InMemoryAkavacheConnection"/> so native SQLCipher is not touched.</summary>
 [InheritsTests]
 public class EncryptedSqliteBlobCacheInterfaceTests : BlobCacheTestsBase
 {

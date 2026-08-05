@@ -4,16 +4,11 @@
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="CacheEntry"/>.
-/// </summary>
+/// <summary>Tests for <see cref="CacheEntry"/>.</summary>
 [Category("Akavache")]
 public class CacheEntryTests
 {
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.ToString"/> renders all relevant fields via the
-    /// record's synthesized <c>ToString</c>.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.ToString"/> renders all relevant fields via the record's synthesized <c>ToString</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ToStringShouldRenderFields()
@@ -26,13 +21,11 @@ public class CacheEntryTests
 
         await Assert.That(text).Contains("Id = key-1");
         await Assert.That(text).Contains("TypeName = MyType");
-        await Assert.That(text).Contains("CreatedAt = " + created);
-        await Assert.That(text).Contains("ExpiresAt = " + expires);
+        await Assert.That(text).Contains($"CreatedAt = {created}");
+        await Assert.That(text).Contains($"ExpiresAt = {expires}");
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(object)"/> returns <see langword="false"/> for a non-<see cref="CacheEntry"/> argument.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(object)"/> returns <see langword="false"/> for a non-<see cref="CacheEntry"/> argument.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ObjectEqualsShouldReturnFalseForDifferentType()
@@ -41,9 +34,7 @@ public class CacheEntryTests
         await Assert.That(entry.Equals((object)"not-a-cache-entry")).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(object)"/> returns <see langword="true"/> for a matching instance.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(object)"/> returns <see langword="true"/> for a matching instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ObjectEqualsShouldReturnTrueForMatchingInstance()
@@ -53,9 +44,7 @@ public class CacheEntryTests
         await Assert.That(a.Equals((object)b)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> short-circuits on reference equality.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> short-circuits on reference equality.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnTrueForSameReference()
@@ -64,9 +53,7 @@ public class CacheEntryTests
         await Assert.That(entry.Equals(entry)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.Id"/> field.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.Id"/> field.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenIdDiffers()
@@ -76,9 +63,7 @@ public class CacheEntryTests
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.CreatedAt"/> field.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.CreatedAt"/> field.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenCreatedAtDiffers()
@@ -88,9 +73,7 @@ public class CacheEntryTests
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.ExpiresAt"/> field.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.ExpiresAt"/> field.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenExpiresAtDiffers()
@@ -100,9 +83,7 @@ public class CacheEntryTests
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.TypeName"/> field.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> checks the <see cref="CacheEntry.TypeName"/> field.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenTypeNameDiffers()
@@ -112,45 +93,42 @@ public class CacheEntryTests
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> compares the <see cref="CacheEntry.Value"/> byte arrays by content.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> compares the <see cref="CacheEntry.Value"/> byte arrays by content.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnTrueForEqualValueBytes()
     {
-        CacheEntry a = new("k", TypeName: null, [1, 2, 3], default, ExpiresAt: null);
-        CacheEntry b = new("k", TypeName: null, [1, 2, 3], default, ExpiresAt: null);
+        byte[] payload = [1, 2, 3];
+        byte[] identicalPayload = [1, 2, 3];
+        CacheEntry a = new("k", TypeName: null, payload, default, ExpiresAt: null);
+        CacheEntry b = new("k", TypeName: null, identicalPayload, default, ExpiresAt: null);
         await Assert.That(a.Equals(b)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="false"/> when the <see cref="CacheEntry.Value"/> content differs.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="false"/> when the <see cref="CacheEntry.Value"/> content differs.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenValueBytesDiffer()
     {
-        CacheEntry a = new("k", TypeName: null, [1, 2, 3], default, ExpiresAt: null);
-        CacheEntry b = new("k", TypeName: null, [1, 2, 4], default, ExpiresAt: null);
+        byte[] payload = [1, 2, 3];
+        byte[] payloadDifferingInLastByte = [1, 2, 4];
+        CacheEntry a = new("k", TypeName: null, payload, default, ExpiresAt: null);
+        CacheEntry b = new("k", TypeName: null, payloadDifferingInLastByte, default, ExpiresAt: null);
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="false"/> when one <see cref="CacheEntry.Value"/> is <see langword="null"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="false"/> when one <see cref="CacheEntry.Value"/> is <see langword="null"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenOneValueIsNull()
     {
-        CacheEntry a = new("k", TypeName: null, [1, 2, 3], default, ExpiresAt: null);
+        byte[] payload = [1, 2, 3];
+        CacheEntry a = new("k", TypeName: null, payload, default, ExpiresAt: null);
         CacheEntry b = new("k", TypeName: null, Value: null, default, ExpiresAt: null);
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="true"/> when both <see cref="CacheEntry.Value"/> arrays are <see langword="null"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.Equals(CacheEntry)"/> returns <see langword="true"/> when both <see cref="CacheEntry.Value"/> arrays are <see langword="null"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnTrueWhenBothValuesAreNull()
@@ -160,21 +138,19 @@ public class CacheEntryTests
         await Assert.That(a.Equals(b)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.GetHashCode"/> yields the same hash for equal instances including matching value bytes.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.GetHashCode"/> yields the same hash for equal instances including matching value bytes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetHashCodeShouldMatchForEqualInstancesWithValueBytes()
     {
-        CacheEntry a = new("k", "t", [9, 8, 7], default, ExpiresAt: null);
-        CacheEntry b = new("k", "t", [9, 8, 7], default, ExpiresAt: null);
+        byte[] payload = [9, 8, 7];
+        byte[] identicalPayload = [9, 8, 7];
+        CacheEntry a = new("k", "t", payload, default, ExpiresAt: null);
+        CacheEntry b = new("k", "t", identicalPayload, default, ExpiresAt: null);
         await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
     }
 
-    /// <summary>
-    /// Tests that <see cref="CacheEntry.GetHashCode"/> yields the same hash for equal instances with <see langword="null"/> value.
-    /// </summary>
+    /// <summary>Tests that <see cref="CacheEntry.GetHashCode"/> yields the same hash for equal instances with <see langword="null"/> value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetHashCodeShouldMatchForEqualInstancesWithNullValue()
@@ -184,9 +160,7 @@ public class CacheEntryTests
         await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
     }
 
-    /// <summary>
-    /// Tests that the positional constructor populates every field verbatim.
-    /// </summary>
+    /// <summary>Tests that the positional constructor populates every field verbatim.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PositionalConstructorShouldPopulateAllFields()
@@ -204,9 +178,7 @@ public class CacheEntryTests
         await Assert.That(entry.ExpiresAt).IsEqualTo(expires);
     }
 
-    /// <summary>
-    /// Tests that the positional constructor accepts null typeName, null value, and null expiry.
-    /// </summary>
+    /// <summary>Tests that the positional constructor accepts null typeName, null value, and null expiry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PositionalConstructorShouldAcceptNullOptionalFields()

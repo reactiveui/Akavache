@@ -4,16 +4,16 @@
 
 namespace Akavache.Tests.Helpers;
 
-/// <summary>
-/// Extensions for DateTime handling in tests.
-/// </summary>
+/// <summary>Extensions for DateTime handling in tests.</summary>
 internal static class DateTimeExtensions
 {
-    /// <summary>
-    /// Extension method to truncate DateTime to seconds (remove milliseconds).
-    /// </summary>
-    /// <param name="dateTime">The DateTime to truncate.</param>
-    /// <returns>DateTime truncated to seconds.</returns>
-    public static DateTime TruncateToSecond(this in DateTime dateTime) =>
-        new(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Kind);
+    /// <summary>Extension members for <see cref="DateTime"/>.</summary>
+    /// <param name="dateTime">The DateTime the members operate on.</param>
+    extension(in DateTime dateTime)
+    {
+        /// <summary>Truncates the DateTime to whole seconds (removes milliseconds).</summary>
+        /// <returns>DateTime truncated to seconds.</returns>
+        internal DateTime TruncateToSecond() =>
+            new(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Kind);
+    }
 }

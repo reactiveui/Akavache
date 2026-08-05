@@ -17,32 +17,27 @@ namespace Akavache.Integration.Tests;
 [Category("Akavache")]
 public class ISerializerDefaultMethodTests
 {
-    /// <summary>
-    /// Tests that calling the <see cref="JsonTypeInfo{T}"/> <c>Deserialize</c>
-    /// extension on a non-System.Text.Json-backed serializer throws
-    /// <see cref="NotSupportedException"/>.
-    /// </summary>
+    /// <summary>The string carried through each extension round trip.</summary>
+    private const string RoundTripPayload = "hello";
+
+    /// <summary>Tests that calling the <see cref="JsonTypeInfo{T}"/> <c>Deserialize</c> extension on a non-System.Text.Json-backed serializer throws <see cref="NotSupportedException"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeWithJsonTypeInfoShouldThrowNotSupportedException()
     {
-        ISerializer serializer = new MinimalSerializer();
+        MinimalSerializer serializer = new();
         var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
 
         await Assert.That(() => serializer.Deserialize([], jsonTypeInfo))
             .Throws<NotSupportedException>();
     }
 
-    /// <summary>
-    /// Tests that calling the <see cref="JsonTypeInfo{T}"/> <c>Serialize</c>
-    /// extension on a non-System.Text.Json-backed serializer throws
-    /// <see cref="NotSupportedException"/>.
-    /// </summary>
+    /// <summary>Tests that calling the <see cref="JsonTypeInfo{T}"/> <c>Serialize</c> extension on a non-System.Text.Json-backed serializer throws <see cref="NotSupportedException"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeWithJsonTypeInfoShouldThrowNotSupportedException()
     {
-        ISerializer serializer = new MinimalSerializer();
+        MinimalSerializer serializer = new();
         var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
 
         await Assert.That(() => serializer.Serialize("test", jsonTypeInfo))
@@ -57,26 +52,16 @@ public class ISerializerDefaultMethodTests
     [Test]
     public async Task ExtensionExceptionsShouldIncludeTypeName()
     {
-        ISerializer serializer = new MinimalSerializer();
+        MinimalSerializer serializer = new();
         var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
 
-        try
-        {
-            serializer.Deserialize([], jsonTypeInfo);
-        }
-        catch (NotSupportedException ex)
-        {
-            await Assert.That(ex.Message).Contains(nameof(MinimalSerializer));
-        }
+        var deserializeFailure = CaptureUnsupported(() => _ = serializer.Deserialize([], jsonTypeInfo));
+        var serializeFailure = CaptureUnsupported(() => _ = serializer.Serialize("test", jsonTypeInfo));
 
-        try
-        {
-            serializer.Serialize("test", jsonTypeInfo);
-        }
-        catch (NotSupportedException ex)
-        {
-            await Assert.That(ex.Message).Contains(nameof(MinimalSerializer));
-        }
+        await Assert.That(deserializeFailure).IsNotNull();
+        await Assert.That(serializeFailure).IsNotNull();
+        await Assert.That(deserializeFailure!.Message).Contains(nameof(MinimalSerializer));
+        await Assert.That(serializeFailure!.Message).Contains(nameof(MinimalSerializer));
     }
 
     /// <summary>
@@ -88,13 +73,13 @@ public class ISerializerDefaultMethodTests
     [Test]
     public async Task ExtensionShouldRoundTripThroughSystemJsonSerializer()
     {
-        ISerializer serializer = new SystemJsonSerializer();
+        SystemJsonSerializer serializer = new();
         var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
 
-        var bytes = serializer.Serialize("hello", jsonTypeInfo);
+        var bytes = serializer.Serialize(RoundTripPayload, jsonTypeInfo);
         var value = serializer.Deserialize(bytes, jsonTypeInfo);
 
-        await Assert.That(value).IsEqualTo("hello");
+        await Assert.That(value).IsEqualTo(RoundTripPayload);
     }
 
     /// <summary>
@@ -106,19 +91,32 @@ public class ISerializerDefaultMethodTests
     [Test]
     public async Task ExtensionShouldRoundTripThroughSystemJsonBsonSerializer()
     {
-        ISerializer serializer = new SystemJsonBsonSerializer();
+        SystemJsonBsonSerializer serializer = new();
         var jsonTypeInfo = (JsonTypeInfo<string>)JsonSerializerOptions.Default.GetTypeInfo(typeof(string));
 
-        var bytes = serializer.Serialize("hello", jsonTypeInfo);
+        var bytes = serializer.Serialize(RoundTripPayload, jsonTypeInfo);
         var value = serializer.Deserialize(bytes, jsonTypeInfo);
 
-        await Assert.That(value).IsEqualTo("hello");
+        await Assert.That(value).IsEqualTo(RoundTripPayload);
     }
 
-    /// <summary>
-    /// A minimal <see cref="ISerializer"/> implementation used to drive the
-    /// <see cref="NotSupportedException"/> fallback path of the extension.
-    /// </summary>
+    /// <summary>Runs <paramref name="call"/> and returns the <see cref="NotSupportedException"/> it raised, or <see langword="null"/> when it completed.</summary>
+    /// <param name="call">The call expected to reject the AOT metadata path.</param>
+    /// <returns>The captured exception, if any.</returns>
+    private static NotSupportedException? CaptureUnsupported(Action call)
+    {
+        try
+        {
+            call();
+            return null;
+        }
+        catch (NotSupportedException ex)
+        {
+            return ex;
+        }
+    }
+
+    /// <summary>A minimal <see cref="ISerializer"/> implementation used to drive the <see cref="NotSupportedException"/> fallback path of the extension.</summary>
     private sealed class MinimalSerializer : ISerializer
     {
         /// <inheritdoc/>

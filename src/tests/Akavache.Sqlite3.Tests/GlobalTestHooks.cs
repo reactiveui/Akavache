@@ -9,26 +9,18 @@ using Splat.Builder;
 
 namespace Akavache.Sqlite3.Tests;
 
-/// <summary>
-/// Resets shared Akavache and SQLite static state around each SQLite test.
-/// </summary>
+/// <summary>Resets shared Akavache and SQLite static state around each SQLite test.</summary>
 public static class GlobalTestHooks
 {
-    /// <summary>
-    /// Runs before every test.
-    /// </summary>
+    /// <summary>Runs before every test.</summary>
     [BeforeEvery(Test)]
     public static void ResetBeforeEveryTest() => ResetState();
 
-    /// <summary>
-    /// Runs after every test.
-    /// </summary>
+    /// <summary>Runs after every test, leaving no residue for whatever runs next.</summary>
     [AfterEvery(Test)]
-    public static void ResetAfterEveryTest() => ResetState();
+    public static void ResetAfterEveryTest() => ResetBeforeEveryTest();
 
-    /// <summary>
-    /// Resets shared static state used by SQLite tests.
-    /// </summary>
+    /// <summary>Resets shared static state used by SQLite tests.</summary>
     private static void ResetState()
     {
         CacheDatabase.ResetForTests().SubscribeAndComplete();

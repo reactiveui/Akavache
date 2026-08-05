@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,34 +6,26 @@ using System.Diagnostics;
 
 namespace Akavache;
 
-/// <summary>
-/// Stored login information for a user.
-/// </summary>
+/// <summary>Stored login information for a user.</summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="LoginInfo"/> class.
 /// </remarks>
 /// <param name="username">The username for the entry.</param>
 /// <param name="password">The password for the user.</param>
 [DebuggerDisplay("UserName: {UserName}")]
-public class LoginInfo(string username, string password) : IEquatable<LoginInfo>
+public sealed class LoginInfo(string username, string password) : IEquatable<LoginInfo>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LoginInfo"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="LoginInfo"/> class.</summary>
     /// <param name="usernameAndLogin">A username and password stored in a tuple.</param>
     internal LoginInfo((string UserName, string Password) usernameAndLogin)
         : this(usernameAndLogin.UserName, usernameAndLogin.Password)
     {
     }
 
-    /// <summary>
-    /// Gets the username.
-    /// </summary>
+    /// <summary>Gets the username.</summary>
     public string UserName { get; } = username;
 
-    /// <summary>
-    /// Gets the password.
-    /// </summary>
+    /// <summary>Gets the password.</summary>
     public string Password { get; } = password;
 
     /// <inheritdoc />
@@ -44,10 +36,10 @@ public class LoginInfo(string username, string password) : IEquatable<LoginInfo>
 
     /// <inheritdoc />
     public bool Equals(LoginInfo? other) =>
-        other is not null &&
-        (ReferenceEquals(this, other) ||
-         (string.Equals(UserName, other.UserName, StringComparison.Ordinal) &&
-          string.Equals(Password, other.Password, StringComparison.Ordinal)));
+        other is not null
+        && (ReferenceEquals(this, other)
+         || (string.Equals(UserName, other.UserName, StringComparison.Ordinal)
+          && string.Equals(Password, other.Password, StringComparison.Ordinal)));
 
     /// <inheritdoc />
     public override int GetHashCode()

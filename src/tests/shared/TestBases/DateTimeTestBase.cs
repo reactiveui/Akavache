@@ -2,6 +2,8 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 using Akavache.Core;
 using Akavache.NewtonsoftJson;
 using Akavache.SystemTextJson;
@@ -10,37 +12,99 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests.TestBases;
 
-/// <summary>
-/// Tests associated with the DateTime and DateTimeOffset.
-/// </summary>
+/// <summary>Tests associated with the DateTime and DateTimeOffset.</summary>
 public abstract class DateTimeTestBase : IDisposable
 {
-    /// <summary>
-    /// A backing field which indicates if the class has been disposed.
-    /// </summary>
+    /// <summary>Type-name fragment identifying an encrypted cache implementation.</summary>
+    private const string EncryptedCacheNameFragment = "Encrypted";
+
+    /// <summary>Index of the local-clock edge case within the DateTime edge-case list.</summary>
+    private const int LocalNowCaseIndex = 5;
+
+    /// <summary>Index of the date-only edge case within the DateTime edge-case list.</summary>
+    private const int TodayCaseIndex = 7;
+
+    /// <summary>Round-trip tolerance for <see cref="DateTime.MinValue"/> and <see cref="DateTime.MaxValue"/>, in milliseconds.</summary>
+    private const double ExtremeValueToleranceMilliseconds = 5000;
+
+    /// <summary>Round-trip tolerance for clock-derived values, in milliseconds; over an hour, to absorb timezone handling differences.</summary>
+    private const double ClockDependentToleranceMilliseconds = 3_700_000;
+
+    /// <summary>Round-trip tolerance for ordinary values, in milliseconds.</summary>
+    private const double DefaultToleranceMilliseconds = 1000;
+
+    /// <summary>Factor the round-trip tolerance is widened by for BSON serializers.</summary>
+    private const double BsonToleranceMultiplier = 20;
+
+    /// <summary>Factor the round-trip tolerance is widened by for encrypted caches.</summary>
+    private const double EncryptedCacheToleranceMultiplier = 10;
+
+    /// <summary>Year at or below which a round-tripped extreme DateTime is treated as mangled.</summary>
+    private const int MinPlausibleRoundTripYear = 1900;
+
+    /// <summary>Year at or above which a round-tripped extreme DateTime is treated as mangled.</summary>
+    private const int MaxPlausibleRoundTripYear = 2100;
+
+    /// <summary>Minimum DateTime edge-case success rate demanded of BSON serializers and encrypted caches.</summary>
+    private const double LenientMinimumDateTimeSuccessRate = 0.3;
+
+    /// <summary>Minimum DateTime edge-case success rate demanded of the remaining serializers.</summary>
+    private const double StandardMinimumDateTimeSuccessRate = 0.6;
+
+    /// <summary>Minimum DateTimeOffset edge-case success rate demanded of encrypted caches.</summary>
+    private const double EncryptedMinimumOffsetSuccessRate = 0.4;
+
+    /// <summary>Minimum DateTimeOffset edge-case success rate demanded of BSON serializers.</summary>
+    private const double BsonMinimumOffsetSuccessRate = 0.5;
+
+    /// <summary>Minimum DateTimeOffset edge-case success rate demanded of the remaining serializers.</summary>
+    private const double StandardMinimumOffsetSuccessRate = 0.7;
+
+    /// <summary>UTC offset, in hours, carried by the shared DateTimeOffset fixture value.</summary>
+    private const int FixtureOffsetHours = 5;
+
+    /// <summary>UTC offset, in hours, of the India time zone case.</summary>
+    private const int IndiaOffsetHours = 5;
+
+    /// <summary>UTC offset, in hours, of the US Pacific standard time case.</summary>
+    private const int PacificStandardOffsetHours = -8;
+
+    /// <summary>UTC offset, in hours, of the US Eastern standard time case.</summary>
+    private const int EasternStandardOffsetHours = -5;
+
+    /// <summary>UTC offset, in hours, of the Central European time case.</summary>
+    private const int CentralEuropeanOffsetHours = 1;
+
+    /// <summary>UTC offset, in hours, of the Japan time zone case.</summary>
+    private const int JapanOffsetHours = 9;
+
+    /// <summary>Tolerance, in seconds, applied when comparing round-tripped UTC instants.</summary>
+    private const int UtcToleranceSeconds = 2;
+
+    /// <summary>Offset tolerance, in hours, allowed for BSON serializers.</summary>
+    private const double BsonOffsetToleranceHours = 48.0;
+
+    /// <summary>Offset tolerance, in hours, allowed for the remaining serializers.</summary>
+    private const double StandardOffsetToleranceHours = 24.0;
+
+    /// <summary>A backing field which indicates if the class has been disposed.</summary>
     private bool _disposed;
 
-    /// <summary>
-    /// Gets the date time offsets used in theory tests.
-    /// </summary>
+    /// <summary>Gets the date time offsets used in theory tests.</summary>
     public static IEnumerable<object[]> DateTimeOffsetData =>
     [
         [new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = null }],
         [new TestObjectDateTimeOffset { Timestamp = TestNowOffset, TimestampNullable = TestNowOffset }],
     ];
 
-    /// <summary>
-    /// Gets the DateTime used in theory tests.
-    /// </summary>
+    /// <summary>Gets the DateTime used in theory tests.</summary>
     public static IEnumerable<object[]> DateTimeData =>
     [
         [new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = null }],
         [new TestObjectDateTime { Timestamp = TestNow, TimestampNullable = TestNow }],
     ];
 
-    /// <summary>
-    /// Gets the DateTime used in theory tests.
-    /// </summary>
+    /// <summary>Gets the DateTime used in theory tests.</summary>
     public static IEnumerable<object[]> DateLocalTimeData =>
     [
         [new TestObjectDateTime { Timestamp = LocalTestNow, TimestampNullable = null }],
@@ -63,11 +127,9 @@ public abstract class DateTimeTestBase : IDisposable
     /// Gets the date time offset when the tests are done to keep them consistent.
     /// Use a fixed timezone offset to avoid platform-specific differences.
     /// </summary>
-    private static DateTimeOffset TestNowOffset { get; } = new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(5));
+    private static DateTimeOffset TestNowOffset { get; } = new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(FixtureOffsetHours));
 
-    /// <summary>
-    /// Tests to make sure that we can force the DateTime kind.
-    /// </summary>
+    /// <summary>Tests to make sure that we can force the DateTime kind.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -86,16 +148,14 @@ public abstract class DateTimeTestBase : IDisposable
         {
             fixture.ForcedDateTimeKind = DateTimeKind.Utc;
 
-            var value = DateTime.UtcNow;
+            var value = TimeProvider.System.GetUtcNow().UtcDateTime;
             fixture.InsertObject("key", value).SubscribeAndComplete();
             var result = fixture.GetObject<DateTime>("key").SubscribeGetValue();
             await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
         }
     }
 
-    /// <summary>
-    /// Tests comprehensive DateTime serialization scenarios including edge cases.
-    /// </summary>
+    /// <summary>Tests comprehensive DateTime serialization scenarios including edge cases.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -120,8 +180,8 @@ public abstract class DateTimeTestBase : IDisposable
                 new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 new(2000, 1, 1, 0, 0, 0, DateTimeKind.Local),
                 new(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-                DateTime.Now,
-                DateTime.UtcNow,
+                TimeProvider.System.GetLocalNow().DateTime,
+                TimeProvider.System.GetUtcNow().UtcDateTime,
                 DateTime.Today
             ];
 
@@ -130,78 +190,22 @@ public abstract class DateTimeTestBase : IDisposable
 
             for (var i = 0; i < edgeCases.Length; i++)
             {
-                var testCase = edgeCases[i];
-                var key = $"datetime_edge_case_{i}";
-
-                try
+                if (await TryRoundTripDateTimeAsync(blobCache, serializer, edgeCases[i], i))
                 {
-                    await blobCache.InsertObject(key, testCase);
-                    var retrieved = await blobCache.GetObject<DateTime>(key);
-
-                    var originalUtc = ConvertToComparableUtc(testCase);
-                    var retrievedUtc = ConvertToComparableUtc(retrieved);
-
-                    var difference = Math.Abs((originalUtc - retrievedUtc).TotalMilliseconds);
-                    var toleranceMs = GetDateTimeToleranceForEdgeCase(i);
-
-                    // Enhanced tolerance for BSON serializers and encrypted caches
-                    var cacheTypeName = serializer.GetType().Name;
-                    var isEncryptedCache = blobCache.GetType().Name.Contains("Encrypted");
-
-                    if (cacheTypeName.Contains("Newton") || cacheTypeName.Contains("Bson") || IsUsingBsonSerializer(serializer))
-                    {
-                        toleranceMs *= 20; // 20x tolerance for BSON
-                    }
-
-                    if (isEncryptedCache)
-                    {
-                        toleranceMs *= 10; // Additional tolerance for encrypted caches
-                    }
-
-                    // Special handling for DateTime.MinValue and DateTime.MaxValue with BSON
-                    if ((testCase == DateTime.MinValue || testCase == DateTime.MaxValue) &&
-                        (retrieved == DateTime.MinValue || retrieved.Year <= 1900 || retrieved.Year >= 2100))
-                    {
-                        // BSON serializers often have issues with extreme DateTime values
-                        // This is a known limitation, so we'll log and continue
-                        System.Diagnostics.Debug.WriteLine($"BSON DateTime edge case {i} skipped: {testCase} -> {retrieved}");
-                        skipCount++;
-                        continue;
-                    }
-
-                    if (difference < toleranceMs)
-                    {
-                        successCount++;
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"DateTime edge case {i} tolerance exceeded: {testCase} ({testCase.Kind}) -> {retrieved} ({retrieved.Kind}) (diff: {difference}ms, tolerance: {toleranceMs}ms)");
-                        skipCount++;
-                    }
+                    successCount++;
                 }
-                catch (Exception ex) when (IsAcceptableEdgeCaseException(i, ex))
+                else
                 {
-                    System.Diagnostics.Debug.WriteLine($"DateTime edge case {i} skipped for {testCase}: {ex.Message}");
                     skipCount++;
-                }
-                catch (Exception ex)
-                {
-                    // For BSON serializers and encrypted caches, be more lenient with edge cases
-                    if ((IsUsingBsonSerializer(serializer) || blobCache.GetType().Name.Contains("Encrypted")) && i is 0 or 1)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"DateTime edge case {i} failed but acceptable: {testCase} - {ex.Message}");
-                        skipCount++;
-                        continue;
-                    }
-
-                    throw new InvalidOperationException($"DateTime edge case {i} failed for value {testCase} ({testCase.Kind})", ex);
                 }
             }
 
             // Require at least 50% success rate for edge cases (very lenient for cross-platform compatibility)
             var totalAttempts = successCount + skipCount;
             var successRate = totalAttempts > 0 ? (double)successCount / totalAttempts : 0;
-            var minSuccessRate = IsUsingBsonSerializer(serializer) || blobCache.GetType().Name.Contains("Encrypted") ? 0.3 : 0.6;
+            var minSuccessRate = IsUsingBsonSerializer(serializer) || IsEncryptedCache(blobCache)
+                ? LenientMinimumDateTimeSuccessRate
+                : StandardMinimumDateTimeSuccessRate;
 
             await Assert.That(successRate)
                 .IsGreaterThanOrEqualTo(minSuccessRate);
@@ -236,47 +240,13 @@ public abstract class DateTimeTestBase : IDisposable
 
             for (var i = 0; i < edgeCases.Length; i++)
             {
-                var testCase = edgeCases[i];
-                var key = $"datetimeoffset_edge_case_{i}";
-
-                try
+                if (await TryRoundTripDateTimeOffsetAsync(blobCache, serializer, edgeCases[i], i))
                 {
-                    await blobCache.InsertObject(key, testCase);
-                    var retrieved = await blobCache.GetObject<DateTimeOffset>(key);
-
-                    if (ValidateDateTimeOffsetRoundtrip(testCase, retrieved, serializer))
-                    {
-                        successCount++;
-                    }
-                    else
-                    {
-                        skipCount++;
-                    }
+                    successCount++;
                 }
-                catch (Exception ex) when (IsAcceptableDateTimeOffsetEdgeCaseException(i, ex))
+                else
                 {
-                    System.Diagnostics.Debug.WriteLine($"DateTimeOffset edge case {i} skipped for {testCase}: {ex.Message}");
                     skipCount++;
-                }
-                catch (Exception ex)
-                {
-                    // For BSON serializers, be more lenient with edge cases
-                    if (IsUsingBsonSerializer(serializer) && i is 0 or 1)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"BSON DateTimeOffset edge case {i} failed but acceptable: {testCase} - {ex.Message}");
-                        skipCount++;
-                        continue;
-                    }
-
-                    // For encrypted caches, also be more lenient
-                    if (blobCache.GetType().Name.Contains("Encrypted"))
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Encrypted cache DateTimeOffset edge case {i} failed but acceptable: {testCase} - {ex.Message}");
-                        skipCount++;
-                        continue;
-                    }
-
-                    throw new InvalidOperationException($"DateTimeOffset edge case {i} failed for value {testCase}", ex);
                 }
             }
 
@@ -285,32 +255,20 @@ public abstract class DateTimeTestBase : IDisposable
             var successRate = actualTests > 0 ? successCount / (double)actualTests : 0;
 
             // Allow for more failures with complex DateTimeOffset scenarios - be very lenient
-            double minimumSuccessRate;
-            if (blobCache.GetType().Name.Contains("Encrypted"))
-            {
-                minimumSuccessRate = 0.4;
-            }
-            else
-            {
-                minimumSuccessRate = IsUsingBsonSerializer(serializer) ? 0.5 : 0.7;
-            }
+            var minimumSuccessRate = GetMinimumOffsetSuccessRate(blobCache, serializer);
 
             await Assert.That(successRate).IsGreaterThanOrEqualTo(minimumSuccessRate);
         }
     }
 
-    /// <summary>
-    /// Disposes the test base, restoring the original serializer.
-    /// </summary>
+    /// <summary>Disposes the test base, restoring the original serializer.</summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Gets the <see cref="IBlobCache" /> we want to do the tests against.
-    /// </summary>
+    /// <summary>Gets the <see cref="IBlobCache" /> we want to do the tests against.</summary>
     /// <param name="path">The path to the blob cache.</param>
     /// <param name="serializer">The serializer.</param>
     /// <returns>
@@ -318,9 +276,7 @@ public abstract class DateTimeTestBase : IDisposable
     /// </returns>
     protected abstract IBlobCache CreateBlobCache(string path, ISerializer serializer);
 
-    /// <summary>
-    /// Disposes resources.
-    /// </summary>
+    /// <summary>Disposes resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
@@ -337,9 +293,168 @@ public abstract class DateTimeTestBase : IDisposable
         _disposed = true;
     }
 
-    /// <summary>
-    /// Converts a DateTime to a comparable UTC DateTime, handling various edge cases.
-    /// </summary>
+    /// <summary>Determines whether the cache under test is an encrypted implementation.</summary>
+    /// <param name="blobCache">The cache under test.</param>
+    /// <returns>True if the cache is an encrypted implementation.</returns>
+    private static bool IsEncryptedCache(IBlobCache blobCache) =>
+        blobCache.GetType().Name.Contains(EncryptedCacheNameFragment);
+
+    /// <summary>Gets the minimum DateTimeOffset edge-case success rate this cache and serializer pairing has to reach.</summary>
+    /// <param name="blobCache">The cache under test.</param>
+    /// <param name="serializer">The serializer under test.</param>
+    /// <returns>The minimum acceptable success rate.</returns>
+    private static double GetMinimumOffsetSuccessRate(IBlobCache blobCache, ISerializer serializer)
+    {
+        if (IsEncryptedCache(blobCache))
+        {
+            return EncryptedMinimumOffsetSuccessRate;
+        }
+
+        return IsUsingBsonSerializer(serializer) ? BsonMinimumOffsetSuccessRate : StandardMinimumOffsetSuccessRate;
+    }
+
+    /// <summary>Round-trips a single DateTime edge case through the cache.</summary>
+    /// <param name="blobCache">The cache under test.</param>
+    /// <param name="serializer">The serializer under test.</param>
+    /// <param name="testCase">The value to round-trip.</param>
+    /// <param name="caseIndex">The edge case index.</param>
+    /// <returns>True when the value round-tripped within tolerance; false when the case was skipped.</returns>
+    /// <exception cref="InvalidOperationException">The edge case failed in a way this serializer is expected to handle.</exception>
+    private static async Task<bool> TryRoundTripDateTimeAsync(IBlobCache blobCache, ISerializer serializer, DateTime testCase, int caseIndex)
+    {
+        var key = $"datetime_edge_case_{caseIndex}";
+
+        try
+        {
+            await blobCache.InsertObject(key, testCase);
+            var retrieved = await blobCache.GetObject<DateTime>(key);
+
+            return IsWithinDateTimeTolerance(blobCache, serializer, testCase, retrieved, caseIndex);
+        }
+        catch (Exception ex) when (IsAcceptableEdgeCaseException(caseIndex, ex))
+        {
+            Debug.WriteLine($"DateTime edge case {caseIndex} skipped for {testCase}: {ex.Message}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            // For BSON serializers and encrypted caches, be more lenient with edge cases
+            if ((IsUsingBsonSerializer(serializer) || IsEncryptedCache(blobCache)) && caseIndex is 0 or 1)
+            {
+                Debug.WriteLine($"DateTime edge case {caseIndex} failed but acceptable: {testCase} - {ex.Message}");
+                return false;
+            }
+
+            throw new InvalidOperationException($"DateTime edge case {caseIndex} failed for value {testCase} ({testCase.Kind})", ex);
+        }
+    }
+
+    /// <summary>Determines whether a round-tripped DateTime landed close enough to the original.</summary>
+    /// <param name="blobCache">The cache under test.</param>
+    /// <param name="serializer">The serializer under test.</param>
+    /// <param name="testCase">The original value.</param>
+    /// <param name="retrieved">The value read back from the cache.</param>
+    /// <param name="caseIndex">The edge case index.</param>
+    /// <returns>True when the difference is inside the tolerance for this case.</returns>
+    private static bool IsWithinDateTimeTolerance(IBlobCache blobCache, ISerializer serializer, DateTime testCase, DateTime retrieved, int caseIndex)
+    {
+        if (IsMangledExtremeValue(testCase, retrieved))
+        {
+            // BSON serializers often have issues with extreme DateTime values.
+            Debug.WriteLine($"BSON DateTime edge case {caseIndex} skipped: {testCase} -> {retrieved}");
+            return false;
+        }
+
+        var difference = Math.Abs((ConvertToComparableUtc(testCase) - ConvertToComparableUtc(retrieved)).TotalMilliseconds);
+        var toleranceMs = GetToleranceMilliseconds(blobCache, serializer, caseIndex);
+        if (difference < toleranceMs)
+        {
+            return true;
+        }
+
+        Debug.WriteLine(
+            $"DateTime edge case {caseIndex} tolerance exceeded: {testCase} ({testCase.Kind}) -> {retrieved} ({retrieved.Kind}) (diff: {difference}ms, tolerance: {toleranceMs}ms)");
+        return false;
+    }
+
+    /// <summary>Determines whether an extreme DateTime came back mangled, a known BSON limitation.</summary>
+    /// <param name="testCase">The original value.</param>
+    /// <param name="retrieved">The value read back from the cache.</param>
+    /// <returns>True when an extreme input round-tripped to an implausible value.</returns>
+    private static bool IsMangledExtremeValue(DateTime testCase, DateTime retrieved) =>
+        (testCase == DateTime.MinValue || testCase == DateTime.MaxValue)
+        && (retrieved == DateTime.MinValue
+         || retrieved.Year <= MinPlausibleRoundTripYear
+         || retrieved.Year >= MaxPlausibleRoundTripYear);
+
+    /// <summary>Gets the round-trip tolerance for an edge case, widened for BSON serializers and encrypted caches.</summary>
+    /// <param name="blobCache">The cache under test.</param>
+    /// <param name="serializer">The serializer under test.</param>
+    /// <param name="caseIndex">The edge case index.</param>
+    /// <returns>The tolerance in milliseconds.</returns>
+    private static double GetToleranceMilliseconds(IBlobCache blobCache, ISerializer serializer, int caseIndex)
+    {
+        var toleranceMs = GetDateTimeToleranceForEdgeCase(caseIndex);
+
+        // Enhanced tolerance for BSON serializers and encrypted caches
+        var serializerTypeName = serializer.GetType().Name;
+        if (serializerTypeName.Contains("Newton") || serializerTypeName.Contains("Bson") || IsUsingBsonSerializer(serializer))
+        {
+            toleranceMs *= BsonToleranceMultiplier;
+        }
+
+        if (IsEncryptedCache(blobCache))
+        {
+            toleranceMs *= EncryptedCacheToleranceMultiplier;
+        }
+
+        return toleranceMs;
+    }
+
+    /// <summary>Round-trips a single DateTimeOffset edge case through the cache.</summary>
+    /// <param name="blobCache">The cache under test.</param>
+    /// <param name="serializer">The serializer under test.</param>
+    /// <param name="testCase">The value to round-trip.</param>
+    /// <param name="caseIndex">The edge case index.</param>
+    /// <returns>True when the value round-tripped within tolerance; false when the case was skipped.</returns>
+    /// <exception cref="InvalidOperationException">The edge case failed in a way this serializer is expected to handle.</exception>
+    private static async Task<bool> TryRoundTripDateTimeOffsetAsync(IBlobCache blobCache, ISerializer serializer, DateTimeOffset testCase, int caseIndex)
+    {
+        var key = $"datetimeoffset_edge_case_{caseIndex}";
+
+        try
+        {
+            await blobCache.InsertObject(key, testCase);
+            var retrieved = await blobCache.GetObject<DateTimeOffset>(key);
+
+            return ValidateDateTimeOffsetRoundtrip(testCase, retrieved, serializer);
+        }
+        catch (Exception ex) when (IsAcceptableEdgeCaseException(caseIndex, ex))
+        {
+            Debug.WriteLine($"DateTimeOffset edge case {caseIndex} skipped for {testCase}: {ex.Message}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            // For BSON serializers, be more lenient with edge cases
+            if (IsUsingBsonSerializer(serializer) && caseIndex is 0 or 1)
+            {
+                Debug.WriteLine($"BSON DateTimeOffset edge case {caseIndex} failed but acceptable: {testCase} - {ex.Message}");
+                return false;
+            }
+
+            // For encrypted caches, also be more lenient
+            if (IsEncryptedCache(blobCache))
+            {
+                Debug.WriteLine($"Encrypted cache DateTimeOffset edge case {caseIndex} failed but acceptable: {testCase} - {ex.Message}");
+                return false;
+            }
+
+            throw new InvalidOperationException($"DateTimeOffset edge case {caseIndex} failed for value {testCase}", ex);
+        }
+    }
+
+    /// <summary>Converts a DateTime to a comparable UTC DateTime, handling various edge cases.</summary>
     /// <param name="dateTime">The DateTime to convert.</param>
     /// <returns>A UTC DateTime for comparison purposes.</returns>
     private static DateTime ConvertToComparableUtc(in DateTime dateTime) => dateTime.Kind switch
@@ -349,46 +464,28 @@ public abstract class DateTimeTestBase : IDisposable
         _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
     };
 
-    /// <summary>
-    /// Gets the appropriate tolerance for a specific DateTime edge case.
-    /// </summary>
+    /// <summary>Gets the appropriate tolerance for a specific DateTime edge case.</summary>
     /// <param name="caseIndex">The edge case index.</param>
     /// <returns>The tolerance in milliseconds.</returns>
     private static double GetDateTimeToleranceForEdgeCase(int caseIndex) =>
         caseIndex switch
         {
-            0 or 1 => 5000, // DateTime.MinValue and MaxValue - very generous
-            5 or 7 => 3_700_000, // DateTime.Now and DateTime.Today - over 1 hour for timezone issues
-            _ => 1000 // Other cases - 1 second
+            0 or 1 => ExtremeValueToleranceMilliseconds, // DateTime.MinValue and MaxValue - very generous
+            LocalNowCaseIndex or TodayCaseIndex => ClockDependentToleranceMilliseconds, // local clock reads - allow for timezone issues
+            _ => DefaultToleranceMilliseconds
         };
 
-    /// <summary>
-    /// Determines if an exception for a DateTime edge case is acceptable and the test should be skipped.
-    /// </summary>
+    /// <summary>Determines if an exception for an edge case is acceptable and the test should be skipped.</summary>
     /// <param name="caseIndex">The edge case index.</param>
     /// <param name="exception">The exception that occurred.</param>
     /// <returns>True if the exception is acceptable and the test should be skipped.</returns>
     private static bool IsAcceptableEdgeCaseException(int caseIndex, Exception exception) =>
-        caseIndex is 0 or 1 &&
-        (exception.Message.Contains("out of range") ||
-         exception.Message.Contains("overflow") ||
-         exception.Message.Contains("underflow"));
+        caseIndex is 0 or 1
+        && (exception.Message.Contains("out of range")
+         || exception.Message.Contains("overflow")
+         || exception.Message.Contains("underflow"));
 
-    /// <summary>
-    /// Determines if an exception for a DateTimeOffset edge case is acceptable and the test should be skipped.
-    /// </summary>
-    /// <param name="caseIndex">The edge case index.</param>
-    /// <param name="exception">The exception that occurred.</param>
-    /// <returns>True if the exception is acceptable and the test should be skipped.</returns>
-    private static bool IsAcceptableDateTimeOffsetEdgeCaseException(int caseIndex, Exception exception) =>
-        caseIndex is 0 or 1 &&
-        (exception.Message.Contains("out of range") ||
-         exception.Message.Contains("overflow") ||
-         exception.Message.Contains("underflow"));
-
-    /// <summary>
-    /// Determines if the current serializer is a BSON-based serializer.
-    /// </summary>
+    /// <summary>Determines if the current serializer is a BSON-based serializer.</summary>
     /// <param name="serializer">The serializer.</param>
     /// <returns>True if using a BSON serializer.</returns>
     private static bool IsUsingBsonSerializer(ISerializer serializer)
@@ -404,9 +501,7 @@ public abstract class DateTimeTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Gets DateTimeOffset test cases that cover mobile and desktop application scenarios.
-    /// </summary>
+    /// <summary>Gets DateTimeOffset test cases that cover mobile and desktop application scenarios.</summary>
     /// <param name="serializer">The serializer.</param>
     /// <returns>Array of DateTimeOffset test cases.</returns>
     private static DateTimeOffset[] GetMobileDesktopDateTimeOffsetTestCases(ISerializer serializer)
@@ -414,15 +509,15 @@ public abstract class DateTimeTestBase : IDisposable
         List<DateTimeOffset> cases =
         [
             new(2025, 1, 15, 10, 30, 45, TimeSpan.Zero), // UTC
-            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(5)), // UTC+5 (India)
-            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(-8)), // UTC-8 (PST)
-            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(-5)), // UTC-5 (EST)
-            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(1)), // UTC+1 (CET)
-            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(9)), // UTC+9 (JST)
+            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(IndiaOffsetHours)), // UTC+5 (India)
+            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(PacificStandardOffsetHours)), // UTC-8 (PST)
+            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(EasternStandardOffsetHours)), // UTC-5 (EST)
+            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(CentralEuropeanOffsetHours)), // UTC+1 (CET)
+            new(2025, 1, 15, 10, 30, 45, TimeSpan.FromHours(JapanOffsetHours)), // UTC+9 (JST)
 
             // Current time scenarios
-            DateTimeOffset.UtcNow,
-            DateTimeOffset.Now,
+            TimeProvider.System.GetUtcNow(),
+            TimeProvider.System.GetLocalNow(),
 
             // Edge cases (but safer than Min/Max)
             new(2000, 1, 1, 0, 0, 0, TimeSpan.Zero),
@@ -441,9 +536,7 @@ public abstract class DateTimeTestBase : IDisposable
         return [.. cases];
     }
 
-    /// <summary>
-    /// Validates a DateTimeOffset roundtrip with appropriate tolerance.
-    /// </summary>
+    /// <summary>Validates a DateTimeOffset roundtrip with appropriate tolerance.</summary>
     /// <param name="original">The original DateTimeOffset.</param>
     /// <param name="retrieved">The retrieved DateTimeOffset.</param>
     /// <param name="serializer">The serializer.</param>
@@ -454,36 +547,30 @@ public abstract class DateTimeTestBase : IDisposable
     {
         // UTC time should be very close
         var utcTicksDifference = Math.Abs(original.UtcTicks - retrieved.UtcTicks);
-        var utcToleranceTicks = TimeSpan.FromSeconds(2).Ticks; // 2 second tolerance
+        var utcToleranceTicks = TimeSpan.FromSeconds(UtcToleranceSeconds).Ticks;
 
         if (utcTicksDifference >= utcToleranceTicks)
         {
-            System.Diagnostics.Debug.WriteLine(
-                "DateTimeOffset UTC ticks validation failed: " +
-                $"original={original.UtcTicks}, retrieved={retrieved.UtcTicks}, " +
-                $"diff={utcTicksDifference} ticks");
+            Debug.WriteLine(
+                $"DateTimeOffset UTC ticks validation failed: {$"original={original.UtcTicks}, retrieved={retrieved.UtcTicks}, "}{$"diff={utcTicksDifference} ticks"}");
             return false;
         }
 
         // Offset comparison: be flexible as some serializers normalize offsets
         var offsetDifference = Math.Abs((original.Offset - retrieved.Offset).TotalHours);
-        var offsetTolerance = IsUsingBsonSerializer(serializer) ? 48.0 : 24.0; // More tolerance for BSON
+        var offsetTolerance = IsUsingBsonSerializer(serializer) ? BsonOffsetToleranceHours : StandardOffsetToleranceHours;
 
         if (offsetDifference <= offsetTolerance)
         {
             return true;
         }
 
-        System.Diagnostics.Debug.WriteLine(
-            "DateTimeOffset offset validation failed: " +
-            $"original={original.Offset}, retrieved={retrieved.Offset}, " +
-            $"diff={offsetDifference} hours, tolerance={offsetTolerance} hours");
+        Debug.WriteLine(
+            $"DateTimeOffset offset validation failed: {$"original={original.Offset}, retrieved={retrieved.Offset}, "}{$"diff={offsetDifference} hours, tolerance={offsetTolerance} hours"}");
         return false;
     }
 
-    /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
+    /// <summary>Sets up the test with the specified serializer type.</summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>
     /// <returns>The configured serializer instance.</returns>
     private static ISerializer SetupTestSerializer(Type? serializerType)
@@ -509,12 +596,6 @@ public abstract class DateTimeTestBase : IDisposable
             return new NewtonsoftSerializer();
         }
 
-        if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-
-        return null!;
+        return serializerType == typeof(SystemJsonSerializer) ? new SystemJsonSerializer() : null!;
     }
 }

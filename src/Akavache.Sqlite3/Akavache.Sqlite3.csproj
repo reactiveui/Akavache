@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(AkavacheFinalTargetFrameworks)</TargetFrameworks>
@@ -24,7 +24,7 @@
     under their original Akavache.Core location.
   -->
   <ItemGroup>
-    <Compile Include="..\Akavache.Core\Helpers\ArgumentExceptionHelper.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\Akavache.Core\Helpers\ArgumentValidation.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Helpers\DisposeHelper.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Core\SecurityUtilities.cs" Link="Shared\%(Filename)%(Extension)" />
     <Compile Include="..\Akavache.Core\Core\CachedObservables.cs" Link="Shared\%(Filename)%(Extension)" />

@@ -6,15 +6,32 @@ using Akavache.Core.Observables;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="InitSignal"/> and <see cref="ObservableFastOps"/>.
-/// </summary>
+/// <summary>Tests for <see cref="InitSignal"/> and <see cref="ObservableFastOpsExtensions"/>.</summary>
 [Category("Akavache")]
 public class ObservablePrimitivesTests
 {
-    /// <summary>
-    /// Fresh <see cref="InitSignal"/> starts in the pending state — not ready, not completed.
-    /// </summary>
+    /// <summary>Value the gate factory emits on the ready fast path.</summary>
+    private const int FactoryValue = 42;
+
+    /// <summary>Value the gate factory emits once a parked subscription is released.</summary>
+    private const int ParkedValue = 99;
+
+    /// <summary>Divisor of the <c>WhereSelect</c> predicate, which keeps only even elements.</summary>
+    private const int EvenPredicateDivisor = 2;
+
+    /// <summary>Factor the <c>WhereSelect</c> selector applies to each element it keeps.</summary>
+    private const int ProjectionMultiplier = 10;
+
+    /// <summary>Fallback <c>CatchReturn</c> emits when the source faults.</summary>
+    private const int ErrorFallbackValue = 42;
+
+    /// <summary>Fallback handed to <c>CatchReturn</c> over a successful source, which must never be emitted.</summary>
+    private const int UnusedFallbackValue = 99;
+
+    /// <summary>Fallback <c>CatchReturn</c> emits for the string-typed source.</summary>
+    private const string StringFallbackValue = "fallback";
+
+    /// <summary>Fresh <see cref="InitSignal"/> starts in the pending state — not ready, not completed.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitSignal_Pending_ShouldNotBeReadyOrCompleted()
@@ -24,10 +41,7 @@ public class ObservablePrimitivesTests
         await Assert.That(signal.IsCompleted).IsFalse();
     }
 
-    /// <summary>
-    /// <see cref="InitSignal.Complete"/> transitions the signal into the ready state
-    /// and the second call is idempotent.
-    /// </summary>
+    /// <summary>Verifies that <see cref="InitSignal.Complete"/> transitions the signal into the ready state and the second call is idempotent.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitSignal_Complete_ShouldTransitionToReadyAndBeIdempotent()
@@ -45,8 +59,8 @@ public class ObservablePrimitivesTests
     }
 
     /// <summary>
-    /// <see cref="InitSignal.Fail"/> transitions to completed-but-not-ready and pins
-    /// the captured error. Subsequent <see cref="InitSignal.Complete"/> is ignored.
+    /// Verifies that <see cref="InitSignal.Fail"/> transitions to completed-but-not-ready and pins
+    /// the captured error, and that a subsequent <see cref="InitSignal.Complete"/> is ignored.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
@@ -69,10 +83,7 @@ public class ObservablePrimitivesTests
         await Assert.That(ex!.Message).IsEqualTo("boom");
     }
 
-    /// <summary>
-    /// <see cref="InitSignal.Gate{T}(Func{IObservable{T}})"/> on the ready path
-    /// returns the factory's observable directly (no wrapper type).
-    /// </summary>
+    /// <summary>Verifies that <see cref="InitSignal.Gate{T}(Func{IObservable{T}})"/> on the ready path returns the factory's observable directly (no wrapper type).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitSignal_GateOnReadyPath_ShouldReturnFactoryObservableDirectly()
@@ -80,50 +91,43 @@ public class ObservablePrimitivesTests
         InitSignal signal = new();
         signal.Complete();
 
-        var expected = Observable.Return(42);
+        var expected = Observable.Return(FactoryValue);
         var actual = signal.Gate(() => expected);
 
         // Fast-path: the returned observable is the factory's observable, not a wrapper.
         await Assert.That(actual).IsSameReferenceAs(expected);
-        await Assert.That(await actual).IsEqualTo(42);
+        await Assert.That(await actual).IsEqualTo(FactoryValue);
     }
 
-    /// <summary>
-    /// <see cref="InitSignal.Gate{T}(Func{IObservable{T}})"/> on the pending path
-    /// parks the subscription until <see cref="InitSignal.Complete"/> fires.
-    /// </summary>
+    /// <summary>Verifies that <see cref="InitSignal.Gate{T}(Func{IObservable{T}})"/> on the pending path parks the subscription until <see cref="InitSignal.Complete"/> fires.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitSignal_GateOnPendingPath_ShouldParkUntilComplete()
     {
         InitSignal signal = new();
-        var emitted = new TaskCompletionSource<int>();
+        var emitted = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var gated = signal.Gate(() => Observable.Return(99));
-        gated.Subscribe(v => emitted.TrySetResult(v));
+        var gated = signal.Gate(static () => Observable.Return(ParkedValue));
+        _ = gated.Subscribe(v => emitted.TrySetResult(v));
 
         // Not completed yet — should not have emitted.
         await Assert.That(emitted.Task.IsCompleted).IsFalse();
 
         signal.Complete();
         var value = await emitted.Task;
-        await Assert.That(value).IsEqualTo(99);
+        await Assert.That(value).IsEqualTo(ParkedValue);
     }
 
-    /// <summary>
-    /// <see cref="InitSignal.Gate{T}(Func{IObservable{T}})"/> on the pending path
-    /// with a subsequent <see cref="InitSignal.Fail"/> propagates the error to the
-    /// parked subscription.
-    /// </summary>
+    /// <summary>Verifies that <see cref="InitSignal.Gate{T}(Func{IObservable{T}})"/> on the pending path propagates a subsequent <see cref="InitSignal.Fail"/> to the parked subscription.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitSignal_GateOnPendingPath_ShouldPropagateFailToParkedSubscription()
     {
         InitSignal signal = new();
-        var captured = new TaskCompletionSource<Exception>();
+        var captured = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var gated = signal.Gate(static () => Observable.Return(0));
-        gated.Subscribe(
+        _ = gated.Subscribe(
             _ => captured.TrySetException(new InvalidOperationException("should not emit")),
             ex => captured.TrySetResult(ex));
 
@@ -133,10 +137,7 @@ public class ObservablePrimitivesTests
         await Assert.That(error.Message).IsEqualTo("gated-error");
     }
 
-    /// <summary>
-    /// <see cref="ObservableFastOps.WhereSelect{TIn, TOut}"/> forwards only elements
-    /// that pass the predicate, projected through the selector.
-    /// </summary>
+    /// <summary>Verifies that <see cref="ObservableFastOpsExtensions.WhereSelect{TIn, TOut}"/> forwards only elements that pass the predicate, projected through the selector.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WhereSelect_ShouldFilterAndProjectInOnePass()
@@ -146,16 +147,13 @@ public class ObservablePrimitivesTests
         var source = input.ToObservable();
 
         var result = await source
-            .WhereSelect(static x => x % 2 == 0, static x => x * 10)
+            .WhereSelect(static x => x % EvenPredicateDivisor == 0, static x => x * ProjectionMultiplier)
             .ToList();
 
         await Assert.That(result).IsEquivalentTo(expected);
     }
 
-    /// <summary>
-    /// <see cref="ObservableFastOps.CatchReturnUnit"/> forwards terminal errors as
-    /// a single <see cref="Unit.Default"/> + OnCompleted.
-    /// </summary>
+    /// <summary>Verifies that <see cref="ObservableFastOpsExtensions.CatchReturnUnit"/> forwards terminal errors as a single <see cref="Unit.Default"/> + OnCompleted.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CatchReturnUnit_ShouldSwallowErrorAndEmitUnit()
@@ -168,31 +166,25 @@ public class ObservablePrimitivesTests
         await Assert.That(result[0]).IsEqualTo(Unit.Default);
     }
 
-    /// <summary>
-    /// <see cref="ObservableFastOps.CatchReturn{T}"/> forwards the stored fallback
-    /// when the source errors, and forwards source values verbatim otherwise.
-    /// </summary>
+    /// <summary>Verifies that <see cref="ObservableFastOpsExtensions.CatchReturn{T}"/> forwards the stored fallback when the source errors, and forwards source values verbatim otherwise.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CatchReturn_ShouldForwardValuesAndFallbackOnError()
     {
         string[] values = ["a", "b"];
         string[] expectedSuccess = ["a", "b"];
-        string[] expectedFailure = ["fallback"];
+        string[] expectedFailure = [StringFallbackValue];
         var successful = values.ToObservable();
         var failed = Observable.Throw<string>(new InvalidOperationException("boom"));
 
-        var successResult = await successful.CatchReturn("fallback").ToList();
-        var failureResult = await failed.CatchReturn("fallback").ToList();
+        var successResult = await successful.CatchReturn(StringFallbackValue).ToList();
+        var failureResult = await failed.CatchReturn(StringFallbackValue).ToList();
 
         await Assert.That(successResult).IsEquivalentTo(expectedSuccess);
         await Assert.That(failureResult).IsEquivalentTo(expectedFailure);
     }
 
-    /// <summary>
-    /// <see cref="WhereSelectObservable{TIn, TOut}"/> routes a throwing predicate
-    /// to <see cref="IObserver{T}.OnError"/> on the downstream observer.
-    /// </summary>
+    /// <summary>Verifies that <see cref="WhereSelectObservable{TIn, TOut}"/> routes a throwing predicate to <see cref="IObserver{T}.OnError"/> on the downstream observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WhereSelect_ThrowingPredicate_ShouldRouteErrorDownstream()
@@ -210,10 +202,7 @@ public class ObservablePrimitivesTests
         await Assert.That(ex!.Message).IsEqualTo("predicate-boom");
     }
 
-    /// <summary>
-    /// <see cref="WhereSelectObservable{TIn, TOut}"/> routes a throwing selector
-    /// to <see cref="IObserver{T}.OnError"/> on the downstream observer.
-    /// </summary>
+    /// <summary>Verifies that <see cref="WhereSelectObservable{TIn, TOut}"/> routes a throwing selector to <see cref="IObserver{T}.OnError"/> on the downstream observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WhereSelect_ThrowingSelector_ShouldRouteErrorDownstream()
@@ -232,9 +221,8 @@ public class ObservablePrimitivesTests
     }
 
     /// <summary>
-    /// <see cref="ObservableFastOps.CatchReturn{T}"/> with a non-Unit type creates a
-    /// <see cref="CatchReturnObservable{T}"/> that forwards the fallback on error.
-    /// Exercises line 45 of ObservableFastOps.
+    /// Verifies that <see cref="ObservableFastOpsExtensions.CatchReturn{T}"/> with a non-Unit type
+    /// creates a <see cref="CatchReturnObservable{T}"/> that forwards the fallback on error.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
@@ -242,25 +230,43 @@ public class ObservablePrimitivesTests
     {
         var source = Observable.Throw<int>(new InvalidOperationException("err"));
 
-        var result = await source.CatchReturn(42).ToList();
+        var result = await source.CatchReturn(ErrorFallbackValue).ToList();
 
         await Assert.That(result.Count).IsEqualTo(1);
-        await Assert.That(result[0]).IsEqualTo(42);
+        await Assert.That(result[0]).IsEqualTo(ErrorFallbackValue);
     }
 
     /// <summary>
-    /// <see cref="ObservableFastOps.CatchReturn{T}"/> with a successful source forwards
-    /// values verbatim without emitting the fallback.
+    /// Verifies that <see cref="ObservableFastOpsExtensions.SelectManyThen{TSource, TMid, TResult}"/>
+    /// pipes the source element through the first projection and then feeds that intermediate value
+    /// into the second projection, emitting only the final result.
     /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task SelectManyThen_ShouldFeedFirstProjectionResultIntoSecond()
+    {
+        var source = Observable.Return("seed");
+
+        var result = await source
+            .SelectManyThen(
+                static x => Observable.Return($"{x}-first"),
+                static mid => Observable.Return($"{mid}-second"))
+            .ToList();
+
+        await Assert.That(result.Count).IsEqualTo(1);
+        await Assert.That(result[0]).IsEqualTo("seed-first-second");
+    }
+
+    /// <summary>Verifies that <see cref="ObservableFastOpsExtensions.CatchReturn{T}"/> with a successful source forwards values verbatim without emitting the fallback.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CatchReturn_WithSuccessfulSource_ForwardsValuesOnly()
     {
-        var source = Observable.Return(1).Concat(Observable.Return(2)).Concat(Observable.Return(3));
-
-        var result = await source.CatchReturn(99).ToList();
-
         int[] expected = [1, 2, 3];
+        var source = expected.ToObservable();
+
+        var result = await source.CatchReturn(UnusedFallbackValue).ToList();
+
         await Assert.That(result).IsEquivalentTo(expected);
     }
 }

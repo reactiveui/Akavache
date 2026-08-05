@@ -21,9 +21,34 @@ public class EncryptedSqliteOperationQueueCoverageTests
     /// <summary>The password used for the encrypted test database.</summary>
     private const string TestPassword = "test-password";
 
-    /// <summary>
-    /// Dispose calls ShutdownAndWait; subsequent enqueue returns ObjectDisposedException.
-    /// </summary>
+    /// <summary>Result of the placeholder operation body used purely to probe enqueue behaviour.</summary>
+    private const int ProbeOperationResult = 42;
+
+    /// <summary>Result of the second operation in a batch, kept distinct so replies can be told apart.</summary>
+    private const int SecondOpResult = 2;
+
+    /// <summary>Result of the third operation in a batch, kept distinct so replies can be told apart.</summary>
+    private const int ThirdOpResult = 3;
+
+    /// <summary>Result of the first operation in the transaction batches.</summary>
+    private const int FirstTransactionOpResult = 10;
+
+    /// <summary>Result of the second operation in the transaction batches.</summary>
+    private const int SecondTransactionOpResult = 20;
+
+    /// <summary>Result of the third operation in the transaction batches.</summary>
+    private const int ThirdTransactionOpResult = 30;
+
+    /// <summary>How long to wait for a dedicated test thread to finish before giving up.</summary>
+    private const int ThreadJoinTimeoutSeconds = 30;
+
+    /// <summary>Batch index the replay test resumes from, leaving the earlier operations untouched.</summary>
+    private const int ReplayStartIndex = 2;
+
+    /// <summary>Payload of the entry written through the single-operation fast path.</summary>
+    private static readonly byte[] SingleOpPayload = [99];
+
+    /// <summary>Dispose calls ShutdownAndWait; subsequent enqueue returns ObjectDisposedException.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Dispose_SubsequentEnqueue_ReturnsObjectDisposedException()
@@ -32,12 +57,12 @@ public class EncryptedSqliteOperationQueueCoverageTests
         {
             var dbPath = Path.Combine(path, $"dispose-{Guid.NewGuid()}.db");
             var queue = new SqliteOperationQueue(
-                new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false),
+                SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false),
                 "test-dispose");
 
             queue.Dispose();
 
-            var obs = queue.Enqueue(_ => 42);
+            var obs = queue.Enqueue(static _ => ProbeOperationResult);
             var error = obs.SubscribeGetError();
             await Assert.That(error).IsTypeOf<ObjectDisposedException>();
         }
@@ -51,17 +76,19 @@ public class EncryptedSqliteOperationQueueCoverageTests
     [Test]
     internal async Task WorkerLoop_DrainLeftovers_AllRepliesComplete()
     {
+        const int writeCount = 20;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"drain-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
             var replies = new List<IObservable<Unit>>();
-            for (var i = 0; i < 20; i++)
+            for (var i = 0; i < writeCount; i++)
             {
                 replies.Add(conn.Upsert(
-                    [new CacheEntry($"drain-{i}", null, [(byte)i], DateTimeOffset.UtcNow, null)]));
+                    [new CacheEntry($"drain-{i}", null, [(byte)i], TimeProvider.System.GetUtcNow(), null)]));
             }
 
             conn.Dispose();
@@ -76,13 +103,11 @@ public class EncryptedSqliteOperationQueueCoverageTests
                 }
             }
 
-            await Assert.That(completedCount).IsEqualTo(20);
+            await Assert.That(completedCount).IsEqualTo(writeCount);
         }
     }
 
-    /// <summary>
-    /// Single coalescable op runs without a transaction wrapper (fast path).
-    /// </summary>
+    /// <summary>Single coalescable op runs without a transaction wrapper (fast path).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ExecuteCoalescedBatch_SingleOp_RunsWithoutTransactionWrapper()
@@ -90,16 +115,16 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"single-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
-                conn.Upsert([new CacheEntry("single", null, [99], DateTimeOffset.UtcNow, null)])
+                conn.Upsert([new CacheEntry("single", null, SingleOpPayload, TimeProvider.System.GetUtcNow(), null)])
                     .WaitForCompletion();
 
-                var entry = conn.Get("single", null, DateTimeOffset.UtcNow).WaitForValue();
+                var entry = conn.Get("single", null, TimeProvider.System.GetUtcNow()).WaitForValue();
                 await Assert.That(entry).IsNotNull();
-                await Assert.That(entry!.Value![0]).IsEqualTo((byte)99);
+                await Assert.That(entry!.Value![0]).IsEqualTo(SingleOpPayload[0]);
             }
             finally
             {
@@ -108,31 +133,31 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// Interleaved writes and reads exercise the afterBatch path.
-    /// </summary>
+    /// <summary>Interleaved writes and reads exercise the afterBatch path.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ExecuteCoalescedBatch_NonCoalescableBreaksBatch()
     {
+        const int interleavedRounds = 5;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"break-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
-                conn.Upsert([new CacheEntry("seed", null, [1], DateTimeOffset.UtcNow, null)])
+                conn.Upsert([new CacheEntry("seed", null, [1], TimeProvider.System.GetUtcNow(), null)])
                     .WaitForCompletion();
 
-                for (var i = 0; i < 5; i++)
+                for (var i = 0; i < interleavedRounds; i++)
                 {
-                    conn.Upsert([new CacheEntry($"brk-{i}", null, [(byte)i], DateTimeOffset.UtcNow, null)])
+                    conn.Upsert([new CacheEntry($"brk-{i}", null, [(byte)i], TimeProvider.System.GetUtcNow(), null)])
                         .WaitForCompletion();
-                    conn.Get("seed", null, DateTimeOffset.UtcNow).WaitForValue();
+                    _ = conn.Get("seed", null, TimeProvider.System.GetUtcNow()).WaitForValue();
                 }
 
-                var entry = conn.Get("seed", null, DateTimeOffset.UtcNow).WaitForValue();
+                var entry = conn.Get("seed", null, TimeProvider.System.GetUtcNow()).WaitForValue();
                 await Assert.That(entry).IsNotNull();
             }
             finally
@@ -142,29 +167,29 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// Coalescable-only writes — RunAfterBatch with null _afterBatch is a no-op.
-    /// </summary>
+    /// <summary>Coalescable-only writes — RunAfterBatch with null _afterBatch is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task RunAfterBatch_NoStashedOp_IsNoOp()
     {
+        const int entryCount = 5;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"noop-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
-                for (var i = 0; i < 5; i++)
+                for (var i = 0; i < entryCount; i++)
                 {
-                    conn.Upsert([new CacheEntry($"noop-{i}", null, [(byte)i], DateTimeOffset.UtcNow, null)])
+                    conn.Upsert([new CacheEntry($"noop-{i}", null, [(byte)i], TimeProvider.System.GetUtcNow(), null)])
                         .WaitForCompletion();
                 }
 
-                for (var i = 0; i < 5; i++)
+                for (var i = 0; i < entryCount; i++)
                 {
-                    var entry = conn.Get($"noop-{i}", null, DateTimeOffset.UtcNow).WaitForValue();
+                    var entry = conn.Get($"noop-{i}", null, TimeProvider.System.GetUtcNow()).WaitForValue();
                     await Assert.That(entry).IsNotNull();
                 }
             }
@@ -175,9 +200,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// Enqueue after dispose — reply observable receives error, row stream completes empty.
-    /// </summary>
+    /// <summary>Enqueue after dispose — reply observable receives error, row stream completes empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Enqueue_AfterDispose_ReturnsErrorOrEmpty()
@@ -185,34 +208,34 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"post-dispose-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             conn.Dispose();
 
-            var error = conn.Get("nonexistent", null, DateTimeOffset.UtcNow).SubscribeGetError();
+            var error = conn.Get("nonexistent", null, TimeProvider.System.GetUtcNow()).SubscribeGetError();
             await Assert.That(error).IsTypeOf<ObjectDisposedException>();
 
-            var keys = conn.GetAllKeys(null, DateTimeOffset.UtcNow).ToList().WaitForValue();
+            var keys = conn.GetAllKeys(null, TimeProvider.System.GetUtcNow()).ToList().WaitForValue();
             await Assert.That(keys).IsEmpty();
         }
     }
 
-    /// <summary>
-    /// Fire-and-forget writes then shutdown — no deadlock or exception.
-    /// </summary>
+    /// <summary>Fire-and-forget writes then shutdown — no deadlock or exception.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ShutdownAndWait_FireAndForget_CompletesCleanly()
     {
+        const int writeCount = 20;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"rapid-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
-            for (var i = 0; i < 20; i++)
+            for (var i = 0; i < writeCount; i++)
             {
-                _ = conn.Upsert([new CacheEntry($"rapid-{i}", null, [(byte)i], DateTimeOffset.UtcNow, null)]);
+                _ = conn.Upsert([new CacheEntry($"rapid-{i}", null, [(byte)i], TimeProvider.System.GetUtcNow(), null)]);
             }
 
             conn.Dispose();
@@ -220,9 +243,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// Multiple sequential dispose calls are idempotent — second call waits on _workerExited.
-    /// </summary>
+    /// <summary>Multiple sequential dispose calls are idempotent — second call waits on _workerExited.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Dispose_MultipleSequential_IsIdempotent()
@@ -230,7 +251,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"multi-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
             conn.Dispose();
@@ -251,7 +272,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"coalesce-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
@@ -262,35 +283,16 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 for (var i = 0; i < threadCount; i++)
                 {
-                    var idx = i;
-                    threads[i] = new Thread(() =>
-                    {
-                        go.Wait();
-                        try
-                        {
-                            conn.Upsert([new CacheEntry($"t-{idx}", null, [(byte)idx], DateTimeOffset.UtcNow, null)])
-                                .WaitForCompletion();
-                        }
-                        catch (Exception ex)
-                        {
-                            errors[idx] = ex;
-                        }
-                    })
-                    { IsBackground = true };
-                    threads[i].Start();
+                    threads[i] = StartWriterThread(conn, go, errors, i, "t");
                 }
 
                 go.Set();
-
-                foreach (var t in threads)
-                {
-                    t.Join(TimeSpan.FromSeconds(30));
-                }
+                JoinAll(threads);
 
                 for (var i = 0; i < threadCount; i++)
                 {
                     await Assert.That(errors[i]).IsNull();
-                    var entry = conn.Get($"t-{i}", null, DateTimeOffset.UtcNow).WaitForValue();
+                    var entry = conn.Get($"t-{i}", null, TimeProvider.System.GetUtcNow()).WaitForValue();
                     await Assert.That(entry).IsNotNull();
                 }
             }
@@ -309,18 +311,20 @@ public class EncryptedSqliteOperationQueueCoverageTests
     [Test]
     internal async Task Dispose_ConcurrentViaDedicatedThreads_NoDeadlock()
     {
+        const int threadCount = 3;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"conc-dispose-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
             using var go = new ManualResetEventSlim(false);
-            var threads = new Thread[3];
+            var threads = new Thread[threadCount];
 
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < threadCount; i++)
             {
-                threads[i] = new Thread(() =>
+                threads[i] = new(() =>
                 {
                     go.Wait();
                     conn.Dispose();
@@ -330,85 +334,46 @@ public class EncryptedSqliteOperationQueueCoverageTests
             }
 
             go.Set();
-
-            foreach (var t in threads)
-            {
-                t.Join(TimeSpan.FromSeconds(30));
-            }
+            JoinAll(threads);
 
             await Task.CompletedTask;
         }
     }
 
-    /// <summary>
-    /// Mixed writes and reads from dedicated threads exercise afterBatch + coalescing
-    /// under real concurrency.
-    /// </summary>
+    /// <summary>Mixed writes and reads from dedicated threads exercise afterBatch + coalescing under real concurrency.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CoalescedBatch_MixedWritesAndReads_ViaDedicatedThreads()
     {
+        const int writerCount = 4;
+        const int readerCount = 2;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"mixed-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
-                conn.Upsert([new CacheEntry("anchor", null, [0xFF], DateTimeOffset.UtcNow, null)])
+                conn.Upsert([new CacheEntry("anchor", null, [0xFF], TimeProvider.System.GetUtcNow(), null)])
                     .WaitForCompletion();
 
-                const int writerCount = 4;
-                const int readerCount = 2;
                 using var go = new ManualResetEventSlim(false);
                 var threads = new Thread[writerCount + readerCount];
                 var errors = new Exception?[writerCount + readerCount];
 
                 for (var i = 0; i < writerCount; i++)
                 {
-                    var idx = i;
-                    threads[i] = new Thread(() =>
-                    {
-                        go.Wait();
-                        try
-                        {
-                            conn.Upsert([new CacheEntry($"w-{idx}", null, [(byte)idx], DateTimeOffset.UtcNow, null)])
-                                .WaitForCompletion();
-                        }
-                        catch (Exception ex)
-                        {
-                            errors[idx] = ex;
-                        }
-                    })
-                    { IsBackground = true };
-                    threads[i].Start();
+                    threads[i] = StartWriterThread(conn, go, errors, i, "w");
                 }
 
                 for (var i = 0; i < readerCount; i++)
                 {
-                    var idx = writerCount + i;
-                    threads[idx] = new Thread(() =>
-                    {
-                        go.Wait();
-                        try
-                        {
-                            conn.Get("anchor", null, DateTimeOffset.UtcNow).WaitForValue();
-                        }
-                        catch (Exception ex)
-                        {
-                            errors[idx] = ex;
-                        }
-                    })
-                    { IsBackground = true };
-                    threads[idx].Start();
+                    threads[writerCount + i] = StartAnchorReaderThread(conn, go, errors, writerCount + i);
                 }
 
                 go.Set();
-
-                foreach (var t in threads)
-                {
-                    t.Join(TimeSpan.FromSeconds(30));
-                }
+                JoinAll(threads);
 
                 for (var i = 0; i < writerCount + readerCount; i++)
                 {
@@ -417,7 +382,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 for (var i = 0; i < writerCount; i++)
                 {
-                    var entry = conn.Get($"w-{i}", null, DateTimeOffset.UtcNow).WaitForValue();
+                    var entry = conn.Get($"w-{i}", null, TimeProvider.System.GetUtcNow()).WaitForValue();
                     await Assert.That(entry).IsNotNull();
                 }
             }
@@ -428,24 +393,24 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// Writes from dedicated threads then dispose — exercises shutdown-as-afterBatch path.
-    /// </summary>
+    /// <summary>Writes from dedicated threads then dispose — exercises shutdown-as-afterBatch path.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task RunAfterBatch_ShutdownDuringConcurrentWrites()
     {
+        const int writeCount = 30;
+
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"shutdown-batch-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
 
             var observables = new List<IObservable<Unit>>();
-            for (var i = 0; i < 30; i++)
+            for (var i = 0; i < writeCount; i++)
             {
                 observables.Add(conn.Upsert(
-                    [new CacheEntry($"ab-{i}", null, [(byte)i], DateTimeOffset.UtcNow, null)]));
+                    [new CacheEntry($"ab-{i}", null, [(byte)i], TimeProvider.System.GetUtcNow(), null)]));
             }
 
             conn.Dispose();
@@ -460,15 +425,12 @@ public class EncryptedSqliteOperationQueueCoverageTests
                 }
             }
 
-            await Assert.That(totalCompleted).IsEqualTo(30);
+            await Assert.That(totalCompleted).IsEqualTo(writeCount);
         }
     }
 
     // ── TryAddToInbox ──────────────────────────────────────────────────────
-
-    /// <summary>
-    /// TryAddToInbox returns true when the inbox is open.
-    /// </summary>
+    /// <summary>TryAddToInbox returns true when the inbox is open.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryAddToInbox_InboxOpen_ReturnsTrue()
@@ -476,12 +438,12 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"inbox-open-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             var queue = new SqliteOperationQueue(conn, "test-inbox-open");
             try
             {
                 var reply = new SqliteReplyObservable<int>();
-                var op = new SqliteOperation<int>(_ => 42, reply, coalescable: false);
+                var op = new SqliteOperation<int>(static _ => ProbeOperationResult, reply, coalescable: false);
                 var added = queue.TryAddToInbox(op);
 
                 await Assert.That(added).IsTrue();
@@ -494,9 +456,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// TryAddToInbox returns false when the inbox has been completed.
-    /// </summary>
+    /// <summary>TryAddToInbox returns false when the inbox has been completed.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryAddToInbox_InboxCompleted_ReturnsFalse()
@@ -504,14 +464,14 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"inbox-completed-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             var queue = new SqliteOperationQueue(conn, "test-inbox-completed");
 
             // Dispose completes the inbox via ShutdownAndWait.
             queue.Dispose();
 
             var reply = new SqliteReplyObservable<int>();
-            var op = new SqliteOperation<int>(_ => 42, reply, coalescable: false);
+            var op = new SqliteOperation<int>(static _ => ProbeOperationResult, reply, coalescable: false);
             var added = queue.TryAddToInbox(op);
 
             await Assert.That(added).IsFalse();
@@ -521,11 +481,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
     }
 
     // ── DrainLeftovers (static) ────────────────────────────────────────────
-
-    /// <summary>
-    /// DrainLeftovers skips SqliteShutdownOperation instances and fails regular ops
-    /// with ObjectDisposedException.
-    /// </summary>
+    /// <summary>DrainLeftovers skips SqliteShutdownOperation instances and fails regular ops with ObjectDisposedException.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task DrainLeftovers_MixedOps_SkipsShutdownAndFailsRegular()
@@ -533,19 +489,19 @@ public class EncryptedSqliteOperationQueueCoverageTests
         var inbox = new BlockingCollection<ISqliteOperation>();
 
         var reply1 = new SqliteReplyObservable<int>();
-        var op1 = new SqliteOperation<int>(_ => 1, reply1, coalescable: false);
+        var op1 = new SqliteOperation<int>(static _ => 1, reply1, coalescable: false);
         inbox.Add(op1);
 
         inbox.Add(new SqliteShutdownOperation(static _ => { }));
 
         var reply2 = new SqliteReplyObservable<int>();
-        var op2 = new SqliteOperation<int>(_ => 2, reply2, coalescable: true);
+        var op2 = new SqliteOperation<int>(static _ => SecondOpResult, reply2, coalescable: true);
         inbox.Add(op2);
 
         inbox.Add(new SqliteShutdownOperation(static _ => { }));
 
         var reply3 = new SqliteReplyObservable<int>();
-        var op3 = new SqliteOperation<int>(_ => 3, reply3, coalescable: false);
+        var op3 = new SqliteOperation<int>(static _ => ThirdOpResult, reply3, coalescable: false);
         inbox.Add(op3);
 
         inbox.CompleteAdding();
@@ -565,9 +521,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         inbox.Dispose();
     }
 
-    /// <summary>
-    /// DrainLeftovers with an empty inbox is a no-op.
-    /// </summary>
+    /// <summary>DrainLeftovers with an empty inbox is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task DrainLeftovers_EmptyInbox_IsNoOp()
@@ -584,10 +538,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
     }
 
     // ── ExecuteBatchInTransaction (static) ──────────────────────────────────
-
-    /// <summary>
-    /// ExecuteBatchInTransaction commits all ops when none throw.
-    /// </summary>
+    /// <summary>ExecuteBatchInTransaction commits all ops when none throw.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ExecuteBatchInTransaction_AllSucceed_CommitsTransaction()
@@ -595,7 +546,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"batch-commit-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
@@ -605,9 +556,9 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 var batch = new List<ISqliteOperation>
                 {
-                    new SqliteOperation<int>(_ => 10, reply1, coalescable: true),
-                    new SqliteOperation<int>(_ => 20, reply2, coalescable: true),
-                    new SqliteOperation<int>(_ => 30, reply3, coalescable: true),
+                    new SqliteOperation<int>(static _ => FirstTransactionOpResult, reply1, coalescable: true),
+                    new SqliteOperation<int>(static _ => SecondTransactionOpResult, reply2, coalescable: true),
+                    new SqliteOperation<int>(static _ => ThirdTransactionOpResult, reply3, coalescable: true),
                 };
 
                 SqliteOperationQueue.ExecuteBatchInTransaction(conn, batch);
@@ -616,9 +567,9 @@ public class EncryptedSqliteOperationQueueCoverageTests
                 var val1 = reply1.SubscribeGetValue();
                 var val2 = reply2.SubscribeGetValue();
                 var val3 = reply3.SubscribeGetValue();
-                await Assert.That(val1).IsEqualTo(10);
-                await Assert.That(val2).IsEqualTo(20);
-                await Assert.That(val3).IsEqualTo(30);
+                await Assert.That(val1).IsEqualTo(FirstTransactionOpResult);
+                await Assert.That(val2).IsEqualTo(SecondTransactionOpResult);
+                await Assert.That(val3).IsEqualTo(ThirdTransactionOpResult);
             }
             finally
             {
@@ -627,10 +578,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// ExecuteBatchInTransaction with a mid-batch failure rolls back and replays
-    /// remaining ops individually.
-    /// </summary>
+    /// <summary>ExecuteBatchInTransaction with a mid-batch failure rolls back and replays remaining ops individually.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ExecuteBatchInTransaction_MidBatchFailure_RollsBackAndReplays()
@@ -638,7 +586,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"batch-mid-fail-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
@@ -648,9 +596,9 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 var batch = new List<ISqliteOperation>
                 {
-                    new SqliteOperation<int>(_ => 10, reply1, coalescable: true),
-                    new SqliteOperation<int>(_ => throw new InvalidOperationException("mid-batch-boom"), reply2, coalescable: true),
-                    new SqliteOperation<int>(_ => 30, reply3, coalescable: true),
+                    new SqliteOperation<int>(static _ => FirstTransactionOpResult, reply1, coalescable: true),
+                    new SqliteOperation<int>(static _ => throw new InvalidOperationException("mid-batch-boom"), reply2, coalescable: true),
+                    new SqliteOperation<int>(static _ => ThirdTransactionOpResult, reply3, coalescable: true),
                 };
 
                 SqliteOperationQueue.ExecuteBatchInTransaction(conn, batch);
@@ -661,7 +609,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 // The op after the failure (index 2) is replayed individually and should succeed.
                 var val3 = reply3.SubscribeGetValue();
-                await Assert.That(val3).IsEqualTo(30);
+                await Assert.That(val3).IsEqualTo(ThirdTransactionOpResult);
             }
             finally
             {
@@ -671,10 +619,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
     }
 
     // ── FailAllOps (static) ────────────────────────────────────────────────
-
-    /// <summary>
-    /// FailAllOps sets InvalidOperationException on every op's reply observable.
-    /// </summary>
+    /// <summary>FailAllOps sets InvalidOperationException on every op's reply observable.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task FailAllOps_SetsInvalidOperationOnAllOps()
@@ -685,9 +630,9 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
         var batch = new List<ISqliteOperation>
         {
-            new SqliteOperation<int>(_ => 1, reply1, coalescable: true),
-            new SqliteOperation<int>(_ => 2, reply2, coalescable: true),
-            new SqliteOperation<int>(_ => 3, reply3, coalescable: true),
+            new SqliteOperation<int>(static _ => 1, reply1, coalescable: true),
+            new SqliteOperation<int>(static _ => SecondOpResult, reply2, coalescable: true),
+            new SqliteOperation<int>(static _ => ThirdOpResult, reply3, coalescable: true),
         };
 
         SqliteOperationQueue.FailAllOps(batch);
@@ -701,9 +646,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         await Assert.That(error3).IsTypeOf<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// FailAllOps on an empty batch is a no-op.
-    /// </summary>
+    /// <summary>FailAllOps on an empty batch is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task FailAllOps_EmptyBatch_IsNoOp()
@@ -717,10 +660,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
     }
 
     // ── ReplayRemainingOps (static) ────────────────────────────────────────
-
-    /// <summary>
-    /// ReplayRemainingOps executes only ops from the given startIndex onward.
-    /// </summary>
+    /// <summary>ReplayRemainingOps executes only ops from the given startIndex onward.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ReplayRemainingOps_FromStartIndex_ExecutesOnlyRemaining()
@@ -728,54 +668,21 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"replay-start-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
-                var executed = new bool[4];
+                SqliteReplyObservable<int>[] replies =
+                [
+                    new(),
+                    new(),
+                    new(),
+                    new(),
+                ];
+                var executed = new bool[replies.Length];
+                var batch = CreateIndexRecordingBatch(executed, replies);
 
-                var reply0 = new SqliteReplyObservable<int>();
-                var reply1 = new SqliteReplyObservable<int>();
-                var reply2 = new SqliteReplyObservable<int>();
-                var reply3 = new SqliteReplyObservable<int>();
-
-                var batch = new List<ISqliteOperation>
-                {
-                    new SqliteOperation<int>(
-                        _ =>
-                        {
-                            executed[0] = true;
-                            return 0;
-                        },
-                        reply0,
-                        coalescable: true),
-                    new SqliteOperation<int>(
-                        _ =>
-                        {
-                            executed[1] = true;
-                            return 1;
-                        },
-                        reply1,
-                        coalescable: true),
-                    new SqliteOperation<int>(
-                        _ =>
-                        {
-                            executed[2] = true;
-                            return 2;
-                        },
-                        reply2,
-                        coalescable: true),
-                    new SqliteOperation<int>(
-                        _ =>
-                        {
-                            executed[3] = true;
-                            return 3;
-                        },
-                        reply3,
-                        coalescable: true),
-                };
-
-                SqliteOperationQueue.ReplayRemainingOps(conn, batch, startIndex: 2);
+                SqliteOperationQueue.ReplayRemainingOps(conn, batch, startIndex: ReplayStartIndex);
 
                 // Only ops at index 2 and 3 should have been executed.
                 await Assert.That(executed[0]).IsFalse();
@@ -784,10 +691,10 @@ public class EncryptedSqliteOperationQueueCoverageTests
                 await Assert.That(executed[3]).IsTrue();
 
                 // The executed ops should have their results.
-                var val2 = reply2.SubscribeGetValue();
-                var val3 = reply3.SubscribeGetValue();
-                await Assert.That(val2).IsEqualTo(2);
-                await Assert.That(val3).IsEqualTo(3);
+                var val2 = replies[2].SubscribeGetValue();
+                var val3 = replies[3].SubscribeGetValue();
+                await Assert.That(val2).IsEqualTo(SecondOpResult);
+                await Assert.That(val3).IsEqualTo(ThirdOpResult);
             }
             finally
             {
@@ -796,9 +703,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         }
     }
 
-    /// <summary>
-    /// ReplayRemainingOps with startIndex at batch length is a no-op.
-    /// </summary>
+    /// <summary>ReplayRemainingOps with startIndex at batch length is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task ReplayRemainingOps_StartIndexAtEnd_IsNoOp()
@@ -806,23 +711,21 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"replay-end-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
                 var executed = false;
                 var reply = new SqliteReplyObservable<int>();
-                var batch = new List<ISqliteOperation>
-                {
-                    new SqliteOperation<int>(
-                        _ =>
-                        {
-                            executed = true;
-                            return 1;
-                        },
-                        reply,
-                        coalescable: true),
-                };
+                var op = new SqliteOperation<int>(
+                    _ =>
+                    {
+                        executed = true;
+                        return 1;
+                    },
+                    reply,
+                    coalescable: true);
+                var batch = new List<ISqliteOperation> { op };
 
                 // startIndex == batch.Count means nothing to replay.
                 SqliteOperationQueue.ReplayRemainingOps(conn, batch, startIndex: 1);
@@ -847,7 +750,7 @@ public class EncryptedSqliteOperationQueueCoverageTests
         using (Utility.WithEmptyDirectory(out var path))
         {
             var dbPath = Path.Combine(path, $"replay-fail-{Guid.NewGuid()}.db");
-            var conn = new SqlitePclRawConnection(dbPath, password: TestPassword, readOnly: false);
+            var conn = SqlitePclRawConnection.Create(dbPath, password: TestPassword, readOnly: false);
             conn.CreateSchema().WaitForCompletion();
             try
             {
@@ -857,9 +760,9 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 var batch = new List<ISqliteOperation>
                 {
-                    new SqliteOperation<int>(_ => 0, reply0, coalescable: true),
-                    new SqliteOperation<int>(_ => throw new InvalidOperationException("replay-boom"), reply1, coalescable: true),
-                    new SqliteOperation<int>(_ => 2, reply2, coalescable: true),
+                    new SqliteOperation<int>(static _ => 0, reply0, coalescable: true),
+                    new SqliteOperation<int>(static _ => throw new InvalidOperationException("replay-boom"), reply1, coalescable: true),
+                    new SqliteOperation<int>(static _ => SecondOpResult, reply2, coalescable: true),
                 };
 
                 // Replay from index 1 — includes the failing op and the one after it.
@@ -871,12 +774,97 @@ public class EncryptedSqliteOperationQueueCoverageTests
 
                 // The op after the failure should still succeed.
                 var val2 = reply2.SubscribeGetValue();
-                await Assert.That(val2).IsEqualTo(2);
+                await Assert.That(val2).IsEqualTo(SecondOpResult);
             }
             finally
             {
                 conn.Dispose();
             }
+        }
+    }
+
+    /// <summary>Builds a batch whose operations record that they ran and return their own batch index.</summary>
+    /// <param name="executed">Flags, one per operation, set when that operation runs.</param>
+    /// <param name="replies">Reply observables, one per operation.</param>
+    /// <returns>The batch, in index order.</returns>
+    private static List<ISqliteOperation> CreateIndexRecordingBatch(bool[] executed, SqliteReplyObservable<int>[] replies)
+    {
+        var batch = new List<ISqliteOperation>(replies.Length);
+        for (var i = 0; i < replies.Length; i++)
+        {
+            var index = i;
+            batch.Add(new SqliteOperation<int>(
+                _ =>
+                {
+                    executed[index] = true;
+                    return index;
+                },
+                replies[index],
+                coalescable: true));
+        }
+
+        return batch;
+    }
+
+    /// <summary>Starts a background thread that upserts one entry once the gate opens.</summary>
+    /// <param name="connection">The connection to write through.</param>
+    /// <param name="gate">Released when every thread should start at once.</param>
+    /// <param name="errors">Slot array that captures a per-thread failure.</param>
+    /// <param name="index">This thread's slot, also used as the key suffix and payload byte.</param>
+    /// <param name="keyPrefix">Prefix of the key this thread writes.</param>
+    /// <returns>The started thread.</returns>
+    private static Thread StartWriterThread(SqlitePclRawConnection connection, ManualResetEventSlim gate, Exception?[] errors, int index, string keyPrefix)
+    {
+        Thread thread = new(() =>
+        {
+            gate.Wait();
+            try
+            {
+                connection.Upsert([new CacheEntry($"{keyPrefix}-{index}", null, [(byte)index], TimeProvider.System.GetUtcNow(), null)])
+                    .WaitForCompletion();
+            }
+            catch (Exception ex)
+            {
+                errors[index] = ex;
+            }
+        })
+        { IsBackground = true };
+        thread.Start();
+        return thread;
+    }
+
+    /// <summary>Starts a background thread that reads the anchor entry once the gate opens.</summary>
+    /// <param name="connection">The connection to read through.</param>
+    /// <param name="gate">Released when every thread should start at once.</param>
+    /// <param name="errors">Slot array that captures a per-thread failure.</param>
+    /// <param name="index">This thread's slot in <paramref name="errors"/>.</param>
+    /// <returns>The started thread.</returns>
+    private static Thread StartAnchorReaderThread(SqlitePclRawConnection connection, ManualResetEventSlim gate, Exception?[] errors, int index)
+    {
+        Thread thread = new(() =>
+        {
+            gate.Wait();
+            try
+            {
+                _ = connection.Get("anchor", null, TimeProvider.System.GetUtcNow()).WaitForValue();
+            }
+            catch (Exception ex)
+            {
+                errors[index] = ex;
+            }
+        })
+        { IsBackground = true };
+        thread.Start();
+        return thread;
+    }
+
+    /// <summary>Waits for every test thread to finish, bounded so a hang fails the test instead of stalling the run.</summary>
+    /// <param name="threads">The threads to join.</param>
+    private static void JoinAll(IEnumerable<Thread> threads)
+    {
+        foreach (var thread in threads)
+        {
+            _ = thread.Join(TimeSpan.FromSeconds(ThreadJoinTimeoutSeconds));
         }
     }
 }

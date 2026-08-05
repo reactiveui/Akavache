@@ -27,6 +27,8 @@ internal sealed class SelectConstantObservable<TSource, TResult>(
     /// Forwarding observer that replaces every <see cref="OnNext"/> value with
     /// the stored constant. Error and completion signals pass through unchanged.
     /// </summary>
+    /// <param name="downstream">The observer that receives the projected notifications.</param>
+    /// <param name="constant">The value emitted in place of every source element.</param>
     private sealed class SelectConstantObserver(IObserver<TResult> downstream, TResult constant) : IObserver<TSource>
     {
         /// <inheritdoc/>

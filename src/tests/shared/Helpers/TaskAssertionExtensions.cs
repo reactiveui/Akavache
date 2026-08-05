@@ -19,31 +19,32 @@ namespace Akavache.Tests;
 /// </summary>
 internal static class TaskAssertionExtensions
 {
-    /// <summary>
-    /// Awaits <paramref name="task"/> and asserts that it faults with an exception
-    /// of type <typeparamref name="TException"/> (or a derived type).
-    /// </summary>
-    /// <typeparam name="TException">The expected exception type.</typeparam>
-    /// <param name="task">The task to await.</param>
-    /// <returns>A task representing the asynchronous assertion.</returns>
-    public static async Task ShouldThrowAsync<TException>(this Task task)
-        where TException : Exception
+    /// <summary>Extension members for <see cref="Task"/>.</summary>
+    /// <param name="task">The task the members operate on.</param>
+    extension(Task task)
     {
-        try
+        /// <summary>Awaits the task and asserts that it faults with an exception of type <typeparamref name="TException"/> (or a derived type).</summary>
+        /// <typeparam name="TException">The expected exception type.</typeparam>
+        /// <returns>A task representing the asynchronous assertion.</returns>
+        internal async Task ShouldThrowAsync<TException>()
+            where TException : Exception
         {
-            await task.ConfigureAwait(false);
-        }
-        catch (TException)
-        {
-            return;
-        }
-        catch (Exception ex)
-        {
-            throw new AssertionException(
-                $"Expected {typeof(TException).Name} but got {ex.GetType().Name}: {ex.Message}");
-        }
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (TException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                throw new AssertionException(
+                    $"Expected {typeof(TException).Name} but got {ex.GetType().Name}: {ex.Message}");
+            }
 
-        throw new AssertionException(
-            $"Expected {typeof(TException).Name} but no exception was thrown.");
+            throw new AssertionException(
+                $"Expected {typeof(TException).Name} but no exception was thrown.");
+        }
     }
 }

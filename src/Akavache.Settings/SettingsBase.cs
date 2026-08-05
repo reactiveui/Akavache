@@ -11,7 +11,7 @@ namespace Akavache.Settings;
 /// Provides a base class for implementing application settings storage using Akavache.
 /// This class automatically manages settings persistence and provides a foundation for typed settings classes.
 /// </summary>
-public abstract class SettingsBase : SettingsStorage
+public class SettingsBase : SettingsStorage
 {
     /// <summary>
     /// Ambient cache slot set by <c>GetSettingsStore&lt;T&gt;</c> immediately before it
@@ -22,10 +22,7 @@ public abstract class SettingsBase : SettingsStorage
     /// </summary>
     private static readonly AsyncLocal<IBlobCache?> _ambientCache = new();
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsBase"/> class that resolves
-    /// its backing cache from the ambient <see cref="CacheDatabase"/>.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="SettingsBase"/> class that resolves its backing cache from the ambient <see cref="CacheDatabase"/>.</summary>
     /// <param name="className">Name of the class — used as the settings key prefix.</param>
     protected SettingsBase(string className)
         : base($"__{className}__", _ambientCache.Value ?? GetBlobCacheForClass(className))
@@ -93,11 +90,7 @@ public abstract class SettingsBase : SettingsStorage
             ?? TryGetTransientFallback()
             ?? throw CreateNoCacheFoundException(className);
 
-    /// <summary>
-    /// Resolves the blob cache using the default ambient-cache resolvers that point at
-    /// <see cref="CacheDatabase"/>. Overload of
-    /// <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>.
-    /// </summary>
+    /// <summary>Default-resolver overload of <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>.</summary>
     /// <param name="className">The settings class name.</param>
     /// <returns>The resolved <see cref="IBlobCache"/>.</returns>
     internal static IBlobCache GetBlobCacheForClass(string className) =>
@@ -116,17 +109,11 @@ public abstract class SettingsBase : SettingsStorage
     /// <returns>The ambient UserAccount cache.</returns>
     internal static IBlobCache ReadAmbientUserAccount() => CacheDatabase.UserAccount;
 
-    /// <summary>
-    /// Default LocalMachine resolver used by the parameterless <see cref="SettingsBase"/>
-    /// constructor. Delegates straight to <see cref="CacheDatabase.LocalMachine"/>.
-    /// </summary>
+    /// <summary>Default LocalMachine resolver used by the parameterless <see cref="SettingsBase"/> constructor. Delegates straight to <see cref="CacheDatabase.LocalMachine"/>.</summary>
     /// <returns>The ambient LocalMachine cache.</returns>
     internal static IBlobCache ReadAmbientLocalMachine() => CacheDatabase.LocalMachine;
 
-    /// <summary>
-    /// Default InMemory resolver used by the parameterless <see cref="SettingsBase"/>
-    /// constructor. Delegates straight to <see cref="CacheDatabase.InMemory"/>.
-    /// </summary>
+    /// <summary>Default InMemory resolver used by the parameterless <see cref="SettingsBase"/> constructor. Delegates straight to <see cref="CacheDatabase.InMemory"/>.</summary>
     /// <returns>The ambient InMemory cache.</returns>
     internal static IBlobCache ReadAmbientInMemory() => CacheDatabase.InMemory;
 
@@ -158,10 +145,9 @@ public abstract class SettingsBase : SettingsStorage
             return cache;
         }
 
-        // Fall back to the first registered entry — keeps consumers that rename
-        // their settings store database working without a custom registration step.
-        // Count > 0 is guaranteed by the guard above, so First() is safe.
-        return registry.Values.First();
+        // Nothing registered under that name, so fall back to whichever cache comes out first.
+        using var entries = registry.GetEnumerator();
+        return entries.MoveNext() ? entries.Current.Value : null;
     }
 
     /// <summary>
@@ -181,10 +167,7 @@ public abstract class SettingsBase : SettingsStorage
             ?? TryReadAmbientCache(localMachineResolver)
             ?? TryReadAmbientCache(inMemoryResolver);
 
-    /// <summary>
-    /// Default-resolver overload of <see cref="TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
-    /// that reads directly from the ambient <see cref="CacheDatabase"/>.
-    /// </summary>
+    /// <summary>Ambient <see cref="CacheDatabase"/> overload of <see cref="TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>.</summary>
     /// <returns>The first available ambient cache, or <see langword="null"/>.</returns>
     internal static IBlobCache? TryGetFromCacheDatabase() =>
         TryGetFromCacheDatabase(
@@ -212,12 +195,7 @@ public abstract class SettingsBase : SettingsStorage
         }
     }
 
-    /// <summary>
-    /// Builds a transient in-memory cache when an <see cref="ISerializer"/> has been
-    /// registered with Splat. Used as the last resort before
-    /// <see cref="GetBlobCacheForClass(string, Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
-    /// throws.
-    /// </summary>
+    /// <summary>Builds a transient in-memory cache when an <see cref="ISerializer"/> is registered with Splat; the last resort before class-name resolution throws.</summary>
     /// <returns>A fresh <see cref="InMemoryBlobCache"/>, or <see langword="null"/> when no serializer is registered.</returns>
     internal static IBlobCache? TryGetTransientFallback()
     {
@@ -244,7 +222,7 @@ public abstract class SettingsBase : SettingsStorage
     }
 
     /// <summary>
-    /// <see cref="IDisposable"/> scope returned by <see cref="PushAmbientCache"/> that
+    /// Represents the <see cref="IDisposable"/> scope returned by <see cref="PushAmbientCache"/> that
     /// restores the previous ambient cache value on disposal. Used by
     /// <c>GetSettingsStore&lt;T&gt;</c> to publish the just-created cache for the
     /// duration of the <c>new T()</c> call without leaking the value to callers.

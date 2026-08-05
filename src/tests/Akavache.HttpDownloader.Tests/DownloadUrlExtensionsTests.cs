@@ -8,17 +8,18 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for the DownloadUrl extension methods on <see cref="IBlobCache"/>.
-/// Uses a local <see cref="TestHttpServer"/> to avoid external network dependencies.
-/// </summary>
+/// <summary>Tests for the DownloadUrl extension methods on <see cref="IBlobCache"/>. Uses a local <see cref="TestHttpServer"/> to avoid external network dependencies.</summary>
 [Category("Akavache")]
 [NotInParallel("CacheDatabaseState")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Usage",
+    "CA2234:Pass System.Uri objects instead of strings",
+    Justification = "These tests exist to exercise the string-URL overloads of the public Akavache API. "
+        + "Each is paired with a Uri twin, so calling the Uri overload here would delete the only "
+        + "coverage the string overloads have.")]
 public class DownloadUrlExtensionsTests
 {
-    /// <summary>
-    /// DownloadUrl(string) should throw on null cache.
-    /// </summary>
+    /// <summary>DownloadUrl(string) should throw on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlShouldValidateArguments()
@@ -26,7 +27,7 @@ public class DownloadUrlExtensionsTests
         IBlobCache? nullCache = null;
 
         // Null cache
-        await Assert.That(() => nullCache!.DownloadUrl("http://example.com")).Throws<ArgumentNullException>();
+        await Assert.That(() => nullCache!.DownloadUrl(new Uri("http://example.com"))).Throws<ArgumentNullException>();
 
         // Null/empty URL
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -37,14 +38,12 @@ public class DownloadUrlExtensionsTests
         await Assert.That(() => cache.DownloadUrl((Uri)null!)).Throws<ArgumentNullException>();
 
         // Key+URL nulls
-        await Assert.That(() => cache.DownloadUrl(null!, "http://example.com")).Throws<ArgumentNullException>();
+        await Assert.That(() => cache.DownloadUrl(null!, new Uri("http://example.com"))).Throws<ArgumentNullException>();
         await Assert.That(() => cache.DownloadUrl("key", (string)null!)).Throws<ArgumentNullException>();
         await Assert.That(() => cache.DownloadUrl("key", (Uri)null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// DownloadUrl(string) should download and cache content from a local server.
-    /// </summary>
+    /// <summary>DownloadUrl(string) should download and cache content from a local server.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlStringShouldDownloadAndCache()
@@ -53,15 +52,13 @@ public class DownloadUrlExtensionsTests
         server.SetupDefaultResponses();
 
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        var bytes = cache.DownloadUrl(server.BaseUrl + "html").WaitForValue();
+        var bytes = cache.DownloadUrl($"{server.BaseUrl}html").WaitForValue();
 
         await Assert.That(bytes).IsNotNull();
         await Assert.That(bytes).IsNotEmpty();
     }
 
-    /// <summary>
-    /// DownloadUrl(Uri) should download and cache content from a local server.
-    /// </summary>
+    /// <summary>DownloadUrl(Uri) should download and cache content from a local server.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlUriShouldDownloadAndCache()
@@ -70,16 +67,14 @@ public class DownloadUrlExtensionsTests
         server.SetupDefaultResponses();
 
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        Uri uri = new(server.BaseUrl + "html");
+        Uri uri = new($"{server.BaseUrl}html");
         var bytes = cache.DownloadUrl(uri).WaitForValue();
 
         await Assert.That(bytes).IsNotNull();
         await Assert.That(bytes).IsNotEmpty();
     }
 
-    /// <summary>
-    /// DownloadUrl(key, string) should store content under the explicit key.
-    /// </summary>
+    /// <summary>DownloadUrl(key, string) should store content under the explicit key.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyStringShouldStoreUnderExplicitKey()
@@ -89,16 +84,14 @@ public class DownloadUrlExtensionsTests
 
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "my-download-key";
-        cache.DownloadUrl(key, server.BaseUrl + "html").WaitForValue();
+        _ = cache.DownloadUrl(key, $"{server.BaseUrl}html").WaitForValue();
 
         var storedBytes = cache.Get(key).SubscribeGetValue();
         await Assert.That(storedBytes).IsNotNull();
         await Assert.That(storedBytes).IsNotEmpty();
     }
 
-    /// <summary>
-    /// DownloadUrl(key, Uri) should store content under the explicit key.
-    /// </summary>
+    /// <summary>DownloadUrl(key, Uri) should store content under the explicit key.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldStoreUnderExplicitKey()
@@ -108,17 +101,15 @@ public class DownloadUrlExtensionsTests
 
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "my-uri-key";
-        Uri uri = new(server.BaseUrl + "html");
-        cache.DownloadUrl(key, uri).WaitForValue();
+        Uri uri = new($"{server.BaseUrl}html");
+        _ = cache.DownloadUrl(key, uri).WaitForValue();
 
         var storedBytes = cache.Get(key).SubscribeGetValue();
         await Assert.That(storedBytes).IsNotNull();
         await Assert.That(storedBytes).IsNotEmpty();
     }
 
-    /// <summary>
-    /// DownloadUrl with fetchAlways=true (string key + string url) should bypass cache.
-    /// </summary>
+    /// <summary>DownloadUrl with fetchAlways=true (string key + string url) should bypass cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyStringFetchAlwaysShouldBypassCache()
@@ -130,21 +121,19 @@ public class DownloadUrlExtensionsTests
         const string key = "fetch-always-key";
 
         // First download — populates cache
-        cache.DownloadUrl(key, server.BaseUrl + "html", fetchAlways: false).WaitForValue();
+        _ = cache.DownloadUrl(key, $"{server.BaseUrl}html", fetchAlways: false).WaitForValue();
 
         // Change server response
         server.SetupResponse("/html", "<html><body>Updated</body></html>");
 
         // Second download with fetchAlways — should get updated content
-        var bytes = cache.DownloadUrl(key, server.BaseUrl + "html", fetchAlways: true).WaitForValue();
+        var bytes = cache.DownloadUrl(key, $"{server.BaseUrl}html", fetchAlways: true).WaitForValue();
 
         await Assert.That(bytes).IsNotNull();
         await Assert.That(bytes).IsNotEmpty();
     }
 
-    /// <summary>
-    /// DownloadUrl with fetchAlways=true (string key + Uri) should bypass cache.
-    /// </summary>
+    /// <summary>DownloadUrl with fetchAlways=true (string key + Uri) should bypass cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriFetchAlwaysShouldBypassCache()
@@ -154,9 +143,9 @@ public class DownloadUrlExtensionsTests
 
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
         const string key = "fetch-always-uri-key";
-        Uri uri = new(server.BaseUrl + "html");
+        Uri uri = new($"{server.BaseUrl}html");
 
-        cache.DownloadUrl(key, uri, fetchAlways: false).WaitForValue();
+        _ = cache.DownloadUrl(key, uri, fetchAlways: false).WaitForValue();
 
         server.SetupResponse("/html", "<html><body>Updated</body></html>");
 
@@ -166,9 +155,7 @@ public class DownloadUrlExtensionsTests
         await Assert.That(bytes).IsNotEmpty();
     }
 
-    /// <summary>
-    /// Multiple concurrent downloads to different keys should all complete.
-    /// </summary>
+    /// <summary>Multiple concurrent downloads to different keys should all complete.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlMultipleKeysShouldAllSucceed()
@@ -180,9 +167,9 @@ public class DownloadUrlExtensionsTests
 
         using var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
-        cache.DownloadUrl("content1", server.BaseUrl + "content1").WaitForValue();
-        cache.DownloadUrl("content2", server.BaseUrl + "content2").WaitForValue();
-        cache.DownloadUrl("content3", server.BaseUrl + "content3").WaitForValue();
+        _ = cache.DownloadUrl("content1", new Uri($"{server.BaseUrl}content1")).WaitForValue();
+        _ = cache.DownloadUrl("content2", new Uri($"{server.BaseUrl}content2")).WaitForValue();
+        _ = cache.DownloadUrl("content3", new Uri($"{server.BaseUrl}content3")).WaitForValue();
 
         var c1 = cache.Get("content1").SubscribeGetValue();
         var c2 = cache.Get("content2").SubscribeGetValue();

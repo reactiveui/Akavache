@@ -6,9 +6,7 @@ using Akavache.Tests;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for the <see cref="InMemoryBlobCache"/> class.
-/// </summary>
+/// <summary>Tests for the <see cref="InMemoryBlobCache"/> class.</summary>
 [InheritsTests]
 public class SystemTextJsonInMemoryBlobCacheTests : BlobCacheTestsBase
 {

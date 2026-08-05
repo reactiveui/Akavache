@@ -9,15 +9,35 @@ using Newtonsoft.Json.Bson;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for NewtonsoftSerializer covering BSON detection, format detection, and edge cases.
-/// </summary>
+/// <summary>Tests for NewtonsoftSerializer covering BSON detection, format detection, and edge cases.</summary>
 [Category("Akavache")]
 public class NewtonsoftSerializerTests
 {
-    /// <summary>
-    /// Tests IsPotentialBsonData returns false for null.
-    /// </summary>
+    /// <summary>Name shared by the objects that must survive the direct (unwrapped) deserialization paths.</summary>
+    private const string DirectObjectName = "direct";
+
+    /// <summary>A declared BSON document length far shorter than the buffer, which the shape check must reject.</summary>
+    private const int UnreasonableDocumentLength = 3;
+
+    /// <summary>Size of the buffer whose first content byte is a JSON brace, and the document length it declares.</summary>
+    private const int JsonShapedBufferLength = 20;
+
+    /// <summary>Element count of the sample JSON array payload.</summary>
+    private const int JsonArrayElementCount = 3;
+
+    /// <summary>The integer carried inside the simple object wrapper.</summary>
+    private const int WrappedIntValue = 42;
+
+    /// <summary>Bytes of BSON framing prepended to the payload: a four-byte length plus one element-type marker.</summary>
+    private const int BsonHeaderByteCount = 5;
+
+    /// <summary>The integer round-tripped through the BSON writer and read back by the JSON serializer.</summary>
+    private const int BsonRoundTripValue = 99;
+
+    /// <summary>The integer serialized and read back while <c>UseBsonFormat</c> is on.</summary>
+    private const int BsonValueTypeSample = 7;
+
+    /// <summary>Tests IsPotentialBsonData returns false for null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task IsPotentialBsonDataShouldReturnFalseForNull()
@@ -26,47 +46,40 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Tests IsPotentialBsonData returns false for short data.
-    /// </summary>
+    /// <summary>Tests IsPotentialBsonData returns false for short data.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task IsPotentialBsonDataShouldReturnFalseForShortData()
     {
-        var result = NewtonsoftSerializer.IsPotentialBsonData([1, 2, 3]);
+        byte[] tooShort = [1, 2, 3];
+        var result = NewtonsoftSerializer.IsPotentialBsonData(tooShort);
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Tests IsPotentialBsonData returns false for unreasonable length.
-    /// </summary>
+    /// <summary>Tests IsPotentialBsonData returns false for unreasonable length.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task IsPotentialBsonDataShouldReturnFalseForUnreasonableLength()
     {
         var data = new byte[10];
-        BitConverter.GetBytes(3).CopyTo(data, 0);
+        BitConverter.GetBytes(UnreasonableDocumentLength).CopyTo(data, 0);
         var result = NewtonsoftSerializer.IsPotentialBsonData(data);
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Tests IsPotentialBsonData returns false for JSON object.
-    /// </summary>
+    /// <summary>Tests IsPotentialBsonData returns false for JSON object.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task IsPotentialBsonDataShouldReturnFalseForJsonObject()
     {
-        var data = new byte[20];
-        BitConverter.GetBytes(20).CopyTo(data, 0);
+        var data = new byte[JsonShapedBufferLength];
+        BitConverter.GetBytes(JsonShapedBufferLength).CopyTo(data, 0);
         data[4] = (byte)'{';
         var result = NewtonsoftSerializer.IsPotentialBsonData(data);
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Tests IsPotentialBsonData returns true for valid BSON-shaped data.
-    /// </summary>
+    /// <summary>Tests IsPotentialBsonData returns true for valid BSON-shaped data.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task IsPotentialBsonDataShouldReturnTrueForValidBson()
@@ -78,9 +91,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsTrue();
     }
 
-    /// <summary>
-    /// Tests Deserialize returns default for null bytes.
-    /// </summary>
+    /// <summary>Tests Deserialize returns default for null bytes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeShouldReturnDefaultForNullBytes()
@@ -90,9 +101,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests Deserialize returns default for empty bytes.
-    /// </summary>
+    /// <summary>Tests Deserialize returns default for empty bytes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeShouldReturnDefaultForEmptyBytes()
@@ -102,9 +111,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests Deserialize falls back to BSON when data is BSON-shaped.
-    /// </summary>
+    /// <summary>Tests Deserialize falls back to BSON when data is BSON-shaped.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeShouldFallBackToBsonForBsonData()
@@ -120,9 +127,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result!.Name).IsEqualTo("bson");
     }
 
-    /// <summary>
-    /// Tests Deserialize returns default for invalid data.
-    /// </summary>
+    /// <summary>Tests Deserialize returns default for invalid data.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeShouldReturnDefaultForInvalidData()
@@ -133,18 +138,12 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests SerializeToBson with custom settings.
-    /// </summary>
+    /// <summary>Tests SerializeToBson with custom settings.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeToBsonShouldUseCustomSettings()
     {
-        NewtonsoftSerializer serializer = new()
-        {
-            UseBsonFormat = true,
-            Options = new() { Formatting = Formatting.Indented }
-        };
+        NewtonsoftSerializer serializer = new() { UseBsonFormat = true, Options = new() { Formatting = Formatting.Indented } };
 
         UserObject testObj = new() { Name = "test", Bio = "bio", Blog = "blog" };
         var data = serializer.Serialize(testObj);
@@ -153,24 +152,19 @@ public class NewtonsoftSerializerTests
         await Assert.That(data.Length).IsGreaterThan(0);
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats handles ObjectWrapper format.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats handles ObjectWrapper format.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldHandleObjectWrapper()
     {
         NewtonsoftSerializer serializer = new();
-        const string json = "{\"Value\":{\"Name\":\"wrapped\",\"Bio\":\"bio\",\"Blog\":\"blog\"}}";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"Value":{"Name":"wrapped","Bio":"bio","Blog":"blog"}}"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
         await Assert.That(result).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats returns default for non-JSON-looking data.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats returns default for non-JSON-looking data.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldReturnDefaultForNonJson()
@@ -182,9 +176,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats returns default for whitespace.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats returns default for whitespace.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldReturnDefaultForWhitespace()
@@ -196,17 +188,12 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests round-trip with custom settings.
-    /// </summary>
+    /// <summary>Tests round-trip with custom settings.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldRoundTripWithCustomSettings()
     {
-        NewtonsoftSerializer serializer = new()
-        {
-            Options = new() { Formatting = Formatting.Indented }
-        };
+        NewtonsoftSerializer serializer = new() { Options = new() { Formatting = Formatting.Indented } };
 
         UserObject testObj = new() { Name = "test", Bio = "bio", Blog = "blog" };
         var bytes = serializer.Serialize(testObj);
@@ -216,22 +203,13 @@ public class NewtonsoftSerializerTests
         await Assert.That(result!.Name).IsEqualTo("test");
     }
 
-    /// <summary>
-    /// Tests SerializeToBson falls back to JSON when BSON serialization throws.
-    /// </summary>
+    /// <summary>Tests SerializeToBson falls back to JSON when BSON serialization throws.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeToBsonShouldFallBackToJsonOnFailure()
     {
         BsonOnlyThrowingConverter converter = new();
-        NewtonsoftSerializer serializer = new()
-        {
-            UseBsonFormat = true,
-            Options = new()
-            {
-                Converters = { converter }
-            }
-        };
+        NewtonsoftSerializer serializer = new() { UseBsonFormat = true, Options = new() { Converters = { converter } } };
 
         UserObject testObj = new() { Name = "fallback", Bio = "bio", Blog = "blog" };
         var data = serializer.Serialize(testObj);
@@ -241,12 +219,10 @@ public class NewtonsoftSerializerTests
 
         // The BSON path threw, so the fallback produced JSON bytes starting with '{'.
         var asString = Encoding.UTF8.GetString(data);
-        await Assert.That(asString.TrimStart().StartsWith("{", StringComparison.Ordinal)).IsTrue();
+        await Assert.That(asString.TrimStart().StartsWith('{')).IsTrue();
     }
 
-    /// <summary>
-    /// Tests DeserializeBsonFormat falls back to direct deserialization when wrapper fails.
-    /// </summary>
+    /// <summary>Tests DeserializeBsonFormat falls back to direct deserialization when wrapper fails.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeBsonFormatShouldFallBackToDirectDeserialization()
@@ -259,27 +235,19 @@ public class NewtonsoftSerializerTests
         await using (BsonDataWriter writer = new(ms) { CloseOutput = false })
         {
             var inner = JsonSerializer.Create();
-            inner.Serialize(writer, new UserObject { Name = "direct", Bio = "bio", Blog = "blog" });
+            inner.Serialize(writer, new UserObject { Name = DirectObjectName, Bio = "bio", Blog = "blog" });
         }
 
         var bytes = ms.ToArray();
-        NewtonsoftSerializer serializer = new()
-        {
-            Options = new()
-            {
-                MissingMemberHandling = MissingMemberHandling.Error
-            }
-        };
+        NewtonsoftSerializer serializer = new() { Options = new() { MissingMemberHandling = MissingMemberHandling.Error } };
 
         var result = serializer.DeserializeBsonFormat<UserObject>(bytes);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Name).IsEqualTo("direct");
+        await Assert.That(result!.Name).IsEqualTo(DirectObjectName);
     }
 
-    /// <summary>
-    /// Tests DeserializeBsonFormat returns default when BSON parsing fails entirely.
-    /// </summary>
+    /// <summary>Tests DeserializeBsonFormat returns default when BSON parsing fails entirely.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeBsonFormatShouldReturnDefaultForInvalidBson()
@@ -292,9 +260,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests DeserializeBsonFormat honors ForcedDateTimeKind on the inner direct deserialization path.
-    /// </summary>
+    /// <summary>Tests DeserializeBsonFormat honors ForcedDateTimeKind on the inner direct deserialization path.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DeserializeBsonFormatShouldHonorForcedDateTimeKindOnFallback()
@@ -307,14 +273,7 @@ public class NewtonsoftSerializerTests
         }
 
         var bytes = ms.ToArray();
-        NewtonsoftSerializer serializer = new()
-        {
-            ForcedDateTimeKind = DateTimeKind.Utc,
-            Options = new()
-            {
-                MissingMemberHandling = MissingMemberHandling.Error
-            }
-        };
+        NewtonsoftSerializer serializer = new() { ForcedDateTimeKind = DateTimeKind.Utc, Options = new() { MissingMemberHandling = MissingMemberHandling.Error } };
 
         var result = serializer.DeserializeBsonFormat<UserObject>(bytes);
 
@@ -322,9 +281,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result!.Name).IsEqualTo("kind");
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats returns the BSON result when BSON decoding succeeds.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats returns the BSON result when BSON decoding succeeds.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldReturnBsonResult()
@@ -340,9 +297,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(result!.Name).IsEqualTo("bsonFallback");
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats catches exceptions when SimpleObjectWrapper parsing fails.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats catches exceptions when SimpleObjectWrapper parsing fails.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldCatchWrapperParseFailure()
@@ -351,8 +306,7 @@ public class NewtonsoftSerializerTests
 
         // Contains "Value": but the inner value is not a valid UserObject shape,
         // so SimpleObjectWrapper<UserObject> parsing throws and falls through to direct deserialization.
-        const string json = "{\"Value\":12345}";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"Value":12345}"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
 
@@ -361,27 +315,22 @@ public class NewtonsoftSerializerTests
         await Assert.That(result).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats returns a list when given a JSON array.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats returns a list when given a JSON array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldHandleJsonArray()
     {
         NewtonsoftSerializer serializer = new();
 
-        const string json = "[1,2,3]";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = "[1,2,3]"u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<int[]>(bytes);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Length).IsEqualTo(3);
+        await Assert.That(result!.Length).IsEqualTo(JsonArrayElementCount);
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats returns default when a malformed JSON object throws during direct deserialization.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats returns default when a malformed JSON object throws during direct deserialization.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldReturnDefaultForMalformedJson()
@@ -390,45 +339,38 @@ public class NewtonsoftSerializerTests
 
         // Starts with '{' so it passes the JSON shape check, but is malformed so the
         // direct deserialization throws and the outer catch returns default.
-        const string json = "{\"Name\":";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"Name":"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
 
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats returns a wrapped value for a value type inside a SimpleObjectWrapper.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats returns a wrapped value for a value type inside a SimpleObjectWrapper.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldUnwrapValueTypeWrapper()
     {
         NewtonsoftSerializer serializer = new();
-        const string json = "{\"Value\":42}";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"Value":42}"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<int>(bytes);
 
-        await Assert.That(result).IsEqualTo(42);
+        await Assert.That(result).IsEqualTo(WrappedIntValue);
     }
 
-    /// <summary>
-    /// Tests TryDeserializeFromOtherFormats deserializes directly when the JSON does not contain a Value property.
-    /// </summary>
+    /// <summary>Tests TryDeserializeFromOtherFormats deserializes directly when the JSON does not contain a Value property.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryDeserializeFromOtherFormatsShouldDeserializeDirectlyWithoutValueKey()
     {
         NewtonsoftSerializer serializer = new();
-        const string json = "{\"Name\":\"direct\",\"Bio\":\"b\",\"Blog\":\"g\"}";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"Name":"direct","Bio":"b","Blog":"g"}"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<UserObject>(bytes);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Name).IsEqualTo("direct");
+        await Assert.That(result!.Name).IsEqualTo(DirectObjectName);
     }
 
     /// <summary>
@@ -507,11 +449,11 @@ public class NewtonsoftSerializerTests
 
         // Prepend a fake BSON header that makes IsPotentialBsonData return true:
         // documentLength matches data size, first content byte is non-JSON.
-        var data = new byte[jsonBytes.Length + 5];
+        var data = new byte[jsonBytes.Length + BsonHeaderByteCount];
         var docLen = data.Length;
         BitConverter.GetBytes(docLen).CopyTo(data, 0);
         data[4] = 0x10; // Non-JSON byte at index 4 — BSON element type marker
-        Array.Copy(jsonBytes, 0, data, 5, jsonBytes.Length);
+        Array.Copy(jsonBytes, 0, data, BsonHeaderByteCount, jsonBytes.Length);
 
         // IsPotentialBsonData will check string content — the full string won't start with '{' or '['
         // because the first bytes are the BSON header. BSON deserialization will fail, catch fires,
@@ -535,8 +477,7 @@ public class NewtonsoftSerializerTests
 
         // Data that is not valid BSON and not valid JSON, starting with '{'
         // so it passes the JSON-looking check but fails direct JSON deserialization too.
-        const string json = "{\"broken";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"broken"""u8.ToArray();
 
         // TryDeserializeFromOtherFormats: BSON attempt throws (catch at 243-244),
         // then JSON parsing of malformed data throws (outer catch returns default).
@@ -554,8 +495,7 @@ public class NewtonsoftSerializerTests
     public async Task TryDeserializeFromOtherFormatsShouldReturnWrappedStringValue()
     {
         NewtonsoftSerializer serializer = new();
-        const string json = "{\"Value\":\"hello\"}";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"Value":"hello"}"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<string>(bytes);
 
@@ -575,8 +515,7 @@ public class NewtonsoftSerializerTests
         // Valid JSON object but deserializing as string[] yields null from DeserializeObject
         // because a JSON object cannot be deserialized as a string array — this throws and
         // the outer catch returns default (null).
-        const string json = "{\"key\":\"value\"}";
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = """{"key":"value"}"""u8.ToArray();
 
         var result = serializer.TryDeserializeFromOtherFormats<string[]>(bytes);
 
@@ -593,12 +532,12 @@ public class NewtonsoftSerializerTests
     {
         // Serialize an int via BSON then call TryDeserializeFromOtherFormats directly.
         NewtonsoftSerializer bsonSerializer = new() { UseBsonFormat = true };
-        var bsonData = bsonSerializer.Serialize(99);
+        var bsonData = bsonSerializer.Serialize(BsonRoundTripValue);
 
         NewtonsoftSerializer jsonSerializer = new();
         var result = jsonSerializer.TryDeserializeFromOtherFormats<int>(bsonData);
 
-        await Assert.That(result).IsEqualTo(99);
+        await Assert.That(result).IsEqualTo(BsonRoundTripValue);
     }
 
     /// <summary>
@@ -610,10 +549,10 @@ public class NewtonsoftSerializerTests
     public async Task DeserializeShouldReturnBsonValueTypeWhenUseBsonFormatIsTrue()
     {
         NewtonsoftSerializer serializer = new() { UseBsonFormat = true };
-        var data = serializer.Serialize(7);
+        var data = serializer.Serialize(BsonValueTypeSample);
         var result = serializer.Deserialize<int>(data);
 
-        await Assert.That(result).IsEqualTo(7);
+        await Assert.That(result).IsEqualTo(BsonValueTypeSample);
     }
 
     /// <summary>
@@ -634,10 +573,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(value).IsNull();
     }
 
-    /// <summary>
-    /// Tests <see cref="NewtonsoftSerializer.TryUnwrapSimpleObjectWrapper{T}"/> returns
-    /// <see langword="false"/> when JsonConvert throws (malformed JSON).
-    /// </summary>
+    /// <summary>Tests <see cref="NewtonsoftSerializer.TryUnwrapSimpleObjectWrapper{T}"/> returns <see langword="false"/> when JsonConvert throws (malformed JSON).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryUnwrapSimpleObjectWrapperShouldReturnFalseWhenDeserializerThrows()
@@ -650,10 +586,7 @@ public class NewtonsoftSerializerTests
         await Assert.That(value).IsNull();
     }
 
-    /// <summary>
-    /// Tests <see cref="NewtonsoftSerializer.TryUnwrapSimpleObjectWrapper{T}"/> resolves
-    /// the happy path.
-    /// </summary>
+    /// <summary>Tests <see cref="NewtonsoftSerializer.TryUnwrapSimpleObjectWrapper{T}"/> resolves the happy path.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryUnwrapSimpleObjectWrapperShouldResolveValueOnHappyPath()

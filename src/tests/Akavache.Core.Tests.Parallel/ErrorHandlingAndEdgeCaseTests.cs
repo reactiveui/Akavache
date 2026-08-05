@@ -7,15 +7,50 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for error handling and edge case scenarios across Akavache functionality.
-/// </summary>
+/// <summary>Tests for error handling and edge case scenarios across Akavache functionality.</summary>
 [Category("Akavache")]
 public class ErrorHandlingAndEdgeCaseTests
 {
-    /// <summary>
-    /// Tests that caches handle ObjectDisposedException correctly.
-    /// </summary>
+    /// <summary>Payload stored by the tests that only care about the operation, not the content.</summary>
+    private const string SampleValue = "value";
+
+    /// <summary>Character count of the multi-megabyte string used to prove large payloads round-trip.</summary>
+    private const int LargeDataCharCount = 10_000_000;
+
+    /// <summary>Character count of the deliberately oversized cache key.</summary>
+    private const int VeryLongKeyLength = 10_000;
+
+    /// <summary>How far ahead the "far future" expiration is set, in years.</summary>
+    private const int FarFutureYears = 100;
+
+    /// <summary>Lifetime, in milliseconds, of the entry used to observe expiry within the test run.</summary>
+    private const int ShortExpirationMilliseconds = 100;
+
+    /// <summary>How long, in milliseconds, the test waits to be sure the short-lived entry has expired.</summary>
+    private const int ShortExpirationWaitMilliseconds = 200;
+
+    /// <summary>Timeout, in minutes, stored in the nested configuration block of the complex object graph.</summary>
+    private const int ConfigTimeoutMinutes = 5;
+
+    /// <summary>Retry count stored in the nested configuration block of the complex object graph.</summary>
+    private const int ConfigRetryCount = 3;
+
+    /// <summary>Round-trip tolerance, in milliseconds, that absorbs serializer precision loss on timestamps.</summary>
+    private const int SerializationToleranceMilliseconds = 1000;
+
+    /// <summary>Offset, in hours, of the east-of-UTC <see cref="DateTimeOffset"/> case.</summary>
+    private const int PositiveOffsetHours = 5;
+
+    /// <summary>Offset, in hours, of the west-of-UTC <see cref="DateTimeOffset"/> case.</summary>
+    private const int NegativeOffsetHours = -8;
+
+    /// <summary>Key of the <see cref="DateTime.MinValue"/> case, which serializers are allowed to reject.</summary>
+    private const string MinValueDateTimeCaseKey = "min_value";
+
+    /// <summary>Key of the <see cref="DateTime.MaxValue"/> case, which serializers are allowed to reject.</summary>
+    private const string MaxValueDateTimeCaseKey = "max_value";
+
+    /// <summary>Tests that caches handle ObjectDisposedException correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleObjectDisposedExceptionCorrectly()
@@ -26,7 +61,7 @@ public class ErrorHandlingAndEdgeCaseTests
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert some data first
-        cache.InsertObject("test", "value").SubscribeAndComplete();
+        cache.InsertObject("test", SampleValue).SubscribeAndComplete();
 
         // Dispose the cache
         cache.Dispose();
@@ -35,16 +70,14 @@ public class ErrorHandlingAndEdgeCaseTests
         var getError = cache.GetObject<string>("test").SubscribeGetError();
         await Assert.That(getError).IsTypeOf<ObjectDisposedException>();
 
-        var insertError = cache.InsertObject("new", "value").SubscribeGetError();
+        var insertError = cache.InsertObject("new", SampleValue).SubscribeGetError();
         await Assert.That(insertError).IsTypeOf<ObjectDisposedException>();
 
         var invalidateError = cache.InvalidateObject<string>("test").SubscribeGetError();
         await Assert.That(invalidateError).IsTypeOf<ObjectDisposedException>();
     }
 
-    /// <summary>
-    /// Tests that cache operations handle extremely large data correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle extremely large data correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleExtremelyLargeDataCorrectly()
@@ -55,7 +88,7 @@ public class ErrorHandlingAndEdgeCaseTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Create very large data (10MB string)
-        string largeData = new('X', 10_000_000);
+        string largeData = new('X', LargeDataCharCount);
 
         // Act - Should handle large data without throwing
         cache.InsertObject("large_data", largeData).SubscribeAndComplete();
@@ -66,13 +99,11 @@ public class ErrorHandlingAndEdgeCaseTests
         using (Assert.Multiple())
         {
             await Assert.That(retrieved).IsEqualTo(largeData);
-            await Assert.That(retrieved).Length().IsEqualTo(10_000_000);
+            await Assert.That(retrieved).Length().IsEqualTo(LargeDataCharCount);
         }
     }
 
-    /// <summary>
-    /// Tests that cache operations handle null objects correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle null objects correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleNullObjectsCorrectly()
@@ -99,9 +130,7 @@ public class ErrorHandlingAndEdgeCaseTests
         await Assert.That(retrievedUser).IsNull();
     }
 
-    /// <summary>
-    /// Tests that cache operations handle invalid keys correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle invalid keys correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleInvalidKeysCorrectly()
@@ -112,7 +141,7 @@ public class ErrorHandlingAndEdgeCaseTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Test null key validation - this should always throw ArgumentNullException
-        var insertNullError = cache.InsertObject(null!, "value").SubscribeGetError();
+        var insertNullError = cache.InsertObject(null!, SampleValue).SubscribeGetError();
         await Assert.That(insertNullError).IsTypeOf<ArgumentNullException>();
 
         var getNullError = cache.GetObject<string>(null!).SubscribeGetError();
@@ -149,16 +178,30 @@ public class ErrorHandlingAndEdgeCaseTests
                 // Different cache implementations may have different key validation policies
             }
         }
+    }
 
-        // Test very long keys - should work for InMemoryBlobCache
-        string veryLongKey = new('k', 10000);
+    /// <summary>Tests that a very long key round-trips through the in-memory cache.</summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task CacheShouldHandleVeryLongKeysCorrectly()
+    {
+        using var cache = CreateCache();
+
+        string veryLongKey = new('k', VeryLongKeyLength);
         cache.InsertObject(veryLongKey, "long_key_value").SubscribeAndComplete();
 
         var longKeyRetrieved = cache.GetObject<string>(veryLongKey).SubscribeGetValue();
 
         await Assert.That(longKeyRetrieved).IsEqualTo("long_key_value");
+    }
 
-        // Test keys with special characters - should work
+    /// <summary>Tests that keys containing punctuation and separator characters round-trip.</summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task CacheShouldHandlePunctuationKeysCorrectly()
+    {
+        using var cache = CreateCache();
+
         string[] specialCharKeys =
         [
             "key-with-dash",
@@ -197,8 +240,15 @@ public class ErrorHandlingAndEdgeCaseTests
 
             await Assert.That(specialRetrieved).IsEqualTo($"value_for_{specialKey}");
         }
+    }
 
-        // Test Unicode keys
+    /// <summary>Tests that Unicode keys round-trip and that ordinary keys still work afterwards.</summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task CacheShouldHandleUnicodeKeysCorrectly()
+    {
+        using var cache = CreateCache();
+
         string[] unicodeKeys =
         [
             "key_??",
@@ -229,9 +279,7 @@ public class ErrorHandlingAndEdgeCaseTests
         await Assert.That(normalRetrieved).IsEqualTo("normal_value");
     }
 
-    /// <summary>
-    /// Tests that cache operations handle concurrent access correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle concurrent access correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleConcurrentAccessCorrectly()
@@ -285,12 +333,10 @@ public class ErrorHandlingAndEdgeCaseTests
         await Task.WhenAll(tasks);
 
         // Assert - All operations should have completed without errors
-        await Assert.That(tasks.All(t => t.IsCompletedSuccessfully)).IsTrue();
+        await Assert.That(tasks.TrueForAll(static t => t.IsCompletedSuccessfully)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that cache operations handle expiration edge cases correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle expiration edge cases correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleExpirationEdgeCasesCorrectly()
@@ -301,7 +347,7 @@ public class ErrorHandlingAndEdgeCaseTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Test immediate expiration
-        var pastExpiration = DateTimeOffset.Now.AddSeconds(-1);
+        var pastExpiration = TimeProvider.System.GetLocalNow().AddSeconds(-1);
         cache.InsertObject("expired_key", "expired_value", pastExpiration).SubscribeAndComplete();
 
         // Should be expired immediately
@@ -309,7 +355,7 @@ public class ErrorHandlingAndEdgeCaseTests
         await Assert.That(expiredError).IsTypeOf<KeyNotFoundException>();
 
         // Test far future expiration
-        var farFutureExpiration = DateTimeOffset.Now.AddYears(100);
+        var farFutureExpiration = TimeProvider.System.GetLocalNow().AddYears(FarFutureYears);
         cache.InsertObject("far_future_key", "far_future_value", farFutureExpiration).SubscribeAndComplete();
 
         var farFutureRetrieved = cache.GetObject<string>("far_future_key").SubscribeGetValue();
@@ -332,24 +378,23 @@ public class ErrorHandlingAndEdgeCaseTests
         await Assert.That(maxRetrieved).IsEqualTo("max_value");
 
         // Test very short expiration
-        var shortExpiration = DateTimeOffset.Now.AddMilliseconds(100);
-        cache.InsertObject("short_expiration", "short_value", shortExpiration).SubscribeAndComplete();
+        const string shortExpirationKey = "short_expiration";
+        var shortExpiration = TimeProvider.System.GetLocalNow().AddMilliseconds(ShortExpirationMilliseconds);
+        cache.InsertObject(shortExpirationKey, "short_value", shortExpiration).SubscribeAndComplete();
 
         // Should be available immediately
-        var shortRetrieved = cache.GetObject<string>("short_expiration").SubscribeGetValue();
+        var shortRetrieved = cache.GetObject<string>(shortExpirationKey).SubscribeGetValue();
         await Assert.That(shortRetrieved).IsEqualTo("short_value");
 
         // Wait for expiration
-        await Task.Delay(200);
+        await Task.Delay(ShortExpirationWaitMilliseconds);
 
         // Should now be expired
-        var shortExpiredError = cache.GetObject<string>("short_expiration").SubscribeGetError();
+        var shortExpiredError = cache.GetObject<string>(shortExpirationKey).SubscribeGetError();
         await Assert.That(shortExpiredError).IsTypeOf<KeyNotFoundException>();
     }
 
-    /// <summary>
-    /// Tests that cache operations handle complex object hierarchies correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle complex object hierarchies correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleComplexObjectHierarchiesCorrectly()
@@ -360,32 +405,31 @@ public class ErrorHandlingAndEdgeCaseTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Create complex nested object
-        var complexObject = new
+        UserObject[] users =
+        [
+            new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" },
+            new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" }
+        ];
+
+        int[] firstRow = [1, 2, 3];
+        int[] secondRow = [4, 5, 6];
+        int[] thirdRow = [7, 8, 9];
+        int[][] nestedArrays = [firstRow, secondRow, thirdRow];
+
+        Dictionary<string, object> metadata = new()
         {
-            Id = Guid.NewGuid(),
-            Name = "Complex Object",
-            Timestamp = DateTimeOffset.Now,
-            Users = (UserObject[])[
-                new() { Name = "User1", Bio = "Bio1", Blog = "Blog1" },
-                new() { Name = "User2", Bio = "Bio2", Blog = "Blog2" }
-            ],
-            Metadata = new Dictionary<string, object>
-            {
-                ["version"] = "1.0.0",
-                ["features"] = (string[])["feature1", "feature2", "feature3"],
-                ["config"] = new
-                {
-                    enabled = true,
-                    timeout = TimeSpan.FromMinutes(5),
-                    retries = 3
-                }
-            },
-            NestedArrays = (int[][])[
-                [1, 2, 3],
-                [4, 5, 6],
-                [7, 8, 9]
-            ]
+            ["version"] = "1.0.0",
+            ["features"] = (string[])["feature1", "feature2", "feature3"],
+            ["config"] = new ComplexObjectConfig(true, TimeSpan.FromMinutes(ConfigTimeoutMinutes), ConfigRetryCount)
         };
+
+        ComplexObjectGraph complexObject = new(
+            Guid.NewGuid(),
+            "Complex Object",
+            TimeProvider.System.GetLocalNow(),
+            users,
+            metadata,
+            nestedArrays);
 
         // Act
         cache.InsertObject("complex_object", complexObject).SubscribeAndComplete();
@@ -396,9 +440,7 @@ public class ErrorHandlingAndEdgeCaseTests
         await Assert.That((object?)retrieved).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests that cache operations handle memory pressure correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle memory pressure correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleMemoryPressureCorrectly()
@@ -417,12 +459,7 @@ public class ErrorHandlingAndEdgeCaseTests
             var index = i;
             tasks.Add(Task.Run(() =>
             {
-                UserObject user = new()
-                {
-                    Name = $"User{index}",
-                    Bio = $"This is a bio for user {index} with some additional text to make it larger",
-                    Blog = $"https://blog{index}.example.com"
-                };
+                UserObject user = new() { Name = $"User{index}", Bio = $"This is a bio for user {index} with some additional text to make it larger", Blog = $"https://blog{index}.example.com" };
 
                 cache.InsertObject($"user_{index}", user).SubscribeAndComplete();
             }));
@@ -456,9 +493,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
     }
 
-    /// <summary>
-    /// Tests that cache operations handle Unicode and special character data correctly.
-    /// </summary>
+    /// <summary>Tests that cache operations handle Unicode and special character data correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleUnicodeAndSpecialCharactersCorrectly()
@@ -516,9 +551,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
     }
 
-    /// <summary>
-    /// Tests that cache operations handle DateTime edge cases correctly across time zones.
-    /// </summary>
+    /// <summary>Tests that cache operations handle DateTime edge cases correctly across time zones.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheShouldHandleDateTimeEdgeCasesCorrectly()
@@ -531,16 +564,16 @@ public class ErrorHandlingAndEdgeCaseTests
         // Test various DateTime edge cases
         Dictionary<string, DateTime> dateTimeCases = new()
         {
-            ["min_value"] = DateTime.MinValue,
-            ["max_value"] = DateTime.MaxValue,
+            [MinValueDateTimeCaseKey] = DateTime.MinValue,
+            [MaxValueDateTimeCaseKey] = DateTime.MaxValue,
             ["epoch"] = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             ["leap_year"] = new(2024, 2, 29, 12, 0, 0, DateTimeKind.Utc), // Leap year date
             ["dst_transition"] = new(2024, 3, 10, 2, 0, 0, DateTimeKind.Local), // DST transition
             ["new_year"] = new(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             ["millennium"] = new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             ["y2k38"] = new(2038, 1, 19, 3, 14, 7, DateTimeKind.Utc), // Unix timestamp edge
-            ["local"] = DateTime.Now,
-            ["utc"] = DateTime.UtcNow,
+            ["local"] = TimeProvider.System.GetUtcNow().UtcDateTime,
+            ["utc"] = TimeProvider.System.GetUtcNow().UtcDateTime,
             ["unspecified"] = new(2025, 1, 15, 12, 30, 45, DateTimeKind.Unspecified)
         };
 
@@ -555,13 +588,13 @@ public class ErrorHandlingAndEdgeCaseTests
 
                 // Assert - Allow for some tolerance due to serialization precision
                 var timeDifference = Math.Abs((dateTimeCase.Value - retrieved!).TotalMilliseconds);
-                await Assert.That(timeDifference).IsLessThan(1000);
+                await Assert.That(timeDifference).IsLessThan(SerializationToleranceMilliseconds);
             }
             catch (Exception ex)
             {
                 // Some extreme DateTime values might not be supported by all serializers
                 // Log and continue if it's a known limitation
-                if (dateTimeCase.Key is "min_value" or "max_value")
+                if (dateTimeCase.Key is MinValueDateTimeCaseKey or MaxValueDateTimeCaseKey)
                 {
                     // These are known to be problematic in some serializers
                     continue;
@@ -570,16 +603,23 @@ public class ErrorHandlingAndEdgeCaseTests
                 throw new InvalidOperationException($"DateTime case '{dateTimeCase.Key}' failed unexpectedly", ex);
             }
         }
+    }
 
-        // Test DateTimeOffset cases
+    /// <summary>Tests that cache operations handle DateTimeOffset edge cases correctly across time zones.</summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task CacheShouldHandleDateTimeOffsetEdgeCasesCorrectly()
+    {
+        using var cache = CreateCache();
+
         Dictionary<string, DateTimeOffset> dateTimeOffsetCases = new()
         {
             ["offset_min"] = DateTimeOffset.MinValue,
             ["offset_max"] = DateTimeOffset.MaxValue,
-            ["offset_now"] = DateTimeOffset.Now,
-            ["offset_utc"] = DateTimeOffset.UtcNow,
-            ["offset_positive"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.FromHours(5)),
-            ["offset_negative"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.FromHours(-8)),
+            ["offset_now"] = TimeProvider.System.GetUtcNow(),
+            ["offset_utc"] = TimeProvider.System.GetUtcNow(),
+            ["offset_positive"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.FromHours(PositiveOffsetHours)),
+            ["offset_negative"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.FromHours(NegativeOffsetHours)),
             ["offset_zero"] = new(2025, 1, 15, 12, 0, 0, TimeSpan.Zero)
         };
 
@@ -592,7 +632,7 @@ public class ErrorHandlingAndEdgeCaseTests
                 var retrieved = cache.GetObject<DateTimeOffset>(offsetCase.Key).SubscribeGetValue();
 
                 var timeDifference = Math.Abs((offsetCase.Value - retrieved!).TotalMilliseconds);
-                await Assert.That(timeDifference).IsLessThan(1000);
+                await Assert.That(timeDifference).IsLessThan(SerializationToleranceMilliseconds);
             }
             catch (Exception ex)
             {
@@ -605,4 +645,29 @@ public class ErrorHandlingAndEdgeCaseTests
             }
         }
     }
+
+    /// <summary>Creates a fresh in-memory cache backed by the System.Text.Json serializer.</summary>
+    /// <returns>A new cache instance the caller owns and must dispose.</returns>
+    private static InMemoryBlobCache CreateCache() => new(ImmediateScheduler.Instance, new SystemJsonSerializer());
+
+    /// <summary>Nested configuration block carried inside <see cref="ComplexObjectGraph"/>.</summary>
+    /// <param name="Enabled">Whether the configured feature is switched on.</param>
+    /// <param name="Timeout">How long the configured operation may run.</param>
+    /// <param name="Retries">How many times the configured operation is retried.</param>
+    private sealed record ComplexObjectConfig(bool Enabled, TimeSpan Timeout, int Retries);
+
+    /// <summary>Deeply nested object graph used to prove complex hierarchies survive a serialize/deserialize round trip.</summary>
+    /// <param name="Id">Identity of the graph.</param>
+    /// <param name="Name">Display name of the graph.</param>
+    /// <param name="Timestamp">When the graph was built.</param>
+    /// <param name="Users">Nested reference-type objects.</param>
+    /// <param name="Metadata">Loosely typed metadata bag holding a further nested record.</param>
+    /// <param name="NestedArrays">Jagged array proving multi-level arrays survive.</param>
+    private sealed record ComplexObjectGraph(
+        Guid Id,
+        string Name,
+        DateTimeOffset Timestamp,
+        UserObject[] Users,
+        Dictionary<string, object> Metadata,
+        int[][] NestedArrays);
 }

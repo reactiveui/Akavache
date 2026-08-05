@@ -4,15 +4,17 @@
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for LoginInfo.
-/// </summary>
+/// <summary>Tests for LoginInfo.</summary>
 [Category("Akavache")]
 public class LoginInfoTests
 {
-    /// <summary>
-    /// Tests the constructor with username and password sets the properties.
-    /// </summary>
+    /// <summary>The user name shared by the equality and rendering tests.</summary>
+    private const string SampleUserName = "alice";
+
+    /// <summary>The password paired with <see cref="SampleUserName"/>.</summary>
+    private const string SamplePassword = "secret";
+
+    /// <summary>Tests the constructor with username and password sets the properties.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldSetProperties()
@@ -22,9 +24,7 @@ public class LoginInfoTests
         await Assert.That(login.Password).IsEqualTo("pass1");
     }
 
-    /// <summary>
-    /// Tests the internal constructor that takes a tuple.
-    /// </summary>
+    /// <summary>Tests the internal constructor that takes a tuple.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TupleConstructorShouldSetProperties()
@@ -34,84 +34,70 @@ public class LoginInfoTests
         await Assert.That(login.Password).IsEqualTo("pass2");
     }
 
-    /// <summary>
-    /// Tests <see cref="LoginInfo.ToString"/> renders the username.
-    /// </summary>
+    /// <summary>Tests <see cref="LoginInfo.ToString"/> renders the username.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ToStringShouldRenderUserName()
     {
-        LoginInfo login = new("alice", "secret");
-        await Assert.That(login.ToString()).IsEqualTo("UserName: alice");
+        LoginInfo login = new(SampleUserName, SamplePassword);
+        await Assert.That(login.ToString()).IsEqualTo($"UserName: {SampleUserName}");
     }
 
-    /// <summary>
-    /// Tests that <see cref="LoginInfo.Equals(object)"/> returns <see langword="false"/> for a non-<see cref="LoginInfo"/> argument.
-    /// </summary>
+    /// <summary>Tests that <see cref="LoginInfo.Equals(object)"/> returns <see langword="false"/> for a non-<see cref="LoginInfo"/> argument.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ObjectEqualsShouldReturnFalseForDifferentType()
     {
-        LoginInfo login = new("alice", "secret");
+        LoginInfo login = new(SampleUserName, SamplePassword);
         await Assert.That(login.Equals((object)"not-a-login")).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="LoginInfo.Equals(object)"/> returns <see langword="true"/> for a matching instance.
-    /// </summary>
+    /// <summary>Tests that <see cref="LoginInfo.Equals(object)"/> returns <see langword="true"/> for a matching instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ObjectEqualsShouldReturnTrueForMatchingInstance()
     {
-        LoginInfo a = new("alice", "secret");
-        LoginInfo b = new("alice", "secret");
+        LoginInfo a = new(SampleUserName, SamplePassword);
+        LoginInfo b = new(SampleUserName, SamplePassword);
         await Assert.That(a.Equals((object)b)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> short-circuits on reference equality.
-    /// </summary>
+    /// <summary>Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> short-circuits on reference equality.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnTrueForSameReference()
     {
-        LoginInfo login = new("alice", "secret");
+        LoginInfo login = new(SampleUserName, SamplePassword);
         await Assert.That(login.Equals(login)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> compares both username and password.
-    /// </summary>
+    /// <summary>Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> compares both username and password.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenUsernameDiffers()
     {
-        LoginInfo a = new("alice", "secret");
-        LoginInfo b = new("bob", "secret");
+        LoginInfo a = new(SampleUserName, SamplePassword);
+        LoginInfo b = new("bob", SamplePassword);
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> returns <see langword="false"/> when only the password differs.
-    /// </summary>
+    /// <summary>Tests that <see cref="LoginInfo.Equals(LoginInfo)"/> returns <see langword="false"/> when only the password differs.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EqualsShouldReturnFalseWhenPasswordDiffers()
     {
-        LoginInfo a = new("alice", "secret");
-        LoginInfo b = new("alice", "different");
+        LoginInfo a = new(SampleUserName, SamplePassword);
+        LoginInfo b = new(SampleUserName, "different");
         await Assert.That(a.Equals(b)).IsFalse();
     }
 
-    /// <summary>
-    /// Tests that <see cref="LoginInfo.GetHashCode"/> yields the same value for equivalent instances.
-    /// </summary>
+    /// <summary>Tests that <see cref="LoginInfo.GetHashCode"/> yields the same value for equivalent instances.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetHashCodeShouldMatchForEqualInstances()
     {
-        LoginInfo a = new("alice", "secret");
-        LoginInfo b = new("alice", "secret");
+        LoginInfo a = new(SampleUserName, SamplePassword);
+        LoginInfo b = new(SampleUserName, SamplePassword);
         await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
     }
 }

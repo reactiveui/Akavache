@@ -4,14 +4,10 @@
 
 namespace Akavache.Integration.Tests.Parallel;
 
-/// <summary>
-/// One-time assembly setup for integration parallel tests.
-/// </summary>
+/// <summary>One-time assembly setup for integration parallel tests.</summary>
 public static class GlobalTestHooks
 {
-    /// <summary>
-    /// Initializes the SQLite provider once before any test runs.
-    /// </summary>
+    /// <summary>Initializes the SQLite provider once before any test runs.</summary>
     [Before(Assembly)]
     public static void InitSqliteProvider() => SQLitePCL.Batteries_V2.Init();
 }

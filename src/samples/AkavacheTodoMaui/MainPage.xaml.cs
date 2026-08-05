@@ -9,14 +9,10 @@ using ReactiveUI;
 
 namespace AkavacheTodoMaui;
 
-/// <summary>
-/// Main page demonstrating Akavache features with ReactiveUI MVVM.
-/// </summary>
+/// <summary>Main page demonstrating Akavache features with ReactiveUI MVVM.</summary>
 public partial class MainPage : ContentPage, IViewFor<MainViewModel>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MainPage"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="MainPage"/> class.</summary>
 #if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
     [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
@@ -33,23 +29,17 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
         BindingContext = ViewModel;
     }
 
-    /// <summary>
-    /// Gets or sets the view model.
-    /// </summary>
+    /// <summary>Gets or sets the view model.</summary>
     public MainViewModel? ViewModel { get; set; }
 
-    /// <summary>
-    /// Gets or sets the view model as object.
-    /// </summary>
+    /// <summary>Gets or sets the view model as object.</summary>
     object? IViewFor.ViewModel
     {
         get => ViewModel;
         set => ViewModel = value as MainViewModel;
     }
 
-    /// <summary>
-    /// Called when the page appears.
-    /// </summary>
+    /// <summary>Called when the page appears.</summary>
     protected override void OnAppearing()
     {
         base.OnAppearing();
@@ -60,12 +50,10 @@ public partial class MainPage : ContentPage, IViewFor<MainViewModel>
             return;
         }
 
-        activatable.Activator.Activate();
+        _ = activatable.Activator.Activate();
     }
 
-    /// <summary>
-    /// Called when the page disappears.
-    /// </summary>
+    /// <summary>Called when the page disappears.</summary>
     protected override void OnDisappearing()
     {
         base.OnDisappearing();

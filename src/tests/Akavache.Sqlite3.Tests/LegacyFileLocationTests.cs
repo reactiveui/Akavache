@@ -13,12 +13,12 @@ namespace Akavache.Tests;
 /// Validates that V10→V11 migration scenarios work correctly when using legacy file locations.
 /// </summary>
 [Category("Akavache")]
-[Obsolete("Use CreateBuilder(string applicationName, ...) which requires an explicit application name.", false)]
 public class LegacyFileLocationTests
 {
-    /// <summary>
-    /// Verifies that WithLegacyFileLocation sets the FileLocationOption to Legacy.
-    /// </summary>
+    /// <summary>The cache slot whose legacy directory differs most visibly from the isolated-storage one.</summary>
+    private const string UserAccountSlot = "UserAccount";
+
+    /// <summary>Verifies that WithLegacyFileLocation sets the FileLocationOption to Legacy.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task WithLegacyFileLocation_SetsFileLocationOptionToLegacy()
@@ -27,15 +27,13 @@ public class LegacyFileLocationTests
         var builder = CacheDatabase.CreateBuilder();
 
         // Act
-        builder.WithLegacyFileLocation();
+        _ = builder.WithLegacyFileLocation();
 
         // Assert
         await Assert.That(builder.FileLocationOption).IsEqualTo(FileLocationOption.Legacy);
     }
 
-    /// <summary>
-    /// Verifies that the default FileLocationOption is Default.
-    /// </summary>
+    /// <summary>Verifies that the default FileLocationOption is Default.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task CreateBuilder_DefaultFileLocationOption_IsDefault()
@@ -47,9 +45,7 @@ public class LegacyFileLocationTests
         await Assert.That(builder.FileLocationOption).IsEqualTo(FileLocationOption.Default);
     }
 
-    /// <summary>
-    /// Verifies that CreateBuilder with explicit Legacy option sets it correctly.
-    /// </summary>
+    /// <summary>Verifies that CreateBuilder with explicit Legacy option sets it correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task CreateBuilder_WithLegacyOption_SetsFileLocationOptionToLegacy()
@@ -61,9 +57,7 @@ public class LegacyFileLocationTests
         await Assert.That(builder.FileLocationOption).IsEqualTo(FileLocationOption.Legacy);
     }
 
-    /// <summary>
-    /// Verifies that WithLegacyFileLocation returns the builder for fluent chaining.
-    /// </summary>
+    /// <summary>Verifies that WithLegacyFileLocation returns the builder for fluent chaining.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task WithLegacyFileLocation_ReturnsSameBuilder_ForFluentChaining()
@@ -80,9 +74,7 @@ public class LegacyFileLocationTests
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Verifies that WithLegacyFileLocation can be chained with other builder methods.
-    /// </summary>
+    /// <summary>Verifies that WithLegacyFileLocation can be chained with other builder methods.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task WithLegacyFileLocation_CanBeChainedWithOtherMethods()
@@ -101,9 +93,7 @@ public class LegacyFileLocationTests
         }
     }
 
-    /// <summary>
-    /// Verifies that legacy file location produces different cache directories than the default.
-    /// </summary>
+    /// <summary>Verifies that legacy file location produces different cache directories than the default.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task LegacyFileLocation_ProducesDifferentPath_ThanDefault()
@@ -120,8 +110,8 @@ public class LegacyFileLocationTests
             .WithSerializer<SystemJsonSerializer>();
 
         // Act
-        var defaultPath = defaultBuilder.GetIsolatedCacheDirectory("UserAccount");
-        var legacyPath = legacyBuilder.GetLegacyCacheDirectory("UserAccount");
+        var defaultPath = defaultBuilder.GetIsolatedCacheDirectory(UserAccountSlot);
+        var legacyPath = legacyBuilder.GetLegacyCacheDirectory(UserAccountSlot);
 
         // Assert - the paths should be different (isolated storage vs legacy app data)
         await Assert.That(defaultPath).IsNotNull();
@@ -129,9 +119,7 @@ public class LegacyFileLocationTests
         await Assert.That(defaultPath).IsNotEqualTo(legacyPath);
     }
 
-    /// <summary>
-    /// Verifies that the legacy directory for UserAccount points to the expected location.
-    /// </summary>
+    /// <summary>Verifies that the legacy directory for UserAccount points to the expected location.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetLegacyCacheDirectory_UserAccount_ContainsApplicationName()
@@ -143,16 +131,14 @@ public class LegacyFileLocationTests
             .WithSerializer<SystemJsonSerializer>();
 
         // Act
-        var legacyPath = builder.GetLegacyCacheDirectory("UserAccount");
+        var legacyPath = builder.GetLegacyCacheDirectory(UserAccountSlot);
 
         // Assert
         await Assert.That(legacyPath).IsNotNull();
         await Assert.That(legacyPath!).Contains(appName);
     }
 
-    /// <summary>
-    /// Verifies that legacy Secure directory points to SecretCache subdirectory.
-    /// </summary>
+    /// <summary>Verifies that legacy Secure directory points to SecretCache subdirectory.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetLegacyCacheDirectory_Secure_ContainsSecretCache()
@@ -171,9 +157,7 @@ public class LegacyFileLocationTests
         await Assert.That(legacyPath!).Contains("SecretCache");
     }
 
-    /// <summary>
-    /// Verifies that legacy LocalMachine directory points to BlobCache subdirectory.
-    /// </summary>
+    /// <summary>Verifies that legacy LocalMachine directory points to BlobCache subdirectory.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task GetLegacyCacheDirectory_LocalMachine_ContainsBlobCache()
@@ -192,9 +176,7 @@ public class LegacyFileLocationTests
         await Assert.That(legacyPath!).Contains("BlobCache");
     }
 
-    /// <summary>
-    /// Verifies that Initialize with FileLocationOption.Legacy creates caches at legacy paths.
-    /// </summary>
+    /// <summary>Verifies that Initialize with FileLocationOption.Legacy creates caches at legacy paths.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task Initialize_WithLegacyFileLocation_CreatesCachesAtLegacyPaths()
@@ -209,8 +191,8 @@ public class LegacyFileLocationTests
             CacheDatabase.Initialize<SystemJsonSerializer>(
                 configure: static builder =>
                 {
-                    builder.WithSqliteProvider();
-                    builder.WithSqliteDefaults();
+                    _ = builder.WithSqliteProvider();
+                    _ = builder.WithSqliteDefaults();
                 },
                 applicationName: testAppName,
                 fileLocationOption: FileLocationOption.Legacy);
@@ -231,9 +213,7 @@ public class LegacyFileLocationTests
         }
     }
 
-    /// <summary>
-    /// Verifies that WithLegacyFileLocation in builder chain initializes caches correctly.
-    /// </summary>
+    /// <summary>Verifies that WithLegacyFileLocation in builder chain initializes caches correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task WithLegacyFileLocation_InBuilderChain_InitializesCachesCorrectly()
@@ -248,7 +228,7 @@ public class LegacyFileLocationTests
             CacheDatabase.Initialize<SystemJsonSerializer>(
                 configure: static builder =>
                 {
-                    builder.WithLegacyFileLocation()
+                    _ = builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
                            .WithSqliteDefaults();
                 },
@@ -270,9 +250,7 @@ public class LegacyFileLocationTests
         }
     }
 
-    /// <summary>
-    /// Verifies that data can be written and read with legacy file locations.
-    /// </summary>
+    /// <summary>Verifies that data can be written and read with legacy file locations.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task LegacyFileLocation_CanWriteAndReadData()
@@ -286,7 +264,7 @@ public class LegacyFileLocationTests
             CacheDatabase.Initialize<SystemJsonSerializer>(
                 configure: static builder =>
                 {
-                    builder.WithLegacyFileLocation()
+                    _ = builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
                            .WithSqliteDefaults();
                 },
@@ -308,9 +286,7 @@ public class LegacyFileLocationTests
         }
     }
 
-    /// <summary>
-    /// Verifies that SettingsCachePath uses legacy directory when legacy option is set.
-    /// </summary>
+    /// <summary>Verifies that SettingsCachePath uses legacy directory when legacy option is set.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SettingsCachePath_WithLegacyOption_UsesLegacyDirectory()
@@ -336,9 +312,7 @@ public class LegacyFileLocationTests
         await Assert.That(defaultPath).IsNotEqualTo(legacyPath);
     }
 
-    /// <summary>
-    /// Verifies that data written with legacy location can be read back after re-initialization.
-    /// </summary>
+    /// <summary>Verifies that data written with legacy location can be read back after re-initialization.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task LegacyFileLocation_DataPersistsAcrossReinitialization()
@@ -355,7 +329,7 @@ public class LegacyFileLocationTests
             CacheDatabase.Initialize<SystemJsonSerializer>(
                 configure: static builder =>
                 {
-                    builder.WithLegacyFileLocation()
+                    _ = builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
                            .WithSqliteDefaults();
                 },
@@ -371,7 +345,7 @@ public class LegacyFileLocationTests
             CacheDatabase.Initialize<SystemJsonSerializer>(
                 configure: static builder =>
                 {
-                    builder.WithLegacyFileLocation()
+                    _ = builder.WithLegacyFileLocation()
                            .WithSqliteProvider()
                            .WithSqliteDefaults();
                 },

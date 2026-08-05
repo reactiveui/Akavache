@@ -9,29 +9,46 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for AOT compatibility and edge cases.
-/// </summary>
+/// <summary>Tests for AOT compatibility and edge cases.</summary>
 [Category("Akavache")]
 [NotInParallel("CacheDatabaseState")]
 public class AotCompatibilityTests
 {
-    /// <summary>
-    /// Tests that null serializer throws appropriate exception.
-    /// </summary>
+    /// <summary>The payload written under the first sample key.</summary>
+    private const string PrimaryValue = "value";
+
+    /// <summary>The payload written under the second sample key.</summary>
+    private const string SecondaryValue = "value2";
+
+    /// <summary>How far a round-tripped instant may drift from the original, in seconds.</summary>
+    private const int RoundTripToleranceSeconds = 2;
+
+    /// <summary>The numeric member of the payload used to check that a round-trip keeps types intact.</summary>
+    private const int PayloadNumber = 42;
+
+    /// <summary>The number of cache operations issued concurrently.</summary>
+    private const int ConcurrentOperationCount = 10;
+
+    /// <summary>The number of temporary entries written before the cache is invalidated.</summary>
+    private const int TemporaryEntryCount = 5;
+
+    /// <summary>The character count of the large string used to exercise oversized payloads.</summary>
+    private const int LargeStringCharCount = 100_000;
+
+    /// <summary>The number of entries written and read back by the bulk operation test.</summary>
+    private const int BulkEntryCount = 3;
+
+    /// <summary>Tests that null serializer throws appropriate exception.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task NullSerializerShouldThrowException() =>
-
-        // Act & Assert - The exception should occur when creating the cache, not when using it
         await Assert.That(static () =>
         {
+            // Act & Assert - The exception should occur when creating the cache, not when using it
             using InMemoryBlobCache cache = new(default(ISerializer)!);
         }).ThrowsException().WithExceptionType(typeof(ArgumentNullException));
 
-    /// <summary>
-    /// Tests that SerializeWithContext handles null values correctly.
-    /// </summary>
+    /// <summary>Tests that SerializeWithContext handles null values correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SerializeWithContextShouldHandleNullValues()
@@ -43,12 +60,10 @@ public class AotCompatibilityTests
 
         // Assert
         await Assert.That(result).IsNotNull();
-        await Assert.That(result.Length == 0 || Encoding.UTF8.GetString(result) == "null").IsTrue();
+        await Assert.That(result.Length == 0 || result.AsSpan().SequenceEqual("null"u8)).IsTrue();
     }
 
-    /// <summary>
-    /// Tests that DeserializeWithContext handles null/empty data.
-    /// </summary>
+    /// <summary>Tests that DeserializeWithContext handles null/empty data.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task DeserializeWithContextShouldHandleNullData()
@@ -63,9 +78,7 @@ public class AotCompatibilityTests
         await Assert.That(emptyResult).IsNull();
     }
 
-    /// <summary>
-    /// Tests that error handling works correctly for serialization failures.
-    /// </summary>
+    /// <summary>Tests that error handling works correctly for serialization failures.</summary>
     /// <returns>A task representing the test completion.</returns>
     [Test]
     public async Task SerializationErrorsShouldBeHandledCorrectly()
@@ -98,9 +111,7 @@ public class AotCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that DateTimeKind forcing works correctly.
-    /// </summary>
+    /// <summary>Tests that DateTimeKind forcing works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task DateTimeKindForcingShouldWorkCorrectly()
@@ -122,7 +133,7 @@ public class AotCompatibilityTests
 
             using (Assert.Multiple())
             {
-                await Assert.That(tickDifference).IsLessThan(TimeSpan.TicksPerSecond * 2);
+                await Assert.That(tickDifference).IsLessThan(TimeSpan.TicksPerSecond * RoundTripToleranceSeconds);
 
                 // Some serializers (e.g. System.Text.Json) preserve the original Kind on
                 // round-trip; others apply ForcedDateTimeKind. Accept any valid Kind.
@@ -133,9 +144,7 @@ public class AotCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that argument validation works correctly.
-    /// </summary>
+    /// <summary>Tests that argument validation works correctly.</summary>
     /// <returns>A task representing the test completion.</returns>
     [Test]
     public async Task ArgumentValidationShouldWorkCorrectly()
@@ -144,7 +153,7 @@ public class AotCompatibilityTests
 
         // Act & Assert - InMemoryBlobCache may not validate empty strings the same way
         // Try to test actual argument validation if it exists
-        var insertNullError = cache.InsertObject(null!, "value").SubscribeGetError();
+        var insertNullError = cache.InsertObject(null!, PrimaryValue).SubscribeGetError();
         await Assert.That(insertNullError).IsTypeOf<ArgumentNullException>();
 
         var getNullError = cache.GetObject<string>(null!).SubscribeGetError();
@@ -156,9 +165,7 @@ public class AotCompatibilityTests
         await Assert.That(emptyKeyResult).IsEqualTo("empty_key_value");
     }
 
-    /// <summary>
-    /// Tests that type safety is maintained with generic operations.
-    /// </summary>
+    /// <summary>Tests that type safety is maintained with generic operations.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task TypeSafetyShouldBeMaintained()
@@ -169,12 +176,8 @@ public class AotCompatibilityTests
 
             // Test actual type conversion behavior rather than expecting specific exceptions
             // This test verifies that serialization maintains type integrity
-
             // Store a complex object
-            var originalData = new
-            {
-                message = "Hello World", number = 42, timestamp = DateTime.UtcNow, isValid = true
-            };
+            TypeIntegrityPayload originalData = new() { Message = "Hello World", Number = PayloadNumber, Timestamp = TimeProvider.System.GetUtcNow().UtcDateTime, IsValid = true };
 
             cache.InsertObject("test_key", originalData).SubscribeAndComplete();
 
@@ -185,7 +188,6 @@ public class AotCompatibilityTests
             // For type safety, we actually want to verify that the system
             // properly handles type conversions or fails appropriately
             // Rather than forcing an exception, let's test successful serialization
-
             // Test that we can store and retrieve strongly typed objects
             UserObject userObject = new() { Name = "Test User", Bio = "Test Bio", Blog = "Test Blog" };
             cache.InsertObject("user_key", userObject).SubscribeAndComplete();
@@ -200,9 +202,7 @@ public class AotCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that concurrent operations work correctly.
-    /// </summary>
+    /// <summary>Tests that concurrent operations work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ConcurrentOperationsShouldWorkCorrectly()
@@ -214,7 +214,7 @@ public class AotCompatibilityTests
             // Act - perform multiple concurrent operations
             List<Task> tasks = [];
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < ConcurrentOperationCount; i++)
             {
                 var index = i;
                 tasks.Add(Task.Run(async () =>
@@ -229,7 +229,7 @@ public class AotCompatibilityTests
             await Task.WhenAll(tasks);
 
             // Assert - verify all data was stored correctly
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < ConcurrentOperationCount; i++)
             {
                 var value = cache.GetObject<string>($"key_{i}").SubscribeGetValue();
                 await Assert.That(value).IsEqualTo($"value_{i}");
@@ -237,9 +237,7 @@ public class AotCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that memory cleanup works correctly.
-    /// </summary>
+    /// <summary>Tests that memory cleanup works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task MemoryCleanupShouldWorkCorrectly()
@@ -249,7 +247,7 @@ public class AotCompatibilityTests
             using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
             // Insert and remove data multiple times
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < TemporaryEntryCount; i++)
             {
                 cache.InsertObject($"temp_key_{i}", $"temp_value_{i}").SubscribeAndComplete();
             }
@@ -268,9 +266,7 @@ public class AotCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that large objects are handled correctly.
-    /// </summary>
+    /// <summary>Tests that large objects are handled correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LargeObjectsShouldBeHandledCorrectly()
@@ -280,7 +276,7 @@ public class AotCompatibilityTests
             using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
             // Create a large object
-            string largeString = new('x', 100000); // 100KB string
+            string largeString = new('x', LargeStringCharCount); // 100KB string
 
             // Act
             cache.InsertObject("large_object", largeString).SubscribeAndComplete();
@@ -288,13 +284,11 @@ public class AotCompatibilityTests
 
             // Assert
             await Assert.That(retrieved).IsEqualTo(largeString);
-            await Assert.That(retrieved!).Length().IsEqualTo(100000);
+            await Assert.That(retrieved!).Length().IsEqualTo(LargeStringCharCount);
         }
     }
 
-    /// <summary>
-    /// Tests that observable extension methods work correctly.
-    /// </summary>
+    /// <summary>Tests that observable extension methods work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ObservableExtensionMethodsShouldWork()
@@ -302,10 +296,10 @@ public class AotCompatibilityTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
         // Test InsertObject and GetObject work with First operator
-        cache.InsertObject("test", "value").SubscribeAndComplete();
+        cache.InsertObject("test", PrimaryValue).SubscribeAndComplete();
         var result = cache.GetObject<string>("test").SubscribeGetValue();
 
-        await Assert.That(result).IsEqualTo("value");
+        await Assert.That(result).IsEqualTo(PrimaryValue);
 
         // Test GetAllKeys works
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -313,9 +307,7 @@ public class AotCompatibilityTests
         await Assert.That(keys).Contains("test");
     }
 
-    /// <summary>
-    /// Tests that cache disposal works correctly in various scenarios.
-    /// </summary>
+    /// <summary>Tests that cache disposal works correctly in various scenarios.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CacheDisposalShouldWorkCorrectly()
@@ -325,23 +317,21 @@ public class AotCompatibilityTests
         // Test using statement disposal
         using (cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer()))
         {
-            cache.InsertObject("test", "value").SubscribeAndComplete();
+            cache.InsertObject("test", PrimaryValue).SubscribeAndComplete();
             var result = cache.GetObject<string>("test").SubscribeGetValue();
-            await Assert.That(result).IsEqualTo("value");
+            await Assert.That(result).IsEqualTo(PrimaryValue);
         }
 
         // Test explicit disposal
         cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        cache.InsertObject("test2", "value2").SubscribeAndComplete();
+        cache.InsertObject("test2", SecondaryValue).SubscribeAndComplete();
         cache.Dispose();
 
         // Test multiple disposal calls (should not throw)
         cache.Dispose();
     }
 
-    /// <summary>
-    /// Tests that bulk operations work correctly.
-    /// </summary>
+    /// <summary>Tests that bulk operations work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task BulkOperationsShouldWorkCorrectly()
@@ -352,7 +342,7 @@ public class AotCompatibilityTests
         KeyValuePair<string, string>[] data =
         [
             new("key1", "value1"),
-            new("key2", "value2"),
+            new("key2", SecondaryValue),
             new("key3", "value3")
         ];
 
@@ -362,11 +352,11 @@ public class AotCompatibilityTests
         string[] keys = ["key1", "key2", "key3"];
         var results = cache.GetObjects<string>(keys).ToList().SubscribeGetValue();
 
-        await Assert.That(results).Count().IsEqualTo(3);
+        await Assert.That(results).Count().IsEqualTo(BulkEntryCount);
         using (Assert.Multiple())
         {
             await Assert.That(results!.Any(static r => r is { Key: "key1", Value: "value1" })).IsTrue();
-            await Assert.That(results!.Any(static r => r is { Key: "key2", Value: "value2" })).IsTrue();
+            await Assert.That(results!.Any(static r => r is { Key: "key2", Value: SecondaryValue })).IsTrue();
             await Assert.That(results!.Any(static r => r is { Key: "key3", Value: "value3" })).IsTrue();
         }
 
@@ -375,5 +365,21 @@ public class AotCompatibilityTests
 
         var allKeys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(allKeys).IsEmpty();
+    }
+
+    /// <summary>A mixed-member payload stored and read back to check that a round-trip keeps types intact.</summary>
+    private sealed record TypeIntegrityPayload
+    {
+        /// <summary>Gets the text member of the payload.</summary>
+        public string? Message { get; init; }
+
+        /// <summary>Gets the numeric member of the payload.</summary>
+        public int Number { get; init; }
+
+        /// <summary>Gets the instant the payload was created.</summary>
+        public DateTime Timestamp { get; init; }
+
+        /// <summary>Gets a value indicating whether the payload is marked valid.</summary>
+        public bool IsValid { get; init; }
     }
 }

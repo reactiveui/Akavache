@@ -3,28 +3,18 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reflection;
-using Akavache.Helpers;
 using Akavache.Settings;
 using Splat;
 
 namespace Akavache.Core;
 
-/// <summary>
-/// Provides the default implementation of the Akavache builder interface for configuring cache instances.
-/// </summary>
+/// <summary>Provides the default implementation of the Akavache builder interface for configuring cache instances.</summary>
 internal class AkavacheBuilder : IAkavacheBuilder
 {
-#if NET9_0_OR_GREATER
     /// <summary>Synchronization primitive guarding serializer registration.</summary>
     private static readonly Lock _lock = new();
-#else
-    /// <summary>Synchronization primitive guarding serializer registration.</summary>
-    private static readonly object _lock = new();
-#endif
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AkavacheBuilder"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="AkavacheBuilder"/> class.</summary>
     /// <remarks>
     /// Sets <see cref="ApplicationRootPath"/> to the parent of
     /// <see cref="AppContext.BaseDirectory"/> and leaves
@@ -94,17 +84,13 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// </summary>
     public DateTimeKind? ForcedDateTimeKind { get; set; }
 
-    /// <summary>
-    /// Gets or sets the name of the serializer type.
-    /// </summary>
+    /// <summary>Gets the name of the serializer type.</summary>
     /// <value>
     /// The name of the serializer type.
     /// </value>
     public string? SerializerTypeName { get; internal set; }
 
-    /// <summary>
-    /// Gets the file location option.
-    /// </summary>
+    /// <summary>Gets the file location option.</summary>
     /// <value>
     /// The file location option.
     /// </value>
@@ -164,7 +150,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheBuilder WithInMemoryDefaults()
     {
-        if (Serializer == null)
+        if (Serializer is null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using InMemory defaults.");
         }
@@ -239,9 +225,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         return this;
     }
 
-    /// <summary>
-    /// Uses the kind of the forced date time.
-    /// </summary>
+    /// <summary>Uses the kind of the forced date time.</summary>
     /// <param name="kind">The kind.</param>
     /// <returns>The builder instance for fluent configuration.</returns>
     public IAkavacheBuilder UseForcedDateTimeKind(DateTimeKind kind)
@@ -253,7 +237,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <inheritdoc />
     public IAkavacheInstance Build()
     {
-        if (Serializer == null)
+        if (Serializer is null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using InMemory defaults.");
         }
@@ -261,10 +245,7 @@ internal class AkavacheBuilder : IAkavacheBuilder
         return this;
     }
 
-    /// <summary>
-    /// Reads and parses the <see cref="AssemblyFileVersionAttribute"/> from
-    /// <paramref name="assembly"/> into a <see cref="System.Version"/>.
-    /// </summary>
+    /// <summary>Reads and parses the <see cref="AssemblyFileVersionAttribute"/> from <paramref name="assembly"/> into a <see cref="System.Version"/>.</summary>
     /// <remarks>
     /// Returns <see langword="null"/> if the attribute is missing or its value
     /// cannot be parsed. The assembly reference is caller-owned so there is no
@@ -273,14 +254,12 @@ internal class AkavacheBuilder : IAkavacheBuilder
     /// <param name="assembly">The caller-supplied assembly.</param>
     /// <returns>The parsed version, or <see langword="null"/>.</returns>
     internal static Version? ReadFileVersion(Assembly assembly) =>
-        assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version } &&
-            Version.TryParse(version, out var parsed)
-                ? parsed
-                : null;
+        assembly.GetCustomAttribute<AssemblyFileVersionAttribute>() is { Version: var version }
+            && Version.TryParse(version, out var parsed)
+            ? parsed
+            : null;
 
-    /// <summary>
-    /// Applies the configured <see cref="ForcedDateTimeKind"/> (if any) to the supplied cache.
-    /// </summary>
+    /// <summary>Applies the configured <see cref="ForcedDateTimeKind"/> (if any) to the supplied cache.</summary>
     /// <param name="cache">The cache to configure.</param>
     internal void ApplyForcedDateTimeKind(IBlobCache cache)
     {
@@ -292,13 +271,11 @@ internal class AkavacheBuilder : IAkavacheBuilder
         cache.ForcedDateTimeKind = ForcedDateTimeKind.Value;
     }
 
-    /// <summary>
-    /// Creates a new <see cref="InMemoryBlobCache"/> using the registered serializer.
-    /// </summary>
+    /// <summary>Creates a new <see cref="InMemoryBlobCache"/> using the registered serializer.</summary>
     /// <returns>The newly created in-memory cache instance.</returns>
     internal InMemoryBlobCache CreateInMemoryCache()
     {
-        if (Serializer == null)
+        if (Serializer is null)
         {
             throw new InvalidOperationException("No serializer has been registered. Call CacheDatabase.Initialize<[SerializerType]>() before using this BlobCache.");
         }

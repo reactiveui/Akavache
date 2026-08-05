@@ -53,6 +53,8 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
     /// many sources complete inline (e.g. <c>Observable.Return</c>,
     /// <c>ImmediateScheduler</c> caches).
     /// </remarks>
+    /// <param name="downstream">The observer signalled once every source has completed.</param>
+    /// <param name="sources">The sources to run, in order.</param>
     private sealed class Sink(
         IObserver<Unit> downstream,
         IReadOnlyList<IObservable<Unit>> sources) : IObserver<Unit>, IDisposable
@@ -73,11 +75,7 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
         /// </summary>
         private bool _syncCompleted;
 
-        /// <summary>
-        /// Guards against re-entrant <see cref="RunNext"/> calls. When <c>true</c>,
-        /// <see cref="OnCompleted"/> sets <see cref="_syncCompleted"/> instead of
-        /// calling <see cref="RunNext"/> directly.
-        /// </summary>
+        /// <summary>Guards against re-entrant <see cref="RunNext"/> calls: while set, <see cref="OnCompleted"/> sets <see cref="_syncCompleted"/> instead of calling it directly.</summary>
         private bool _looping;
 
         /// <inheritdoc/>
@@ -138,9 +136,10 @@ internal sealed class RunAllObservable(IReadOnlyList<IObservable<Unit>> sources)
                 while (!_done && _index < sources.Count)
                 {
                     _syncCompleted = false;
-                    var source = sources[_index++];
+                    var source = sources[_index];
+                    _index++;
                     var sub = source.Subscribe(this);
-                    Interlocked.Exchange(ref _currentSubscription, sub);
+                    _ = Interlocked.Exchange(ref _currentSubscription, sub);
 
                     if (!_syncCompleted)
                     {

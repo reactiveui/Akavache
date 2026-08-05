@@ -16,19 +16,46 @@ namespace Akavache.Settings.Tests;
 [Category("Akavache")]
 public class SettingsCacheTests
 {
-    /// <summary>
-    /// The per-test <see cref="AppBuilder"/> instance.
-    /// </summary>
+    /// <summary>The application name used when a test does not scope itself to a unique application.</summary>
+    private const string DefaultApplicationName = "Akavache";
+
+    /// <summary>Seconds a settings round trip may take before the deadlock guard fires the test.</summary>
+    private const int DeadlockGuardTimeoutSeconds = 10;
+
+    /// <summary>Seconds allowed for a store to be created and its cold load to settle.</summary>
+    private const int StoreCreationTimeoutSeconds = 30;
+
+    /// <summary>Milliseconds given to a freshly-created store to finish initializing before it is mutated.</summary>
+    private const int StoreWarmupDelayMilliseconds = 100;
+
+    /// <summary>The seeded <c>ShortTest</c> value expected after a round trip.</summary>
+    private const short ExpectedShortSetting = 16;
+
+    /// <summary>The seeded <c>LongTest</c> value expected after a round trip.</summary>
+    private const long ExpectedLongSetting = 123_456L;
+
+    /// <summary>The seeded <c>FloatTest</c> value expected after a round trip.</summary>
+    private const float ExpectedFloatSetting = 2.2F;
+
+    /// <summary>The seeded <c>DoubleTest</c> value expected after a round trip.</summary>
+    private const double ExpectedDoubleSetting = 23.8D;
+
+    /// <summary>Tolerance applied when comparing the single-precision setting.</summary>
+    private const float FloatComparisonTolerance = 0.0001F;
+
+    /// <summary>Tolerance applied when comparing the double-precision setting.</summary>
+    private const double DoubleComparisonTolerance = 0.0001D;
+
+    /// <summary>Bytes written to and read back from the blob cache in the construction repro.</summary>
+    private static readonly byte[] SamplePayload = [1, 2, 3];
+
+    /// <summary>The per-test <see cref="AppBuilder"/> instance.</summary>
     private AppBuilder _appBuilder = null!;
 
-    /// <summary>
-    /// The unique per-test cache root path (directory).
-    /// </summary>
+    /// <summary>The unique per-test cache root path (directory).</summary>
     private string _cacheRoot = null!;
 
-    /// <summary>
-    /// One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.
-    /// </summary>
+    /// <summary>One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.</summary>
     [Before(Test)]
     public void Setup()
     {
@@ -40,12 +67,10 @@ public class SettingsCacheTests
             Guid.NewGuid().ToString("N"),
             "ApplicationSettings");
 
-        Directory.CreateDirectory(_cacheRoot);
+        _ = Directory.CreateDirectory(_cacheRoot);
     }
 
-    /// <summary>
-    /// One-time teardown after each test. Best-effort cleanup.
-    /// </summary>
+    /// <summary>One-time teardown after each test. Best-effort cleanup.</summary>
     [After(Test)]
     public void Teardown()
     {
@@ -75,23 +100,21 @@ public class SettingsCacheTests
         var appName = NewName("repro_wss");
         ViewSettings? captured = null;
 
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
+        var configured = await _appBuilder
+            .WithAkavacheAsync<NewtonsoftSerializer>(
                 appName,
-                builder =>
+                async builder =>
                 {
-                    Func<Task> configure = async () =>
-                    {
-                        await Task.CompletedTask.ConfigureAwait(false);
-                        builder
-                            .WithSqliteProvider()
-                            .WithSettingsCachePath(_cacheRoot)
-                            .WithSettingsStore<ViewSettings>(s => captured = s);
-                    };
-                    configure().GetAwaiter().GetResult();
+                    await Task.CompletedTask.ConfigureAwait(false);
+                    _ = builder
+                        .WithSqliteProvider()
+                        .WithSettingsCachePath(_cacheRoot)
+                        .WithSettingsStore<ViewSettings>(s => captured = s);
                 },
-                _ => { })
-            .Build();
+                static _ => Task.CompletedTask)
+            .ConfigureAwait(false);
+
+        _ = configured.Build();
 
         await Assert.That(captured).IsNotNull();
         captured?.Dispose();
@@ -118,9 +141,9 @@ public class SettingsCacheTests
 
         await RunWithAkavacheAsync<NewtonsoftSerializer>(
             appName,
-            (builder, _) =>
+            (builder, ct) =>
             {
-                builder.WithSettingsStore<ViewSettings>(s => captured = s, null, ImmediateScheduler.Instance);
+                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s, null, ImmediateScheduler.Instance);
                 return Task.CompletedTask;
             },
             async (instance, _) =>
@@ -143,7 +166,7 @@ public class SettingsCacheTests
                     await instance.DeleteSettingsStore<ViewSettings>();
                 }
             },
-            timeout: TimeSpan.FromSeconds(10));
+            timeout: TimeSpan.FromSeconds(DeadlockGuardTimeoutSeconds));
     }
 
     /// <summary>
@@ -163,7 +186,7 @@ public class SettingsCacheTests
             appName,
             (builder, ct) =>
             {
-                builder.WithSettingsStore<ViewSettings>(s => captured = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s);
                 return Task.CompletedTask;
             },
             async (instance, ct) =>
@@ -172,13 +195,10 @@ public class SettingsCacheTests
                 var boolValue = (bool)captured!.BoolTest;
                 await Assert.That(boolValue).IsTrue();
             },
-            timeout: TimeSpan.FromSeconds(10));
+            timeout: TimeSpan.FromSeconds(DeadlockGuardTimeoutSeconds));
     }
 
-    /// <summary>
-    /// Regression test variant: configure lambda is ASYNC with an awaited completed task
-    /// before <c>WithSettingsStore</c>.
-    /// </summary>
+    /// <summary>Regression test variant: configure lambda is ASYNC with an awaited completed task before <c>WithSettingsStore</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Repro_AsyncConfigure_AwaitedCompletedTask()
@@ -191,7 +211,7 @@ public class SettingsCacheTests
             async (builder, ct) =>
             {
                 await Task.CompletedTask.ConfigureAwait(false);
-                builder.WithSettingsStore<ViewSettings>(s => captured = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s);
             },
             async (instance, ct) =>
             {
@@ -199,7 +219,7 @@ public class SettingsCacheTests
                 var boolValue = (bool)captured!.BoolTest;
                 await Assert.That(boolValue).IsTrue();
             },
-            timeout: TimeSpan.FromSeconds(10));
+            timeout: TimeSpan.FromSeconds(DeadlockGuardTimeoutSeconds));
     }
 
     /// <summary>
@@ -219,7 +239,7 @@ public class SettingsCacheTests
             async (builder, ct) =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>();
-                builder.WithSettingsStore<ViewSettings>(s => captured = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s);
             },
             async (instance, ct) =>
             {
@@ -228,7 +248,7 @@ public class SettingsCacheTests
                 var boolValue = (bool)captured!.BoolTest;
                 await Assert.That(boolValue).IsTrue();
             },
-            timeout: TimeSpan.FromSeconds(10));
+            timeout: TimeSpan.FromSeconds(DeadlockGuardTimeoutSeconds));
     }
 
     /// <summary>
@@ -247,7 +267,7 @@ public class SettingsCacheTests
             async (builder, ct) =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>();
-                builder.WithSettingsStore<ViewSettings>(s => captured = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => captured = s);
             },
             async (instance, ct) =>
             {
@@ -257,7 +277,7 @@ public class SettingsCacheTests
                 await Assert.That(boolValue).IsTrue();
                 captured?.Dispose();
             },
-            timeout: TimeSpan.FromSeconds(10));
+            timeout: TimeSpan.FromSeconds(DeadlockGuardTimeoutSeconds));
     }
 
     /// <summary>
@@ -275,33 +295,31 @@ public class SettingsCacheTests
         var dbPath = Path.Combine(_cacheRoot, "ReproCache.db");
 
         SqliteBlobCache? cache = null;
-        _appBuilder
-            .WithAkavache<NewtonsoftSerializer>(
+
+        // The async configure lambda mirrors TestCreateAndInsertNewtonsoftAsync's configure
+        // body, which does `await DeleteSettingsStore<T>()` — a no-op on a fresh filesystem
+        // that still forces the state machine.
+        var configured = await _appBuilder
+            .WithAkavacheAsync<NewtonsoftSerializer>(
                 appName,
-                builder =>
+                async builder =>
                 {
-                    // async-lambda + await-Task.CompletedTask mirrors
-                    // TestCreateAndInsertNewtonsoftAsync's configure body, which does
-                    // `await DeleteSettingsStore<T>()` — a no-op on a
-                    // fresh filesystem that still forces the state machine.
-                    Func<Task> configure = async () =>
-                    {
-                        await Task.CompletedTask.ConfigureAwait(false);
-                        cache = new(dbPath, builder.Serializer!, ImmediateScheduler.Instance);
-                    };
-                    configure().GetAwaiter().GetResult();
+                    await Task.CompletedTask.ConfigureAwait(false);
+                    cache = new(dbPath, builder.Serializer!, ImmediateScheduler.Instance);
                 },
-                _ => { })
-            .Build();
+                static _ => Task.CompletedTask)
+            .ConfigureAwait(false);
+
+        _ = configured.Build();
 
         await Assert.That(cache).IsNotNull();
 
         try
         {
-            cache!.Insert("k", [1, 2, 3]).WaitForCompletion();
+            cache!.Insert("k", SamplePayload).WaitForCompletion();
             var data = cache.Get("k").WaitForValue();
             await Assert.That(data).IsNotNull();
-            await Assert.That(data!).IsEquivalentTo(new byte[] { 1, 2, 3 });
+            await Assert.That(data!).IsEquivalentTo(SamplePayload);
         }
         finally
         {
@@ -309,9 +327,7 @@ public class SettingsCacheTests
         }
     }
 
-    /// <summary>
-    /// Verifies that a settings store can be created and initial values materialize (Newtonsoft serializer).
-    /// </summary>
+    /// <summary>Verifies that a settings store can be created and initial values materialize (Newtonsoft serializer).</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task TestCreateAndInsertNewtonsoftAsync()
@@ -321,10 +337,10 @@ public class SettingsCacheTests
 
         await RunWithAkavacheAsync<NewtonsoftSerializer>(
             appName,
-            async (builder, _) =>
+            async (builder, ct) =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>();
-                builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
             },
             async (instance, _) =>
             {
@@ -334,12 +350,12 @@ public class SettingsCacheTests
 
                     await Assert.That(viewSettings).IsNotNull();
                     await Assert.That((bool)viewSettings!.BoolTest).IsTrue();
-                    await Assert.That((short)viewSettings.ShortTest).IsEqualTo((short)16);
+                    await Assert.That((short)viewSettings.ShortTest).IsEqualTo(ExpectedShortSetting);
                     await Assert.That((int)viewSettings.IntTest).IsEqualTo(1);
-                    await Assert.That((long)viewSettings.LongTest).IsEqualTo(123456L);
+                    await Assert.That((long)viewSettings.LongTest).IsEqualTo(ExpectedLongSetting);
                     await Assert.That((string?)viewSettings.StringTest).IsEqualTo("TestString");
-                    await Assert.That((float)viewSettings.FloatTest).IsEqualTo(2.2f).Within(0.0001f);
-                    await Assert.That((double)viewSettings.DoubleTest).IsEqualTo(23.8d).Within(0.0001d);
+                    await Assert.That((float)viewSettings.FloatTest).IsEqualTo(ExpectedFloatSetting).Within(FloatComparisonTolerance);
+                    await Assert.That((double)viewSettings.DoubleTest).IsEqualTo(ExpectedDoubleSetting).Within(DoubleComparisonTolerance);
                     await Assert.That((EnumTestValue)viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option1);
                 }
                 finally
@@ -357,14 +373,12 @@ public class SettingsCacheTests
                     }
                 }
             },
-            timeout: TimeSpan.FromSeconds(30));
+            timeout: TimeSpan.FromSeconds(StoreCreationTimeoutSeconds));
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Verifies updates are applied and readable (Newtonsoft serializer).
-    /// </summary>
+    /// <summary>Verifies updates are applied and readable (Newtonsoft serializer).</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task TestUpdateAndReadNewtonsoftAsync()
@@ -372,11 +386,11 @@ public class SettingsCacheTests
         var appName = NewName("newtonsoft_update_test");
         ViewSettings? viewSettings = null;
 
-        RunWithAkavache<NewtonsoftSerializer>(
+        await RunWithAkavache<NewtonsoftSerializer>(
             appName,
             builder =>
             {
-                builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
                 return Task.CompletedTask;
             },
             async instance =>
@@ -384,24 +398,19 @@ public class SettingsCacheTests
                 try
                 {
                     // Wait for the initially captured store to exist with longer timeout for CI
-                    await TestHelper.EventuallyAsync(
-                        () => viewSettings is not null,
-                        timeoutMs: 10000,
-                        initialDelayMs: 50).ConfigureAwait(false);
+                    await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                     await Assert.That(viewSettings).IsNotNull();
 
                     // Wait a moment for the store to be fully initialized
-                    await Task.Delay(100).ConfigureAwait(false);
+                    await Task.Delay(StoreWarmupDelayMilliseconds).ConfigureAwait(false);
 
                     // Perform the mutation directly on the captured store
                     viewSettings!.EnumTest.Set(EnumTestValue.Option2).SubscribeAndComplete();
 
                     // Wait for the value to be readable via the property helper
-                    await TestHelper.EventuallyAsync(
-                        () => viewSettings.EnumTest == EnumTestValue.Option2,
-                        timeoutMs: 10000,
-                        initialDelayMs: 50).ConfigureAwait(false);
+                    await TestHelper.EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2)
+                        .ConfigureAwait(false);
 
                     // Final assertion
                     await Assert.That((EnumTestValue)viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
@@ -422,15 +431,10 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(
-            () => AppBuilder.HasBeenBuilt,
-            timeoutMs: 10000,
-            initialDelayMs: 50).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Verifies that a settings store can be created and initial values materialize (System.Text.Json serializer).
-    /// </summary>
+    /// <summary>Verifies that a settings store can be created and initial values materialize (System.Text.Json serializer).</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task TestCreateAndInsertSystemTextJsonAsync()
@@ -438,12 +442,12 @@ public class SettingsCacheTests
         var appName = NewName("systemjson_test");
         ViewSettings? viewSettings = null;
 
-        RunWithAkavache<SystemJsonSerializer>(
+        await RunWithAkavache<SystemJsonSerializer>(
             appName,
             async builder =>
             {
                 await builder.DeleteSettingsStore<ViewSettings>();
-                builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
             },
             async instance =>
             {
@@ -453,12 +457,12 @@ public class SettingsCacheTests
 
                     await Assert.That(viewSettings).IsNotNull();
                     await Assert.That((bool)viewSettings!.BoolTest).IsTrue();
-                    await Assert.That((short)viewSettings.ShortTest).IsEqualTo((short)16);
+                    await Assert.That((short)viewSettings.ShortTest).IsEqualTo(ExpectedShortSetting);
                     await Assert.That((int)viewSettings.IntTest).IsEqualTo(1);
-                    await Assert.That((long)viewSettings.LongTest).IsEqualTo(123456L);
+                    await Assert.That((long)viewSettings.LongTest).IsEqualTo(ExpectedLongSetting);
                     await Assert.That((string?)viewSettings.StringTest).IsEqualTo("TestString");
-                    await Assert.That((float)viewSettings.FloatTest).IsEqualTo(2.2f).Within(0.0001f);
-                    await Assert.That((double)viewSettings.DoubleTest).IsEqualTo(23.8d).Within(0.0001d);
+                    await Assert.That((float)viewSettings.FloatTest).IsEqualTo(ExpectedFloatSetting).Within(FloatComparisonTolerance);
+                    await Assert.That((double)viewSettings.DoubleTest).IsEqualTo(ExpectedDoubleSetting).Within(DoubleComparisonTolerance);
                     await Assert.That((EnumTestValue)viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option1);
                 }
                 finally
@@ -477,12 +481,10 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Verifies updates are applied and readable (System.Text.Json serializer).
-    /// </summary>
+    /// <summary>Verifies updates are applied and readable (System.Text.Json serializer).</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task TestUpdateAndReadSystemTextJsonAsync()
@@ -490,11 +492,11 @@ public class SettingsCacheTests
         var appName = NewName("systemjson_update_test");
         ViewSettings? viewSettings = null;
 
-        RunWithAkavache<SystemJsonSerializer>(
+        await RunWithAkavache<SystemJsonSerializer>(
             appName,
             builder =>
             {
-                builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
+                _ = builder.WithSettingsStore<ViewSettings>(s => viewSettings = s);
                 return Task.CompletedTask;
             },
             async instance =>
@@ -502,24 +504,19 @@ public class SettingsCacheTests
                 try
                 {
                     // Wait for the initially captured store to exist with longer timeout for CI
-                    await TestHelper.EventuallyAsync(
-                        () => viewSettings is not null,
-                        timeoutMs: 10000,
-                        initialDelayMs: 50).ConfigureAwait(false);
+                    await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                     await Assert.That(viewSettings).IsNotNull();
 
                     // Wait a moment for the store to be fully initialized
-                    await Task.Delay(100).ConfigureAwait(false);
+                    await Task.Delay(StoreWarmupDelayMilliseconds).ConfigureAwait(false);
 
                     // Perform the mutation directly on the captured store
                     viewSettings!.EnumTest.Set(EnumTestValue.Option2).SubscribeAndComplete();
 
                     // Wait for the value to be readable via the property helper
-                    await TestHelper.EventuallyAsync(
-                        () => viewSettings.EnumTest == EnumTestValue.Option2,
-                        timeoutMs: 10000,
-                        initialDelayMs: 50).ConfigureAwait(false);
+                    await TestHelper.EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2)
+                        .ConfigureAwait(false);
 
                     // Final assertion
                     await Assert.That((EnumTestValue)viewSettings.EnumTest).IsEqualTo(EnumTestValue.Option2);
@@ -540,37 +537,32 @@ public class SettingsCacheTests
                 }
             });
 
-        await TestHelper.EventuallyAsync(
-            () => AppBuilder.HasBeenBuilt,
-            timeoutMs: 10000,
-            initialDelayMs: 50).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Verifies that <see cref="IAkavacheInstance.SettingsCachePath"/> honors an explicit override.
-    /// </summary>
+    /// <summary>Verifies that <see cref="IAkavacheInstance.SettingsCachePath"/> honors an explicit override.</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task TestOverrideSettingsCachePathAsync()
     {
         var path = Path.Combine(_cacheRoot, "OverridePath");
-        Directory.CreateDirectory(path);
+        _ = Directory.CreateDirectory(path);
 
         IAkavacheInstance? akavache = null;
 
-        _appBuilder
+        _ = _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache",
+                applicationName: DefaultApplicationName,
                 builder =>
                 {
-                    builder
+                    _ = builder
                         .WithSqliteProvider()
                         .WithSettingsCachePath(path);
                 },
                 instance => akavache = instance)
             .Build();
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
         await Assert.That(akavache).IsNotNull();
         await Assert.That(akavache!.SettingsCachePath).IsEqualTo(path);
@@ -587,19 +579,19 @@ public class SettingsCacheTests
         var customAppName = NewName("CustomAppTest");
         IAkavacheInstance? akavache = null;
 
-        _appBuilder
+        _ = _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache", // Don't set via parameter
+                applicationName: DefaultApplicationName, // Don't set via parameter
                 builder =>
                 {
-                    builder
+                    _ = builder
                         .WithSqliteProvider()
                         .WithApplicationName(customAppName); // Set via fluent API after builder creation
                 },
                 instance => akavache = instance)
             .Build();
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
         await Assert.That(akavache).IsNotNull();
         await Assert.That(akavache!.SettingsCachePath).IsNotNull();
@@ -612,47 +604,43 @@ public class SettingsCacheTests
 
         // Additional validation: ensure it doesn't contain the default name when a custom name is set
         await Assert.That(akavache.SettingsCachePath)
-            .DoesNotContain("Akavache")
+            .DoesNotContain(DefaultApplicationName)
             .Because(
                 "SettingsCachePath should not contain the default 'Akavache' directory when a custom application name is specified");
     }
 
-    /// <summary>
-    /// Verifies that <see cref="IAkavacheInstance.SettingsCachePath"/> uses the default application name when no custom name is provided.
-    /// </summary>
+    /// <summary>Verifies that <see cref="IAkavacheInstance.SettingsCachePath"/> uses the default application name when no custom name is provided.</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
     public async Task TestSettingsCachePathUsesDefaultApplicationNameAsync()
     {
         IAkavacheInstance? akavache = null;
 
-        _appBuilder
+        _ = _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
-                applicationName: "Akavache", // No custom application name
-                builder =>
+                applicationName: DefaultApplicationName, // No custom application name
+                static builder =>
                 {
-                    builder.WithSqliteProvider();
+                    _ = builder.WithSqliteProvider();
 
                     // Don't call WithApplicationName() - should use default
                 },
                 instance => akavache = instance)
             .Build();
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
 
         await Assert.That(akavache).IsNotNull();
         await Assert.That(akavache!.SettingsCachePath).IsNotNull();
 
         // Should contain the default application name when no custom name is provided
         await Assert.That(akavache.SettingsCachePath)
-            .Contains("Akavache")
+            .Contains(DefaultApplicationName)
             .Because(
                 "SettingsCachePath should contain the default 'Akavache' directory when no custom application name is specified");
     }
 
-    /// <summary>
-    /// Creates a unique, human-readable test name prefix plus a GUID segment.
-    /// </summary>
+    /// <summary>Creates a unique, human-readable test name prefix plus a GUID segment.</summary>
     /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
     /// <returns>A unique name string suitable for use as an application name or store key.</returns>
     private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
@@ -665,30 +653,30 @@ public class SettingsCacheTests
     /// <param name="applicationName">Optional application name to scope the store; may be <see langword="null"/>.</param>
     /// <param name="configureAsync">An async configuration callback to register stores and/or delete existing stores before the body runs.</param>
     /// <param name="bodyAsync">The asynchronous test body that uses the configured <see cref="IAkavacheInstance"/>.</param>
-    private void RunWithAkavache<TSerializer>(
+    /// <returns>A task that completes when the configure callback and the body have both run.</returns>
+    private async Task RunWithAkavache<TSerializer>(
         string? applicationName,
         Func<IAkavacheBuilder, Task> configureAsync,
         Func<IAkavacheInstance, Task> bodyAsync)
-        where TSerializer : class, ISerializer, new() =>
-        _appBuilder
-            .WithAkavache<TSerializer>(
+        where TSerializer : class, ISerializer, new()
+    {
+        var configured = await _appBuilder
+            .WithAkavacheAsync<TSerializer>(
                 applicationName!,
-                builder =>
+                async builder =>
                 {
                     // base config
-                    builder
+                    _ = builder
                         .WithSqliteProvider()
                         .WithSettingsCachePath(_cacheRoot);
 
-                    // IMPORTANT: block here so we don't create async-void
-                    configureAsync(builder).GetAwaiter().GetResult();
+                    await configureAsync(builder).ConfigureAwait(false);
                 },
-                instance =>
-                {
-                    // IMPORTANT: block here so the body completes before Build() returns
-                    bodyAsync(instance).GetAwaiter().GetResult();
-                })
-            .Build();
+                bodyAsync)
+            .ConfigureAwait(false);
+
+        _ = configured.Build();
+    }
 
     /// <summary>
     /// Async-friendly variant of <see cref="RunWithAkavache{TSerializer}"/> that enforces a
@@ -711,23 +699,27 @@ public class SettingsCacheTests
         TimeSpan? timeout = null)
         where TSerializer : class, ISerializer, new()
     {
-        var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(30);
+        var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(StoreCreationTimeoutSeconds);
         using var cts = new CancellationTokenSource(effectiveTimeout);
 
         var work = Task.Run(
-            () =>
-                _appBuilder
-                    .WithAkavache<TSerializer>(
+            async () =>
+            {
+                var configured = await _appBuilder
+                    .WithAkavacheAsync<TSerializer>(
                         applicationName!,
-                        builder =>
+                        async builder =>
                         {
-                            builder
+                            _ = builder
                                 .WithSqliteProvider()
                                 .WithSettingsCachePath(_cacheRoot);
-                            configureAsync(builder, cts.Token).GetAwaiter().GetResult();
+                            await configureAsync(builder, cts.Token).ConfigureAwait(false);
                         },
-                        instance => bodyAsync(instance, cts.Token).GetAwaiter().GetResult())
-                    .Build(),
+                        instance => bodyAsync(instance, cts.Token))
+                    .ConfigureAwait(false);
+
+                return configured.Build();
+            },
             cts.Token);
 
         try

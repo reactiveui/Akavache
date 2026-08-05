@@ -4,33 +4,21 @@
 
 namespace AkavacheTodoMaui.Models;
 
-/// <summary>
-/// Represents information about cache usage.
-/// </summary>
+/// <summary>Represents information about cache usage.</summary>
 public class CacheInfo
 {
-    /// <summary>
-    /// Gets or sets the number of keys in UserAccount cache.
-    /// </summary>
+    /// <summary>Gets or sets the number of keys in UserAccount cache.</summary>
     public int UserAccountKeys { get; set; }
 
-    /// <summary>
-    /// Gets or sets the number of keys in LocalMachine cache.
-    /// </summary>
+    /// <summary>Gets or sets the number of keys in LocalMachine cache.</summary>
     public int LocalMachineKeys { get; set; }
 
-    /// <summary>
-    /// Gets or sets the number of keys in Secure cache.
-    /// </summary>
+    /// <summary>Gets or sets the number of keys in Secure cache.</summary>
     public int SecureKeys { get; set; }
 
-    /// <summary>
-    /// Gets or sets the total number of keys across all caches.
-    /// </summary>
+    /// <summary>Gets or sets the total number of keys across all caches.</summary>
     public int TotalKeys { get; set; }
 
-    /// <summary>
-    /// Gets or sets when this information was last checked.
-    /// </summary>
+    /// <summary>Gets or sets when this information was last checked.</summary>
     public DateTimeOffset LastChecked { get; set; }
 }

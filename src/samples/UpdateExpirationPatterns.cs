@@ -36,17 +36,17 @@ namespace Akavache.Samples
                 var sessionData = new UserSession 
                 { 
                     UserId = "user123", 
-                    LoginTime = DateTimeOffset.Now,
-                    LastActivity = DateTimeOffset.Now
+                    LoginTime = TimeProvider.System.GetLocalNow(),
+                    LastActivity = TimeProvider.System.GetLocalNow()
                 };
                 
                 await BlobCache.UserAccount.InsertObject(cacheKey, sessionData, 
-                    DateTimeOffset.Now.AddMinutes(30));
+                    TimeProvider.System.GetLocalNow().AddMinutes(30));
                 
                 Console.WriteLine("Session data cached for 30 minutes");
                 
                 // Later, when user is active, extend the session
-                var newExpiration = DateTimeOffset.Now.AddHours(2);
+                var newExpiration = TimeProvider.System.GetLocalNow().AddHours(2);
                 await BlobCache.UserAccount.UpdateExpiration(cacheKey, newExpiration);
                 
                 Console.WriteLine($"Session extended to {newExpiration:HH:mm:ss}");
@@ -63,11 +63,11 @@ namespace Akavache.Samples
                 var apiData = new ApiResponse 
                 { 
                     Data = "Important cached data",
-                    CachedAt = DateTimeOffset.Now
+                    CachedAt = TimeProvider.System.GetLocalNow()
                 };
                 
                 await BlobCache.LocalMachine.InsertObject(cacheKey, apiData,
-                    DateTimeOffset.Now.AddMinutes(15));
+                    TimeProvider.System.GetLocalNow().AddMinutes(15));
                 
                 Console.WriteLine("API response cached for 15 minutes");
                 
@@ -127,7 +127,7 @@ namespace Akavache.Samples
                     var profile = new UserProfile { Id = i, Name = $"User {i}" };
                     
                     await BlobCache.UserAccount.InsertObject(key, profile, 
-                        DateTimeOffset.Now.AddMinutes(30));
+                        TimeProvider.System.GetLocalNow().AddMinutes(30));
                     userKeys.Add(key);
                 }
                 
@@ -145,10 +145,10 @@ namespace Akavache.Samples
             public static async Task BulkUpdateWithTypeFiltering()
             {
                 // Cache mixed data types
-                await BlobCache.LocalMachine.InsertObject("config_setting_1", "value1", DateTimeOffset.Now.AddMinutes(30));
-                await BlobCache.LocalMachine.InsertObject("config_setting_2", "value2", DateTimeOffset.Now.AddMinutes(30));
-                await BlobCache.LocalMachine.InsertObject("temp_data_1", 12345, DateTimeOffset.Now.AddMinutes(30));
-                await BlobCache.LocalMachine.InsertObject("temp_data_2", 67890, DateTimeOffset.Now.AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("config_setting_1", "value1", TimeProvider.System.GetLocalNow().AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("config_setting_2", "value2", TimeProvider.System.GetLocalNow().AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("temp_data_1", 12345, TimeProvider.System.GetLocalNow().AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("temp_data_2", 67890, TimeProvider.System.GetLocalNow().AddMinutes(30));
                 
                 var keys = new[] { "config_setting_1", "config_setting_2", "temp_data_1", "temp_data_2" };
                 
@@ -171,9 +171,9 @@ namespace Akavache.Samples
                 for (int i = 1; i <= 10; i++)
                 {
                     var key = $"session_{i}";
-                    var session = new UserSession { UserId = $"user{i}", LoginTime = DateTimeOffset.Now };
+                    var session = new UserSession { UserId = $"user{i}", LoginTime = TimeProvider.System.GetLocalNow() };
                     
-                    await BlobCache.UserAccount.InsertObject(key, session, DateTimeOffset.Now.AddMinutes(30));
+                    await BlobCache.UserAccount.InsertObject(key, session, TimeProvider.System.GetLocalNow().AddMinutes(30));
                     sessionKeys.Add(key);
                 }
                 
@@ -211,8 +211,8 @@ namespace Akavache.Samples
                 var etag = "\"abc123\"";
                 
                 // Cache both data and ETag
-                await BlobCache.LocalMachine.InsertObject(cacheKey, users, DateTimeOffset.Now.AddMinutes(15));
-                await BlobCache.LocalMachine.InsertObject(etagKey, etag, DateTimeOffset.Now.AddMinutes(15));
+                await BlobCache.LocalMachine.InsertObject(cacheKey, users, TimeProvider.System.GetLocalNow().AddMinutes(15));
+                await BlobCache.LocalMachine.InsertObject(etagKey, etag, TimeProvider.System.GetLocalNow().AddMinutes(15));
                 
                 Console.WriteLine("Cached user list with 15-minute expiration");
                 
@@ -235,9 +235,9 @@ namespace Akavache.Samples
                 {
                     // Update cache with new data and ETag
                     await BlobCache.LocalMachine.InsertObject(cacheKey, httpResponse.Data, 
-                        DateTimeOffset.Now.AddMinutes(15));
+                        TimeProvider.System.GetLocalNow().AddMinutes(15));
                     await BlobCache.LocalMachine.InsertObject(etagKey, httpResponse.ETag, 
-                        DateTimeOffset.Now.AddMinutes(15));
+                        TimeProvider.System.GetLocalNow().AddMinutes(15));
                     
                     Console.WriteLine("HTTP 200: Updated cache with fresh data");
                 }
@@ -256,7 +256,7 @@ namespace Akavache.Samples
                     var cachedArticles = await BlobCache.LocalMachine.GetObject<List<NewsArticle>>(cacheKey);
                     var cacheAge = await BlobCache.LocalMachine.GetCreatedAt(cacheKey);
                     
-                    if (DateTimeOffset.Now - cacheAge > TimeSpan.FromMinutes(10))
+                    if (TimeProvider.System.GetLocalNow() - cacheAge > TimeSpan.FromMinutes(10))
                     {
                         Console.WriteLine("Cache is stale, serving cached data and revalidating in background");
                         
@@ -273,7 +273,7 @@ namespace Akavache.Samples
                             {
                                 var freshArticles = await FetchNewsArticlesFromApi();
                                 await BlobCache.LocalMachine.InsertObject(cacheKey, freshArticles,
-                                    DateTimeOffset.Now.AddMinutes(20));
+                                    TimeProvider.System.GetLocalNow().AddMinutes(20));
                                 
                                 Console.WriteLine("Background revalidation completed");
                             }
@@ -295,7 +295,7 @@ namespace Akavache.Samples
                     Console.WriteLine("No cached data, fetching fresh data");
                     var articles = await FetchNewsArticlesFromApi();
                     await BlobCache.LocalMachine.InsertObject(cacheKey, articles,
-                        DateTimeOffset.Now.AddMinutes(20));
+                        TimeProvider.System.GetLocalNow().AddMinutes(20));
                     DisplayArticles(articles);
                 }
             }
@@ -318,14 +318,14 @@ namespace Akavache.Samples
                 var session = new UserSession
                 {
                     UserId = "12345",
-                    LoginTime = DateTimeOffset.Now,
-                    LastActivity = DateTimeOffset.Now,
+                    LoginTime = TimeProvider.System.GetLocalNow(),
+                    LastActivity = TimeProvider.System.GetLocalNow(),
                     IsActive = true
                 };
                 
                 // Cache session for 30 minutes
                 await BlobCache.UserAccount.InsertObject(sessionKey, session, 
-                    DateTimeOffset.Now.AddMinutes(30));
+                    TimeProvider.System.GetLocalNow().AddMinutes(30));
                 
                 Console.WriteLine("User session created with 30-minute timeout");
                 
@@ -357,13 +357,13 @@ namespace Akavache.Samples
                     var session = new UserSession 
                     { 
                         UserId = $"user{i}", 
-                        LoginTime = DateTimeOffset.Now.AddMinutes(-10),
-                        LastActivity = DateTimeOffset.Now.AddMinutes(-2),
+                        LoginTime = TimeProvider.System.GetLocalNow().AddMinutes(-10),
+                        LastActivity = TimeProvider.System.GetLocalNow().AddMinutes(-2),
                         IsActive = true
                     };
                     
                     await BlobCache.UserAccount.InsertObject(sessionKey, session,
-                        DateTimeOffset.Now.AddMinutes(15)); // Will expire soon
+                        TimeProvider.System.GetLocalNow().AddMinutes(15)); // Will expire soon
                     
                     activeSessionKeys.Add(sessionKey);
                 }
@@ -396,7 +396,7 @@ namespace Akavache.Samples
                 foreach (var kvp in sessionKeys)
                 {
                     await BlobCache.UserAccount.InsertObject(kvp.Key, $"data_for_{kvp.Key}",
-                        DateTimeOffset.Now.Add(kvp.Value));
+                        TimeProvider.System.GetLocalNow().Add(kvp.Value));
                 }
                 
                 Console.WriteLine("Created hierarchical session with different component lifetimes");
@@ -434,13 +434,13 @@ namespace Akavache.Samples
                 { 
                     Data = new string('x', 10000), // 10KB string
                     Numbers = Enumerable.Range(1, 1000).ToArray(),
-                    Timestamp = DateTimeOffset.Now
+                    Timestamp = TimeProvider.System.GetLocalNow()
                 };
                 
                 foreach (var key in keys)
                 {
                     await BlobCache.LocalMachine.InsertObject(key, largeData, 
-                        DateTimeOffset.Now.AddMinutes(15));
+                        TimeProvider.System.GetLocalNow().AddMinutes(15));
                 }
                 
                 Console.WriteLine($"Setup: Cached {itemCount} large objects (10KB each)");
@@ -454,9 +454,9 @@ namespace Akavache.Samples
                     {
                         var data = await BlobCache.LocalMachine.GetObject<LargeDataObject>(key);
                         // Simulating some modification that would require re-caching
-                        data.Timestamp = DateTimeOffset.Now;
+                        data.Timestamp = TimeProvider.System.GetLocalNow();
                         await BlobCache.LocalMachine.InsertObject(key, data, 
-                            DateTimeOffset.Now.AddHours(1));
+                            TimeProvider.System.GetLocalNow().AddHours(1));
                     }
                     catch (KeyNotFoundException)
                     {
@@ -500,7 +500,7 @@ namespace Akavache.Samples
                     var data = new { Id = i, Name = $"Item {i}", Data = new string('x', 100) };
                     
                     await BlobCache.LocalMachine.InsertObject(key, data,
-                        DateTimeOffset.Now.AddMinutes(10));
+                        TimeProvider.System.GetLocalNow().AddMinutes(10));
                 }
                 
                 Console.WriteLine("Cached 1000 items for maintenance testing");
@@ -536,8 +536,8 @@ namespace Akavache.Samples
                     
                     // Some items are "older" than others
                     var expiration = i <= 10 
-                        ? DateTimeOffset.Now.AddMinutes(5)   // Will expire soon
-                        : DateTimeOffset.Now.AddHours(1);    // Have time left
+                        ? TimeProvider.System.GetLocalNow().AddMinutes(5)   // Will expire soon
+                        : TimeProvider.System.GetLocalNow().AddHours(1);    // Have time left
                     
                     await BlobCache.LocalMachine.InsertObject(key, data, expiration);
                     testKeys.Add(key);
@@ -554,7 +554,7 @@ namespace Akavache.Samples
                     {
                         var createdAt = await BlobCache.LocalMachine.GetCreatedAt(key);
                         // If created more than 2 minutes ago, it might expire soon
-                        if (DateTimeOffset.Now - createdAt > TimeSpan.FromMinutes(2))
+                        if (TimeProvider.System.GetLocalNow() - createdAt > TimeSpan.FromMinutes(2))
                         {
                             soonToExpireKeys.Add(key);
                         }
@@ -593,7 +593,7 @@ namespace Akavache.Samples
                 
                 // Cache a valid item
                 await BlobCache.LocalMachine.InsertObject(validKey, "test data", 
-                    DateTimeOffset.Now.AddMinutes(30));
+                    TimeProvider.System.GetLocalNow().AddMinutes(30));
                 
                 // Test 1: Single key that doesn't exist
                 try
@@ -642,7 +642,7 @@ namespace Akavache.Samples
                 {
                     var key = $"safe_test_{i}";
                     await BlobCache.LocalMachine.InsertObject(key, $"data_{i}",
-                        DateTimeOffset.Now.AddMinutes(15));
+                        TimeProvider.System.GetLocalNow().AddMinutes(15));
                     validKeys.Add(key);
                 }
                 
@@ -692,7 +692,7 @@ namespace Akavache.Samples
                 // Best Practice 1: Use reasonable expiration times
                 const string key = "production_data";
                 await BlobCache.LocalMachine.InsertObject(key, "important data", 
-                    DateTimeOffset.Now.AddMinutes(30));
+                    TimeProvider.System.GetLocalNow().AddMinutes(30));
                 
                 // ✅ Good: Reasonable extension
                 await BlobCache.LocalMachine.UpdateExpiration(key, TimeSpan.FromHours(4));
@@ -705,9 +705,9 @@ namespace Akavache.Samples
                 var mixedTypeKeys = new[] { "string_data", "int_data", "object_data" };
                 
                 // Cache different types
-                await BlobCache.LocalMachine.InsertObject("string_data", "text", DateTimeOffset.Now.AddMinutes(30));
-                await BlobCache.LocalMachine.InsertObject("int_data", 42, DateTimeOffset.Now.AddMinutes(30));
-                await BlobCache.LocalMachine.InsertObject("object_data", new { Name = "Test" }, DateTimeOffset.Now.AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("string_data", "text", TimeProvider.System.GetLocalNow().AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("int_data", 42, TimeProvider.System.GetLocalNow().AddMinutes(30));
+                await BlobCache.LocalMachine.InsertObject("object_data", new { Name = "Test" }, TimeProvider.System.GetLocalNow().AddMinutes(30));
                 
                 // ✅ Good: Type-specific updates
                 await BlobCache.LocalMachine.UpdateExpiration<string>(mixedTypeKeys, TimeSpan.FromHours(2));
@@ -720,7 +720,7 @@ namespace Akavache.Samples
                 foreach (var relatedKey in relatedKeys)
                 {
                     await BlobCache.UserAccount.InsertObject(relatedKey, $"data_for_{relatedKey}",
-                        DateTimeOffset.Now.AddMinutes(30));
+                        TimeProvider.System.GetLocalNow().AddMinutes(30));
                 }
                 
                 // ✅ Good: Update related items together
@@ -733,7 +733,7 @@ namespace Akavache.Samples
                 foreach (var monitorKey in keysToMonitor)
                 {
                     await BlobCache.LocalMachine.InsertObject(monitorKey, "critical info",
-                        DateTimeOffset.Now.AddMinutes(15));
+                        TimeProvider.System.GetLocalNow().AddMinutes(15));
                 }
                 
                 try
@@ -781,8 +781,8 @@ namespace Akavache.Samples
             await Task.Delay(500); // Simulate API call
             return new List<NewsArticle>
             {
-                new() { Id = 1, Title = "Breaking News", PublishedAt = DateTimeOffset.Now },
-                new() { Id = 2, Title = "Tech Update", PublishedAt = DateTimeOffset.Now.AddMinutes(-30) }
+                new() { Id = 1, Title = "Breaking News", PublishedAt = TimeProvider.System.GetLocalNow() },
+                new() { Id = 2, Title = "Tech Update", PublishedAt = TimeProvider.System.GetLocalNow().AddMinutes(-30) }
             };
         }
 

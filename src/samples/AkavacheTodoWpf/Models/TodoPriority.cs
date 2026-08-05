@@ -4,33 +4,21 @@
 
 namespace AkavacheTodoWpf.Models;
 
-/// <summary>
-/// Represents the priority levels for todo items.
-/// </summary>
+/// <summary>Represents the priority levels for todo items.</summary>
 public enum TodoPriority
 {
-    /// <summary>
-    /// There is no order.
-    /// </summary>
+    /// <summary>There is no order.</summary>
     None = 0,
 
-    /// <summary>
-    /// Low priority.
-    /// </summary>
+    /// <summary>Low priority.</summary>
     Low = 1,
 
-    /// <summary>
-    /// Medium priority.
-    /// </summary>
+    /// <summary>Medium priority.</summary>
     Medium = 2,
 
-    /// <summary>
-    /// High priority.
-    /// </summary>
+    /// <summary>High priority.</summary>
     High = 3,
 
-    /// <summary>
-    /// Critical priority.
-    /// </summary>
+    /// <summary>Critical priority.</summary>
     Critical = 4
 }

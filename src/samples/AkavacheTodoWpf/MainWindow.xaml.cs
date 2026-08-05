@@ -9,15 +9,14 @@ using ReactiveUI;
 
 namespace AkavacheTodoWpf;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml with ReactiveUI integration.
-/// </summary>
+/// <summary>Interaction logic for MainWindow.xaml with ReactiveUI integration.</summary>
 [SupportedOSPlatform("windows10.0.19041.0")]
 public partial class MainWindow : IViewFor<MainViewModel>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MainWindow"/> class.
-    /// </summary>
+    /// <summary>The number of equal margins a centered window splits the leftover screen space into.</summary>
+    private const double CenteredMarginCount = 2;
+
+    /// <summary>Initializes a new instance of the <see cref="MainWindow"/> class.</summary>
     public MainWindow()
     {
         InitializeComponent();
@@ -26,27 +25,21 @@ public partial class MainWindow : IViewFor<MainViewModel>
         LoadWindowState();
     }
 
-    /// <summary>
-    /// Gets or sets the view model.
-    /// </summary>
+    /// <summary>Gets or sets the view model.</summary>
     public MainViewModel? ViewModel
     {
         get => DataContext as MainViewModel;
         set => DataContext = value;
     }
 
-    /// <summary>
-    /// Gets or sets the view model as object.
-    /// </summary>
+    /// <summary>Gets or sets the view model as object.</summary>
     object? IViewFor.ViewModel
     {
         get => ViewModel;
         set => ViewModel = value as MainViewModel;
     }
 
-    /// <summary>
-    /// Called when the window is loaded.
-    /// </summary>
+    /// <summary>Called when the window is loaded.</summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -57,12 +50,10 @@ public partial class MainWindow : IViewFor<MainViewModel>
             return;
         }
 
-        activatable.Activator.Activate();
+        _ = activatable.Activator.Activate();
     }
 
-    /// <summary>
-    /// Called when the window is closing.
-    /// </summary>
+    /// <summary>Called when the window is closing.</summary>
     /// <param name="sender">The sender.</param>
     /// <param name="e">The event args.</param>
     private async void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -71,7 +62,7 @@ public partial class MainWindow : IViewFor<MainViewModel>
         SaveWindowState();
 
         // Save application state
-        if (ViewModel != null)
+        if (ViewModel is not null)
         {
             try
             {
@@ -95,7 +86,7 @@ public partial class MainWindow : IViewFor<MainViewModel>
     /// <summary>Restores the window size and position from persisted settings.</summary>
     private void LoadWindowState()
     {
-        if (ViewModel?.Settings == null)
+        if (ViewModel?.Settings is null)
         {
             return;
         }
@@ -121,7 +112,7 @@ public partial class MainWindow : IViewFor<MainViewModel>
     /// <summary>Persists the current window size and position back to settings.</summary>
     private void SaveWindowState()
     {
-        if (ViewModel?.Settings == null)
+        if (ViewModel?.Settings is null)
         {
             return;
         }
@@ -147,7 +138,7 @@ public partial class MainWindow : IViewFor<MainViewModel>
 
         if (Left < 0 || Left > screenWidth - Width)
         {
-            Left = (screenWidth - Width) / 2;
+            Left = (screenWidth - Width) / CenteredMarginCount;
         }
 
         if (Top >= 0 && Top <= screenHeight - Height)
@@ -155,6 +146,6 @@ public partial class MainWindow : IViewFor<MainViewModel>
             return;
         }
 
-        Top = (screenHeight - Height) / 2;
+        Top = (screenHeight - Height) / CenteredMarginCount;
     }
 }

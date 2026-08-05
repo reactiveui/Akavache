@@ -9,24 +9,21 @@ using Newtonsoft.Json;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for NewtonsoftJson.AkavacheBuilderExtensions.
-/// </summary>
+/// <summary>Tests for NewtonsoftJson.AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]
 public class NewtonsoftJsonBuilderExtensionsTests
 {
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson() throws on null builder.
-    /// </summary>
+    /// <summary>The number of Newtonsoft serializers (JSON and BSON) this fixture registers as alternatives.</summary>
+    private const int ExpectedAlternativeSerializerCount = 2;
+
+    /// <summary>Tests WithSerializerNewtonsoftJson() throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonShouldThrowOnNullBuilder() =>
         await Assert.That(static () => NewtonsoftJson.AkavacheBuilderExtensions.WithSerializerNewtonsoftJson(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson() registers serializer.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson() registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonShouldRegisterSerializer()
@@ -38,18 +35,14 @@ public class NewtonsoftJsonBuilderExtensionsTests
         await Assert.That(builder.SerializerTypeName).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson(settings) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson(settings) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonSettingsShouldThrowOnNullBuilder() =>
         await Assert.That(static () => NewtonsoftJson.AkavacheBuilderExtensions.WithSerializerNewtonsoftJson(null!, new JsonSerializerSettings()))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson(settings) throws on null settings.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson(settings) throws on null settings.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonSettingsShouldThrowOnNullSettings()
@@ -59,9 +52,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson(settings) registers serializer with custom settings.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson(settings) registers serializer with custom settings.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonSettingsShouldRegisterSerializer()
@@ -74,21 +65,17 @@ public class NewtonsoftJsonBuilderExtensionsTests
         await Assert.That(builder.SerializerTypeName).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson(configure) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson(configure) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonConfigureShouldThrowOnNullBuilder()
     {
-        Action<JsonSerializerSettings> configure = _ => { };
+        Action<JsonSerializerSettings> configure = static _ => { };
         await Assert.That(() => NewtonsoftJson.AkavacheBuilderExtensions.WithSerializerNewtonsoftJson(null!, configure))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson(configure) throws on null configure.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson(configure) throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonConfigureShouldThrowOnNullConfigure()
@@ -98,9 +85,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftJson(configure) invokes configure and registers serializer.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftJson(configure) invokes configure and registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftJsonConfigureShouldInvokeAction()
@@ -117,18 +102,14 @@ public class NewtonsoftJsonBuilderExtensionsTests
         await Assert.That(configureInvoked).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson() throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson() throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonShouldThrowOnNullBuilder() =>
         await Assert.That(static () => NewtonsoftJson.AkavacheBuilderExtensions.WithSerializerNewtonsoftBson(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson() registers serializer.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson() registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonShouldRegisterSerializer()
@@ -140,18 +121,14 @@ public class NewtonsoftJsonBuilderExtensionsTests
         await Assert.That(builder.SerializerTypeName).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson(settings) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson(settings) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonSettingsShouldThrowOnNullBuilder() =>
         await Assert.That(static () => NewtonsoftJson.AkavacheBuilderExtensions.WithSerializerNewtonsoftBson(null!, new JsonSerializerSettings()))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson(settings) throws on null settings.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson(settings) throws on null settings.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonSettingsShouldThrowOnNullSettings()
@@ -161,9 +138,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson(settings) registers serializer.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson(settings) registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonSettingsShouldRegisterSerializer()
@@ -175,21 +150,17 @@ public class NewtonsoftJsonBuilderExtensionsTests
         await Assert.That(builder.SerializerTypeName).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson(configure) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson(configure) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonConfigureShouldThrowOnNullBuilder()
     {
-        Action<JsonSerializerSettings> configure = _ => { };
+        Action<JsonSerializerSettings> configure = static _ => { };
         await Assert.That(() => NewtonsoftJson.AkavacheBuilderExtensions.WithSerializerNewtonsoftBson(null!, configure))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson(configure) throws on null configure.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson(configure) throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonConfigureShouldThrowOnNullConfigure()
@@ -199,9 +170,7 @@ public class NewtonsoftJsonBuilderExtensionsTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithSerializerNewtonsoftBson(configure) invokes configure and registers serializer.
-    /// </summary>
+    /// <summary>Tests WithSerializerNewtonsoftBson(configure) invokes configure and registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerNewtonsoftBsonConfigureShouldInvokeAction()
@@ -235,18 +204,18 @@ public class NewtonsoftJsonBuilderExtensionsTests
         UniversalSerializer.ResetCaches();
 
         var builder = CreateBuilder("WithSerializerNewtonsoftVariantsFactoryExec");
-        builder.WithSerializerNewtonsoftJson();
-        builder.WithSerializerNewtonsoftJson(new JsonSerializerSettings { Formatting = Formatting.Indented });
-        builder.WithSerializerNewtonsoftJson(static s => s.Formatting = Formatting.Indented);
-        builder.WithSerializerNewtonsoftBson();
-        builder.WithSerializerNewtonsoftBson(new JsonSerializerSettings { Formatting = Formatting.Indented });
-        builder.WithSerializerNewtonsoftBson(static s => s.Formatting = Formatting.Indented);
+        _ = builder.WithSerializerNewtonsoftJson();
+        _ = builder.WithSerializerNewtonsoftJson(new JsonSerializerSettings { Formatting = Formatting.Indented });
+        _ = builder.WithSerializerNewtonsoftJson(static s => s.Formatting = Formatting.Indented);
+        _ = builder.WithSerializerNewtonsoftBson();
+        _ = builder.WithSerializerNewtonsoftBson(new JsonSerializerSettings { Formatting = Formatting.Indented });
+        _ = builder.WithSerializerNewtonsoftBson(static s => s.Formatting = Formatting.Indented);
 
         // Force every registered factory lambda (including the static () => new ... ones)
         // to actually execute by enumerating alternatives against an unrelated primary.
         var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new SystemTextJson.SystemJsonSerializer());
 
-        await Assert.That(alternatives.Count).IsGreaterThanOrEqualTo(2);
+        await Assert.That(alternatives.Count).IsGreaterThanOrEqualTo(ExpectedAlternativeSerializerCount);
 
         UniversalSerializer.ResetCaches();
     }

@@ -2,45 +2,103 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using Akavache.Drawing;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for Akavache.Drawing Size struct functionality.
-/// </summary>
+/// <summary>Tests for Akavache.Drawing Size struct functionality.</summary>
 [Category("Akavache")]
 public class SizeTests
 {
-    /// <summary>
-    /// Tests that Size constructor sets properties correctly.
-    /// </summary>
+    /// <summary>Width of the reference size that the comparison, hashing and formatting cases all start from.</summary>
+    private const float ReferenceWidth = 100F;
+
+    /// <summary>Height of the reference size that the comparison, hashing and formatting cases all start from.</summary>
+    private const float ReferenceHeight = 200F;
+
+    /// <summary>Width one step above the reference, used to isolate a width-only mismatch.</summary>
+    private const float LargerWidth = 150F;
+
+    /// <summary>Height one step above the reference, pairing with <see cref="LargerWidth"/> in the ordered collection.</summary>
+    private const float LargerHeight = 300F;
+
+    /// <summary>Width of the largest entry in the ordered collection.</summary>
+    private const float LargestWidth = 200F;
+
+    /// <summary>Height of the largest entry in the ordered collection.</summary>
+    private const float LargestHeight = 400F;
+
+    /// <summary>Height above the reference, used to isolate a height-only mismatch.</summary>
+    private const float TallerHeight = 250F;
+
+    /// <summary>The non-zero extent paired with a zero one, so only the zeroed axis reads as empty.</summary>
+    private const float NonZeroExtent = 100F;
+
+    /// <summary>Width carrying a fractional part, to prove the constructor stores it unrounded.</summary>
+    private const float FractionalWidth = 100.5F;
+
+    /// <summary>Height carrying a fractional part, to prove the constructor stores it unrounded.</summary>
+    private const float FractionalHeight = 200.75F;
+
+    /// <summary>Width whose fractional part must appear in the formatted string.</summary>
+    private const float FormattedFractionalWidth = 1.5F;
+
+    /// <summary>Height whose fractional part must appear in the formatted string.</summary>
+    private const float FormattedFractionalHeight = 2.75F;
+
+    /// <summary>Width of the size built entirely from negative extents.</summary>
+    private const float NegativeWidth = -100F;
+
+    /// <summary>Height of the size built entirely from negative extents.</summary>
+    private const float NegativeHeight = -200F;
+
+    /// <summary>The negative width of the size whose two axes disagree in sign.</summary>
+    private const float MixedSignWidth = -50F;
+
+    /// <summary>Aspect ratio of the wholly negative size, where the two signs cancel.</summary>
+    private const float NegativeSizeAspectRatio = 0.5F;
+
+    /// <summary>Aspect ratio of the mixed-sign size, where the signs do not cancel.</summary>
+    private const float MixedSignAspectRatio = -0.5F;
+
+    /// <summary>Slack allowed when comparing a computed aspect ratio, covering five decimal places.</summary>
+    private const float AspectRatioTolerance = 0.00001F;
+
+    /// <summary>Entries left once the duplicate is removed from the four-element sample.</summary>
+    private const int DistinctSizeCount = 3;
+
+    /// <summary>Keys left in the dictionary once the repeated size overwrites its earlier entry.</summary>
+    private const int DistinctKeyCount = 2;
+
+    /// <summary>The value written last for the repeated dictionary key, overwriting the original.</summary>
+    private const string OverwritingValue = "Third";
+
+    /// <summary>Tests that Size constructor sets properties correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeConstructorShouldSetPropertiesCorrectly()
     {
         // Act
-        Size size = new(100.5f, 200.75f);
+        Size size = new(FractionalWidth, FractionalHeight);
 
         // Assert
         using (Assert.Multiple())
         {
-            await Assert.That(size.Width).IsEqualTo(100.5f);
-            await Assert.That(size.Height).IsEqualTo(200.75f);
+            await Assert.That(size.Width).IsEqualTo(FractionalWidth);
+            await Assert.That(size.Height).IsEqualTo(FractionalHeight);
         }
     }
 
-    /// <summary>
-    /// Tests that Size with zero dimensions works correctly.
-    /// </summary>
+    /// <summary>Tests that Size with zero dimensions works correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeWithZeroDimensionsShouldWork()
     {
         // Act
         Size zeroSize = new(0, 0);
-        Size zeroWidth = new(0, 100);
-        Size zeroHeight = new(100, 0);
+        Size zeroWidth = new(0, NonZeroExtent);
+        Size zeroHeight = new(NonZeroExtent, 0);
 
         // Assert
         using (Assert.Multiple())
@@ -48,25 +106,23 @@ public class SizeTests
             await Assert.That(zeroSize.Width).IsZero();
             await Assert.That(zeroSize.Height).IsZero();
             await Assert.That(zeroWidth.Width).IsZero();
-            await Assert.That(zeroWidth.Height).IsEqualTo(100f);
-            await Assert.That(zeroHeight.Width).IsEqualTo(100f);
+            await Assert.That(zeroWidth.Height).IsEqualTo(NonZeroExtent);
+            await Assert.That(zeroHeight.Width).IsEqualTo(NonZeroExtent);
             await Assert.That(zeroHeight.Height).IsZero();
         }
     }
 
-    /// <summary>
-    /// Tests that AspectRatio calculation works correctly.
-    /// </summary>
+    /// <summary>Tests that AspectRatio calculation works correctly.</summary>
     /// <param name="width">The width to test.</param>
     /// <param name="height">The height to test.</param>
     /// <param name="expectedRatio">The expected aspect ratio.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Arguments(100f, 100f, 1.0f)] // Square
-    [Arguments(200f, 100f, 2.0f)] // 2:1 landscape
-    [Arguments(100f, 200f, 0.5f)] // 1:2 portrait
-    [Arguments(16f, 9f, 1.777778f)] // 16:9 widescreen (approximately)
-    [Arguments(4f, 3f, 1.333333f)] // 4:3 standard (approximately)
-    [Arguments(100f, 0f, 0f)] // Zero height
+    [Arguments(100F, 100F, 1.0F)] // Square
+    [Arguments(200F, 100F, 2.0F)] // 2:1 landscape
+    [Arguments(100F, 200F, 0.5F)] // 1:2 portrait
+    [Arguments(16F, 9F, 1.777778F)] // 16:9 widescreen (approximately)
+    [Arguments(4F, 3F, 1.333333F)] // 4:3 standard (approximately)
+    [Arguments(100F, 0F, 0F)] // Zero height
     [Test]
     public async Task AspectRatioShouldBeCalculatedCorrectly(float width, float height, float expectedRatio)
     {
@@ -77,19 +133,16 @@ public class SizeTests
         var actualRatio = size.AspectRatio;
 
         // Assert
-        // Check for equality within a small tolerance (5 decimal places)
-        await Assert.That(actualRatio).IsEqualTo(expectedRatio).Within(0.00001f);
+        await Assert.That(actualRatio).IsEqualTo(expectedRatio).Within(AspectRatioTolerance);
     }
 
-    /// <summary>
-    /// Tests that AspectRatio handles zero width correctly.
-    /// </summary>
+    /// <summary>Tests that AspectRatio handles zero width correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task AspectRatioWithZeroWidthShouldReturnZero()
     {
         // Arrange
-        Size size = new(0f, 100f);
+        Size size = new(0F, NonZeroExtent);
 
         // Act
         var ratio = size.AspectRatio;
@@ -98,18 +151,16 @@ public class SizeTests
         await Assert.That(ratio).IsZero();
     }
 
-    /// <summary>
-    /// Tests that Size equality operators work correctly.
-    /// </summary>
+    /// <summary>Tests that Size equality operators work correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeEqualityOperatorsShouldWork()
     {
         // Arrange
-        Size size1 = new(100f, 200f);
-        Size size2 = new(100f, 200f);
-        Size size3 = new(150f, 200f);
-        Size size4 = new(100f, 250f);
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        Size size2 = new(ReferenceWidth, ReferenceHeight);
+        Size size3 = new(LargerWidth, ReferenceHeight);
+        Size size4 = new(ReferenceWidth, TallerHeight);
 
         // Act & Assert - Equality
         await Assert.That(size1).IsEqualTo(size2);
@@ -122,17 +173,15 @@ public class SizeTests
         await Assert.That(size1).IsNotEqualTo(size4);
     }
 
-    /// <summary>
-    /// Tests that Size.Equals method works correctly.
-    /// </summary>
+    /// <summary>Tests that Size.Equals method works correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeEqualsShouldWork()
     {
         // Arrange
-        Size size1 = new(100f, 200f);
-        Size size2 = new(100f, 200f);
-        Size size3 = new(150f, 200f);
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        Size size2 = new(ReferenceWidth, ReferenceHeight);
+        Size size3 = new(LargerWidth, ReferenceHeight);
 
         using (Assert.Multiple())
         {
@@ -146,17 +195,15 @@ public class SizeTests
         }
     }
 
-    /// <summary>
-    /// Tests that Size.GetHashCode works correctly.
-    /// </summary>
+    /// <summary>Tests that Size.GetHashCode works correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeGetHashCodeShouldWork()
     {
         // Arrange
-        Size size1 = new(100f, 200f);
-        Size size2 = new(100f, 200f);
-        Size size3 = new(150f, 200f);
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        Size size2 = new(ReferenceWidth, ReferenceHeight);
+        Size size3 = new(LargerWidth, ReferenceHeight);
 
         // Act
         var hash1 = size1.GetHashCode();
@@ -171,17 +218,15 @@ public class SizeTests
         }
     }
 
-    /// <summary>
-    /// Tests that Size.ToString works correctly.
-    /// </summary>
+    /// <summary>Tests that Size.ToString works correctly.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeToStringShouldWork()
     {
         // Arrange
-        Size size1 = new(100f, 200f);
-        Size size2 = new(1.5f, 2.75f);
-        Size size3 = new(0f, 0f);
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        Size size2 = new(FormattedFractionalWidth, FormattedFractionalHeight);
+        Size size3 = new(0F, 0F);
 
         // Act
         var str1 = size1.ToString();
@@ -197,81 +242,73 @@ public class SizeTests
         }
     }
 
-    /// <summary>
-    /// Tests Size with negative dimensions.
-    /// </summary>
+    /// <summary>Tests Size with negative dimensions.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeWithNegativeDimensionsShouldWork()
     {
         // Arrange & Act
-        Size negativeSize = new(-100f, -200f);
-        Size mixedSize = new(-50f, 100f);
+        Size negativeSize = new(NegativeWidth, NegativeHeight);
+        Size mixedSize = new(MixedSignWidth, NonZeroExtent);
 
         using (Assert.Multiple())
         {
             // Assert
-            await Assert.That(negativeSize.Width).IsEqualTo(-100f);
-            await Assert.That(negativeSize.Height).IsEqualTo(-200f);
-            await Assert.That(negativeSize.AspectRatio).IsEqualTo(0.5f); // -100 / -200 = 0.5
+            await Assert.That(negativeSize.Width).IsEqualTo(NegativeWidth);
+            await Assert.That(negativeSize.Height).IsEqualTo(NegativeHeight);
+            await Assert.That(negativeSize.AspectRatio).IsEqualTo(NegativeSizeAspectRatio);
 
-            await Assert.That(mixedSize.Width).IsEqualTo(-50f);
-            await Assert.That(mixedSize.Height).IsEqualTo(100f);
-            await Assert.That(mixedSize.AspectRatio).IsEqualTo(-0.5f); // -50 / 100 = -0.5
+            await Assert.That(mixedSize.Width).IsEqualTo(MixedSignWidth);
+            await Assert.That(mixedSize.Height).IsEqualTo(NonZeroExtent);
+            await Assert.That(mixedSize.AspectRatio).IsEqualTo(MixedSignAspectRatio);
         }
     }
 
-    /// <summary>
-    /// Tests Size with very large dimensions.
-    /// </summary>
+    /// <summary>Tests Size with very large dimensions.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeWithLargeDimensionsShouldWork()
     {
         // Arrange & Act
         Size largeSize = new(float.MaxValue, float.MaxValue);
-        Size veryLargeSize = new(1e30f, 1e30f);
+        Size veryLargeSize = new(1e30F, 1e30F);
 
         using (Assert.Multiple())
         {
             // Assert
             await Assert.That(largeSize.Width).IsEqualTo(float.MaxValue);
             await Assert.That(largeSize.Height).IsEqualTo(float.MaxValue);
-            await Assert.That(largeSize.AspectRatio).IsEqualTo(1.0f); // MaxValue / MaxValue = 1
+            await Assert.That(largeSize.AspectRatio).IsEqualTo(1.0F); // MaxValue / MaxValue = 1
 
-            await Assert.That(veryLargeSize.Width).IsEqualTo(1e30f);
-            await Assert.That(veryLargeSize.Height).IsEqualTo(1e30f);
-            await Assert.That(veryLargeSize.AspectRatio).IsEqualTo(1.0f);
+            await Assert.That(veryLargeSize.Width).IsEqualTo(1e30F);
+            await Assert.That(veryLargeSize.Height).IsEqualTo(1e30F);
+            await Assert.That(veryLargeSize.AspectRatio).IsEqualTo(1.0F);
         }
     }
 
-    /// <summary>
-    /// Tests Size with very small dimensions.
-    /// </summary>
+    /// <summary>Tests Size with very small dimensions.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeWithSmallDimensionsShouldWork()
     {
         // Arrange & Act
         Size smallSize = new(float.Epsilon, float.Epsilon);
-        Size tinySize = new(1e-30f, 1e-30f);
+        Size tinySize = new(1e-30F, 1e-30F);
 
         using (Assert.Multiple())
         {
             // Assert
             await Assert.That(smallSize.Width).IsEqualTo(float.Epsilon);
             await Assert.That(smallSize.Height).IsEqualTo(float.Epsilon);
-            await Assert.That(smallSize.AspectRatio).IsEqualTo(1.0f); // Epsilon / Epsilon = 1
+            await Assert.That(smallSize.AspectRatio).IsEqualTo(1.0F); // Epsilon / Epsilon = 1
 
-            await Assert.That(tinySize.Width).IsEqualTo(1e-30f);
-            await Assert.That(tinySize.Height).IsEqualTo(1e-30f);
-            await Assert.That(tinySize.AspectRatio).IsEqualTo(1.0f);
+            await Assert.That(tinySize.Width).IsEqualTo(1e-30F);
+            await Assert.That(tinySize.Height).IsEqualTo(1e-30F);
+            await Assert.That(tinySize.AspectRatio).IsEqualTo(1.0F);
         }
     }
 
-    /// <summary>
-    /// Tests Size with special float values.
-    /// </summary>
+    /// <summary>Tests Size with special float values.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeWithSpecialFloatValuesShouldWork()
@@ -279,7 +316,7 @@ public class SizeTests
         // Arrange & Act
         Size infiniteSize = new(float.PositiveInfinity, float.PositiveInfinity);
         Size nanSize = new(float.NaN, float.NaN);
-        Size mixedSpecialSize = new(float.PositiveInfinity, 100f);
+        Size mixedSpecialSize = new(float.PositiveInfinity, NonZeroExtent);
 
         using (Assert.Multiple())
         {
@@ -293,14 +330,12 @@ public class SizeTests
             await Assert.That(nanSize.AspectRatio).IsNaN();
 
             await Assert.That(mixedSpecialSize.Width).IsEqualTo(float.PositiveInfinity);
-            await Assert.That(mixedSpecialSize.Height).IsEqualTo(100f);
+            await Assert.That(mixedSpecialSize.Height).IsEqualTo(NonZeroExtent);
             await Assert.That(mixedSpecialSize.AspectRatio).IsEqualTo(float.PositiveInfinity); // Infinity / 100 = Infinity
         }
     }
 
-    /// <summary>
-    /// Tests that Size struct behaves correctly in collections.
-    /// </summary>
+    /// <summary>Tests that Size struct behaves correctly in collections.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeShouldWorkInCollections()
@@ -308,10 +343,10 @@ public class SizeTests
         // Arrange
         Size[] sizes =
         [
-            new(100f, 200f),
-            new(150f, 300f),
-            new(100f, 200f), // Duplicate
-            new(200f, 400f)
+            new(ReferenceWidth, ReferenceHeight),
+            new(LargerWidth, LargerHeight),
+            new(ReferenceWidth, ReferenceHeight), // Duplicate
+            new(LargestWidth, LargestHeight)
         ];
 
         // Act
@@ -319,61 +354,57 @@ public class SizeTests
         var sortedSizes = sizes.OrderBy(static s => s.Width).ThenBy(static s => s.Height).ToArray();
 
         // Assert
-        await Assert.That(uniqueSizes).Count().IsEqualTo(3); // Should remove one duplicate
-        await Assert.That(uniqueSizes).Contains(new Size(100f, 200f));
-        await Assert.That(uniqueSizes).Contains(new Size(150f, 300f));
+        await Assert.That(uniqueSizes).Count().IsEqualTo(DistinctSizeCount);
+        await Assert.That(uniqueSizes).Contains(new Size(ReferenceWidth, ReferenceHeight));
+        await Assert.That(uniqueSizes).Contains(new Size(LargerWidth, LargerHeight));
         using (Assert.Multiple())
         {
-            await Assert.That(uniqueSizes).Contains(new Size(200f, 400f));
+            await Assert.That(uniqueSizes).Contains(new Size(LargestWidth, LargestHeight));
 
             // Check sorting
-            await Assert.That(sortedSizes[0]).IsEqualTo(new(100f, 200f));
-            await Assert.That(sortedSizes[1]).IsEqualTo(new(100f, 200f)); // Duplicate
-            await Assert.That(sortedSizes[2]).IsEqualTo(new(150f, 300f));
-            await Assert.That(sortedSizes[3]).IsEqualTo(new(200f, 400f));
+            await Assert.That(sortedSizes[0]).IsEqualTo(new(ReferenceWidth, ReferenceHeight));
+            await Assert.That(sortedSizes[1]).IsEqualTo(new(ReferenceWidth, ReferenceHeight)); // Duplicate
+            await Assert.That(sortedSizes[2]).IsEqualTo(new(LargerWidth, LargerHeight));
+            await Assert.That(sortedSizes[3]).IsEqualTo(new(LargestWidth, LargestHeight));
         }
     }
 
-    /// <summary>
-    /// Tests that Size can be used as dictionary key.
-    /// </summary>
+    /// <summary>Tests that Size can be used as dictionary key.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeShouldWorkAsDictionaryKey()
     {
         // Arrange
         Dictionary<Size, string> sizeDict = [];
-        Size size1 = new(100f, 200f);
-        Size size2 = new(150f, 300f);
-        Size size3 = new(100f, 200f); // Same as size1
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        Size size2 = new(LargerWidth, LargerHeight);
+        Size size3 = new(ReferenceWidth, ReferenceHeight); // Same as size1
 
         // Act
         sizeDict[size1] = "First";
         sizeDict[size2] = "Second";
-        sizeDict[size3] = "Third"; // Should overwrite "First"
+        sizeDict[size3] = OverwritingValue; // Should overwrite "First"
 
         // Assert
-        await Assert.That(sizeDict).Count().IsEqualTo(2);
+        await Assert.That(sizeDict).Count().IsEqualTo(DistinctKeyCount);
         using (Assert.Multiple())
         {
-            await Assert.That(sizeDict[size1]).IsEqualTo("Third"); // Overwritten by size3
-            await Assert.That(sizeDict[size3]).IsEqualTo("Third"); // Same as size1
+            await Assert.That(sizeDict[size1]).IsEqualTo(OverwritingValue); // Overwritten by size3
+            await Assert.That(sizeDict[size3]).IsEqualTo(OverwritingValue); // Same as size1
             await Assert.That(sizeDict[size2]).IsEqualTo("Second");
         }
     }
 
-    /// <summary>
-    /// Tests that the == and != operators on Size return the expected results.
-    /// </summary>
+    /// <summary>Tests that the == and != operators on Size return the expected results.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public async Task SizeOperatorEqualsAndNotEqualsShouldWork()
     {
         // Arrange
-        Size size1 = new(100f, 200f);
-        Size size2 = new(100f, 200f);
-        Size size3 = new(150f, 200f);
-        Size size4 = new(100f, 250f);
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        Size size2 = new(ReferenceWidth, ReferenceHeight);
+        Size size3 = new(LargerWidth, ReferenceHeight);
+        Size size4 = new(ReferenceWidth, TallerHeight);
 
         using (Assert.Multiple())
         {
@@ -389,18 +420,16 @@ public class SizeTests
         }
     }
 
-    /// <summary>
-    /// Tests that Equals(object?) handles matching Size, non-matching Size, different type and null.
-    /// </summary>
+    /// <summary>Tests that Equals(object?) handles matching Size, non-matching Size, different type and null.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1508:Avoid dead conditional code", Justification = "Test deliberately verifies Equals(null) returns false; the analyzer can't model the boxed object cast.")]
+    [SuppressMessage("Performance", "CA1508:Avoid dead conditional code", Justification = "Test deliberately verifies Equals(null) returns false; the analyzer can't model the boxed object cast.")]
     public async Task SizeEqualsObjectShouldWork()
     {
         // Arrange
-        Size size1 = new(100f, 200f);
-        object sameBoxed = new Size(100f, 200f);
-        object differentBoxed = new Size(150f, 200f);
+        Size size1 = new(ReferenceWidth, ReferenceHeight);
+        object sameBoxed = new Size(ReferenceWidth, ReferenceHeight);
+        object differentBoxed = new Size(LargerWidth, ReferenceHeight);
         object notASize = "not a size";
         object? nullObj = null;
 
@@ -414,18 +443,16 @@ public class SizeTests
         }
     }
 
-    /// <summary>
-    /// Tests Size with realistic image dimensions.
-    /// </summary>
+    /// <summary>Tests Size with realistic image dimensions.</summary>
     /// <param name="width">The width of the image.</param>
     /// <param name="height">The height of the image.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Arguments(1920f, 1080f)] // Full HD
-    [Arguments(3840f, 2160f)] // 4K UHD
-    [Arguments(1024f, 768f)] // XGA
-    [Arguments(800f, 600f)] // SVGA
-    [Arguments(640f, 480f)] // VGA
-    [Arguments(320f, 240f)] // QVGA
+    [Arguments(1920F, 1080F)] // Full HD
+    [Arguments(3840F, 2160F)] // 4K UHD
+    [Arguments(1024F, 768F)] // XGA
+    [Arguments(800F, 600F)] // SVGA
+    [Arguments(640F, 480F)] // VGA
+    [Arguments(320F, 240F)] // QVGA
     [Test]
     public async Task SizeWithRealisticImageDimensionsShouldWork(float width, float height)
     {

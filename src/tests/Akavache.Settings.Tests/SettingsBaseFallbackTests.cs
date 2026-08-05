@@ -18,19 +18,16 @@ namespace Akavache.Settings.Tests;
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseFallbackTests
 {
-    /// <summary>
-    /// The per-test <see cref="AppBuilder"/> instance.
-    /// </summary>
+    /// <summary>The value <see cref="TestSettings.TestValue"/> is seeded with.</summary>
+    private const int SeededTestValue = 42;
+
+    /// <summary>The per-test <see cref="AppBuilder"/> instance.</summary>
     private AppBuilder _appBuilder = null!;
 
-    /// <summary>
-    /// The unique per-test cache root path (directory).
-    /// </summary>
+    /// <summary>The unique per-test cache root path (directory).</summary>
     private string _cacheRoot = null!;
 
-    /// <summary>
-    /// One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.
-    /// </summary>
+    /// <summary>One-time setup that runs before each test. Creates a fresh builder and an isolated cache path.</summary>
     [Before(Test)]
     public void Setup()
     {
@@ -42,12 +39,10 @@ public class SettingsBaseFallbackTests
             Guid.NewGuid().ToString("N"),
             "ApplicationSettings");
 
-        Directory.CreateDirectory(_cacheRoot);
+        _ = Directory.CreateDirectory(_cacheRoot);
     }
 
-    /// <summary>
-    /// One-time teardown after each test. Best-effort cleanup.
-    /// </summary>
+    /// <summary>One-time teardown after each test. Best-effort cleanup.</summary>
     [After(Test)]
     public void Teardown()
     {
@@ -78,10 +73,10 @@ public class SettingsBaseFallbackTests
 
         // Initialize CacheDatabase - SettingsBase should fall back to using it
         CacheDatabase.Initialize<NewtonsoftSerializer>(
-            builder => builder.WithInMemoryDefaults(),
+            static builder => builder.WithInMemoryDefaults(),
             applicationName: appName);
 
-        await TestHelper.EventuallyAsync(() => CacheDatabase.IsInitialized).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => CacheDatabase.IsInitialized).ConfigureAwait(false);
 
         try
         {
@@ -92,7 +87,7 @@ public class SettingsBaseFallbackTests
             await TestHelper.EventuallyAsync(() => settings is not null).ConfigureAwait(false);
 
             await Assert.That(settings).IsNotNull();
-            await Assert.That((int)settings.TestValue).IsEqualTo(42);
+            await Assert.That((int)settings.TestValue).IsEqualTo(SeededTestValue);
         }
         finally
         {
@@ -100,12 +95,9 @@ public class SettingsBaseFallbackTests
         }
     }
 
-    /// <summary>
-    /// Verifies that SettingsBase works with settings persistence using explicit settings store.
-    /// </summary>
+    /// <summary>Verifies that SettingsBase works with settings persistence using explicit settings store.</summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately uses synchronous Rx Subscribe patterns to avoid sync-over-async deadlocks.")]
     public async Task TestSettingsPersistenceAcrossInstances()
     {
         var appName = NewName("persistence_test");
@@ -116,7 +108,7 @@ public class SettingsBaseFallbackTests
         // to avoid relying on CacheDatabase.CurrentInstance (which the test
         // executor may have reset).
         IAkavacheInstance? instance = null;
-        _appBuilder
+        _ = _appBuilder
             .WithAkavache<NewtonsoftSerializer>(
                 appName,
                 builder => builder
@@ -159,12 +151,10 @@ public class SettingsBaseFallbackTests
             CacheDatabase.ResetForTests().SubscribeAndComplete();
         }
 
-        await TestHelper.EventuallyAsync(() => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
+        await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Creates a unique, human-readable test name prefix plus a GUID segment.
-    /// </summary>
+    /// <summary>Creates a unique, human-readable test name prefix plus a GUID segment.</summary>
     /// <param name="prefix">A short, descriptive prefix for the test resource name.</param>
     /// <returns>A unique name string suitable for use as an application name or store key.</returns>
     private static string NewName(string prefix) => $"{prefix}_{Guid.NewGuid():N}";
@@ -178,7 +168,7 @@ public class SettingsBaseFallbackTests
     {
         /// <summary>Initializes a new instance of the <see cref="TestSettings"/> class.</summary>
         public TestSettings()
-            : base(nameof(TestSettings)) => TestValue = CreateProperty(42, nameof(TestValue));
+            : base(nameof(TestSettings)) => TestValue = CreateProperty(SeededTestValue);
 
         /// <summary>Gets the test value property helper.</summary>
         public SettingsPropertyHelper<int> TestValue { get; }

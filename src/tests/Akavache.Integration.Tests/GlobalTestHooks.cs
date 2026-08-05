@@ -12,7 +12,6 @@ using Splat.Builder;
 // state, so serialise the entire assembly under one shared NotInParallel group key
 // and route every test through the executor that wraps the test method body in a
 // try/finally so cleanup always runs.
-//
 // State reset lives in [BeforeEvery(Test)] / [AfterEvery(Test)] hooks rather than
 // inside the executor because TUnit runs ITestExecutor.ExecuteTest *after* class
 // [Before(Test)] hooks (see TUnit's HookExecutor.cs ~line 500). Resetting state
@@ -44,10 +43,16 @@ public static class GlobalTestHooks
     [BeforeEvery(Test)]
     public static Task ResetBeforeEveryTest() => ResetGlobalStateAsync();
 
-    /// <summary>Runs after every test. Wipes Akavache global state.</summary>
+    /// <summary>
+    /// Runs after every test. Deliberately performs the same wipe as
+    /// <see cref="ResetBeforeEveryTest"/> — a test that throws part-way through leaves
+    /// global state behind, and the next test's before-hook is not the only thing that
+    /// must be able to rely on a clean slate (assembly-level teardown and any
+    /// non-test code observing the locator do too).
+    /// </summary>
     /// <returns>A task representing the asynchronous reset operation.</returns>
     [AfterEvery(Test)]
-    public static Task CleanAfterEveryTest() => ResetGlobalStateAsync();
+    public static Task CleanAfterEveryTest() => ResetBeforeEveryTest();
 
     /// <summary>
     /// Resets every Akavache and Splat static state holder to its constructed

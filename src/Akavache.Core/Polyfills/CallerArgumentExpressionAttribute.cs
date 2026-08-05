@@ -11,29 +11,25 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System.Runtime.CompilerServices;
 
-/// <summary>
-/// Indicates that a parameter captures the expression passed for another parameter
-/// as a string.
-/// </summary>
+/// <summary>Indicates that a parameter captures the expression passed for another parameter as a string.</summary>
 /// <remarks>
 /// Link: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.callerargumentexpressionattribute.
 /// </remarks>
+[SuppressMessage(
+    "Design",
+    "SST2324:Do not declare a member more accessible than its containing type",
+    Justification = "Mirrors the shape of the corresponding BCL type (System.CallerArgumentExpressionAttribute); the polyfill compiles only where the BCL lacks it.")]
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
 internal sealed class CallerArgumentExpressionAttribute : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CallerArgumentExpressionAttribute"/>
-    /// class with the name of the target parameter.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="CallerArgumentExpressionAttribute"/> class with the name of the target parameter.</summary>
     /// <param name="parameterName">The name of the parameter whose expression should be captured.</param>
     public CallerArgumentExpressionAttribute(string parameterName) =>
         ParameterName = parameterName;
 
-    /// <summary>
-    /// Gets the name of the parameter whose expression should be captured.
-    /// </summary>
+    /// <summary>Gets the name of the parameter whose expression should be captured.</summary>
     public string ParameterName { get; }
 }
 

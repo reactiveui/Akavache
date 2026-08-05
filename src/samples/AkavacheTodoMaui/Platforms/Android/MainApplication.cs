@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
+// Copyright (c) 2019-2026 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,18 +8,14 @@ using Android.Runtime;
 
 namespace AkavacheTodoMaui;
 
-/// <summary>
-/// MainApplication.
-/// </summary>
+/// <summary>The Android application entry point that builds the MAUI app.</summary>
 /// <seealso cref="MauiApplication" />
 [Application]
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public class MainApplication : MauiApplication
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MainApplication"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="MainApplication"/> class.</summary>
     /// <param name="handle">The handle.</param>
     /// <param name="ownership">The ownership.</param>
     public MainApplication(IntPtr handle, JniHandleOwnership ownership)

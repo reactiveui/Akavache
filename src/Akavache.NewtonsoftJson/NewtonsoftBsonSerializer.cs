@@ -10,9 +10,7 @@ namespace Akavache.NewtonsoftJson;
 /// </summary>
 public class NewtonsoftBsonSerializer : NewtonsoftSerializer
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NewtonsoftBsonSerializer"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="NewtonsoftBsonSerializer"/> class.</summary>
     public NewtonsoftBsonSerializer()
     {
         // Configure for BSON format by default

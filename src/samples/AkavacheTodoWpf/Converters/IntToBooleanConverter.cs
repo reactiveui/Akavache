@@ -7,32 +7,18 @@ using System.Windows.Data;
 
 namespace AkavacheTodoWpf.Converters;
 
-/// <summary>
-/// Converts integers to boolean for visibility.
-/// </summary>
+/// <summary>Converts integers to boolean for visibility.</summary>
 public class IntToBooleanConverter : IValueConverter
 {
-    /// <summary>
-    /// Converts integer to boolean.
-    /// </summary>
+    /// <summary>Converts integer to boolean.</summary>
     /// <param name="value">The integer value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>True if greater than 0.</returns>
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not int intValue)
-        {
-            return false;
-        }
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not int intValue ? false : intValue > 0;
 
-        return intValue > 0;
-    }
-
-    /// <summary>
-    /// One-way converter — returns <see cref="Binding.DoNothing"/> so the binding engine skips the source update.
-    /// </summary>
+    /// <summary>One-way converter — returns <see cref="Binding.DoNothing"/> so the binding engine skips the source update.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>

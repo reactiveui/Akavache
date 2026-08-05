@@ -9,15 +9,11 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Extended serialization tests for System.Text.Json and Newtonsoft.Json serializers.
-/// </summary>
+/// <summary>Extended serialization tests for System.Text.Json and Newtonsoft.Json serializers.</summary>
 [Category("Serialization")]
 public class ExtendedJsonSerializerTests
 {
-    /// <summary>
-    /// Round trips a user object with SystemJsonSerializer.
-    /// </summary>
+    /// <summary>Round trips a user object with SystemJsonSerializer.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SystemJsonSerializer_SerializesAndDeserializes_UserObject()
@@ -30,9 +26,7 @@ public class ExtendedJsonSerializerTests
         await Assert.That(roundtrip!.Name).IsEqualTo("System");
     }
 
-    /// <summary>
-    /// Round trips a user object with NewtonsoftSerializer.
-    /// </summary>
+    /// <summary>Round trips a user object with NewtonsoftSerializer.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task NewtonsoftSerializer_SerializesAndDeserializes_UserObject()
@@ -45,37 +39,31 @@ public class ExtendedJsonSerializerTests
         await Assert.That(roundtrip!.Name).IsEqualTo("Newton");
     }
 
-    /// <summary>
-    /// Serializes DateTime UTC kind with SystemJsonSerializer.
-    /// </summary>
+    /// <summary>Serializes DateTime UTC kind with SystemJsonSerializer.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SystemJsonSerializer_SerializesDateTimeUtc()
     {
         SystemJsonSerializer serializer = new();
-        var dt = DateTime.UtcNow;
+        var dt = TimeProvider.System.GetUtcNow().UtcDateTime;
         var bytes = serializer.Serialize(dt);
         var roundtrip = serializer.Deserialize<DateTime>(bytes);
         await Assert.That(roundtrip.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Serializes DateTimeOffset with zero offset using NewtonsoftSerializer.
-    /// </summary>
+    /// <summary>Serializes DateTimeOffset with zero offset using NewtonsoftSerializer.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task NewtonsoftSerializer_SerializesDateTimeOffset()
     {
         NewtonsoftSerializer serializer = new();
-        var dto = DateTimeOffset.UtcNow;
+        var dto = TimeProvider.System.GetUtcNow();
         var bytes = serializer.Serialize(dto);
         var roundtrip = serializer.Deserialize<DateTimeOffset>(bytes);
         await Assert.That(roundtrip.Offset).IsEqualTo(TimeSpan.Zero);
     }
 
-    /// <summary>
-    /// Unsupported type serialization throws for SystemJsonSerializer.
-    /// </summary>
+    /// <summary>Unsupported type serialization throws for SystemJsonSerializer.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SystemJsonSerializer_ThrowsOnUnsupportedType()
@@ -84,9 +72,7 @@ public class ExtendedJsonSerializerTests
         await Assert.That(serializer.Serialize(new ExtendedJsonSerializerTests())).IsNotNull();
     }
 
-    /// <summary>
-    /// Unsupported type serialization throws for NewtonsoftSerializer.
-    /// </summary>
+    /// <summary>Unsupported type serialization throws for NewtonsoftSerializer.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task NewtonsoftSerializer_ThrowsOnUnsupportedType()

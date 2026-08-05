@@ -7,14 +7,10 @@ using System.Windows.Data;
 
 namespace AkavacheTodoWpf.Converters;
 
-/// <summary>
-/// Converts string to boolean for visibility.
-/// </summary>
+/// <summary>Converts string to boolean for visibility.</summary>
 public class StringToBooleanConverter : IValueConverter
 {
-    /// <summary>
-    /// Converts string to boolean.
-    /// </summary>
+    /// <summary>Converts string to boolean.</summary>
     /// <param name="value">The string value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
@@ -22,9 +18,7 @@ public class StringToBooleanConverter : IValueConverter
     /// <returns>True if string is not null or empty.</returns>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => !string.IsNullOrWhiteSpace(value?.ToString());
 
-    /// <summary>
-    /// One-way converter — returns <see cref="Binding.DoNothing"/> so the binding engine skips the source update.
-    /// </summary>
+    /// <summary>One-way converter — returns <see cref="Binding.DoNothing"/> so the binding engine skips the source update.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>

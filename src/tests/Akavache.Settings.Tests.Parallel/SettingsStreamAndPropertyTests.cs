@@ -10,20 +10,30 @@ using Akavache.Tests;
 
 namespace Akavache.Settings.Tests;
 
-/// <summary>
-/// Tests targeting missed coverage lines in <see cref="SettingsStorage"/>,
-/// <see cref="SettingsStream{T}"/>, <see cref="SettingsPropertyHelper{T}"/>,
-/// and <see cref="SettingsBase"/>.
-/// </summary>
+/// <summary>Tests targeting missed coverage lines in <see cref="SettingsStorage"/>, <see cref="SettingsStream{T}"/>, <see cref="SettingsPropertyHelper{T}"/>, and <see cref="SettingsBase"/>.</summary>
 [Category("Akavache")]
 public class SettingsStreamAndPropertyTests
 {
-    // ───────────────────────── SettingsStorage: EagerCreateStreams swallows exceptions ─────
+    /// <summary>The value the <c>Name</c> stream falls back to before anything is persisted.</summary>
+    private const string DefaultName = "default_name";
 
+    /// <summary>The value written over <see cref="DefaultName"/> to prove a set is observed.</summary>
+    private const string UpdatedName = "updated";
+
+    /// <summary>The value the <c>Score</c> property helper is seeded with.</summary>
+    private const int DefaultScore = 100;
+
+    /// <summary>The value written over <see cref="DefaultScore"/> to prove a set is observed.</summary>
+    private const int UpdatedScore = 200;
+
+    /// <summary>The value written while no <c>PropertyChanged</c> handler is attached.</summary>
+    private const int UnobservedScore = 42;
+
+    // ───────────────────────── SettingsStorage: EagerCreateStreams swallows exceptions ─────
     /// <summary>
-    /// <see cref="SettingsStorage.EagerCreateStreams"/> swallows exceptions thrown by
-    /// individual property getters — a faulty getter should not prevent the rest of the
-    /// properties from being visited.
+    /// Verifies that <see cref="SettingsStorage.EagerCreateStreams"/> swallows exceptions
+    /// thrown by individual property getters — a faulty getter should not prevent the rest
+    /// of the properties from being visited.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
@@ -39,11 +49,7 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsStorage: GetOrCreateObservable default-value path ──
-
-    /// <summary>
-    /// <see cref="SettingsStorage"/> creates a stream with the supplied default value and
-    /// returns it to the subscriber.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsStorage"/> creates a stream with the supplied default value and returns it to the subscriber.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetOrCreateObservableShouldEmitDefaultValue()
@@ -53,12 +59,10 @@ public class SettingsStreamAndPropertyTests
 
         var value = storage.Name.SubscribeGetValue();
 
-        await Assert.That(value).IsEqualTo("default_name");
+        await Assert.That(value).IsEqualTo(DefaultName);
     }
 
-    /// <summary>
-    /// Calling the same property getter twice returns the same stream instance.
-    /// </summary>
+    /// <summary>Calling the same property getter twice returns the same stream instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetOrCreateObservableShouldReturnSameStreamOnSecondAccess()
@@ -73,11 +77,7 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsStorage: SetObservable creates stream on the fly ───
-
-    /// <summary>
-    /// <see cref="SettingsStorage"/> creates the stream on the fly when
-    /// the setter is called before any getter, then persists the value.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsStorage"/> creates the stream on the fly when the setter is called before any getter, then persists the value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SetObservableShouldCreateStreamAndPersistValue()
@@ -93,9 +93,7 @@ public class SettingsStreamAndPropertyTests
         await Assert.That(value).IsEqualTo("hello");
     }
 
-    /// <summary>
-    /// <see cref="SettingsStorage"/> raises PropertyChanged with the key name on set.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsStorage"/> raises PropertyChanged with the key name on set.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SetObservableShouldRaisePropertyChanged()
@@ -112,24 +110,16 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsStorage: DisposeStreams error swallowing ────────────
-
-    /// <summary>
-    /// A stream that throws on <see cref="IDisposable.Dispose"/> should not crash the
-    /// <c>DisposeStreams</c> loop — the error is swallowed.
-    /// </summary>
+    /// <summary>A stream that throws on <see cref="IDisposable.Dispose"/> should not crash the <c>DisposeStreams</c> loop — the error is swallowed.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [SuppressMessage(
-        "Performance",
-        "CA1849:Call async methods when in an async method",
-        Justification = "Test deliberately exercises the synchronous Dispose path.")]
     public async Task DisposeStreamsShouldSwallowStreamDisposeExceptions()
     {
         var storage = new ThrowingDisposeStorage(
             new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
 
         // Access the property to create the stream, then inject a throwing stream.
-        storage.Name.SubscribeGetValue();
+        _ = storage.Name.SubscribeGetValue();
         storage.InjectThrowingStream();
 
         // Dispose should complete without throwing.
@@ -139,11 +129,7 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsStream: Double EnsureLoaded ────────────────────────
-
-    /// <summary>
-    /// Calling <see cref="SettingsStream{T}.EnsureLoaded"/> twice returns the same cached
-    /// observable — the second call hits the early return.
-    /// </summary>
+    /// <summary>Calling <see cref="SettingsStream{T}.EnsureLoaded"/> twice returns the same cached observable — the second call hits the early return.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EnsureLoadedShouldReturnSameObservableOnSecondCall()
@@ -162,10 +148,7 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsPropertyHelper: Value, Set, Subscribe, Dispose ─────
-
-    /// <summary>
-    /// <see cref="SettingsPropertyHelper{T}.Value"/> returns the default before any update.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}.Value"/> returns the default before any update.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperValueShouldReturnDefaultBeforeUpdate()
@@ -173,13 +156,10 @@ public class SettingsStreamAndPropertyTests
         using var storage = new PropertyHelperTestSettings(
             new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
 
-        await Assert.That(storage.Score.Value).IsEqualTo(100);
+        await Assert.That(storage.Score.Value).IsEqualTo(DefaultScore);
     }
 
-    /// <summary>
-    /// <see cref="SettingsPropertyHelper{T}.Set"/> updates the Value synchronously and
-    /// persists.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}.Set"/> updates the Value synchronously and persists.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperSetShouldUpdateValue()
@@ -187,14 +167,12 @@ public class SettingsStreamAndPropertyTests
         using var storage = new PropertyHelperTestSettings(
             new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
 
-        storage.Score.Set(200).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
 
-        await Assert.That(storage.Score.Value).IsEqualTo(200);
+        await Assert.That(storage.Score.Value).IsEqualTo(UpdatedScore);
     }
 
-    /// <summary>
-    /// <see cref="SettingsPropertyHelper{T}.Subscribe"/> delegates to the backing stream.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}.Subscribe"/> delegates to the backing stream.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperSubscribeShouldDelegateToStream()
@@ -203,19 +181,16 @@ public class SettingsStreamAndPropertyTests
             new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
 
         var received = new List<int>();
-        var sub = storage.Score.Subscribe(Observer.Create<int>(v => received.Add(v)));
+        var sub = storage.Score.Subscribe(Observer.Create<int>(received.Add));
 
-        storage.Score.Set(42).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
         sub.Dispose();
 
-        await Assert.That(received).Contains(100); // initial replay
-        await Assert.That(received).Contains(42); // set value
+        await Assert.That(received).Contains(DefaultScore); // initial replay
+        await Assert.That(received).Contains(UpdatedScore); // set value
     }
 
-    /// <summary>
-    /// <see cref="SettingsPropertyHelper{T}.Dispose"/> disposes the internal subscription
-    /// without throwing.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}.Dispose"/> disposes the internal subscription without throwing.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperDisposeShouldNotThrow()
@@ -229,10 +204,7 @@ public class SettingsStreamAndPropertyTests
         storage.Dispose();
     }
 
-    /// <summary>
-    /// <see cref="SettingsPropertyHelper{T}"/> raises PropertyChanged when the backing
-    /// stream pushes a new value.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}"/> raises PropertyChanged when the backing stream pushes a new value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperShouldRaisePropertyChangedOnUpdate()
@@ -243,15 +215,12 @@ public class SettingsStreamAndPropertyTests
         string? changedProp = null;
         storage.Score.PropertyChanged += (_, args) => changedProp = args.PropertyName;
 
-        storage.Score.Set(55).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
 
         await Assert.That(changedProp).IsEqualTo("Value");
     }
 
-    /// <summary>
-    /// The implicit conversion operator on <see cref="SettingsPropertyHelper{T}"/> returns
-    /// the current value.
-    /// </summary>
+    /// <summary>The implicit conversion operator on <see cref="SettingsPropertyHelper{T}"/> returns the current value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperImplicitConversionShouldReturnCurrentValue()
@@ -261,12 +230,10 @@ public class SettingsStreamAndPropertyTests
 
         int value = storage.Score;
 
-        await Assert.That(value).IsEqualTo(100);
+        await Assert.That(value).IsEqualTo(DefaultScore);
     }
 
-    /// <summary>
-    /// <see cref="SettingsPropertyHelper{T}.ToT"/> returns the current value.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsPropertyHelper{T}.ToT"/> returns the current value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperToTShouldReturnCurrentValue()
@@ -276,15 +243,11 @@ public class SettingsStreamAndPropertyTests
 
         var value = storage.Score.ToT();
 
-        await Assert.That(value).IsEqualTo(100);
+        await Assert.That(value).IsEqualTo(DefaultScore);
     }
 
     // ───────────────────────── SettingsBase: TryGetFromBlobCacheRegistry fallback ─────────
-
-    /// <summary>
-    /// <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> iterates past a non-matching
-    /// entry and falls back to the first entry in the registry.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> iterates past a non-matching entry and falls back to the first entry in the registry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstWhenNoExactMatch()
@@ -299,7 +262,6 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsStream: Set after EnsureLoaded ──────────────────────
-
     /// <summary>
     /// Calling <see cref="SettingsStream{T}.Set"/> after <see cref="SettingsStream{T}.EnsureLoaded"/>
     /// takes the <c>_coldLoad is not null</c> branch in Set, skipping the cold-load seed.
@@ -315,10 +277,10 @@ public class SettingsStreamAndPropertyTests
         stream.EnsureLoaded().SubscribeAndComplete();
 
         // Now Set — should hit the _coldLoad is not null branch.
-        stream.Set("updated").SubscribeAndComplete();
+        stream.Set(UpdatedName).SubscribeAndComplete();
 
         var value = ((IObservable<string>)stream).SubscribeGetValue();
-        await Assert.That(value).IsEqualTo("updated");
+        await Assert.That(value).IsEqualTo(UpdatedName);
     }
 
     /// <summary>
@@ -343,21 +305,17 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsStream: Dispose ───────────────────────────────────
-
-    /// <summary>
-    /// <see cref="SettingsStream{T}.Dispose"/> disposes the backing subject, completing
-    /// any active subscriptions.
-    /// </summary>
+    /// <summary>Verifies that <see cref="SettingsStream{T}.Dispose"/> disposes the backing subject, completing any active subscriptions.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SettingsStreamDisposeShouldCompleteSubscribers()
     {
         var cache = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        var stream = new SettingsStream<int>(cache, "test:dispose", 42);
+        var stream = new SettingsStream<int>(cache, "test:dispose", DefaultScore);
 
         var completed = false;
-        ((IObservable<int>)stream).Subscribe(
-            _ => { },
+        _ = ((IObservable<int>)stream).Subscribe(
+            static _ => { },
             () => completed = true);
 
         stream.Dispose();
@@ -366,7 +324,6 @@ public class SettingsStreamAndPropertyTests
     }
 
     // ───────────────────────── SettingsPropertyHelper: no PropertyChanged handler ────────
-
     /// <summary>
     /// When no <c>PropertyChanged</c> handler is registered on a
     /// <see cref="SettingsPropertyHelper{T}"/>, setting a value should not throw
@@ -380,29 +337,22 @@ public class SettingsStreamAndPropertyTests
             new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
 
         // No PropertyChanged handler registered — should not throw.
-        storage.Score.Set(42).SubscribeAndComplete();
+        storage.Score.Set(UnobservedScore).SubscribeAndComplete();
 
-        await Assert.That(storage.Score.Value).IsEqualTo(42);
+        await Assert.That(storage.Score.Value).IsEqualTo(UnobservedScore);
     }
 
-    /// <summary>
-    /// The <see cref="SettingsPropertyHelper{T}"/> implicit operator throws when
-    /// given a null helper reference.
-    /// </summary>
+    /// <summary>The <see cref="SettingsPropertyHelper{T}"/> implicit operator throws when given a null helper reference.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task PropertyHelperImplicitConversionShouldThrowOnNull()
     {
         SettingsPropertyHelper<int>? helper = null;
 
-        await Assert.That(() =>
-        {
-            var unused = (int)helper!;
-        }).Throws<ArgumentNullException>();
+        await Assert.That(() => (int)helper!).Throws<ArgumentNullException>();
     }
 
     // ───────────────────────── SettingsStorage: SetObservable on already-created stream ──
-
     /// <summary>
     /// Calling <c>SetObservable</c> on a key whose stream was already created by
     /// <c>GetOrCreateObservable</c> reuses the existing stream instance.
@@ -416,21 +366,17 @@ public class SettingsStreamAndPropertyTests
 
         // Create stream via getter.
         var initial = storage.Name.SubscribeGetValue();
-        await Assert.That(initial).IsEqualTo("default_name");
+        await Assert.That(initial).IsEqualTo(DefaultName);
 
         // Set through the setter — should reuse the existing stream.
-        storage.SetName("updated").SubscribeAndComplete();
+        storage.SetName(UpdatedName).SubscribeAndComplete();
 
         var updated = storage.Name.SubscribeGetValue();
-        await Assert.That(updated).IsEqualTo("updated");
+        await Assert.That(updated).IsEqualTo(UpdatedName);
     }
 
     // ───────────────────────── Test fixtures ──────────────────────────────────────────────
-
-    /// <summary>
-    /// Minimal <see cref="SettingsStorage"/> subclass that exposes observable getter/setter
-    /// for testing <c>GetOrCreateObservable</c> and <c>SetObservable</c>.
-    /// </summary>
+    /// <summary>Minimal <see cref="SettingsStorage"/> subclass that exposes observable getter/setter for testing <c>GetOrCreateObservable</c> and <c>SetObservable</c>.</summary>
     internal sealed class ObservableTestSettings : SettingsStorage
     {
         /// <summary>Initializes a new instance of the <see cref="ObservableTestSettings"/> class.</summary>
@@ -440,35 +386,35 @@ public class SettingsStreamAndPropertyTests
         {
         }
 
-        /// <summary>Gets the live Name stream, defaulting to "default_name".</summary>
-        public IObservable<string> Name => GetOrCreateObservable("default_name");
+        /// <summary>Gets the live Name stream, defaulting to <see cref="DefaultName"/>.</summary>
+        internal IObservable<string> Name => GetOrCreateObservable(DefaultName);
 
         /// <summary>Sets the Name property.</summary>
         /// <param name="value">The new value.</param>
         /// <returns>An observable that completes when the write is persisted.</returns>
-        public IObservable<Unit> SetName(string value) => SetObservable(value, nameof(Name));
+        /// <remarks>
+        /// The key is named explicitly because the caller-member name here is <c>SetName</c>,
+        /// not <c>Name</c>, and the setter has to address the same stream as the getter.
+        /// </remarks>
+        internal IObservable<Unit> SetName(string value) => SetObservable(value, nameof(Name));
     }
 
-    /// <summary>
-    /// Minimal <see cref="SettingsStorage"/> subclass that exposes a
-    /// <see cref="SettingsPropertyHelper{T}"/> property for testing the helper pattern.
-    /// </summary>
+    /// <summary>Minimal <see cref="SettingsStorage"/> subclass that exposes a <see cref="SettingsPropertyHelper{T}"/> property for testing the helper pattern.</summary>
     internal sealed class PropertyHelperTestSettings : SettingsStorage
     {
         /// <summary>Initializes a new instance of the <see cref="PropertyHelperTestSettings"/> class.</summary>
         /// <param name="cache">The backing blob cache.</param>
         public PropertyHelperTestSettings(IBlobCache cache)
             : base("PropHelper", cache) =>
-            Score = CreateProperty(100, nameof(Score));
+            Score = CreateProperty(DefaultScore);
 
         /// <summary>Gets the Score property helper.</summary>
-        public SettingsPropertyHelper<int> Score { get; }
+        internal SettingsPropertyHelper<int> Score { get; }
     }
 
     /// <summary>
-    /// <see cref="SettingsStorage"/> subclass that lets us inject a throwing stream into
-    /// the internal dictionary so the <c>DisposeStreams</c> error-swallowing path can be
-    /// exercised.
+    /// Storage subclass that lets us inject a throwing stream into the internal
+    /// dictionary so the <c>DisposeStreams</c> error-swallowing path can be exercised.
     /// </summary>
     internal sealed class ThrowingDisposeStorage : SettingsStorage
     {
@@ -480,48 +426,56 @@ public class SettingsStreamAndPropertyTests
         }
 
         /// <summary>Gets the live Name stream.</summary>
-        public IObservable<string> Name => GetOrCreateObservable("x");
+        internal IObservable<string> Name => GetOrCreateObservable("x");
 
         /// <summary>
         /// Injects a stream implementation whose Dispose throws, alongside the real
         /// stream, so the DisposeStreams loop encounters the exception.
+        /// <para>
+        /// The stream registry is a private field with no injection seam, so this
+        /// deliberately couples to <c>SettingsStorage._streams</c>. It is the only
+        /// reflective reach in this fixture; if the field is ever renamed the null-forgiving
+        /// lookup below fails loudly rather than silently skipping the assertion.
+        /// </para>
         /// </summary>
         [SuppressMessage(
             "Usage",
             "CA2000:Dispose objects before losing scope",
             Justification = "Intentionally leaking for test.")]
-        public void InjectThrowingStream()
+        internal void InjectThrowingStream()
         {
-            var field = typeof(SettingsStorage)
-                .GetField("_streams", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            var field = typeof(SettingsStorage).GetTypeInfo().GetDeclaredField("_streams")!;
             var dict = (ConcurrentDictionary<string, ISettingsStream>)field.GetValue(this)!;
-            dict.TryAdd("_throwOnDispose", new ThrowingStream());
+            _ = dict.TryAdd("_throwOnDispose", new ThrowingStream());
         }
 
-        /// <summary>
-        /// A fake <see cref="ISettingsStream"/> whose Dispose throws.
-        /// </summary>
+        /// <summary>A fake <see cref="ISettingsStream"/> whose teardown fails.</summary>
         private sealed class ThrowingStream : ISettingsStream
         {
+            /// <summary>The failing teardown this fake stands in for.</summary>
+            private static readonly Action FailingTeardown =
+                static () => throw new InvalidOperationException("dispose failure");
+
             /// <inheritdoc/>
             public IObservable<Unit> EnsureLoaded() => Observable.Return(Unit.Default);
 
             /// <inheritdoc/>
-            public void Dispose() => throw new InvalidOperationException("dispose failure");
+            public void Dispose() => FailingTeardown();
         }
     }
 
-    /// <summary>
-    /// Probe object with a property getter that throws, used to verify that
-    /// <see cref="SettingsStorage.EagerCreateStreams"/> swallows getter exceptions.
-    /// </summary>
-    private sealed class ThrowingGetterProbe
+    /// <summary>Probe object with a property getter that throws, used to verify that <see cref="SettingsStorage.EagerCreateStreams"/> swallows getter exceptions.</summary>
+    internal sealed class ThrowingGetterProbe
     {
-        /// <summary>Gets the number of times <see cref="Good"/> was read.</summary>
-        public int GoodCount { get; private set; }
+        /// <summary>Gets a property that always throws, read reflectively by the eager-create sweep.</summary>
+        /// <exception cref="InvalidOperationException">Always thrown.</exception>
+        internal static string Faulty => throw new InvalidOperationException("boom");
 
-        /// <summary>Gets a well-behaved property.</summary>
-        public string Good
+        /// <summary>Gets the number of times <see cref="Good"/> was read.</summary>
+        internal int GoodCount { get; private set; }
+
+        /// <summary>Gets a well-behaved property, read reflectively by the eager-create sweep.</summary>
+        internal string Good
         {
             get
             {
@@ -529,13 +483,5 @@ public class SettingsStreamAndPropertyTests
                 return string.Empty;
             }
         }
-
-        /// <summary>Gets a property that always throws.</summary>
-        /// <exception cref="InvalidOperationException">Always thrown.</exception>
-        [SuppressMessage(
-            "Performance",
-            "CA1822:Member does not access instance data",
-            Justification = "Instance property required for reflection-based EagerCreateStreams.")]
-        public string Faulty => throw new InvalidOperationException("boom");
     }
 }

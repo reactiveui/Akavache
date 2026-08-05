@@ -4,9 +4,7 @@
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Download tests exercising <see cref="InMemoryBlobCache"/> with a real HTTP server.
-/// </summary>
+/// <summary>Download tests exercising <see cref="InMemoryBlobCache"/> with a real HTTP server.</summary>
 [InheritsTests]
 public class InMemoryBlobCacheDownloadTests : BlobCacheDownloadTestsBase
 {

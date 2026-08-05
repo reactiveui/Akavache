@@ -44,7 +44,7 @@ namespace Akavache.Settings.Core;
 /// updates, or call <c>await settings.Enabled.FirstAsync()</c> for a one-shot read.
 /// </para>
 /// </remarks>
-public abstract class SettingsStorage : ISettingsStorage
+public class SettingsStorage : ISettingsStorage
 {
     /// <summary>The underlying blob cache used for persistent storage of settings values.</summary>
     private readonly IBlobCache _blobCache;
@@ -63,15 +63,13 @@ public abstract class SettingsStorage : ISettingsStorage
     /// <summary>Tracks whether <see cref="Dispose(bool)"/> has already run.</summary>
     private bool _disposedValue;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsStorage"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="SettingsStorage"/> class.</summary>
     /// <param name="keyPrefix">The prefix used for all settings keys in the blob cache. Should be unique to avoid key collisions.</param>
     /// <param name="cache">The blob cache implementation where settings will be stored and retrieved.</param>
     /// <exception cref="ArgumentException">Thrown when <paramref name="keyPrefix"/> is null, empty, or whitespace.</exception>
     protected SettingsStorage(string keyPrefix, IBlobCache cache)
     {
-        ArgumentExceptionHelper.ThrowIfNullOrWhiteSpace(keyPrefix);
+        ArgumentValidation.ThrowIfNullOrWhiteSpace(keyPrefix);
 
         _keyPrefix = keyPrefix;
         _blobCache = cache;
@@ -101,18 +99,18 @@ public abstract class SettingsStorage : ISettingsStorage
         {
             EagerCreateStreams(this, GetType().GetRuntimeProperties());
 
-            var loaders = _streams.Values.Select(static s => s.EnsureLoaded()).ToArray();
-            if (loaders.Length == 0)
+            List<IObservable<Unit>> loaders = new(_streams.Count);
+            foreach (var entry in _streams)
             {
-                return Observable.Return(Unit.Default);
+                loaders.Add(entry.Value.EnsureLoaded());
             }
 
-            return loaders.Merge().IgnoreElements().Concat(Observable.Return(Unit.Default));
+            return loaders.Count == 0
+                ? Observable.Return(Unit.Default)
+                : loaders.Merge().IgnoreElements().Concat(Observable.Return(Unit.Default));
         });
 
-    /// <summary>
-    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-    /// </summary>
+    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
     public void Dispose()
     {
         Dispose(disposing: true);
@@ -136,13 +134,20 @@ public abstract class SettingsStorage : ISettingsStorage
         {
             try
             {
-                property.GetValue(target);
+                _ = property.GetValue(target);
             }
-            catch
+            catch (TargetInvocationException)
             {
-                // Swallow reflection/getter failures — the goal is best-effort pre-warm,
-                // not a strict contract assertion. A faulty getter should not take down
-                // the rest of the initialization sweep.
+                // The getter itself threw. Pre-warming is best-effort, so one faulty property
+                // must not take down the rest of the sweep.
+            }
+            catch (TargetParameterCountException)
+            {
+                // An indexer needs arguments this sweep cannot supply; it has no stream to warm.
+            }
+            catch (MethodAccessException)
+            {
+                // The getter is not reachable from here, so there is nothing to pre-warm.
             }
         }
     }
@@ -164,14 +169,10 @@ public abstract class SettingsStorage : ISettingsStorage
     {
         ArgumentExceptionHelper.ThrowIfNull(key);
 
-        // GetOrAdd's 3-arg state overload is .NET 6+, so capture locals via closure for
-        // net462/472/481 compatibility. The closure allocation is amortized across the
-        // lifetime of the stream (one-time per property) — not a hot-path cost.
-        var cache = _blobCache;
-        var prefix = _keyPrefix;
-        var stream = _streams.GetOrAdd(
+        var stream = _streams.GetOrAddWithState(
             key,
-            k => new SettingsStream<T>(cache, $"{prefix}:{k}", defaultValue));
+            static (k, state) => (ISettingsStream)new SettingsStream<T>(state.Cache, $"{state.Prefix}:{k}", state.DefaultValue),
+            (Cache: _blobCache, Prefix: _keyPrefix, DefaultValue: defaultValue));
 
         return (SettingsStream<T>)stream;
     }
@@ -195,11 +196,10 @@ public abstract class SettingsStorage : ISettingsStorage
     {
         ArgumentExceptionHelper.ThrowIfNull(propertyName);
 
-        var cache = _blobCache;
-        var prefix = _keyPrefix;
-        var stream = (SettingsStream<T>)_streams.GetOrAdd(
+        var stream = (SettingsStream<T>)_streams.GetOrAddWithState(
             propertyName,
-            k => new SettingsStream<T>(cache, $"{prefix}:{k}", defaultValue));
+            static (k, state) => (ISettingsStream)new SettingsStream<T>(state.Cache, $"{state.Prefix}:{k}", state.DefaultValue),
+            (Cache: _blobCache, Prefix: _keyPrefix, DefaultValue: defaultValue));
 
         return new(stream, defaultValue);
     }
@@ -212,7 +212,11 @@ public abstract class SettingsStorage : ISettingsStorage
     /// </summary>
     /// <typeparam name="T">The property value type.</typeparam>
     /// <param name="value">The new value to publish and persist.</param>
-    /// <param name="key">The property name. Unlike the getter, the setter cannot rely on <see cref="CallerMemberNameAttribute"/> because the caller is <c>SetFoo(value)</c>, not <c>Foo</c> — pass the matching getter's name explicitly with <c>nameof(Foo)</c>.</param>
+    /// <param name="key">
+    /// The property name. Unlike the getter, the setter cannot rely on
+    /// <see cref="CallerMemberNameAttribute"/> because the caller is <c>SetFoo(value)</c>, not
+    /// <c>Foo</c> — pass the matching getter's name explicitly with <c>nameof(Foo)</c>.
+    /// </param>
     /// <returns>An observable that fires <see cref="Unit"/> when the persistent write completes.</returns>
     [RequiresUnreferencedCode("SetObservable requires types to be preserved for serialization.")]
     [RequiresDynamicCode("SetObservable requires types to be preserved for serialization.")]
@@ -220,27 +224,25 @@ public abstract class SettingsStorage : ISettingsStorage
     {
         ArgumentExceptionHelper.ThrowIfNull(key);
 
-        var cache = _blobCache;
-        var prefix = _keyPrefix;
-        var seed = value;
-        var stream = _streams.GetOrAdd(
+        var stream = _streams.GetOrAddWithState(
             key,
-            k => new SettingsStream<T>(cache, $"{prefix}:{k}", seed));
+            static (k, state) => (ISettingsStream)new SettingsStream<T>(state.Cache, $"{state.Prefix}:{k}", state.Seed),
+            (Cache: _blobCache, Prefix: _keyPrefix, Seed: value));
 
         var result = ((SettingsStream<T>)stream).Set(value);
         OnPropertyChanged(key);
         return result;
     }
 
-    /// <summary>
-    /// Raises the <see cref="PropertyChanged"/> event for the specified property name.
-    /// </summary>
-    /// <param name="propertyName">The name of the property that changed.</param>
-    protected void OnPropertyChanged(string? propertyName = null) => PropertyChanged?.Invoke(this, new(propertyName));
+    /// <summary>Raises the <see cref="PropertyChanged"/> event for the specified property name.</summary>
+    protected void OnPropertyChanged() =>
+        OnPropertyChanged((string?)null);
 
-    /// <summary>
-    /// Releases unmanaged and - optionally - managed resources.
-    /// </summary>
+    /// <summary>Raises the <see cref="PropertyChanged"/> event for the specified property name.</summary>
+    /// <param name="propertyName">The name of the property that changed.</param>
+    protected void OnPropertyChanged(string? propertyName) => PropertyChanged?.Invoke(this, new(propertyName));
+
+    /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
     /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
@@ -258,21 +260,23 @@ public abstract class SettingsStorage : ISettingsStorage
         _disposedValue = true;
     }
 
-    /// <summary>
-    /// Disposes every active per-property stream and clears the registry. Called from
-    /// <see cref="Dispose(bool)"/> to release the backing <see cref="BehaviorSubject{T}"/> resources.
-    /// </summary>
+    /// <summary>Disposes every active per-property stream and clears the registry. Called from <see cref="Dispose(bool)"/> to release the backing <see cref="BehaviorSubject{T}"/> resources.</summary>
     private void DisposeStreams()
     {
-        foreach (var stream in _streams.Values)
+        foreach (var entry in _streams)
         {
             try
             {
-                stream.Dispose();
+                entry.Value.Dispose();
             }
-            catch
+            catch (ObjectDisposedException)
             {
-                // Best-effort: one faulty stream should not block disposal of the rest.
+                // Already torn down by a concurrent disposal; nothing left to release.
+            }
+            catch (InvalidOperationException)
+            {
+                // A stream refused to close cleanly. Disposal is best-effort — one faulty
+                // stream must not strand the rest.
             }
         }
 

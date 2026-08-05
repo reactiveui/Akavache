@@ -8,14 +8,22 @@ using AkavacheTodoMaui.Models;
 
 namespace AkavacheTodoMaui.Services;
 
-/// <summary>
-/// Service that demonstrates comprehensive Akavache usage for the Todo application.
-/// </summary>
+/// <summary>Service that demonstrates comprehensive Akavache usage for the Todo application.</summary>
 public static class TodoCacheService
 {
-    /// <summary>
-    /// Gets all todos from cache.
-    /// </summary>
+    /// <summary>How long a single cache key enumeration may run before it is abandoned.</summary>
+    private const int CacheQueryTimeoutSeconds = 5;
+
+    /// <summary>How long the combined cache inspection may run before it is abandoned.</summary>
+    private const int CacheInfoTimeoutSeconds = 15;
+
+    /// <summary>Sentinel key count reported for a cache that could not be queried.</summary>
+    private const int UnknownKeyCount = -1;
+
+    /// <summary>The caches summarized by <see cref="GetCacheInfo"/>: user account, local machine and secure.</summary>
+    private const int TrackedCacheCount = 3;
+
+    /// <summary>Gets all todos from cache.</summary>
     /// <returns>Observable list of todos.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
@@ -24,20 +32,23 @@ public static class TodoCacheService
         .Catch(Observable.Return(new List<TodoItem>()))
         .Select(static todos => todos ?? []);
 
-    /// <summary>
-    /// Saves todos to cache.
-    /// </summary>
+    /// <summary>Saves todos to cache so that they never expire.</summary>
     /// <param name="todos">The todos to save.</param>
-    /// <param name="expiration">Optional expiration time.</param>
     /// <returns>Observable unit.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    public static IObservable<Unit> SaveTodos(List<TodoItem> todos, DateTimeOffset? expiration = null) =>
+    public static IObservable<Unit> SaveTodos(List<TodoItem> todos) => SaveTodos(todos, null);
+
+    /// <summary>Saves todos to cache.</summary>
+    /// <param name="todos">The todos to save.</param>
+    /// <param name="expiration">The absolute expiration time, or null to keep the entry indefinitely.</param>
+    /// <returns>Observable unit.</returns>
+    [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
+    public static IObservable<Unit> SaveTodos(List<TodoItem> todos, DateTimeOffset? expiration) =>
         CacheDatabase.UserAccount.InsertObject("todos", todos, expiration);
 
-    /// <summary>
-    /// Gets application settings.
-    /// </summary>
+    /// <summary>Gets application settings.</summary>
     /// <returns>Observable app settings.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
@@ -45,9 +56,7 @@ public static class TodoCacheService
         .GetOrCreateObject("app_settings", static () => new AppSettings())
         .Select(static settings => settings ?? new AppSettings());
 
-    /// <summary>
-    /// Saves application settings.
-    /// </summary>
+    /// <summary>Saves application settings.</summary>
     /// <param name="settings">The settings to save.</param>
     /// <returns>Observable unit.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
@@ -55,32 +64,13 @@ public static class TodoCacheService
     public static IObservable<Unit> SaveSettings(AppSettings? settings) =>
         CacheDatabase.UserAccount.InsertObject("app_settings", settings);
 
-    /// <summary>
-    /// Gets todo statistics.
-    /// </summary>
+    /// <summary>Gets todo statistics.</summary>
     /// <returns>Observable todo statistics.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
-    public static IObservable<TodoStats> GetTodoStats() => GetAllTodos()
-        .Select(static todos =>
-        {
-            if (todos == null || todos.Count == 0)
-            {
-                return new();
-            }
+    public static IObservable<TodoStats> GetTodoStats() => GetAllTodos().Select(Summarize);
 
-            return new TodoStats
-            {
-                TotalTodos = todos.Count,
-                CompletedTodos = todos.Count(static t => t.IsCompleted),
-                OverdueTodos = todos.Count(static t => t.IsOverdue),
-                DueSoonTodos = todos.Count(static t => t.IsDueSoon)
-            };
-        });
-
-    /// <summary>
-    /// Gets cache information with enhanced debugging and error handling.
-    /// </summary>
+    /// <summary>Gets cache information with enhanced debugging and error handling.</summary>
     /// <returns>Observable cache information.</returns>
     public static IObservable<CacheInfo> GetCacheInfo() =>
         Observable.Defer(static () =>
@@ -90,7 +80,7 @@ public static class TodoCacheService
             // Use timeout and better error handling for each cache operation
             var userKeysObs = CacheDatabase.UserAccount.GetAllKeys()
                 .ToArray()
-                .Timeout(TimeSpan.FromSeconds(5))
+                .Timeout(TimeSpan.FromSeconds(CacheQueryTimeoutSeconds))
                 .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"UserAccount cache error: {ex.Message}");
@@ -99,7 +89,7 @@ public static class TodoCacheService
 
             var localKeysObs = CacheDatabase.LocalMachine.GetAllKeys()
                 .ToArray()
-                .Timeout(TimeSpan.FromSeconds(5))
+                .Timeout(TimeSpan.FromSeconds(CacheQueryTimeoutSeconds))
                 .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"LocalMachine cache error: {ex.Message}");
@@ -108,7 +98,7 @@ public static class TodoCacheService
 
             var secureKeysObs = CacheDatabase.Secure.GetAllKeys()
                 .ToArray()
-                .Timeout(TimeSpan.FromSeconds(5))
+                .Timeout(TimeSpan.FromSeconds(CacheQueryTimeoutSeconds))
                 .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"Secure cache error: {ex.Message}");
@@ -126,47 +116,74 @@ public static class TodoCacheService
                         LocalMachineKeys = localKeys?.Length ?? 0,
                         SecureKeys = secureKeys?.Length ?? 0,
                         TotalKeys = (userKeys?.Length ?? 0) + (localKeys?.Length ?? 0) + (secureKeys?.Length ?? 0),
-                        LastChecked = DateTimeOffset.Now
+                        LastChecked = TimeProvider.System.GetLocalNow()
                     };
 
                     System.Diagnostics.Debug.WriteLine($"Cache keys found: User={result.UserAccountKeys}, Local={result.LocalMachineKeys}, Secure={result.SecureKeys}");
                     return result;
                 })
-                .Timeout(TimeSpan.FromSeconds(15)) // Overall timeout
+                .Timeout(TimeSpan.FromSeconds(CacheInfoTimeoutSeconds)) // Overall timeout
                 .Catch(static (Exception ex) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"Cache info error: {ex}");
-                    return Observable.Return(new CacheInfo
-                    {
-                        UserAccountKeys = -1,
-                        LocalMachineKeys = -1,
-                        SecureKeys = -1,
-                        TotalKeys = -3,
-                        LastChecked = DateTimeOffset.Now
-                    });
+                    return Observable.Return(UnavailableCacheInfo());
                 });
         });
 
-    /// <summary>
-    /// Invalidates a todo by ID.
-    /// </summary>
+    /// <summary>Invalidates a todo by ID.</summary>
     /// <param name="todoId">The todo ID to invalidate.</param>
     /// <returns>Observable unit.</returns>
     public static IObservable<Unit> InvalidateTodo(string todoId) =>
         CacheDatabase.UserAccount.Invalidate($"todo_{todoId}");
 
-    /// <summary>
-    /// Cleans up the cache.
-    /// </summary>
+    /// <summary>Cleans up the cache.</summary>
     /// <returns>Observable unit.</returns>
     public static IObservable<Unit> CleanupCache() => CacheDatabase.UserAccount.Vacuum();
 
-    /// <summary>
-    /// Saves application state.
-    /// </summary>
+    /// <summary>Saves application state.</summary>
     /// <returns>Observable unit.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public static IObservable<Unit> SaveApplicationState() =>
-        CacheDatabase.UserAccount.InsertObject("last_shutdown", DateTimeOffset.Now);
+        CacheDatabase.UserAccount.InsertObject("last_shutdown", TimeProvider.System.GetLocalNow());
+
+    /// <summary>Counts the completed, overdue and due-soon todos in a single pass.</summary>
+    /// <param name="todos">The todos to summarize.</param>
+    /// <returns>Statistics describing the supplied todos.</returns>
+    private static TodoStats Summarize(List<TodoItem> todos)
+    {
+        TodoStats stats = new();
+
+        foreach (var todo in todos)
+        {
+            if (todo.IsCompleted)
+            {
+                stats.CompletedTodos++;
+            }
+
+            if (todo.IsOverdue)
+            {
+                stats.OverdueTodos++;
+            }
+
+            if (todo.IsDueSoon)
+            {
+                stats.DueSoonTodos++;
+            }
+        }
+
+        stats.TotalTodos = todos.Count;
+        return stats;
+    }
+
+    /// <summary>Builds the placeholder reported when the caches cannot be inspected.</summary>
+    /// <returns>Cache information whose counts are all <see cref="UnknownKeyCount"/>.</returns>
+    private static CacheInfo UnavailableCacheInfo() => new()
+    {
+        UserAccountKeys = UnknownKeyCount,
+        LocalMachineKeys = UnknownKeyCount,
+        SecureKeys = UnknownKeyCount,
+        TotalKeys = UnknownKeyCount * TrackedCacheCount,
+        LastChecked = TimeProvider.System.GetLocalNow()
+    };
 }

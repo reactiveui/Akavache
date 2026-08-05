@@ -2,13 +2,9 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Helpers;
-
 namespace Akavache.Core;
 
-/// <summary>
-/// A wrapper that implements <see cref="ISecureBlobCache"/> by delegating to an <see cref="IBlobCache"/>.
-/// </summary>
+/// <summary>A wrapper that implements <see cref="ISecureBlobCache"/> by delegating to an <see cref="IBlobCache"/>.</summary>
 /// <remarks>
 /// This file is compiled into every assembly that needs it via
 /// <c>&lt;Compile Include Link&gt;</c> — it is <see langword="internal"/> and
@@ -16,14 +12,10 @@ namespace Akavache.Core;
 /// </remarks>
 internal sealed class SecureBlobCacheWrapper : ISecureBlobCache, IWrappedBlobCache
 {
-    /// <summary>Tracks whether the wrapper has already been disposed. Transition is
-    /// monotonic 0→1; the dispose gate uses <see cref="Interlocked.CompareExchange(ref int, int, int)"/>.</summary>
+    /// <summary>Tracks whether the wrapper has already been disposed. Transition is monotonic 0→1; the dispose gate uses <see cref="Interlocked.CompareExchange(ref int, int, int)"/>.</summary>
     private int _disposed;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SecureBlobCacheWrapper"/> class
-    /// that wraps the specified <paramref name="inner"/> blob cache as a secure cache.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="SecureBlobCacheWrapper"/> class that wraps the specified <paramref name="inner"/> blob cache as a secure cache.</summary>
     /// <param name="inner">The underlying blob cache to delegate all operations to.</param>
     internal SecureBlobCacheWrapper(IBlobCache inner)
     {
@@ -48,19 +40,35 @@ internal sealed class SecureBlobCacheWrapper : ISecureBlobCache, IWrappedBlobCac
     public ISerializer Serializer => InnerCache.Serializer ?? throw new InvalidOperationException("The inner cache's Serializer is null.");
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) =>
+    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+        Insert(keyValuePairs, (DateTimeOffset?)null);
+
+    /// <inheritdoc/>
+    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(keyValuePairs, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+    public IObservable<Unit> Insert(string key, byte[] data) =>
+        Insert(key, data, (DateTimeOffset?)null);
+
+    /// <inheritdoc/>
+    public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(key, data, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) =>
+    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+        Insert(keyValuePairs, type, (DateTimeOffset?)null);
+
+    /// <inheritdoc/>
+    public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(keyValuePairs, type, absoluteExpiration);
 
     /// <inheritdoc/>
-    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
+    public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+        Insert(key, data, type, (DateTimeOffset?)null);
+
+    /// <inheritdoc/>
+    public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
         InnerCache.Insert(key, data, type, absoluteExpiration);
 
     /// <inheritdoc/>
@@ -144,6 +152,5 @@ internal sealed class SecureBlobCacheWrapper : ISecureBlobCache, IWrappedBlobCac
         }
 
         ((IDisposable)InnerCache).Dispose();
-        GC.SuppressFinalize(this);
     }
 }

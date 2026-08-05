@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
-using Akavache.Helpers;
 
 namespace Akavache.Settings.Core;
 
@@ -58,11 +57,7 @@ internal sealed class SettingsValueSubject<T> : IObservable<T>, IDisposable
     /// monitor-on-<see cref="object"/>; on older TFMs it degrades to the conventional
     /// reference-object lock.
     /// </summary>
-#if NET9_0_OR_GREATER
-    private readonly System.Threading.Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
+    private readonly Lock _gate = new();
 
     /// <summary>
     /// The latest value. Guarded by <see cref="_gate"/> for writes; reads via
@@ -87,49 +82,12 @@ internal sealed class SettingsValueSubject<T> : IObservable<T>, IDisposable
     /// </summary>
     private bool _completed;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsValueSubject{T}"/> class
-    /// seeded with <paramref name="initialValue"/>. The first <see cref="Subscribe"/>
-    /// call sees this value.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="SettingsValueSubject{T}"/> class seeded with the value the first <see cref="Subscribe"/> call sees.</summary>
     /// <param name="initialValue">The value to publish to subscribers before any <see cref="OnNext"/> call.</param>
     public SettingsValueSubject(T initialValue) => _current = initialValue;
 
-    /// <summary>
-    /// Gets the latest value. Synchronous, non-blocking, non-allocating. Updated
-    /// immediately inside <see cref="OnNext"/> before the broadcast loop.
-    /// </summary>
-    public T Value => _current;
-
-    /// <summary>
-    /// Replaces the current value and broadcasts it to every live subscriber. Called
-    /// from the producer thread (typically the owning <see cref="SettingsStream{T}.Set"/>
-    /// or the cold-load completion path). No-op once the subject has been disposed.
-    /// </summary>
-    /// <param name="value">The new value to publish.</param>
-    public void OnNext(T value)
-    {
-        IObserver<T>[] snapshot;
-        lock (_gate)
-        {
-            if (_completed)
-            {
-                return;
-            }
-
-            _current = value;
-            snapshot = _observers;
-        }
-
-        // Broadcast outside the lock so a slow observer can't stall other writers.
-        // `snapshot` is a local reference to the pre-mutation array; a concurrent
-        // subscribe/unsubscribe will allocate a brand-new array and never touch this
-        // one, so iterating without the lock is safe.
-        foreach (var observer in snapshot)
-        {
-            observer.OnNext(value);
-        }
-    }
+    /// <summary>Gets the latest value. Synchronous, non-blocking, non-allocating. Updated immediately inside <see cref="OnNext"/> before the broadcast loop.</summary>
+    internal T Value => _current;
 
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<T> observer)
@@ -187,6 +145,36 @@ internal sealed class SettingsValueSubject<T> : IObservable<T>, IDisposable
         foreach (var observer in snapshot)
         {
             observer.OnCompleted();
+        }
+    }
+
+    /// <summary>
+    /// Replaces the current value and broadcasts it to every live subscriber. Called
+    /// from the producer thread (typically the owning <see cref="SettingsStream{T}.Set"/>
+    /// or the cold-load completion path). No-op once the subject has been disposed.
+    /// </summary>
+    /// <param name="value">The new value to publish.</param>
+    internal void OnNext(T value)
+    {
+        IObserver<T>[] snapshot;
+        lock (_gate)
+        {
+            if (_completed)
+            {
+                return;
+            }
+
+            _current = value;
+            snapshot = _observers;
+        }
+
+        // Broadcast outside the lock so a slow observer can't stall other writers.
+        // `snapshot` is a local reference to the pre-mutation array; a concurrent
+        // subscribe/unsubscribe will allocate a brand-new array and never touch this
+        // one, so iterating without the lock is safe.
+        foreach (var observer in snapshot)
+        {
+            observer.OnNext(value);
         }
     }
 

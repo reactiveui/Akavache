@@ -7,24 +7,21 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper.
-/// </summary>
+/// <summary>Tests for Akavache.Sqlite3.AkavacheBuilderExtensions.SecureBlobCacheWrapper.</summary>
 [Category("Akavache")]
 public class Sqlite3SecureBlobCacheWrapperTests
 {
-    /// <summary>
-    /// Tests constructor throws on null inner cache.
-    /// </summary>
+    /// <summary>How many keys the batch tests write, and therefore how many the batch reads must return.</summary>
+    private const int BatchedKeyCount = 2;
+
+    /// <summary>Tests constructor throws on null inner cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldThrowOnNullInner() =>
         await Assert.That(static () => new SecureBlobCacheWrapper(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests Insert and Get round-trip.
-    /// </summary>
+    /// <summary>Tests Insert and Get round-trip.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertAndGet()
@@ -32,10 +29,11 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Insert("k", [1, 2, 3]).SubscribeAndComplete();
+            byte[] payload = [1, 2, 3];
+            wrapper.Insert("k", payload).SubscribeAndComplete();
             var data = wrapper.Get("k").SubscribeGetValue();
             await Assert.That(data).IsNotNull();
-            await Assert.That(data!.Length).IsEqualTo(3);
+            await Assert.That(data!.Length).IsEqualTo(payload.Length);
         }
         finally
         {
@@ -43,9 +41,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert and Get for multiple keys.
-    /// </summary>
+    /// <summary>Tests Insert and Get for multiple keys.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertAndGetMultiple()
@@ -53,10 +49,12 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
             KeyValuePair<string, byte[]>[] pairs =
             [
-                new("k1", [1]),
-                new("k2", [2])
+                new("k1", firstPayload),
+                new("k2", secondPayload)
             ];
             wrapper.Insert(pairs).SubscribeAndComplete();
 
@@ -65,7 +63,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
             await Assert.That(keys).Contains("k2");
 
             var results = wrapper.Get(["k1", "k2"]).ToList().SubscribeGetValue();
-            await Assert.That(results!.Count).IsEqualTo(2);
+            await Assert.That(results!.Count).IsEqualTo(BatchedKeyCount);
         }
         finally
         {
@@ -73,9 +71,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert with type and Get with type.
-    /// </summary>
+    /// <summary>Tests Insert with type and Get with type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertAndGetWithType()
@@ -93,9 +89,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert multiple with type.
-    /// </summary>
+    /// <summary>Tests Insert multiple with type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertMultipleWithType()
@@ -103,21 +97,23 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
             KeyValuePair<string, byte[]>[] pairs =
             [
-                new("k1", [1]),
-                new("k2", [2])
+                new("k1", firstPayload),
+                new("k2", secondPayload)
             ];
             wrapper.Insert(pairs, typeof(string)).SubscribeAndComplete();
 
             var results = wrapper.Get(["k1", "k2"], typeof(string)).ToList().SubscribeGetValue();
-            await Assert.That(results!.Count).IsEqualTo(2);
+            await Assert.That(results!.Count).IsEqualTo(BatchedKeyCount);
 
             var keys = wrapper.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
-            await Assert.That(keys!.Count).IsEqualTo(2);
+            await Assert.That(keys!.Count).IsEqualTo(BatchedKeyCount);
 
             var all = wrapper.GetAll(typeof(string)).ToList().SubscribeGetValue();
-            await Assert.That(all!.Count).IsEqualTo(2);
+            await Assert.That(all!.Count).IsEqualTo(BatchedKeyCount);
         }
         finally
         {
@@ -125,9 +121,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests GetCreatedAt operations.
-    /// </summary>
+    /// <summary>Tests GetCreatedAt operations.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldGetCreatedAt()
@@ -135,16 +129,19 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Insert("k1", [1]).SubscribeAndComplete();
-            wrapper.Insert("k2", [2]).SubscribeAndComplete();
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
+            byte[] thirdPayload = [3];
+            wrapper.Insert("k1", firstPayload).SubscribeAndComplete();
+            wrapper.Insert("k2", secondPayload).SubscribeAndComplete();
 
             var single = wrapper.GetCreatedAt("k1").SubscribeGetValue();
             await Assert.That(single).IsNotNull();
 
             var multi = wrapper.GetCreatedAt(["k1", "k2"]).ToList().SubscribeGetValue();
-            await Assert.That(multi!.Count).IsEqualTo(2);
+            await Assert.That(multi!.Count).IsEqualTo(BatchedKeyCount);
 
-            wrapper.Insert("k3", [3], typeof(int)).SubscribeAndComplete();
+            wrapper.Insert("k3", thirdPayload, typeof(int)).SubscribeAndComplete();
             var typed = wrapper.GetCreatedAt("k3", typeof(int)).SubscribeGetValue();
             await Assert.That(typed).IsNotNull();
 
@@ -157,9 +154,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Invalidate operations.
-    /// </summary>
+    /// <summary>Tests Invalidate operations.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInvalidate()
@@ -167,10 +162,14 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Insert("k1", [1]).SubscribeAndComplete();
-            wrapper.Insert("k2", [2]).SubscribeAndComplete();
-            wrapper.Insert("k3", [3], typeof(string)).SubscribeAndComplete();
-            wrapper.Insert("k4", [4], typeof(int)).SubscribeAndComplete();
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
+            byte[] thirdPayload = [3];
+            byte[] fourthPayload = [4];
+            wrapper.Insert("k1", firstPayload).SubscribeAndComplete();
+            wrapper.Insert("k2", secondPayload).SubscribeAndComplete();
+            wrapper.Insert("k3", thirdPayload, typeof(string)).SubscribeAndComplete();
+            wrapper.Insert("k4", fourthPayload, typeof(int)).SubscribeAndComplete();
 
             wrapper.Invalidate("k1").SubscribeAndComplete();
             wrapper.Invalidate("k3", typeof(string)).SubscribeAndComplete();
@@ -186,9 +185,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests InvalidateAll operations.
-    /// </summary>
+    /// <summary>Tests InvalidateAll operations.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInvalidateAll()
@@ -196,10 +193,12 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Insert("k1", [1], typeof(string)).SubscribeAndComplete();
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
+            wrapper.Insert("k1", firstPayload, typeof(string)).SubscribeAndComplete();
             wrapper.InvalidateAll(typeof(string)).SubscribeAndComplete();
 
-            wrapper.Insert("k2", [2]).SubscribeAndComplete();
+            wrapper.Insert("k2", secondPayload).SubscribeAndComplete();
             wrapper.InvalidateAll().SubscribeAndComplete();
 
             var keys = wrapper.GetAllKeys().ToList().SubscribeGetValue();
@@ -211,9 +210,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Flush operations.
-    /// </summary>
+    /// <summary>Tests Flush operations.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldFlush()
@@ -232,9 +229,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         await Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Tests Vacuum operation.
-    /// </summary>
+    /// <summary>Tests Vacuum operation.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldVacuum()
@@ -252,9 +247,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         await Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Tests UpdateExpiration operations.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration operations.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldUpdateExpiration()
@@ -262,10 +255,12 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Insert("k1", [1]).SubscribeAndComplete();
-            wrapper.Insert("k2", [2], typeof(string)).SubscribeAndComplete();
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
+            wrapper.Insert("k1", firstPayload).SubscribeAndComplete();
+            wrapper.Insert("k2", secondPayload, typeof(string)).SubscribeAndComplete();
 
-            var future = DateTimeOffset.Now.AddHours(1);
+            var future = TimeProvider.System.GetLocalNow().AddHours(1);
             wrapper.UpdateExpiration("k1", future).SubscribeAndComplete();
             wrapper.UpdateExpiration("k2", typeof(string), future).SubscribeAndComplete();
             wrapper.UpdateExpiration(["k1"], future).SubscribeAndComplete();
@@ -279,9 +274,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         await Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Tests Scheduler, Serializer, ForcedDateTimeKind, and InnerCache properties.
-    /// </summary>
+    /// <summary>Tests Scheduler, Serializer, ForcedDateTimeKind, and InnerCache properties.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldExposeProperties()
@@ -303,9 +296,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests sync Dispose does not throw.
-    /// </summary>
+    /// <summary>Tests sync Dispose does not throw.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldDispose()
@@ -314,9 +305,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         await Assert.That(() => wrapper.Dispose()).ThrowsNothing();
     }
 
-    /// <summary>
-    /// Tests SecureBlobCacheWrapper.Serializer throws when inner cache serializer is null.
-    /// </summary>
+    /// <summary>Tests SecureBlobCacheWrapper.Serializer throws when inner cache serializer is null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializerShouldThrowWhenInnerSerializerIsNull()
@@ -328,9 +317,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests SecureBlobCacheWrapper.Dispose disposes the inner cache.
-    /// </summary>
+    /// <summary>Tests SecureBlobCacheWrapper.Dispose disposes the inner cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DisposeShouldDisposeInner()
@@ -342,9 +329,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         await Assert.That(wrapper).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests SecureBlobCacheWrapper double Dispose is idempotent.
-    /// </summary>
+    /// <summary>Tests SecureBlobCacheWrapper double Dispose is idempotent.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DoubleDisposeShouldNotThrow()
@@ -358,18 +343,17 @@ public class Sqlite3SecureBlobCacheWrapperTests
         wrapper.Dispose();
     }
 
-    /// <summary>
-    /// Creates a fresh <see cref="SecureBlobCacheWrapper"/> over an in-memory backing cache.
-    /// </summary>
+    /// <summary>Creates a fresh <see cref="SecureBlobCacheWrapper"/> over an in-memory backing cache.</summary>
     /// <returns>A new wrapper instance.</returns>
     private static SecureBlobCacheWrapper CreateWrapper() =>
         new(new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer()));
 
-    /// <summary>
-    /// Fake IBlobCache with null Serializer to test the null guard in SecureBlobCacheWrapper.
-    /// </summary>
+    /// <summary>Fake IBlobCache with null Serializer to test the null guard in SecureBlobCacheWrapper.</summary>
     private sealed class FakeNullSerializerBlobCache : IBlobCache
     {
+        /// <summary>Shared already-completed result: every mutating member of this fake does nothing.</summary>
+        private static readonly IObservable<Unit> NoOpResult = Observable.Return(Unit.Default);
+
         /// <inheritdoc/>
         public DateTimeKind? ForcedDateTimeKind { get; set; }
 
@@ -380,16 +364,32 @@ public class Sqlite3SecureBlobCacheWrapperTests
         public ISerializer Serializer => null!;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration = null) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+            Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration = null) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Insert(string key, byte[] data) =>
+            Insert(key, data, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) => NoOpResult;
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+            Insert(keyValuePairs, type, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+            Insert(key, data, type, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
         public IObservable<byte[]?> Get(string key) => Observable.Return<byte[]?>(null);
@@ -413,55 +413,55 @@ public class Sqlite3SecureBlobCacheWrapperTests
         public IObservable<string> GetAllKeys(Type type) => Observable.Empty<string>();
 
         /// <inheritdoc/>
-        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => Observable.Empty<(string, DateTimeOffset?)>();
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) => Observable.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
         public IObservable<DateTimeOffset?> GetCreatedAt(string key) => Observable.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
-        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => Observable.Empty<(string, DateTimeOffset?)>();
+        public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) => Observable.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
         public IObservable<DateTimeOffset?> GetCreatedAt(string key, Type type) => Observable.Return<DateTimeOffset?>(null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => Observable.Return(Unit.Default);
+        public IObservable<Unit> Flush() => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Flush(Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Invalidate(string key) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(string key, Type type) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Invalidate(string key, Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll(Type type) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Invalidate(IEnumerable<string> keys, Type type) => Observable.Return(Unit.Default);
+        public IObservable<Unit> InvalidateAll() => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> InvalidateAll() => Observable.Return(Unit.Default);
+        public IObservable<Unit> InvalidateAll(Type type) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => Observable.Return(Unit.Default);
+        public IObservable<Unit> Vacuum() => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+        public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+        public IObservable<Unit> UpdateExpiration(string key, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
-        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+        public IObservable<Unit> UpdateExpiration(IEnumerable<string> keys, Type type, DateTimeOffset? absoluteExpiration) => NoOpResult;
 
         /// <inheritdoc/>
         public void Dispose()

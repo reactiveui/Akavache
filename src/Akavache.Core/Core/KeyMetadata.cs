@@ -14,14 +14,14 @@ namespace Akavache.Core;
 /// <typeparam name="T">The value type whose reflection strings are being cached.</typeparam>
 internal static class KeyMetadata<T>
 {
-    /// <summary>Cached <c>typeof(T).FullName</c> (or <c>typeof(T).Name</c> when <see cref="Type.FullName"/> is null).</summary>
-    public static readonly string FullName = KeyMetadata.BuildFullName(typeof(T));
-
     /// <summary>Cached <c>typeof(T).Name</c>.</summary>
-    public static readonly string Name = typeof(T).Name;
+    internal static readonly string Name = typeof(T).Name;
+
+    /// <summary>Cached <c>typeof(T).FullName</c> (or <c>typeof(T).Name</c> when <see cref="Type.FullName"/> is null).</summary>
+    internal static readonly string FullName = KeyMetadata.BuildFullName(typeof(T));
 
     /// <summary>Cached <c>Assembly.Name + '.' + typeof(T).Name</c>, matching the original
     /// third-form prefix built by <see cref="UniversalSerializer"/>. If the assembly name is
     /// null it collapses to just the short type name.</summary>
-    public static readonly string AssemblyQualifiedShortName = KeyMetadata.BuildAssemblyQualifiedShortName(typeof(T));
+    internal static readonly string AssemblyQualifiedShortName = KeyMetadata.BuildAssemblyQualifiedShortName(typeof(T));
 }

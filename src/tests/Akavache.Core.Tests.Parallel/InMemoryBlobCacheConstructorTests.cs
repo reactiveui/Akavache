@@ -4,9 +4,7 @@
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="InMemoryBlobCache"/> constructor branches.
-/// </summary>
+/// <summary>Tests for <see cref="InMemoryBlobCache"/> constructor branches.</summary>
 [Category("Akavache")]
 public class InMemoryBlobCacheConstructorTests
 {

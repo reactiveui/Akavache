@@ -45,10 +45,7 @@ public interface IAkavacheConnection : IDisposable
     /// <returns>A one-shot observable that signals schema creation completion.</returns>
     IObservable<Unit> CreateSchema();
 
-    /// <summary>
-    /// Checks whether a table with the specified name exists in the database. Emits
-    /// a single <see cref="bool"/>.
-    /// </summary>
+    /// <summary>Checks whether a table with the specified name exists in the database. Emits a single <see cref="bool"/>.</summary>
     /// <param name="tableName">The table name.</param>
     /// <returns>A one-shot observable that emits <see langword="true"/> when the table exists, <see langword="false"/> otherwise.</returns>
     IObservable<bool> TableExists(string tableName);
@@ -74,28 +71,19 @@ public interface IAkavacheConnection : IDisposable
     /// <returns>An observable sequence of matching entries.</returns>
     IObservable<CacheEntry> GetMany(IReadOnlyList<string> keys, string? typeFullName, DateTimeOffset now);
 
-    /// <summary>
-    /// Reads every unexpired cache entry in the store, optionally filtered by type.
-    /// Emits one item per row, then completes.
-    /// </summary>
+    /// <summary>Reads every unexpired cache entry in the store, optionally filtered by type. Emits one item per row, then completes.</summary>
     /// <param name="typeFullName">Optional type discriminator.</param>
     /// <param name="now">The wall-clock instant used to filter expired rows.</param>
     /// <returns>An observable sequence of matching entries.</returns>
     IObservable<CacheEntry> GetAll(string? typeFullName, DateTimeOffset now);
 
-    /// <summary>
-    /// Reads every unexpired cache entry key, optionally filtered by type. Emits one
-    /// item per key, then completes.
-    /// </summary>
+    /// <summary>Reads every unexpired cache entry key, optionally filtered by type. Emits one item per key, then completes.</summary>
     /// <param name="typeFullName">Optional type discriminator.</param>
     /// <param name="now">The wall-clock instant used to filter expired rows.</param>
     /// <returns>An observable sequence of matching keys.</returns>
     IObservable<string> GetAllKeys(string? typeFullName, DateTimeOffset now);
 
-    /// <summary>
-    /// Inserts or replaces a batch of cache entries within a single transaction.
-    /// Emits a single <see cref="Unit"/> on commit.
-    /// </summary>
+    /// <summary>Inserts or replaces a batch of cache entries within a single transaction. Emits a single <see cref="Unit"/> on commit.</summary>
     /// <param name="entries">The entries to upsert.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
     IObservable<Unit> Upsert(IReadOnlyList<CacheEntry> entries);
@@ -110,28 +98,19 @@ public interface IAkavacheConnection : IDisposable
     /// <returns>A one-shot observable that fires on commit.</returns>
     IObservable<Unit> Invalidate(IReadOnlyList<string> keys, string? typeFullName);
 
-    /// <summary>
-    /// Removes every row from the CacheEntry table, optionally filtered by type.
-    /// Emits a single <see cref="Unit"/> on commit.
-    /// </summary>
+    /// <summary>Removes every row from the CacheEntry table, optionally filtered by type. Emits a single <see cref="Unit"/> on commit.</summary>
     /// <param name="typeFullName">Optional type discriminator. <see langword="null"/> wipes everything.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
     IObservable<Unit> InvalidateAll(string? typeFullName);
 
-    /// <summary>
-    /// Updates the expiration time of a cache entry by key, with an optional type
-    /// filter. Emits a single <see cref="Unit"/> on commit.
-    /// </summary>
+    /// <summary>Updates the expiration time of a cache entry by key, with an optional type filter. Emits a single <see cref="Unit"/> on commit.</summary>
     /// <param name="key">The cache key.</param>
     /// <param name="typeFullName">Optional type discriminator.</param>
     /// <param name="expiresAt">The new expiration instant, or <see langword="null"/> to clear.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
     IObservable<Unit> SetExpiry(string key, string? typeFullName, DateTimeOffset? expiresAt);
 
-    /// <summary>
-    /// Removes every row whose expiration is older than <paramref name="now"/>. Emits
-    /// a single <see cref="Unit"/> on commit.
-    /// </summary>
+    /// <summary>Removes every row whose expiration is older than <paramref name="now"/>. Emits a single <see cref="Unit"/> on commit.</summary>
     /// <param name="now">The wall-clock instant.</param>
     /// <returns>A one-shot observable that fires on commit.</returns>
     IObservable<Unit> VacuumExpired(DateTimeOffset now);
@@ -144,10 +123,7 @@ public interface IAkavacheConnection : IDisposable
     /// <returns>A one-shot observable that fires when the checkpoint finishes.</returns>
     IObservable<Unit> Checkpoint(CheckpointMode mode);
 
-    /// <summary>
-    /// Requests that the backend reclaim unused storage. On SQLite this maps to
-    /// <c>VACUUM</c>. Emits a single <see cref="Unit"/> on completion.
-    /// </summary>
+    /// <summary>Requests that the backend reclaim unused storage. On SQLite this maps to <c>VACUUM</c>. Emits a single <see cref="Unit"/> on completion.</summary>
     /// <returns>A one-shot observable that fires when compaction finishes.</returns>
     IObservable<Unit> Compact();
 

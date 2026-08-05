@@ -18,33 +18,27 @@ namespace Akavache.NewtonsoftJson;
 /// <param name="forceDateTimeKind">If we should override the <see cref="DateTimeKind"/>.</param>
 internal class NewtonsoftDateTimeContractResolver(IContractResolver? contractResolver, DateTimeKind? forceDateTimeKind) : DefaultContractResolver
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="NewtonsoftDateTimeContractResolver"/> class.</summary>
     public NewtonsoftDateTimeContractResolver()
         : this(null, null)
     {
     }
 
-    /// <summary>
-    /// Gets or sets an existing contract resolver to delegate to before applying the DateTime overrides.
-    /// </summary>
-    public IContractResolver? ExistingContractResolver { get; set; } = contractResolver;
+    /// <summary>Gets or sets an existing contract resolver to delegate to before applying the DateTime overrides.</summary>
+    internal IContractResolver? ExistingContractResolver { get; set; } = contractResolver;
 
-    /// <summary>
-    /// Gets or sets the <see cref="DateTimeKind"/> that resolved DateTime values should be forced to, if any.
-    /// </summary>
-    public DateTimeKind? ForceDateTimeKind { get; set; } = forceDateTimeKind;
+    /// <summary>Gets or sets the <see cref="DateTimeKind"/> that resolved DateTime values should be forced to, if any.</summary>
+    internal DateTimeKind? ForceDateTimeKind { get; set; } = forceDateTimeKind;
 
     /// <inheritdoc />
     public override JsonContract ResolveContract(Type type)
     {
         // Check if we have an existing contract resolver and it's not another instance of this class
         // to prevent infinite recursion
-        var contract = ExistingContractResolver is not null &&
-                       ExistingContractResolver.GetType() != typeof(NewtonsoftDateTimeContractResolver)
-                       ? ExistingContractResolver.ResolveContract(type)
-                       : null;
+        var contract = ExistingContractResolver is not null
+                       && ExistingContractResolver.GetType() != typeof(NewtonsoftDateTimeContractResolver)
+            ? ExistingContractResolver.ResolveContract(type)
+            : null;
 
         if (contract?.Converter is not null)
         {

@@ -15,9 +15,7 @@ namespace Akavache.Integration.Tests;
 [Category("Akavache")]
 public class AkavacheBuilderTests
 {
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithApplicationName"/> ignores null and whitespace values.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithApplicationName"/> ignores null and whitespace values.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithApplicationNameShouldIgnoreNullOrWhitespace()
@@ -25,19 +23,17 @@ public class AkavacheBuilderTests
         AkavacheBuilder builder = new();
         var originalName = builder.ApplicationName;
 
-        builder.WithApplicationName(null);
+        _ = builder.WithApplicationName(null);
         await Assert.That(builder.ApplicationName).IsEqualTo(originalName);
 
-        builder.WithApplicationName(string.Empty);
+        _ = builder.WithApplicationName(string.Empty);
         await Assert.That(builder.ApplicationName).IsEqualTo(originalName);
 
-        builder.WithApplicationName("   ");
+        _ = builder.WithApplicationName("   ");
         await Assert.That(builder.ApplicationName).IsEqualTo(originalName);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithApplicationName"/> sets a valid name and returns the builder.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithApplicationName"/> sets a valid name and returns the builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithApplicationNameShouldSetName()
@@ -50,9 +46,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.ApplicationName).IsEqualTo("MyTestApp_Builder");
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithInMemory"/> throws <see cref="ArgumentNullException"/> when passed null.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithInMemory"/> throws <see cref="ArgumentNullException"/> when passed null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryShouldThrowOnNull()
@@ -61,9 +55,7 @@ public class AkavacheBuilderTests
         await Assert.That(() => builder.WithInMemory(null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithLocalMachine"/> throws <see cref="ArgumentNullException"/> when passed null.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithLocalMachine"/> throws <see cref="ArgumentNullException"/> when passed null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithLocalMachineShouldThrowOnNull()
@@ -72,9 +64,7 @@ public class AkavacheBuilderTests
         await Assert.That(() => builder.WithLocalMachine(null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithSecure"/> throws <see cref="ArgumentNullException"/> when passed null.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithSecure"/> throws <see cref="ArgumentNullException"/> when passed null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSecureShouldThrowOnNull()
@@ -83,9 +73,7 @@ public class AkavacheBuilderTests
         await Assert.That(() => builder.WithSecure(null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithUserAccount"/> throws <see cref="ArgumentNullException"/> when passed null.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithUserAccount"/> throws <see cref="ArgumentNullException"/> when passed null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithUserAccountShouldThrowOnNull()
@@ -94,15 +82,13 @@ public class AkavacheBuilderTests
         await Assert.That(() => builder.WithUserAccount(null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithLocalMachine"/> assigns the provided cache and returns the builder.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithLocalMachine"/> assigns the provided cache and returns the builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithLocalMachineShouldAssignCache()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
         InMemoryBlobCache cache = new(builder.Serializer!);
 
         var result = builder.WithLocalMachine(cache);
@@ -111,15 +97,13 @@ public class AkavacheBuilderTests
         await Assert.That(builder.LocalMachine).IsSameReferenceAs(cache);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithUserAccount"/> assigns the provided cache and returns the builder.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithUserAccount"/> assigns the provided cache and returns the builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithUserAccountShouldAssignCache()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
         InMemoryBlobCache cache = new(builder.Serializer!);
 
         var result = builder.WithUserAccount(cache);
@@ -128,15 +112,13 @@ public class AkavacheBuilderTests
         await Assert.That(builder.UserAccount).IsSameReferenceAs(cache);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithInMemory"/> assigns the provided cache and returns the builder.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithInMemory"/> assigns the provided cache and returns the builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryShouldAssignCache()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
         InMemoryBlobCache cache = new(builder.Serializer!);
 
         var result = builder.WithInMemory(cache);
@@ -145,9 +127,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.InMemory).IsSameReferenceAs(cache);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithSerializer{T}(Func{T})"/> uses the supplied factory.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithSerializer{T}(Func{T})"/> uses the supplied factory.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerFactoryShouldRegisterSerializer()
@@ -161,9 +141,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.Serializer).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithSerializer{T}()"/> default overload registers the serializer.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithSerializer{T}()"/> default overload registers the serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSerializerDefaultShouldRegisterSerializer()
@@ -176,9 +154,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.Serializer).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.UseForcedDateTimeKind"/> sets the kind and returns the builder.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.UseForcedDateTimeKind"/> sets the kind and returns the builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseForcedDateTimeKindShouldSetValue()
@@ -191,9 +167,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithLegacyFileLocation"/> switches to <see cref="FileLocationOption.Legacy"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithLegacyFileLocation"/> switches to <see cref="FileLocationOption.Legacy"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithLegacyFileLocationShouldChangeFileLocationOption()
@@ -206,9 +180,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.FileLocationOption).IsEqualTo(FileLocationOption.Legacy);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.Build"/> throws when no serializer has been registered.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.Build"/> throws when no serializer has been registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BuildShouldThrowWhenNoSerializerRegistered()
@@ -216,21 +188,19 @@ public class AkavacheBuilderTests
         AkavacheBuilder builder = new()
         {
             // Force a unique serializer type name so that the lookup returns null (no registration).
-            SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N")
+            SerializerTypeName = $"NonExistentSerializer_{Guid.NewGuid():N}"
         };
 
         await Assert.That(() => builder.Build()).Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.Build"/> returns the builder instance itself (which implements IAkavacheInstance).
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.Build"/> returns the builder instance itself (which implements IAkavacheInstance).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BuildShouldReturnInstanceWhenSerializerRegistered()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
 
         var instance = builder.Build();
 
@@ -238,30 +208,23 @@ public class AkavacheBuilderTests
         await Assert.That(instance).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithInMemoryDefaults"/> throws when no serializer is registered.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithInMemoryDefaults"/> throws when no serializer is registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryDefaultsShouldThrowWhenNoSerializer()
     {
-        AkavacheBuilder builder = new()
-        {
-            SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N"),
-        };
+        AkavacheBuilder builder = new() { SerializerTypeName = $"NonExistentSerializer_{Guid.NewGuid():N}", };
 
         await Assert.That(() => builder.WithInMemoryDefaults()).Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithInMemoryDefaults"/> populates all four blob cache slots.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithInMemoryDefaults"/> populates all four blob cache slots.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryDefaultsShouldPopulateAllCaches()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
 
         var result = builder.WithInMemoryDefaults();
 
@@ -272,26 +235,22 @@ public class AkavacheBuilderTests
         await Assert.That(builder.Secure).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.WithInMemoryDefaults"/> does not overwrite already-assigned caches.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.WithInMemoryDefaults"/> does not overwrite already-assigned caches.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryDefaultsShouldNotOverwriteExistingCaches()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
         InMemoryBlobCache existing = new(builder.Serializer!);
-        builder.WithLocalMachine(existing);
+        _ = builder.WithLocalMachine(existing);
 
-        builder.WithInMemoryDefaults();
+        _ = builder.WithInMemoryDefaults();
 
         await Assert.That(builder.LocalMachine).IsSameReferenceAs(existing);
     }
 
-    /// <summary>
-    /// Tests the <see cref="AkavacheBuilder(FileLocationOption)"/> constructor with the Legacy option.
-    /// </summary>
+    /// <summary>Tests the <see cref="AkavacheBuilder(FileLocationOption)"/> constructor with the Legacy option.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ConstructorShouldRespectFileLocationOption()
@@ -301,10 +260,7 @@ public class AkavacheBuilderTests
         await Assert.That(builder.FileLocationOption).IsEqualTo(FileLocationOption.Legacy);
     }
 
-    /// <summary>
-    /// Tests that the per-instance <see cref="IAkavacheInstance.BlobCaches"/> dictionary
-    /// is exposed on every built instance and starts empty.
-    /// </summary>
+    /// <summary>Tests that the per-instance <see cref="IAkavacheInstance.BlobCaches"/> dictionary is exposed on every built instance and starts empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BlobCachesInstanceDictionaryShouldBeReadable()
@@ -316,10 +272,7 @@ public class AkavacheBuilderTests
         await Assert.That(instance.BlobCaches.Count).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// Tests that the per-instance <see cref="IAkavacheInstance.SettingsStores"/>
-    /// dictionary is exposed on every built instance and starts empty.
-    /// </summary>
+    /// <summary>Tests that the per-instance <see cref="IAkavacheInstance.SettingsStores"/> dictionary is exposed on every built instance and starts empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SettingsStoresInstanceDictionaryShouldBeReadable()
@@ -331,62 +284,48 @@ public class AkavacheBuilderTests
         await Assert.That(instance.SettingsStores.Count).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// Tests that the <see cref="AkavacheBuilder.SettingsCachePath"/> setter assigns a custom path.
-    /// </summary>
+    /// <summary>Tests that the <see cref="AkavacheBuilder.SettingsCachePath"/> setter assigns a custom path.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SettingsCachePathSetterShouldAssignValue()
     {
-        AkavacheBuilder builder = new()
-        {
-            SettingsCachePath = "/tmp/custom_settings_path",
-        };
+        AkavacheBuilder builder = new() { SettingsCachePath = "/tmp/custom_settings_path", };
 
         await Assert.That(builder.SettingsCachePath).IsEqualTo("/tmp/custom_settings_path");
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.CreateInMemoryCache"/> throws when no serializer has been registered.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.CreateInMemoryCache"/> throws when no serializer has been registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateInMemoryCacheShouldThrowWhenNoSerializer()
     {
-        AkavacheBuilder builder = new()
-        {
-            SerializerTypeName = "NonExistentSerializer_" + Guid.NewGuid().ToString("N"),
-        };
+        AkavacheBuilder builder = new() { SerializerTypeName = $"NonExistentSerializer_{Guid.NewGuid():N}", };
 
         await Assert.That(() => builder.CreateInMemoryCache()).Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.CreateInMemoryCache"/> applies the forced DateTimeKind to the created cache.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.CreateInMemoryCache"/> applies the forced DateTimeKind to the created cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateInMemoryCacheShouldApplyForcedDateTimeKind()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        builder.UseForcedDateTimeKind(DateTimeKind.Utc);
+        _ = builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.UseForcedDateTimeKind(DateTimeKind.Utc);
 
         var cache = builder.CreateInMemoryCache();
 
         await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.ApplyForcedDateTimeKind"/> assigns the value when set.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.ApplyForcedDateTimeKind"/> assigns the value when set.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ApplyForcedDateTimeKindShouldAssignWhenSet()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        builder.UseForcedDateTimeKind(DateTimeKind.Local);
+        _ = builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.UseForcedDateTimeKind(DateTimeKind.Local);
         InMemoryBlobCache cache = new(builder.Serializer!);
 
         builder.ApplyForcedDateTimeKind(cache);
@@ -394,35 +333,28 @@ public class AkavacheBuilderTests
         await Assert.That(cache.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests that <see cref="AkavacheBuilder.ApplyForcedDateTimeKind"/> leaves the cache unchanged when not set.
-    /// </summary>
+    /// <summary>Tests that <see cref="AkavacheBuilder.ApplyForcedDateTimeKind"/> leaves the cache unchanged when not set.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ApplyForcedDateTimeKindShouldNotAssignWhenUnset()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        InMemoryBlobCache cache = new(builder.Serializer!)
-        {
-            ForcedDateTimeKind = null,
-        };
+        _ = builder.WithSerializer<SystemJsonSerializer>();
+        InMemoryBlobCache cache = new(builder.Serializer!) { ForcedDateTimeKind = null, };
 
         builder.ApplyForcedDateTimeKind(cache);
 
         await Assert.That(cache.ForcedDateTimeKind).IsNull();
     }
 
-    /// <summary>
-    /// Tests that the SecureBlobCacheWrapper forwards <c>Vacuum</c> calls to the wrapped inner cache.
-    /// </summary>
+    /// <summary>Tests that the SecureBlobCacheWrapper forwards <c>Vacuum</c> calls to the wrapped inner cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SecureBlobCacheWrapperShouldForwardVacuum()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        builder.WithInMemoryDefaults();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithInMemoryDefaults();
 
         var secure = builder.Secure!;
 
@@ -430,32 +362,28 @@ public class AkavacheBuilderTests
         await secure.Vacuum();
     }
 
-    /// <summary>
-    /// Tests that disposing the SecureBlobCacheWrapper via <see cref="IDisposable.Dispose"/> succeeds.
-    /// </summary>
+    /// <summary>Tests that disposing the SecureBlobCacheWrapper via <see cref="IDisposable.Dispose"/> succeeds.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SecureBlobCacheWrapperShouldSupportDispose()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        builder.WithInMemoryDefaults();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithInMemoryDefaults();
 
         var secure = builder.Secure!;
 
         secure.Dispose();
     }
 
-    /// <summary>
-    /// Tests that disposing the SecureBlobCacheWrapper via synchronous <see cref="IDisposable.Dispose"/> succeeds.
-    /// </summary>
+    /// <summary>Tests that disposing the SecureBlobCacheWrapper via synchronous <see cref="IDisposable.Dispose"/> succeeds.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SecureBlobCacheWrapperShouldSupportSyncDispose()
     {
         AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        builder.WithInMemoryDefaults();
+        _ = builder.WithSerializer<SystemJsonSerializer>();
+        _ = builder.WithInMemoryDefaults();
 
         var secure = builder.Secure!;
         secure.Dispose();
@@ -495,7 +423,7 @@ public class AkavacheBuilderTests
     public async Task WithExecutingAssemblyShouldPopulateExecutingAssemblyName()
     {
         AkavacheBuilder builder = new();
-        builder.WithExecutingAssembly(typeof(AkavacheBuilderTests).Assembly);
+        _ = builder.WithExecutingAssembly(typeof(AkavacheBuilderTests).Assembly);
 
 #pragma warning disable CS0618 // Type or member is obsolete
         await Assert.That(builder.ExecutingAssemblyName).IsNotNull();
@@ -551,10 +479,7 @@ public class AkavacheBuilderTests
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 
-    /// <summary>
-    /// Tests <see cref="AkavacheBuilder.WithExecutingAssembly"/> overrides the sentinel
-    /// and populates both the name and version from the caller-supplied assembly.
-    /// </summary>
+    /// <summary>Tests <see cref="AkavacheBuilder.WithExecutingAssembly"/> overrides the sentinel and populates both the name and version from the caller-supplied assembly.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithExecutingAssemblyShouldOverrideSentinelAndPopulateMetadata()
@@ -571,9 +496,7 @@ public class AkavacheBuilderTests
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 
-    /// <summary>
-    /// Tests <see cref="AkavacheBuilder.WithExecutingAssembly"/> throws on null.
-    /// </summary>
+    /// <summary>Tests <see cref="AkavacheBuilder.WithExecutingAssembly"/> throws on null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithExecutingAssemblyShouldThrowOnNull()
@@ -584,10 +507,7 @@ public class AkavacheBuilderTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns a non-null version
-    /// for an assembly with a parseable <see cref="AssemblyFileVersionAttribute"/>.
-    /// </summary>
+    /// <summary>Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns a non-null version for an assembly with a parseable <see cref="AssemblyFileVersionAttribute"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadFileVersionShouldReturnVersionForNormalAssembly()
@@ -597,10 +517,7 @@ public class AkavacheBuilderTests
         await Assert.That(result).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns <see langword="null"/>
-    /// when the assembly has no <see cref="AssemblyFileVersionAttribute"/>.
-    /// </summary>
+    /// <summary>Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns <see langword="null"/> when the assembly has no <see cref="AssemblyFileVersionAttribute"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadFileVersionShouldReturnNullWhenAttributeMissing()
@@ -612,10 +529,7 @@ public class AkavacheBuilderTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns <see langword="null"/>
-    /// when the attribute value cannot be parsed as a <see cref="Version"/>.
-    /// </summary>
+    /// <summary>Tests <see cref="AkavacheBuilder.ReadFileVersion"/> returns <see langword="null"/> when the attribute value cannot be parsed as a <see cref="Version"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadFileVersionShouldReturnNullWhenValueUnparseable()
@@ -628,30 +542,20 @@ public class AkavacheBuilderTests
     }
 
     /// <summary>
-    /// Tests that disposing the secure cache wrapper via <see cref="IDisposable.Dispose"/>
-    /// calls the inner cache's dispose when the inner supports it.
+    /// Tests that disposing the secure cache wrapper via <see cref="IDisposable.Dispose"/> calls the
+    /// inner cache's dispose when the inner supports it. The wrapper built by
+    /// <see cref="AkavacheBuilder.WithInMemoryDefaults"/> always wraps an
+    /// <see cref="InMemoryBlobCache"/>, which implements <see cref="IDisposable"/>, so the
+    /// IDisposable branch is exactly the scenario
+    /// <see cref="SecureBlobCacheWrapperShouldSupportSyncDispose"/> sets up — this test names that
+    /// branch and defers to it rather than duplicating the arrangement.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task SecureBlobCacheWrapperDisposeShouldCallInnerDispose()
-    {
-        AkavacheBuilder builder = new();
-        builder.WithSerializer<SystemJsonSerializer>();
-        builder.WithInMemoryDefaults();
+    public Task SecureBlobCacheWrapperDisposeShouldCallInnerDispose() =>
+        SecureBlobCacheWrapperShouldSupportSyncDispose();
 
-        var secure = builder.Secure!;
-
-        // The inner InMemoryBlobCache implements IDisposable, so this exercises
-        // the IDisposable branch of Dispose.
-        secure.Dispose();
-
-        // Reaching here without exception confirms the dispose path completed.
-        await Assert.That(secure).IsNotNull();
-    }
-
-    /// <summary>
-    /// Stub <see cref="System.Reflection.Assembly"/> that reports no custom attributes, used to exercise the "missing attribute" branch.
-    /// </summary>
+    /// <summary>Stub <see cref="System.Reflection.Assembly"/> that reports no custom attributes, used to exercise the "missing attribute" branch.</summary>
     private sealed class NoFileVersionAttributeStubAssembly : Assembly
     {
         /// <summary>
@@ -666,15 +570,20 @@ public class AkavacheBuilderTests
         public override string? FullName => "AkavacheBuilderTests.NoFileVersion";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _empty;
+        /// <remarks>
+        /// The return type is narrowed from the base <c>object[]</c> to <c>Attribute[]</c> so the
+        /// array never widens to an <c>object[]</c> reference — a widened array turns every element
+        /// store into a runtime-checked one, and the caller casts straight back to
+        /// <c>Attribute[]</c> anyway.
+        /// </remarks>
+        public override Attribute[] GetCustomAttributes(Type attributeType, bool inherit) => _empty;
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => _empty;
+        /// <remarks>Narrows the base <c>object[]</c> return type for the same reason as the other overload.</remarks>
+        public override Attribute[] GetCustomAttributes(bool inherit) => _empty;
     }
 
-    /// <summary>
-    /// Stub <see cref="System.Reflection.Assembly"/> whose <see cref="AssemblyFileVersionAttribute"/> value cannot be parsed as a <see cref="Version"/>.
-    /// </summary>
+    /// <summary>Stub <see cref="System.Reflection.Assembly"/> whose <see cref="AssemblyFileVersionAttribute"/> value cannot be parsed as a <see cref="Version"/>.</summary>
     private sealed class UnparseableFileVersionStubAssembly : Assembly
     {
         /// <summary>
@@ -687,10 +596,17 @@ public class AkavacheBuilderTests
         public override string? FullName => "AkavacheBuilderTests.Unparseable";
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) =>
+        /// <remarks>
+        /// The return type is narrowed from the base <c>object[]</c> to <c>Attribute[]</c> so the
+        /// array never widens to an <c>object[]</c> reference — a widened array turns every element
+        /// store into a runtime-checked one, and the caller casts straight back to
+        /// <c>Attribute[]</c> anyway.
+        /// </remarks>
+        public override Attribute[] GetCustomAttributes(Type attributeType, bool inherit) =>
             attributeType == typeof(AssemblyFileVersionAttribute) ? _attrs : [];
 
         /// <inheritdoc/>
-        public override object[] GetCustomAttributes(bool inherit) => _attrs;
+        /// <remarks>Narrows the base <c>object[]</c> return type for the same reason as the other overload.</remarks>
+        public override Attribute[] GetCustomAttributes(bool inherit) => _attrs;
     }
 }

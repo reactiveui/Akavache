@@ -3,22 +3,43 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Threading.Tasks;
-using System.Security.Cryptography;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 
 namespace Akavache.Benchmarks.V10;
 
-/// <summary>
-/// AkavacheV10ComprehensiveBenchmarks.
-/// </summary>
+/// <summary> Measures the full Akavache V10 object API — get-or-fetch, get-and-fetch-latest, invalidation, expiry and each of the four built-in caches — against a SQLite-backed store. </summary>
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Security",
+    "CA5394:Do not use insecure randomness",
+    Justification = "Benchmark fixture data drawn inside the measured region. A cryptographic "
+        + "generator costs enough that the benchmark would partly be measuring it, and this data "
+        + "is fixture material rather than a secret.")]
 public class AkavacheV10ComprehensiveBenchmarks
 {
+    /// <summary>Message reported when a value read back out of the cache does not match the value that was written.</summary>
+    private const string DataIntegrityFailureMessage = "Data integrity check failed";
+
+    /// <summary>Floor on the size of the pre-generated working set, so even the smallest benchmark size still cycles through varied objects.</summary>
+    private const int MinimumTestObjectCount = 1000;
+
+    /// <summary>Exclusive upper bound on the randomly generated <see cref="TestData.Value"/> of a working-set object.</summary>
+    private const int MaxTestObjectValue = 10_000;
+
+    /// <summary>Exclusive upper bound, in days, on how far in the past a working-set object's creation timestamp is placed.</summary>
+    private const int MaxTestObjectAgeDays = 365;
+
+    /// <summary>Ceiling on the number of fetch-latest round trips per iteration, which are far more expensive than a plain insert.</summary>
+    private const int MaxFetchLatestOperationCount = 100;
+
+    /// <summary>How far in the future the expiry-write benchmark sets each entry's expiry.</summary>
+    private const int EntryExpiryMinutes = 30;
+
     /// <summary>The per-benchmark temp directory created in setup and cleaned up in teardown.</summary>
     private string? _tempDirectory;
 
@@ -28,26 +49,20 @@ public class AkavacheV10ComprehensiveBenchmarks
     /// <summary>Pre-generated objects used as the benchmark's working set.</summary>
     private List<TestData>? _testObjects;
 
-    /// <summary>
-    /// Gets or sets the size of the benchmark.
-    /// </summary>
+    /// <summary> Gets or sets the size of the benchmark. </summary>
     /// <value>
     /// The size of the benchmark.
     /// </value>
     [Params(10, 100, 1000)]
     public int BenchmarkSize { get; set; }
 
-    /// <summary>
-    /// Gets or sets the bench BLOB cache.
-    /// </summary>
+    /// <summary> Gets or sets the bench BLOB cache. </summary>
     /// <value>
     /// The bench BLOB cache.
     /// </value>
     public IBlobCache? BenchBlobCache { get; set; }
 
-    /// <summary>
-    /// Globals the setup.
-    /// </summary>
+    /// <summary> Globals the setup. </summary>
     [GlobalSetup]
     public void GlobalSetup()
     {
@@ -62,41 +77,33 @@ public class AkavacheV10ComprehensiveBenchmarks
 
         // Pre-generate test objects
         _testObjects = [];
-        for (var i = 0; i < Math.Max(BenchmarkSize, 1000); i++)
+        for (var i = 0; i < Math.Max(BenchmarkSize, MinimumTestObjectCount); i++)
         {
             _testObjects.Add(new()
             {
                 Id = Guid.NewGuid(),
                 Name = $"Test Object {i}",
-                Value = RandomNumberGenerator.GetInt32(1, 10000),
-                Created = DateTimeOffset.Now.AddDays(-RandomNumberGenerator.GetInt32(0, 365))
+                Value = PerfHelper.Rng.Next(1, MaxTestObjectValue),
+                Created = TimeProvider.System.GetLocalNow().AddDays(-PerfHelper.Rng.Next(0, MaxTestObjectAgeDays))
             });
         }
     }
 
-    /// <summary>
-    /// Globals the cleanup.
-    /// </summary>
+    /// <summary> Globals the cleanup. </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [GlobalCleanup]
-    public async void GlobalCleanup()
+    public async Task GlobalCleanup()
     {
         BenchBlobCache?.Dispose();
         _directoryCleanup?.Dispose();
         await BlobCache.Shutdown();
     }
 
-    /// <summary>
-    /// Iterations the setup.
-    /// </summary>
+    /// <summary> Clears the cache before each iteration so every measured run starts from an empty database. </summary>
     [IterationSetup]
-    public void IterationSetup() =>
+    public void IterationSetup() => BenchBlobCache!.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
 
-        // Clear the cache before each iteration
-        BenchBlobCache!.InvalidateAll().FirstAsync().GetAwaiter().GetResult();
-
-    /// <summary>
-    /// Gets the or fetch object.
-    /// </summary>
+    /// <summary> Gets the or fetch object. </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("GetOrFetch")]
@@ -112,16 +119,14 @@ public class AkavacheV10ComprehensiveBenchmarks
         }
     }
 
-    /// <summary>
-    /// Gets the and fetch latest.
-    /// </summary>
+    /// <summary> Gets the and fetch latest. </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("GetAndFetch")]
     public async Task GetAndFetchLatest()
     {
         // Pre-populate some data
-        for (var i = 0; i < Math.Min(BenchmarkSize, 100); i++)
+        for (var i = 0; i < Math.Min(BenchmarkSize, MaxFetchLatestOperationCount); i++)
         {
             var key = $"get_and_fetch_{i}";
             var testData = _testObjects![i % _testObjects.Count];
@@ -129,7 +134,7 @@ public class AkavacheV10ComprehensiveBenchmarks
         }
 
         List<Task> tasks = [];
-        for (var i = 0; i < Math.Min(BenchmarkSize, 100); i++)
+        for (var i = 0; i < Math.Min(BenchmarkSize, MaxFetchLatestOperationCount); i++)
         {
             var key = $"get_and_fetch_{i}";
             var testData = _testObjects![i % _testObjects.Count];
@@ -146,9 +151,7 @@ public class AkavacheV10ComprehensiveBenchmarks
         await Task.WhenAll(tasks);
     }
 
-    /// <summary>
-    /// Invalidates the objects.
-    /// </summary>
+    /// <summary> Invalidates the objects. </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("Invalidate")]
@@ -171,15 +174,13 @@ public class AkavacheV10ComprehensiveBenchmarks
         }
     }
 
-    /// <summary>
-    /// Inserts the with expiration.
-    /// </summary>
+    /// <summary> Inserts the with expiration. </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
     [BenchmarkCategory("Expiration")]
     public async Task InsertWithExpiration()
     {
-        var expiration = DateTimeOffset.Now.AddMinutes(30);
+        var expiration = TimeProvider.System.GetLocalNow().AddMinutes(EntryExpiryMinutes);
 
         for (var i = 0; i < BenchmarkSize; i++)
         {
@@ -188,9 +189,7 @@ public class AkavacheV10ComprehensiveBenchmarks
         }
     }
 
-    /// <summary>
-    /// Users the account operations.
-    /// </summary>
+    /// <summary> Users the account operations. </summary>
     /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
@@ -210,14 +209,12 @@ public class AkavacheV10ComprehensiveBenchmarks
             // Verify data integrity
             if (retrieved!.Id != testData.Id)
             {
-                throw new InvalidOperationException("Data integrity check failed");
+                throw new InvalidOperationException(DataIntegrityFailureMessage);
             }
         }
     }
 
-    /// <summary>
-    /// Locals the machine operations.
-    /// </summary>
+    /// <summary> Locals the machine operations. </summary>
     /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
@@ -237,14 +234,12 @@ public class AkavacheV10ComprehensiveBenchmarks
             // Verify data integrity
             if (retrieved!.Id != testData.Id)
             {
-                throw new InvalidOperationException("Data integrity check failed");
+                throw new InvalidOperationException(DataIntegrityFailureMessage);
             }
         }
     }
 
-    /// <summary>
-    /// Secures the operations.
-    /// </summary>
+    /// <summary> Secures the operations. </summary>
     /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
@@ -264,14 +259,12 @@ public class AkavacheV10ComprehensiveBenchmarks
             // Verify data integrity
             if (retrieved!.Id != testData.Id)
             {
-                throw new InvalidOperationException("Data integrity check failed");
+                throw new InvalidOperationException(DataIntegrityFailureMessage);
             }
         }
     }
 
-    /// <summary>
-    /// Ins the memory operations.
-    /// </summary>
+    /// <summary> Ins the memory operations. </summary>
     /// <exception cref="InvalidOperationException">Data integrity check failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
@@ -291,14 +284,12 @@ public class AkavacheV10ComprehensiveBenchmarks
             // Verify data integrity
             if (retrieved!.Id != testData.Id)
             {
-                throw new InvalidOperationException("Data integrity check failed");
+                throw new InvalidOperationException(DataIntegrityFailureMessage);
             }
         }
     }
 
-    /// <summary>
-    /// Mixeds the operations.
-    /// </summary>
+    /// <summary> Mixeds the operations. </summary>
     /// <exception cref="InvalidOperationException">Update verification failed.</exception>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [Benchmark]
@@ -325,8 +316,8 @@ public class AkavacheV10ComprehensiveBenchmarks
             var retrieved = await cache.GetObject<TestData>(key);
 
             // Update
-            retrieved!.Value++;
-            await cache.InsertObject(key, retrieved);
+            TestData incremented = new() { Id = retrieved!.Id, Name = retrieved.Name, Value = retrieved.Value + 1, Created = retrieved.Created };
+            await cache.InsertObject(key, incremented);
 
             // Read again
             var updated = await cache.GetObject<TestData>(key);

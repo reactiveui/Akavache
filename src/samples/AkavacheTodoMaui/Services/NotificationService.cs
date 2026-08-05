@@ -7,9 +7,7 @@ using AkavacheTodoMaui.Models;
 
 namespace AkavacheTodoMaui.Services;
 
-/// <summary>
-/// Service for handling todo notifications and reminders.
-/// </summary>
+/// <summary>Service for handling todo notifications and reminders.</summary>
 public class NotificationService : IDisposable
 {
     /// <summary>Subject used to publish reminder notifications.</summary>
@@ -24,29 +22,23 @@ public class NotificationService : IDisposable
     /// <summary>Tracks whether this instance has been disposed.</summary>
     private bool _disposed;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NotificationService"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="NotificationService"/> class.</summary>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public NotificationService()
     {
         // Subscribe to settings changes
-        TodoCacheService.GetSettings()
+        _ = TodoCacheService.GetSettings()
             .Subscribe(settings => _currentSettings = settings);
 
         // Start reminder timer
         _reminderTimer = new(CheckForReminders, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
     }
 
-    /// <summary>
-    /// Gets an observable that emits todos that need reminders.
-    /// </summary>
+    /// <summary>Gets an observable that emits todos that need reminders.</summary>
     public IObservable<TodoItem> ReminderNotifications => _reminderSubject.AsObservable();
 
-    /// <summary>
-    /// Gets the notification message for a todo item.
-    /// </summary>
+    /// <summary>Gets the notification message for a todo item.</summary>
     /// <param name="todo">The todo item.</param>
     /// <returns>The notification message.</returns>
     public static string GetNotificationMessage(TodoItem todo)
@@ -61,21 +53,16 @@ public class NotificationService : IDisposable
             return $"Reminder: {todo?.Title}";
         }
 
-        var timeUntilDue = todo.DueDate!.Value - DateTimeOffset.Now;
+        var timeUntilDue = todo.DueDate!.Value - TimeProvider.System.GetLocalNow();
         return $"Due soon: {todo.Title} (in {timeUntilDue.Hours}h {timeUntilDue.Minutes}m)";
     }
 
-    /// <summary>
-    /// Schedules a reminder for a specific todo item.
-    /// </summary>
+    /// <summary>Schedules a reminder for a specific todo item.</summary>
     /// <param name="todo">The todo item to schedule.</param>
     /// <returns>Observable unit.</returns>
     public IObservable<Unit> ScheduleReminder(TodoItem todo)
     {
-        if (todo == null)
-        {
-            throw new ArgumentNullException(nameof(todo));
-        }
+        ArgumentNullException.ThrowIfNull(todo);
 
         if (!todo.DueDate.HasValue || !_currentSettings.NotificationsEnabled)
         {
@@ -84,7 +71,7 @@ public class NotificationService : IDisposable
 
         var reminderTime = todo.DueDate.Value.AddMinutes(-_currentSettings.NotificationMinutes);
 
-        if (reminderTime <= DateTimeOffset.Now)
+        if (reminderTime <= TimeProvider.System.GetLocalNow())
         {
             // Immediate notification for overdue items
             _reminderSubject.OnNext(todo);
@@ -92,7 +79,7 @@ public class NotificationService : IDisposable
         }
 
         // Schedule future notification (in a real app, you'd use platform-specific scheduling)
-        var delay = reminderTime - DateTimeOffset.Now;
+        var delay = reminderTime - TimeProvider.System.GetLocalNow();
         return Observable.Timer(delay)
             .Select(_ =>
             {
@@ -105,29 +92,22 @@ public class NotificationService : IDisposable
             });
     }
 
-    /// <summary>
-    /// Gets all todos that are due soon and need reminders.
-    /// </summary>
+    /// <summary>Gets all todos that are due soon and need reminders.</summary>
     /// <returns>Observable list of todos needing reminders.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<List<TodoItem>> GetTodosNeedingReminders() =>
-        TodoCacheService.GetAllTodos()
-            .Select(todos => todos.Where(todo =>
-                todo is { IsCompleted: false, DueDate: not null } &&
-                _currentSettings.NotificationsEnabled &&
-                ShouldNotify(todo)).ToList());
+        TodoCacheService.GetAllTodos().Select(SelectTodosNeedingReminders);
 
-    /// <summary>
-    /// Sends a notification for a specific todo item.
-    /// </summary>
+    /// <summary>Sends a notification for a specific todo item.</summary>
     /// <param name="todo">The todo item.</param>
     /// <param name="message">The notification message.</param>
     /// <returns>Observable unit.</returns>
+    /// <remarks>
+    /// A real app would raise a platform-specific notification here. This sample only pushes the todo
+    /// through <see cref="ReminderNotifications"/> so the UI can react to it.
+    /// </remarks>
     public IObservable<Unit> SendNotification(TodoItem todo, string message) =>
-
-        // In a real app, this would trigger platform-specific notifications
-        // For demo purposes, we'll just emit through the subject
         Observable.FromAsync(async () =>
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
@@ -137,20 +117,16 @@ public class NotificationService : IDisposable
             });
         });
 
-    /// <summary>
-    /// Checks for todos that need immediate reminders.
-    /// </summary>
+    /// <summary>Checks for todos that need immediate reminders.</summary>
     /// <returns>Observable unit.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     [RequiresDynamicCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
     public IObservable<Unit> CheckImmediateReminders() => GetTodosNeedingReminders()
-            .SelectMany(todos => todos.ToObservable())
+            .SelectMany(static todos => todos.ToObservable())
             .SelectMany(todo => SendNotification(todo, GetNotificationMessage(todo)))
-            .Aggregate(Unit.Default, (_, _) => Unit.Default);
+            .Aggregate(Unit.Default, static (_, _) => Unit.Default);
 
-    /// <summary>
-    /// Updates notification settings and reschedules reminders.
-    /// </summary>
+    /// <summary>Updates notification settings and reschedules reminders.</summary>
     /// <param name="settings">The new settings.</param>
     /// <returns>Observable unit.</returns>
     [RequiresUnreferencedCode("This method uses reactive extensions which may not be preserved in trimming scenarios.")]
@@ -159,31 +135,21 @@ public class NotificationService : IDisposable
     {
         _currentSettings = settings ?? new AppSettings();
 
-        if (settings?.NotificationsEnabled == false)
-        {
-            return Observable.Return(Unit.Default);
-        }
-
-        // Reschedule all reminders with new settings
-        return TodoCacheService.GetAllTodos()
+        return settings?.NotificationsEnabled == false ? Observable.Return(Unit.Default) : TodoCacheService.GetAllTodos()
             .SelectMany(static todos => todos.ToObservable())
             .Where(static todo => todo is { IsCompleted: false, DueDate: not null })
             .SelectMany(ScheduleReminder)
             .Aggregate(Unit.Default, static (_, _) => Unit.Default);
     }
 
-    /// <summary>
-    /// Disposes the notification service and cleans up resources.
-    /// </summary>
+    /// <summary>Disposes the notification service and cleans up resources.</summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Disposes the notification service and cleans up resources.
-    /// </summary>
+    /// <summary>Disposes the notification service and cleans up resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
@@ -209,10 +175,30 @@ public class NotificationService : IDisposable
         }
 
         // Check for reminders in background
-        CheckImmediateReminders()
+        _ = CheckImmediateReminders()
             .Subscribe(
                 static _ => { /* Success */ },
                 static ex => System.Diagnostics.Debug.WriteLine($"Reminder check failed: {ex}"));
+    }
+
+    /// <summary>Filters the cached todos down to those whose reminder is currently due.</summary>
+    /// <param name="todos">The cached todos.</param>
+    /// <returns>The todos that warrant a reminder right now.</returns>
+    private List<TodoItem> SelectTodosNeedingReminders(List<TodoItem> todos)
+    {
+        List<TodoItem> needingReminders = [];
+
+        foreach (var todo in todos)
+        {
+            if (todo is { IsCompleted: false, DueDate: not null }
+                && _currentSettings.NotificationsEnabled
+                && ShouldNotify(todo))
+            {
+                needingReminders.Add(todo);
+            }
+        }
+
+        return needingReminders;
     }
 
     /// <summary>Determines whether the given todo currently falls within its notification window.</summary>
@@ -225,7 +211,7 @@ public class NotificationService : IDisposable
             return false;
         }
 
-        var now = DateTimeOffset.Now;
+        var now = TimeProvider.System.GetLocalNow();
         var notificationTime = todo.DueDate.Value.AddMinutes(-_currentSettings.NotificationMinutes);
 
         return now >= notificationTime && now <= todo.DueDate.Value;

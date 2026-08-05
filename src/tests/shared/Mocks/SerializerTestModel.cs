@@ -4,18 +4,12 @@
 
 namespace Akavache.Tests.Mocks;
 
-/// <summary>
-/// Test model for serializer tests.
-/// </summary>
+/// <summary>Test model for serializer tests.</summary>
 public class SerializerTestModel
 {
-    /// <summary>
-    /// Gets or sets the name.
-    /// </summary>
+    /// <summary>Gets or sets the name.</summary>
     public string? Name { get; set; }
 
-    /// <summary>
-    /// Gets or sets the value.
-    /// </summary>
+    /// <summary>Gets or sets the value.</summary>
     public int Value { get; set; }
 }

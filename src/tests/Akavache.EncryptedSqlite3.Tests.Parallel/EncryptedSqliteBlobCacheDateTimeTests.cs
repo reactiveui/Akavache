@@ -8,10 +8,7 @@ using Akavache.Tests.TestBases;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for DateTime operations associated with the <see cref="EncryptedSqliteBlobCache"/> class.
-/// Uses <see cref="InMemoryAkavacheConnection"/> so native SQLCipher is not touched.
-/// </summary>
+/// <summary>Tests for DateTime operations associated with the <see cref="EncryptedSqliteBlobCache"/> class. Uses <see cref="InMemoryAkavacheConnection"/> so native SQLCipher is not touched.</summary>
 [InheritsTests]
 public class EncryptedSqliteBlobCacheDateTimeTests : DateTimeTestBase
 {

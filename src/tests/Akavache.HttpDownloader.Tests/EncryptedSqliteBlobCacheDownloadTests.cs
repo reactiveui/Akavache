@@ -6,9 +6,7 @@ using Akavache.EncryptedSqlite3;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Download tests exercising <see cref="EncryptedSqliteBlobCache"/> with a real HTTP server.
-/// </summary>
+/// <summary>Download tests exercising <see cref="EncryptedSqliteBlobCache"/> with a real HTTP server.</summary>
 [InheritsTests]
 public class EncryptedSqliteBlobCacheDownloadTests : BlobCacheDownloadTestsBase
 {

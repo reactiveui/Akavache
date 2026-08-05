@@ -31,10 +31,10 @@ public static class GlobalTestHooks
     [BeforeEvery(Test)]
     public static Task ResetBeforeEveryTest() => ResetGlobalStateAsync();
 
-    /// <summary>Runs after every test. Wipes Akavache global state.</summary>
+    /// <summary>Runs after every test, wiping the same global state the before-test hook wipes.</summary>
     /// <returns>A task representing the asynchronous reset operation.</returns>
     [AfterEvery(Test)]
-    public static Task CleanAfterEveryTest() => ResetGlobalStateAsync();
+    public static Task CleanAfterEveryTest() => ResetBeforeEveryTest();
 
     /// <summary>
     /// Resets every Akavache and Splat static state holder to its constructed

@@ -9,9 +9,7 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Focused serialization compatibility tests to ensure proper cross-serializer compatibility.
-/// </summary>
+/// <summary>Focused serialization compatibility tests to ensure proper cross-serializer compatibility.</summary>
 [Category("Akavache")]
 public class SerializationCompatibilityTests
 {
@@ -24,24 +22,41 @@ public class SerializationCompatibilityTests
         new NewtonsoftBsonSerializer()
     ];
 
-    /// <summary>
-    /// Gets all combinations of serializers for cross-compatibility testing.
-    /// </summary>
-    /// <returns>All serializer combinations as tuples wrapped in Func for test isolation.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "Method returns a lazy enumerable used as a TUnit data source — property semantics aren't appropriate.")]
-    public static IEnumerable<(Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer)> GetSerializerCombinations() =>
-        Serializers
-            .SelectMany(
-                _ => Serializers,
-                (writeSerializer, readSerializer) => new { writeSerializer, readSerializer })
-            .Select(t => new { t, ws = t.writeSerializer })
-            .Select(t => new { t, rs = t.t.readSerializer })
-            .Select(t =>
-                ((Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer))(() => t.t.ws, () => t.rs));
+    /// <summary>The shape every serializer round-trip fixture in these tests carries.</summary>
+    internal interface ISerializerFixture
+    {
+        /// <summary>Gets or sets the name.</summary>
+        string? Name { get; set; }
 
-    /// <summary>
-    /// Tests that each serializer can roundtrip its own data.
-    /// </summary>
+        /// <summary>Gets or sets the value.</summary>
+        int Value { get; set; }
+    }
+
+    /// <summary>A fixture that also carries a bare <see cref="DateTime"/>, which is what these tests are about.</summary>
+    internal interface IDatedSerializerFixture : ISerializerFixture
+    {
+        /// <summary>Gets or sets the date.</summary>
+        DateTime Date { get; set; }
+    }
+
+    /// <summary>Gets all combinations of serializers for cross-compatibility testing.</summary>
+    /// <returns>All serializer combinations as tuples wrapped in Func for test isolation.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Design",
+        "CA1024:Use properties where appropriate",
+        Justification = "Method returns a lazy enumerable used as a TUnit data source — property semantics aren't appropriate.")]
+    public static IEnumerable<(Func<ISerializer> WriteSerializer, Func<ISerializer> ReadSerializer)> GetSerializerCombinations()
+    {
+        foreach (var writeSerializer in Serializers)
+        {
+            foreach (var readSerializer in Serializers)
+            {
+                yield return (() => writeSerializer, () => readSerializer);
+            }
+        }
+    }
+
+    /// <summary>Tests that each serializer can roundtrip its own data.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -51,14 +66,11 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task SerializerShouldRoundTripOwnData(Type serializerType)
     {
+        const int RoundTripValue = 42;
+
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        TestObject testObj = new()
-        {
-            Name = "Test",
-            Value = 42,
-            Date = DateTime.UtcNow
-        };
+        TestObject testObj = new() { Name = "Test", Value = RoundTripValue, Date = TimeProvider.System.GetUtcNow().UtcDateTime };
 
         // Act
         var serializedData = serializer.Serialize(testObj);
@@ -76,9 +88,7 @@ public class SerializationCompatibilityTests
         await Assert.That(Math.Abs((testObj.Date - deserializedObj.Date).TotalSeconds)).IsLessThan(1);
     }
 
-    /// <summary>
-    /// Tests cross-serializer compatibility for all combinations.
-    /// </summary>
+    /// <summary>Tests cross-serializer compatibility for all combinations.</summary>
     /// <param name="writeSerializerFactory">Factory for the writer serializer.</param>
     /// <param name="readSerializerFactory">Factory for the reader serializer.</param>
     /// <returns>A task representing the asynchronous test operation.</returns>
@@ -88,18 +98,15 @@ public class SerializationCompatibilityTests
         Func<ISerializer> writeSerializerFactory,
         Func<ISerializer> readSerializerFactory)
     {
+        const int CrossSerializerValue = 123;
+
         ArgumentNullException.ThrowIfNull(writeSerializerFactory);
         ArgumentNullException.ThrowIfNull(readSerializerFactory);
         var writeSerializer = writeSerializerFactory();
         var readSerializer = readSerializerFactory();
 
         // Arrange
-        TestObject testObj = new()
-        {
-            Name = "CrossTest",
-            Value = 123,
-            Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
-        };
+        TestObject testObj = new() { Name = "CrossTest", Value = CrossSerializerValue, Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) };
 
         // Skip known incompatible combinations:
         // 1. BSON → pure JSON: different wire formats
@@ -160,11 +167,8 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task JsonSerializersShouldBeInterchangeableForSimpleTypes()
     {
-        SimpleTestObject testObj = new()
-        {
-            Name = "JsonCrossTest",
-            Value = 999,
-        };
+        const int InterchangeValue = 999;
+        SimpleTestObject testObj = new() { Name = "JsonCrossTest", Value = InterchangeValue, };
 
         ISerializer[] jsonSerializers =
         [
@@ -186,19 +190,13 @@ public class SerializationCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that all BSON serializers can read each other's data (same wire format).
-    /// </summary>
+    /// <summary>Tests that all BSON serializers can read each other's data (same wire format).</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task BsonSerializersShouldBeInterchangeable()
     {
-        TestObject testObj = new()
-        {
-            Name = "BsonCrossTest",
-            Value = 999,
-            Date = new(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
-        };
+        const int InterchangeValue = 999;
+        TestObject testObj = new() { Name = "BsonCrossTest", Value = InterchangeValue, Date = new(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc) };
 
         ISerializer[] bsonSerializers =
         [
@@ -228,38 +226,29 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task BsonSerializersShouldReadJsonDataFromSameLibrary()
     {
-        SimpleTestObject testObj = new()
-        {
-            Name = "JsonToBsonTest",
-            Value = 42,
-        };
+        const int JsonToBsonValue = 42;
+        SimpleTestObject testObj = new() { Name = "JsonToBsonTest", Value = JsonToBsonValue, };
 
         // STJ JSON → STJ BSON reader
-        var stjData = new SystemJsonSerializer().Serialize(testObj);
-        var stjBsonResult = new SystemJsonBsonSerializer().Deserialize<SimpleTestObject>(stjData);
-        await Assert.That(stjBsonResult).IsNotNull();
-        await Assert.That(stjBsonResult!.Name).IsEqualTo(testObj.Name);
+        var systemJsonData = new SystemJsonSerializer().Serialize(testObj);
+        var systemJsonBsonResult = new SystemJsonBsonSerializer().Deserialize<SimpleTestObject>(systemJsonData);
+        await Assert.That(systemJsonBsonResult).IsNotNull();
+        await Assert.That(systemJsonBsonResult!.Name).IsEqualTo(testObj.Name);
 
         // Newtonsoft JSON → Newtonsoft BSON reader
-        var nsData = new NewtonsoftSerializer().Serialize(testObj);
-        var nsBsonResult = new NewtonsoftBsonSerializer().Deserialize<SimpleTestObject>(nsData);
-        await Assert.That(nsBsonResult).IsNotNull();
-        await Assert.That(nsBsonResult!.Name).IsEqualTo(testObj.Name);
+        var newtonsoftData = new NewtonsoftSerializer().Serialize(testObj);
+        var newtonsoftBsonResult = new NewtonsoftBsonSerializer().Deserialize<SimpleTestObject>(newtonsoftData);
+        await Assert.That(newtonsoftBsonResult).IsNotNull();
+        await Assert.That(newtonsoftBsonResult!.Name).IsEqualTo(testObj.Name);
     }
 
-    /// <summary>
-    /// Tests that pure JSON serializers cannot read BSON data (expected - different wire formats).
-    /// </summary>
+    /// <summary>Tests that pure JSON serializers cannot read BSON data (expected - different wire formats).</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task PureJsonSerializersShouldNotReadBsonData()
     {
-        TestObject testObj = new()
-        {
-            Name = "BsonToJsonTest",
-            Value = 42,
-            Date = new(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc)
-        };
+        const int BsonToJsonValue = 42;
+        TestObject testObj = new() { Name = "BsonToJsonTest", Value = BsonToJsonValue, Date = new(2025, 1, 15, 16, 0, 0, DateTimeKind.Utc) };
 
         SystemJsonBsonSerializer bsonWriter = new();
         SystemJsonSerializer pureJsonReader = new();
@@ -270,9 +259,7 @@ public class SerializationCompatibilityTests
         await Assert.That(() => pureJsonReader.Deserialize<TestObject>(bsonData)).Throws<Exception>();
     }
 
-    /// <summary>
-    /// Tests that SQLite cache can store and retrieve objects with all serializers without losing data.
-    /// </summary>
+    /// <summary>Tests that SQLite cache can store and retrieve objects with all serializers without losing data.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -282,10 +269,10 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task SqliteCacheShouldPersistDataCorrectlyWithAllSerializers(Type serializerType)
     {
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
+        const int PersistedValue = 12_345;
+        const int MaxRoundTripDriftSeconds = 60;
+
+        ArgumentExceptionHelper.ThrowIfNull(serializerType);
 
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
@@ -294,42 +281,33 @@ public class SerializationCompatibilityTests
         {
             var dbPath = Path.Combine(path, "test.db");
 
-            TestObject testObject = new()
-            {
-                Name = "TestUser",
-                Value = 12345,
-                Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
-            };
+            TestObject testObject = new() { Name = "TestUser", Value = PersistedValue, Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) };
 
             // Test storage phase
-            using (SqliteBlobCache cache = new(dbPath, serializer, ImmediateScheduler.Instance))
+            using (SqliteBlobCache writeCache = new(dbPath, serializer, ImmediateScheduler.Instance))
             {
-                cache.InsertObject("test_key", testObject).WaitForCompletion();
-                cache.Flush().WaitForCompletion(); // Ensure data is written to disk
+                writeCache.InsertObject("test_key", testObject).WaitForCompletion();
+                writeCache.Flush().WaitForCompletion(); // Ensure data is written to disk
             }
 
             // Test retrieval phase with new cache instance
-            using (SqliteBlobCache cache = new(dbPath, serializer, ImmediateScheduler.Instance))
+            using SqliteBlobCache readCache = new(dbPath, serializer, ImmediateScheduler.Instance);
+            var retrievedObject = readCache.GetObject<TestObject>("test_key").WaitForValue();
+
+            await Assert.That(retrievedObject).IsNotNull();
+            using (Assert.Multiple())
             {
-                var retrievedObject = cache.GetObject<TestObject>("test_key").WaitForValue();
-
-                await Assert.That(retrievedObject).IsNotNull();
-                using (Assert.Multiple())
-                {
-                    await Assert.That(retrievedObject!.Name).IsEqualTo(testObject.Name);
-                    await Assert.That(retrievedObject.Value).IsEqualTo(testObject.Value);
-                }
-
-                // Allow for DateTime precision differences
-                var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalSeconds);
-                await Assert.That(timeDiff).IsLessThan(60);
+                await Assert.That(retrievedObject!.Name).IsEqualTo(testObject.Name);
+                await Assert.That(retrievedObject.Value).IsEqualTo(testObject.Value);
             }
+
+            // Allow for DateTime precision differences
+            var timeDiff = Math.Abs((testObject.Date - retrievedObject!.Date).TotalSeconds);
+            await Assert.That(timeDiff).IsLessThan(MaxRoundTripDriftSeconds);
         }
     }
 
-    /// <summary>
-    /// Tests cross-serializer compatibility with SQLite cache.
-    /// </summary>
+    /// <summary>Tests cross-serializer compatibility with SQLite cache.</summary>
     /// <param name="writeSerializerType">The serializer to use for writing.</param>
     /// <param name="readSerializerType">The serializer to use for reading.</param>
     /// <returns>A task representing the test operation.</returns>
@@ -342,22 +320,13 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task SqliteCacheShouldSupportCrossSerializerCompatibility(Type writeSerializerType, Type readSerializerType)
     {
-        if (writeSerializerType is null)
-        {
-            throw new ArgumentNullException(nameof(writeSerializerType));
-        }
+        const int CrossSerializerValue = 99_999;
+        const int MaxCrossSerializerDriftMinutes = 1440;
 
-        if (readSerializerType is null)
-        {
-            throw new ArgumentNullException(nameof(readSerializerType));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(writeSerializerType);
+        ArgumentExceptionHelper.ThrowIfNull(readSerializerType);
 
-        TestObject testObject = new()
-        {
-            Name = "CrossSerializerTest",
-            Value = 99999,
-            Date = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
-        };
+        TestObject testObject = new() { Name = "CrossSerializerTest", Value = CrossSerializerValue, Date = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc) };
 
         using (Utility.WithEmptyDirectory(out var path))
         {
@@ -390,22 +359,20 @@ public class SerializationCompatibilityTests
                     }
 
                     // Allow for DateTime precision differences
-                    var timeDiff = Math.Abs((testObject.Date - retrievedObject.Date).TotalMinutes);
-                    await Assert.That(timeDiff).IsLessThan(1440);
+                    var timeDiff = Math.Abs((testObject.Date - retrievedObject!.Date).TotalMinutes);
+                    await Assert.That(timeDiff).IsLessThan(MaxCrossSerializerDriftMinutes);
                 }
                 catch (KeyNotFoundException ex)
                 {
                     throw new InvalidOperationException(
-                        $"Cross-serializer test failed: could not read data written with {writeSerializerType.Name} using {readSerializerType.Name}. " +
-                        $"Error: {ex.Message}");
+                        $"Cross-serializer test failed: could not read data written with {writeSerializerType.Name} using {readSerializerType.Name}. "
+                        + $"Error: {ex.Message}");
                 }
             }
         }
     }
 
-    /// <summary>
-    /// Simple test to verify SQLite cache basic operations work.
-    /// </summary>
+    /// <summary>Simple test to verify SQLite cache basic operations work.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -415,10 +382,9 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task SimpleSqliteTest(Type serializerType)
     {
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
+        const int SimpleValue = 123;
+
+        ArgumentExceptionHelper.ThrowIfNull(serializerType);
 
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
@@ -427,12 +393,7 @@ public class SerializationCompatibilityTests
         {
             var dbPath = Path.Combine(path, "simple_test.db");
 
-            TestObject testObject = new()
-            {
-                Name = "SimpleTest",
-                Value = 123,
-                Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc)
-            };
+            TestObject testObject = new() { Name = "SimpleTest", Value = SimpleValue, Date = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Utc) };
 
             // Test in single cache instance to see if issue is with multiple instances
             using SqliteBlobCache cache = new(dbPath, serializer, ImmediateScheduler.Instance);
@@ -462,9 +423,7 @@ public class SerializationCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Test to debug multi-instance SQLite persistence issues.
-    /// </summary>
+    /// <summary>Test to debug multi-instance SQLite persistence issues.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the test operation.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -474,10 +433,10 @@ public class SerializationCompatibilityTests
     [Test]
     public async Task DebuggingMultiInstancePersistence(Type serializerType)
     {
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
+        const int MultiInstanceValue = 789;
+        const int CleanupSettleMilliseconds = 100;
+
+        ArgumentExceptionHelper.ThrowIfNull(serializerType);
 
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
@@ -486,12 +445,7 @@ public class SerializationCompatibilityTests
         {
             var dbPath = Path.Combine(path, "debug_multi_instance.db");
 
-            TestObject testObject = new()
-            {
-                Name = "MultiInstanceDebug",
-                Value = 789,
-                Date = new(2025, 1, 15, 15, 30, 0, DateTimeKind.Utc)
-            };
+            TestObject testObject = new() { Name = "MultiInstanceDebug", Value = MultiInstanceValue, Date = new(2025, 1, 15, 15, 30, 0, DateTimeKind.Utc) };
 
             // Phase 1: Store data with explicit disposal and verification
             {
@@ -507,7 +461,7 @@ public class SerializationCompatibilityTests
                 cache1.Dispose();
 
                 // Small delay to ensure cleanup is complete
-                await Task.Delay(100);
+                await Task.Delay(CleanupSettleMilliseconds);
             }
 
             // Phase 2: Try to read with a new instance
@@ -523,16 +477,16 @@ public class SerializationCompatibilityTests
 
                 // Enhanced diagnostics
                 FileInfo fileInfo = new(dbPath);
-                var walFile = dbPath + "-wal";
-                var shmFile = dbPath + "-shm";
+                var walFile = $"{dbPath}-wal";
+                var shmFile = $"{dbPath}-shm";
 
-                _ = $"DB file size: {fileInfo.Length} bytes. " +
-                    $"WAL exists: {File.Exists(walFile)}. " +
-                    $"SHM exists: {File.Exists(shmFile)}. " +
-                    $"All keys count: {allKeys!.Count}. " +
-                    $"Typed keys count: {typedKeys!.Count}. " +
-                    $"All keys: [{string.Join(", ", allKeys)}]. " +
-                    $"Typed keys: [{string.Join(", ", typedKeys)}]";
+                _ = $"DB file size: {fileInfo.Length} bytes. "
+                    + $"WAL exists: {File.Exists(walFile)}. "
+                    + $"SHM exists: {File.Exists(shmFile)}. "
+                    + $"All keys count: {allKeys!.Count}. "
+                    + $"Typed keys count: {typedKeys!.Count}. "
+                    + $"All keys: [{string.Join(", ", allKeys)}]. "
+                    + $"Typed keys: [{string.Join(", ", typedKeys)}]";
 
                 await Assert.That(allKeys).IsNotEmpty();
 
@@ -551,24 +505,21 @@ public class SerializationCompatibilityTests
         }
     }
 
-    /// <summary>
-    /// Test object for serialization.
-    /// </summary>
-    public class TestObject
+    /// <summary>Test object for serialization.</summary>
+    /// <remarks>
+    /// Assembly-internal on purpose: the fixture exists to carry a bare <see cref="DateTime"/>, which is
+    /// exactly what must not appear on a type other assemblies can bind to. The properties stay public
+    /// because both serializer families ignore non-public members, and they satisfy the fixture contract.
+    /// </remarks>
+    internal sealed class TestObject : IDatedSerializerFixture
     {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
+        /// <inheritdoc/>
         public string? Name { get; set; }
 
-        /// <summary>
-        /// Gets or sets the value.
-        /// </summary>
+        /// <inheritdoc/>
         public int Value { get; set; }
 
-        /// <summary>
-        /// Gets or sets the date.
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime Date { get; set; }
     }
 
@@ -576,16 +527,12 @@ public class SerializationCompatibilityTests
     /// Simple test object without DateTime for cross-format tests where DateTime
     /// serialization formats differ (Newtonsoft \/Date()\/ vs STJ ISO 8601).
     /// </summary>
-    public class SimpleTestObject
+    internal sealed class SimpleTestObject : ISerializerFixture
     {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
+        /// <inheritdoc/>
         public string? Name { get; set; }
 
-        /// <summary>
-        /// Gets or sets the value.
-        /// </summary>
+        /// <inheritdoc/>
         public int Value { get; set; }
     }
 }

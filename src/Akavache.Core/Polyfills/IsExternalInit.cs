@@ -12,16 +12,21 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System.Runtime.CompilerServices;
 
-/// <summary>
-/// Marker type recognized by the C# compiler to enable <c>init</c> setters and records
-/// on frameworks that do not ship <see cref="IsExternalInit"/>.
-/// </summary>
+/// <summary>Marker type recognized by the C# compiler to enable <c>init</c> setters and records on frameworks that do not ship <see cref="IsExternalInit"/>.</summary>
 /// <remarks>
 /// Link: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.isexternalinit.
 /// </remarks>
+[SuppressMessage(
+    "Design",
+    "SST1436:Add members to the type or remove it",
+    Justification = "Required empty compiler marker type enabling init-only setters on older targets.")]
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [EditorBrowsable(EditorBrowsableState.Never)]
 internal static class IsExternalInit;
 
+#else
+using System.Runtime.CompilerServices;
+
+[assembly: TypeForwardedTo(typeof(IsExternalInit))]
 #endif

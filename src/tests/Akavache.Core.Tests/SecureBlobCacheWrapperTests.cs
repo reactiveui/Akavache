@@ -13,9 +13,13 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class SecureBlobCacheWrapperTests
 {
-    /// <summary>
-    /// Tests basic Insert and Get round-trip.
-    /// </summary>
+    /// <summary>Number of entries the multi-key tests seed and then expect the cache to report back.</summary>
+    private const int ExpectedEntryCount = 2;
+
+    /// <summary>Payload written whenever a test asserts on cache bookkeeping rather than on the stored bytes.</summary>
+    private static readonly byte[] SamplePayload = [1, 2, 3];
+
+    /// <summary>Tests basic Insert and Get round-trip.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertAndGet()
@@ -23,10 +27,10 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            await cache.Insert("k", [1, 2, 3]);
+            await cache.Insert("k", SamplePayload);
             var data = await cache.Get("k");
             await Assert.That(data).IsNotNull();
-            await Assert.That(data!.Length).IsEqualTo(3);
+            await Assert.That(data!.Length).IsEqualTo(SamplePayload.Length);
         }
         finally
         {
@@ -34,9 +38,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert and Get for multiple keys.
-    /// </summary>
+    /// <summary>Tests Insert and Get for multiple keys.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertAndGetMultiple()
@@ -46,8 +48,8 @@ public class SecureBlobCacheWrapperTests
         {
             KeyValuePair<string, byte[]>[] pairs =
             [
-                new("k1", [1]),
-                new("k2", [2])
+                new("k1", SamplePayload),
+                new("k2", SamplePayload)
             ];
             await cache.Insert(pairs);
 
@@ -56,7 +58,7 @@ public class SecureBlobCacheWrapperTests
             await Assert.That(keys).Contains("k2");
 
             var results = await cache.Get(["k1", "k2"]).ToList();
-            await Assert.That(results.Count).IsEqualTo(2);
+            await Assert.That(results.Count).IsEqualTo(ExpectedEntryCount);
         }
         finally
         {
@@ -64,9 +66,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert with type and Get with type.
-    /// </summary>
+    /// <summary>Tests Insert with type and Get with type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertAndGetWithType()
@@ -74,7 +74,7 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            await cache.Insert("k", [1], typeof(string));
+            await cache.Insert("k", SamplePayload, typeof(string));
             var data = await cache.Get("k", typeof(string));
             await Assert.That(data).IsNotNull();
         }
@@ -84,9 +84,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert multiple with type.
-    /// </summary>
+    /// <summary>Tests Insert multiple with type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInsertMultipleWithType()
@@ -96,19 +94,19 @@ public class SecureBlobCacheWrapperTests
         {
             KeyValuePair<string, byte[]>[] pairs =
             [
-                new("k1", [1]),
-                new("k2", [2])
+                new("k1", SamplePayload),
+                new("k2", SamplePayload)
             ];
             await cache.Insert(pairs, typeof(string));
 
             var results = await cache.Get(["k1", "k2"], typeof(string)).ToList();
-            await Assert.That(results.Count).IsEqualTo(2);
+            await Assert.That(results.Count).IsEqualTo(ExpectedEntryCount);
 
             var keys = await cache.GetAllKeys(typeof(string)).ToList();
-            await Assert.That(keys.Count).IsEqualTo(2);
+            await Assert.That(keys.Count).IsEqualTo(ExpectedEntryCount);
 
             var all = await cache.GetAll(typeof(string)).ToList();
-            await Assert.That(all.Count).IsEqualTo(2);
+            await Assert.That(all.Count).IsEqualTo(ExpectedEntryCount);
         }
         finally
         {
@@ -116,9 +114,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests GetCreatedAt for single and multiple keys.
-    /// </summary>
+    /// <summary>Tests GetCreatedAt for single and multiple keys.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldGetCreatedAt()
@@ -126,16 +122,16 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            await cache.Insert("k1", [1]);
-            await cache.Insert("k2", [2]);
+            await cache.Insert("k1", SamplePayload);
+            await cache.Insert("k2", SamplePayload);
 
             var single = await cache.GetCreatedAt("k1");
             await Assert.That(single).IsNotNull();
 
             var multi = await cache.GetCreatedAt(["k1", "k2"]).ToList();
-            await Assert.That(multi.Count).IsEqualTo(2);
+            await Assert.That(multi.Count).IsEqualTo(ExpectedEntryCount);
 
-            await cache.Insert("k3", [3], typeof(int));
+            await cache.Insert("k3", SamplePayload, typeof(int));
             var typed = await cache.GetCreatedAt("k3", typeof(int));
             await Assert.That(typed).IsNotNull();
 
@@ -148,9 +144,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Invalidate operations.
-    /// </summary>
+    /// <summary>Tests Invalidate operations.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInvalidate()
@@ -158,10 +152,10 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            await cache.Insert("k1", [1]);
-            await cache.Insert("k2", [2]);
-            await cache.Insert("k3", [3], typeof(string));
-            await cache.Insert("k4", [4], typeof(int));
+            await cache.Insert("k1", SamplePayload);
+            await cache.Insert("k2", SamplePayload);
+            await cache.Insert("k3", SamplePayload, typeof(string));
+            await cache.Insert("k4", SamplePayload, typeof(int));
 
             await cache.Invalidate("k1");
             await cache.Invalidate("k3", typeof(string));
@@ -177,9 +171,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests InvalidateAll and InvalidateAll(type).
-    /// </summary>
+    /// <summary>Tests InvalidateAll and InvalidateAll(type).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldInvalidateAll()
@@ -187,10 +179,10 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            await cache.Insert("k1", [1], typeof(string));
+            await cache.Insert("k1", SamplePayload, typeof(string));
             await cache.InvalidateAll(typeof(string));
 
-            await cache.Insert("k2", [2]);
+            await cache.Insert("k2", SamplePayload);
             await cache.InvalidateAll();
 
             var keys = await cache.GetAllKeys().ToList();
@@ -202,9 +194,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Flush and Flush(type).
-    /// </summary>
+    /// <summary>Tests Flush and Flush(type).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldFlush()
@@ -221,9 +211,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests UpdateExpiration overloads.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration overloads.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldUpdateExpiration()
@@ -231,10 +219,10 @@ public class SecureBlobCacheWrapperTests
         var cache = CreateSecureCache();
         try
         {
-            await cache.Insert("k1", [1]);
-            await cache.Insert("k2", [2], typeof(string));
+            await cache.Insert("k1", SamplePayload);
+            await cache.Insert("k2", SamplePayload, typeof(string));
 
-            var future = DateTimeOffset.Now.AddHours(1);
+            var future = TimeProvider.System.GetLocalNow().AddHours(1);
             await cache.UpdateExpiration("k1", future);
             await cache.UpdateExpiration("k2", typeof(string), future);
             await cache.UpdateExpiration(["k1"], future);
@@ -246,9 +234,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Scheduler, Serializer, and ForcedDateTimeKind properties.
-    /// </summary>
+    /// <summary>Tests Scheduler, Serializer, and ForcedDateTimeKind properties.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldExposeProperties()
@@ -270,9 +256,7 @@ public class SecureBlobCacheWrapperTests
         }
     }
 
-    /// <summary>
-    /// Tests Dispose (sync) does not throw.
-    /// </summary>
+    /// <summary>Tests Dispose (sync) does not throw.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShouldDispose()
@@ -281,13 +265,11 @@ public class SecureBlobCacheWrapperTests
         await Assert.That(() => cache.Dispose()).ThrowsNothing();
     }
 
-    /// <summary>
-    /// Creates a secure cache using the builder for testing.
-    /// </summary>
+    /// <summary>Creates a secure cache using the builder for testing.</summary>
     /// <returns>The secure cache.</returns>
     private static ISecureBlobCache CreateSecureCache() =>
         CacheDatabase.CreateBuilder()
-            .WithApplicationName("SecureWrapperTest_" + Guid.NewGuid().ToString("N"))
+            .WithApplicationName($"SecureWrapperTest_{Guid.NewGuid():N}")
             .WithSerializer<SystemJsonSerializer>()
             .WithInMemoryDefaults()
             .Build()
