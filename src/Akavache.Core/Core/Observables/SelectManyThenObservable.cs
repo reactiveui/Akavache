@@ -27,6 +27,9 @@ internal sealed class SelectManyThenObservable<TSource, TMid, TResult>(
         source.Subscribe(new SourceObserver(observer, first, second));
 
     /// <summary>Receives the source value and subscribes to the first projection.</summary>
+    /// <param name="downstream">The observer that receives the final results.</param>
+    /// <param name="first">First projection: source element to intermediate observable.</param>
+    /// <param name="second">Second projection: intermediate element to result observable.</param>
     private sealed class SourceObserver(
         IObserver<TResult> downstream,
         Func<TSource, IObservable<TMid>> first,
@@ -37,7 +40,7 @@ internal sealed class SelectManyThenObservable<TSource, TMid, TResult>(
         {
             try
             {
-                first(value).Subscribe(new MidObserver(downstream, second));
+                _ = first(value).Subscribe(new MidObserver(downstream, second));
             }
             catch (Exception ex)
             {
@@ -53,6 +56,8 @@ internal sealed class SelectManyThenObservable<TSource, TMid, TResult>(
     }
 
     /// <summary>Receives the intermediate value and subscribes to the second projection.</summary>
+    /// <param name="downstream">The observer that receives the final results.</param>
+    /// <param name="second">Second projection: intermediate element to result observable.</param>
     private sealed class MidObserver(
         IObserver<TResult> downstream,
         Func<TMid, IObservable<TResult>> second) : IObserver<TMid>
@@ -62,7 +67,7 @@ internal sealed class SelectManyThenObservable<TSource, TMid, TResult>(
         {
             try
             {
-                second(value).Subscribe(new FinalObserver(downstream));
+                _ = second(value).Subscribe(new FinalObserver(downstream));
             }
             catch (Exception ex)
             {
@@ -78,6 +83,7 @@ internal sealed class SelectManyThenObservable<TSource, TMid, TResult>(
     }
 
     /// <summary>Forwards the final result to downstream.</summary>
+    /// <param name="downstream">The observer that receives the final results.</param>
     private sealed class FinalObserver(IObserver<TResult> downstream) : IObserver<TResult>
     {
         /// <inheritdoc/>

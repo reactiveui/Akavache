@@ -4,23 +4,15 @@
 
 namespace Akavache.Tests.Mocks;
 
-/// <summary>
-/// A fixture of a user object.
-/// </summary>
+/// <summary>A fixture of a user object.</summary>
 public class UserObject
 {
-    /// <summary>
-    /// Gets or sets the bio.
-    /// </summary>
+    /// <summary>Gets or sets the bio.</summary>
     public string? Bio { get; set; }
 
-    /// <summary>
-    /// Gets or sets the name.
-    /// </summary>
+    /// <summary>Gets or sets the name.</summary>
     public string? Name { get; set; }
 
-    /// <summary>
-    /// Gets or sets the blog.
-    /// </summary>
+    /// <summary>Gets or sets the blog.</summary>
     public string? Blog { get; set; }
 }

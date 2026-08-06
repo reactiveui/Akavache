@@ -11,12 +11,21 @@ namespace Akavache.Tests;
 /// to prevent crashes on mobile platforms.
 /// </summary>
 [Category("Akavache")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "RCS1261:Resource can be disposed asynchronously", Justification = "Tests use synchronous Dispose to avoid async deadlocks.")]
 public class GetAllKeysSafeExtensionsTests
 {
-    /// <summary>
-    /// Tests that GetAllKeysSafe returns an empty list for an empty cache.
-    /// </summary>
+    /// <summary>Key of the entry stored as a <see cref="string"/>, used to prove type filtering.</summary>
+    private const string StringEntryKey = "test_string";
+
+    /// <summary>Key of the entry stored as an <see cref="int"/>, used to prove type filtering.</summary>
+    private const string IntEntryKey = "test_int";
+
+    /// <summary>Value stored under <see cref="IntEntryKey"/>.</summary>
+    private const int IntEntryValue = 42;
+
+    /// <summary>How many keys a cache populated by two inserts is expected to report.</summary>
+    private const int PopulatedCacheKeyCount = 2;
+
+    /// <summary>Tests that GetAllKeysSafe returns an empty list for an empty cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_ShouldReturnEmptyForEmptyCache()
@@ -26,27 +35,25 @@ public class GetAllKeysSafeExtensionsTests
         await Assert.That(keys).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that GetAllKeysSafe returns all keys when cache is populated.
-    /// </summary>
+    /// <summary>Tests that GetAllKeysSafe returns all keys when cache is populated.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_ShouldReturnKeysForPopulatedCache()
     {
         using var cache = CreateCache();
-        cache.Insert("key1", [1, 2, 3]).SubscribeAndComplete();
-        cache.Insert("key2", [4, 5, 6]).SubscribeAndComplete();
+        byte[] firstPayload = [1, 2, 3];
+        byte[] secondPayload = [4, 5, 6];
+        cache.Insert("key1", firstPayload).SubscribeAndComplete();
+        cache.Insert("key2", secondPayload).SubscribeAndComplete();
 
         var keys = cache.GetAllKeysSafe().ToList().SubscribeGetValue();
 
-        await Assert.That(keys).Count().IsEqualTo(2);
+        await Assert.That(keys).Count().IsEqualTo(PopulatedCacheKeyCount);
         await Assert.That(keys!).Contains("key1");
         await Assert.That(keys).Contains("key2");
     }
 
-    /// <summary>
-    /// Tests that GetAllKeysSafe with type returns an empty list for an empty cache.
-    /// </summary>
+    /// <summary>Tests that GetAllKeysSafe with type returns an empty list for an empty cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
@@ -57,17 +64,15 @@ public class GetAllKeysSafeExtensionsTests
         await Assert.That(keys).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that GetAllKeysSafe with type returns keys filtered by the specified type.
-    /// </summary>
+    /// <summary>Tests that GetAllKeysSafe with type returns keys filtered by the specified type.</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
     public async Task GetAllKeysSafe_WithType_ShouldReturnKeysForSpecificType()
     {
         using var cache = CreateCache();
-        cache.InsertObject("test_string", "value").SubscribeAndComplete();
-        cache.InsertObject("test_int", 42).SubscribeAndComplete();
+        cache.InsertObject(StringEntryKey, "value").SubscribeAndComplete();
+        cache.InsertObject(IntEntryKey, IntEntryValue).SubscribeAndComplete();
 
         var stringKeys = cache.GetAllKeysSafe(typeof(string)).ToList().SubscribeGetValue();
         var intKeys = cache.GetAllKeysSafe(typeof(int)).ToList().SubscribeGetValue();
@@ -75,15 +80,13 @@ public class GetAllKeysSafeExtensionsTests
         using (Assert.Multiple())
         {
             await Assert.That(stringKeys).Count().IsEqualTo(1);
-            await Assert.That(stringKeys![0]).Contains("test_string");
+            await Assert.That(stringKeys![0]).Contains(StringEntryKey);
             await Assert.That(intKeys).Count().IsEqualTo(1);
-            await Assert.That(intKeys![0]).Contains("test_int");
+            await Assert.That(intKeys![0]).Contains(IntEntryKey);
         }
     }
 
-    /// <summary>
-    /// Tests that generic GetAllKeysSafe returns an empty list for an empty cache.
-    /// </summary>
+    /// <summary>Tests that generic GetAllKeysSafe returns an empty list for an empty cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_Generic_ShouldReturnEmptyForEmptyCache()
@@ -93,26 +96,22 @@ public class GetAllKeysSafeExtensionsTests
         await Assert.That(keys).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that generic GetAllKeysSafe returns keys filtered by the specified generic type.
-    /// </summary>
+    /// <summary>Tests that generic GetAllKeysSafe returns keys filtered by the specified generic type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_Generic_ShouldReturnKeysForSpecificType()
     {
         using var cache = CreateCache();
-        cache.InsertObject("test_string", "value").SubscribeAndComplete();
-        cache.InsertObject("test_int", 42).SubscribeAndComplete();
+        cache.InsertObject(StringEntryKey, "value").SubscribeAndComplete();
+        cache.InsertObject(IntEntryKey, IntEntryValue).SubscribeAndComplete();
 
         var stringKeys = cache.GetAllKeysSafe<string>().ToList().SubscribeGetValue();
 
         await Assert.That(stringKeys).Count().IsEqualTo(1);
-        await Assert.That(stringKeys![0]).Contains("test_string");
+        await Assert.That(stringKeys![0]).Contains(StringEntryKey);
     }
 
-    /// <summary>
-    /// Tests that GetAllKeysSafe throws ArgumentNullException for null cache.
-    /// </summary>
+    /// <summary>Tests that GetAllKeysSafe throws ArgumentNullException for null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_ShouldThrowForNullCache()
@@ -121,9 +120,7 @@ public class GetAllKeysSafeExtensionsTests
         await Assert.That(() => nullCache!.GetAllKeysSafe()).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that GetAllKeysSafe with type throws ArgumentNullException for null cache.
-    /// </summary>
+    /// <summary>Tests that GetAllKeysSafe with type throws ArgumentNullException for null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "Test deliberately exercises the non-generic Type overload.")]
@@ -133,9 +130,7 @@ public class GetAllKeysSafeExtensionsTests
         await Assert.That(() => nullCache!.GetAllKeysSafe(typeof(string))).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that GetAllKeysSafe with type throws ArgumentNullException for null type.
-    /// </summary>
+    /// <summary>Tests that GetAllKeysSafe with type throws ArgumentNullException for null type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_WithType_ShouldThrowForNullType()
@@ -144,9 +139,7 @@ public class GetAllKeysSafeExtensionsTests
         await Assert.That(() => cache.GetAllKeysSafe(null!)).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests that generic GetAllKeysSafe throws ArgumentNullException for null cache.
-    /// </summary>
+    /// <summary>Tests that generic GetAllKeysSafe throws ArgumentNullException for null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetAllKeysSafe_Generic_ShouldThrowForNullCache()

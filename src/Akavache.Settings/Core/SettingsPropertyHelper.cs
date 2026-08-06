@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using Akavache.Helpers;
 
 namespace Akavache.Settings.Core;
 
@@ -58,9 +57,7 @@ public sealed class SettingsPropertyHelper<T> : IObservable<T>, INotifyPropertyC
     /// <summary>Cached latest value so <see cref="Value"/> stays allocation-free. Writes go through <see cref="_stream"/>'s OnNext which re-notifies us via the internal subscription.</summary>
     private T _value;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsPropertyHelper{T}"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="SettingsPropertyHelper{T}"/> class.</summary>
     /// <param name="stream">The backing stream to read/write through.</param>
     /// <param name="initialValue">The seed value used for <see cref="Value"/> before the stream emits its first notification.</param>
     internal SettingsPropertyHelper(SettingsStream<T> stream, T initialValue)

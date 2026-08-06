@@ -6,14 +6,10 @@ using System.Globalization;
 
 namespace AkavacheTodoMaui.Converters;
 
-/// <summary>
-/// Converts integer to boolean for visibility binding.
-/// </summary>
+/// <summary>Converts integer to boolean for visibility binding.</summary>
 public class IntToBoolConverter : IValueConverter
 {
-    /// <summary>
-    /// Converts integer to boolean.
-    /// </summary>
+    /// <summary>Converts integer to boolean.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
@@ -22,9 +18,7 @@ public class IntToBoolConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         value is > 0;
 
-    /// <summary>
-    /// One-way converter — returns <see cref="BindableProperty.UnsetValue"/> so the binding engine leaves the source untouched.
-    /// </summary>
+    /// <summary>One-way converter — returns <see cref="BindableProperty.UnsetValue"/> so the binding engine leaves the source untouched.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>

@@ -211,7 +211,7 @@ public static class CacheInvalidationPatterns
                 return new ApiResponse 
                 { 
                     Data = $"API Response #{apiCallCount}",
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = TimeProvider.System.GetUtcNow().UtcDateTime,
                     Version = apiCallCount
                 };
             });
@@ -226,7 +226,7 @@ public static class CacheInvalidationPatterns
             // Step 1: Initial API call through GetOrFetchObject
             Console.WriteLine("Step 1: Initial API call...");
             var response1 = await cache.GetOrFetchObject("api_data", simulateApiCall, 
-                DateTimeOffset.Now.AddMinutes(30)).FirstAsync();
+                TimeProvider.System.GetLocalNow().AddMinutes(30)).FirstAsync();
             Console.WriteLine($"  Result: {response1.Data} (Version {response1.Version})");
 
             // Step 2: Invalidate the cache entry
@@ -237,7 +237,7 @@ public static class CacheInvalidationPatterns
             // Step 3: Call GetOrFetchObject again - should fetch fresh data
             Console.WriteLine("\nStep 3: Calling GetOrFetchObject again...");
             var response2 = await cache.GetOrFetchObject("api_data", simulateApiCall, 
-                DateTimeOffset.Now.AddMinutes(30)).FirstAsync();
+                TimeProvider.System.GetLocalNow().AddMinutes(30)).FirstAsync();
             Console.WriteLine($"  Result: {response2.Data} (Version {response2.Version})");
 
             // Verify the fix worked

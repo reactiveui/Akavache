@@ -7,16 +7,11 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Smoke coverage for the UniversalSerializer Task-returning shim.
-/// </summary>
+/// <summary>Smoke coverage for the UniversalSerializer Task-returning shim.</summary>
 [Category("Akavache")]
 public class UniversalSerializerAsyncSmokeTests
 {
-    /// <summary>
-    /// Verifies <see cref="UniversalSerializer.TryFindDataWithAlternativeKeysAsync{T}"/>
-    /// returns <see langword="default"/> when the cache is <see langword="null"/>.
-    /// </summary>
+    /// <summary>Verifies <see cref="UniversalSerializer.TryFindDataWithAlternativeKeysAsync{T}"/> returns <see langword="default"/> when the cache is <see langword="null"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryFindDataAsyncShouldReturnDefaultForNullCache()
@@ -27,10 +22,7 @@ public class UniversalSerializerAsyncSmokeTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Verifies <see cref="UniversalSerializer.TryFindDataWithAlternativeKeysAsync{T}"/>
-    /// returns <see langword="default"/> when the cache exists but contains no entries.
-    /// </summary>
+    /// <summary>Verifies <see cref="UniversalSerializer.TryFindDataWithAlternativeKeysAsync{T}"/> returns <see langword="default"/> when the cache exists but contains no entries.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryFindDataAsyncShouldReturnDefaultForEmptyCache()

@@ -17,10 +17,10 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class KeyMetadataTests
 {
-    /// <summary>
-    /// Verifies <see cref="KeyMetadata.BuildFullName"/> returns <see cref="Type.FullName"/>
-    /// verbatim for an ordinary concrete type whose full name is non-null.
-    /// </summary>
+    /// <summary>CLR simple name of <see cref="string"/>, the type the generic cache assertions close over.</summary>
+    private const string StringTypeSimpleName = "String";
+
+    /// <summary>Verifies <see cref="KeyMetadata.BuildFullName"/> returns <see cref="Type.FullName"/> verbatim for an ordinary concrete type whose full name is non-null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BuildFullNameShouldReturnFullNameForConcreteType() =>
@@ -43,10 +43,7 @@ public class KeyMetadataTests
         await Assert.That(KeyMetadata.BuildFullName(genericParameter)).IsEqualTo("T");
     }
 
-    /// <summary>
-    /// Verifies <see cref="KeyMetadata.BuildAssemblyQualifiedShortName"/> produces the
-    /// <c>Assembly.Name + "." + Type.Name</c> form for an ordinary runtime type.
-    /// </summary>
+    /// <summary>Verifies <see cref="KeyMetadata.BuildAssemblyQualifiedShortName"/> produces the <c>Assembly.Name + "." + Type.Name</c> form for an ordinary runtime type.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BuildAssemblyQualifiedShortNameShouldCombineAssemblyAndTypeName()
@@ -100,7 +97,7 @@ public class KeyMetadataTests
     public async Task KeyMetadataGenericFieldsShouldMatchHelperOutputs()
     {
         await Assert.That(KeyMetadata<string>.FullName).IsEqualTo(KeyMetadata.BuildFullName(typeof(string)));
-        await Assert.That(KeyMetadata<string>.Name).IsEqualTo(nameof(String));
+        await Assert.That(KeyMetadata<string>.Name).IsEqualTo(StringTypeSimpleName);
         await Assert.That(KeyMetadata<string>.AssemblyQualifiedShortName).IsEqualTo(KeyMetadata.BuildAssemblyQualifiedShortName(typeof(string)));
     }
 
@@ -110,6 +107,7 @@ public class KeyMetadataTests
     /// second branch of <see cref="KeyMetadata.BuildAssemblyQualifiedShortName"/> from managed
     /// code without reflecting a distro-specific emitted type.
     /// </summary>
+    /// <param name="name">The value the shim reports from its <c>Name</c> property.</param>
     private sealed class NullAssemblyNameShimType(string name) : TypeDelegator(typeof(object))
     {
         /// <inheritdoc/>

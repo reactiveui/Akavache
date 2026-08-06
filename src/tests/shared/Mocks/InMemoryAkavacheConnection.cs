@@ -29,59 +29,50 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
     private bool _schemaCreated;
 
     /// <summary>Gets or sets a value indicating whether the connection should simulate being disposed.</summary>
-    public bool SimulateDisposed { get; set; }
+    internal bool SimulateDisposed { get; set; }
 
     /// <summary>Gets the number of times <see cref="Checkpoint"/> was invoked.</summary>
-    public int CheckpointCount { get; private set; }
+    internal int CheckpointCount { get; private set; }
 
     /// <summary>Gets the mode passed to the most recent <see cref="Checkpoint"/> call.</summary>
-    public CheckpointMode? LastCheckpointMode { get; private set; }
+    internal CheckpointMode? LastCheckpointMode { get; private set; }
 
     /// <summary>Gets the number of times <see cref="Compact"/> was invoked.</summary>
-    public int CompactCount { get; private set; }
+    internal int CompactCount { get; private set; }
 
     /// <summary>Gets a mutable store of legacy V10 values that <see cref="TryReadLegacyV10Value"/> reads from.</summary>
-    public Dictionary<string, byte[]> LegacyV10Store { get; } = [];
+    internal Dictionary<string, byte[]> LegacyV10Store { get; } = [];
 
     /// <summary>Gets the internal live store of <see cref="CacheEntry"/> values. Exposed for test assertions.</summary>
-    public IReadOnlyDictionary<string, CacheEntry> Store => _store;
+    internal IReadOnlyDictionary<string, CacheEntry> Store => _store;
 
     /// <summary>Gets or sets a value indicating whether <see cref="Checkpoint"/> should throw.</summary>
-    public bool FailCheckpoint { get; set; }
+    internal bool FailCheckpoint { get; set; }
 
     /// <summary>Gets or sets a value indicating whether <see cref="Checkpoint"/> should throw synchronously (not via observable).</summary>
-    public bool ThrowOnCheckpointCall { get; set; }
+    internal bool ThrowOnCheckpointCall { get; set; }
 
     /// <summary>Gets or sets a value indicating whether <see cref="Compact"/> should throw.</summary>
-    public bool FailCompact { get; set; }
+    internal bool FailCompact { get; set; }
 
     /// <summary>Gets or sets a value indicating whether <see cref="CreateSchema"/> should throw.</summary>
-    public bool FailCreateTable { get; set; }
+    internal bool FailCreateTable { get; set; }
 
     /// <summary>Gets or sets a value indicating whether <see cref="Upsert"/> should throw.</summary>
-    public bool FailUpsert { get; set; }
+    internal bool FailUpsert { get; set; }
 
     /// <summary>Gets or sets a value indicating whether <see cref="Get(string, string?, DateTimeOffset)"/> should throw.</summary>
-    public bool FailGet { get; set; }
+    internal bool FailGet { get; set; }
 
     /// <summary>Gets or sets a value indicating whether <see cref="TryReadLegacyV10Value"/> should throw.</summary>
-    public bool FailLegacyRead { get; set; }
+    internal bool FailLegacyRead { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether read methods should ignore the expiration
     /// filter and return every stored entry. Used to exercise post-query defensive
     /// <c>x?.Id is not null</c> / <c>x?.Value is not null</c> branches in <c>SqliteBlobCache</c>.
     /// </summary>
-    public bool BypassPredicate { get; set; }
-
-    /// <summary>
-    /// Seeds an entry directly into the underlying store without going through
-    /// <see cref="Upsert"/>'s null-Id guard. Useful for driving SqliteBlobCache's
-    /// defensive filters from tests.
-    /// </summary>
-    /// <param name="key">The dictionary key.</param>
-    /// <param name="entry">The entry to store.</param>
-    public void SeedRaw(string key, CacheEntry entry) => _store[key] = entry;
+    internal bool BypassPredicate { get; set; }
 
     /// <inheritdoc/>
     public IObservable<Unit> CreateSchema() =>
@@ -125,12 +116,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
                 return Observable.Return<CacheEntry?>(null);
             }
 
-            if (typeFullName is not null && !string.Equals(entry.TypeName, typeFullName, StringComparison.Ordinal))
-            {
-                return Observable.Return<CacheEntry?>(null);
-            }
-
-            return Observable.Return<CacheEntry?>(entry);
+            return typeFullName is not null && !string.Equals(entry.TypeName, typeFullName, StringComparison.Ordinal) ? Observable.Return<CacheEntry?>(null) : Observable.Return<CacheEntry?>(entry);
         });
 
     /// <inheritdoc/>
@@ -168,7 +154,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         {
             ThrowIfDisposed();
             var rows = new List<CacheEntry>();
-            foreach (var entry in _store.Values)
+            foreach (var (_, entry) in _store)
             {
                 if (!BypassPredicate && !IsUnexpired(entry, now))
                 {
@@ -192,7 +178,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
         {
             ThrowIfDisposed();
             var keys = new List<string>();
-            foreach (var entry in _store.Values)
+            foreach (var (_, entry) in _store)
             {
                 if (!BypassPredicate && !IsUnexpired(entry, now))
                 {
@@ -245,13 +231,13 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
                 var key = keys[i];
                 if (typeFullName is null)
                 {
-                    _store.TryRemove(key, out _);
+                    _ = _store.TryRemove(key, out _);
                     continue;
                 }
 
                 if (_store.TryGetValue(key, out var existing) && string.Equals(existing.TypeName, typeFullName, StringComparison.Ordinal))
                 {
-                    _store.TryRemove(key, out _);
+                    _ = _store.TryRemove(key, out _);
                 }
             }
 
@@ -273,7 +259,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
             {
                 if (string.Equals(kvp.Value.TypeName, typeFullName, StringComparison.Ordinal))
                 {
-                    _store.TryRemove(kvp.Key, out _);
+                    _ = _store.TryRemove(kvp.Key, out _);
                 }
             }
 
@@ -308,7 +294,7 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
             {
                 if (!IsUnexpired(kvp.Value, now))
                 {
-                    _store.TryRemove(kvp.Key, out _);
+                    _ = _store.TryRemove(kvp.Key, out _);
                 }
             }
 
@@ -362,6 +348,15 @@ internal sealed class InMemoryAkavacheConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public void Dispose() => SimulateDisposed = true;
+
+    /// <summary>
+    /// Seeds an entry directly into the underlying store without going through
+    /// <see cref="Upsert"/>'s null-Id guard. Useful for driving SqliteBlobCache's
+    /// defensive filters from tests.
+    /// </summary>
+    /// <param name="key">The dictionary key.</param>
+    /// <param name="entry">The entry to store.</param>
+    internal void SeedRaw(string key, CacheEntry entry) => _store[key] = entry;
 
     /// <summary>Returns <see langword="true"/> if <paramref name="entry"/> is not expired at <paramref name="now"/>.</summary>
     /// <param name="entry">The entry to inspect.</param>

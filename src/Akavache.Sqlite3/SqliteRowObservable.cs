@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
-using Akavache.Helpers;
 
 #if ENCRYPTED
 namespace Akavache.EncryptedSqlite3;
@@ -43,7 +42,10 @@ namespace Akavache.Sqlite3;
 /// <list type="bullet">
 ///   <item><description><b>Pending, no subscriber</b> — constructed, nobody has subscribed yet. Worker OnNext calls are dropped silently (see below).</description></item>
 ///   <item><description><b>Pending, subscriber</b> — Subscribe has been called; worker OnNext calls forward to the observer.</description></item>
-///   <item><description><b>Cancelled</b> — subscriber disposed. Further OnNext calls are dropped; the next worker check of <see cref="IsCancelled"/> is expected to short-circuit the scan and call OnCompleted.</description></item>
+///   <item><description>
+///   <b>Cancelled</b> — subscriber disposed. Further OnNext calls are dropped; the next worker
+///   check of <see cref="IsCancelled"/> is expected to short-circuit the scan and call OnCompleted.
+///   </description></item>
 ///   <item><description><b>Completed</b> — OnCompleted was called. Further calls are no-ops.</description></item>
 ///   <item><description><b>Errored</b> — OnError was called. Further calls are no-ops.</description></item>
 /// </list>
@@ -60,6 +62,11 @@ namespace Akavache.Sqlite3;
 /// <typeparam name="T">The row type emitted.</typeparam>
 internal sealed class SqliteRowObservable<T> : IObservable<T>
 {
+    /// <summary>Guard message for the single-subscriber contract, held as a constant so the throw site stays within the line limit.</summary>
+    private const string MultiSubscriberMessage =
+        "SqliteRowObservable only supports a single subscriber. Multi-subscriber semantics are "
+        + "intentionally not supported - bridge through an Rx Publish if you need them.";
+
     /// <summary>State value: active; worker may emit, observer may subscribe.</summary>
     private const int StatePending = 0;
 
@@ -78,11 +85,7 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
     /// state — observer callbacks fire outside the lock so a slow observer cannot stall
     /// the worker producing the next row.
     /// </summary>
-#if NET9_0_OR_GREATER
-    private readonly System.Threading.Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
+    private readonly Lock _gate = new();
 
     /// <summary>The active subscriber, or <see langword="null"/> before Subscribe / after terminal state.</summary>
     private IObserver<T>? _observer;
@@ -102,85 +105,7 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
     /// this between rows and stop emitting (falling through to <see cref="OnCompleted"/>)
     /// when it becomes <see langword="true"/>.
     /// </summary>
-    public bool IsCancelled => Volatile.Read(ref _state) != StatePending;
-
-    /// <summary>
-    /// Pushes a row to the subscriber. Worker thread calls this per <c>SQLITE_ROW</c>
-    /// return from <c>sqlite3_step</c>. Silently no-ops in any non-pending state, which
-    /// covers the race where the caller disposes right as the worker is iterating.
-    /// </summary>
-    /// <param name="value">The row to forward.</param>
-    public void OnNext(T value)
-    {
-        IObserver<T>? observer;
-        lock (_gate)
-        {
-            if (_state != StatePending)
-            {
-                return;
-            }
-
-            observer = _observer;
-            if (observer is null)
-            {
-                _buffer ??= [];
-                _buffer.Add(value);
-                return;
-            }
-        }
-
-        observer.OnNext(value);
-    }
-
-    /// <summary>
-    /// Signals end-of-stream. Worker thread calls this once after the last row (or
-    /// immediately when the result set is empty). Subsequent <see cref="OnNext"/> calls
-    /// are no-ops.
-    /// </summary>
-    public void OnCompleted()
-    {
-        IObserver<T>? observer;
-        lock (_gate)
-        {
-            // Cancelled is treated the same as Completed from the worker's perspective —
-            // we're exiting cleanly, either because the caller disposed or because
-            // sqlite3_step returned SQLITE_DONE. Either way, fire OnCompleted at most
-            // once by transitioning through the state machine.
-            if (_state is StateCompleted or StateErrored)
-            {
-                return;
-            }
-
-            _state = StateCompleted;
-            observer = _observer;
-            _observer = null;
-        }
-
-        observer?.OnCompleted();
-    }
-
-    /// <summary>
-    /// Signals failure. Worker thread calls this when <c>sqlite3_step</c> returns an
-    /// error or a body exception propagates out. Suppressed after terminal state.
-    /// </summary>
-    /// <param name="error">The exception to forward.</param>
-    public void OnError(Exception error)
-    {
-        IObserver<T>? observer;
-        lock (_gate)
-        {
-            if (_state is StateCompleted or StateErrored)
-            {
-                return;
-            }
-
-            _state = StateErrored;
-            observer = _observer;
-            _observer = null;
-        }
-
-        observer?.OnError(error);
-    }
+    internal bool IsCancelled => Volatile.Read(ref _state) != StatePending;
 
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<T> observer)
@@ -191,8 +116,7 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         {
             if (_subscribed)
             {
-                throw new InvalidOperationException(
-                    $"{nameof(SqliteRowObservable<T>)} only supports a single subscriber. Multi-subscriber semantics are intentionally not supported — bridge through an Rx <c>Publish</c> if you need them.");
+                throw new InvalidOperationException(MultiSubscriberMessage);
             }
 
             _subscribed = true;
@@ -256,6 +180,84 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
     }
 
     /// <summary>
+    /// Pushes a row to the subscriber. Worker thread calls this per <c>SQLITE_ROW</c>
+    /// return from <c>sqlite3_step</c>. Silently no-ops in any non-pending state, which
+    /// covers the race where the caller disposes right as the worker is iterating.
+    /// </summary>
+    /// <param name="value">The row to forward.</param>
+    internal void OnNext(T value)
+    {
+        IObserver<T>? observer;
+        lock (_gate)
+        {
+            if (_state != StatePending)
+            {
+                return;
+            }
+
+            observer = _observer;
+            if (observer is null)
+            {
+                _buffer ??= [];
+                _buffer.Add(value);
+                return;
+            }
+        }
+
+        observer.OnNext(value);
+    }
+
+    /// <summary>
+    /// Signals end-of-stream. Worker thread calls this once after the last row (or
+    /// immediately when the result set is empty). Subsequent <see cref="OnNext"/> calls
+    /// are no-ops.
+    /// </summary>
+    internal void OnCompleted()
+    {
+        IObserver<T>? observer;
+        lock (_gate)
+        {
+            // Cancelled is treated the same as Completed from the worker's perspective —
+            // we're exiting cleanly, either because the caller disposed or because
+            // sqlite3_step returned SQLITE_DONE. Either way, fire OnCompleted at most
+            // once by transitioning through the state machine.
+            if (_state is StateCompleted or StateErrored)
+            {
+                return;
+            }
+
+            _state = StateCompleted;
+            observer = _observer;
+            _observer = null;
+        }
+
+        observer?.OnCompleted();
+    }
+
+    /// <summary>
+    /// Signals failure. Worker thread calls this when <c>sqlite3_step</c> returns an
+    /// error or a body exception propagates out. Suppressed after terminal state.
+    /// </summary>
+    /// <param name="error">The exception to forward.</param>
+    internal void OnError(Exception error)
+    {
+        IObserver<T>? observer;
+        lock (_gate)
+        {
+            if (_state is StateCompleted or StateErrored)
+            {
+                return;
+            }
+
+            _state = StateErrored;
+            observer = _observer;
+            _observer = null;
+        }
+
+        observer?.OnError(error);
+    }
+
+    /// <summary>
     /// Flips the state to <see cref="StateCancelled"/> so the worker's next
     /// <see cref="IsCancelled"/> check short-circuits the scan. No observer notification
     /// is sent — the subscriber asked to stop listening, so firing <c>OnCompleted</c>
@@ -275,9 +277,7 @@ internal sealed class SqliteRowObservable<T> : IObservable<T>
         }
     }
 
-    /// <summary>
-    /// Replays buffered rows to the observer. Runs outside the lock on an independent snapshot.
-    /// </summary>
+    /// <summary>Replays buffered rows to the observer. Runs outside the lock on an independent snapshot.</summary>
     /// <param name="observer">The observer to forward buffered rows to.</param>
     /// <param name="buffered">The buffered rows, or <see langword="null"/> if none were captured.</param>
     private static void DrainBuffer(IObserver<T> observer, T[]? buffered)

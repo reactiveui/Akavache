@@ -2,20 +2,35 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
 using Akavache.Core;
 using Akavache.Tests.Executors;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for core utility functionality.
-/// </summary>
+/// <summary>Tests for core utility functionality.</summary>
 [Category("Akavache")]
 public class CoreUtilityTests
 {
-    /// <summary>
-    /// Tests that RelativeTimeExtensions work correctly with past times.
-    /// </summary>
+    /// <summary>Number of days in the week-sized offset used to build past and future sample times.</summary>
+    private const int WeekSpanDays = 7;
+
+    /// <summary>UTC offset of the Eastern Standard Time zone, used as a representative non-zero offset.</summary>
+    private const int EasternStandardOffsetHours = -5;
+
+    /// <summary>Minutes in one hour, the conversion factor the TimeSpan arithmetic assertions rely on.</summary>
+    private const double MinutesPerHour = 60;
+
+    /// <summary>Minutes in half an hour, the smaller operand of the TimeSpan arithmetic assertions.</summary>
+    private const double HalfHourMinutes = 30;
+
+    /// <summary>Minutes in an hour and a half, the expected sum of the two TimeSpan operands.</summary>
+    private const double HourAndAHalfMinutes = MinutesPerHour + HalfHourMinutes;
+
+    /// <summary>Number of factory invocations expected once the request cache has been cleared and the key re-requested.</summary>
+    private const int FactoryCallsAcrossCacheClear = 2;
+
+    /// <summary>Tests that RelativeTimeExtensions work correctly with past times.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task RelativeTimeExtensionsShouldWorkWithPastTimes()
@@ -26,7 +41,7 @@ public class CoreUtilityTests
         // Act
         var oneHourAgo = baseTime.AddHours(-1);
         var oneDayAgo = baseTime.AddDays(-1);
-        var oneWeekAgo = baseTime.AddDays(-7);
+        var oneWeekAgo = baseTime.AddDays(-WeekSpanDays);
 
         // Assert - These should all be in the past relative to baseTime
         using (Assert.Multiple())
@@ -37,9 +52,7 @@ public class CoreUtilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that RelativeTimeExtensions work correctly with future times.
-    /// </summary>
+    /// <summary>Tests that RelativeTimeExtensions work correctly with future times.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task RelativeTimeExtensionsShouldWorkWithFutureTimes()
@@ -50,7 +63,7 @@ public class CoreUtilityTests
         // Act
         var oneHourFromNow = baseTime.AddHours(1);
         var oneDayFromNow = baseTime.AddDays(1);
-        var oneWeekFromNow = baseTime.AddDays(7);
+        var oneWeekFromNow = baseTime.AddDays(WeekSpanDays);
 
         // Assert - These should all be in the future relative to baseTime
         using (Assert.Multiple())
@@ -61,16 +74,14 @@ public class CoreUtilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that DateTimeOffset conversions work correctly.
-    /// </summary>
+    /// <summary>Tests that DateTimeOffset conversions work correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task DateTimeOffsetConversionsShouldWorkCorrectly()
     {
         // Arrange
         DateTime utcTime = new(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc);
-        var offset = TimeSpan.FromHours(-5); // EST
+        var offset = TimeSpan.FromHours(EasternStandardOffsetHours);
 
         // Act
         DateTimeOffset dateTimeOffset = new(utcTime, TimeSpan.Zero);
@@ -85,9 +96,7 @@ public class CoreUtilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that utility methods handle edge cases correctly.
-    /// </summary>
+    /// <summary>Tests that utility methods handle edge cases correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task UtilityMethodsShouldHandleEdgeCases()
@@ -114,24 +123,22 @@ public class CoreUtilityTests
         }
     }
 
-    /// <summary>
-    /// Tests that TimeSpan operations work correctly.
-    /// </summary>
+    /// <summary>Tests that TimeSpan operations work correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task TimeSpanOperationsShouldWorkCorrectly()
     {
         // Arrange
         var oneHour = TimeSpan.FromHours(1);
-        var thirtyMinutes = TimeSpan.FromMinutes(30);
-        var ninetyMinutes = TimeSpan.FromMinutes(90);
+        var thirtyMinutes = TimeSpan.FromMinutes(HalfHourMinutes);
+        var ninetyMinutes = TimeSpan.FromMinutes(HourAndAHalfMinutes);
 
         using (Assert.Multiple())
         {
             // Act & Assert
-            await Assert.That(oneHour.TotalMinutes).IsEqualTo(60);
-            await Assert.That(thirtyMinutes.TotalMinutes).IsEqualTo(30);
-            await Assert.That(ninetyMinutes.TotalMinutes).IsEqualTo(90);
+            await Assert.That(oneHour.TotalMinutes).IsEqualTo(MinutesPerHour);
+            await Assert.That(thirtyMinutes.TotalMinutes).IsEqualTo(HalfHourMinutes);
+            await Assert.That(ninetyMinutes.TotalMinutes).IsEqualTo(HourAndAHalfMinutes);
         }
 
         // Test arithmetic
@@ -142,9 +149,7 @@ public class CoreUtilityTests
         await Assert.That(difference).IsEqualTo(thirtyMinutes);
     }
 
-    /// <summary>
-    /// Tests that RequestCache functionality works correctly.
-    /// </summary>
+    /// <summary>Tests that RequestCache functionality works correctly.</summary>
     /// <returns>A task representing the test completion.</returns>
     [Test]
     [TestExecutor<AkavacheTestExecutor>]
@@ -185,13 +190,11 @@ public class CoreUtilityTests
         using (Assert.Multiple())
         {
             await Assert.That(result3).IsEqualTo("result_2"); // Should be called again after clear
-            await Assert.That(callCount).IsEqualTo(2);
+            await Assert.That(callCount).IsEqualTo(FactoryCallsAcrossCacheClear);
         }
     }
 
-    /// <summary>
-    /// Tests that RequestCache handles different key types correctly.
-    /// </summary>
+    /// <summary>Tests that RequestCache handles different key types correctly.</summary>
     /// <returns>A task representing the test completion.</returns>
     [Test]
     [TestExecutor<AkavacheTestExecutor>]
@@ -222,19 +225,13 @@ public class CoreUtilityTests
 
         IObservable<string> Factory(string key)
         {
-            if (!callCounts.TryGetValue(key, out _))
-            {
-                callCounts[key] = 0;
-            }
-
-            callCounts[key]++;
-            return Observable.Return($"result_{key}_{callCounts[key]}");
+            ref var callCount = ref CollectionsMarshal.GetValueRefOrAddDefault(callCounts, key, out _);
+            callCount++;
+            return Observable.Return($"result_{key}_{callCount}");
         }
     }
 
-    /// <summary>
-    /// Tests that IBlobCache.ExceptionHelpers work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache.ExceptionHelpers work correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task ExceptionHelpersShouldWorkCorrectly()
@@ -260,9 +257,7 @@ public class CoreUtilityTests
         await Assert.That(objectDisposedEx.Message).Contains("disposed");
     }
 
-    /// <summary>
-    /// Tests that scheduler registration works correctly.
-    /// </summary>
+    /// <summary>Tests that scheduler registration works correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SchedulerRegistrationShouldWorkCorrectly()
@@ -281,9 +276,7 @@ public class CoreUtilityTests
         await Assert.That(immediateScheduler).IsNotEquivalentTo(taskpoolScheduler);
     }
 
-    /// <summary>
-    /// Tests that unit values work correctly.
-    /// </summary>
+    /// <summary>Tests that unit values work correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task UnitValuesShouldWorkCorrectly()

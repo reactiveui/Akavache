@@ -6,6 +6,8 @@
 // https://github.com/SimonCropp/Polyfill
 #if !NET
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Diagnostics.CodeAnalysis;
 
 /// <summary>
@@ -15,26 +17,25 @@ namespace System.Diagnostics.CodeAnalysis;
 /// <remarks>
 /// Link: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.requiresunreferencedcodeattribute.
 /// </remarks>
+[SuppressMessage(
+    "Design",
+    "SST2324:Do not declare a member more accessible than its containing type",
+    Justification = "Mirrors the shape of the corresponding BCL type (System.RequiresUnreferencedCodeAttribute); the polyfill compiles only where the BCL lacks it.")]
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [AttributeUsage(
-    AttributeTargets.Method |
-    AttributeTargets.Constructor |
-    AttributeTargets.Class,
+    AttributeTargets.Method
+    | AttributeTargets.Constructor
+    | AttributeTargets.Class,
     Inherited = false)]
 internal sealed class RequiresUnreferencedCodeAttribute : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequiresUnreferencedCodeAttribute"/> class
-    /// with the specified message.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="RequiresUnreferencedCodeAttribute"/> class with the specified message.</summary>
     /// <param name="message">A message that contains information about the usage of unreferenced code.</param>
     public RequiresUnreferencedCodeAttribute(string message) =>
         Message = message;
 
-    /// <summary>
-    /// Gets a message that contains information about the usage of unreferenced code.
-    /// </summary>
+    /// <summary>Gets a message that contains information about the usage of unreferenced code.</summary>
     public string Message { get; }
 
     /// <summary>

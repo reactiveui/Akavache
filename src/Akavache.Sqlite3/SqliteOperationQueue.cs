@@ -36,7 +36,10 @@ internal sealed class SqliteOperationQueue : IDisposable
 
     /// <summary>Signalled by the worker thread as it exits so <see cref="ShutdownAndWait"/> can block the caller until the worker is fully done.</summary>
     /// <remarks>Not disposed explicitly: concurrent <see cref="ShutdownAndWait"/> callers may still be blocking on <see cref="ManualResetEventSlim.Wait()"/> when the winner returns.</remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Concurrent ShutdownAndWait callers may still be blocking on Wait when the winner disposes the inbox.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2213:Disposable fields should be disposed",
+        Justification = "Concurrent ShutdownAndWait callers may still be blocking on Wait when the winner disposes the inbox.")]
     private readonly ManualResetEventSlim _workerExited = new(initialState: false);
 
     /// <summary>Reusable buffer for collecting coalescable operations in the worker loop. Only accessed from the worker thread.</summary>
@@ -58,83 +61,8 @@ internal sealed class SqliteOperationQueue : IDisposable
     public SqliteOperationQueue(SqlitePclRawConnection connection, string threadName)
     {
         _connection = connection;
-        _worker = new(WorkerLoop)
-        {
-            IsBackground = true,
-            Name = threadName,
-        };
+        _worker = new(WorkerLoop) { IsBackground = true, Name = threadName, };
         _worker.Start();
-    }
-
-    /// <summary>
-    /// Enqueues <paramref name="body"/> for execution on the worker thread and returns
-    /// an observable that emits the result once the worker has run it. The returned
-    /// observable is a <see cref="SqliteReplyObservable{T}"/> — single-subscriber, one-shot,
-    /// deliberately cheaper than <c>AsyncSubject&lt;T&gt;</c>.
-    /// </summary>
-    /// <typeparam name="T">The result type produced by the body.</typeparam>
-    /// <param name="body">The work to run against the owning connection. Runs on the worker thread — must not touch state owned by other threads without synchronization.</param>
-    /// <param name="coalescable">When <see langword="true"/>, the worker loop may batch this operation with adjacent coalescable writes into a single transaction.</param>
-    /// <returns>A one-shot observable that emits the body's return value.</returns>
-    public IObservable<T> Enqueue<T>(Func<SqlitePclRawConnection, T> body, bool coalescable = false)
-    {
-        var reply = new SqliteReplyObservable<T>();
-
-        if (Volatile.Read(ref _disposed) != 0)
-        {
-            reply.SetError(new ObjectDisposedException(nameof(SqliteOperationQueue)));
-            return reply;
-        }
-
-        _inbox.Add(new SqliteOperation<T>(body, reply, coalescable));
-        return reply;
-    }
-
-    /// <summary>
-    /// Enqueues a multi-row work body and returns a
-    /// <see cref="SqliteRowObservable{T}"/> that emits each row as the worker produces
-    /// it. The body runs on the worker thread with two delegates: one to emit each row,
-    /// and one to check whether the subscriber has disposed and the scan should
-    /// short-circuit. The body returns normally on end-of-rows, or throws on SQLite
-    /// errors (the thrown exception is forwarded to <see cref="IObserver{T}.OnError"/>).
-    /// </summary>
-    /// <typeparam name="T">The row type emitted.</typeparam>
-    /// <param name="body">The work to run. Arguments: the connection, the per-row emit callback, and a cancel-check that returns <see langword="true"/> once the caller has disposed the subscription.</param>
-    /// <returns>An observable sequence of rows.</returns>
-    public IObservable<T> EnqueueRowStream<T>(Action<SqlitePclRawConnection, Action<T>, Func<bool>> body)
-    {
-        var stream = new SqliteRowObservable<T>();
-
-        if (Volatile.Read(ref _disposed) != 0)
-        {
-            stream.OnError(new ObjectDisposedException(nameof(SqliteOperationQueue)));
-            return stream;
-        }
-
-        _inbox.Add(new SqliteRowStreamOperation<T>(body, stream));
-        return stream;
-    }
-
-    /// <summary>
-    /// Signals the worker thread to drain any remaining work items and then exit, runs
-    /// the supplied last-will callback on the worker thread as its final act (so native
-    /// prepared statements and the <c>sqlite3*</c> handle are finalized on the same
-    /// thread that created them), and blocks the caller until the worker has finished.
-    /// </summary>
-    /// <param name="lastWill">Cleanup callback invoked on the worker thread after all queued operations have drained. Typical use: dispose prepared statements and close the <c>sqlite3*</c> handle.</param>
-    public void ShutdownAndWait(Action<SqlitePclRawConnection> lastWill)
-    {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
-        {
-            _workerExited.Wait();
-            return;
-        }
-
-        TryAddToInbox(new SqliteShutdownOperation(lastWill));
-
-        _inbox.CompleteAdding();
-        _workerExited.Wait();
-        _inbox.Dispose();
     }
 
     /// <inheritdoc/>
@@ -239,10 +167,7 @@ internal sealed class SqliteOperationQueue : IDisposable
         ReplayRemainingOps(connection, batch, failedIndex + 1);
     }
 
-    /// <summary>
-    /// Fails all operations in a batch with an <see cref="InvalidOperationException"/>.
-    /// Used when COMMIT or structural failure makes the entire batch unrecoverable.
-    /// </summary>
+    /// <summary>Fails all operations in a batch with an <see cref="InvalidOperationException"/>. Used when COMMIT or structural failure makes the entire batch unrecoverable.</summary>
     /// <param name="batch">The batch whose operations should receive errors.</param>
     internal static void FailAllOps(List<ISqliteOperation> batch)
     {
@@ -269,6 +194,83 @@ internal sealed class SqliteOperationQueue : IDisposable
         {
             batch[i].Execute(connection);
         }
+    }
+
+    /// <summary>
+    /// Enqueues <paramref name="body"/> for execution on the worker thread and returns
+    /// an observable that emits the result once the worker has run it. The returned
+    /// observable is a <see cref="SqliteReplyObservable{T}"/> — single-subscriber, one-shot,
+    /// deliberately cheaper than <c>AsyncSubject&lt;T&gt;</c>.
+    /// </summary>
+    /// <typeparam name="T">The result type produced by the body.</typeparam>
+    /// <param name="body">The work to run against the owning connection. Runs on the worker thread — must not touch state owned by other threads without synchronization.</param>
+    /// <param name="coalescable">When <see langword="true"/>, the worker loop may batch this operation with adjacent coalescable writes into a single transaction.</param>
+    /// <returns>A one-shot observable that emits the body's return value.</returns>
+    internal IObservable<T> Enqueue<T>(Func<SqlitePclRawConnection, T> body, bool coalescable = false)
+    {
+        var reply = new SqliteReplyObservable<T>();
+
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            reply.SetError(new ObjectDisposedException(nameof(SqliteOperationQueue)));
+            return reply;
+        }
+
+        _inbox.Add(new SqliteOperation<T>(body, reply, coalescable));
+        return reply;
+    }
+
+    /// <summary>
+    /// Enqueues a multi-row work body and returns a
+    /// <see cref="SqliteRowObservable{T}"/> that emits each row as the worker produces
+    /// it. The body runs on the worker thread with two delegates: one to emit each row,
+    /// and one to check whether the subscriber has disposed and the scan should
+    /// short-circuit. The body returns normally on end-of-rows, or throws on SQLite
+    /// errors (the thrown exception is forwarded to <see cref="IObserver{T}.OnError"/>).
+    /// </summary>
+    /// <typeparam name="T">The row type emitted.</typeparam>
+    /// <param name="body">
+    /// The work to run. Arguments: the connection, the per-row emit callback, and a cancel-check
+    /// that returns <see langword="true"/> once the caller has disposed the subscription.
+    /// </param>
+    /// <returns>An observable sequence of rows.</returns>
+    internal IObservable<T> EnqueueRowStream<T>(Action<SqlitePclRawConnection, Action<T>, Func<bool>> body)
+    {
+        var stream = new SqliteRowObservable<T>();
+
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            stream.OnError(new ObjectDisposedException(nameof(SqliteOperationQueue)));
+            return stream;
+        }
+
+        _inbox.Add(new SqliteRowStreamOperation<T>(body, stream));
+        return stream;
+    }
+
+    /// <summary>
+    /// Signals the worker thread to drain any remaining work items and then exit, runs
+    /// the supplied last-will callback on the worker thread as its final act (so native
+    /// prepared statements and the <c>sqlite3*</c> handle are finalized on the same
+    /// thread that created them), and blocks the caller until the worker has finished.
+    /// </summary>
+    /// <param name="lastWill">
+    /// Cleanup callback invoked on the worker thread after all queued operations have drained.
+    /// Typical use: dispose prepared statements and close the <c>sqlite3*</c> handle.
+    /// </param>
+    internal void ShutdownAndWait(Action<SqlitePclRawConnection> lastWill)
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            _workerExited.Wait();
+            return;
+        }
+
+        _ = TryAddToInbox(new SqliteShutdownOperation(lastWill));
+
+        _inbox.CompleteAdding();
+        _workerExited.Wait();
+        _inbox.Dispose();
     }
 
     /// <summary>
@@ -375,10 +377,7 @@ internal sealed class SqliteOperationQueue : IDisposable
         RunAfterBatch();
     }
 
-    /// <summary>
-    /// Runs the stashed non-coalescable op (if any) that broke the current batch,
-    /// then clears the slot.
-    /// </summary>
+    /// <summary>Runs the stashed non-coalescable op (if any) that broke the current batch, then clears the slot.</summary>
     internal void RunAfterBatch()
     {
         if (_afterBatch is null)

@@ -8,15 +8,11 @@ using Newtonsoft.Json.Serialization;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for <see cref="NewtonsoftDateTimeContractResolver"/>.
-/// </summary>
+/// <summary>Tests for <see cref="NewtonsoftDateTimeContractResolver"/>.</summary>
 [Category("Akavache")]
 public class NewtonsoftDateTimeContractResolverTests
 {
-    /// <summary>
-    /// Resolving a DateTime type on a resolver with no existing resolver should attach the tick converter.
-    /// </summary>
+    /// <summary>Resolving a DateTime type on a resolver with no existing resolver should attach the tick converter.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldAttachDateTimeConverterByDefault()
@@ -28,9 +24,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsTypeOf<NewtonsoftDateTimeTickConverter>();
     }
 
-    /// <summary>
-    /// Resolving a nullable DateTime should also attach the tick converter.
-    /// </summary>
+    /// <summary>Resolving a nullable DateTime should also attach the tick converter.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldAttachDateTimeConverterForNullable()
@@ -41,9 +35,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsTypeOf<NewtonsoftDateTimeTickConverter>();
     }
 
-    /// <summary>
-    /// Resolving a DateTimeOffset type should attach the DateTimeOffset tick converter.
-    /// </summary>
+    /// <summary>Resolving a DateTimeOffset type should attach the DateTimeOffset tick converter.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldAttachDateTimeOffsetConverter()
@@ -54,9 +46,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsSameReferenceAs(NewtonsoftDateTimeOffsetTickConverter.Default);
     }
 
-    /// <summary>
-    /// Resolving a nullable DateTimeOffset type should also attach the DateTimeOffset tick converter.
-    /// </summary>
+    /// <summary>Resolving a nullable DateTimeOffset type should also attach the DateTimeOffset tick converter.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldAttachDateTimeOffsetConverterForNullable()
@@ -67,9 +57,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsSameReferenceAs(NewtonsoftDateTimeOffsetTickConverter.Default);
     }
 
-    /// <summary>
-    /// Resolving a non-Date type should leave the converter null.
-    /// </summary>
+    /// <summary>Resolving a non-Date type should leave the converter null.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldNotAttachConverterForOtherTypes()
@@ -81,9 +69,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsNull();
     }
 
-    /// <summary>
-    /// When an existing resolver is supplied that already attaches a converter, that contract should be returned as-is.
-    /// </summary>
+    /// <summary>When an existing resolver is supplied that already attaches a converter, that contract should be returned as-is.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldHonorExistingResolverWithConverter()
@@ -97,9 +83,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsTypeOf<MarkerConverter>();
     }
 
-    /// <summary>
-    /// When an existing resolver returns a contract without a converter, the tick converter should still be applied.
-    /// </summary>
+    /// <summary>When an existing resolver returns a contract without a converter, the tick converter should still be applied.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldApplyConverterWhenExistingReturnsNoConverter()
@@ -112,18 +96,13 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsTypeOf<NewtonsoftDateTimeTickConverter>();
     }
 
-    /// <summary>
-    /// An existing resolver of the same type should be ignored to prevent infinite recursion.
-    /// </summary>
+    /// <summary>An existing resolver of the same type should be ignored to prevent infinite recursion.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverShouldIgnoreSameTypeExistingResolver()
     {
         NewtonsoftDateTimeContractResolver inner = new();
-        NewtonsoftDateTimeContractResolver resolver = new()
-        {
-            ExistingContractResolver = inner,
-        };
+        NewtonsoftDateTimeContractResolver resolver = new() { ExistingContractResolver = inner, };
 
         var contract = resolver.ResolveContract(typeof(DateTime));
 
@@ -131,17 +110,12 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsTypeOf<NewtonsoftDateTimeTickConverter>();
     }
 
-    /// <summary>
-    /// The ForceDateTimeKind property should be settable after construction.
-    /// </summary>
+    /// <summary>The ForceDateTimeKind property should be settable after construction.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ContractResolverForceDateTimeKindShouldBeSettable()
     {
-        NewtonsoftDateTimeContractResolver resolver = new()
-        {
-            ForceDateTimeKind = DateTimeKind.Utc,
-        };
+        NewtonsoftDateTimeContractResolver resolver = new() { ForceDateTimeKind = DateTimeKind.Utc, };
 
         await Assert.That(resolver.ForceDateTimeKind).IsEqualTo(DateTimeKind.Utc);
 
@@ -149,9 +123,7 @@ public class NewtonsoftDateTimeContractResolverTests
         await Assert.That(contract.Converter).IsTypeOf<NewtonsoftDateTimeTickConverter>();
     }
 
-    /// <summary>
-    /// A minimal inner resolver that always attaches a marker converter to contracts.
-    /// </summary>
+    /// <summary>A minimal inner resolver that always attaches a marker converter to contracts.</summary>
     private sealed class ResolverWithConverter : DefaultContractResolver
     {
         /// <inheritdoc />
@@ -163,9 +135,7 @@ public class NewtonsoftDateTimeContractResolverTests
         }
     }
 
-    /// <summary>
-    /// A no-op converter used to detect when an existing resolver's converter is preserved.
-    /// </summary>
+    /// <summary>A no-op converter used to detect when an existing resolver's converter is preserved.</summary>
     private sealed class MarkerConverter : JsonConverter
     {
         /// <inheritdoc />

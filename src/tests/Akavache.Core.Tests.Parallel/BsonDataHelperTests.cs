@@ -6,27 +6,24 @@ using Akavache.Core;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="BsonDataHelper"/>.
-/// </summary>
+/// <summary>Tests for <see cref="BsonDataHelper"/>.</summary>
 [Category("Akavache")]
 public class BsonDataHelperTests
 {
-    /// <summary>
-    /// Data shorter than 5 bytes is not BSON (lines 22-23, branch at 21).
-    /// </summary>
+    /// <summary>Data shorter than 5 bytes is not BSON (lines 22-23, branch at 21).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task IsPotentialBsonData_DataShorterThan5Bytes_ReturnsFalse()
     {
-        var result = BsonDataHelper.IsPotentialBsonData([1, 2, 3, 4]);
+        // One byte shorter than the 5-byte minimum a BSON document header occupies.
+        byte[] shorterThanBsonHeader = [1, 2, 3, 4];
+
+        var result = BsonDataHelper.IsPotentialBsonData(shorterThanBsonHeader);
 
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Data with valid BSON header length returns true.
-    /// </summary>
+    /// <summary>Data with valid BSON header length returns true.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task IsPotentialBsonData_ValidBsonHeader_ReturnsTrue()
@@ -39,9 +36,7 @@ public class BsonDataHelperTests
         await Assert.That(result).IsTrue();
     }
 
-    /// <summary>
-    /// Data with document length of 4 or less is not valid BSON.
-    /// </summary>
+    /// <summary>Data with document length of 4 or less is not valid BSON.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task IsPotentialBsonData_DocumentLengthTooSmall_ReturnsFalse()
@@ -54,9 +49,7 @@ public class BsonDataHelperTests
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Data with document length exceeding data.Length + 100 is not valid BSON.
-    /// </summary>
+    /// <summary>Data with document length exceeding data.Length + 100 is not valid BSON.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task IsPotentialBsonData_DocumentLengthExceedsDataPlusTolerance_ReturnsFalse()
@@ -69,9 +62,7 @@ public class BsonDataHelperTests
         await Assert.That(result).IsFalse();
     }
 
-    /// <summary>
-    /// Empty data array is shorter than 5 bytes and returns false.
-    /// </summary>
+    /// <summary>Empty data array is shorter than 5 bytes and returns false.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task IsPotentialBsonData_EmptyArray_ReturnsFalse()

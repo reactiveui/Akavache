@@ -18,6 +18,18 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class SqliteBlobCacheSmokeTests
 {
+    /// <summary>The payload written and read back on the round-trip smoke tests.</summary>
+    private static readonly byte[] RoundTripPayload = [1, 2, 3];
+
+    /// <summary>The payload written by one cache instance and read back by another.</summary>
+    private static readonly byte[] PersistedPayload = [9, 8, 7];
+
+    /// <summary>Payload for the entry whose expiry has already passed.</summary>
+    private static readonly byte[] ExpiredPayload = [1];
+
+    /// <summary>Payload for the entry that is still within its expiry.</summary>
+    private static readonly byte[] ValidPayload = [2];
+
     /// <summary>
     /// Verifies that a simple insert + get round-trip works against a real SQLite database.
     /// This is the canonical end-to-end smoke test.
@@ -32,12 +44,12 @@ public class SqliteBlobCacheSmokeTests
             SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), System.Reactive.Concurrency.ImmediateScheduler.Instance);
             try
             {
-                cache.Insert("k", [1, 2, 3]).WaitForCompletion();
+                cache.Insert("k", RoundTripPayload).WaitForCompletion();
 
                 var data = cache.Get("k").WaitForValue();
 
                 await Assert.That(data).IsNotNull();
-                await Assert.That(data!).IsEquivalentTo(new byte[] { 1, 2, 3 });
+                await Assert.That(data!).IsEquivalentTo(RoundTripPayload);
             }
             finally
             {
@@ -62,7 +74,7 @@ public class SqliteBlobCacheSmokeTests
             SqliteBlobCache writer = new(dbPath, new SystemJsonSerializer());
             try
             {
-                writer.Insert("persisted", [9, 8, 7]).WaitForCompletion();
+                writer.Insert("persisted", PersistedPayload).WaitForCompletion();
             }
             finally
             {
@@ -75,7 +87,7 @@ public class SqliteBlobCacheSmokeTests
                 var data = reader.Get("persisted").WaitForValue();
 
                 await Assert.That(data).IsNotNull();
-                await Assert.That(data!).IsEquivalentTo(new byte[] { 9, 8, 7 });
+                await Assert.That(data!).IsEquivalentTo(PersistedPayload);
             }
             finally
             {
@@ -103,12 +115,12 @@ public class SqliteBlobCacheSmokeTests
             SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), System.Reactive.Concurrency.ImmediateScheduler.Instance);
             try
             {
-                cache.Insert("k", [1, 2, 3]).WaitForCompletion();
+                cache.Insert("k", RoundTripPayload).WaitForCompletion();
 
                 var data = cache.Get("k").WaitForValue();
 
                 await Assert.That(data).IsNotNull();
-                await Assert.That(data!).IsEquivalentTo(new byte[] { 1, 2, 3 });
+                await Assert.That(data!).IsEquivalentTo(RoundTripPayload);
             }
             finally
             {
@@ -132,8 +144,8 @@ public class SqliteBlobCacheSmokeTests
             SqliteBlobCache cache = new(dbPath, new SystemJsonSerializer(), System.Reactive.Concurrency.ImmediateScheduler.Instance);
             try
             {
-                cache.Insert("expired", [1], DateTimeOffset.UtcNow.AddDays(-1)).WaitForCompletion();
-                cache.Insert("valid", [2], DateTimeOffset.UtcNow.AddDays(1)).WaitForCompletion();
+                cache.Insert("expired", ExpiredPayload, TimeProvider.System.GetUtcNow().AddDays(-1)).WaitForCompletion();
+                cache.Insert("valid", ValidPayload, TimeProvider.System.GetUtcNow().AddDays(1)).WaitForCompletion();
                 cache.Vacuum().WaitForCompletion();
 
                 var keys = cache.GetAllKeys().ToList().WaitForValue();

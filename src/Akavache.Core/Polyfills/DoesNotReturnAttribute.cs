@@ -6,14 +6,18 @@
 // https://github.com/SimonCropp/Polyfill
 #if !NET
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Diagnostics.CodeAnalysis;
 
-/// <summary>
-/// Specifies that a method will never return under any circumstance.
-/// </summary>
+/// <summary>Specifies that a method will never return under any circumstance.</summary>
 /// <remarks>
 /// Link: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnattribute.
 /// </remarks>
+[SuppressMessage(
+    "Design",
+    "SST2324:Do not declare a member more accessible than its containing type",
+    Justification = "Mirrors the shape of the corresponding BCL type (System.DoesNotReturnAttribute); the polyfill compiles only where the BCL lacks it.")]
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]

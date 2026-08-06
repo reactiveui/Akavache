@@ -6,43 +6,33 @@ using System.Diagnostics;
 
 namespace Akavache.Benchmarks.V10;
 
-/// <summary>
-/// TestData.
-/// </summary>
+/// <summary> The payload the object benchmarks round-trip through the cache: a small immutable POCO mixing a value type, a string and a timestamp so serialization cost is representative. </summary>
 [DebuggerDisplay("Id: {Id}, Name: {Name}, Value: {Value}")]
-public class TestData : IEquatable<TestData>
+public sealed class TestData : IEquatable<TestData>
 {
-    /// <summary>
-    /// Gets or sets the identifier.
-    /// </summary>
+    /// <summary> Gets the identifier. Init-only because it takes part in <see cref="GetHashCode"/>. </summary>
     /// <value>
     /// The identifier.
     /// </value>
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 
-    /// <summary>
-    /// Gets or sets the name.
-    /// </summary>
+    /// <summary> Gets the name. Init-only because it takes part in <see cref="GetHashCode"/>. </summary>
     /// <value>
     /// The name.
     /// </value>
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
 
-    /// <summary>
-    /// Gets or sets the value.
-    /// </summary>
+    /// <summary> Gets the value. Init-only because it takes part in <see cref="GetHashCode"/>. </summary>
     /// <value>
     /// The value.
     /// </value>
-    public int Value { get; set; }
+    public int Value { get; init; }
 
-    /// <summary>
-    /// Gets or sets the created.
-    /// </summary>
+    /// <summary> Gets the creation timestamp. Init-only because it takes part in <see cref="GetHashCode"/>. </summary>
     /// <value>
-    /// The created.
+    /// The creation timestamp.
     /// </value>
-    public DateTimeOffset Created { get; set; }
+    public DateTimeOffset Created { get; init; }
 
     /// <inheritdoc />
     public override string ToString() => $"Id: {Id}, Name: {Name}, Value: {Value}, Created: {Created}";
@@ -58,15 +48,10 @@ public class TestData : IEquatable<TestData>
             return false;
         }
 
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return Id.Equals(other.Id) &&
-               string.Equals(Name, other.Name, StringComparison.Ordinal) &&
-               Value == other.Value &&
-               Created.Equals(other.Created);
+        return ReferenceEquals(this, other) ? true : Id.Equals(other.Id)
+               && string.Equals(Name, other.Name, StringComparison.Ordinal)
+               && Value == other.Value
+               && Created.Equals(other.Created);
     }
 
     /// <inheritdoc />

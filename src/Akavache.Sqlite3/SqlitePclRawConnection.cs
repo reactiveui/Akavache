@@ -2,8 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Helpers;
-
 using SQLitePCL;
 using static SQLitePCL.raw;
 
@@ -21,9 +19,10 @@ namespace Akavache.Sqlite3;
 /// memory allocations to only the necessary serialized payload and results.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
-    "Ordering Rules",
-    "SA1204:Static elements should appear before instance elements",
-    Justification = "Methods are grouped by functional purpose (public API first, then shared private helpers including the static legacy-V10 probes). Enforcing strict static-first ordering would scatter cohesive code.")]
+    "Ordering",
+    "SST1204:Static members should appear before instance members",
+    Justification = "Methods are grouped by functional purpose: public API first, then the shared private helpers "
+                    + "including the static legacy-V10 probes. Strict static-first ordering would scatter cohesive code.")]
 internal sealed class SqlitePclRawConnection : IAkavacheConnection
 {
     /// <summary>
@@ -32,14 +31,14 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// that used sqlite-net, allowing older databases to be opened seamlessly.
     /// </summary>
     private const string SchemaSql =
-        "CREATE TABLE IF NOT EXISTS \"CacheEntry\" (" +
-        "\"Id\" TEXT PRIMARY KEY NOT NULL, " +
-        "\"CreatedAt\" INTEGER NOT NULL, " +
-        "\"ExpiresAt\" INTEGER NULL, " +
-        "\"TypeName\" TEXT NULL, " +
-        "\"Value\" BLOB NULL);" +
-        "CREATE INDEX IF NOT EXISTS \"CacheEntry_ExpiresAt\" ON \"CacheEntry\"(\"ExpiresAt\");" +
-        "CREATE INDEX IF NOT EXISTS \"CacheEntry_TypeName\" ON \"CacheEntry\"(\"TypeName\");";
+        "CREATE TABLE IF NOT EXISTS \"CacheEntry\" ("
+        + "\"Id\" TEXT PRIMARY KEY NOT NULL, "
+        + "\"CreatedAt\" INTEGER NOT NULL, "
+        + "\"ExpiresAt\" INTEGER NULL, "
+        + "\"TypeName\" TEXT NULL, "
+        + "\"Value\" BLOB NULL);"
+        + "CREATE INDEX IF NOT EXISTS \"CacheEntry_ExpiresAt\" ON \"CacheEntry\"(\"ExpiresAt\");"
+        + "CREATE INDEX IF NOT EXISTS \"CacheEntry_TypeName\" ON \"CacheEntry\"(\"TypeName\");";
 
     /// <summary>The list of columns retrieved in CacheEntry selection queries.</summary>
     private const string SelectColumns = "\"Id\", \"CreatedAt\", \"ExpiresAt\", \"TypeName\", \"Value\"";
@@ -56,35 +55,35 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
 
     /// <summary>Single-key read (no type filter).</summary>
     private const string SqlGetOne =
-        "SELECT " + SelectColumns + " FROM \"CacheEntry\" WHERE \"Id\" = ? AND " + UnexpiredClause;
+        $"SELECT {SelectColumns} FROM \"CacheEntry\" WHERE \"Id\" = ? AND {UnexpiredClause}";
 
     /// <summary>Single-key read with type discriminator.</summary>
     private const string SqlGetOneTyped =
-        "SELECT " + SelectColumns + " FROM \"CacheEntry\" WHERE \"Id\" = ? AND " + UnexpiredClause + " AND \"TypeName\" = ?";
+        $"SELECT {SelectColumns} FROM \"CacheEntry\" WHERE \"Id\" = ? AND {UnexpiredClause} AND \"TypeName\" = ?";
 
     /// <summary>Bulk key read using a JSON-array parameter.</summary>
     private const string SqlGetMany =
-        "SELECT " + SelectColumns + " FROM \"CacheEntry\" WHERE " + JsonKeyInClause + " AND " + UnexpiredClause;
+        $"SELECT {SelectColumns} FROM \"CacheEntry\" WHERE {JsonKeyInClause} AND {UnexpiredClause}";
 
     /// <summary>Bulk key read with type discriminator.</summary>
     private const string SqlGetManyTyped =
-        "SELECT " + SelectColumns + " FROM \"CacheEntry\" WHERE " + JsonKeyInClause + " AND " + UnexpiredClause + " AND \"TypeName\" = ?";
+        $"SELECT {SelectColumns} FROM \"CacheEntry\" WHERE {JsonKeyInClause} AND {UnexpiredClause} AND \"TypeName\" = ?";
 
     /// <summary>Full-scan read of unexpired rows.</summary>
     private const string SqlGetAll =
-        "SELECT " + SelectColumns + " FROM \"CacheEntry\" WHERE " + UnexpiredClause;
+        $"SELECT {SelectColumns} FROM \"CacheEntry\" WHERE {UnexpiredClause}";
 
     /// <summary>Full-scan read of unexpired rows matching a type discriminator.</summary>
     private const string SqlGetAllTyped =
-        "SELECT " + SelectColumns + " FROM \"CacheEntry\" WHERE " + UnexpiredClause + " AND \"TypeName\" = ?";
+        $"SELECT {SelectColumns} FROM \"CacheEntry\" WHERE {UnexpiredClause} AND \"TypeName\" = ?";
 
     /// <summary>Full-scan read of unexpired keys only.</summary>
     private const string SqlGetAllKeys =
-        "SELECT \"Id\" FROM \"CacheEntry\" WHERE " + UnexpiredClause;
+        $"SELECT \"Id\" FROM \"CacheEntry\" WHERE {UnexpiredClause}";
 
     /// <summary>Full-scan read of unexpired keys matching a type discriminator.</summary>
     private const string SqlGetAllKeysTyped =
-        "SELECT \"Id\" FROM \"CacheEntry\" WHERE " + UnexpiredClause + " AND \"TypeName\" = ?";
+        $"SELECT \"Id\" FROM \"CacheEntry\" WHERE {UnexpiredClause} AND \"TypeName\" = ?";
 
     /// <summary>Upsert of a single CacheEntry row.</summary>
     private const string SqlUpsert =
@@ -127,7 +126,6 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         "SELECT \"Key\", \"TypeName\", \"Value\", \"Expiration\", \"CreatedAt\" FROM \"CacheElement\"";
 
     // ── CacheEntry SELECT column ordinals (matches SelectColumns) ──────────
-
     /// <summary>Column ordinal for the <c>Id</c> column in CacheEntry SELECT results.</summary>
     private const int ColId = 0;
 
@@ -144,7 +142,6 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private const int ColValue = 4;
 
     // ── Upsert bind-parameter positions (matches SqlUpsert "?, ?, ?, ?, ?") ──
-
     /// <summary>Bind position for the <c>Id</c> parameter in the upsert statement.</summary>
     private const int UpsertParamId = 1;
 
@@ -161,7 +158,6 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private const int UpsertParamValue = 5;
 
     // ── Common query bind-parameter positions ──────────────────────────────
-
     /// <summary>Bind position for the key (or JSON key array) parameter in most query statements.</summary>
     private const int QueryParamKey = 1;
 
@@ -172,7 +168,6 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private const int QueryParamTypeName = 3;
 
     // ── Legacy v10 read-all column ordinals (matches SqlLegacyV10ReadAll) ──
-
     /// <summary>Column ordinal for the <c>Key</c> column in v10 read-all results.</summary>
     private const int V10ColKey = 0;
 
@@ -189,12 +184,10 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private const int V10ColCreatedAt = 4;
 
     // ── Legacy v10 single-row read column ordinal ──────────────────────────
-
     /// <summary>Column ordinal for the <c>Value</c> column in the single-row v10 query (only column selected).</summary>
     private const int V10SingleColValue = 0;
 
     // ── Invalidate bind-parameter positions ────────────────────────────────
-
     /// <summary>Bind position for the key parameter in invalidate statements.</summary>
     private const int InvalidateParamKey = 1;
 
@@ -202,7 +195,6 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private const int InvalidateParamTypeName = 2;
 
     // ── SetExpiry bind-parameter positions ──────────────────────────────────
-
     /// <summary>Bind position for the <c>ExpiresAt</c> parameter in set-expiry statements.</summary>
     private const int SetExpiryParamExpiresAt = 1;
 
@@ -213,17 +205,18 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private const int SetExpiryParamTypeName = 3;
 
     // ── GetAllKeys column ordinal ──────────────────────────────────────────
-
     /// <summary>Column ordinal for the single <c>Id</c> column returned by GetAllKeys queries.</summary>
     private const int KeysColId = 0;
 
     // ── JSON builder heuristics ────────────────────────────────────────────
-
     /// <summary>Estimated average bytes per key used to pre-size the JSON builder in <see cref="SerializeKeysAsJson"/>.</summary>
     private const int EstimatedBytesPerKey = 8;
 
     /// <summary>First non-control Unicode code point. Characters below this are escaped as <c>\uXXXX</c> in JSON strings.</summary>
     private const char FirstPrintableChar = (char)0x20;
+
+    /// <summary>The database file name, used to name the worker thread once the queue is attached.</summary>
+    private readonly string _databaseFileName;
 
     /// <summary>The cached prepared statement for retrieving a single cache entry.</summary>
     private sqlite3_stmt? _stmtGetOne;
@@ -289,12 +282,22 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     private int _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SqlitePclRawConnection"/> class.
+    /// The worker queue. Assigned by <see cref="Create"/> immediately after construction, never
+    /// from the constructor itself, so the worker thread cannot observe a half-built connection.
     /// </summary>
+    private SqliteOperationQueue? _queue;
+
+    /// <summary>Initializes a new instance of the <see cref="SqlitePclRawConnection"/> class.</summary>
     /// <param name="databasePath">The full file system path to the SQLite database.</param>
     /// <param name="password">An optional password for database encryption. If provided, the key is applied immediately after the database is opened.</param>
     /// <param name="readOnly">Whether to open the database in read-only mode. This is typically used for legacy database probes.</param>
-    public SqlitePclRawConnection(string databasePath, string? password, bool readOnly)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Layout",
+        "SST1510:Remove the blank line before 'catch'",
+        Justification = "There is no blank line. The encrypted build's SQLCipher-4 fallback catch sits in an #if "
+                        + "region between the try and the general catch, and the excluded region reads as blank on "
+                        + "the unencrypted build.")]
+    private SqlitePclRawConnection(string databasePath, string? password, bool readOnly)
     {
         ArgumentExceptionHelper.ThrowIfNull(databasePath);
 
@@ -311,15 +314,15 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
 
         // Quote the password by doubling any single-quotes.
         var quotedPassword = !string.IsNullOrEmpty(password)
-            ? "'" + password!.Replace("'", "''") + "'"
+            ? $"'{password!.Replace("'", "''")}'"
             : null;
 
-        CheckRc(sqlite3_open_v2(databasePath, out var db, openFlags, null), db, "open " + databasePath);
+        CheckRc(sqlite3_open_v2(databasePath, out var db, openFlags, null), db, $"open {databasePath}");
         Db = db;
 
         if (quotedPassword is not null)
         {
-            ExecuteNonQuery("PRAGMA key = " + quotedPassword);
+            ExecuteNonQuery($"PRAGMA key = {quotedPassword}");
         }
 
         if (!readOnly)
@@ -345,7 +348,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                     // Switch the page cipher back to the SQLite3MC default and rewrite every
                     // page in place. Use the same password so callers don't need to know.
                     ExecuteNonQuery("PRAGMA cipher = 'chacha20'");
-                    ExecuteNonQuery("PRAGMA rekey = " + quotedPassword);
+                    ExecuteNonQuery($"PRAGMA rekey = {quotedPassword}");
                     ExecuteNonQuery("PRAGMA journal_mode=WAL");
                     ExecuteNonQuery("PRAGMA synchronous=NORMAL");
                 }
@@ -363,17 +366,15 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             }
         }
 
-        // Start the background worker after all constructor-time native calls.
-        // All subsequent database interactions must go through the queue.
-        Queue = new(this, $"Akavache.Sqlite3[{Path.GetFileName(databasePath)}]");
+        _databaseFileName = Path.GetFileName(databasePath);
     }
 
     /// <summary>Gets the native SQLite database handle.</summary>
 #if ENCRYPTED
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
-        "Roslynator",
-        "RCS1170:Use read-only auto-implemented property",
-        Justification = "Reassigned by the constructor when the SQLCipher-4 → modern-cipher backward-compatibility retry path opens a second handle.")]
+        "Design",
+        "SST2332:Private setter is only written during construction",
+        Justification = "Reassigned by the constructor when the SQLCipher-4 to modern-cipher retry path opens a second handle.")]
     internal sqlite3 Db { get; private set; }
 #else
     internal sqlite3 Db { get; }
@@ -384,7 +385,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         "Usage",
         "CA2213:Disposable fields should be disposed",
         Justification = "Close()/CloseAsync() call Queue.ShutdownAndWait, which joins the worker thread and releases the queue's own native resources.")]
-    internal SqliteOperationQueue Queue { get; }
+    internal SqliteOperationQueue Queue => _queue!;
 
     /// <summary>Gets or sets a value indicating whether an ambient transaction is active.</summary>
     internal bool InTransaction { get; set; }
@@ -404,49 +405,44 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             var statement = conn.EnsurePrepared(ref conn._stmtTableExists, SqlTableExists);
             try
             {
-                sqlite3_bind_text(statement, QueryParamKey, tableName);
+                _ = sqlite3_bind_text(statement, QueryParamKey, tableName);
                 return sqlite3_step(statement) == SQLITE_ROW;
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
 
     /// <inheritdoc/>
     public IObservable<CacheEntry?> Get(string key, string? typeFullName, DateTimeOffset now) =>
-        Queue.Enqueue<CacheEntry?>(conn =>
+        Queue.Enqueue(conn =>
         {
             var nowUtcTicks = now.UtcTicks;
             sqlite3_stmt statement;
             if (typeFullName is null)
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetOne, SqlGetOne);
-                sqlite3_bind_text(statement, QueryParamKey, key);
-                sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
+                _ = sqlite3_bind_text(statement, QueryParamKey, key);
+                _ = sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
             }
             else
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetOneTyped, SqlGetOneTyped);
-                sqlite3_bind_text(statement, QueryParamKey, key);
-                sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
-                sqlite3_bind_text(statement, QueryParamTypeName, typeFullName);
+                _ = sqlite3_bind_text(statement, QueryParamKey, key);
+                _ = sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
+                _ = sqlite3_bind_text(statement, QueryParamTypeName, typeFullName);
             }
 
             try
             {
-                if (sqlite3_step(statement) == SQLITE_ROW)
-                {
-                    return ReadCacheEntry(statement);
-                }
-
-                return null;
+                return sqlite3_step(statement) == SQLITE_ROW ? ReadCacheEntry(statement) : null;
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
 
@@ -468,25 +464,25 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             if (typeFullName is null)
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetMany, SqlGetMany);
-                sqlite3_bind_text(statement, QueryParamKey, keysJson);
-                sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
+                _ = sqlite3_bind_text(statement, QueryParamKey, keysJson);
+                _ = sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
             }
             else
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetManyTyped, SqlGetManyTyped);
-                sqlite3_bind_text(statement, QueryParamKey, keysJson);
-                sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
-                sqlite3_bind_text(statement, QueryParamTypeName, typeFullName);
+                _ = sqlite3_bind_text(statement, QueryParamKey, keysJson);
+                _ = sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
+                _ = sqlite3_bind_text(statement, QueryParamTypeName, typeFullName);
             }
 
             try
             {
-                ScanRows(statement, static s => ReadCacheEntry(s), onNext, isCancelled);
+                ScanRows(statement, ReadCacheEntry, onNext, isCancelled);
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
     }
@@ -501,23 +497,23 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             if (typeFullName is null)
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetAll, SqlGetAll);
-                sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
+                _ = sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
             }
             else
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetAllTyped, SqlGetAllTyped);
-                sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
-                sqlite3_bind_text(statement, QueryParamNow, typeFullName);
+                _ = sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
+                _ = sqlite3_bind_text(statement, QueryParamNow, typeFullName);
             }
 
             try
             {
-                ScanRows(statement, static s => ReadCacheEntry(s), onNext, isCancelled);
+                ScanRows(statement, ReadCacheEntry, onNext, isCancelled);
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
 
@@ -531,13 +527,13 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             if (typeFullName is null)
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetAllKeys, SqlGetAllKeys);
-                sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
+                _ = sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
             }
             else
             {
                 statement = conn.EnsurePrepared(ref conn._stmtGetAllKeysTyped, SqlGetAllKeysTyped);
-                sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
-                sqlite3_bind_text(statement, QueryParamNow, typeFullName);
+                _ = sqlite3_bind_int64(statement, QueryParamKey, nowUtcTicks);
+                _ = sqlite3_bind_text(statement, QueryParamNow, typeFullName);
             }
 
             try
@@ -546,8 +542,8 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
 
@@ -568,38 +564,38 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                     var statement = conn.EnsurePrepared(ref conn._stmtUpsert, SqlUpsert);
                     foreach (var cacheEntry in entries)
                     {
-                        sqlite3_bind_text(statement, UpsertParamId, cacheEntry.Id ?? string.Empty);
-                        sqlite3_bind_int64(statement, UpsertParamCreatedAt, cacheEntry.CreatedAt.UtcTicks);
+                        _ = sqlite3_bind_text(statement, UpsertParamId, cacheEntry.Id ?? string.Empty);
+                        _ = sqlite3_bind_int64(statement, UpsertParamCreatedAt, cacheEntry.CreatedAt.UtcTicks);
                         if (cacheEntry.ExpiresAt.HasValue)
                         {
-                            sqlite3_bind_int64(statement, UpsertParamExpiresAt, cacheEntry.ExpiresAt.Value.UtcTicks);
+                            _ = sqlite3_bind_int64(statement, UpsertParamExpiresAt, cacheEntry.ExpiresAt.Value.UtcTicks);
                         }
                         else
                         {
-                            sqlite3_bind_null(statement, UpsertParamExpiresAt);
+                            _ = sqlite3_bind_null(statement, UpsertParamExpiresAt);
                         }
 
                         if (cacheEntry.TypeName is null)
                         {
-                            sqlite3_bind_null(statement, UpsertParamTypeName);
+                            _ = sqlite3_bind_null(statement, UpsertParamTypeName);
                         }
                         else
                         {
-                            sqlite3_bind_text(statement, UpsertParamTypeName, cacheEntry.TypeName);
+                            _ = sqlite3_bind_text(statement, UpsertParamTypeName, cacheEntry.TypeName);
                         }
 
                         if (cacheEntry.Value is null)
                         {
-                            sqlite3_bind_null(statement, UpsertParamValue);
+                            _ = sqlite3_bind_null(statement, UpsertParamValue);
                         }
                         else
                         {
-                            sqlite3_bind_blob(statement, UpsertParamValue, cacheEntry.Value);
+                            _ = sqlite3_bind_blob(statement, UpsertParamValue, cacheEntry.Value);
                         }
 
                         StepAndCheck(statement, conn.Db, "upsert step");
-                        sqlite3_reset(statement);
-                        sqlite3_clear_bindings(statement);
+                        _ = sqlite3_reset(statement);
+                        _ = sqlite3_clear_bindings(statement);
                     }
                 });
 
@@ -628,15 +624,15 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
 
                     foreach (var cacheKey in keys)
                     {
-                        sqlite3_bind_text(statement, InvalidateParamKey, cacheKey);
+                        _ = sqlite3_bind_text(statement, InvalidateParamKey, cacheKey);
                         if (typeFullName is not null)
                         {
-                            sqlite3_bind_text(statement, InvalidateParamTypeName, typeFullName);
+                            _ = sqlite3_bind_text(statement, InvalidateParamTypeName, typeFullName);
                         }
 
                         StepAndCheck(statement, conn.Db, "invalidate step");
-                        sqlite3_reset(statement);
-                        sqlite3_clear_bindings(statement);
+                        _ = sqlite3_reset(statement);
+                        _ = sqlite3_clear_bindings(statement);
                     }
                 });
 
@@ -658,7 +654,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                 else
                 {
                     statement = conn.EnsurePrepared(ref conn._stmtInvalidateAllTyped, SqlInvalidateAllTyped);
-                    sqlite3_bind_text(statement, QueryParamKey, typeFullName);
+                    _ = sqlite3_bind_text(statement, QueryParamKey, typeFullName);
                 }
 
                 try
@@ -668,8 +664,8 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                 }
                 finally
                 {
-                    sqlite3_reset(statement);
-                    sqlite3_clear_bindings(statement);
+                    _ = sqlite3_reset(statement);
+                    _ = sqlite3_clear_bindings(statement);
                 }
             },
             coalescable: true);
@@ -683,14 +679,14 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             {
                 statement = conn.EnsurePrepared(ref conn._stmtSetExpiry, SqlSetExpiry);
                 BindNullableTicks(statement, SetExpiryParamExpiresAt, expiresAt);
-                sqlite3_bind_text(statement, SetExpiryParamKey, key);
+                _ = sqlite3_bind_text(statement, SetExpiryParamKey, key);
             }
             else
             {
                 statement = conn.EnsurePrepared(ref conn._stmtSetExpiryTyped, SqlSetExpiryTyped);
                 BindNullableTicks(statement, SetExpiryParamExpiresAt, expiresAt);
-                sqlite3_bind_text(statement, SetExpiryParamKey, key);
-                sqlite3_bind_text(statement, SetExpiryParamTypeName, typeFullName);
+                _ = sqlite3_bind_text(statement, SetExpiryParamKey, key);
+                _ = sqlite3_bind_text(statement, SetExpiryParamTypeName, typeFullName);
             }
 
             try
@@ -700,8 +696,8 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
 
@@ -710,7 +706,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         Queue.Enqueue(conn =>
         {
             var statement = conn.EnsurePrepared(ref conn._stmtVacuumExpired, SqlVacuumExpired);
-            sqlite3_bind_int64(statement, QueryParamKey, now.UtcTicks);
+            _ = sqlite3_bind_int64(statement, QueryParamKey, now.UtcTicks);
             try
             {
                 StepAndCheck(statement, conn.Db, "vacuum-expired step");
@@ -718,8 +714,8 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             }
             finally
             {
-                sqlite3_reset(statement);
-                sqlite3_clear_bindings(statement);
+                _ = sqlite3_reset(statement);
+                _ = sqlite3_clear_bindings(statement);
             }
         });
 
@@ -753,7 +749,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
 
     /// <inheritdoc/>
     public IObservable<byte[]?> TryReadLegacyV10Value(string key, DateTimeOffset now, Type? type) =>
-        Queue.Enqueue<byte[]?>(conn =>
+        Queue.Enqueue(conn =>
         {
             // Probe the legacy CacheElement table. Attempt typed search first (using
             // AQN then FQN), then fall back to an untyped search. The caller
@@ -776,19 +772,40 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             return typeFullNameHit ?? TryLegacyUntyped(conn, key, nowUtcTicks);
         });
 
+    /// <summary>Opens a connection and attaches its worker queue.</summary>
+    /// <remarks>
+    /// The queue's constructor starts a background thread that holds the connection, so it is
+    /// attached here rather than from the constructor: publishing <c>this</c> to another thread
+    /// before construction completes would let the worker observe a half-built connection. Doing
+    /// it after the constructor returns makes that impossible by construction, rather than
+    /// relying on the queue happening to be created by the last statement.
+    /// </remarks>
+    /// <param name="databasePath">The full file system path to the SQLite database.</param>
+    /// <param name="password">An optional password for database encryption.</param>
+    /// <param name="readOnly">Whether to open the database in read-only mode.</param>
+    /// <returns>A fully constructed connection with its worker queue running.</returns>
+    internal static SqlitePclRawConnection Create(string databasePath, string? password, bool readOnly)
+    {
+        var connection = new SqlitePclRawConnection(databasePath, password, readOnly);
+        connection._queue = new(
+            connection,
+            $"Akavache.Sqlite3[{connection._databaseFileName}]");
+        return connection;
+    }
+
     /// <summary>
     /// Reads all rows from the legacy version 10 CacheElement table. This is used exclusively
     /// during the migration process from version 10 to version 11 and is not part of the standard connection interface.
     /// </summary>
     /// <returns>An observable sequence containing the data from each legacy row.</returns>
-    public IObservable<V10LegacyRow> ReadAllLegacyV10Rows() =>
+    internal IObservable<V10LegacyRow> ReadAllLegacyV10Rows() =>
         Queue.EnqueueRowStream<V10LegacyRow>(static (conn, onNext, isCancelled) =>
         {
             var resultCode = sqlite3_prepare_v2(conn.Db, SqlLegacyV10ReadAll, out var statement);
             CheckRc(resultCode, conn.Db, "prepare v10 read-all");
             try
             {
-                ScanRows(statement, static s => ReadV10Row(s), onNext, isCancelled);
+                ScanRows(statement, ReadV10Row, onNext, isCancelled);
             }
             finally
             {
@@ -834,23 +851,18 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             return null;
         }
 
-        sqlite3_bind_text(statement, QueryParamKey, key);
-        sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
-        sqlite3_bind_text(statement, QueryParamTypeName, typeName);
+        _ = sqlite3_bind_text(statement, QueryParamKey, key);
+        _ = sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
+        _ = sqlite3_bind_text(statement, QueryParamTypeName, typeName);
 
         try
         {
-            if (sqlite3_step(statement) == SQLITE_ROW)
-            {
-                return sqlite3_column_blob(statement, V10SingleColValue).ToArray();
-            }
-
-            return null;
+            return sqlite3_step(statement) == SQLITE_ROW ? sqlite3_column_blob(statement, V10SingleColValue).ToArray() : null;
         }
         finally
         {
-            sqlite3_reset(statement);
-            sqlite3_clear_bindings(statement);
+            _ = sqlite3_reset(statement);
+            _ = sqlite3_clear_bindings(statement);
         }
     }
 
@@ -874,22 +886,17 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             return null;
         }
 
-        sqlite3_bind_text(statement, QueryParamKey, key);
-        sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
+        _ = sqlite3_bind_text(statement, QueryParamKey, key);
+        _ = sqlite3_bind_int64(statement, QueryParamNow, nowUtcTicks);
 
         try
         {
-            if (sqlite3_step(statement) == SQLITE_ROW)
-            {
-                return sqlite3_column_blob(statement, V10SingleColValue).ToArray();
-            }
-
-            return null;
+            return sqlite3_step(statement) == SQLITE_ROW ? sqlite3_column_blob(statement, V10SingleColValue).ToArray() : null;
         }
         finally
         {
-            sqlite3_reset(statement);
-            sqlite3_clear_bindings(statement);
+            _ = sqlite3_reset(statement);
+            _ = sqlite3_clear_bindings(statement);
         }
     }
 
@@ -902,72 +909,70 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     internal static string SerializeKeysAsJson(IReadOnlyList<string> keys)
     {
         var jsonBuilder = new StringBuilder(keys.Count * EstimatedBytesPerKey);
-        jsonBuilder.Append('[');
+        _ = jsonBuilder.Append('[');
         for (var i = 0; i < keys.Count; i++)
         {
             if (i > 0)
             {
-                jsonBuilder.Append(',');
+                _ = jsonBuilder.Append(',');
             }
 
             AppendJsonString(jsonBuilder, keys[i]);
         }
 
-        jsonBuilder.Append(']');
+        _ = jsonBuilder.Append(']');
         return jsonBuilder.ToString();
     }
 
-    /// <summary>
-    /// Appends a string to a StringBuilder, applying JSON escaping rules.
-    /// </summary>
+    /// <summary>Appends a string to a StringBuilder, applying JSON escaping rules.</summary>
     /// <param name="jsonBuilder">The target StringBuilder.</param>
     /// <param name="value">The string value to escape and append.</param>
     internal static void AppendJsonString(StringBuilder jsonBuilder, string value)
     {
-        jsonBuilder.Append('"');
+        _ = jsonBuilder.Append('"');
         foreach (var character in value)
         {
             switch (character)
             {
                 case '"':
                     {
-                        jsonBuilder.Append("\\\"");
+                        _ = jsonBuilder.Append("\\\"");
                         break;
                     }
 
                 case '\\':
                     {
-                        jsonBuilder.Append("\\\\");
+                        _ = jsonBuilder.Append("\\\\");
                         break;
                     }
 
                 case '\b':
                     {
-                        jsonBuilder.Append("\\b");
+                        _ = jsonBuilder.Append("\\b");
                         break;
                     }
 
                 case '\f':
                     {
-                        jsonBuilder.Append("\\f");
+                        _ = jsonBuilder.Append("\\f");
                         break;
                     }
 
                 case '\n':
                     {
-                        jsonBuilder.Append("\\n");
+                        _ = jsonBuilder.Append("\\n");
                         break;
                     }
 
                 case '\r':
                     {
-                        jsonBuilder.Append("\\r");
+                        _ = jsonBuilder.Append("\\r");
                         break;
                     }
 
                 case '\t':
                     {
-                        jsonBuilder.Append("\\t");
+                        _ = jsonBuilder.Append("\\t");
                         break;
                     }
 
@@ -975,11 +980,11 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
                     {
                         if (character < FirstPrintableChar)
                         {
-                            jsonBuilder.Append("\\u").Append(((int)character).ToString("X4"));
+                            _ = jsonBuilder.Append("\\u").Append(((int)character).ToString("X4"));
                         }
                         else
                         {
-                            jsonBuilder.Append(character);
+                            _ = jsonBuilder.Append(character);
                         }
 
                         break;
@@ -987,7 +992,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
             }
         }
 
-        jsonBuilder.Append('"');
+        _ = jsonBuilder.Append('"');
     }
 
     /// <summary>
@@ -1027,11 +1032,11 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     {
         if (value.HasValue)
         {
-            sqlite3_bind_int64(statement, parameterIndex, value.Value.UtcTicks);
+            _ = sqlite3_bind_int64(statement, parameterIndex, value.Value.UtcTicks);
         }
         else
         {
-            sqlite3_bind_null(statement, parameterIndex);
+            _ = sqlite3_bind_null(statement, parameterIndex);
         }
     }
 
@@ -1040,11 +1045,17 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// Any secondary errors during the rollback are ignored to preserve the original exception.
     /// </summary>
     /// <param name="db">The native SQLite handle.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Design",
+        "SST1429:Handle, rethrow, or narrow this catch",
+        Justification = "Best-effort rollback. sqlite3_exec reports failure through its result code rather than "
+                        + "an exception, so there is no specific type to narrow to, and any secondary failure here "
+                        + "must not displace the original exception that triggered the rollback.")]
     internal static void TryRollback(sqlite3 db)
     {
         try
         {
-            sqlite3_exec(db, "ROLLBACK");
+            _ = sqlite3_exec(db, "ROLLBACK");
         }
         catch
         {
@@ -1052,10 +1063,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         }
     }
 
-    /// <summary>
-    /// Checks a <c>sqlite3_prepare_v2</c> result code and throws if it indicates failure.
-    /// Disposes the partial mapping on error.
-    /// </summary>
+    /// <summary>Checks a <c>sqlite3_prepare_v2</c> result code and throws if it indicates failure. Disposes the partial mapping on error.</summary>
     /// <param name="resultCode">The SQLite result code.</param>
     /// <param name="preparedMapping">The statement handle (may be null on failure).</param>
     /// <param name="db">The database handle for error messages.</param>
@@ -1068,12 +1076,10 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         }
 
         preparedMapping?.Dispose();
-        CheckRc(resultCode, db, "prepare: " + sql);
+        CheckRc(resultCode, db, $"prepare: {sql}");
     }
 
-    /// <summary>
-    /// Reads a V10 legacy row from the current statement position.
-    /// </summary>
+    /// <summary>Reads a V10 legacy row from the current statement position.</summary>
     /// <param name="statement">The prepared statement positioned on a row.</param>
     /// <returns>A <see cref="V10LegacyRow"/>.</returns>
     internal static V10LegacyRow ReadV10Row(sqlite3_stmt statement)
@@ -1090,9 +1096,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         return new(cacheKey, typeName, value, expiration, createdAt);
     }
 
-    /// <summary>
-    /// Steps through a prepared statement, emitting each row via <paramref name="onNext"/>.
-    /// </summary>
+    /// <summary>Steps through a prepared statement, emitting each row via <paramref name="onNext"/>.</summary>
     /// <typeparam name="T">The row type.</typeparam>
     /// <param name="statement">The prepared statement.</param>
     /// <param name="readRow">Reads a row from the current position.</param>
@@ -1106,10 +1110,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         }
     }
 
-    /// <summary>
-    /// Executes <c>sqlite3_step</c> on <paramref name="statement"/> and throws via
-    /// <see cref="CheckRc"/> if the result is not <c>SQLITE_DONE</c>.
-    /// </summary>
+    /// <summary>Executes <c>sqlite3_step</c> on <paramref name="statement"/> and throws via <see cref="CheckRc"/> if the result is not <c>SQLITE_DONE</c>.</summary>
     /// <param name="statement">The prepared statement to step.</param>
     /// <param name="db">The database handle for error messages.</param>
     /// <param name="operation">A description for the error message.</param>
@@ -1130,10 +1131,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     internal static int MapStepResult(int stepResult, sqlite3 db) =>
         stepResult == SQLITE_DONE ? SQLITE_OK : sqlite3_errcode(db);
 
-    /// <summary>
-    /// Validates a SQLite return code and throws <see cref="AkavacheSqliteException"/>
-    /// if it indicates failure.
-    /// </summary>
+    /// <summary>Validates a SQLite return code and throws <see cref="AkavacheSqliteException"/> if it indicates failure.</summary>
     /// <param name="resultCode">The SQLite result code.</param>
     /// <param name="db">The database handle for error message extraction, or null.</param>
     /// <param name="operation">A description of the operation for the error message.</param>
@@ -1186,14 +1184,12 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         return slot!;
     }
 
-    /// <summary>
-    /// Executes an SQL command that does not return results, such as a PRAGMA or a schema modification.
-    /// </summary>
+    /// <summary>Executes an SQL command that does not return results, such as a PRAGMA or a schema modification.</summary>
     /// <param name="sql">The SQL text to execute.</param>
     internal void ExecuteNonQuery(string sql)
     {
         var resultCode = sqlite3_exec(Db, sql);
-        CheckRc(resultCode, Db, "exec: " + sql);
+        CheckRc(resultCode, Db, $"exec: {sql}");
     }
 
     /// <summary>
@@ -1207,9 +1203,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         InTransaction = true;
     }
 
-    /// <summary>
-    /// Commits the ambient transaction opened by <see cref="BeginImmediate"/>.
-    /// </summary>
+    /// <summary>Commits the ambient transaction opened by <see cref="BeginImmediate"/>.</summary>
     internal void Commit()
     {
         InTransaction = false;
@@ -1252,10 +1246,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         }
     }
 
-    /// <summary>
-    /// Best-effort rollback of the ambient transaction. Clears the
-    /// transaction flag regardless of outcome.
-    /// </summary>
+    /// <summary>Best-effort rollback of the ambient transaction. Clears the transaction flag regardless of outcome.</summary>
     /// <param name="setInTransaction">Action that sets the transaction flag to false.</param>
     /// <param name="db">The database handle to rollback on.</param>
     internal static void TryRollbackAmbient(Action<bool> setInTransaction, sqlite3 db)
@@ -1264,9 +1255,7 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
         TryRollback(db);
     }
 
-    /// <summary>
-    /// Shutdown cleanup: disposes statements and the native handle if not already disposed.
-    /// </summary>
+    /// <summary>Shutdown cleanup: disposes statements and the native handle if not already disposed.</summary>
     /// <param name="disposed">The disposed flag.</param>
     /// <param name="disposeStatements">Action that finalizes prepared statements.</param>
     /// <param name="disposeHandle">Action that closes the native database handle.</param>
@@ -1327,12 +1316,12 @@ internal sealed class SqlitePclRawConnection : IAkavacheConnection
     /// <returns>An open <see cref="sqlite3"/> handle on which page 1 has been successfully decrypted.</returns>
     private static sqlite3 OpenLegacySqlCipher4(string databasePath, int openFlags, string quotedPassword)
     {
-        CheckRc(sqlite3_open_v2(databasePath, out var db, openFlags, null), db, "open " + databasePath + " (sqlcipher-4 compat)");
+        CheckRc(sqlite3_open_v2(databasePath, out var db, openFlags, null), db, $"open {databasePath} (sqlcipher-4 compat)");
         try
         {
             CheckRc(sqlite3_exec(db, "PRAGMA cipher = 'sqlcipher'"), db, "exec: PRAGMA cipher = 'sqlcipher'");
             CheckRc(sqlite3_exec(db, "PRAGMA legacy = 4"), db, "exec: PRAGMA legacy = 4");
-            CheckRc(sqlite3_exec(db, "PRAGMA key = " + quotedPassword), db, "exec: PRAGMA key (sqlcipher-4)");
+            CheckRc(sqlite3_exec(db, $"PRAGMA key = {quotedPassword}"), db, "exec: PRAGMA key (sqlcipher-4)");
 
             // Touch page 1 to confirm the key is correct in legacy mode. This raises
             // SQLITE_NOTADB if the password is genuinely wrong, distinguishing that

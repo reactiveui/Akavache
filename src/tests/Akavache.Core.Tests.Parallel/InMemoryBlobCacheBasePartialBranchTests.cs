@@ -6,9 +6,7 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for partial branch coverage in <see cref="InMemoryBlobCacheBase"/>.
-/// </summary>
+/// <summary>Tests for partial branch coverage in <see cref="InMemoryBlobCacheBase"/>.</summary>
 [Category("Akavache")]
 public class InMemoryBlobCacheBasePartialBranchTests
 {
@@ -47,10 +45,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
-    /// <summary>
-    /// Double-dispose exercises the Interlocked.CompareExchange branch at line 822
-    /// where the second dispose is a no-op.
-    /// </summary>
+    /// <summary>Double-dispose exercises the Interlocked.CompareExchange branch at line 822 where the second dispose is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Dispose_CalledTwice_IsIdempotent()
@@ -62,7 +57,8 @@ public class InMemoryBlobCacheBasePartialBranchTests
         cache.Dispose();
 
         // After dispose, operations should throw ObjectDisposedException.
-        var error = cache.Insert("key", [1, 2, 3]).SubscribeGetError();
+        byte[] payload = [1, 2, 3];
+        var error = cache.Insert("key", payload).SubscribeGetError();
         await Assert.That(error).IsTypeOf<ObjectDisposedException>();
     }
 
@@ -78,8 +74,9 @@ public class InMemoryBlobCacheBasePartialBranchTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Non-empty collection — takes the normal path.
+        byte[] payload = [1, 2, 3];
         cache.Insert(
-            [new KeyValuePair<string, byte[]>("k1", [1, 2, 3])]).SubscribeAndComplete();
+            [new KeyValuePair<string, byte[]>("k1", payload)]).SubscribeAndComplete();
 
         // Empty collection — takes the early-return guard.
         var result = cache.Insert(
@@ -104,8 +101,9 @@ public class InMemoryBlobCacheBasePartialBranchTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Non-empty typed collection — takes the normal path.
+        byte[] payload = [1, 2, 3];
         cache.Insert(
-            [new KeyValuePair<string, byte[]>("k1", [1, 2, 3])],
+            [new KeyValuePair<string, byte[]>("k1", payload)],
             typeof(string)).SubscribeAndComplete();
 
         // Empty typed collection — takes the early-return guard.
@@ -131,8 +129,9 @@ public class InMemoryBlobCacheBasePartialBranchTests
         // A Select() projection is IEnumerable but not ICollection, so the
         // pattern match `keyValuePairs is ICollection { Count: 0 }` is false.
         // .Select(x => x) intentionally wraps the array in a non-ICollection IEnumerable to bypass the Count guard.
-        var source = new[] { new KeyValuePair<string, byte[]>("k1", [1, 2]) }
-            .Select(x => x);
+        byte[] payload = [1, 2];
+        var source = new[] { new KeyValuePair<string, byte[]>("k1", payload) }
+            .Select(static x => x);
 
         cache.Insert(source).SubscribeAndComplete();
 
@@ -153,8 +152,9 @@ public class InMemoryBlobCacheBasePartialBranchTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // .Select(x => x) intentionally wraps the array in a non-ICollection IEnumerable to bypass the Count guard.
-        var source = new[] { new KeyValuePair<string, byte[]>("k1", [1, 2]) }
-            .Select(x => x);
+        byte[] payload = [1, 2];
+        var source = new[] { new KeyValuePair<string, byte[]>("k1", payload) }
+            .Select(static x => x);
 
         cache.Insert(source, typeof(string)).SubscribeAndComplete();
 

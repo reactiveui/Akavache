@@ -18,9 +18,16 @@ namespace Akavache.Integration.Tests;
 [TestExecutor<AkavacheTestExecutor>]
 public class CacheDatabaseTests
 {
-    /// <summary>
-    /// Tests that CacheDatabase.TaskpoolScheduler is available and functional.
-    /// </summary>
+    /// <summary>How long the scheduler test waits for its scheduled work to run.</summary>
+    private const int ScheduledWorkTimeoutMilliseconds = 5000;
+
+    /// <summary>The numeric member of the named payload handed to each serializer.</summary>
+    private const int NamedPayloadNumber = 123;
+
+    /// <summary>The numeric entry of the dictionary handed to each serializer.</summary>
+    private const int DictionaryEntryNumber = 42;
+
+    /// <summary>Tests that CacheDatabase.TaskpoolScheduler is available and functional.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task TaskpoolSchedulerShouldBeAvailable()
@@ -35,7 +42,7 @@ public class CacheDatabaseTests
         var workExecuted = false;
         ManualResetEventSlim resetEvent = new(false);
 
-        scheduler.Schedule(() =>
+        _ = scheduler.Schedule(() =>
         {
             workExecuted = true;
             resetEvent.Set();
@@ -44,31 +51,30 @@ public class CacheDatabaseTests
         using (Assert.Multiple())
         {
             // Wait for work to complete
-            await Assert.That(resetEvent.Wait(5000)).IsTrue();
+            await Assert.That(resetEvent.Wait(ScheduledWorkTimeoutMilliseconds)).IsTrue();
             await Assert.That(workExecuted).IsTrue();
         }
     }
 
-    /// <summary>
-    /// Tests that CacheDatabase properly validates serializer functionality.
-    /// </summary>
+    /// <summary>Tests that CacheDatabase properly validates serializer functionality.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SerializerFunctionalityValidationShouldWork()
     {
         // Arrange
+        int[] sampleIntegers = [1, 2, 3, 4, 5];
         object[] testCases =
         [
             "string test",
             42,
-            3.14d,
+            3.14D,
             true,
-            DateTime.UtcNow,
-            DateTimeOffset.Now,
+            TimeProvider.System.GetUtcNow().UtcDateTime,
+            TimeProvider.System.GetLocalNow(),
             Guid.NewGuid(),
-            new { Name = "Test", Value = 123 },
-            (int[])[1, 2, 3, 4, 5],
-            new Dictionary<string, object> { ["key1"] = "value1", ["key2"] = 42 }
+            new NamedValuePayload { Name = "Test", Value = NamedPayloadNumber },
+            sampleIntegers,
+            new Dictionary<string, object> { ["key1"] = "value1", ["key2"] = DictionaryEntryNumber }
         ];
 
         ISerializer[] serializers =
@@ -111,71 +117,55 @@ public class CacheDatabaseTests
         }
     }
 
-    /// <summary>
-    /// Tests ApplicationName getter throws when not initialized.
-    /// </summary>
+    /// <summary>Tests ApplicationName getter throws when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ApplicationNameShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.ApplicationName)
             .Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests ForcedDateTimeKind getter throws when not initialized.
-    /// </summary>
+    /// <summary>Tests ForcedDateTimeKind getter throws when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ForcedDateTimeKindShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.ForcedDateTimeKind)
             .Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests InMemory getter throws when not initialized.
-    /// </summary>
+    /// <summary>Tests InMemory getter throws when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InMemoryShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.InMemory)
             .Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests LocalMachine getter throws when not initialized.
-    /// </summary>
+    /// <summary>Tests LocalMachine getter throws when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task LocalMachineShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.LocalMachine)
             .Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests Secure getter throws when not initialized.
-    /// </summary>
+    /// <summary>Tests Secure getter throws when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SecureShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.Secure)
             .Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests UserAccount getter throws when not initialized.
-    /// </summary>
+    /// <summary>Tests UserAccount getter throws when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UserAccountShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => _ = CacheDatabase.UserAccount)
             .Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests Shutdown is a no-op when not initialized.
-    /// </summary>
+    /// <summary>Tests Shutdown is a no-op when not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShutdownShouldNoopWhenNotInitialized() =>
         await Assert.That(static () => CacheDatabase.Shutdown().SubscribeAndComplete()).ThrowsNothing();
 
-    /// <summary>
-    /// Tests Initialize with serializer factory.
-    /// </summary>
+    /// <summary>Tests Initialize with serializer factory.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitializeWithSerializerFactoryShouldSucceed()
@@ -185,9 +175,7 @@ public class CacheDatabaseTests
         await Assert.That(CacheDatabase.ApplicationName).IsEqualTo("TestApp_FactoryInit");
     }
 
-    /// <summary>
-    /// Tests Initialize with configure action throws on null configure.
-    /// </summary>
+    /// <summary>Tests Initialize with configure action throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitializeWithConfigureShouldThrowOnNullConfigure() =>
@@ -195,9 +183,7 @@ public class CacheDatabaseTests
                 CacheDatabase.Initialize<SystemJsonSerializer>((Action<IAkavacheBuilder>)null!, "TestApp"))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests Initialize with configure action and serializer factory throws on null configure.
-    /// </summary>
+    /// <summary>Tests Initialize with configure action and serializer factory throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitializeWithSerializerAndConfigureShouldThrowOnNullConfigure() =>
@@ -205,9 +191,7 @@ public class CacheDatabaseTests
                 CacheDatabase.Initialize(static () => new SystemJsonSerializer(), null!, "TestApp"))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests Initialize with configure action invokes the action.
-    /// </summary>
+    /// <summary>Tests Initialize with configure action invokes the action.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitializeWithConfigureShouldInvokeAction()
@@ -223,13 +207,11 @@ public class CacheDatabaseTests
         void Configure(IAkavacheBuilder b)
         {
             configureCalled = true;
-            b.WithInMemoryDefaults();
+            _ = b.WithInMemoryDefaults();
         }
     }
 
-    /// <summary>
-    /// Tests Initialize with serializer factory and configure action invokes both.
-    /// </summary>
+    /// <summary>Tests Initialize with serializer factory and configure action invokes both.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InitializeWithSerializerAndConfigureShouldInvokeAction()
@@ -238,7 +220,7 @@ public class CacheDatabaseTests
         Action<IAkavacheBuilder> configure = b =>
         {
             configureCalled = true;
-            b.WithInMemoryDefaults();
+            _ = b.WithInMemoryDefaults();
         };
         CacheDatabase.Initialize(
             static () => new SystemJsonSerializer(),
@@ -249,9 +231,7 @@ public class CacheDatabaseTests
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
     }
 
-    /// <summary>
-    /// Tests Shutdown after initialization completes.
-    /// </summary>
+    /// <summary>Tests Shutdown after initialization completes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ShutdownAfterInitializeShouldComplete()
@@ -263,9 +243,7 @@ public class CacheDatabaseTests
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
     }
 
-    /// <summary>
-    /// Tests TaskpoolScheduler returns default when not overridden.
-    /// </summary>
+    /// <summary>Tests TaskpoolScheduler returns default when not overridden.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TaskpoolSchedulerShouldReturnDefault()
@@ -274,9 +252,7 @@ public class CacheDatabaseTests
         await Assert.That(scheduler).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests TaskpoolScheduler can be overridden.
-    /// </summary>
+    /// <summary>Tests TaskpoolScheduler can be overridden.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TaskpoolSchedulerShouldBeOverridable()
@@ -378,10 +354,7 @@ public class CacheDatabaseTests
     [Test]
     public async Task ShutdownShouldHandleNullCachesOnBuilder()
     {
-        FakeAkavacheInstance fakeInstance = new()
-        {
-            UserAccount = null, LocalMachine = null, Secure = null, InMemory = null,
-        };
+        FakeAkavacheInstance fakeInstance = new() { UserAccount = null, LocalMachine = null, Secure = null, InMemory = null, };
         CacheDatabase.SetBuilder(fakeInstance);
 
         await Assert.That(static async () => await CacheDatabase.Shutdown().FirstAsync()).ThrowsNothing();
@@ -431,9 +404,7 @@ public class CacheDatabaseTests
         await Assert.That(CacheDatabase.ForcedDateTimeKind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests CreateBuilder throws on null/whitespace application name.
-    /// </summary>
+    /// <summary>Tests CreateBuilder throws on null/whitespace application name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateBuilderShouldThrowOnNullOrWhitespaceAppName()
@@ -487,10 +458,7 @@ public class CacheDatabaseTests
     [Test]
     public async Task SubCacheGettersShouldThrowWhenInstanceReturnsNull()
     {
-        CacheDatabase.SetBuilder(new FakeAkavacheInstance
-        {
-            InMemory = null, LocalMachine = null, Secure = null, UserAccount = null,
-        });
+        CacheDatabase.SetBuilder(new FakeAkavacheInstance { InMemory = null, LocalMachine = null, Secure = null, UserAccount = null, });
 
         await Assert.That(static () => CacheDatabase.InMemory).Throws<InvalidOperationException>();
         await Assert.That(static () => CacheDatabase.LocalMachine).Throws<InvalidOperationException>();
@@ -514,9 +482,7 @@ public class CacheDatabaseTests
         await CacheDatabase.ResetForTests();
     }
 
-    /// <summary>
-    /// A minimal in-memory fake of <see cref="ISettingsStorage"/> that tracks disposal.
-    /// </summary>
+    /// <summary>A minimal in-memory fake of <see cref="ISettingsStorage"/> that tracks disposal.</summary>
     private sealed class FakeSettingsStorage : ISettingsStorage
     {
         /// <inheritdoc/>
@@ -527,14 +493,10 @@ public class CacheDatabaseTests
             remove { }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether this instance has been disposed.
-        /// </summary>
+        /// <summary>Gets a value indicating whether this instance has been disposed.</summary>
         public bool Disposed { get; private set; }
 
-        /// <summary>
-        /// Initializes the storage.
-        /// </summary>
+        /// <summary>Initializes the storage.</summary>
         /// <returns>A completed observable.</returns>
         public IObservable<Unit> Initialize() => Observable.Return(Unit.Default);
 
@@ -542,10 +504,7 @@ public class CacheDatabaseTests
         public void Dispose() => Disposed = true;
     }
 
-    /// <summary>
-    /// A minimal stub <see cref="IAkavacheInstance"/> used to drive the Shutdown path
-    /// with a caller-supplied UserAccount cache.
-    /// </summary>
+    /// <summary>A minimal stub <see cref="IAkavacheInstance"/> used to drive the Shutdown path with a caller-supplied UserAccount cache.</summary>
     private sealed class FakeAkavacheInstance : IAkavacheInstance
     {
         /// <inheritdoc/>
@@ -623,23 +582,39 @@ public class CacheDatabaseTests
         }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
-            IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
-            DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+            Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+        public IObservable<Unit> Insert(
+            IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
+            DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data) =>
+            Insert(key, data, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+            Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
-            DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+            DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+            Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit>
-            Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
+            Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
@@ -749,23 +724,39 @@ public class CacheDatabaseTests
         }
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(
-            IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
-            DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+            Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+        public IObservable<Unit> Insert(
+            IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
+            DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data) =>
+            Insert(key, data, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+            Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
-            DateTimeOffset? absoluteExpiration = null) => throw new NotImplementedException();
+            DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+            Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit>
-            Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
+            Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             throw new NotImplementedException();
 
         /// <inheritdoc/>
@@ -843,5 +834,15 @@ public class CacheDatabaseTests
             IEnumerable<string> keys,
             Type type,
             DateTimeOffset? absoluteExpiration) => throw new NotImplementedException();
+    }
+
+    /// <summary>A small named-value object handed to each serializer to exercise a non-primitive payload.</summary>
+    private sealed record NamedValuePayload
+    {
+        /// <summary>Gets the name carried by the payload.</summary>
+        public string? Name { get; init; }
+
+        /// <summary>Gets the number carried by the payload.</summary>
+        public int Value { get; init; }
     }
 }

@@ -6,15 +6,18 @@
 // https://github.com/SimonCropp/Polyfill
 #if !NET
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Diagnostics.CodeAnalysis;
 
-/// <summary>
-/// Suppresses reporting of a specific rule violation, allowing multiple suppressions on a
-/// single code artifact.
-/// </summary>
+/// <summary>Suppresses reporting of a specific rule violation, allowing multiple suppressions on a single code artifact.</summary>
 /// <remarks>
 /// Link: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.unconditionalsuppressmessageattribute.
 /// </remarks>
+[SuppressMessage(
+    "Design",
+    "SST2324:Do not declare a member more accessible than its containing type",
+    Justification = "Mirrors the shape of the corresponding BCL type (System.UnconditionalSuppressMessageAttribute); the polyfill compiles only where the BCL lacks it.")]
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [AttributeUsage(
@@ -23,10 +26,7 @@ namespace System.Diagnostics.CodeAnalysis;
     AllowMultiple = true)]
 internal sealed class UnconditionalSuppressMessageAttribute : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UnconditionalSuppressMessageAttribute"/>
-    /// class, specifying the category of the tool and the identifier for an analysis rule.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="UnconditionalSuppressMessageAttribute"/> class, specifying the category of the tool and the identifier for an analysis rule.</summary>
     /// <param name="category">The category identifying the classification of the attribute.</param>
     /// <param name="checkId">The identifier of the analysis tool rule to be suppressed.</param>
     public UnconditionalSuppressMessageAttribute(string category, string checkId)
@@ -35,34 +35,22 @@ internal sealed class UnconditionalSuppressMessageAttribute : Attribute
         CheckId = checkId;
     }
 
-    /// <summary>
-    /// Gets the category identifying the classification of the attribute.
-    /// </summary>
+    /// <summary>Gets the category identifying the classification of the attribute.</summary>
     public string Category { get; }
 
-    /// <summary>
-    /// Gets the identifier of the analysis tool rule to be suppressed.
-    /// </summary>
+    /// <summary>Gets the identifier of the analysis tool rule to be suppressed.</summary>
     public string CheckId { get; }
 
-    /// <summary>
-    /// Gets or sets the scope of the code that is relevant for the attribute.
-    /// </summary>
+    /// <summary>Gets or sets the scope of the code that is relevant for the attribute.</summary>
     public string? Scope { get; set; }
 
-    /// <summary>
-    /// Gets or sets a fully qualified path that represents the target of the attribute.
-    /// </summary>
+    /// <summary>Gets or sets a fully qualified path that represents the target of the attribute.</summary>
     public string? Target { get; set; }
 
-    /// <summary>
-    /// Gets or sets an optional argument expanding on exclusion criteria.
-    /// </summary>
+    /// <summary>Gets or sets an optional argument expanding on exclusion criteria.</summary>
     public string? MessageId { get; set; }
 
-    /// <summary>
-    /// Gets or sets the justification for suppressing the code analysis message.
-    /// </summary>
+    /// <summary>Gets or sets the justification for suppressing the code analysis message.</summary>
     public string? Justification { get; set; }
 }
 

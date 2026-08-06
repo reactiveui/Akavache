@@ -9,19 +9,19 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests.TestBases;
 
-/// <summary>
-/// Base class for tests associated with object based bulk operations.
-/// </summary>
+/// <summary>Base class for tests associated with object based bulk operations.</summary>
 public abstract class ObjectBulkOperationsTestBase : IDisposable
 {
-    /// <summary>
-    /// A backing field which indicates if the class has been disposed.
-    /// </summary>
+    /// <summary>The integer component of the tuple payload these tests round-trip.</summary>
+    private const int TuplePayloadValue = 4;
+
+    /// <summary>Number of distinct object types stored per key by the type-filtering test: a tuple and a string.</summary>
+    private const int StoredTypesPerKey = 2;
+
+    /// <summary>A backing field which indicates if the class has been disposed.</summary>
     private bool _disposed;
 
-    /// <summary>
-    /// Tests to make sure that Get works with multiple key types.
-    /// </summary>
+    /// <summary>Tests to make sure that Get works with multiple key types.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -39,7 +39,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = Tuple.Create("Foo", 4);
+            var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
             foreach (var v in keys)
@@ -57,9 +57,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure that Get works with multiple key types.
-    /// </summary>
+    /// <summary>Tests to make sure that Get works with multiple key types.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -76,7 +74,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = Tuple.Create("Foo", 4);
+            var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
             foreach (var v in keys)
@@ -95,9 +93,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure that insert works with multiple keys.
-    /// </summary>
+    /// <summary>Tests to make sure that insert works with multiple keys.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -114,10 +110,10 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = Tuple.Create("Foo", 4);
+            var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
-            fixture.InsertObjects(keys.ToDictionary(k => k, _ => data)).SubscribeAndComplete();
+            fixture.InsertObjects(keys.ToDictionary(static k => k, _ => data)).SubscribeAndComplete();
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length);
@@ -129,9 +125,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Invalidate should be able to trash multiple keys.
-    /// </summary>
+    /// <summary>Invalidate should be able to trash multiple keys.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -148,7 +142,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path, serializer))
         {
-            var data = Tuple.Create("Foo", 4);
+            var data = Tuple.Create("Foo", TuplePayloadValue);
             string[] keys = ["Foo", "Bar", "Baz"];
 
             foreach (var v in keys)
@@ -166,9 +160,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure that InvalidateObjects works with the correct type parameter.
-    /// </summary>
+    /// <summary>Tests to make sure that InvalidateObjects works with the correct type parameter.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -185,7 +177,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
         using (Utility.WithEmptyDirectory(out var path))
         using (var fixture = CreateBlobCache(path, serializer))
         {
-            var tupleData = Tuple.Create("Foo", 4);
+            var tupleData = Tuple.Create("Foo", TuplePayloadValue);
             const string stringData = "TestString";
             string[] keys = ["Key1", "Key2", "Key3"];
 
@@ -201,30 +193,26 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             }
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
-            await Assert.That(allKeys).Count().IsEqualTo(6);
+            await Assert.That(allKeys).Count().IsEqualTo(keys.Length * StoredTypesPerKey);
 
             // Invalidate only the tuple objects
             fixture.InvalidateObjects<Tuple<string, int>>(keys).SubscribeAndComplete();
 
             // Should still have the string objects
             var remainingKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
-            await Assert.That(remainingKeys).Count().IsEqualTo(3);
-            await Assert.That(remainingKeys!.All(k => k.StartsWith("str_", StringComparison.Ordinal))).IsTrue();
+            await Assert.That(remainingKeys).Count().IsEqualTo(keys.Length);
+            await Assert.That(remainingKeys!.All(static k => k.StartsWith("str_", StringComparison.Ordinal))).IsTrue();
         }
     }
 
-    /// <summary>
-    /// Disposes the test base, restoring the original serializer.
-    /// </summary>
+    /// <summary>Disposes the test base, restoring the original serializer.</summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Gets the <see cref="IBlobCache" /> we want to do the tests against.
-    /// </summary>
+    /// <summary>Gets the <see cref="IBlobCache" /> we want to do the tests against.</summary>
     /// <param name="path">The path to the blob cache.</param>
     /// <param name="serializer">The serializer.</param>
     /// <returns>
@@ -232,9 +220,7 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
     /// </returns>
     protected abstract IBlobCache CreateBlobCache(string path, ISerializer serializer);
 
-    /// <summary>
-    /// Disposes resources.
-    /// </summary>
+    /// <summary>Disposes resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
@@ -243,16 +229,10 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             return;
         }
 
-        if (disposing)
-        {
-        }
-
         _disposed = true;
     }
 
-    /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
+    /// <summary>Sets up the test with the specified serializer type.</summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>
     /// <returns>The configured serializer instance.</returns>
     private static ISerializer SetupTestSerializer(Type? serializerType)
@@ -278,12 +258,6 @@ public abstract class ObjectBulkOperationsTestBase : IDisposable
             return new NewtonsoftSerializer();
         }
 
-        if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-
-        return null!;
+        return serializerType == typeof(SystemJsonSerializer) ? new SystemJsonSerializer() : null!;
     }
 }

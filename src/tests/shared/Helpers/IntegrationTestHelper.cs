@@ -8,14 +8,19 @@ using System.Net;
 
 namespace Akavache.Tests.Helpers;
 
-/// <summary>
-/// Tests to help with the integration tests.
-/// </summary>
+/// <summary>Tests to help with the integration tests.</summary>
 public static class IntegrationTestHelper
 {
-    /// <summary>
-    /// Gets a single path combined from other paths.
-    /// </summary>
+    /// <summary>Length of a CRLF line terminator.</summary>
+    private const int LineTerminatorLength = 2;
+
+    /// <summary>Length of the ": " that separates an HTTP header name from its value.</summary>
+    private const int HeaderSeparatorLength = 2;
+
+    /// <summary>Gets the blank-line byte sequence that separates an HTTP header block from the body that follows it.</summary>
+    private static ReadOnlySpan<byte> HeaderTerminator => "\r\n\r\n"u8;
+
+    /// <summary>Gets a single path combined from other paths.</summary>
     /// <param name="paths">The paths to combine.</param>
     /// <returns>The combined path.</returns>
     public static string GetPath(params string[] paths)
@@ -24,9 +29,7 @@ public static class IntegrationTestHelper
         return new FileInfo(paths.Aggregate(ret, Path.Combine)).FullName;
     }
 
-    /// <summary>
-    /// Gets the root folder for the integration tests.
-    /// </summary>
+    /// <summary>Gets the root folder for the integration tests.</summary>
     /// <returns>The root folder.</returns>
     public static string GetIntegrationTestRootDirectory()
     {
@@ -39,9 +42,7 @@ public static class IntegrationTestHelper
         return di.FullName;
     }
 
-    /// <summary>
-    /// Gets a response from a web service.
-    /// </summary>
+    /// <summary>Gets a response from a web service.</summary>
     /// <param name="paths">The paths for the web service.</param>
     /// <returns>The response from the server.</returns>
     public static HttpResponseMessage GetResponse(params string[] paths)
@@ -49,29 +50,16 @@ public static class IntegrationTestHelper
         var bytes = File.ReadAllBytes(GetPath(paths));
 
         // Find the body
-        int bodyIndex;
-        for (bodyIndex = 0; bodyIndex < bytes.Length - 3; bodyIndex++)
+        var bodyIndex = bytes.AsSpan().IndexOf(HeaderTerminator);
+        if (bodyIndex < 0)
         {
-            if (bytes[bodyIndex] != 0x0D || bytes[bodyIndex + 1] != 0x0A ||
-                bytes[bodyIndex + 2] != 0x0D || bytes[bodyIndex + 3] != 0x0A)
-            {
-                continue;
-            }
-
-            goto foundIt;
+            throw new InvalidOperationException("Couldn't find response body");
         }
-
-        throw new InvalidOperationException("Couldn't find response body");
-
-    foundIt:
 
         var headerText = Encoding.UTF8.GetString(bytes, 0, bodyIndex);
         var lines = headerText.Split('\n');
         var statusCode = (HttpStatusCode)int.Parse(lines[0].Split(' ')[1], CultureInfo.InvariantCulture);
-        HttpResponseMessage ret = new(statusCode)
-        {
-            Content = new ByteArrayContent(bytes, bodyIndex + 2, bytes.Length - bodyIndex - 2)
-        };
+        HttpResponseMessage ret = new(statusCode) { Content = new ByteArrayContent(bytes, bodyIndex + LineTerminatorLength, bytes.Length - bodyIndex - LineTerminatorLength) };
 
         foreach (var line in lines.Skip(1))
         {
@@ -81,11 +69,11 @@ public static class IntegrationTestHelper
             }
 
             var separatorIndex = line.IndexOf(':');
-            var key = line.Substring(0, separatorIndex);
-            var val = line.Substring(separatorIndex + 2).TrimEnd();
+            var key = line[..separatorIndex];
+            var val = line[(separatorIndex + HeaderSeparatorLength)..].TrimEnd();
 
-            ret.Headers.TryAddWithoutValidation(key, val);
-            ret.Content.Headers.TryAddWithoutValidation(key, val);
+            _ = ret.Headers.TryAddWithoutValidation(key, val);
+            _ = ret.Content.Headers.TryAddWithoutValidation(key, val);
         }
 
         return ret;

@@ -15,18 +15,40 @@ namespace Akavache.Settings.Tests;
 /// <seealso cref="SettingsBase"/>
 public class ViewSettings : SettingsBase
 {
+    /// <summary>The seeded default for <see cref="ByteTest"/>.</summary>
+    private const byte DefaultByteSetting = 123;
+
+    /// <summary>The seeded default for <see cref="ShortTest"/>.</summary>
+    private const short DefaultShortSetting = 16;
+
+    /// <summary>The seeded default for <see cref="LongTest"/>.</summary>
+    private const long DefaultLongSetting = 123_456L;
+
+    /// <summary>The seeded default for <see cref="FloatTest"/>.</summary>
+    private const float DefaultFloatSetting = 2.2F;
+
+    /// <summary>The seeded default for <see cref="DoubleTest"/>.</summary>
+    private const double DefaultDoubleSetting = 23.8D;
+
     /// <summary>Initializes a new instance of the <see cref="ViewSettings"/> class.</summary>
+    /// <remarks>
+    /// Every call names its property explicitly. <c>CreateProperty</c> keys the backing stream on
+    /// <see cref="System.Runtime.CompilerServices.CallerMemberNameAttribute"/>, which resolves to
+    /// <c>.ctor</c> for every call made from a constructor — so leaving it implicit here would
+    /// give all nine properties the same key and the second one would fail casting the first
+    /// one's stream.
+    /// </remarks>
     public ViewSettings()
         : base(nameof(ViewSettings))
     {
         BoolTest = CreateProperty(true, nameof(BoolTest));
-        ByteTest = CreateProperty((byte)123, nameof(ByteTest));
-        ShortTest = CreateProperty((short)16, nameof(ShortTest));
+        ByteTest = CreateProperty(DefaultByteSetting, nameof(ByteTest));
+        ShortTest = CreateProperty(DefaultShortSetting, nameof(ShortTest));
         IntTest = CreateProperty(1, nameof(IntTest));
-        LongTest = CreateProperty(123456L, nameof(LongTest));
+        LongTest = CreateProperty(DefaultLongSetting, nameof(LongTest));
         StringTest = CreateProperty<string?>("TestString", nameof(StringTest));
-        FloatTest = CreateProperty(2.2f, nameof(FloatTest));
-        DoubleTest = CreateProperty(23.8d, nameof(DoubleTest));
+        FloatTest = CreateProperty(DefaultFloatSetting, nameof(FloatTest));
+        DoubleTest = CreateProperty(DefaultDoubleSetting, nameof(DoubleTest));
         EnumTest = CreateProperty(EnumTestValue.Option1, nameof(EnumTest));
     }
 

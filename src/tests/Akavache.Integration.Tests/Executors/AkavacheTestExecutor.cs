@@ -4,7 +4,5 @@
 
 namespace Akavache.Tests.Executors;
 
-/// <summary>
-/// Standard test executor used by tests in this assembly.
-/// </summary>
+/// <summary>Standard test executor used by tests in this assembly.</summary>
 public sealed class AkavacheTestExecutor : AkavacheTestExecutorBase;

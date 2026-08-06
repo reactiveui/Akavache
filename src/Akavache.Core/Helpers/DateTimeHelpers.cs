@@ -12,6 +12,21 @@ namespace Akavache.Helpers;
 /// </summary>
 internal static partial class DateTimeHelpers
 {
+    /// <summary>Earliest year for which a caller-supplied original value is still believed to be a real calendar date rather than corruption.</summary>
+    private const int EarliestPlausibleOriginalYear = 1900;
+
+    /// <summary>Earliest year a millisecond Unix timestamp decoded out of a raw byte buffer may land on before it is dismissed as a coincidental bit pattern.</summary>
+    private const int EarliestPlausibleTimestampYear = 2000;
+
+    /// <summary>Latest year either plausibility window accepts; anything beyond it is treated as corruption rather than a date.</summary>
+    private const int LatestPlausibleYear = 2100;
+
+    /// <summary>Width in bytes of the little-endian Int64 a binary timestamp is read from.</summary>
+    private const int TimestampByteCount = 8;
+
+    /// <summary>Alignment the binary-recovery scan advances by, matching the 4-byte field alignment serializers emit.</summary>
+    private const int TimestampScanStride = 4;
+
     /// <summary>The Unix epoch (1970-01-01T00:00:00Z) used as the reference point for millisecond-timestamp recovery.</summary>
     private static readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -28,7 +43,7 @@ internal static partial class DateTimeHelpers
     /// <param name="dateTime">The source DateTime.</param>
     /// <param name="targetKind">The desired kind.</param>
     /// <returns>A DateTime adjusted to the target kind.</returns>
-    public static DateTime ConvertDateTimeKind(DateTime dateTime, DateTimeKind targetKind) =>
+    internal static DateTime ConvertDateTimeKind(DateTime dateTime, DateTimeKind targetKind) =>
         targetKind switch
         {
             DateTimeKind.Utc => dateTime.Kind == DateTimeKind.Local
@@ -50,31 +65,17 @@ internal static partial class DateTimeHelpers
     /// <param name="dateTime">The deserialized DateTime to inspect.</param>
     /// <param name="forcedDateTimeKind">The forced DateTime kind, if any.</param>
     /// <returns>The processed DateTime boxed back into <typeparamref name="T"/>.</returns>
-    public static T HandleDateTimeEdgeCase<T>(DateTime dateTime, DateTimeKind? forcedDateTimeKind)
+    internal static T HandleDateTimeEdgeCase<T>(DateTime dateTime, DateTimeKind? forcedDateTimeKind)
     {
-        // BSON serializers sometimes return DateTime.MinValue for serialization errors;
-        // when forced UTC is requested we still want a tagged UTC MinValue rather than
-        // an Unspecified one.
+        // BSON serializers sometimes surface a serialization error as DateTime.MinValue.
+        // When forced UTC is requested we still want a tagged UTC MinValue rather than an
+        // Unspecified one.
         if (dateTime == DateTime.MinValue && forcedDateTimeKind == DateTimeKind.Utc)
         {
-            // BSON serializers sometimes return DateTime.MinValue for serialization errors;
-            // when forced UTC is requested we still want a tagged UTC MinValue rather than
-            // an Unspecified one.
             return (T)(object)DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
         }
 
-        if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-        {
-            // BSON serializers sometimes return DateTime.MinValue for serialization errors;
-            // when forced UTC is requested we still want a tagged UTC MinValue rather than
-            // an Unspecified one.
-            return (T)(object)ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value);
-        }
-
-        // BSON serializers sometimes return DateTime.MinValue for serialization errors;
-        // when forced UTC is requested we still want a tagged UTC MinValue rather than
-        // an Unspecified one.
-        return (T)(object)dateTime;
+        return forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value ? (T)(object)ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value) : (T)(object)dateTime;
     }
 
     /// <summary>
@@ -87,7 +88,7 @@ internal static partial class DateTimeHelpers
     /// <param name="dateTime">The deserialized DateTime to inspect.</param>
     /// <param name="forcedDateTimeKind">The forced DateTime kind, if any.</param>
     /// <returns>The processed DateTime boxed back into <typeparamref name="T"/>.</returns>
-    public static T HandleDateTimeWithCrossSerializerSupport<T>(DateTime dateTime, DateTimeKind? forcedDateTimeKind) =>
+    internal static T HandleDateTimeWithCrossSerializerSupport<T>(DateTime dateTime, DateTimeKind? forcedDateTimeKind) =>
         (T)(object)HandleDateTimeEdgeCase<DateTime>(dateTime, forcedDateTimeKind);
 
     /// <summary>
@@ -98,21 +99,14 @@ internal static partial class DateTimeHelpers
     /// <typeparam name="T">The expected return type — must be assignment-compatible with <see cref="DateTimeOffset"/>.</typeparam>
     /// <param name="dateTimeOffset">The deserialized DateTimeOffset to inspect.</param>
     /// <returns>The processed DateTimeOffset boxed back into <typeparamref name="T"/>.</returns>
-    public static T HandleDateTimeOffsetWithCrossSerializerSupport<T>(DateTimeOffset dateTimeOffset)
+    internal static T HandleDateTimeOffsetWithCrossSerializerSupport<T>(DateTimeOffset dateTimeOffset)
     {
         if (dateTimeOffset == DateTimeOffset.MinValue)
         {
             return (T)(object)DateTimeOffset.MinValue;
         }
 
-        if (dateTimeOffset == DateTimeOffset.MaxValue)
-        {
-            return (T)(object)DateTimeOffset.MaxValue;
-        }
-
-        // Other values pass through unchanged. Some serializers might mutate the offset
-        // while preserving the UTC instant; downstream consumers should rely on UtcDateTime.
-        return (T)(object)dateTimeOffset;
+        return dateTimeOffset == DateTimeOffset.MaxValue ? (T)(object)DateTimeOffset.MaxValue : (T)(object)dateTimeOffset;
     }
 
     /// <summary>
@@ -127,7 +121,7 @@ internal static partial class DateTimeHelpers
     /// </param>
     /// <param name="forcedDateTimeKind">The forced DateTime kind, if any.</param>
     /// <returns>The validated/corrected DateTime.</returns>
-    public static DateTime ValidateDeserializedDateTime(DateTime dateTime, DateTime? originalValue, DateTimeKind? forcedDateTimeKind)
+    internal static DateTime ValidateDeserializedDateTime(DateTime dateTime, DateTime? originalValue, DateTimeKind? forcedDateTimeKind)
     {
         if (dateTime != DateTime.MinValue || !originalValue.HasValue || originalValue.Value == DateTime.MinValue)
         {
@@ -137,20 +131,13 @@ internal static partial class DateTimeHelpers
         }
 
         // Suggests a deserialization issue — recover the original if it looks reasonable.
-        if (originalValue.Value.Year is >= 1900 and <= 2100)
+        if (originalValue.Value.Year is >= EarliestPlausibleOriginalYear and <= LatestPlausibleYear)
         {
             // Suggests a deserialization issue — recover the original if it looks reasonable.
             return originalValue.Value;
         }
 
-        if (forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value)
-        {
-            // Suggests a deserialization issue — recover the original if it looks reasonable.
-            return ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value);
-        }
-
-        // Suggests a deserialization issue — recover the original if it looks reasonable.
-        return dateTime;
+        return forcedDateTimeKind.HasValue && dateTime.Kind != forcedDateTimeKind.Value ? ConvertDateTimeKind(dateTime, forcedDateTimeKind.Value) : dateTime;
     }
 
     /// <summary>
@@ -162,7 +149,7 @@ internal static partial class DateTimeHelpers
     /// <param name="data">The serialized data.</param>
     /// <param name="problematicResult">The (likely corrupt) DateTime returned by the serializer.</param>
     /// <returns>A recovered DateTime or the original <paramref name="problematicResult"/>.</returns>
-    public static DateTime AttemptDateTimeRecovery(byte[] data, DateTime problematicResult) =>
+    internal static DateTime AttemptDateTimeRecovery(byte[] data, DateTime problematicResult) =>
         problematicResult != DateTime.MinValue || data.Length <= 10
             ? problematicResult
             : TryRecoverDateTimeFromText(data)
@@ -177,7 +164,7 @@ internal static partial class DateTimeHelpers
     /// </summary>
     /// <param name="data">The candidate data.</param>
     /// <returns>A recovered DateTime, or <c>null</c> if no text hint was found.</returns>
-    public static DateTime? TryRecoverDateTimeFromText(byte[] data)
+    internal static DateTime? TryRecoverDateTimeFromText(byte[] data)
     {
         var dataAsString = Encoding.UTF8.GetString(data);
 
@@ -197,14 +184,14 @@ internal static partial class DateTimeHelpers
     /// </summary>
     /// <param name="data">The candidate data.</param>
     /// <returns>A recovered DateTime, or <c>null</c> if no plausible timestamp was found.</returns>
-    public static DateTime? TryRecoverDateTimeFromBinary(byte[] data)
+    internal static DateTime? TryRecoverDateTimeFromBinary(byte[] data)
     {
-        if (data.Length < 8)
+        if (data.Length < TimestampByteCount)
         {
             return null;
         }
 
-        for (var offset = 0; offset <= data.Length - 8; offset += 4)
+        for (var offset = 0; offset <= data.Length - TimestampByteCount; offset += TimestampScanStride)
         {
             var ticks = BinaryHelpers.ReadInt64LittleEndian(data, offset);
 
@@ -220,7 +207,7 @@ internal static partial class DateTimeHelpers
                 continue;
             }
 
-            if (candidateDateTime.Year is >= 2000 and <= 2100)
+            if (candidateDateTime.Year is >= EarliestPlausibleTimestampYear and <= LatestPlausibleYear)
             {
                 return candidateDateTime;
             }
@@ -236,6 +223,6 @@ internal static partial class DateTimeHelpers
     /// </summary>
     /// <param name="data">The candidate data.</param>
     /// <returns>A recovered DateTime, or <c>null</c> if the buffer is too small to apply this strategy.</returns>
-    public static DateTime? TryRecoverDateTimeFromLargeDataFallback(byte[] data) =>
+    internal static DateTime? TryRecoverDateTimeFromLargeDataFallback(byte[] data) =>
         data.Length > 50 ? _safeFallbackDate : null;
 }

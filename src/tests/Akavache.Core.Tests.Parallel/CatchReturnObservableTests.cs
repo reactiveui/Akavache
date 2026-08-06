@@ -6,29 +6,28 @@ using Akavache.Core.Observables;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="CatchReturnObservable{T}"/> covering success forwarding,
-/// error swallowing with fallback, empty sources, and multi-value streams.
-/// </summary>
+/// <summary>Tests for <see cref="CatchReturnObservable{T}"/> covering success forwarding, error swallowing with fallback, empty sources, and multi-value streams.</summary>
 [Category("Akavache")]
 public class CatchReturnObservableTests
 {
-    /// <summary>
-    /// Success source — value is forwarded and sequence completes normally.
-    /// </summary>
+    /// <summary>The value a successful source emits, which must reach the subscriber unchanged.</summary>
+    private const int SuccessValue = 42;
+
+    /// <summary>The value a subject emits before it faults, which must still reach the subscriber.</summary>
+    private const int ValueBeforeError = 10;
+
+    /// <summary>Success source — value is forwarded and sequence completes normally.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Success_ForwardsValue()
     {
-        var sut = new CatchReturnObservable<int>(Observable.Return(42), -1);
+        var sut = new CatchReturnObservable<int>(Observable.Return(SuccessValue), -1);
 
         var result = await sut.FirstAsync();
-        await Assert.That(result).IsEqualTo(42);
+        await Assert.That(result).IsEqualTo(SuccessValue);
     }
 
-    /// <summary>
-    /// Error source — fallback is emitted instead.
-    /// </summary>
+    /// <summary>Error source — fallback is emitted instead.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Error_EmitsFallback()
@@ -41,9 +40,7 @@ public class CatchReturnObservableTests
         await Assert.That(result).IsEqualTo("recovered");
     }
 
-    /// <summary>
-    /// Empty source (OnCompleted with no OnNext) — completes without emitting.
-    /// </summary>
+    /// <summary>Empty source (OnCompleted with no OnNext) — completes without emitting.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Empty_CompletesWithNoValue()
@@ -54,24 +51,20 @@ public class CatchReturnObservableTests
         await Assert.That(result).IsEmpty();
     }
 
-    /// <summary>
-    /// Multi-value source — all values forwarded then completes.
-    /// </summary>
+    /// <summary>Multi-value source — all values forwarded then completes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MultiValue_ForwardsAllValues()
     {
-        var source = Observable.Return(1).Concat(Observable.Return(2)).Concat(Observable.Return(3));
+        int[] expectedValues = [1, 2, 3];
+        var source = expectedValues.ToObservable();
         var sut = new CatchReturnObservable<int>(source, -1);
 
         var result = await sut.ToList();
-        await Assert.That(result).IsEquivalentTo([1, 2, 3]);
+        await Assert.That(result).IsEquivalentTo(expectedValues);
     }
 
-    /// <summary>
-    /// Async error (via Subject) — values before the error are forwarded,
-    /// then fallback is emitted on error.
-    /// </summary>
+    /// <summary>Async error (via Subject) — values before the error are forwarded, then fallback is emitted on error.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AsyncError_ForwardsValuesThenFallback()
@@ -81,21 +74,20 @@ public class CatchReturnObservableTests
         var results = new List<int>();
         var completed = false;
         var sut = new CatchReturnObservable<int>(subject, -1);
-        sut.Subscribe(
+        _ = sut.Subscribe(
             results.Add,
-            _ => { },
+            static _ => { },
             () => completed = true);
 
-        subject.OnNext(10);
+        subject.OnNext(ValueBeforeError);
         subject.OnError(new InvalidOperationException("async error"));
 
-        await Assert.That(results).IsEquivalentTo([10, -1]);
+        int[] expectedValueThenFallback = [ValueBeforeError, -1];
+        await Assert.That(results).IsEquivalentTo(expectedValueThenFallback);
         await Assert.That(completed).IsTrue();
     }
 
-    /// <summary>
-    /// Async success (via Subject) — values forwarded then completes normally.
-    /// </summary>
+    /// <summary>Async success (via Subject) — values forwarded then completes normally.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AsyncSuccess_ForwardsValues()
@@ -105,9 +97,9 @@ public class CatchReturnObservableTests
         var results = new List<string>();
         var completed = false;
         var sut = new CatchReturnObservable<string>(subject, "fallback");
-        sut.Subscribe(
+        _ = sut.Subscribe(
             results.Add,
-            _ => { },
+            static _ => { },
             () => completed = true);
 
         subject.OnNext("a");

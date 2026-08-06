@@ -8,15 +8,35 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests focused on SqliteBlobCache.InvalidateAll behavior.
-/// </summary>
+/// <summary>Tests focused on SqliteBlobCache.InvalidateAll behavior.</summary>
 [Category("Akavache")]
 public class SqliteBlobCacheInvalidateAllTests
 {
-    /// <summary>
-    /// Verifies that InvalidateAll removes all untyped items and they cannot be retrieved afterwards.
-    /// </summary>
+    /// <summary>How long the entry that must survive until <c>InvalidateAll</c> runs stays valid.</summary>
+    private static readonly TimeSpan LiveEntryLifetime = TimeSpan.FromMinutes(5);
+
+    /// <summary>How long the entry that is meant to lapse before the assertions stays valid.</summary>
+    private static readonly TimeSpan ExpiringEntryLifetime = TimeSpan.FromMilliseconds(200);
+
+    /// <summary>How long the test waits to be sure <see cref="ExpiringEntryLifetime"/> has elapsed.</summary>
+    private static readonly TimeSpan ExpiryGracePeriod = TimeSpan.FromMilliseconds(300);
+
+    /// <summary>Distinct payloads so a wrong key surfacing in a read is visible in the assertion.</summary>
+    private static readonly byte[] FirstUntypedPayload = [1];
+
+    /// <summary>Payload for the second untyped entry.</summary>
+    private static readonly byte[] SecondUntypedPayload = [2];
+
+    /// <summary>Payload for the third untyped entry.</summary>
+    private static readonly byte[] ThirdUntypedPayload = [3];
+
+    /// <summary>Payload for the first type-scoped entry.</summary>
+    private static readonly byte[] FirstTypedPayload = [10];
+
+    /// <summary>Payload for the second type-scoped entry.</summary>
+    private static readonly byte[] SecondTypedPayload = [20];
+
+    /// <summary>Verifies that InvalidateAll removes all untyped items and they cannot be retrieved afterwards.</summary>
     /// <returns>A task to await.</returns>
     [Test]
     public async Task InvalidateAll_ShouldRemove_AllItems()
@@ -24,13 +44,15 @@ public class SqliteBlobCacheInvalidateAllTests
         SystemJsonSerializer serializer = new();
         using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
+        const int InsertedKeyCount = 3;
+
         // Arrange
-        cache.Insert("a", [1]).SubscribeAndComplete();
-        cache.Insert("b", [2]).SubscribeAndComplete();
-        cache.Insert("c", [3]).SubscribeAndComplete();
+        cache.Insert("a", FirstUntypedPayload).SubscribeAndComplete();
+        cache.Insert("b", SecondUntypedPayload).SubscribeAndComplete();
+        cache.Insert("c", ThirdUntypedPayload).SubscribeAndComplete();
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
-        await Assert.That(keysBefore).Count().IsEqualTo(3);
+        await Assert.That(keysBefore).Count().IsEqualTo(InsertedKeyCount);
 
         // Act
         cache.InvalidateAll().SubscribeAndComplete();
@@ -49,9 +71,7 @@ public class SqliteBlobCacheInvalidateAllTests
         await Assert.That(errorC).IsTypeOf<KeyNotFoundException>();
     }
 
-    /// <summary>
-    /// Verifies that InvalidateAll removes both typed and untyped items.
-    /// </summary>
+    /// <summary>Verifies that InvalidateAll removes both typed and untyped items.</summary>
     /// <returns>A task to await.</returns>
     [Test]
     public async Task InvalidateAll_ShouldRemove_TypedAndUntypedItems()
@@ -59,16 +79,18 @@ public class SqliteBlobCacheInvalidateAllTests
         SystemJsonSerializer serializer = new();
         using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
+        const int InsertedKeyCount = 4;
+
         // Arrange: mix typed and untyped entries
-        cache.Insert("u1", [1]).SubscribeAndComplete();
-        cache.Insert("u2", [2]).SubscribeAndComplete();
+        cache.Insert("u1", FirstUntypedPayload).SubscribeAndComplete();
+        cache.Insert("u2", SecondUntypedPayload).SubscribeAndComplete();
 
         var userType = typeof(string);
-        cache.Insert("t1", [10], userType).SubscribeAndComplete();
-        cache.Insert("t2", [20], userType).SubscribeAndComplete();
+        cache.Insert("t1", FirstTypedPayload, userType).SubscribeAndComplete();
+        cache.Insert("t2", SecondTypedPayload, userType).SubscribeAndComplete();
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
-        await Assert.That(keysBefore).Count().IsEqualTo(4);
+        await Assert.That(keysBefore).Count().IsEqualTo(InsertedKeyCount);
 
         // Act
         cache.InvalidateAll().SubscribeAndComplete();
@@ -91,9 +113,7 @@ public class SqliteBlobCacheInvalidateAllTests
         await Assert.That(errorT2).IsTypeOf<KeyNotFoundException>();
     }
 
-    /// <summary>
-    /// Verifies that InvalidateAll clears all items even when some entries are expired and filtered from GetAllKeys.
-    /// </summary>
+    /// <summary>Verifies that InvalidateAll clears all items even when some entries are expired and filtered from GetAllKeys.</summary>
     /// <returns>A task to await.</returns>
     [Test]
     public async Task InvalidateAll_ShouldIgnore_ExpiredEntriesButStillClearAll()
@@ -102,11 +122,11 @@ public class SqliteBlobCacheInvalidateAllTests
         using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
 
         // Arrange: one expired, one not
-        cache.Insert("live", [1], DateTimeOffset.Now.AddMinutes(5)).SubscribeAndComplete();
-        cache.Insert("expired", [2], DateTimeOffset.Now.AddMilliseconds(200)).SubscribeAndComplete();
+        cache.Insert("live", FirstUntypedPayload, TimeProvider.System.GetLocalNow().Add(LiveEntryLifetime)).SubscribeAndComplete();
+        cache.Insert("expired", SecondUntypedPayload, TimeProvider.System.GetLocalNow().Add(ExpiringEntryLifetime)).SubscribeAndComplete();
 
         // wait for expiration
-        await Task.Delay(300);
+        await Task.Delay(ExpiryGracePeriod);
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
 

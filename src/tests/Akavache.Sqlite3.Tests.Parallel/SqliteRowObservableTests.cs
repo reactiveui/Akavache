@@ -6,41 +6,36 @@ using Akavache.Sqlite3;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="SqliteRowObservable{T}"/> covering state transitions, cancellation,
-/// idempotent terminal calls, and single-subscriber enforcement.
-/// </summary>
+/// <summary>Tests for <see cref="SqliteRowObservable{T}"/> covering state transitions, cancellation, idempotent terminal calls, and single-subscriber enforcement.</summary>
 [Category("Akavache")]
 public class SqliteRowObservableTests
 {
-    /// <summary>
-    /// Calling OnNext after OnCompleted is a silent no-op.
-    /// </summary>
+    /// <summary>Calling OnNext after OnCompleted is a silent no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnNext_AfterCompleted_IsNoop()
     {
+        const int DeliveredRow = 1;
+        const int DroppedRow = 2;
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
         var completed = false;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            values.Add,
+            static _ => { },
             () => completed = true));
 
-        sut.OnNext(1);
+        sut.OnNext(DeliveredRow);
         sut.OnCompleted();
-        sut.OnNext(2);
+        sut.OnNext(DroppedRow);
 
         await Assert.That(values.Count).IsEqualTo(1);
-        await Assert.That(values[0]).IsEqualTo(1);
+        await Assert.That(values[0]).IsEqualTo(DeliveredRow);
         await Assert.That(completed).IsTrue();
     }
 
-    /// <summary>
-    /// Calling OnCompleted twice delivers OnCompleted to the observer only once.
-    /// </summary>
+    /// <summary>Calling OnCompleted twice delivers OnCompleted to the observer only once.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnCompleted_Twice_IsNoop()
@@ -48,9 +43,9 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var completedCount = 0;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
+            static _ => { },
             () => completedCount++));
 
         sut.OnCompleted();
@@ -59,9 +54,7 @@ public class SqliteRowObservableTests
         await Assert.That(completedCount).IsEqualTo(1);
     }
 
-    /// <summary>
-    /// OnError forwards the exception to the subscribed observer.
-    /// </summary>
+    /// <summary>OnError forwards the exception to the subscribed observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnError_ForwardsToObserver()
@@ -69,10 +62,10 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         Exception? caught = null;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
             ex => caught = ex,
-            () => { }));
+            static () => { }));
 
         var expected = new InvalidOperationException("test-error");
         sut.OnError(expected);
@@ -80,9 +73,7 @@ public class SqliteRowObservableTests
         await Assert.That(caught).IsSameReferenceAs(expected);
     }
 
-    /// <summary>
-    /// Calling OnError after OnCompleted is a silent no-op.
-    /// </summary>
+    /// <summary>Calling OnError after OnCompleted is a silent no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnError_AfterCompleted_IsNoop()
@@ -91,8 +82,8 @@ public class SqliteRowObservableTests
         var completed = false;
         Exception? caught = null;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
             ex => caught = ex,
             () => completed = true));
 
@@ -103,10 +94,7 @@ public class SqliteRowObservableTests
         await Assert.That(caught).IsNull();
     }
 
-    /// <summary>
-    /// Subscribing to an observable that has already completed fires OnCompleted
-    /// immediately without any OnNext emissions.
-    /// </summary>
+    /// <summary>Subscribing to an observable that has already completed fires OnCompleted immediately without any OnNext emissions.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Subscribe_WhenAlreadyCompleted_FiresOnCompletedImmediately()
@@ -117,9 +105,9 @@ public class SqliteRowObservableTests
         var completed = false;
         var values = new List<int>();
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            values.Add,
+            static _ => { },
             () => completed = true));
 
         await Assert.That(completed).IsTrue();
@@ -140,8 +128,8 @@ public class SqliteRowObservableTests
         var completed = false;
         Exception? caught = null;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
             ex => caught = ex,
             () => completed = true));
 
@@ -149,34 +137,30 @@ public class SqliteRowObservableTests
         await Assert.That(caught).IsNull();
     }
 
-    /// <summary>
-    /// A second call to Subscribe throws <see cref="InvalidOperationException"/>.
-    /// </summary>
+    /// <summary>A second call to Subscribe throws <see cref="InvalidOperationException"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Subscribe_Twice_Throws()
     {
         var sut = new SqliteRowObservable<int>();
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
-            _ => { },
-            () => { }));
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
+            static _ => { },
+            static () => { }));
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () =>
             {
-                sut.Subscribe(System.Reactive.Observer.Create<int>(
-                    _ => { },
-                    _ => { },
-                    () => { }));
+                _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+                    static _ => { },
+                    static _ => { },
+                    static () => { }));
                 return Task.CompletedTask;
             });
     }
 
-    /// <summary>
-    /// Calling CancelFromDispose on an already-completed observable is a silent no-op.
-    /// </summary>
+    /// <summary>Calling CancelFromDispose on an already-completed observable is a silent no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CancelFromDispose_WhenNotPending_IsNoop()
@@ -190,9 +174,7 @@ public class SqliteRowObservableTests
         await Assert.That(sut.IsCancelled).IsTrue();
     }
 
-    /// <summary>
-    /// Disposing the subscription sets IsCancelled to true.
-    /// </summary>
+    /// <summary>Disposing the subscription sets IsCancelled to true.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Dispose_Subscription_SetsCancelled()
@@ -200,9 +182,9 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
 
         var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
-            _ => { },
-            () => { }));
+            static _ => { },
+            static _ => { },
+            static () => { }));
 
         await Assert.That(sut.IsCancelled).IsFalse();
 
@@ -211,9 +193,7 @@ public class SqliteRowObservableTests
         await Assert.That(sut.IsCancelled).IsTrue();
     }
 
-    /// <summary>
-    /// Disposing the subscription twice is idempotent and does not throw.
-    /// </summary>
+    /// <summary>Disposing the subscription twice is idempotent and does not throw.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Dispose_Subscription_Twice_IsIdempotent()
@@ -221,9 +201,9 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
 
         var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
-            _ => { },
-            () => { }));
+            static _ => { },
+            static _ => { },
+            static () => { }));
 
         subscription.Dispose();
         subscription.Dispose();
@@ -231,28 +211,27 @@ public class SqliteRowObservableTests
         await Assert.That(sut.IsCancelled).IsTrue();
     }
 
-    /// <summary>
-    /// Calling OnNext after the subscription has been disposed (cancelled state) is a
-    /// silent no-op.
-    /// </summary>
+    /// <summary>Calling OnNext after the subscription has been disposed (cancelled state) is a silent no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnNext_AfterCancelled_IsNoop()
     {
+        const int DeliveredRow = 1;
+        const int DroppedRow = 2;
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
         var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
-            () => { }));
+            values.Add,
+            static _ => { },
+            static () => { }));
 
-        sut.OnNext(1);
+        sut.OnNext(DeliveredRow);
         subscription.Dispose();
-        sut.OnNext(2);
+        sut.OnNext(DroppedRow);
 
         await Assert.That(values.Count).IsEqualTo(1);
-        await Assert.That(values[0]).IsEqualTo(1);
+        await Assert.That(values[0]).IsEqualTo(DeliveredRow);
     }
 
     /// <summary>
@@ -263,26 +242,30 @@ public class SqliteRowObservableTests
     [Test]
     public async Task OnNext_BeforeSubscribe_BuffersAndDrains()
     {
+        const int FirstBufferedRow = 10;
+        const int SecondBufferedRow = 20;
+        const int ThirdBufferedRow = 30;
+        const int BufferedRowCount = 3;
         var sut = new SqliteRowObservable<int>();
 
-        sut.OnNext(10);
-        sut.OnNext(20);
-        sut.OnNext(30);
+        sut.OnNext(FirstBufferedRow);
+        sut.OnNext(SecondBufferedRow);
+        sut.OnNext(ThirdBufferedRow);
 
         var values = new List<int>();
         var completed = false;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            values.Add,
+            static _ => { },
             () => completed = true));
 
         sut.OnCompleted();
 
-        await Assert.That(values.Count).IsEqualTo(3);
-        await Assert.That(values[0]).IsEqualTo(10);
-        await Assert.That(values[1]).IsEqualTo(20);
-        await Assert.That(values[2]).IsEqualTo(30);
+        await Assert.That(values.Count).IsEqualTo(BufferedRowCount);
+        await Assert.That(values[0]).IsEqualTo(FirstBufferedRow);
+        await Assert.That(values[1]).IsEqualTo(SecondBufferedRow);
+        await Assert.That(values[2]).IsEqualTo(ThirdBufferedRow);
         await Assert.That(completed).IsTrue();
     }
 
@@ -295,24 +278,23 @@ public class SqliteRowObservableTests
     [Test]
     public async Task Subscribe_WithNoBufferedRows_DoesNotDrain()
     {
+        const int DeliveredRow = 42;
         var sut = new SqliteRowObservable<int>();
 
         var values = new List<int>();
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
-            () => { }));
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            values.Add,
+            static _ => { },
+            static () => { }));
 
-        sut.OnNext(42);
+        sut.OnNext(DeliveredRow);
         sut.OnCompleted();
 
         await Assert.That(values.Count).IsEqualTo(1);
-        await Assert.That(values[0]).IsEqualTo(42);
+        await Assert.That(values[0]).IsEqualTo(DeliveredRow);
     }
 
-    /// <summary>
-    /// OnError after errored state is a no-op (double OnError suppressed).
-    /// </summary>
+    /// <summary>OnError after errored state is a no-op (double OnError suppressed).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnError_AfterErrored_IsNoop()
@@ -320,10 +302,10 @@ public class SqliteRowObservableTests
         var sut = new SqliteRowObservable<int>();
         var errorCount = 0;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
             _ => errorCount++,
-            () => { }));
+            static () => { }));
 
         sut.OnError(new InvalidOperationException("first"));
         sut.OnError(new InvalidOperationException("second"));
@@ -331,28 +313,27 @@ public class SqliteRowObservableTests
         await Assert.That(errorCount).IsEqualTo(1);
     }
 
-    /// <summary>
-    /// CancelFromDispose while in pending state with no subscriber sets
-    /// IsCancelled to true and subsequent OnNext is a no-op.
-    /// </summary>
+    /// <summary>CancelFromDispose while in pending state with no subscriber sets IsCancelled to true and subsequent OnNext is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CancelFromDispose_WhilePending_SetsCancelledAndDropsOnNext()
     {
+        const int DeliveredRow = 1;
+        const int DroppedRow = 2;
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
 
         var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
-            () => { }));
+            values.Add,
+            static _ => { },
+            static () => { }));
 
-        sut.OnNext(1);
+        sut.OnNext(DeliveredRow);
         subscription.Dispose();
 
         await Assert.That(sut.IsCancelled).IsTrue();
 
-        sut.OnNext(2);
+        sut.OnNext(DroppedRow);
 
         await Assert.That(values.Count).IsEqualTo(1);
     }
@@ -366,23 +347,26 @@ public class SqliteRowObservableTests
     [Test]
     public async Task OnNext_ThenOnCompleted_BeforeSubscribe_DrainsThenCompletes()
     {
+        const int FirstBufferedRow = 1;
+        const int SecondBufferedRow = 2;
+        const int BufferedRowCount = 2;
         var sut = new SqliteRowObservable<int>();
 
-        sut.OnNext(1);
-        sut.OnNext(2);
+        sut.OnNext(FirstBufferedRow);
+        sut.OnNext(SecondBufferedRow);
         sut.OnCompleted();
 
         var values = new List<int>();
         var completed = false;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            values.Add,
+            static _ => { },
             () => completed = true));
 
-        await Assert.That(values.Count).IsEqualTo(2);
-        await Assert.That(values[0]).IsEqualTo(1);
-        await Assert.That(values[1]).IsEqualTo(2);
+        await Assert.That(values.Count).IsEqualTo(BufferedRowCount);
+        await Assert.That(values[0]).IsEqualTo(FirstBufferedRow);
+        await Assert.That(values[1]).IsEqualTo(SecondBufferedRow);
         await Assert.That(completed).IsTrue();
     }
 
@@ -400,9 +384,7 @@ public class SqliteRowObservableTests
         await Assert.That(sut.IsCancelled).IsTrue();
     }
 
-    /// <summary>
-    /// OnError without any subscriber does not throw and transitions to errored state.
-    /// </summary>
+    /// <summary>OnError without any subscriber does not throw and transitions to errored state.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task OnError_WithoutSubscriber_TransitionsToErrored()
@@ -422,20 +404,21 @@ public class SqliteRowObservableTests
     [Test]
     public async Task Subscribe_NeverBuffered_DrainBufferReceivesNull()
     {
+        const int DeliveredRow = 99;
         var sut = new SqliteRowObservable<int>();
         var values = new List<int>();
         var completed = false;
 
-        sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
+        _ = sut.Subscribe(System.Reactive.Observer.Create<int>(
+            values.Add,
+            static _ => { },
             () => completed = true));
 
-        sut.OnNext(99);
+        sut.OnNext(DeliveredRow);
         sut.OnCompleted();
 
         await Assert.That(values).Count().IsEqualTo(1);
-        await Assert.That(values[0]).IsEqualTo(99);
+        await Assert.That(values[0]).IsEqualTo(DeliveredRow);
         await Assert.That(completed).IsTrue();
     }
 
@@ -451,9 +434,9 @@ public class SqliteRowObservableTests
         var values = new List<int>();
 
         var subscription = sut.Subscribe(System.Reactive.Observer.Create<int>(
-            v => values.Add(v),
-            _ => { },
-            () => { }));
+            values.Add,
+            static _ => { },
+            static () => { }));
 
         subscription.Dispose();
         sut.OnCompleted();
@@ -462,10 +445,7 @@ public class SqliteRowObservableTests
     }
 
     // ── CaptureGapAndSetObserver static helper ──────────────────────────
-
-    /// <summary>
-    /// CaptureGapAndSetObserver with pending state, no buffer — sets observer, returns no gap.
-    /// </summary>
+    /// <summary>CaptureGapAndSetObserver with pending state, no buffer — sets observer, returns no gap.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CaptureGapAndSetObserver_Pending_NoBuffer_SetsObserver()
@@ -473,7 +453,7 @@ public class SqliteRowObservableTests
         var state = 0; // StatePending
         List<int>? buffer = null;
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(_ => { });
+        var observer = System.Reactive.Observer.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,
@@ -486,17 +466,16 @@ public class SqliteRowObservableTests
         await Assert.That(observerSlot).IsSameReferenceAs(observer);
     }
 
-    /// <summary>
-    /// CaptureGapAndSetObserver with pending state and buffered rows — sets observer, returns gap.
-    /// </summary>
+    /// <summary>CaptureGapAndSetObserver with pending state and buffered rows — sets observer, returns gap.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CaptureGapAndSetObserver_Pending_WithBuffer_ReturnsGap()
     {
+        const int BufferedRowCount = 3;
         var state = 0; // StatePending
         List<int>? buffer = [10, 20, 30];
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(_ => { });
+        var observer = System.Reactive.Observer.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,
@@ -506,14 +485,12 @@ public class SqliteRowObservableTests
 
         await Assert.That(terminal).IsFalse();
         await Assert.That(gap).IsNotNull();
-        await Assert.That(gap!.Length).IsEqualTo(3);
+        await Assert.That(gap!.Length).IsEqualTo(BufferedRowCount);
         await Assert.That(buffer).IsNull();
         await Assert.That(observerSlot).IsSameReferenceAs(observer);
     }
 
-    /// <summary>
-    /// CaptureGapAndSetObserver with pending state and empty buffer — sets observer, returns null gap.
-    /// </summary>
+    /// <summary>CaptureGapAndSetObserver with pending state and empty buffer — sets observer, returns null gap.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CaptureGapAndSetObserver_Pending_EmptyBuffer_ReturnsNullGap()
@@ -521,7 +498,7 @@ public class SqliteRowObservableTests
         var state = 0; // StatePending
         List<int>? buffer = [];
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(_ => { });
+        var observer = System.Reactive.Observer.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,
@@ -534,9 +511,7 @@ public class SqliteRowObservableTests
         await Assert.That(buffer).IsNull();
     }
 
-    /// <summary>
-    /// CaptureGapAndSetObserver with terminal state — does not set observer.
-    /// </summary>
+    /// <summary>CaptureGapAndSetObserver with terminal state — does not set observer.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CaptureGapAndSetObserver_Terminal_DoesNotSetObserver()
@@ -544,7 +519,7 @@ public class SqliteRowObservableTests
         var state = 1; // StateCompleted
         List<int>? buffer = [99];
         IObserver<int>? observerSlot = null;
-        var observer = System.Reactive.Observer.Create<int>(_ => { });
+        var observer = System.Reactive.Observer.Create<int>(static _ => { });
 
         var (terminal, gap) = SqliteRowObservable<int>.CaptureGapAndSetObserver(
             ref state,

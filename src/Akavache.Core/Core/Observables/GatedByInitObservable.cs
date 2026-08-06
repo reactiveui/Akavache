@@ -14,8 +14,7 @@ namespace Akavache.Core.Observables;
 /// <typeparam name="T">The element type.</typeparam>
 /// <param name="signal">The init signal to gate on.</param>
 /// <param name="factory">Factory that produces the inner observable once init succeeds.</param>
-internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservable<T>> factory)
-    : IObservable<T>
+internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservable<T>> factory) : IObservable<T>
 {
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<T> observer)
@@ -65,10 +64,7 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
         return HandleParkResult(parked, inner, factory, observer, error);
     }
 
-    /// <summary>
-    /// Routes the result of <see cref="InitSignal.TryPark"/>: if parked, returns the
-    /// inner disposable; otherwise dispatches inline via <see cref="SubscribeAfterPark"/>.
-    /// </summary>
+    /// <summary>Routes the result of <see cref="InitSignal.TryPark"/>: if parked, returns the inner disposable; otherwise dispatches inline via <see cref="SubscribeAfterPark"/>.</summary>
     /// <param name="parked">Whether TryPark succeeded.</param>
     /// <param name="inner">The disposable holding the parked subscription.</param>
     /// <param name="innerFactory">The factory that produces the inner observable.</param>
@@ -80,15 +76,7 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
         IDisposable inner,
         Func<IObservable<T>> innerFactory,
         IObserver<T> observer,
-        Exception? error)
-    {
-        if (parked)
-        {
-            return inner;
-        }
-
-        return SubscribeAfterPark(innerFactory, observer, error);
-    }
+        Exception? error) => parked ? inner : SubscribeAfterPark(innerFactory, observer, error);
 
     /// <summary>Subscribes directly to the inner factory observable.</summary>
     /// <param name="innerFactory">The factory that produces the inner observable.</param>
@@ -107,9 +95,7 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
         }
     }
 
-    /// <summary>
-    /// Delivers a terminal error to the observer and returns an empty disposable.
-    /// </summary>
+    /// <summary>Delivers a terminal error to the observer and returns an empty disposable.</summary>
     /// <param name="observer">The observer to notify.</param>
     /// <param name="capturedError">The error from the failed signal.</param>
     /// <returns>An empty disposable.</returns>
@@ -128,13 +114,8 @@ internal sealed class GatedByInitObservable<T>(InitSignal signal, Func<IObservab
     /// <param name="observer">The outer observer.</param>
     /// <param name="capturedError">The captured terminal error, or <see langword="null"/> if the signal completed successfully.</param>
     /// <returns>The forwarded subscription.</returns>
-    internal static IDisposable SubscribeAfterPark(Func<IObservable<T>> innerFactory, IObserver<T> observer, Exception? capturedError)
-    {
-        if (capturedError is null)
-        {
-            return SubscribeToInner(innerFactory, observer);
-        }
-
-        return DeliverError(observer, capturedError);
-    }
+    internal static IDisposable SubscribeAfterPark(
+        Func<IObservable<T>> innerFactory,
+        IObserver<T> observer,
+        Exception? capturedError) => capturedError is null ? SubscribeToInner(innerFactory, observer) : DeliverError(observer, capturedError);
 }

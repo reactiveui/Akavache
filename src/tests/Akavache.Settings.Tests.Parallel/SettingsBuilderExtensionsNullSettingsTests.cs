@@ -17,10 +17,7 @@ namespace Akavache.Settings.Tests;
 [Category("Akavache")]
 public class SettingsBuilderExtensionsNullSettingsTests
 {
-    /// <summary>
-    /// Passing <see langword="null"/> for the <c>settings</c> action skips the
-    /// <c>settings?.Invoke</c> call without throwing.
-    /// </summary>
+    /// <summary>Passing <see langword="null"/> for the <c>settings</c> action skips the <c>settings?.Invoke</c> call without throwing.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task WithSettingsStore_NullSettingsAction_DoesNotThrow()
@@ -41,20 +38,13 @@ public class SettingsBuilderExtensionsNullSettingsTests
         store.Dispose();
     }
 
-    /// <summary>
-    /// Passing <see langword="null"/> for the <c>settings</c> action on the secure
-    /// overload (<c>WithSecureSettingsStore</c>) skips <c>settings?.Invoke</c>.
-    /// </summary>
+    /// <summary>Passing <see langword="null"/> for the <c>settings</c> action on the secure overload (<c>WithSecureSettingsStore</c>) skips <c>settings?.Invoke</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task WithSecureSettingsStore_NullSettingsAction_DoesNotThrow()
     {
         using var tempDir = Utility.WithEmptyDirectory(out var path);
-        FakeAkavacheBuilder builder = new()
-        {
-            Serializer = new SystemJsonSerializer(),
-            SettingsCachePath = path,
-        };
+        FakeAkavacheBuilder builder = new() { Serializer = new SystemJsonSerializer(), SettingsCachePath = path, };
 
         var result = builder.WithSecureSettingsStore<ViewSettings>("password", null!);
 
@@ -139,23 +129,43 @@ public class SettingsBuilderExtensionsNullSettingsTests
         public IAkavacheBuilder WithInMemory(IBlobCache cache) => this;
 
         /// <inheritdoc/>
-        public IAkavacheBuilder WithInMemoryDefaults() => this;
+        public IAkavacheBuilder WithInMemoryDefaults()
+        {
+            FileLocationOption = FileLocationOption.Default;
+            return this;
+        }
 
         /// <inheritdoc/>
-        public IAkavacheBuilder WithLegacyFileLocation() => this;
+        public IAkavacheBuilder WithLegacyFileLocation()
+        {
+            FileLocationOption = FileLocationOption.Legacy;
+            return this;
+        }
 
         /// <inheritdoc/>
-        public IAkavacheBuilder WithLocalMachine(IBlobCache cache) => this;
+        public IAkavacheBuilder WithLocalMachine(IBlobCache cache)
+        {
+            LocalMachine = cache;
+            return this;
+        }
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSecure(ISecureBlobCache cache) => this;
 
         /// <inheritdoc/>
-        public IAkavacheBuilder WithUserAccount(IBlobCache cache) => this;
+        public IAkavacheBuilder WithUserAccount(IBlobCache cache)
+        {
+            UserAccount = cache;
+            return this;
+        }
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSerializer<T>()
-            where T : class, ISerializer, new() => this;
+            where T : class, ISerializer, new()
+        {
+            Serializer = new T();
+            return this;
+        }
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithSerializer<T>(Func<T> configure)

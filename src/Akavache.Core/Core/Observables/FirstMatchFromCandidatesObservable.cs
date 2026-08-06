@@ -4,8 +4,6 @@
 
 using System.Reactive.Disposables;
 
-using Akavache.Helpers;
-
 namespace Akavache.Core.Observables;
 
 /// <summary>
@@ -185,6 +183,13 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
     /// Heap-allocated observer used when a projection does not complete synchronously.
     /// Walks the remaining candidates via async callbacks.
     /// </summary>
+    /// <param name="downstream">The observer that receives the first matching result, or the fallback.</param>
+    /// <param name="candidates">The candidate keys to project, in priority order.</param>
+    /// <param name="project">Projects a candidate key to the observable that produces its raw value.</param>
+    /// <param name="transform">Converts a raw value into the result type.</param>
+    /// <param name="predicate">Decides whether a transformed result counts as a match.</param>
+    /// <param name="fallback">The value emitted when no candidate matches.</param>
+    /// <param name="startIndex">The index in <paramref name="candidates"/> to resume walking from.</param>
     private sealed class AsyncSink(
         IObserver<TResult> downstream,
         IReadOnlyList<TKey> candidates,
@@ -293,7 +298,8 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
             {
                 while (!_done && _index < candidates.Count)
                 {
-                    var key = candidates[_index++];
+                    var key = candidates[_index];
+                    _index++;
 
                     IObservable<TRaw> projected;
                     try
@@ -308,7 +314,7 @@ internal sealed class FirstMatchFromCandidatesObservable<TKey, TRaw, TResult>(
 
                     _syncCompleted = false;
                     var sub = projected.Subscribe(this);
-                    Interlocked.Exchange(ref _currentSubscription, sub);
+                    _ = Interlocked.Exchange(ref _currentSubscription, sub);
 
                     if (!_syncCompleted)
                     {

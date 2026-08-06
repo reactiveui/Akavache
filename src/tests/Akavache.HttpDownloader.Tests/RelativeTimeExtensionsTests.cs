@@ -7,15 +7,35 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for relative time extension methods.
-/// </summary>
+/// <summary>Tests for relative time extension methods.</summary>
 [Category("Akavache")]
 public class RelativeTimeExtensionsTests
 {
-    /// <summary>
-    /// Tests that Insert with TimeSpan correctly calculates expiration.
-    /// </summary>
+    /// <summary>Cache key used by the byte-array expiration tests.</summary>
+    private const string TestKey = "test_key";
+
+    /// <summary>Cache key used by the object expiration tests.</summary>
+    private const string TestObjectKey = "test_object";
+
+    /// <summary>A well-formed absolute URL used wherever a test only needs a syntactically valid address.</summary>
+    private const string ExampleUrl = "http://example.com";
+
+    /// <summary>Expiration long enough that entries cannot lapse mid-test on a slow CI agent.</summary>
+    private const int ExpirationMinutes = 5;
+
+    /// <summary>Payload value carried by the object round-tripped through the cache.</summary>
+    private const int SampleValue = 42;
+
+    /// <summary>Payload stored by the tests that assert an entry survives its expiration window.</summary>
+    private static readonly byte[] TestPayload = "test data"u8.ToArray();
+
+    /// <summary>Payload pre-cached ahead of the string-URL download so the request is served from the cache.</summary>
+    private static readonly byte[] StringOverloadCachedPayload = [9, 8, 7];
+
+    /// <summary>Payload pre-cached ahead of the <see cref="Uri"/> download so the request is served from the cache.</summary>
+    private static readonly byte[] UriOverloadCachedPayload = [1, 2, 3];
+
+    /// <summary>Tests that Insert with TimeSpan correctly calculates expiration.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task InsertWithTimeSpanShouldCalculateExpirationCorrectly()
@@ -25,21 +45,20 @@ public class RelativeTimeExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
-            var testData = "test data"u8.ToArray();
 
             // Use a longer expiration to avoid CI timing issues
-            var expiration = TimeSpan.FromMinutes(5);
-            var beforeInsert = DateTimeOffset.Now;
+            var expiration = TimeSpan.FromMinutes(ExpirationMinutes);
+            var beforeInsert = TimeProvider.System.GetLocalNow();
 
             // Act
-            await cache.Insert("test_key", testData, expiration);
+            await cache.Insert(TestKey, TestPayload, expiration);
 
             // Assert - verify the data was inserted
-            var retrievedData = await cache.Get("test_key");
-            await Assert.That(retrievedData).IsEquivalentTo(testData);
+            var retrievedData = await cache.Get(TestKey);
+            await Assert.That(retrievedData).IsEquivalentTo(TestPayload);
 
             // Verify expiration was set (we can't easily test exact expiration without waiting)
-            var createdAt = await cache.GetCreatedAt("test_key");
+            var createdAt = await cache.GetCreatedAt(TestKey);
             using (Assert.Multiple())
             {
                 await Assert.That(createdAt).IsNotNull();
@@ -50,9 +69,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that InsertObject with TimeSpan correctly calculates expiration.
-    /// </summary>
+    /// <summary>Tests that InsertObject with TimeSpan correctly calculates expiration.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task InsertObjectWithTimeSpanShouldCalculateExpirationCorrectly()
@@ -62,19 +79,19 @@ public class RelativeTimeExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
-            var testObject = new { Name = "Test", Value = 42 };
+            var testObject = (Name: "Test", Value: SampleValue);
             var expiration = TimeSpan.FromMinutes(1);
-            var beforeInsert = DateTimeOffset.Now;
+            var beforeInsert = TimeProvider.System.GetLocalNow();
 
             // Act
-            await cache.InsertObject("test_object", testObject, expiration);
+            await cache.InsertObject(TestObjectKey, testObject, expiration);
 
             // Assert - verify the object was inserted
-            var retrievedObject = await cache.GetObject<dynamic>("test_object");
+            var retrievedObject = await cache.GetObject<dynamic>(TestObjectKey);
             await Assert.That((object?)retrievedObject).IsNotNull();
 
             // Verify expiration was set
-            var createdAt = await cache.GetCreatedAt("test_object");
+            var createdAt = await cache.GetCreatedAt(TestObjectKey);
             await Assert.That(createdAt).IsNotNull();
             await Assert.That(createdAt!.Value).IsGreaterThanOrEqualTo(beforeInsert);
 
@@ -82,9 +99,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that Insert throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that Insert throws ArgumentNullException when cache is null.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public Task InsertShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -97,7 +112,7 @@ public class RelativeTimeExtensionsTests
             var expiration = TimeSpan.FromSeconds(1);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.Insert("key", testData, expiration));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.Insert("key", testData, expiration));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -106,9 +121,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that InsertObject throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that InsertObject throws ArgumentNullException when cache is null.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public Task InsertObjectShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -121,7 +134,7 @@ public class RelativeTimeExtensionsTests
             var expiration = TimeSpan.FromSeconds(1);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.InsertObject("key", testObject, expiration));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.InsertObject("key", testObject, expiration));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -130,23 +143,23 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that DownloadUrl (string) throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that DownloadUrl (string) throws ArgumentNullException when cache is null.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public Task DownloadUrlStringShouldThrowArgumentNullExceptionWhenCacheIsNull()
     {
         try
         {
             // Arrange
             IBlobCache? cache = null;
-            const string url = "http://example.com";
-            var expiration = TimeSpan.FromMinutes(5);
+            var expiration = TimeSpan.FromMinutes(ExpirationMinutes);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.DownloadUrl(url, HttpMethod.Get, expiration));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.DownloadUrl(ExampleUrl, HttpMethod.Get, expiration));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -155,9 +168,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that DownloadUrl (Uri) throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that DownloadUrl (Uri) throws ArgumentNullException when cache is null.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public Task DownloadUrlUriShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -166,11 +177,11 @@ public class RelativeTimeExtensionsTests
         {
             // Arrange
             IBlobCache? cache = null;
-            Uri url = new("http://example.com");
-            var expiration = TimeSpan.FromMinutes(5);
+            Uri url = new(ExampleUrl);
+            var expiration = TimeSpan.FromMinutes(ExpirationMinutes);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.DownloadUrl(url, HttpMethod.Get, expiration));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.DownloadUrl(url, HttpMethod.Get, expiration));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -179,9 +190,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that SaveLogin throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that SaveLogin throws ArgumentNullException when cache is null.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
     public Task SaveLoginShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -193,7 +202,7 @@ public class RelativeTimeExtensionsTests
             var expiration = TimeSpan.FromHours(1);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.SaveLogin("user", "password", "host", expiration));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.SaveLogin("user", "password", "host", expiration));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -202,9 +211,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that relative time extensions work with different time spans.
-    /// </summary>
+    /// <summary>Tests that relative time extensions work with different time spans.</summary>
     /// <param name="seconds">The number of seconds for the timespan.</param>
     /// <returns>A task representing the test.</returns>
     [Arguments(30)] // 30 seconds (avoid short durations that can expire in CI)
@@ -218,16 +225,15 @@ public class RelativeTimeExtensionsTests
         {
             SystemJsonSerializer serializer = new();
             InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
-            var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.FromSeconds(seconds);
-            var beforeInsert = DateTimeOffset.Now;
+            var beforeInsert = TimeProvider.System.GetLocalNow();
 
             // Act
-            await cache.Insert($"test_key_{seconds}", testData, expiration);
+            await cache.Insert($"test_key_{seconds}", TestPayload, expiration);
 
             // Assert
             var retrievedData = await cache.Get($"test_key_{seconds}");
-            await Assert.That(retrievedData).IsEquivalentTo(testData);
+            await Assert.That(retrievedData).IsEquivalentTo(TestPayload);
 
             var createdAt = await cache.GetCreatedAt($"test_key_{seconds}");
             await Assert.That(createdAt).IsNotNull();
@@ -237,9 +243,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that zero timespan works correctly.
-    /// </summary>
+    /// <summary>Tests that zero timespan works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ZeroTimeSpanShouldWorkCorrectly()
@@ -249,11 +253,10 @@ public class RelativeTimeExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
-            var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.Zero;
 
             // Act - Zero timespan should set expiration to current time (immediate expiration)
-            await cache.Insert("zero_expiration", testData, expiration);
+            await cache.Insert("zero_expiration", TestPayload, expiration);
 
             // Assert - The data should still be insertable but might be immediately expired
             var createdAt = await cache.GetCreatedAt("zero_expiration");
@@ -263,9 +266,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that negative timespan results in past expiration.
-    /// </summary>
+    /// <summary>Tests that negative timespan results in past expiration.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task NegativeTimeSpanShouldResultInPastExpiration()
@@ -275,11 +276,10 @@ public class RelativeTimeExtensionsTests
         using (Utility.WithEmptyDirectory(out _))
         {
             InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
-            var testData = "test data"u8.ToArray();
             var expiration = TimeSpan.FromSeconds(-1); // Past expiration
 
             // Act - Negative timespan should set expiration to past time
-            await cache.Insert("negative_expiration", testData, expiration);
+            await cache.Insert("negative_expiration", TestPayload, expiration);
 
             // Assert - The data should still be insertable
             var createdAt = await cache.GetCreatedAt("negative_expiration");
@@ -289,9 +289,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests Insert(key, data, TimeSpan) round-trips.
-    /// </summary>
+    /// <summary>Tests Insert(key, data, TimeSpan) round-trips.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InsertShouldRoundTrip()
@@ -299,7 +297,8 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.Insert("k", [1, 2, 3], TimeSpan.FromMinutes(1)).SubscribeAndComplete();
+            byte[] payload = [1, 2, 3];
+            cache.Insert("k", payload, TimeSpan.FromMinutes(1)).SubscribeAndComplete();
             var data = cache.Get("k").SubscribeGetValue();
             await Assert.That(data).IsNotNull();
         }
@@ -309,9 +308,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests InsertObject(key, value, TimeSpan) round-trips.
-    /// </summary>
+    /// <summary>Tests InsertObject(key, value, TimeSpan) round-trips.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InsertObjectShouldRoundTrip()
@@ -329,45 +326,35 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests UpdateExpiration(key, TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration(key, TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeyShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, "k", TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests UpdateExpiration(key, type, TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration(key, type, TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeyTypeShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, "k", typeof(string), TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests UpdateExpiration(keys, TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration(keys, TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeysShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, ["k"], TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests UpdateExpiration(keys, type, TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration(keys, type, TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeysTypeShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.UpdateExpiration(null!, ["k"], typeof(string), TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests UpdateExpiration(key, TimeSpan) updates the expiration.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration(key, TimeSpan) updates the expiration.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeyShouldWork()
@@ -386,9 +373,7 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests UpdateExpiration(keys, TimeSpan) updates the expiration.
-    /// </summary>
+    /// <summary>Tests UpdateExpiration(keys, TimeSpan) updates the expiration.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeysShouldWork()
@@ -396,8 +381,10 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.Insert("k1", [1]).SubscribeAndComplete();
-            cache.Insert("k2", [2]).SubscribeAndComplete();
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
+            cache.Insert("k1", firstPayload).SubscribeAndComplete();
+            cache.Insert("k2", secondPayload).SubscribeAndComplete();
             cache.UpdateExpiration(["k1", "k2"], TimeSpan.FromMinutes(1)).SubscribeAndComplete();
 
             var d1 = cache.Get("k1").SubscribeGetValue();
@@ -411,56 +398,50 @@ public class RelativeTimeExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(string, HttpMethod, TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(string, HttpMethod, TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringHttpMethodShouldThrowOnNullCache() =>
-        await Assert.That(static () => RelativeTimeDownloadExtensions.DownloadUrl(null!, "http://example.com", HttpMethod.Get, TimeSpan.FromMinutes(1)))
+        await Assert.That(static () => RelativeTimeDownloadExtensions.DownloadUrl(null!, ExampleUrl, HttpMethod.Get, TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests DownloadUrl(Uri, HttpMethod, TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(Uri, HttpMethod, TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlUriHttpMethodShouldThrowOnNullCache() =>
-        await Assert.That(static () => RelativeTimeDownloadExtensions.DownloadUrl(null!, new Uri("http://example.com"), HttpMethod.Get, TimeSpan.FromMinutes(1)))
+        await Assert.That(static () => RelativeTimeDownloadExtensions.DownloadUrl(null!, new Uri(ExampleUrl), HttpMethod.Get, TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests SaveLogin(ISecureBlobCache, ..., TimeSpan) throws on null cache.
-    /// </summary>
+    /// <summary>Tests SaveLogin(ISecureBlobCache, ..., TimeSpan) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SaveLoginWithTimeSpanShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.SaveLogin(null!, "user", "pass", "host", TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests InsertObject with TimeSpan throws on null cache.
-    /// </summary>
+    /// <summary>Tests InsertObject with TimeSpan throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task InsertObjectWithTimeSpanShouldThrowOnNullCache() =>
         await Assert.That(static () => RelativeTimeExtensions.InsertObject(null!, "key", "val", TimeSpan.FromMinutes(1)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests Insert with TimeSpan throws on null cache.
-    /// </summary>
+    /// <summary>Tests Insert with TimeSpan throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task InsertWithTimeSpanShouldThrowOnNullCache() =>
-        await Assert.That(static () => RelativeTimeExtensions.Insert(null!, "key", [1, 2], TimeSpan.FromMinutes(1)))
-            .Throws<ArgumentNullException>();
+    public async Task InsertWithTimeSpanShouldThrowOnNullCache()
+    {
+        byte[] payload = [1, 2];
 
-    /// <summary>
-    /// Tests <see cref="RelativeTimeExtensions.UpdateExpiration(IBlobCache, string, Type, TimeSpan)"/>
-    /// happy-path: updates the expiration of an existing typed entry.
-    /// </summary>
+        await Assert.That(() => RelativeTimeExtensions.Insert(null!, "key", payload, TimeSpan.FromMinutes(1)))
+            .Throws<ArgumentNullException>();
+    }
+
+    /// <summary>Tests <see cref="RelativeTimeExtensions.UpdateExpiration(IBlobCache, string, Type, TimeSpan)"/> happy-path: updates the expiration of an existing typed entry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UpdateExpirationKeyTypeShouldWork()
@@ -491,8 +472,10 @@ public class RelativeTimeExtensionsTests
         var cache = CreateCache();
         try
         {
-            cache.Insert("k1", [1], typeof(string)).SubscribeAndComplete();
-            cache.Insert("k2", [2], typeof(string)).SubscribeAndComplete();
+            byte[] firstPayload = [1];
+            byte[] secondPayload = [2];
+            cache.Insert("k1", firstPayload, typeof(string)).SubscribeAndComplete();
+            cache.Insert("k2", secondPayload, typeof(string)).SubscribeAndComplete();
 
             cache.UpdateExpiration(["k1", "k2"], typeof(string), TimeSpan.FromHours(1)).SubscribeAndComplete();
 
@@ -537,18 +520,21 @@ public class RelativeTimeExtensionsTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringHttpMethodShouldServeFromCache()
     {
         var cache = CreateCache();
         try
         {
             const string url = "http://example.invalid/data";
-            cache.Insert(url, [9, 8, 7]).SubscribeAndComplete();
+            cache.Insert(url, StringOverloadCachedPayload).SubscribeAndComplete();
 
             var data = cache.DownloadUrl(url, HttpMethod.Get, TimeSpan.FromHours(1)).SubscribeGetValue();
 
-            await Assert.That(data).IsEquivalentTo(new byte[] { 9, 8, 7 });
+            await Assert.That(data).IsEquivalentTo(StringOverloadCachedPayload);
         }
         finally
         {
@@ -568,11 +554,11 @@ public class RelativeTimeExtensionsTests
         try
         {
             Uri url = new("http://example.invalid/data");
-            cache.Insert(url.ToString(), [1, 2, 3]).SubscribeAndComplete();
+            cache.Insert(url.ToString(), UriOverloadCachedPayload).SubscribeAndComplete();
 
             var data = cache.DownloadUrl(url, HttpMethod.Get, TimeSpan.FromHours(1)).SubscribeGetValue();
 
-            await Assert.That(data).IsEquivalentTo(new byte[] { 1, 2, 3 });
+            await Assert.That(data).IsEquivalentTo(UriOverloadCachedPayload);
         }
         finally
         {

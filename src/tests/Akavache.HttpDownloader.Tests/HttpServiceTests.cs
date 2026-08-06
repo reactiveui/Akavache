@@ -15,20 +15,60 @@ namespace Akavache.Integration.Tests;
 /// Also covers argument validation, static helper branches, and nested-class construction paths.
 /// </summary>
 [Category("Akavache")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
-    "Reliability",
-    "CA1001:Types that own disposable fields should be disposable",
-    Justification = "Cleanup is handled via test hooks")]
 public class HttpServiceTests
 {
-    /// <summary>
-    /// Local HTTP test server used to serve canned responses to the SUT.
-    /// </summary>
+    /// <summary>A host that resolves but is reserved for documentation, so no request can succeed against it.</summary>
+    private const string UnreachableHostUrl = "https://example.invalid";
+
+    /// <summary>A host that cannot resolve at all, used to force a DNS failure quickly.</summary>
+    private const string UnresolvableHostUrl = "https://nonexistent.invalid.localhost.test";
+
+    /// <summary>A well-formed absolute URL used wherever a test only needs a syntactically valid address.</summary>
+    private const string SampleUrl = "https://example.com";
+
+    /// <summary>A loopback address on a port nothing listens on, so the connection is refused immediately.</summary>
+    private const string RefusedConnectionUrl = "http://127.0.0.1:1/unused";
+
+    /// <summary>How long a test waits for an HTTP observable to emit, fail, or complete.</summary>
+    private const int ObservableCompletionTimeoutSeconds = 30;
+
+    /// <summary>How long a test waits for a blob cache read to emit.</summary>
+    private const int CacheReadTimeoutSeconds = 10;
+
+    /// <summary>Timeout assigned to an <see cref="HttpClient"/> purely to prove the value round-trips.</summary>
+    private const int CustomClientTimeoutSeconds = 30;
+
+    /// <summary>Timeout assigned to a fast service so a network attempt gives up almost immediately.</summary>
+    private const int FailFastTimeoutMilliseconds = 100;
+
+    /// <summary>Timeout used by the retry tests, long enough for a retry to be attempted before giving up.</summary>
+    private const int RetryAttemptTimeoutMilliseconds = 250;
+
+    /// <summary>Timeout supplied to a fast service to prove the constructor applies it verbatim.</summary>
+    private const int AppliedTimeoutSeconds = 5;
+
+    /// <summary>A negative timeout, which <see cref="HttpClient.Timeout"/> rejects, exercising the constructor's catch block.</summary>
+    private const int RejectedNegativeTimeoutSeconds = -5;
+
+    /// <summary>Retry count handed to a fast service, chosen so a retry is observable as a second send.</summary>
+    private const int FastServiceRetryCount = 2;
+
+    /// <summary>A retry count a caller states on a fast service, which the fast service is expected to ignore.</summary>
+    private const int IgnoredCallerRetryCount = 99;
+
+    /// <summary>A timeout a caller states on a fast service, which the fast service is expected to ignore.</summary>
+    private const int IgnoredCallerTimeoutMinutes = 10;
+
+    /// <summary>Handler behind <see cref="RetryCountingClient"/>, counting the attempts a retry policy makes.</summary>
+    private static readonly CountingHttpMessageHandler RetryCountingHandler = new();
+
+    /// <summary>A client that fails every request, shared because a client is meant to outlive a single call.</summary>
+    private static readonly HttpClient RetryCountingClient = new(RetryCountingHandler);
+
+    /// <summary>Local HTTP test server used to serve canned responses to the SUT.</summary>
     private TestHttpServer? _testServer;
 
-    /// <summary>
-    /// Sets up the test fixture with a local HTTP server.
-    /// </summary>
+    /// <summary>Sets up the test fixture with a local HTTP server.</summary>
     [Before(Test)]
     public void OneTimeSetUp()
     {
@@ -36,15 +76,11 @@ public class HttpServiceTests
         _testServer.SetupDefaultResponses();
     }
 
-    /// <summary>
-    /// Cleans up the test fixture.
-    /// </summary>
+    /// <summary>Cleans up the test fixture.</summary>
     [After(Test)]
     public void OneTimeTearDown() => _testServer?.Dispose();
 
-    /// <summary>
-    /// Tests that HttpService can be instantiated correctly.
-    /// </summary>
+    /// <summary>Tests that HttpService can be instantiated correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task HttpServiceShouldInstantiateCorrectly()
@@ -60,9 +96,7 @@ public class HttpServiceTests
         httpService.HttpClient.Dispose();
     }
 
-    /// <summary>
-    /// Tests that HttpService properly sets up compression.
-    /// </summary>
+    /// <summary>Tests that HttpService properly sets up compression.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task HttpServiceShouldSetupCompressionCorrectly()
@@ -81,9 +115,7 @@ public class HttpServiceTests
         httpService.HttpClient.Dispose();
     }
 
-    /// <summary>
-    /// Tests that DownloadUrl with URI parameter validates arguments correctly.
-    /// </summary>
+    /// <summary>Tests that DownloadUrl with URI parameter validates arguments correctly.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     public async Task DownloadUrlWithUriShouldValidateArguments()
@@ -97,7 +129,7 @@ public class HttpServiceTests
         try
         {
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => httpService.DownloadUrl(cache, nullUri!));
+            _ = Assert.Throws<ArgumentNullException>(() => httpService.DownloadUrl(cache, nullUri!));
         }
         finally
         {
@@ -106,9 +138,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests that DownloadUrl with key validates arguments correctly.
-    /// </summary>
+    /// <summary>Tests that DownloadUrl with key validates arguments correctly.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -125,7 +155,7 @@ public class HttpServiceTests
         try
         {
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => httpService.DownloadUrl(null!, "key", "http://example.com"));
+            _ = Assert.Throws<ArgumentNullException>(() => httpService.DownloadUrl(null!, "key", "http://example.com"));
         }
         finally
         {
@@ -134,9 +164,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests that multiple HttpService instances can be created.
-    /// </summary>
+    /// <summary>Tests that multiple HttpService instances can be created.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task MultipleHttpServiceInstancesShouldBeCreatable()
@@ -161,16 +189,14 @@ public class HttpServiceTests
         service2.HttpClient.Dispose();
     }
 
-    /// <summary>
-    /// Tests that HttpService supports custom HttpClient configuration.
-    /// </summary>
+    /// <summary>Tests that HttpService supports custom HttpClient configuration.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task HttpServiceShouldSupportCustomConfiguration()
     {
         // Arrange
         HttpService httpService = new();
-        var customTimeout = TimeSpan.FromSeconds(30);
+        var customTimeout = TimeSpan.FromSeconds(CustomClientTimeoutSeconds);
 
         // Act
         httpService.HttpClient.Timeout = customTimeout;
@@ -182,9 +208,7 @@ public class HttpServiceTests
         httpService.HttpClient.Dispose();
     }
 
-    /// <summary>
-    /// Tests that HttpService handles null headers gracefully.
-    /// </summary>
+    /// <summary>Tests that HttpService handles null headers gracefully.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -217,9 +241,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests that HttpService handles different HTTP methods.
-    /// </summary>
+    /// <summary>Tests that HttpService handles different HTTP methods.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -257,9 +279,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests that HttpService respects fetchAlways parameter.
-    /// </summary>
+    /// <summary>Tests that HttpService respects fetchAlways parameter.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -295,9 +315,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests that HttpService supports absolute expiration.
-    /// </summary>
+    /// <summary>Tests that HttpService supports absolute expiration.</summary>
     /// <returns>A task representing the asynchronous unit test.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -310,7 +328,7 @@ public class HttpServiceTests
         SystemJsonSerializer serializer = new();
         HttpService httpService = new();
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
-        var expiration = DateTimeOffset.Now.AddHours(1);
+        var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
         try
         {
@@ -334,9 +352,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests HttpService.DownloadUrl(string url) forwards without throwing for a valid url argument (pure forwarder path).
-    /// </summary>
+    /// <summary>Tests HttpService.DownloadUrl(string url) forwards without throwing for a valid url argument (pure forwarder path).</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -346,13 +362,11 @@ public class HttpServiceTests
     public async Task DownloadUrlStringForwarderShouldThrowOnNullCache()
     {
         HttpService service = new();
-        await Assert.That(() => service.DownloadUrl(null!, "https://example.invalid"))
+        await Assert.That(() => service.DownloadUrl(null!, UnreachableHostUrl))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests HttpService.DownloadUrl(Uri url) throws on null Uri.
-    /// </summary>
+    /// <summary>Tests HttpService.DownloadUrl(Uri url) throws on null Uri.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlUriShouldThrowOnNullUri()
@@ -370,9 +384,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests HttpService.DownloadUrl(key, string url) throws on null cache.
-    /// </summary>
+    /// <summary>Tests HttpService.DownloadUrl(key, string url) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -382,25 +394,21 @@ public class HttpServiceTests
     public async Task DownloadUrlKeyStringShouldThrowOnNullCache()
     {
         HttpService service = new();
-        await Assert.That(() => service.DownloadUrl(null!, "key", "https://example.invalid"))
+        await Assert.That(() => service.DownloadUrl(null!, "key", UnreachableHostUrl))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests HttpService.DownloadUrl(key, Uri url) throws on null cache.
-    /// </summary>
+    /// <summary>Tests HttpService.DownloadUrl(key, Uri url) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullCache()
     {
         HttpService service = new();
-        await Assert.That(() => service.DownloadUrl(null!, "key", new Uri("https://example.invalid")))
+        await Assert.That(() => service.DownloadUrl(null!, "key", new Uri(UnreachableHostUrl)))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests HttpService.DownloadUrl(key, string url) returns cached value when present (not fetchAlways, hits cache).
-    /// </summary>
+    /// <summary>Tests HttpService.DownloadUrl(key, string url) returns cached value when present (not fetchAlways, hits cache).</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -416,7 +424,7 @@ public class HttpServiceTests
             byte[] expected = [1, 2, 3];
             cache.Insert("cached-key", expected).SubscribeAndComplete();
 
-            var result = service.DownloadUrl(cache, "cached-key", "https://example.invalid").SubscribeGetValue();
+            var result = service.DownloadUrl(cache, "cached-key", UnreachableHostUrl).SubscribeGetValue();
 
             await Assert.That(result).IsEqualTo(expected);
         }
@@ -426,9 +434,7 @@ public class HttpServiceTests
         }
     }
 
-    /// <summary>
-    /// Tests HttpService.DownloadUrl(key, Uri url) returns cached value when present (not fetchAlways, hits cache).
-    /// </summary>
+    /// <summary>Tests HttpService.DownloadUrl(key, Uri url) returns cached value when present (not fetchAlways, hits cache).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldReturnCachedValue()
@@ -440,7 +446,7 @@ public class HttpServiceTests
             byte[] expected = [4, 5, 6];
             cache.Insert("cached-uri-key", expected).SubscribeAndComplete();
 
-            var result = service.DownloadUrl(cache, "cached-uri-key", new Uri("https://example.invalid"))
+            var result = service.DownloadUrl(cache, "cached-uri-key", new Uri(UnreachableHostUrl))
                 .SubscribeGetValue();
 
             await Assert.That(result).IsEqualTo(expected);
@@ -462,25 +468,25 @@ public class HttpServiceTests
         Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringFetchAlwaysShouldBypassCache()
     {
-        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds));
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         cache.Insert("fetch-always-key", "\t\t\t"u8.ToArray()).SubscribeAndComplete();
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
-        service.DownloadUrl(
+        _ = service.DownloadUrl(
             cache,
             "fetch-always-key",
-            "https://nonexistent.invalid.localhost.test",
+            UnresolvableHostUrl,
             fetchAlways: true).Subscribe(
-            _ => { },
+            static _ => { },
             ex =>
             {
                 error = ex;
                 mre.Set();
             },
             () => mre.Set());
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
         await Assert.That(error).IsNotNull();
     }
 
@@ -491,45 +497,42 @@ public class HttpServiceTests
     [Test]
     public async Task DownloadUrlKeyUriFetchAlwaysShouldBypassCache()
     {
-        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(100));
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds));
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
-        cache.Insert("fetch-always-uri-key", [7, 7, 7]).SubscribeAndComplete();
+        byte[] stalePayload = [7, 7, 7];
+        cache.Insert("fetch-always-uri-key", stalePayload).SubscribeAndComplete();
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
-        service.DownloadUrl(
+        _ = service.DownloadUrl(
             cache,
             "fetch-always-uri-key",
-            new Uri("https://nonexistent.invalid.localhost.test"),
+            new Uri(UnresolvableHostUrl),
             fetchAlways: true).Subscribe(
-            _ => { },
+            static _ => { },
             ex =>
             {
                 error = ex;
                 mre.Set();
             },
             () => mre.Set());
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
         await Assert.That(error).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests CreateWebRequest with null headers returns a request without extra headers.
-    /// </summary>
+    /// <summary>Tests CreateWebRequest with null headers returns a request without extra headers.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateWebRequestWithNullHeadersShouldSucceed()
     {
-        var request = HttpService.CreateWebRequest(new("https://example.com"), HttpMethod.Get, null);
+        var request = HttpService.CreateWebRequest(new(SampleUrl), HttpMethod.Get, null);
 
         await Assert.That(request).IsNotNull();
         await Assert.That(request.Method).IsEqualTo(HttpMethod.Get);
-        await Assert.That(request.RequestUri).IsEqualTo(new("https://example.com"));
+        await Assert.That(request.RequestUri).IsEqualTo(new(SampleUrl));
     }
 
-    /// <summary>
-    /// Tests CreateWebRequest with supplied headers adds them to the request.
-    /// </summary>
+    /// <summary>Tests CreateWebRequest with supplied headers adds them to the request.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateWebRequestWithHeadersShouldAddHeaders()
@@ -540,15 +543,13 @@ public class HttpServiceTests
             new("X-Other", "other-value")
         ];
 
-        var request = HttpService.CreateWebRequest(new("https://example.com"), HttpMethod.Post, headers);
+        var request = HttpService.CreateWebRequest(new(SampleUrl), HttpMethod.Post, headers);
 
         await Assert.That(request.Headers.Contains("X-Test-Header")).IsTrue();
         await Assert.That(request.Headers.Contains("X-Other")).IsTrue();
     }
 
-    /// <summary>
-    /// Tests ProcessWebResponse(string url) throws HttpRequestException when the response is not successful.
-    /// </summary>
+    /// <summary>Tests ProcessWebResponse(string url) throws HttpRequestException when the response is not successful.</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -565,9 +566,7 @@ public class HttpServiceTests
         await Assert.That(error).IsTypeOf<HttpRequestException>();
     }
 
-    /// <summary>
-    /// Tests ProcessWebResponse(Uri url) throws HttpRequestException when the response is not successful.
-    /// </summary>
+    /// <summary>Tests ProcessWebResponse(Uri url) throws HttpRequestException when the response is not successful.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ProcessWebResponseUriShouldThrowOnNonSuccess()
@@ -576,14 +575,12 @@ public class HttpServiceTests
         response.ReasonPhrase = "Server Error";
 
         var error = HttpService
-            .ProcessWebResponse(response, new Uri("https://example.com/boom"), DateTimeOffset.UtcNow.AddHours(1))
+            .ProcessWebResponse(response, new Uri("https://example.com/boom"), TimeProvider.System.GetUtcNow().AddHours(1))
             .SubscribeGetError();
         await Assert.That(error).IsTypeOf<HttpRequestException>();
     }
 
-    /// <summary>
-    /// Tests ProcessWebResponse(string url) returns the content bytes on a successful response.
-    /// </summary>
+    /// <summary>Tests ProcessWebResponse(string url) returns the content bytes on a successful response.</summary>
     /// <returns>A task.</returns>
     [Test]
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -596,7 +593,7 @@ public class HttpServiceTests
         using HttpResponseMessage response = new(HttpStatusCode.OK);
         response.Content = new ByteArrayContent(payload);
 
-        var result = HttpService.ProcessWebResponse(response, "https://example.com", null)
+        var result = HttpService.ProcessWebResponse(response, SampleUrl, null)
             .SubscribeGetValue();
 
         await Assert.That(result).IsNotNull();
@@ -627,34 +624,35 @@ public class HttpServiceTests
         {
             byte[]? data = null;
             ManualResetEventSlim mre = new(false);
-            httpService
+            _ = httpService
                 .DownloadUrl(
                     cache,
                     "happy-key-string",
-                    $"{_testServer!.BaseUrl}status/200",
-                    HttpMethod.Get,
-                    fetchAlways: true).Subscribe(
+                   $"{_testServer!.BaseUrl}status/200",
+                   HttpMethod.Get,
+                   (IEnumerable<KeyValuePair<string, string>>?)null,
+                   true).Subscribe(
                     v =>
                     {
                         data = v;
                         mre.Set();
                     },
                     _ => mre.Set());
-            mre.Wait(TimeSpan.FromSeconds(30));
+            _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
 
             await Assert.That(data).IsNotNull();
 
             // The SelectMany that writes to the blob cache should have stored the payload.
             byte[]? stored = null;
             ManualResetEventSlim mre2 = new(false);
-            cache.Get("happy-key-string").Subscribe(
+            _ = cache.Get("happy-key-string").Subscribe(
                 v =>
                 {
                     stored = v;
                     mre2.Set();
                 },
                 _ => mre2.Set());
-            mre2.Wait(TimeSpan.FromSeconds(10));
+            _ = mre2.Wait(TimeSpan.FromSeconds(CacheReadTimeoutSeconds));
             await Assert.That(stored).IsNotNull();
         }
         finally
@@ -681,33 +679,34 @@ public class HttpServiceTests
         {
             byte[]? data = null;
             ManualResetEventSlim mre = new(false);
-            httpService
+            _ = httpService
                 .DownloadUrl(
                     cache,
                     "happy-key-uri",
-                    new Uri($"{_testServer!.BaseUrl}status/200"),
-                    HttpMethod.Get,
-                    fetchAlways: true).Subscribe(
+                   new Uri($"{_testServer!.BaseUrl}status/200"),
+                   HttpMethod.Get,
+                   (IEnumerable<KeyValuePair<string, string>>?)null,
+                   true).Subscribe(
                     v =>
                     {
                         data = v;
                         mre.Set();
                     },
                     _ => mre.Set());
-            mre.Wait(TimeSpan.FromSeconds(30));
+            _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
 
             await Assert.That(data).IsNotNull();
 
             byte[]? stored = null;
             ManualResetEventSlim mre2 = new(false);
-            cache.Get("happy-key-uri").Subscribe(
+            _ = cache.Get("happy-key-uri").Subscribe(
                 v =>
                 {
                     stored = v;
                     mre2.Set();
                 },
                 _ => mre2.Set());
-            mre2.Wait(TimeSpan.FromSeconds(10));
+            _ = mre2.Wait(TimeSpan.FromSeconds(CacheReadTimeoutSeconds));
             await Assert.That(stored).IsNotNull();
         }
         finally
@@ -727,18 +726,18 @@ public class HttpServiceTests
         TestableHttpService service = new();
 
         ManualResetEventSlim mre = new(false);
-        service.InvokeMakeWebRequest(
-                new("https://nonexistent.invalid.localhost.test"),
+        _ = service.InvokeMakeWebRequest(
+                new(UnresolvableHostUrl),
                 HttpMethod.Get,
                 headers: null,
                 content: null,
                 retries: 0,
-                timeout: TimeSpan.FromMilliseconds(100))
+                timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds))
             .Subscribe(
                 _ => mre.Set(),
                 _ => mre.Set(),
                 () => mre.Set());
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
         return Task.CompletedTask;
     }
 
@@ -752,24 +751,22 @@ public class HttpServiceTests
         TestableHttpService service = new();
 
         ManualResetEventSlim mre = new(false);
-        service.InvokeMakeWebRequest(
-                new("https://nonexistent.invalid.localhost.test"),
+        _ = service.InvokeMakeWebRequest(
+                new(UnresolvableHostUrl),
                 HttpMethod.Post,
                 headers: null,
                 content: "request-body",
                 retries: 0,
-                timeout: TimeSpan.FromMilliseconds(100))
+                timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds))
             .Subscribe(
                 _ => mre.Set(),
                 _ => mre.Set(),
                 mre.Set);
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Tests the default FastHttpService constructor uses the default retries and timeout without throwing.
-    /// </summary>
+    /// <summary>Tests the default FastHttpService constructor uses the default retries and timeout without throwing.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task FastHttpServiceDefaultConstructorShouldNotThrow()
@@ -787,11 +784,46 @@ public class HttpServiceTests
     [Test]
     public async Task FastHttpServiceWithCustomRetriesAndTimeoutShouldNotThrow()
     {
-        var timeout = TimeSpan.FromSeconds(5);
+        var timeout = TimeSpan.FromSeconds(AppliedTimeoutSeconds);
         HttpService.FastHttpService service = new(retries: 1, timeout: timeout);
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient.Timeout).IsEqualTo(timeout);
+    }
+
+    /// <summary>
+    /// A fast service given only a retry count falls back to the fast default timeout, and the retry
+    /// count it was constructed with is the one requests actually use — the caller's own retry count
+    /// and timeout are ignored, so the send count reflects the constructed value.
+    /// </summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task FastHttpServiceWithRetriesOnlyShouldUseFastDefaultTimeoutAndApplyThoseRetries()
+    {
+        HttpService.FastHttpService service = new(retries: FastServiceRetryCount);
+
+        await Assert.That(service.HttpClient.Timeout).IsEqualTo(HttpService.FastHttpService.FastDefaultTimeout);
+
+        // Route the service through a client that fails every attempt and counts them. The service is
+        // deliberately left undisposed: its own client is released here, and disposing the service
+        // would take the shared counting client down with it.
+        service.HttpClient.Dispose();
+        service.HttpClient = RetryCountingClient;
+
+        var error = service.MakeWebRequest(
+                new(RefusedConnectionUrl),
+                HttpMethod.Get,
+                (IEnumerable<KeyValuePair<string, string>>?)null,
+                (string?)null,
+                IgnoredCallerRetryCount,
+                TimeSpan.FromMinutes(IgnoredCallerTimeoutMinutes))
+            .WaitForError();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(error).IsNotNull();
+            await Assert.That(RetryCountingHandler.SendCount).IsEqualTo(FastServiceRetryCount);
+        }
     }
 
     /// <summary>
@@ -805,18 +837,18 @@ public class HttpServiceTests
         TestableHttpService service = new();
 
         ManualResetEventSlim mre = new(false);
-        service.InvokeMakeWebRequest(
-                new("http://127.0.0.1:1/unused"),
+        _ = service.InvokeMakeWebRequest(
+                new(RefusedConnectionUrl),
                 HttpMethod.Post,
                 headers: null,
                 content: "hello-body",
                 retries: 1,
-                timeout: TimeSpan.FromMilliseconds(250))
+                timeout: TimeSpan.FromMilliseconds(RetryAttemptTimeoutMilliseconds))
             .Subscribe(
                 _ => mre.Set(),
                 _ => mre.Set(),
                 mre.Set);
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
     }
 
     /// <summary>
@@ -829,23 +861,21 @@ public class HttpServiceTests
         TestableHttpService service = new();
 
         ManualResetEventSlim mre = new(false);
-        service.InvokeMakeWebRequest(
-                new("http://127.0.0.1:1/unused"),
+        _ = service.InvokeMakeWebRequest(
+                new(RefusedConnectionUrl),
                 HttpMethod.Put,
                 headers: [new("X-Test", "1")],
                 content: "{\"key\":\"value\"}",
                 retries: 2,
-                timeout: TimeSpan.FromMilliseconds(250))
+                timeout: TimeSpan.FromMilliseconds(RetryAttemptTimeoutMilliseconds))
             .Subscribe(
                 _ => mre.Set(),
                 _ => mre.Set(),
                 mre.Set);
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
     }
 
-    /// <summary>
-    /// Tests MakeWebRequest with null content via the fully-routed retry path to exercise the no-content Defer branch.
-    /// </summary>
+    /// <summary>Tests MakeWebRequest with null content via the fully-routed retry path to exercise the no-content Defer branch.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MakeWebRequestWithNullContentAndRetriesShouldExecuteDeferBody()
@@ -853,18 +883,18 @@ public class HttpServiceTests
         TestableHttpService service = new();
 
         ManualResetEventSlim mre = new(false);
-        service.InvokeMakeWebRequest(
-                new("http://127.0.0.1:1/unused"),
+        _ = service.InvokeMakeWebRequest(
+                new(RefusedConnectionUrl),
                 HttpMethod.Get,
                 headers: null,
                 content: null,
                 retries: 1,
-                timeout: TimeSpan.FromMilliseconds(250))
+                timeout: TimeSpan.FromMilliseconds(RetryAttemptTimeoutMilliseconds))
             .Subscribe(
                 _ => mre.Set(),
                 _ => mre.Set(),
                 mre.Set);
-        mre.Wait(TimeSpan.FromSeconds(30));
+        _ = mre.Wait(TimeSpan.FromSeconds(ObservableCompletionTimeoutSeconds));
     }
 
     /// <summary>
@@ -875,7 +905,7 @@ public class HttpServiceTests
     [Test]
     public async Task FastHttpServiceWithInvalidNegativeTimeoutShouldSwallowException()
     {
-        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromSeconds(-5));
+        HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromSeconds(RejectedNegativeTimeoutSeconds));
 
         await Assert.That(service).IsNotNull();
         await Assert.That(service.HttpClient).IsNotNull();
@@ -925,7 +955,7 @@ public class HttpServiceTests
         HttpService service = new();
         try
         {
-            var result = service.DownloadUrl(cache, "any-key", "https://example.invalid").SubscribeGetValue();
+            var result = service.DownloadUrl(cache, "any-key", UnreachableHostUrl).SubscribeGetValue();
 
             await Assert.That(result).IsNotNull();
             await Assert.That(result!).IsEmpty();
@@ -949,7 +979,7 @@ public class HttpServiceTests
         HttpService service = new();
         try
         {
-            var result = service.DownloadUrl(cache, "any-key", new Uri("https://example.invalid")).SubscribeGetValue();
+            var result = service.DownloadUrl(cache, "any-key", new Uri(UnreachableHostUrl)).SubscribeGetValue();
 
             await Assert.That(result).IsNotNull();
             await Assert.That(result!).IsEmpty();
@@ -975,10 +1005,7 @@ public class HttpServiceTests
         await Assert.That(service).IsNotNull();
     }
 
-    /// <summary>
-    /// Calling <c>Dispose(false)</c> takes the <c>!isDisposing</c> early-return path
-    /// (line 185), leaving the HttpClient alive.
-    /// </summary>
+    /// <summary>Calling <c>Dispose(false)</c> takes the <c>!isDisposing</c> early-return path (line 185), leaving the HttpClient alive.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task DisposeWithDisposingFalseShouldNotDisposeHttpClient()
@@ -994,27 +1021,35 @@ public class HttpServiceTests
         service.Dispose();
     }
 
-    /// <summary>
-    /// Exposes the protected <c>Dispose(bool)</c> method so the <c>isDisposing: false</c>
-    /// path can be exercised directly.
-    /// </summary>
+    /// <summary>A handler that fails every request and counts the attempts, so a retry policy shows up as a send count.</summary>
+    private sealed class CountingHttpMessageHandler : HttpMessageHandler
+    {
+        /// <summary>The number of sends this handler has been asked for.</summary>
+        private int _sendCount;
+
+        /// <summary>Gets the number of sends this handler has been asked for.</summary>
+        public int SendCount => Volatile.Read(ref _sendCount);
+
+        /// <inheritdoc/>
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            _ = Interlocked.Increment(ref _sendCount);
+            return Task.FromException<HttpResponseMessage>(new HttpRequestException("The counting handler refuses every request."));
+        }
+    }
+
+    /// <summary>Exposes the protected <c>Dispose(bool)</c> method so the <c>isDisposing: false</c> path can be exercised directly.</summary>
     private sealed class DisposeTestableHttpService : HttpService
     {
-        /// <summary>
-        /// Invokes the protected <see cref="HttpService.Dispose(bool)"/> method.
-        /// </summary>
+        /// <summary>Invokes the protected <see cref="HttpService.Dispose(bool)"/> method.</summary>
         /// <param name="disposing">Whether managed resources should be released.</param>
         public void InvokeDispose(bool disposing) => Dispose(disposing);
     }
 
-    /// <summary>
-    /// Exposes the protected MakeWebRequest for direct testing of its content-branch logic.
-    /// </summary>
+    /// <summary>Exposes the protected MakeWebRequest for direct testing of its content-branch logic.</summary>
     private sealed class TestableHttpService : HttpService
     {
-        /// <summary>
-        /// Invokes the protected <see cref="HttpService.MakeWebRequest"/> method.
-        /// </summary>
+        /// <summary>Invokes the protected <c>MakeWebRequest</c> method.</summary>
         /// <param name="uri">The target URI.</param>
         /// <param name="method">The HTTP method.</param>
         /// <param name="headers">Optional request headers.</param>
@@ -1081,31 +1116,47 @@ public class HttpServiceTests
 
         /// <inheritdoc/>
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys) =>
-            Observable.Empty<(string, DateTimeOffset?)>();
+            Observable.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
         public IObservable<(string Key, DateTimeOffset? Time)> GetCreatedAt(IEnumerable<string> keys, Type type) =>
-            Observable.Empty<(string, DateTimeOffset?)>();
+            Observable.Empty<(string Key, DateTimeOffset? Time)>();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration = null) =>
+        public IObservable<Unit> Insert(string key, byte[] data) =>
+            Insert(key, data, (DateTimeOffset?)null);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, DateTimeOffset? absoluteExpiration) =>
             Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(string key, byte[] data, Type type) =>
+            Insert(key, data, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit>
-            Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration = null) =>
+            Insert(string key, byte[] data, Type type, DateTimeOffset? absoluteExpiration) =>
             Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs) =>
+            Insert(keyValuePairs, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
-            DateTimeOffset? absoluteExpiration = null) => Observable.Return(Unit.Default);
+            DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
+
+        /// <inheritdoc/>
+        public IObservable<Unit> Insert(IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs, Type type) =>
+            Insert(keyValuePairs, type, (DateTimeOffset?)null);
 
         /// <inheritdoc/>
         public IObservable<Unit> Insert(
             IEnumerable<KeyValuePair<string, byte[]>> keyValuePairs,
             Type type,
-            DateTimeOffset? absoluteExpiration = null) => Observable.Return(Unit.Default);
+            DateTimeOffset? absoluteExpiration) => Observable.Return(Unit.Default);
 
         /// <inheritdoc/>
         public IObservable<Unit> Invalidate(string key) => Observable.Return(Unit.Default);
@@ -1126,13 +1177,13 @@ public class HttpServiceTests
         public IObservable<Unit> InvalidateAll(Type type) => Observable.Return(Unit.Default);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush() => Observable.Return(Unit.Default);
+        public IObservable<Unit> Flush() => InvalidateAll();
 
         /// <inheritdoc/>
-        public IObservable<Unit> Flush(Type type) => Observable.Return(Unit.Default);
+        public IObservable<Unit> Flush(Type type) => InvalidateAll(type);
 
         /// <inheritdoc/>
-        public IObservable<Unit> Vacuum() => Observable.Return(Unit.Default);
+        public IObservable<Unit> Vacuum() => Flush();
 
         /// <inheritdoc/>
         public IObservable<Unit> UpdateExpiration(string key, DateTimeOffset? absoluteExpiration) =>

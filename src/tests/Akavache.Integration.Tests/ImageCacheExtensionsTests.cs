@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using Akavache.Drawing;
 using Akavache.SystemTextJson;
 using Akavache.Tests;
@@ -10,15 +9,90 @@ using Splat;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for Akavache.Drawing ImageCacheExtensions functionality.
-/// </summary>
+/// <summary>Tests for Akavache.Drawing ImageCacheExtensions functionality.</summary>
 [Category("Akavache")]
-public class ImageCacheExtensionsTests
+public partial class ImageCacheExtensionsTests
 {
+    /// <summary>Cache key holding the full-size image a thumbnail is derived from.</summary>
+    private const string SourceImageKey = "source";
+
+    /// <summary>Cache key the derived thumbnail is written to.</summary>
+    private const string ThumbnailKey = "thumb";
+
+    /// <summary>Cache key of the first image read back by the batch projection test.</summary>
+    private const string FirstCoverImageKey = "cover_img_a";
+
+    /// <summary>Cache key of the second image read back by the batch projection test.</summary>
+    private const string SecondCoverImageKey = "cover_img_b";
+
+    /// <summary>Number of distinct byte values, used to wrap a counter into a byte payload.</summary>
+    private const int ByteValueCount = 256;
+
+    /// <summary>Edge length requested from the thumbnail overload that is guarded against a null cache.</summary>
+    private const float ThumbnailEdgePixels = 100F;
+
+    /// <summary>Edge length requested when a thumbnail is created and saved under a new key.</summary>
+    private const float SavedThumbnailEdgePixels = 50F;
+
+    /// <summary>Edge length requested when a thumbnail is created with an absolute expiration.</summary>
+    private const float ExpiringThumbnailEdgePixels = 25F;
+
+    /// <summary>Edge length requested when the thumbnail pipeline runs against a directly installed loader.</summary>
+    private const float DirectThumbnailEdgePixels = 32F;
+
+    /// <summary>Edge length requested when the expiring thumbnail pipeline runs against a directly installed loader.</summary>
+    private const float DirectExpiringThumbnailEdgePixels = 16F;
+
+    /// <summary>Lifetime granted to the thumbnail written by the expiring pipeline test.</summary>
+    private const int ThumbnailLifetimeMinutes = 5;
+
+    /// <summary>Width the mock loader reports, and therefore the width the image size must carry.</summary>
+    private const float MockBitmapWidthPixels = 100F;
+
+    /// <summary>Height the mock loader reports, and therefore the height the image size must carry.</summary>
+    private const float MockBitmapHeightPixels = 200F;
+
+    /// <summary>Decode width requested when images are loaded with explicit dimensions.</summary>
+    private const float RequestedImageWidthPixels = 100F;
+
+    /// <summary>Decode height requested when images are loaded with explicit dimensions.</summary>
+    private const float RequestedImageHeightPixels = 200F;
+
+    /// <summary>Decode width handed to BytesToImage that the loader must receive unchanged.</summary>
+    private const float ForwardedWidthPixels = 320F;
+
+    /// <summary>Decode height handed to BytesToImage that the loader must receive unchanged.</summary>
+    private const float ForwardedHeightPixels = 240F;
+
+    /// <summary>Number of images the batch load tests insert and expect back.</summary>
+    private const int ExpectedImageCount = 2;
+
     /// <summary>
-    /// Tests that LoadImages throws ArgumentNullException when cache is null.
+    /// Byte length of the decodable image the tests seed a cache with. Differs from
+    /// <see cref="CacheBackedHttpService.DownloadedPayloadLength"/> so the byte count reaching the
+    /// loader says whether the cache or the download served the request.
     /// </summary>
+    private const int SeededImageByteLength = 128;
+
+    /// <summary>Byte length of the fallback image, sized apart from every other payload so the byte count reaching the loader identifies it.</summary>
+    private const int FallbackImageByteLength = 80;
+
+    /// <summary>Cache key of the first image read back by the batch load that supplies only a width.</summary>
+    private const string FirstWidthOnlyImageKey = "width_only_img_a";
+
+    /// <summary>Cache key of the second image read back by the batch load that supplies only a width.</summary>
+    private const string SecondWidthOnlyImageKey = "width_only_img_b";
+
+    /// <summary>Bitmap loader named in the failure a host without image support produces.</summary>
+    private const string BitmapLoaderName = "BitmapLoader";
+
+    /// <summary>Service location framework named in the failure a host without image support produces.</summary>
+    private const string SplatFrameworkName = "Splat";
+
+    /// <summary>Resolver named in the failure a host without image support produces.</summary>
+    private const string DependencyResolverName = "dependency resolver";
+
+    /// <summary>Tests that LoadImages throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task LoadImagesShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -30,7 +104,7 @@ public class ImageCacheExtensionsTests
             string[] keys = ["key1", "key2"];
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.LoadImages(keys));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.LoadImages(keys));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -39,9 +113,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that PreloadImagesFromUrls throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that PreloadImagesFromUrls throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task PreloadImagesFromUrlsShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -53,7 +125,7 @@ public class ImageCacheExtensionsTests
             string[] urls = ["http://example.com/image1.png", "http://example.com/image2.png"];
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.PreloadImagesFromUrls(urls));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.PreloadImagesFromUrls(urls));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -62,9 +134,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImageWithFallback throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that LoadImageWithFallback throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -76,7 +146,7 @@ public class ImageCacheExtensionsTests
             byte[] fallbackBytes = [0x89, 0x50, 0x4E, 0x47];
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.LoadImageWithFallback("key", fallbackBytes));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.LoadImageWithFallback("key", fallbackBytes));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -85,9 +155,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImageWithFallback throws ArgumentNullException when fallback bytes are null.
-    /// </summary>
+    /// <summary>Tests that LoadImageWithFallback throws ArgumentNullException when fallback bytes are null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task LoadImageWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
@@ -98,12 +166,10 @@ public class ImageCacheExtensionsTests
         byte[]? nullFallback = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => cache.LoadImageWithFallback("key", nullFallback!));
+        _ = Assert.Throws<ArgumentNullException>(() => cache.LoadImageWithFallback("key", nullFallback!));
     }
 
-    /// <summary>
-    /// Tests that LoadImageFromUrlWithFallback throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that LoadImageFromUrlWithFallback throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -115,7 +181,7 @@ public class ImageCacheExtensionsTests
             byte[] fallbackBytes = [0x89, 0x50, 0x4E, 0x47];
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() =>
+            _ = Assert.Throws<ArgumentNullException>(() =>
                 cache!.LoadImageFromUrlWithFallback("http://example.com/image.png", fallbackBytes));
             return Task.CompletedTask;
         }
@@ -125,9 +191,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImageFromUrlWithFallback throws ArgumentNullException when fallback bytes are null.
-    /// </summary>
+    /// <summary>Tests that LoadImageFromUrlWithFallback throws ArgumentNullException when fallback bytes are null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task LoadImageFromUrlWithFallbackShouldThrowArgumentNullExceptionWhenFallbackIsNull()
@@ -138,13 +202,11 @@ public class ImageCacheExtensionsTests
         byte[]? nullFallback = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
+        _ = Assert.Throws<ArgumentNullException>(() =>
             cache.LoadImageFromUrlWithFallback("http://example.com/image.png", nullFallback!));
     }
 
-    /// <summary>
-    /// Tests that CreateAndCacheThumbnail throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that CreateAndCacheThumbnail throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task CreateAndCacheThumbnailShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -155,7 +217,8 @@ public class ImageCacheExtensionsTests
             IBlobCache? cache = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.CreateAndCacheThumbnail("source", "thumb", 100f, 100f));
+            _ = Assert.Throws<ArgumentNullException>(() =>
+                cache!.CreateAndCacheThumbnail(SourceImageKey, ThumbnailKey, ThumbnailEdgePixels, ThumbnailEdgePixels));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -164,9 +227,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that GetImageSize throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that GetImageSize throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task GetImageSizeShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -177,7 +238,7 @@ public class ImageCacheExtensionsTests
             IBlobCache? cache = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.GetImageSize("key"));
+            _ = Assert.Throws<ArgumentNullException>(() => cache!.GetImageSize("key"));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -186,9 +247,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that ClearImageCache throws ArgumentNullException when cache is null.
-    /// </summary>
+    /// <summary>Tests that ClearImageCache throws ArgumentNullException when cache is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task ClearImageCacheShouldThrowArgumentNullExceptionWhenCacheIsNull()
@@ -199,7 +258,8 @@ public class ImageCacheExtensionsTests
             IBlobCache? cache = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cache!.ClearImageCache(key => key.StartsWith("image_")));
+            _ = Assert.Throws<ArgumentNullException>(() =>
+                cache!.ClearImageCache(static key => key.StartsWith("image_", StringComparison.Ordinal)));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -208,9 +268,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that ClearImageCache throws ArgumentNullException when pattern is null.
-    /// </summary>
+    /// <summary>Tests that ClearImageCache throws ArgumentNullException when pattern is null.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task ClearImageCacheShouldThrowArgumentNullExceptionWhenPatternIsNull()
@@ -221,12 +279,10 @@ public class ImageCacheExtensionsTests
         Func<string, bool>? nullPattern = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => cache.ClearImageCache(nullPattern!));
+        _ = Assert.Throws<ArgumentNullException>(() => cache.ClearImageCache(nullPattern!));
     }
 
-    /// <summary>
-    /// Tests that LoadImages handles empty key collections correctly.
-    /// </summary>
+    /// <summary>Tests that LoadImages handles empty key collections correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImagesShouldHandleEmptyKeyCollections()
@@ -243,9 +299,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(results).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that PreloadImagesFromUrls handles empty URL collections correctly.
-    /// </summary>
+    /// <summary>Tests that PreloadImagesFromUrls handles empty URL collections correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task PreloadImagesFromUrlsShouldHandleEmptyUrlCollections()
@@ -262,9 +316,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
-    /// <summary>
-    /// Tests that LoadImages gracefully handles missing keys.
-    /// </summary>
+    /// <summary>Tests that LoadImages gracefully handles missing keys.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImagesShouldGracefullyHandleMissingKeys()
@@ -281,9 +333,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(results).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that PreloadImagesFromUrls gracefully handles invalid URLs.
-    /// </summary>
+    /// <summary>Tests that PreloadImagesFromUrls gracefully handles invalid URLs.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task PreloadImagesFromUrlsShouldGracefullyHandleInvalidUrls()
@@ -310,9 +360,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImageWithFallback uses fallback when main image fails to load.
-    /// </summary>
+    /// <summary>Tests that LoadImageWithFallback uses fallback when main image fails to load.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImageWithFallbackShouldUseFallbackWhenMainImageFails()
@@ -323,7 +371,7 @@ public class ImageCacheExtensionsTests
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
-            fallbackBytes[i] = (byte)(i % 256);
+            fallbackBytes[i] = (byte)(i % ByteValueCount);
         }
 
         // Set up mock bitmap loader for testing
@@ -342,9 +390,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImageFromUrlWithFallback uses fallback when URL fails.
-    /// </summary>
+    /// <summary>Tests that LoadImageFromUrlWithFallback uses fallback when URL fails.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImageFromUrlWithFallbackShouldUseFallbackWhenUrlFails()
@@ -358,7 +404,7 @@ public class ImageCacheExtensionsTests
         var fallbackBytes = new byte[128]; // Valid size fallback
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
-            fallbackBytes[i] = (byte)(i % 256);
+            fallbackBytes[i] = (byte)(i % ByteValueCount);
         }
 
         // Set up mock bitmap loader for testing
@@ -377,9 +423,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that GetImageSize handles missing images correctly.
-    /// </summary>
+    /// <summary>Tests that GetImageSize handles missing images correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task GetImageSizeShouldHandleMissingImages()
@@ -394,9 +438,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
     }
 
-    /// <summary>
-    /// Tests that GetImageSize works with valid image data.
-    /// </summary>
+    /// <summary>Tests that GetImageSize works with valid image data.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task GetImageSizeShouldWorkWithValidImageData()
@@ -407,7 +449,7 @@ public class ImageCacheExtensionsTests
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
-            validImageData[i] = (byte)(i % 256);
+            validImageData[i] = (byte)(i % ByteValueCount);
         }
 
         const string key = "size_test_image";
@@ -428,15 +470,13 @@ public class ImageCacheExtensionsTests
             using (Assert.Multiple())
             {
                 // Assert
-                await Assert.That(size.Width).IsEqualTo(100f);
-                await Assert.That(size.Height).IsEqualTo(200f);
+                await Assert.That(size.Width).IsEqualTo(MockBitmapWidthPixels);
+                await Assert.That(size.Height).IsEqualTo(MockBitmapHeightPixels);
             }
         }
     }
 
-    /// <summary>
-    /// Tests that ClearImageCache works with pattern matching.
-    /// </summary>
+    /// <summary>Tests that ClearImageCache works with pattern matching.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ClearImageCacheShouldWorkWithPatternMatching()
@@ -446,15 +486,18 @@ public class ImageCacheExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert some test data
-        cache.Insert("image_1", [1, 2, 3])
+        byte[] firstImageBytes = [1, 2, 3];
+        byte[] secondImageBytes = [4, 5, 6];
+        byte[] unrelatedBytes = [7, 8, 9];
+        cache.Insert("image_1", firstImageBytes)
             .SubscribeAndComplete();
-        cache.Insert("image_2", [4, 5, 6])
+        cache.Insert("image_2", secondImageBytes)
             .SubscribeAndComplete();
-        cache.Insert("other_data", [7, 8, 9])
+        cache.Insert("other_data", unrelatedBytes)
             .SubscribeAndComplete();
 
         // Act - Clear only keys starting with "image_"
-        cache.ClearImageCache(static key => key.StartsWith("image_"))
+        cache.ClearImageCache(static key => key.StartsWith("image_", StringComparison.Ordinal))
             .SubscribeAndComplete();
 
         // Assert - Only "other_data" should remain
@@ -464,9 +507,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(remainingKeys).Contains("other_data");
     }
 
-    /// <summary>
-    /// Tests that ClearImageCache handles empty pattern matches gracefully.
-    /// </summary>
+    /// <summary>Tests that ClearImageCache handles empty pattern matches gracefully.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ClearImageCacheShouldHandleEmptyPatternMatches()
@@ -476,11 +517,12 @@ public class ImageCacheExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert some test data
-        cache.Insert("test_key", [1, 2, 3])
+        byte[] retainedBytes = [1, 2, 3];
+        cache.Insert("test_key", retainedBytes)
             .SubscribeAndComplete();
 
         // Act - Use pattern that matches nothing
-        cache.ClearImageCache(static key => key.StartsWith("nonexistent_"))
+        cache.ClearImageCache(static key => key.StartsWith("nonexistent_", StringComparison.Ordinal))
             .SubscribeAndComplete();
 
         // Assert - All data should remain
@@ -490,9 +532,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(remainingKeys).Contains("test_key");
     }
 
-    /// <summary>
-    /// Tests that LoadImages with dimensions work correctly.
-    /// </summary>
+    /// <summary>Tests that LoadImages with dimensions work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImagesWithDimensionsShouldWork()
@@ -503,16 +543,14 @@ public class ImageCacheExtensionsTests
         string[] keys = ["missing1", "missing2"]; // Use missing keys to test error handling
 
         // Act
-        var results = cache.LoadImages(keys, 100f, 200f).ToList()
+        var results = cache.LoadImages(keys, RequestedImageWidthPixels, RequestedImageHeightPixels).ToList()
             .WaitForValue();
 
         // Assert - Should be empty due to missing keys being filtered out
         await Assert.That(results).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that PreloadImagesFromUrls with expiration works correctly.
-    /// </summary>
+    /// <summary>Tests that PreloadImagesFromUrls with expiration works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task PreloadImagesFromUrlsWithExpirationShouldWork()
@@ -521,7 +559,7 @@ public class ImageCacheExtensionsTests
         SystemJsonSerializer serializer = new();
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
         string[] urls = ["http://invalid1.com", "http://invalid2.com"]; // Use invalid URLs to test error handling
-        var expiration = DateTimeOffset.Now.AddHours(1);
+        var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
         // Act
         var result = cache.PreloadImagesFromUrls(urls, expiration)
@@ -531,9 +569,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
-    /// <summary>
-    /// Tests that LoadImages returns key/bitmap pairs for successfully loaded images.
-    /// </summary>
+    /// <summary>Tests that LoadImages returns key/bitmap pairs for successfully loaded images.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImagesShouldReturnPairsForSuccessfullyLoadedImages()
@@ -544,7 +580,7 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("img1", imageData).SubscribeAndComplete();
@@ -560,13 +596,13 @@ public class ImageCacheExtensionsTests
                 .WaitForValue();
 
             // Assert
-            await Assert.That(results).Count().IsEqualTo(2);
+            await Assert.That(results).Count().IsEqualTo(ExpectedImageCount);
             await Assert.That(results![0].Key).IsEqualTo("img1");
             await Assert.That(results[0].Value).IsTypeOf<MockBitmap>();
             await Assert.That(results[1].Key).IsEqualTo("img2");
         }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") ||
-                                   ex.Message.Contains("dependency resolver"))
+        catch (Exception ex) when (ex.Message.Contains(BitmapLoaderName) || ex.Message.Contains(SplatFrameworkName)
+                                   || ex.Message.Contains(DependencyResolverName))
         {
             return;
         }
@@ -576,9 +612,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that PreloadImagesFromUrls completes with Unit.Default when downloads succeed.
-    /// </summary>
+    /// <summary>Tests that PreloadImagesFromUrls completes with Unit.Default when downloads succeed.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task PreloadImagesFromUrlsShouldCompleteWhenDownloadsSucceed()
@@ -598,9 +632,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
-    /// <summary>
-    /// Tests that CreateAndCacheThumbnail loads the source image and saves a thumbnail.
-    /// </summary>
+    /// <summary>Tests that CreateAndCacheThumbnail loads the source image and saves a thumbnail.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CreateAndCacheThumbnailShouldLoadAndSaveThumbnail()
@@ -611,10 +643,10 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("source", imageData).SubscribeAndComplete();
+        cache.Insert(SourceImageKey, imageData).SubscribeAndComplete();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -624,24 +656,22 @@ public class ImageCacheExtensionsTests
                 SetupMockBitmapLoader();
 
                 // Act
-                cache.CreateAndCacheThumbnail("source", "thumb", 50f, 50f)
+                cache.CreateAndCacheThumbnail(SourceImageKey, ThumbnailKey, SavedThumbnailEdgePixels, SavedThumbnailEdgePixels)
                     .SubscribeAndComplete();
 
                 // Assert - Thumbnail key should now exist in the cache
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
-                await Assert.That(keys).Contains("thumb");
+                await Assert.That(keys).Contains(ThumbnailKey);
             }
-            catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") ||
-                                       ex.Message.Contains("dependency resolver"))
+            catch (Exception ex) when (ex.Message.Contains(BitmapLoaderName) || ex.Message.Contains(SplatFrameworkName)
+                                       || ex.Message.Contains(DependencyResolverName))
             {
                 return; // Environment without BitmapLoader - skip test semantics
             }
         }
     }
 
-    /// <summary>
-    /// Tests that CreateAndCacheThumbnail honours an absolute expiration parameter.
-    /// </summary>
+    /// <summary>Tests that CreateAndCacheThumbnail honours an absolute expiration parameter.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CreateAndCacheThumbnailShouldHonourAbsoluteExpiration()
@@ -652,11 +682,11 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("source2", imageData).SubscribeAndComplete();
-        var expiration = DateTimeOffset.Now.AddHours(1);
+        var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -664,7 +694,7 @@ public class ImageCacheExtensionsTests
             SetupMockBitmapLoader();
 
             // Act
-            cache.CreateAndCacheThumbnail("source2", "thumb2", 25f, 25f, expiration)
+            cache.CreateAndCacheThumbnail("source2", "thumb2", ExpiringThumbnailEdgePixels, ExpiringThumbnailEdgePixels, expiration)
                 .SubscribeAndComplete();
 
             // Assert
@@ -673,9 +703,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that GetImageSize throws when the bitmap loader returns a null bitmap.
-    /// </summary>
+    /// <summary>Tests that GetImageSize throws when the bitmap loader returns a null bitmap.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task GetImageSizeShouldThrowWhenBitmapLoaderReturnsNull()
@@ -686,7 +714,7 @@ public class ImageCacheExtensionsTests
         var validImageData = new byte[128];
         for (var i = 0; i < validImageData.Length; i++)
         {
-            validImageData[i] = (byte)(i % 256);
+            validImageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("null_bitmap_key", validImageData).SubscribeAndComplete();
@@ -701,8 +729,8 @@ public class ImageCacheExtensionsTests
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
         }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") ||
-                                   ex.Message.Contains("dependency resolver"))
+        catch (Exception ex) when (ex.Message.Contains(BitmapLoaderName) || ex.Message.Contains(SplatFrameworkName)
+                                   || ex.Message.Contains(DependencyResolverName))
         {
             return;
         }
@@ -712,9 +740,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImageWithFallback throws IOException when the fallback bitmap loader returns null.
-    /// </summary>
+    /// <summary>Tests that LoadImageWithFallback throws IOException when the fallback bitmap loader returns null.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImageWithFallbackShouldThrowWhenFallbackBitmapIsNull()
@@ -725,7 +751,7 @@ public class ImageCacheExtensionsTests
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
-            fallbackBytes[i] = (byte)(i % 256);
+            fallbackBytes[i] = (byte)(i % ByteValueCount);
         }
 
         var originalLoader = GetCurrentBitmapLoader();
@@ -738,8 +764,8 @@ public class ImageCacheExtensionsTests
                 .SubscribeGetError();
             await Assert.That(error).IsTypeOf<IOException>();
         }
-        catch (Exception ex) when (ex.Message.Contains("BitmapLoader") || ex.Message.Contains("Splat") ||
-                                   ex.Message.Contains("dependency resolver"))
+        catch (Exception ex) when (ex.Message.Contains(BitmapLoaderName) || ex.Message.Contains(SplatFrameworkName)
+                                   || ex.Message.Contains(DependencyResolverName))
         {
             return;
         }
@@ -749,9 +775,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that LoadImages projects key/value pairs for successful loads (covers the Select projection).
-    /// </summary>
+    /// <summary>Tests that LoadImages projects key/value pairs for successful loads (covers the Select projection).</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task LoadImagesShouldProjectKeyValuePairsForSuccessfulLoads()
@@ -762,25 +786,25 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("cover_img_a", imageData).SubscribeAndComplete();
-        cache.Insert("cover_img_b", imageData).SubscribeAndComplete();
+        cache.Insert(FirstCoverImageKey, imageData).SubscribeAndComplete();
+        cache.Insert(SecondCoverImageKey, imageData).SubscribeAndComplete();
 
         var originalLoader = GetCurrentBitmapLoader();
         SetupMockBitmapLoader();
         try
         {
             // Act
-            var results = cache.LoadImages(["cover_img_a", "cover_img_b"]).ToList()
+            var results = cache.LoadImages([FirstCoverImageKey, SecondCoverImageKey]).ToList()
                 .WaitForValue();
 
             // Assert
-            await Assert.That(results).Count().IsEqualTo(2);
-            await Assert.That(results![0].Key).IsEqualTo("cover_img_a");
+            await Assert.That(results).Count().IsEqualTo(ExpectedImageCount);
+            await Assert.That(results![0].Key).IsEqualTo(FirstCoverImageKey);
             await Assert.That(results[0].Value).IsNotNull();
-            await Assert.That(results[1].Key).IsEqualTo("cover_img_b");
+            await Assert.That(results[1].Key).IsEqualTo(SecondCoverImageKey);
             await Assert.That(results[1].Value).IsNotNull();
         }
         finally
@@ -789,9 +813,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that PreloadImagesFromUrls projects Unit.Default for each successful download (covers the Select).
-    /// </summary>
+    /// <summary>Tests that PreloadImagesFromUrls projects Unit.Default for each successful download (covers the Select).</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task PreloadImagesFromUrlsShouldProjectUnitForSuccessfulDownloads()
@@ -811,9 +833,7 @@ public class ImageCacheExtensionsTests
         await Assert.That(result).IsEqualTo(Unit.Default);
     }
 
-    /// <summary>
-    /// Tests that CreateAndCacheThumbnail loads the source image and saves a thumbnail under the new key.
-    /// </summary>
+    /// <summary>Tests that CreateAndCacheThumbnail loads the source image and saves a thumbnail under the new key.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CreateAndCacheThumbnailShouldExecuteLoadAndSave()
@@ -824,7 +844,7 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("thumbnail_source_direct", imageData).SubscribeAndComplete();
@@ -834,7 +854,11 @@ public class ImageCacheExtensionsTests
         try
         {
             // Act
-            cache.CreateAndCacheThumbnail("thumbnail_source_direct", "thumbnail_dest_direct", 32f, 32f)
+            cache.CreateAndCacheThumbnail(
+                "thumbnail_source_direct",
+                "thumbnail_dest_direct",
+                DirectThumbnailEdgePixels,
+                DirectThumbnailEdgePixels)
                 .SubscribeAndComplete();
 
             // Assert
@@ -860,7 +884,7 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[64];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("thumbnail_source_exp", imageData).SubscribeAndComplete();
@@ -873,9 +897,9 @@ public class ImageCacheExtensionsTests
             cache.CreateAndCacheThumbnail(
                 "thumbnail_source_exp",
                 "thumbnail_dest_exp",
-                16f,
-                16f,
-                DateTimeOffset.Now.AddMinutes(5))
+                DirectExpiringThumbnailEdgePixels,
+                DirectExpiringThumbnailEdgePixels,
+                TimeProvider.System.GetLocalNow().AddMinutes(ThumbnailLifetimeMinutes))
                 .SubscribeAndComplete();
 
             // Assert
@@ -888,9 +912,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that GetImageSize returns a Size value for a successfully loaded bitmap (covers bitmap != null branch).
-    /// </summary>
+    /// <summary>Tests that GetImageSize returns a Size value for a successfully loaded bitmap (covers bitmap != null branch).</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task GetImageSizeShouldReturnSizeForValidBitmap()
@@ -901,7 +923,7 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[128];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("size_valid_key", imageData).SubscribeAndComplete();
@@ -915,8 +937,8 @@ public class ImageCacheExtensionsTests
                 .SubscribeGetValue();
 
             // Assert
-            await Assert.That(size.Width).IsEqualTo(100f);
-            await Assert.That(size.Height).IsEqualTo(200f);
+            await Assert.That(size.Width).IsEqualTo(MockBitmapWidthPixels);
+            await Assert.That(size.Height).IsEqualTo(MockBitmapHeightPixels);
         }
         finally
         {
@@ -924,9 +946,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests that GetImageSize throws InvalidOperationException when the bitmap loader returns null (covers the throw branch).
-    /// </summary>
+    /// <summary>Tests that GetImageSize throws InvalidOperationException when the bitmap loader returns null (covers the throw branch).</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task GetImageSizeShouldThrowWhenLoaderReturnsNullBitmap()
@@ -937,7 +957,7 @@ public class ImageCacheExtensionsTests
         var imageData = new byte[128];
         for (var i = 0; i < imageData.Length; i++)
         {
-            imageData[i] = (byte)(i % 256);
+            imageData[i] = (byte)(i % ByteValueCount);
         }
 
         cache.Insert("size_null_bitmap_key", imageData).SubscribeAndComplete();
@@ -970,7 +990,7 @@ public class ImageCacheExtensionsTests
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
-            fallbackBytes[i] = (byte)(i % 256);
+            fallbackBytes[i] = (byte)(i % ByteValueCount);
         }
 
         var originalLoader = BitmapLoader.Current;
@@ -1001,7 +1021,7 @@ public class ImageCacheExtensionsTests
         var fallbackBytes = new byte[128];
         for (var i = 0; i < fallbackBytes.Length; i++)
         {
-            fallbackBytes[i] = (byte)(i % 256);
+            fallbackBytes[i] = (byte)(i % ByteValueCount);
         }
 
         var originalLoader = BitmapLoader.Current;
@@ -1022,9 +1042,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests GetImageSize throws on null cache.
-    /// </summary>
+    /// <summary>Tests GetImageSize throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetImageSizeShouldThrowOnNullCache() =>
@@ -1058,11 +1076,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Verifies that <see cref="ImageCacheExtensions.BytesToImage"/> throws an
-    /// <see cref="IOException"/> when the ambient <see cref="BitmapLoader"/> returns
-    /// <see langword="null"/>.
-    /// </summary>
+    /// <summary>Verifies that <see cref="ImageCacheExtensions.BytesToImage"/> throws an <see cref="IOException"/> when the ambient <see cref="BitmapLoader"/> returns <see langword="null"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BytesToImageShouldThrowIOExceptionWhenLoaderReturnsNull()
@@ -1098,11 +1112,12 @@ public class ImageCacheExtensionsTests
             SizeCapturingBitmapLoader capturing = new();
             BitmapLoader.Current = capturing;
 
-            ImageCacheExtensions.BytesToImage([0x01, 0x02], desiredWidth: 320f, desiredHeight: 240f)
+            _ = ImageCacheExtensions
+                .BytesToImage([0x01, 0x02], desiredWidth: ForwardedWidthPixels, desiredHeight: ForwardedHeightPixels)
                 .SubscribeGetValue();
 
-            await Assert.That(capturing.LastWidth).IsEqualTo(320f);
-            await Assert.That(capturing.LastHeight).IsEqualTo(240f);
+            await Assert.That(capturing.LastWidth).IsEqualTo(ForwardedWidthPixels);
+            await Assert.That(capturing.LastHeight).IsEqualTo(ForwardedHeightPixels);
         }
         finally
         {
@@ -1110,10 +1125,7 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Verifies that <see cref="ImageCacheExtensions.BytesToImage"/> reads the entire
-    /// byte payload it was given before handing the stream to the loader.
-    /// </summary>
+    /// <summary>Verifies that <see cref="ImageCacheExtensions.BytesToImage"/> reads the entire byte payload it was given before handing the stream to the loader.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BytesToImageShouldHandToLoaderAStreamOverTheSuppliedBytes()
@@ -1125,7 +1137,7 @@ public class ImageCacheExtensionsTests
             BitmapLoader.Current = capturing;
             byte[] payload = [0xDE, 0xAD, 0xBE, 0xEF];
 
-            ImageCacheExtensions.BytesToImage(payload, desiredWidth: null, desiredHeight: null)
+            _ = ImageCacheExtensions.BytesToImage(payload, desiredWidth: null, desiredHeight: null)
                 .SubscribeGetValue();
 
             await Assert.That(capturing.LastStreamLength).IsEqualTo(payload.Length);
@@ -1137,8 +1149,231 @@ public class ImageCacheExtensionsTests
     }
 
     /// <summary>
-    /// Gets the current bitmap loader safely.
+    /// Tests that the width-only <c>LoadImages</c> overload still yields a pair per key and
+    /// decodes each one at the requested width, leaving the height unasked-for so the images
+    /// keep their native height.
     /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task LoadImagesAtWidthShouldDecodeEveryKeyAtNativeHeight()
+    {
+        SystemJsonSerializer serializer = new();
+        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        var imageData = CreateDecodableImageBytes();
+
+        cache.Insert(FirstWidthOnlyImageKey, imageData).SubscribeAndComplete();
+        cache.Insert(SecondWidthOnlyImageKey, imageData).SubscribeAndComplete();
+
+        var originalLoader = GetCurrentBitmapLoader();
+        using (new LoaderRestorer(originalLoader))
+        {
+            SizeCapturingBitmapLoader loader = new();
+            BitmapLoader.Current = loader;
+
+            // Act
+            var results = cache.LoadImages([FirstWidthOnlyImageKey, SecondWidthOnlyImageKey], RequestedImageWidthPixels)
+                .ToList()
+                .WaitForValue();
+
+            using (Assert.Multiple())
+            {
+                // Assert
+                await Assert.That(results).Count().IsEqualTo(ExpectedImageCount);
+                await Assert.That(results![0].Key).IsEqualTo(FirstWidthOnlyImageKey);
+                await Assert.That(results[1].Key).IsEqualTo(SecondWidthOnlyImageKey);
+                await Assert.That(loader.LastStreamLength).IsEqualTo(SeededImageByteLength);
+                await Assert.That(loader.LastWidth).IsEqualTo(RequestedImageWidthPixels);
+                await Assert.That(loader.LastHeight).IsNull();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that the width-only <c>LoadImageWithFallback</c> overload decodes the fallback bytes
+    /// at the requested width when the key is missing, leaving the height unasked-for.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task LoadImageWithFallbackAtWidthShouldDecodeFallbackAtNativeHeight()
+    {
+        SystemJsonSerializer serializer = new();
+        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        var fallbackBytes = CreateFallbackImageBytes();
+
+        var originalLoader = GetCurrentBitmapLoader();
+        using (new LoaderRestorer(originalLoader))
+        {
+            SizeCapturingBitmapLoader loader = new();
+            BitmapLoader.Current = loader;
+
+            // Act - the missing key forces the fallback branch.
+            var bitmap = cache.LoadImageWithFallback("missing_width_only_key", fallbackBytes, RequestedImageWidthPixels)
+                .SubscribeGetValue();
+
+            using (Assert.Multiple())
+            {
+                // Assert
+                await Assert.That(bitmap).IsNotNull();
+                await Assert.That(loader.LastStreamLength).IsEqualTo(FallbackImageByteLength);
+                await Assert.That(loader.LastWidth).IsEqualTo(RequestedImageWidthPixels);
+                await Assert.That(loader.LastHeight).IsNull();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that the <c>LoadImageFromUrlWithFallback</c> overload taking only <c>fetchAlways</c>
+    /// honours that flag — reading the cached image when it is clear and re-downloading when it is
+    /// set — and asks for the image at its native size with no expiration.
+    /// </summary>
+    /// <param name="fetchAlways">Whether the caller demanded a fresh download.</param>
+    /// <param name="expectedByteLength">Byte length of the buffer the loader is expected to decode.</param>
+    /// <returns>A task representing the test.</returns>
+    [Arguments(false, SeededImageByteLength)]
+    [Arguments(true, CacheBackedHttpService.DownloadedPayloadLength)]
+    [Test]
+    public async Task LoadImageFromUrlWithFallbackAndFetchAlwaysShouldDecodeAtNativeSize(bool fetchAlways, int expectedByteLength)
+    {
+        const string url = "http://example.com/fallback_fetch_always.png";
+        SystemJsonSerializer serializer = new();
+        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        CacheBackedHttpService httpService = new();
+        cache.SetHttpService(httpService);
+        cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
+
+        var originalLoader = GetCurrentBitmapLoader();
+        using (new LoaderRestorer(originalLoader))
+        {
+            SizeCapturingBitmapLoader loader = new();
+            BitmapLoader.Current = loader;
+
+            // Act
+            var bitmap = cache.LoadImageFromUrlWithFallback(url, CreateFallbackImageBytes(), fetchAlways)
+                .SubscribeGetValue();
+
+            using (Assert.Multiple())
+            {
+                // Assert
+                await Assert.That(bitmap).IsNotNull();
+                await Assert.That(loader.LastStreamLength).IsEqualTo(expectedByteLength);
+                await Assert.That(loader.LastWidth).IsNull();
+                await Assert.That(loader.LastHeight).IsNull();
+                await Assert.That(httpService.LastFetchAlways).IsEqualTo(fetchAlways);
+                await Assert.That(httpService.LastAbsoluteExpiration).IsNull();
+                await Assert.That(httpService.DownloadCount).IsEqualTo(fetchAlways ? 1 : 0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that the <c>LoadImageFromUrlWithFallback</c> overload taking a width reads the cached
+    /// image rather than re-downloading it and decodes it at that width with no height.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task LoadImageFromUrlWithFallbackAtWidthShouldDecodeCachedBytesAtNativeHeight()
+    {
+        const string url = "http://example.com/fallback_width_only.png";
+        SystemJsonSerializer serializer = new();
+        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        CacheBackedHttpService httpService = new();
+        cache.SetHttpService(httpService);
+        cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
+
+        var originalLoader = GetCurrentBitmapLoader();
+        using (new LoaderRestorer(originalLoader))
+        {
+            SizeCapturingBitmapLoader loader = new();
+            BitmapLoader.Current = loader;
+
+            // Act
+            var bitmap = cache
+                .LoadImageFromUrlWithFallback(url, CreateFallbackImageBytes(), false, RequestedImageWidthPixels)
+                .SubscribeGetValue();
+
+            using (Assert.Multiple())
+            {
+                // Assert
+                await Assert.That(bitmap).IsNotNull();
+                await Assert.That(loader.LastStreamLength).IsEqualTo(SeededImageByteLength);
+                await Assert.That(loader.LastWidth).IsEqualTo(RequestedImageWidthPixels);
+                await Assert.That(loader.LastHeight).IsNull();
+                await Assert.That(httpService.LastAbsoluteExpiration).IsNull();
+                await Assert.That(httpService.DownloadCount).IsEqualTo(0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that the <c>LoadImageFromUrlWithFallback</c> overload taking a full decode size
+    /// forwards both dimensions and leaves the cached entry without an expiration.
+    /// </summary>
+    /// <returns>A task representing the test.</returns>
+    [Test]
+    public async Task LoadImageFromUrlWithFallbackAtSizeShouldDecodeCachedBytesWithoutAnExpiration()
+    {
+        const string url = "http://example.com/fallback_sized.png";
+        SystemJsonSerializer serializer = new();
+        using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
+        CacheBackedHttpService httpService = new();
+        cache.SetHttpService(httpService);
+        cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
+
+        var originalLoader = GetCurrentBitmapLoader();
+        using (new LoaderRestorer(originalLoader))
+        {
+            SizeCapturingBitmapLoader loader = new();
+            BitmapLoader.Current = loader;
+
+            // Act
+            var bitmap = cache.LoadImageFromUrlWithFallback(
+                    url,
+                    CreateFallbackImageBytes(),
+                    false,
+                    RequestedImageWidthPixels,
+                    RequestedImageHeightPixels)
+                .SubscribeGetValue();
+
+            using (Assert.Multiple())
+            {
+                // Assert
+                await Assert.That(bitmap).IsNotNull();
+                await Assert.That(loader.LastStreamLength).IsEqualTo(SeededImageByteLength);
+                await Assert.That(loader.LastWidth).IsEqualTo(RequestedImageWidthPixels);
+                await Assert.That(loader.LastHeight).IsEqualTo(RequestedImageHeightPixels);
+                await Assert.That(httpService.LastAbsoluteExpiration).IsNull();
+                await Assert.That(httpService.DownloadCount).IsEqualTo(0);
+            }
+        }
+    }
+
+    /// <summary>Creates a deterministic buffer long enough to be accepted as a decodable image.</summary>
+    /// <returns>A <see cref="SeededImageByteLength"/>-byte buffer.</returns>
+    private static byte[] CreateDecodableImageBytes()
+    {
+        var buffer = new byte[SeededImageByteLength];
+        for (var i = 0; i < buffer.Length; i++)
+        {
+            buffer[i] = (byte)(i % ByteValueCount);
+        }
+
+        return buffer;
+    }
+
+    /// <summary>Creates the deterministic fallback buffer used when the primary image cannot be loaded.</summary>
+    /// <returns>A <see cref="FallbackImageByteLength"/>-byte buffer.</returns>
+    private static byte[] CreateFallbackImageBytes()
+    {
+        var buffer = new byte[FallbackImageByteLength];
+        for (var i = 0; i < buffer.Length; i++)
+        {
+            buffer[i] = (byte)(i % ByteValueCount);
+        }
+
+        return buffer;
+    }
+
+    /// <summary>Gets the current bitmap loader safely.</summary>
     /// <returns>The current bitmap loader or null if not available.</returns>
     private static IBitmapLoader? GetCurrentBitmapLoader()
     {
@@ -1152,249 +1387,37 @@ public class ImageCacheExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Sets up a mock bitmap loader for testing.
-    /// </summary>
+    /// <summary>Sets up a mock bitmap loader for testing.</summary>
     private static void SetupMockBitmapLoader()
     {
         try
         {
             BitmapLoader.Current = new MockBitmapLoader();
         }
-        catch
+        catch (TypeInitializationException)
         {
-            // If we can't set the bitmap loader, the tests will skip appropriately
+            // Installing a loader is a static field write, so the only failure is the BitmapLoader
+            // type initializer resolving the ambient loader from Splat. On a host without one the
+            // loader stays unset and the tests skip their bitmap assertions.
         }
     }
 
-    /// <summary>
-    /// Restores the original bitmap loader.
-    /// </summary>
+    /// <summary>Restores the original bitmap loader.</summary>
     /// <param name="originalLoader">The original loader to restore.</param>
     private static void RestoreBitmapLoader(IBitmapLoader? originalLoader)
     {
         try
         {
-            if (originalLoader != null)
+            if (originalLoader is not null)
             {
                 BitmapLoader.Current = originalLoader;
             }
         }
-        catch
+        catch (TypeInitializationException)
         {
-            // Ignore errors when restoring
+            // Restoring is a static field write, so the only failure is the BitmapLoader type
+            // initializer resolving the ambient loader from Splat. There is nothing to put back on
+            // a host where that resolution fails, so the original loader is left alone.
         }
-    }
-
-    /// <summary>
-    /// Mock bitmap implementation for testing.
-    /// </summary>
-    private sealed class MockBitmap : IBitmap
-    {
-        /// <inheritdoc/>
-        public float Width => 100;
-
-        /// <inheritdoc/>
-        public float Height => 200;
-
-        /// <inheritdoc/>
-        public Task Save(CompressedBitmapFormat format, float quality, Stream target)
-        {
-            byte[] mockPngData = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-            return target.WriteAsync(mockPngData, 0, mockPngData.Length);
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-        }
-    }
-
-    /// <summary>
-    /// Mock bitmap loader implementation for testing.
-    /// </summary>
-    private sealed class MockBitmapLoader : IBitmapLoader
-    {
-        /// <inheritdoc/>
-        public Task<IBitmap?> Load(Stream sourceStream, float? desiredWidth, float? desiredHeight) =>
-            Task.FromResult<IBitmap?>(new MockBitmap());
-
-        /// <inheritdoc/>
-        public IBitmap Create(float width, float height) => new MockBitmap();
-
-        /// <inheritdoc/>
-        [SuppressMessage(
-            "Performance",
-            "CA1822:Mark members as static",
-            Justification = "Cannot be static as it implements interface")]
-        public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) =>
-            Task.FromResult<IBitmap?>(new MockBitmap());
-    }
-
-    /// <summary>
-    /// A test-local HTTP service that immediately errors to avoid real network I/O.
-    /// </summary>
-    private sealed class ThrowingHttpService : IHttpService
-    {
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            string url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            Uri url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            string key,
-            string url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            string key,
-            Uri url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Throw<byte[]>(new HttpRequestException("Test HTTP failure"));
-    }
-
-    /// <summary>
-    /// A test-local HTTP service that returns a successful byte payload without real network I/O.
-    /// </summary>
-    private sealed class SuccessHttpService : IHttpService
-    {
-        /// <summary>
-        /// Fixed byte payload returned from every download call.
-        /// </summary>
-        private static readonly byte[] Payload = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            string url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Return(Payload);
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            Uri url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Return(Payload);
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            string key,
-            string url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Return(Payload);
-
-        /// <inheritdoc/>
-        public IObservable<byte[]> DownloadUrl(
-            IBlobCache blobCache,
-            string key,
-            Uri url,
-            HttpMethod? method = null,
-            IEnumerable<KeyValuePair<string, string>>? headers = null,
-            bool fetchAlways = false,
-            DateTimeOffset? absoluteExpiration = null) =>
-            Observable.Return(Payload);
-    }
-
-    /// <summary>
-    /// A bitmap loader that always returns a null bitmap to exercise error paths.
-    /// </summary>
-    private sealed class NullBitmapLoader : IBitmapLoader
-    {
-        /// <inheritdoc/>
-        public Task<IBitmap?> Load(Stream sourceStream, float? desiredWidth, float? desiredHeight) =>
-            Task.FromResult<IBitmap?>(null);
-
-        /// <inheritdoc/>
-        public IBitmap Create(float width, float height) => new MockBitmap();
-
-        /// <inheritdoc/>
-        [SuppressMessage(
-            "Performance",
-            "CA1822:Mark members as static",
-            Justification = "Cannot be static as it implements interface")]
-        public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) =>
-            Task.FromResult<IBitmap?>(null);
-    }
-
-    /// <summary>
-    /// A bitmap loader that captures the arguments passed to <c>Load</c> so tests can
-    /// assert the caller forwarded the expected dimensions and stream payload.
-    /// </summary>
-    private sealed class SizeCapturingBitmapLoader : IBitmapLoader
-    {
-        /// <summary>Gets the <c>desiredWidth</c> argument from the most recent <c>Load</c> call.</summary>
-        public float? LastWidth { get; private set; }
-
-        /// <summary>Gets the <c>desiredHeight</c> argument from the most recent <c>Load</c> call.</summary>
-        public float? LastHeight { get; private set; }
-
-        /// <summary>Gets the byte length of the stream supplied to the most recent <c>Load</c> call.</summary>
-        public long LastStreamLength { get; private set; }
-
-        /// <inheritdoc/>
-        public Task<IBitmap?> Load(Stream sourceStream, float? desiredWidth, float? desiredHeight)
-        {
-            LastWidth = desiredWidth;
-            LastHeight = desiredHeight;
-            LastStreamLength = sourceStream.Length;
-            return Task.FromResult<IBitmap?>(new MockBitmap());
-        }
-
-        /// <inheritdoc/>
-        public IBitmap Create(float width, float height) => new MockBitmap();
-
-        /// <inheritdoc/>
-        [SuppressMessage(
-            "Performance",
-            "CA1822:Mark members as static",
-            Justification = "Cannot be static as it implements interface")]
-        public Task<IBitmap?> LoadFromResource(string source, float? desiredWidth, float? desiredHeight) =>
-            Task.FromResult<IBitmap?>(new MockBitmap());
-    }
-
-    /// <summary>
-    /// Helper to restore the bitmap loader after a test.
-    /// </summary>
-    private sealed class LoaderRestorer(IBitmapLoader? original) : IDisposable
-    {
-        /// <inheritdoc />
-        public void Dispose() => RestoreBitmapLoader(original);
     }
 }

@@ -6,16 +6,42 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for IBlobCache interface core functionality and helper methods.
-/// </summary>
+/// <summary>Tests for IBlobCache interface core functionality and helper methods.</summary>
 [Category("Akavache")]
 [NotInParallel("CacheDatabaseState")]
 public class IBlobCacheInterfaceTests
 {
-    /// <summary>
-    /// Tests that IBlobCache.ExceptionHelpers work correctly.
-    /// </summary>
+    /// <summary>Key the untyped byte-array round-trip test stores its entry under.</summary>
+    private const string ByteKey = "byte_key";
+
+    /// <summary>Key the expiration test stores its short-lived entry under.</summary>
+    private const string ExpiringKey = "expiring_key";
+
+    /// <summary>Key the Type-aware operation test stores its entry under.</summary>
+    private const string TypedKey = "typed_key";
+
+    /// <summary>Wait comfortably past the one-second expiry the expiration tests set, so the entry is certain to have lapsed.</summary>
+    private const int ExpiryWaitMilliseconds = 1500;
+
+    /// <summary>Number of entries seeded before the bulk invalidation assertions run.</summary>
+    private const int SeededEntryCount = 3;
+
+    /// <summary>Payload written whenever a test asserts on cache bookkeeping rather than on the stored bytes.</summary>
+    private static readonly byte[] SamplePayload = [1, 2, 3];
+
+    /// <summary>A payload distinct from <see cref="SamplePayload"/>, so a cross-wired lookup between two entries fails the assertion.</summary>
+    private static readonly byte[] SecondSamplePayload = [4, 5, 6];
+
+    /// <summary>A third distinct payload, for the fixtures that need to tell three entries apart.</summary>
+    private static readonly byte[] ThirdSamplePayload = [7, 8, 9];
+
+    /// <summary>First payload of the two-entry bulk fixtures.</summary>
+    private static readonly byte[] FirstBulkPayload = [1, 2];
+
+    /// <summary>Second payload of the two-entry bulk fixtures.</summary>
+    private static readonly byte[] SecondBulkPayload = [3, 4];
+
+    /// <summary>Tests that IBlobCache.ExceptionHelpers work correctly.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task ExceptionHelpersShouldWorkCorrectly()
@@ -50,9 +76,7 @@ public class IBlobCacheInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that IBlobCache basic operations work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache basic operations work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task BasicBlobCacheOperationsShouldWork()
@@ -66,35 +90,33 @@ public class IBlobCacheInterfaceTests
         byte[] testData = [1, 2, 3, 4, 5];
 
         // Insert
-        cache.Insert("byte_key", testData).SubscribeAndComplete();
+        cache.Insert(ByteKey, testData).SubscribeAndComplete();
 
         // Get
-        var retrieved = cache.Get("byte_key").SubscribeGetValue();
+        var retrieved = cache.Get(ByteKey).SubscribeGetValue();
         await Assert.That(retrieved).IsEqualTo(testData);
 
         // GetCreatedAt
-        var createdAt = cache.GetCreatedAt("byte_key").SubscribeGetValue();
+        var createdAt = cache.GetCreatedAt(ByteKey).SubscribeGetValue();
         using (Assert.Multiple())
         {
             await Assert.That(createdAt).IsNotNull();
-            await Assert.That(createdAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
+            await Assert.That(createdAt!.Value).IsLessThanOrEqualTo(TimeProvider.System.GetLocalNow());
         }
 
         // GetAllKeys
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
-        await Assert.That(keys!).Contains("byte_key");
+        await Assert.That(keys!).Contains(ByteKey);
 
         // Invalidate
-        cache.Invalidate("byte_key").SubscribeAndComplete();
+        cache.Invalidate(ByteKey).SubscribeAndComplete();
 
         // Verify invalidated
-        var getError = cache.Get("byte_key").SubscribeGetError();
+        var getError = cache.Get(ByteKey).SubscribeGetError();
         await Assert.That(getError).IsTypeOf<KeyNotFoundException>();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache bulk operations work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache bulk operations work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task BulkBlobCacheOperationsShouldWork()
@@ -105,12 +127,7 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Test bulk byte array operations
-        Dictionary<string, byte[]> testData = new()
-        {
-            ["key1"] = [1, 2, 3],
-            ["key2"] = [4, 5, 6],
-            ["key3"] = [7, 8, 9]
-        };
+        Dictionary<string, byte[]> testData = new() { ["key1"] = SamplePayload, ["key2"] = SecondSamplePayload, ["key3"] = ThirdSamplePayload };
 
         // Bulk insert
         cache.Insert(testData).SubscribeAndComplete();
@@ -119,7 +136,7 @@ public class IBlobCacheInterfaceTests
         var keys = testData.Keys.ToArray();
         var retrieved = cache.Get(keys).ToList().SubscribeGetValue();
 
-        await Assert.That(retrieved).Count().IsEqualTo(3);
+        await Assert.That(retrieved).Count().IsEqualTo(testData.Count);
         foreach (var item in retrieved!)
         {
             await Assert.That(item.Value).IsEqualTo(testData[item.Key]);
@@ -136,9 +153,7 @@ public class IBlobCacheInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that IBlobCache expiration operations work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache expiration operations work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ExpirationOperationsShouldWork()
@@ -149,34 +164,34 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         byte[] testData = [1, 2, 3, 4, 5];
-        var expiration = DateTimeOffset.Now.AddSeconds(1);
+        var expiration = TimeProvider.System.GetLocalNow().AddSeconds(1);
 
         // Insert with expiration
-        cache.Insert("expiring_key", testData, expiration).SubscribeAndComplete();
+        cache.Insert(ExpiringKey, testData, expiration).SubscribeAndComplete();
 
         // Should be available immediately
-        var retrieved = cache.Get("expiring_key").SubscribeGetValue();
+        var retrieved = cache.Get(ExpiringKey).SubscribeGetValue();
         await Assert.That(retrieved).IsEqualTo(testData);
 
         // Wait for expiration
-        await Task.Delay(1500);
+        await Task.Delay(ExpiryWaitMilliseconds);
 
         // Should now be expired
-        var expiredError = cache.Get("expiring_key").SubscribeGetError();
+        var expiredError = cache.Get(ExpiringKey).SubscribeGetError();
         await Assert.That(expiredError).IsTypeOf<KeyNotFoundException>();
 
         // Test bulk insert with expiration
-        Dictionary<string, byte[]> bulkData = new() { ["bulk1"] = [1, 2], ["bulk2"] = [3, 4] };
-        var bulkExpiration = DateTimeOffset.Now.AddSeconds(1);
+        Dictionary<string, byte[]> bulkData = new() { ["bulk1"] = FirstBulkPayload, ["bulk2"] = SecondBulkPayload };
+        var bulkExpiration = TimeProvider.System.GetLocalNow().AddSeconds(1);
 
         cache.Insert(bulkData, bulkExpiration).SubscribeAndComplete();
 
         // Should be available immediately
         var bulkRetrieved = cache.Get([.. bulkData.Keys]).ToList().SubscribeGetValue();
-        await Assert.That(bulkRetrieved).Count().IsEqualTo(2);
+        await Assert.That(bulkRetrieved).Count().IsEqualTo(bulkData.Count);
 
         // Wait for expiration
-        await Task.Delay(1500);
+        await Task.Delay(ExpiryWaitMilliseconds);
 
         // Should now be expired
         foreach (var key in bulkData.Keys)
@@ -186,9 +201,7 @@ public class IBlobCacheInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that IBlobCache InvalidateAll works correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache InvalidateAll works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task InvalidateAllShouldWork()
@@ -199,13 +212,13 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert multiple items
-        cache.Insert("key1", [1, 2, 3]).SubscribeAndComplete();
-        cache.Insert("key2", [4, 5, 6]).SubscribeAndComplete();
-        cache.Insert("key3", [7, 8, 9]).SubscribeAndComplete();
+        cache.Insert("key1", SamplePayload).SubscribeAndComplete();
+        cache.Insert("key2", SecondSamplePayload).SubscribeAndComplete();
+        cache.Insert("key3", ThirdSamplePayload).SubscribeAndComplete();
 
         // Verify items exist
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
-        await Assert.That(keys).Count().IsEqualTo(3);
+        await Assert.That(keys).Count().IsEqualTo(SeededEntryCount);
 
         // InvalidateAll
         cache.InvalidateAll().SubscribeAndComplete();
@@ -225,9 +238,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(error3).IsTypeOf<KeyNotFoundException>();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache Flush operation works correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache Flush operation works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task FlushShouldWork()
@@ -238,19 +249,17 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert data
-        cache.Insert("flush_test", [1, 2, 3]).SubscribeAndComplete();
+        cache.Insert("flush_test", SamplePayload).SubscribeAndComplete();
 
         // Flush should complete without error
         cache.Flush().SubscribeAndComplete();
 
         // Data should still be available after flush
         var retrieved = cache.Get("flush_test").SubscribeGetValue();
-        await Assert.That(retrieved).IsEquivalentTo(new byte[] { 1, 2, 3 });
+        await Assert.That(retrieved).IsEquivalentTo(SamplePayload);
     }
 
-    /// <summary>
-    /// Tests that IBlobCache Vacuum operation works correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache Vacuum operation works correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task VacuumShouldWork()
@@ -261,8 +270,8 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert and remove data to create fragmentation
-        cache.Insert("vacuum_test1", [1, 2, 3]).SubscribeAndComplete();
-        cache.Insert("vacuum_test2", [4, 5, 6]).SubscribeAndComplete();
+        cache.Insert("vacuum_test1", SamplePayload).SubscribeAndComplete();
+        cache.Insert("vacuum_test2", SecondSamplePayload).SubscribeAndComplete();
         cache.Invalidate("vacuum_test1").SubscribeAndComplete();
 
         // Vacuum should complete without error
@@ -270,12 +279,10 @@ public class IBlobCacheInterfaceTests
 
         // Remaining data should still be available
         var retrieved = cache.Get("vacuum_test2").SubscribeGetValue();
-        await Assert.That(retrieved).IsEquivalentTo(new byte[] { 4, 5, 6 });
+        await Assert.That(retrieved).IsEquivalentTo(SecondSamplePayload);
     }
 
-    /// <summary>
-    /// Tests that IBlobCache handles argument validation correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache handles argument validation correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ArgumentValidationShouldWork()
@@ -286,7 +293,7 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Test null key validation - these should consistently throw ArgumentNullException
-        var insertNullError = cache.Insert(null!, [1, 2, 3]).SubscribeGetError();
+        var insertNullError = cache.Insert(null!, SamplePayload).SubscribeGetError();
         await Assert.That(insertNullError).IsTypeOf<ArgumentNullException>();
 
         var getNullError = cache.Get((string)null!).SubscribeGetError();
@@ -298,7 +305,7 @@ public class IBlobCacheInterfaceTests
         // GetCreatedAt may not always throw for null - InMemoryBlobCache might handle this differently
         try
         {
-            cache.GetCreatedAt((string)null!).SubscribeGetValue();
+            _ = cache.GetCreatedAt((string)null!).SubscribeGetValue();
 
             // If it doesn't throw, that's also acceptable for some cache implementations
         }
@@ -314,49 +321,36 @@ public class IBlobCacheInterfaceTests
         // For empty/whitespace string validation, different cache implementations may handle this differently
         // InMemoryBlobCache may allow empty strings as valid keys, while other implementations might not
         // We'll test the behavior but be flexible about the exception type
-        try
-        {
-            // Test empty string - some implementations might allow this, others might not
-            cache.Insert(string.Empty, [1, 2, 3]).SubscribeAndComplete();
-
-            // If it succeeds, that's also acceptable for some cache implementations
-            cache.Get(string.Empty).SubscribeGetValue();
-        }
-        catch (ArgumentException)
-        {
-            // This is expected behavior for implementations that validate empty strings
-        }
-        catch (KeyNotFoundException)
-        {
-            // This might happen if empty string is allowed as a key but no data is found
-        }
-
-        try
-        {
-            // Test whitespace string - similar flexibility
-            cache.Insert("   ", [1, 2, 3]).SubscribeAndComplete();
-
-            cache.Get("   ").SubscribeGetValue();
-        }
-        catch (ArgumentException)
-        {
-            // This is expected behavior for implementations that validate whitespace strings
-        }
-        catch (KeyNotFoundException)
-        {
-            // This might happen if whitespace string is allowed as a key but no data is found
-        }
+        RoundTripDegenerateKey(string.Empty);
+        RoundTripDegenerateKey("   ");
 
         // Verify that valid operations still work
-        cache.Insert("valid_key", [1, 2, 3]).SubscribeAndComplete();
+        cache.Insert("valid_key", SamplePayload).SubscribeAndComplete();
 
         var validData = cache.Get("valid_key").SubscribeGetValue();
-        await Assert.That(validData).IsEquivalentTo(new byte[] { 1, 2, 3 });
+        await Assert.That(validData).IsEquivalentTo(SamplePayload);
+
+        // An empty or whitespace key is either rejected up front or accepted and simply not found.
+        // Both are legitimate implementations, so the round-trip only has to not blow up.
+        void RoundTripDegenerateKey(string key)
+        {
+            try
+            {
+                cache.Insert(key, SamplePayload).SubscribeAndComplete();
+                _ = cache.Get(key).SubscribeGetValue();
+            }
+            catch (ArgumentException)
+            {
+                // Expected for implementations that validate the key shape.
+            }
+            catch (KeyNotFoundException)
+            {
+                // Expected for implementations that accept the key but store nothing under it.
+            }
+        }
     }
 
-    /// <summary>
-    /// Tests that IBlobCache properties work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache properties work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task CachePropertiesShouldWork()
@@ -380,9 +374,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(cache.ForcedDateTimeKind).IsNull();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache handles concurrent dispose correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache handles concurrent dispose correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task ConcurrentDisposeShouldWork()
@@ -393,7 +385,7 @@ public class IBlobCacheInterfaceTests
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, serializer);
 
         // Insert some data
-        cache.Insert("dispose_test", [1, 2, 3]).SubscribeAndComplete();
+        cache.Insert("dispose_test", SamplePayload).SubscribeAndComplete();
 
         // Test multiple dispose calls — all should be idempotent
         cache.Dispose();
@@ -405,9 +397,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(disposeError).IsTypeOf<ObjectDisposedException>();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache GetCreatedAt handles missing keys correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache GetCreatedAt handles missing keys correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task GetCreatedAtShouldHandleMissingKeys()
@@ -422,9 +412,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(createdAt).IsNull();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache operations with Type parameters work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache operations with Type parameters work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task TypeBasedOperationsShouldWork()
@@ -437,49 +425,45 @@ public class IBlobCacheInterfaceTests
         var userType = typeof(string);
 
         // Insert with Type
-        cache.Insert("typed_key", testData, userType).SubscribeAndComplete();
+        cache.Insert(TypedKey, testData, userType).SubscribeAndComplete();
 
         // Get with Type
-        var retrieved = cache.Get("typed_key", userType).SubscribeGetValue();
+        var retrieved = cache.Get(TypedKey, userType).SubscribeGetValue();
         await Assert.That(retrieved).IsEqualTo(testData);
 
         // GetCreatedAt with Type
-        var createdAt = cache.GetCreatedAt("typed_key", userType).SubscribeGetValue();
+        var createdAt = cache.GetCreatedAt(TypedKey, userType).SubscribeGetValue();
         await Assert.That(createdAt).IsNotNull();
 
         // GetAllKeys with Type
         var typedKeys = cache.GetAllKeys(userType).ToList().SubscribeGetValue();
-        await Assert.That(typedKeys!).Contains("typed_key");
+        await Assert.That(typedKeys!).Contains(TypedKey);
 
         // GetAll with Type
         var allTypedData = cache.GetAll(userType).ToList().SubscribeGetValue();
         await Assert.That(allTypedData).IsNotEmpty();
-        await Assert.That(allTypedData!.Any(kvp => kvp.Key == "typed_key")).IsTrue();
+        await Assert.That(allTypedData!.Any(static kvp => kvp.Key == TypedKey)).IsTrue();
 
         // Bulk Insert with Type
-        Dictionary<string, byte[]> bulkData = new()
-        {
-            ["bulk1"] = [1, 2],
-            ["bulk2"] = [3, 4]
-        };
+        Dictionary<string, byte[]> bulkData = new() { ["bulk1"] = FirstBulkPayload, ["bulk2"] = SecondBulkPayload };
         cache.Insert(bulkData, userType).SubscribeAndComplete();
 
         // Bulk Get with Type
         var bulkRetrieved = cache.Get([.. bulkData.Keys], userType).ToList().SubscribeGetValue();
-        await Assert.That(bulkRetrieved).Count().IsEqualTo(2);
+        await Assert.That(bulkRetrieved).Count().IsEqualTo(bulkData.Count);
 
         // Bulk GetCreatedAt with Type
         var bulkCreatedAt = cache.GetCreatedAt([.. bulkData.Keys], userType).ToList().SubscribeGetValue();
-        await Assert.That(bulkCreatedAt).Count().IsEqualTo(2);
+        await Assert.That(bulkCreatedAt).Count().IsEqualTo(bulkData.Count);
 
         // Flush with Type
         cache.Flush(userType).SubscribeAndComplete();
 
         // Invalidate with Type
-        cache.Invalidate("typed_key", userType).SubscribeAndComplete();
+        cache.Invalidate(TypedKey, userType).SubscribeAndComplete();
 
         // Verify invalidation
-        var invalidateError = cache.Get("typed_key", userType).SubscribeGetError();
+        var invalidateError = cache.Get(TypedKey, userType).SubscribeGetError();
         await Assert.That(invalidateError).IsTypeOf<KeyNotFoundException>();
 
         // Bulk Invalidate with Type
@@ -493,9 +477,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(keysAfterInvalidateAll).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache bulk operations with collections work correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache bulk operations with collections work correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task BulkCollectionOperationsShouldWork()
@@ -533,7 +515,7 @@ public class IBlobCacheInterfaceTests
                         await Assert.That(time).IsNotNull();
                     }
 
-                    await Assert.That(time!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
+                    await Assert.That(time!.Value).IsLessThanOrEqualTo(TimeProvider.System.GetLocalNow());
                 }
             }
 
@@ -550,7 +532,7 @@ public class IBlobCacheInterfaceTests
         {
             var individualCreatedAt = cache.GetCreatedAt(key).SubscribeGetValue();
             await Assert.That(individualCreatedAt).IsNotNull();
-            await Assert.That(individualCreatedAt!.Value).IsLessThanOrEqualTo(DateTimeOffset.Now);
+            await Assert.That(individualCreatedAt!.Value).IsLessThanOrEqualTo(TimeProvider.System.GetLocalNow());
         }
 
         // Test empty collection handling
@@ -559,9 +541,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(emptyResults).IsEmpty();
     }
 
-    /// <summary>
-    /// Tests that IBlobCache handles empty collections correctly.
-    /// </summary>
+    /// <summary>Tests that IBlobCache handles empty collections correctly.</summary>
     /// <returns>A task representing the test.</returns>
     [Test]
     public async Task EmptyCollectionOperationsShouldWork()

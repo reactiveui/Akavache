@@ -4,23 +4,15 @@
 
 namespace AkavacheTodoMaui.Models;
 
-/// <summary>
-/// Represents available app themes.
-/// </summary>
+/// <summary>Represents available app themes.</summary>
 public enum AppTheme
 {
-    /// <summary>
-    /// Follow system theme.
-    /// </summary>
+    /// <summary>Follow system theme.</summary>
     System = 0,
 
-    /// <summary>
-    /// Light theme.
-    /// </summary>
+    /// <summary>Light theme.</summary>
     Light = 1,
 
-    /// <summary>
-    /// Dark theme.
-    /// </summary>
+    /// <summary>Dark theme.</summary>
     Dark = 2
 }

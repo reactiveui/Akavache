@@ -6,14 +6,10 @@ using AkavacheTodoMaui.ViewModels;
 
 namespace AkavacheTodoMaui.Views;
 
-/// <summary>
-/// Edit Todo page for modifying existing todos.
-/// </summary>
+/// <summary>Edit Todo page for modifying existing todos.</summary>
 public partial class EditTodoPage : ContentPage
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EditTodoPage"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="EditTodoPage"/> class.</summary>
     /// <param name="viewModel">The edit todo view model.</param>
     public EditTodoPage(EditTodoViewModel viewModel)
     {

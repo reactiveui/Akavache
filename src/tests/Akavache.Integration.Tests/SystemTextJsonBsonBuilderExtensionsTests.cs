@@ -9,24 +9,24 @@ using Akavache.Tests.Executors;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for Akavache.SystemTextJson.Bson.AkavacheBuilderExtensions.
-/// </summary>
+/// <summary>Tests for Akavache.SystemTextJson.Bson.AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]
 public class SystemTextJsonBsonBuilderExtensionsTests
 {
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer() throws on null builder.
-    /// </summary>
+    /// <summary>Stock options used where the call is expected to fail argument validation before the options are read.</summary>
+    private static readonly JsonSerializerOptions DefaultSerializerOptions = new();
+
+    /// <summary>Options carrying a non-default setting, used to prove custom options reach the registered serializer.</summary>
+    private static readonly JsonSerializerOptions IndentedSerializerOptions = new() { WriteIndented = true };
+
+    /// <summary>Tests UseSystemJsonBsonSerializer() throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerShouldThrowOnNullBuilder() =>
         await Assert.That(static () => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer() registers serializer.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer() registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerShouldRegisterSerializer()
@@ -38,18 +38,14 @@ public class SystemTextJsonBsonBuilderExtensionsTests
         await Assert.That(builder.SerializerTypeName).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer(settings) throws on null builder.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer(settings) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerSettingsShouldThrowOnNullBuilder() =>
-        await Assert.That(static () => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, new JsonSerializerOptions()))
+        await Assert.That(static () => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, DefaultSerializerOptions))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer(settings) throws on null settings.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer(settings) throws on null settings.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerSettingsShouldThrowOnNullSettings()
@@ -59,36 +55,29 @@ public class SystemTextJsonBsonBuilderExtensionsTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer(settings) registers serializer.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer(settings) registers serializer.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerSettingsShouldRegisterSerializer()
     {
         var builder = CreateBuilder("UseSystemJsonBsonSerializerSettings");
-        JsonSerializerOptions settings = new() { WriteIndented = true };
-        var result = builder.UseSystemJsonBsonSerializer(settings);
+        var result = builder.UseSystemJsonBsonSerializer(IndentedSerializerOptions);
 
         await Assert.That(result).IsSameReferenceAs(builder);
         await Assert.That(builder.SerializerTypeName).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer(configure) throws on null builder.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer(configure) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerConfigureShouldThrowOnNullBuilder()
     {
-        Action<JsonSerializerOptions> configure = _ => { };
+        Action<JsonSerializerOptions> configure = static _ => { };
         await Assert.That(() => SystemTextJson.Bson.AkavacheBuilderExtensions.UseSystemJsonBsonSerializer(null!, configure))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer(configure) throws on null configure.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer(configure) throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerConfigureShouldThrowOnNullConfigure()
@@ -98,9 +87,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests UseSystemJsonBsonSerializer(configure) invokes configure.
-    /// </summary>
+    /// <summary>Tests UseSystemJsonBsonSerializer(configure) invokes configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task UseSystemJsonBsonSerializerConfigureShouldInvokeAction()
@@ -130,9 +117,9 @@ public class SystemTextJsonBsonBuilderExtensionsTests
         UniversalSerializer.ResetCaches();
 
         var builder = CreateBuilder("UseSystemJsonBsonSerializerVariantsFactoryExec");
-        builder.UseSystemJsonBsonSerializer();
-        builder.UseSystemJsonBsonSerializer(new JsonSerializerOptions { WriteIndented = true });
-        builder.UseSystemJsonBsonSerializer(static o => o.WriteIndented = true);
+        _ = builder.UseSystemJsonBsonSerializer();
+        _ = builder.UseSystemJsonBsonSerializer(IndentedSerializerOptions);
+        _ = builder.UseSystemJsonBsonSerializer(static o => o.WriteIndented = true);
 
         var alternatives = UniversalSerializer.GetAvailableAlternativeSerializers(new NewtonsoftJson.NewtonsoftSerializer());
 
@@ -141,9 +128,7 @@ public class SystemTextJsonBsonBuilderExtensionsTests
         UniversalSerializer.ResetCaches();
     }
 
-    /// <summary>
-    /// Creates a fresh <see cref="IAkavacheBuilder"/> with a unique application name.
-    /// </summary>
+    /// <summary>Creates a fresh <see cref="IAkavacheBuilder"/> with a unique application name.</summary>
     /// <param name="applicationName">The application name used for builder isolation.</param>
     /// <returns>A new builder instance.</returns>
     private static IAkavacheBuilder CreateBuilder(string applicationName) =>

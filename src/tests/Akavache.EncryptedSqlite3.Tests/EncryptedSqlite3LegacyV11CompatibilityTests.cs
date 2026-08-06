@@ -23,6 +23,15 @@ namespace Akavache.Tests;
 [Category("Sqlite")]
 public class EncryptedSqlite3LegacyV11CompatibilityTests
 {
+    /// <summary>Bind index of the CacheEntry "Id" column in the seed insert statement.</summary>
+    private const int IdParameterIndex = 1;
+
+    /// <summary>Bind index of the CacheEntry "CreatedAt" column in the seed insert statement.</summary>
+    private const int CreatedAtParameterIndex = 2;
+
+    /// <summary>Bind index of the CacheEntry "Value" column in the seed insert statement.</summary>
+    private const int ValueParameterIndex = 3;
+
     /// <summary>
     /// A v11-style file (SQLCipher-4 cipher) must be readable through the v12 public API,
     /// and after the first open it must be rekeyed to the modern cipher so subsequent
@@ -54,17 +63,12 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         AssertReadableWithModernCipher(path, password);
 
         // And the public API still works after the rekey.
-        using (EncryptedSqliteBlobCache cache = new(path, password, serializer, ImmediateScheduler.Instance))
-        {
-            var fetched = cache.Get(key).WaitForValue();
-            await Assert.That(fetched).IsEquivalentTo(payload);
-        }
+        using EncryptedSqliteBlobCache rekeyedCache = new(path, password, serializer, ImmediateScheduler.Instance);
+        var rekeyedFetch = rekeyedCache.Get(key).WaitForValue();
+        await Assert.That(rekeyedFetch).IsEquivalentTo(payload);
     }
 
-    /// <summary>
-    /// A wrong password must still fail loudly — the legacy fallback should not
-    /// silently mask a genuine key error.
-    /// </summary>
+    /// <summary>A wrong password must still fail loudly — the legacy fallback should not silently mask a genuine key error.</summary>
     /// <returns>A task representing the async test.</returns>
     [Test]
     public async Task LegacyFallbackDoesNotMaskWrongPassword()
@@ -80,7 +84,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         var ex = Assert.Throws<AkavacheSqliteException>(() =>
         {
             using EncryptedSqliteBlobCache cache = new(path, wrongPassword, serializer, ImmediateScheduler.Instance);
-            cache.Get("k").WaitForValue();
+            _ = cache.Get("k").WaitForValue();
         });
 
         // The legacy fallback re-validates page 1 with the supplied password and
@@ -102,24 +106,24 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         Batteries_V2.Init();
 
         var rc = sqlite3_open_v2(path, out var db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, null);
-        ThrowIfNotOk(rc, db, "open " + path);
+        ThrowIfNotOk(rc, db, $"open {path}");
         try
         {
-            var quotedPassword = "'" + password.Replace("'", "''") + "'";
+            var quotedPassword = $"'{password.Replace("'", "''")}'";
 
             // SQLite3MC's SQLCipher-4 compatibility mode — what Akavache 11.x effectively
             // wrote out via the e_sqlcipher native bundle.
             Exec(db, "PRAGMA cipher = 'sqlcipher'");
             Exec(db, "PRAGMA legacy = 4");
-            Exec(db, "PRAGMA key = " + quotedPassword);
+            Exec(db, $"PRAGMA key = {quotedPassword}");
 
             const string createTable =
-                "CREATE TABLE \"CacheEntry\" (" +
-                "\"Id\" TEXT PRIMARY KEY NOT NULL, " +
-                "\"CreatedAt\" INTEGER NOT NULL, " +
-                "\"ExpiresAt\" INTEGER NULL, " +
-                "\"TypeName\" TEXT NULL, " +
-                "\"Value\" BLOB NULL);";
+                "CREATE TABLE \"CacheEntry\" ("
+                + "\"Id\" TEXT PRIMARY KEY NOT NULL, "
+                + "\"CreatedAt\" INTEGER NOT NULL, "
+                + "\"ExpiresAt\" INTEGER NULL, "
+                + "\"TypeName\" TEXT NULL, "
+                + "\"Value\" BLOB NULL);";
             Exec(db, createTable);
 
             const string insertSql =
@@ -128,18 +132,18 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
             ThrowIfNotOk(rc, db, "prepare insert");
             try
             {
-                ThrowIfNotOk(sqlite3_bind_text(stmt, 1, key), db, "bind id");
-                ThrowIfNotOk(sqlite3_bind_int64(stmt, 2, DateTimeOffset.UtcNow.UtcTicks), db, "bind createdAt");
-                ThrowIfNotOk(sqlite3_bind_blob(stmt, 3, value), db, "bind value");
+                ThrowIfNotOk(sqlite3_bind_text(stmt, IdParameterIndex, key), db, "bind id");
+                ThrowIfNotOk(sqlite3_bind_int64(stmt, CreatedAtParameterIndex, TimeProvider.System.GetUtcNow().UtcTicks), db, "bind createdAt");
+                ThrowIfNotOk(sqlite3_bind_blob(stmt, ValueParameterIndex, value), db, "bind value");
 
                 if (sqlite3_step(stmt) != SQLITE_DONE)
                 {
-                    throw new InvalidOperationException("seed insert failed: " + sqlite3_errmsg(db).utf8_to_string());
+                    throw new InvalidOperationException($"seed insert failed: {sqlite3_errmsg(db).utf8_to_string()}");
                 }
             }
             finally
             {
-                sqlite3_finalize(stmt);
+                _ = sqlite3_finalize(stmt);
             }
         }
         finally
@@ -159,11 +163,11 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
         Batteries_V2.Init();
 
         var rc = sqlite3_open_v2(path, out var db, SQLITE_OPEN_READONLY, null);
-        ThrowIfNotOk(rc, db, "open " + path);
+        ThrowIfNotOk(rc, db, $"open {path}");
         try
         {
-            var quotedPassword = "'" + password.Replace("'", "''") + "'";
-            Exec(db, "PRAGMA key = " + quotedPassword);
+            var quotedPassword = $"'{password.Replace("'", "''")}'";
+            Exec(db, $"PRAGMA key = {quotedPassword}");
             Exec(db, "SELECT count(*) FROM sqlite_master");
         }
         finally
@@ -176,7 +180,7 @@ public class EncryptedSqlite3LegacyV11CompatibilityTests
     /// <param name="db">An open SQLite handle.</param>
     /// <param name="sql">The statement to execute.</param>
     private static void Exec(sqlite3 db, string sql) =>
-        ThrowIfNotOk(sqlite3_exec(db, sql), db, "exec: " + sql);
+        ThrowIfNotOk(sqlite3_exec(db, sql), db, $"exec: {sql}");
 
     /// <summary>Throws an <see cref="InvalidOperationException"/> when a SQLite call returns an error code.</summary>
     /// <param name="rc">The SQLite return code.</param>

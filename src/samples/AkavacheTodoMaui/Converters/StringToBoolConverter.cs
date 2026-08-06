@@ -6,14 +6,10 @@ using System.Globalization;
 
 namespace AkavacheTodoMaui.Converters;
 
-/// <summary>
-/// Converts string to boolean for visibility binding.
-/// </summary>
+/// <summary>Converts string to boolean for visibility binding.</summary>
 public class StringToBoolConverter : IValueConverter
 {
-    /// <summary>
-    /// Converts string to boolean.
-    /// </summary>
+    /// <summary>Converts string to boolean.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
@@ -21,9 +17,7 @@ public class StringToBoolConverter : IValueConverter
     /// <returns>True if string is not null or empty.</returns>
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => !string.IsNullOrWhiteSpace(value?.ToString());
 
-    /// <summary>
-    /// One-way converter — returns <see cref="BindableProperty.UnsetValue"/> so the binding engine leaves the source untouched.
-    /// </summary>
+    /// <summary>One-way converter — returns <see cref="BindableProperty.UnsetValue"/> so the binding engine leaves the source untouched.</summary>
     /// <param name="value">The value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>

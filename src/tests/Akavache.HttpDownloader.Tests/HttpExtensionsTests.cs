@@ -6,24 +6,28 @@ using Akavache.SystemTextJson;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for HttpExtensions covering null/empty argument validation and stream paths.
-/// </summary>
+/// <summary>Tests for HttpExtensions covering null/empty argument validation and stream paths.</summary>
 [Category("Akavache")]
 public class HttpExtensionsTests
 {
-    /// <summary>
-    /// Tests WriteAsyncRx throws on null stream.
-    /// </summary>
+    /// <summary>A well-formed absolute URL used wherever a test only needs a syntactically valid address.</summary>
+    private const string SampleUrl = "https://example.com";
+
+    /// <summary>How long a test waits for a <c>WriteAsyncRx</c> subscription to signal success or failure.</summary>
+    private const int WriteCompletionTimeoutSeconds = 5;
+
+    /// <summary>Tests WriteAsyncRx throws on null stream.</summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task WriteAsyncRxShouldThrowOnNullStream() =>
-        await Assert.That(static () => HttpExtensions.WriteAsyncRx(null!, [1, 2, 3], 0, 3))
-            .Throws<ArgumentNullException>();
+    public async Task WriteAsyncRxShouldThrowOnNullStream()
+    {
+        byte[] data = [1, 2, 3];
 
-    /// <summary>
-    /// Tests WriteAsyncRx writes to a memory stream.
-    /// </summary>
+        await Assert.That(() => HttpExtensions.WriteAsyncRx(null!, data, 0, data.Length))
+            .Throws<ArgumentNullException>();
+    }
+
+    /// <summary>Tests WriteAsyncRx writes to a memory stream.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WriteAsyncRxShouldWriteToStream()
@@ -32,17 +36,15 @@ public class HttpExtensionsTests
         byte[] data = [1, 2, 3, 4, 5];
 
         ManualResetEventSlim mre = new(false);
-        stream.WriteAsyncRx(data, 0, data.Length).Subscribe(
+        _ = stream.WriteAsyncRx(data, 0, data.Length).Subscribe(
             _ => mre.Set(),
             _ => mre.Set());
-        mre.Wait(TimeSpan.FromSeconds(5));
+        _ = mre.Wait(TimeSpan.FromSeconds(WriteCompletionTimeoutSeconds));
 
-        await Assert.That(stream.Length).IsEqualTo(5);
+        await Assert.That(stream.Length).IsEqualTo(data.Length);
     }
 
-    /// <summary>
-    /// Tests WriteAsyncRx propagates exceptions when writing fails.
-    /// </summary>
+    /// <summary>Tests WriteAsyncRx propagates exceptions when writing fails.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WriteAsyncRxShouldPropagateException()
@@ -51,33 +53,35 @@ public class HttpExtensionsTests
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
-        stream.WriteAsyncRx([1], 0, 1).Subscribe(
+        _ = stream.WriteAsyncRx([1], 0, 1).Subscribe(
             _ => mre.Set(),
             ex =>
             {
                 error = ex;
                 mre.Set();
             });
-        mre.Wait(TimeSpan.FromSeconds(5));
+        _ = mre.Wait(TimeSpan.FromSeconds(WriteCompletionTimeoutSeconds));
         await Assert.That(error).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(string url) throws on null cache.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(string url) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnNullCache() =>
-        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "https://example.com"))
+        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, SampleUrl))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests DownloadUrl(string url) throws on null url.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(string url) throws on null url.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnNullUrl()
     {
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -92,12 +96,13 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(string url) throws on empty url.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(string url) throws on empty url.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlStringShouldThrowOnEmptyUrl()
     {
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -112,18 +117,14 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(Uri url) throws on null cache.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(Uri url) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlUriShouldThrowOnNullCache() =>
-        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, new Uri("https://example.com")))
+        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, new Uri(SampleUrl)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests DownloadUrl(Uri url) throws on null url.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(Uri url) throws on null url.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlUriShouldThrowOnNullUrl()
@@ -140,28 +141,30 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, string url) throws on null cache.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, string url) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullCache() =>
-        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "key", "https://example.com"))
+        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "key", SampleUrl))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests DownloadUrl(key, string url) throws on null key.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, string url) throws on null key.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullKey()
     {
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            await Assert.That(() => cache.DownloadUrl(null!, "https://example.com"))
+            await Assert.That(() => cache.DownloadUrl(null!, SampleUrl))
                 .Throws<ArgumentNullException>();
         }
         finally
@@ -170,18 +173,19 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, string url) throws on empty key.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, string url) throws on empty key.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyKey()
     {
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            await Assert.That(() => cache.DownloadUrl(string.Empty, "https://example.com"))
+            await Assert.That(() => cache.DownloadUrl(string.Empty, SampleUrl))
                 .Throws<ArgumentException>();
         }
         finally
@@ -190,12 +194,13 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, string url) throws on null url.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, string url) throws on null url.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnNullUrl()
     {
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -210,12 +215,13 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, string url) throws on empty url.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, string url) throws on empty url.</summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Usage",
+        "CA2234:Pass system uri objects instead of strings",
+        Justification = "Test deliberately exercises the string-URL overload of the public Akavache API.")]
     public async Task DownloadUrlKeyStringShouldThrowOnEmptyUrl()
     {
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
@@ -230,18 +236,14 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, Uri url) throws on null cache.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, Uri url) throws on null cache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullCache() =>
-        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "key", new Uri("https://example.com")))
+        await Assert.That(static () => HttpExtensions.DownloadUrl(null!, "key", new Uri(SampleUrl)))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests DownloadUrl(key, Uri url) throws on null key.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, Uri url) throws on null key.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullKey()
@@ -249,7 +251,7 @@ public class HttpExtensionsTests
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            await Assert.That(() => cache.DownloadUrl(null!, new Uri("https://example.com")))
+            await Assert.That(() => cache.DownloadUrl(null!, new Uri(SampleUrl)))
                 .Throws<ArgumentNullException>();
         }
         finally
@@ -258,9 +260,7 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, Uri url) throws on empty key.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, Uri url) throws on empty key.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnEmptyKey()
@@ -268,7 +268,7 @@ public class HttpExtensionsTests
         InMemoryBlobCache cache = new(ImmediateScheduler.Instance, new SystemJsonSerializer());
         try
         {
-            await Assert.That(() => cache.DownloadUrl(string.Empty, new Uri("https://example.com")))
+            await Assert.That(() => cache.DownloadUrl(string.Empty, new Uri(SampleUrl)))
                 .Throws<ArgumentException>();
         }
         finally
@@ -277,9 +277,7 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests DownloadUrl(key, Uri url) throws on null url.
-    /// </summary>
+    /// <summary>Tests DownloadUrl(key, Uri url) throws on null url.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task DownloadUrlKeyUriShouldThrowOnNullUrl()
@@ -296,9 +294,7 @@ public class HttpExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests WriteAsyncRx handles EndWrite throwing.
-    /// </summary>
+    /// <summary>Tests WriteAsyncRx handles EndWrite throwing.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WriteAsyncRxShouldHandleEndWriteFailure()
@@ -308,20 +304,18 @@ public class HttpExtensionsTests
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
-        stream.WriteAsyncRx(data, 0, data.Length).Subscribe(
+        _ = stream.WriteAsyncRx(data, 0, data.Length).Subscribe(
             _ => mre.Set(),
             ex =>
             {
                 error = ex;
                 mre.Set();
             });
-        mre.Wait(TimeSpan.FromSeconds(5));
+        _ = mre.Wait(TimeSpan.FromSeconds(WriteCompletionTimeoutSeconds));
         await Assert.That(error).IsTypeOf<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// A stream whose <see cref="BeginWrite"/> always throws, used to exercise the BeginWrite failure path.
-    /// </summary>
+    /// <summary>A stream whose <see cref="BeginWrite"/> always throws, used to exercise the BeginWrite failure path.</summary>
     private sealed class ThrowingStream : MemoryStream
     {
         /// <inheritdoc/>
@@ -329,10 +323,7 @@ public class HttpExtensionsTests
             throw new InvalidOperationException("Throwing stream");
     }
 
-    /// <summary>
-    /// A stream that allows BeginWrite to succeed but throws on EndWrite,
-    /// exercising the inner catch block of WriteAsyncRx.
-    /// </summary>
+    /// <summary>A stream that allows BeginWrite to succeed but throws on EndWrite, exercising the inner catch block of WriteAsyncRx.</summary>
     private sealed class EndWriteThrowingStream : MemoryStream
     {
         /// <inheritdoc/>

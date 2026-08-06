@@ -16,6 +16,9 @@ namespace Akavache.Settings.Tests;
 [TestExecutor<AkavacheTestExecutor>]
 public class SettingsBaseHelperTests
 {
+    /// <summary>The settings class name passed to the exception factory under test.</summary>
+    private const string UnresolvedClassName = "TargetClass";
+
     /// <summary>
     /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
     /// <see langword="null"/> when no Akavache instance has been initialized yet —
@@ -30,10 +33,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
-    /// <see langword="null"/> when the current instance's registry is empty.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns <see langword="null"/> when the current instance's registry is empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldReturnNullWhenRegistryEmpty()
@@ -45,10 +45,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns the
-    /// matching cache when the class name is registered in the current instance.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns the matching cache when the class name is registered in the current instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldReturnExactMatch()
@@ -62,10 +59,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsSameReferenceAs(cache);
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> falls back
-    /// to the first registered entry when the class name does not match.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> falls back to the first registered entry when the class name does not match.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromBlobCacheRegistryShouldFallBackToFirstEntry()
@@ -93,10 +87,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
-    /// returns the UserAccount cache when its resolver succeeds.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/> returns the UserAccount cache when its resolver succeeds.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetFromCacheDatabaseShouldReturnUserAccountWhenResolverSucceeds()
@@ -163,10 +154,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryReadAmbientCache"/> returns the value a
-    /// successful resolver produces.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryReadAmbientCache"/> returns the value a successful resolver produces.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryReadAmbientCacheShouldReturnValueFromSuccessfulResolver()
@@ -178,10 +166,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsSameReferenceAs(cache);
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryReadAmbientCache"/> swallows a resolver
-    /// exception and returns <see langword="null"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryReadAmbientCache"/> swallows a resolver exception and returns <see langword="null"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryReadAmbientCacheShouldReturnNullWhenResolverThrows()
@@ -233,11 +218,7 @@ public class SettingsBaseHelperTests
         await Assert.That(settings).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetTransientFallback"/> returns
-    /// <see langword="null"/> when no <see cref="ISerializer"/> is registered with
-    /// the locator.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetTransientFallback"/> returns <see langword="null"/> when no <see cref="ISerializer"/> is registered with the locator.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetTransientFallbackShouldReturnNullWhenNoSerializerRegistered()
@@ -247,11 +228,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetTransientFallback"/> constructs a
-    /// fresh <see cref="InMemoryBlobCache"/> when an <see cref="ISerializer"/> has
-    /// been registered.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetTransientFallback"/> constructs a fresh <see cref="InMemoryBlobCache"/> when an <see cref="ISerializer"/> has been registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryGetTransientFallbackShouldReturnInMemoryWhenSerializerRegistered()
@@ -271,10 +248,7 @@ public class SettingsBaseHelperTests
         }
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> includes
-    /// every registered key in the message when the registry has entries.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> includes every registered key in the message when the registry has entries.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateNoCacheFoundExceptionShouldListRegisteredKeys()
@@ -284,37 +258,31 @@ public class SettingsBaseHelperTests
         registry["AlphaCache"] = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
         registry["BetaCache"] = new InMemoryBlobCache(ImmediateScheduler.Instance, new SystemJsonSerializer());
 
-        var exception = SettingsBase.CreateNoCacheFoundException("TargetClass");
+        var exception = SettingsBase.CreateNoCacheFoundException(UnresolvedClassName);
 
-        await Assert.That(exception.Message).Contains("TargetClass");
+        await Assert.That(exception.Message).Contains(UnresolvedClassName);
         await Assert.That(exception.Message).Contains("AlphaCache");
         await Assert.That(exception.Message).Contains("BetaCache");
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports
-    /// <c>&lt;none&gt;</c> when the current instance's registry is empty.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports <c>&lt;none&gt;</c> when the current instance's registry is empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateNoCacheFoundExceptionShouldReport_NoneWhenRegistryEmpty()
     {
         CacheDatabase.Initialize<SystemJsonSerializer>("TestApp_NoCacheFoundEmpty");
 
-        var exception = SettingsBase.CreateNoCacheFoundException("TargetClass");
+        var exception = SettingsBase.CreateNoCacheFoundException(UnresolvedClassName);
 
         await Assert.That(exception.Message).Contains("<none>");
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports
-    /// <c>&lt;none&gt;</c> when no Akavache instance has been initialized yet.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports <c>&lt;none&gt;</c> when no Akavache instance has been initialized yet.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateNoCacheFoundExceptionShouldReport_NoneWhenNoInstance()
     {
-        var exception = SettingsBase.CreateNoCacheFoundException("TargetClass");
+        var exception = SettingsBase.CreateNoCacheFoundException(UnresolvedClassName);
 
         await Assert.That(exception.Message).Contains("<none>");
     }
@@ -367,19 +335,13 @@ public class SettingsBaseHelperTests
     public async Task ReadAmbientUserAccountShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => SettingsBase.ReadAmbientUserAccount()).Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.ReadAmbientLocalMachine"/> throws when
-    /// <see cref="CacheDatabase"/> is not initialized.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.ReadAmbientLocalMachine"/> throws when <see cref="CacheDatabase"/> is not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadAmbientLocalMachineShouldThrowWhenNotInitialized() =>
         await Assert.That(static () => SettingsBase.ReadAmbientLocalMachine()).Throws<InvalidOperationException>();
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.ReadAmbientInMemory"/> throws when
-    /// <see cref="CacheDatabase"/> is not initialized.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.ReadAmbientInMemory"/> throws when <see cref="CacheDatabase"/> is not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadAmbientInMemoryShouldThrowWhenNotInitialized() =>
@@ -424,6 +386,5 @@ public class SettingsBaseHelperTests
         string className,
         Func<IBlobCache> userAccountResolver,
         Func<IBlobCache> localMachineResolver,
-        Func<IBlobCache> inMemoryResolver)
-        : SettingsBase(className, userAccountResolver, localMachineResolver, inMemoryResolver);
+        Func<IBlobCache> inMemoryResolver) : SettingsBase(className, userAccountResolver, localMachineResolver, inMemoryResolver);
 }

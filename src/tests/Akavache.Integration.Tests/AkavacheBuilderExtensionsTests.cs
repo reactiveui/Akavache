@@ -11,15 +11,35 @@ using Splat.Builder;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for AkavacheBuilderExtensions.
-/// </summary>
+/// <summary>Tests for AkavacheBuilderExtensions.</summary>
 [Category("Akavache")]
 public class AkavacheBuilderExtensionsTests
 {
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configure, applicationName) throws on null builder.
-    /// </summary>
+    /// <summary>Application name supplied to guard-clause tests, which reject their arguments before it is ever used.</summary>
+    private const string TestApplicationName = "TestApp";
+
+    /// <summary>Name of the per-user blob cache slot.</summary>
+    private const string UserAccountSlot = "UserAccount";
+
+    /// <summary>Name of the encrypted blob cache slot.</summary>
+    private const string SecureCacheSlot = "Secure";
+
+    /// <summary>Name of the machine-wide blob cache slot.</summary>
+    private const string LocalMachineSlot = "LocalMachine";
+
+    /// <summary>Folder beneath the system temp directory that holds the throwaway directories these tests create.</summary>
+    private const string TempDirectoryRootName = "AkavacheTest";
+
+    /// <summary>Components produced by splitting a path carrying three named segments beneath its root.</summary>
+    private const int ThreeSegmentPathComponentCount = 4;
+
+    /// <summary>Components produced by splitting a path carrying a single named segment beneath its root.</summary>
+    private const int SingleSegmentPathComponentCount = 2;
+
+    /// <summary>Gap between polls while waiting for a registration callback to run.</summary>
+    private const int PollIntervalMilliseconds = 25;
+
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configure, applicationName) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseConfigureShouldThrowOnNullBuilder() =>
@@ -27,12 +47,10 @@ public class AkavacheBuilderExtensionsTests
             AkavacheBuilderExtensions.WithAkavacheCacheDatabase<SystemJsonSerializer>(
                 null!,
                 static b => b.WithInMemoryDefaults(),
-                "TestApp"))
+                TestApplicationName))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configure, applicationName) initializes the cache database.
-    /// </summary>
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configure, applicationName) initializes the cache database.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseConfigureShouldInitialize()
@@ -46,9 +64,7 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configureSerializer, configure, applicationName) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configureSerializer, configure, applicationName) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseFactoryConfigureShouldThrowOnNullBuilder() =>
@@ -57,7 +73,7 @@ public class AkavacheBuilderExtensionsTests
                 null!,
                 static () => new SystemJsonSerializer(),
                 static b => b.WithInMemoryDefaults(),
-                "TestApp"))
+                TestApplicationName))
             .Throws<ArgumentNullException>();
 
     /// <summary>
@@ -77,19 +93,15 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, applicationName) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, applicationName) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseDefaultShouldThrowOnNullBuilder() =>
         await Assert.That(static () =>
-            AkavacheBuilderExtensions.WithAkavacheCacheDatabase<SystemJsonSerializer>(null!, "TestApp"))
+            AkavacheBuilderExtensions.WithAkavacheCacheDatabase<SystemJsonSerializer>(null!, TestApplicationName))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, applicationName) initializes the cache database.
-    /// </summary>
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, applicationName) initializes the cache database.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseDefaultShouldInitialize()
@@ -101,9 +113,7 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configureSerializer, applicationName) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configureSerializer, applicationName) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseFactoryShouldThrowOnNullBuilder() =>
@@ -111,12 +121,10 @@ public class AkavacheBuilderExtensionsTests
             AkavacheBuilderExtensions.WithAkavacheCacheDatabase(
                 null!,
                 static () => new SystemJsonSerializer(),
-                "TestApp"))
+                TestApplicationName))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configureSerializer, applicationName) initializes the cache database.
-    /// </summary>
+    /// <summary>Tests WithAkavacheCacheDatabase&lt;T&gt;(builder, configureSerializer, applicationName) initializes the cache database.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheCacheDatabaseFactoryShouldInitialize()
@@ -130,40 +138,34 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(CacheDatabase.IsInitialized).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithAkavache&lt;T&gt;(builder, applicationName, configure, instance) throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavache&lt;T&gt;(builder, applicationName, configure, instance) throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheConfigureInstanceShouldThrowOnNullBuilder()
     {
-        Action<IAkavacheInstance> instance = _ => { };
+        Action<IAkavacheInstance> instance = static _ => { };
         await Assert.That(() =>
             AkavacheBuilderExtensions.WithAkavache<SystemJsonSerializer>(
                 null!,
-                "TestApp",
-                b => b.WithInMemoryDefaults(),
+                TestApplicationName,
+                static b => b.WithInMemoryDefaults(),
                 instance))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache configure-instance overload throws on null configure.
-    /// </summary>
+    /// <summary>Tests WithAkavache configure-instance overload throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheConfigureInstanceShouldThrowOnNullConfigure()
     {
         var appBuilder = AppBuilder.CreateSplatBuilder();
-        Action<IAkavacheInstance> instance = _ => { };
+        Action<IAkavacheInstance> instance = static _ => { };
         await Assert.That(() =>
-            appBuilder.WithAkavache<SystemJsonSerializer>("TestApp", null!, instance))
+            appBuilder.WithAkavache<SystemJsonSerializer>(TestApplicationName, null!, instance))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache configure-instance overload throws on null instance.
-    /// </summary>
+    /// <summary>Tests WithAkavache configure-instance overload throws on null instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheConfigureInstanceShouldThrowOnNullInstance()
@@ -172,15 +174,13 @@ public class AkavacheBuilderExtensionsTests
         Action<IAkavacheInstance>? instance = null;
         await Assert.That(() =>
             appBuilder.WithAkavache<SystemJsonSerializer>(
-                "TestApp",
-                b => b.WithInMemoryDefaults(),
+                TestApplicationName,
+                static b => b.WithInMemoryDefaults(),
                 instance!))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache configure-instance overload invokes configure and instance.
-    /// </summary>
+    /// <summary>Tests WithAkavache configure-instance overload invokes configure and instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheConfigureInstanceShouldInvokeCallbacks()
@@ -189,12 +189,12 @@ public class AkavacheBuilderExtensionsTests
         var instanceInvoked = false;
         var appBuilder = AppBuilder.CreateSplatBuilder();
 
-        appBuilder.WithAkavache<SystemJsonSerializer>(
+        _ = appBuilder.WithAkavache<SystemJsonSerializer>(
             "TestApp_ConfigInst",
             b =>
             {
                 configureInvoked = true;
-                b.WithInMemoryDefaults();
+                _ = b.WithInMemoryDefaults();
             },
             i => instanceInvoked = i is not null);
 
@@ -202,40 +202,34 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(instanceInvoked).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithAkavache resolver-instance overload throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavache resolver-instance overload throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheResolverInstanceShouldThrowOnNullBuilder()
     {
-        Action<IMutableDependencyResolver, IAkavacheInstance> instance = (_, _) => { };
+        Action<IMutableDependencyResolver, IAkavacheInstance> instance = static (_, _) => { };
         await Assert.That(() =>
             AkavacheBuilderExtensions.WithAkavache<SystemJsonSerializer>(
                 null!,
-                "TestApp",
-                b => b.WithInMemoryDefaults(),
+                TestApplicationName,
+                static b => b.WithInMemoryDefaults(),
                 instance))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache resolver-instance overload throws on null configure.
-    /// </summary>
+    /// <summary>Tests WithAkavache resolver-instance overload throws on null configure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheResolverInstanceShouldThrowOnNullConfigure()
     {
         var appBuilder = AppBuilder.CreateSplatBuilder();
-        Action<IMutableDependencyResolver, IAkavacheInstance> instance = (_, _) => { };
+        Action<IMutableDependencyResolver, IAkavacheInstance> instance = static (_, _) => { };
         await Assert.That(() =>
-            appBuilder.WithAkavache<SystemJsonSerializer>("TestApp", null!, instance))
+            appBuilder.WithAkavache<SystemJsonSerializer>(TestApplicationName, null!, instance))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache resolver-instance overload throws on null instance.
-    /// </summary>
+    /// <summary>Tests WithAkavache resolver-instance overload throws on null instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheResolverInstanceShouldThrowOnNullInstance()
@@ -243,26 +237,22 @@ public class AkavacheBuilderExtensionsTests
         var appBuilder = AppBuilder.CreateSplatBuilder();
         Action<IMutableDependencyResolver, IAkavacheInstance>? instance = null;
         await Assert.That(() =>
-            appBuilder.WithAkavache<SystemJsonSerializer>("TestApp", b => b.WithInMemoryDefaults(), instance!))
+            appBuilder.WithAkavache<SystemJsonSerializer>(TestApplicationName, static b => b.WithInMemoryDefaults(), instance!))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache simple instance overload throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavache simple instance overload throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheSimpleInstanceShouldThrowOnNullBuilder()
     {
-        Action<IAkavacheInstance> instance = _ => { };
+        Action<IAkavacheInstance> instance = static _ => { };
         await Assert.That(() =>
-            AkavacheBuilderExtensions.WithAkavache<SystemJsonSerializer>(null!, "TestApp", instance))
+            AkavacheBuilderExtensions.WithAkavache<SystemJsonSerializer>(null!, TestApplicationName, instance))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache simple instance overload throws on null instance.
-    /// </summary>
+    /// <summary>Tests WithAkavache simple instance overload throws on null instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheSimpleInstanceShouldThrowOnNullInstance()
@@ -270,13 +260,11 @@ public class AkavacheBuilderExtensionsTests
         var appBuilder = AppBuilder.CreateSplatBuilder();
         Action<IAkavacheInstance>? instance = null;
         await Assert.That(() =>
-            appBuilder.WithAkavache<SystemJsonSerializer>("TestApp", instance!))
+            appBuilder.WithAkavache<SystemJsonSerializer>(TestApplicationName, instance!))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache simple instance overload invokes the instance callback.
-    /// </summary>
+    /// <summary>Tests WithAkavache simple instance overload invokes the instance callback.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheSimpleInstanceShouldInvokeCallback()
@@ -284,29 +272,25 @@ public class AkavacheBuilderExtensionsTests
         var instanceInvoked = false;
         var appBuilder = AppBuilder.CreateSplatBuilder();
 
-        appBuilder.WithAkavache<SystemJsonSerializer>(
+        _ = appBuilder.WithAkavache<SystemJsonSerializer>(
             "TestApp_SimpleInst",
             i => instanceInvoked = i is not null);
 
         await Assert.That(instanceInvoked).IsTrue();
     }
 
-    /// <summary>
-    /// Tests WithAkavache simple resolver-instance overload throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithAkavache simple resolver-instance overload throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheSimpleResolverInstanceShouldThrowOnNullBuilder()
     {
-        Action<IMutableDependencyResolver, IAkavacheInstance> instance = (_, _) => { };
+        Action<IMutableDependencyResolver, IAkavacheInstance> instance = static (_, _) => { };
         await Assert.That(() =>
-            AkavacheBuilderExtensions.WithAkavache<SystemJsonSerializer>(null!, "TestApp", instance))
+            AkavacheBuilderExtensions.WithAkavache<SystemJsonSerializer>(null!, TestApplicationName, instance))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithAkavache simple resolver-instance overload throws on null instance.
-    /// </summary>
+    /// <summary>Tests WithAkavache simple resolver-instance overload throws on null instance.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithAkavacheSimpleResolverInstanceShouldThrowOnNullInstance()
@@ -314,22 +298,18 @@ public class AkavacheBuilderExtensionsTests
         var appBuilder = AppBuilder.CreateSplatBuilder();
         Action<IMutableDependencyResolver, IAkavacheInstance>? instance = null;
         await Assert.That(() =>
-            appBuilder.WithAkavache<SystemJsonSerializer>("TestApp", instance!))
+            appBuilder.WithAkavache<SystemJsonSerializer>(TestApplicationName, instance!))
             .Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithInMemory throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithInMemory throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryShouldThrowOnNullBuilder() =>
         await Assert.That(static () => AkavacheBuilderExtensions.WithInMemory(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithInMemory throws when no serializer is configured.
-    /// </summary>
+    /// <summary>Tests WithInMemory throws when no serializer is configured.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryShouldThrowWhenNoSerializerConfigured()
@@ -338,9 +318,7 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(() => builder.WithInMemory()).Throws<ArgumentNullException>();
     }
 
-    /// <summary>
-    /// Tests WithInMemory works when serializer is configured.
-    /// </summary>
+    /// <summary>Tests WithInMemory works when serializer is configured.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryShouldWorkWithSerializer()
@@ -353,18 +331,14 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(builder).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory throws on null builder.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnNullBuilder() =>
         await Assert.That(static () => AkavacheBuilderExtensions.GetIsolatedCacheDirectory(null!, "TestCache"))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory throws on null cache name.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory throws on null cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnNullCacheName()
@@ -374,9 +348,7 @@ public class AkavacheBuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory throws on empty cache name.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory throws on empty cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnEmptyCacheName()
@@ -386,33 +358,27 @@ public class AkavacheBuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory returns a valid path for UserAccount.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory returns a valid path for UserAccount.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldReturnPathForUserAccount()
     {
         var instance = CreateInstance("TestApp_UserAccountIso");
-        var path = instance.GetIsolatedCacheDirectory("UserAccount");
+        var path = instance.GetIsolatedCacheDirectory(UserAccountSlot);
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory returns a valid path for Secure.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory returns a valid path for Secure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldReturnPathForSecure()
     {
         var instance = CreateInstance("TestApp_SecureIso");
-        var path = instance.GetIsolatedCacheDirectory("Secure");
+        var path = instance.GetIsolatedCacheDirectory(SecureCacheSlot);
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory returns a valid path for SettingsCache.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory returns a valid path for SettingsCache.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldReturnPathForSettingsCache()
@@ -422,30 +388,24 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory returns a path for unknown cache name (default branch).
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory returns a path for unknown cache name (default branch).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldHandleUnknownCacheName()
     {
         var instance = CreateInstance("TestApp_UnknownIso");
-        var path = instance.GetIsolatedCacheDirectory("LocalMachine");
+        var path = instance.GetIsolatedCacheDirectory(LocalMachineSlot);
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory throws on null builder.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnNullBuilder() =>
         await Assert.That(static () => AkavacheBuilderExtensions.GetLegacyCacheDirectory(null!, "TestCache"))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory throws on null cache name.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory throws on null cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnNullCacheName()
@@ -455,9 +415,7 @@ public class AkavacheBuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory throws on empty cache name.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory throws on empty cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnEmptyCacheName()
@@ -467,50 +425,42 @@ public class AkavacheBuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory returns a path for LocalMachine.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory returns a path for LocalMachine.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldReturnPathForLocalMachine()
     {
         var instance = CreateInstance("TestApp_LegacyLM");
-        var path = instance.GetLegacyCacheDirectory("LocalMachine");
+        var path = instance.GetLegacyCacheDirectory(LocalMachineSlot);
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory returns a path for Secure.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory returns a path for Secure.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldReturnPathForSecure()
     {
         var instance = CreateInstance("TestApp_LegacySecure");
-        var path = instance.GetLegacyCacheDirectory("Secure");
+        var path = instance.GetLegacyCacheDirectory(SecureCacheSlot);
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory returns a path for UserAccount (default branch).
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory returns a path for UserAccount (default branch).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldReturnPathForUserAccount()
     {
         var instance = CreateInstance("TestApp_LegacyUA");
-        var path = instance.GetLegacyCacheDirectory("UserAccount");
+        var path = instance.GetLegacyCacheDirectory(UserAccountSlot);
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests CreateRecursive creates nested directories.
-    /// </summary>
+    /// <summary>Tests CreateRecursive creates nested directories.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateRecursiveShouldCreateNestedDirectories()
     {
-        var tempPath = Path.Combine(Path.GetTempPath(), "AkavacheTest", Guid.NewGuid().ToString("N"), "level1", "level2", "level3");
+        var tempPath = Path.Combine(Path.GetTempPath(), TempDirectoryRootName, Guid.NewGuid().ToString("N"), "level1", "level2", "level3");
         DirectoryInfo dirInfo = new(tempPath);
 
         try
@@ -520,23 +470,27 @@ public class AkavacheBuilderExtensionsTests
         }
         finally
         {
-            if (Directory.Exists(Path.Combine(Path.GetTempPath(), "AkavacheTest")))
+            if (Directory.Exists(Path.Combine(Path.GetTempPath(), TempDirectoryRootName)))
             {
                 try
                 {
-                    Directory.Delete(Path.Combine(Path.GetTempPath(), "AkavacheTest"), true);
+                    Directory.Delete(Path.Combine(Path.GetTempPath(), TempDirectoryRootName), true);
                 }
-                catch
+                catch (IOException)
                 {
-                    // best effort
+                    // Teardown only, and the assertion above has already run. A concurrently
+                    // running test still holding a handle under the shared temp root must not
+                    // turn a passing test red; the OS reclaims the directory later.
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // Same: a leftover read-only entry is a cleanup problem, not a test failure.
                 }
             }
         }
     }
 
-    /// <summary>
-    /// Tests SplitFullPath returns path components.
-    /// </summary>
+    /// <summary>Tests SplitFullPath returns path components.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SplitFullPathShouldReturnComponents()
@@ -546,15 +500,13 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(components.Count).IsGreaterThan(0);
     }
 
-    /// <summary>
-    /// Tests CreateRecursive is a no-op when the target directory already exists.
-    /// </summary>
+    /// <summary>Tests CreateRecursive is a no-op when the target directory already exists.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateRecursiveShouldBeNoOpWhenDirectoryExists()
     {
         var tempPath = Path.Combine(Path.GetTempPath(), "AkavacheTestExtra", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempPath);
+        _ = Directory.CreateDirectory(tempPath);
         DirectoryInfo dirInfo = new(tempPath);
 
         try
@@ -572,22 +524,25 @@ public class AkavacheBuilderExtensionsTests
             {
                 Directory.Delete(tempPath, true);
             }
-            catch
+            catch (IOException)
             {
-                // best effort
+                // Teardown only, and the assertions above have already run. A lingering handle
+                // on the throwaway directory must not turn a passing test red.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Same: a leftover read-only entry is a cleanup problem, not a test failure.
             }
         }
     }
 
-    /// <summary>
-    /// Tests CreateRecursive creates only the missing leaf when parents already exist.
-    /// </summary>
+    /// <summary>Tests CreateRecursive creates only the missing leaf when parents already exist.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateRecursiveShouldCreateOnlyMissingLeaf()
     {
         var root = Path.Combine(Path.GetTempPath(), "AkavacheTestExtra", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
+        _ = Directory.CreateDirectory(root);
         var leaf = Path.Combine(root, "newLeaf");
         DirectoryInfo dirInfo = new(leaf);
 
@@ -602,16 +557,19 @@ public class AkavacheBuilderExtensionsTests
             {
                 Directory.Delete(root, true);
             }
-            catch
+            catch (IOException)
             {
-                // best effort
+                // Teardown only, and the assertion above has already run. A lingering handle
+                // on the throwaway directory must not turn a passing test red.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Same: a leftover read-only entry is a cleanup problem, not a test failure.
             }
         }
     }
 
-    /// <summary>
-    /// Tests SplitFullPath includes the root as the first element.
-    /// </summary>
+    /// <summary>Tests SplitFullPath includes the root as the first element.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SplitFullPathShouldIncludeRoot()
@@ -620,7 +578,7 @@ public class AkavacheBuilderExtensionsTests
         DirectoryInfo dirInfo = new(full);
         var components = dirInfo.SplitFullPath().ToList();
 
-        await Assert.That(components.Count).IsGreaterThanOrEqualTo(4);
+        await Assert.That(components.Count).IsGreaterThanOrEqualTo(ThreeSegmentPathComponentCount);
 
         var expectedRoot = Path.GetPathRoot(dirInfo.FullName);
         await Assert.That(components[0]).IsEqualTo(expectedRoot);
@@ -629,9 +587,7 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(components).Contains("gamma");
     }
 
-    /// <summary>
-    /// Tests SplitFullPath handles a path whose last segment is the root itself.
-    /// </summary>
+    /// <summary>Tests SplitFullPath handles a path whose last segment is the root itself.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SplitFullPathShouldHandleRootOnlyPath()
@@ -650,9 +606,7 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(components[0]).IsEqualTo(root);
     }
 
-    /// <summary>
-    /// Tests SplitFullPath handles a single-component path beneath the root.
-    /// </summary>
+    /// <summary>Tests SplitFullPath handles a single-component path beneath the root.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SplitFullPathShouldHandleSingleComponentPath()
@@ -663,23 +617,21 @@ public class AkavacheBuilderExtensionsTests
             return;
         }
 
-        var single = Path.Combine(root, "single_" + Guid.NewGuid().ToString("N"));
+        var single = Path.Combine(root, $"single_{Guid.NewGuid():N}");
         DirectoryInfo dirInfo = new(single);
         var components = dirInfo.SplitFullPath().ToList();
 
-        await Assert.That(components.Count).IsGreaterThanOrEqualTo(2);
+        await Assert.That(components.Count).IsGreaterThanOrEqualTo(SingleSegmentPathComponentCount);
         await Assert.That(components[0]).IsEqualTo(root);
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory with a LocalMachine cache name triggers the machine/user store fallback path.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory with a LocalMachine cache name triggers the machine/user store fallback path.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldHandleLocalMachineBranch()
     {
         var instance = CreateInstance("TestApp_LMIsoExtra");
-        var path = instance.GetIsolatedCacheDirectory("LocalMachine");
+        var path = instance.GetIsolatedCacheDirectory(LocalMachineSlot);
         await Assert.That(path).IsNotNull();
     }
 
@@ -691,17 +643,15 @@ public class AkavacheBuilderExtensionsTests
     public async Task GetIsolatedCacheDirectoryShouldBeIdempotent()
     {
         var instance = CreateInstance("TestApp_IsoIdem");
-        var first = instance.GetIsolatedCacheDirectory("UserAccount");
-        var second = instance.GetIsolatedCacheDirectory("UserAccount");
+        var first = instance.GetIsolatedCacheDirectory(UserAccountSlot);
+        var second = instance.GetIsolatedCacheDirectory(UserAccountSlot);
 
         await Assert.That(first).IsNotNull();
         await Assert.That(second).IsNotNull();
         await Assert.That(second).IsEqualTo(first);
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory throws ArgumentException when ApplicationName is whitespace.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory throws ArgumentException when ApplicationName is whitespace.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnWhitespaceCacheName()
@@ -711,9 +661,7 @@ public class AkavacheBuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory throws ArgumentException on whitespace cache name.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory throws ArgumentException on whitespace cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnWhitespaceCacheName()
@@ -723,9 +671,7 @@ public class AkavacheBuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory returns a path for SettingsCache (hits the default switch branch).
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory returns a path for SettingsCache (hits the default switch branch).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldReturnPathForSettingsCache()
@@ -735,18 +681,16 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(path).IsNotNull();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory returns paths that contain the application name.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory returns paths that contain the application name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryPathShouldContainApplicationName()
     {
         const string appName = "TestApp_LegacyContainsName";
         var instance = CreateInstance(appName);
-        var localMachine = instance.GetLegacyCacheDirectory("LocalMachine");
-        var secure = instance.GetLegacyCacheDirectory("Secure");
-        var userAccount = instance.GetLegacyCacheDirectory("UserAccount");
+        var localMachine = instance.GetLegacyCacheDirectory(LocalMachineSlot);
+        var secure = instance.GetLegacyCacheDirectory(SecureCacheSlot);
+        var userAccount = instance.GetLegacyCacheDirectory(UserAccountSlot);
 
         await Assert.That(localMachine).IsNotNull();
         await Assert.That(localMachine!).Contains(appName);
@@ -756,24 +700,20 @@ public class AkavacheBuilderExtensionsTests
         await Assert.That(userAccount!).Contains(appName);
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory uses a path constructed from the application name and cache name.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory uses a path constructed from the application name and cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryPathShouldReferenceCacheName()
     {
         const string appName = "TestApp_IsoContains";
         var instance = CreateInstance(appName);
-        var path = instance.GetIsolatedCacheDirectory("UserAccount");
+        var path = instance.GetIsolatedCacheDirectory(UserAccountSlot);
 
         await Assert.That(path).IsNotNull();
-        await Assert.That(path!).Contains("UserAccount");
+        await Assert.That(path!).Contains(UserAccountSlot);
     }
 
-    /// <summary>
-    /// Tests WithInMemory returns the same builder for chaining.
-    /// </summary>
+    /// <summary>Tests WithInMemory returns the same builder for chaining.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithInMemoryShouldReturnSameBuilder()
@@ -802,12 +742,12 @@ public class AkavacheBuilderExtensionsTests
         Action<IAkavacheBuilder> configure = b =>
         {
             configureInvoked = true;
-            b.WithInMemoryDefaults();
+            _ = b.WithInMemoryDefaults();
         };
         Action<IMutableDependencyResolver, IAkavacheInstance> instance = (resolver, i) =>
             instanceInvoked = resolver is not null && i is not null;
 
-        appBuilder
+        _ = appBuilder
             .WithAkavache<SystemJsonSerializer>("TestApp_ConfigResolverBuild", configure, instance)
             .Build();
 
@@ -832,7 +772,7 @@ public class AkavacheBuilderExtensionsTests
         Action<IMutableDependencyResolver, IAkavacheInstance> instance = (resolver, i) =>
             instanceInvoked = resolver is not null && i is not null;
 
-        appBuilder
+        _ = appBuilder
             .WithAkavache<SystemJsonSerializer>("TestApp_SimpleResolverBuild", instance)
             .Build();
 
@@ -850,20 +790,17 @@ public class AkavacheBuilderExtensionsTests
     public async Task GetIsolatedCacheDirectoryShouldThrowOnNullApplicationName()
     {
         StubAkavacheInstance stub = new(null);
-        await Assert.That(() => stub.GetIsolatedCacheDirectory("UserAccount"))
+        await Assert.That(() => stub.GetIsolatedCacheDirectory(UserAccountSlot))
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetIsolatedCacheDirectory throws ArgumentException when the instance's
-    /// ApplicationName is whitespace only.
-    /// </summary>
+    /// <summary>Tests GetIsolatedCacheDirectory throws ArgumentException when the instance's ApplicationName is whitespace only.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetIsolatedCacheDirectoryShouldThrowOnWhitespaceApplicationName()
     {
         StubAkavacheInstance stub = new("   ");
-        await Assert.That(() => stub.GetIsolatedCacheDirectory("UserAccount"))
+        await Assert.That(() => stub.GetIsolatedCacheDirectory(UserAccountSlot))
             .Throws<ArgumentException>();
     }
 
@@ -876,20 +813,17 @@ public class AkavacheBuilderExtensionsTests
     public async Task GetLegacyCacheDirectoryShouldThrowOnNullApplicationName()
     {
         StubAkavacheInstance stub = new(null);
-        await Assert.That(() => stub.GetLegacyCacheDirectory("LocalMachine"))
+        await Assert.That(() => stub.GetLegacyCacheDirectory(LocalMachineSlot))
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests GetLegacyCacheDirectory throws ArgumentException when the instance's
-    /// ApplicationName is whitespace only.
-    /// </summary>
+    /// <summary>Tests GetLegacyCacheDirectory throws ArgumentException when the instance's ApplicationName is whitespace only.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task GetLegacyCacheDirectoryShouldThrowOnWhitespaceApplicationName()
     {
         StubAkavacheInstance stub = new("\t");
-        await Assert.That(() => stub.GetLegacyCacheDirectory("LocalMachine"))
+        await Assert.That(() => stub.GetLegacyCacheDirectory(LocalMachineSlot))
             .Throws<ArgumentException>();
     }
 
@@ -928,15 +862,15 @@ public class AkavacheBuilderExtensionsTests
     /// <returns>A task that completes when the condition is observed or the timeout elapses.</returns>
     private static async Task WaitUntilAsync(Func<bool> condition, int timeoutMs = 5000)
     {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        while (sw.ElapsedMilliseconds < timeoutMs)
+        var start = System.Diagnostics.Stopwatch.GetTimestamp();
+        while (System.Diagnostics.Stopwatch.GetElapsedTime(start).TotalMilliseconds < timeoutMs)
         {
             if (condition())
             {
                 return;
             }
 
-            await Task.Delay(25).ConfigureAwait(false);
+            await Task.Delay(PollIntervalMilliseconds).ConfigureAwait(false);
         }
     }
 

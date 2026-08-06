@@ -17,15 +17,15 @@ namespace Akavache.Settings.Tests.Executors;
 public class AkavacheTestExecutorBase : ITestExecutor
 {
     /// <inheritdoc />
-    public async ValueTask ExecuteTest(TestContext context, Func<ValueTask> testAction)
+    public async ValueTask ExecuteTest(TestContext context, Func<ValueTask> action)
     {
-        ArgumentNullException.ThrowIfNull(testAction);
+        ArgumentNullException.ThrowIfNull(action);
 
         try
         {
             await ResetStateAsync().ConfigureAwait(false);
             ConfigureBuilder();
-            await testAction().ConfigureAwait(false);
+            await action().ConfigureAwait(false);
         }
         finally
         {

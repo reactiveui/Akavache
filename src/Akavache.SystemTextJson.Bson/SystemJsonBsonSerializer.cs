@@ -9,6 +9,11 @@ using Akavache.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
+// Both serializers ship a JsonException, and both namespaces are imported here, so the bare
+// name binds to neither. Aliasing keeps each catch clause short and says which stack threw.
+using NewtonsoftJsonException = Newtonsoft.Json.JsonException;
+using SystemTextJsonException = System.Text.Json.JsonException;
+
 namespace Akavache.SystemTextJson;
 
 /// <summary>
@@ -17,12 +22,19 @@ namespace Akavache.SystemTextJson;
 /// </summary>
 public partial class SystemJsonBsonSerializer : ISerializer
 {
+    /// <summary>Byte width of the length field every BSON document opens with.</summary>
+    private const int BsonLengthPrefixSize = 4;
+
+    /// <summary>
+    /// Slack allowed between the length a BSON document declares and the buffer actually handed
+    /// over, so a payload carrying a trailing framing byte or two still reads as plausible.
+    /// </summary>
+    private const int BsonLengthTolerance = 100;
+
     /// <summary>The inner JSON serializer used for the JSON fallback path.</summary>
     private readonly SystemJsonSerializer _jsonSerializer = new();
 
-    /// <summary>
-    /// Gets or sets the JSON serializer options for customizing serialization behavior.
-    /// </summary>
+    /// <summary>Gets or sets the JSON serializer options for customizing serialization behavior.</summary>
     public JsonSerializerOptions? Options
     {
         get => _jsonSerializer.Options;
@@ -32,34 +44,25 @@ public partial class SystemJsonBsonSerializer : ISerializer
     /// <inheritdoc/>
     public DateTimeKind? ForcedDateTimeKind { get; set; } = DateTimeKind.Utc;
 
-    /// <summary>
-    /// Checks if data might be BSON format.
-    /// </summary>
+    /// <summary>Checks if data might be BSON format.</summary>
     /// <param name="data">The data to check.</param>
     /// <returns>True if data might be BSON.</returns>
     public static bool IsPotentialBsonData(byte[] data)
     {
-        if (data is null || data.Length < 5)
+        if (data is null || data.Length <= BsonLengthPrefixSize)
         {
             return false;
         }
 
         var documentLength = BitConverter.ToInt32(data, 0);
 
-        if (documentLength <= 4 || documentLength > data.Length + 100)
+        if (documentLength <= BsonLengthPrefixSize || documentLength > data.Length + BsonLengthTolerance)
         {
             return false;
         }
 
-        var firstChar = data[4];
-        if (firstChar is (byte)'{' or (byte)'[' or (byte)'"')
-        {
-            return false;
-        }
-
-        // If the payload starts with a JSON opener (after whitespace), it's probably JSON,
-        // not BSON. Byte-level probe — zero allocations.
-        return !BinaryHelpers.StartsWithJsonOpener(data);
+        var firstChar = data[BsonLengthPrefixSize];
+        return firstChar is (byte)'{' or (byte)'[' or (byte)'"' ? false : !BinaryHelpers.StartsWithJsonOpener(data);
     }
 
     /// <summary>
@@ -93,7 +96,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     [RequiresDynamicCode("Reflection-based BSON deserialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
     public T? Deserialize<T>(byte[] bytes)
     {
-        if (bytes == null || bytes.Length == 0)
+        if (bytes is null || bytes.Length == 0)
         {
             return default;
         }
@@ -104,7 +107,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
         if (IsPotentialBsonData(bytes))
         {
             var bsonResult = DeserializeBsonFormat<T>(bytes);
-            if (bsonResult != null || typeof(T).IsValueType)
+            if (bsonResult is not null || typeof(T).IsValueType)
             {
                 return bsonResult;
             }
@@ -126,9 +129,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
     [RequiresDynamicCode("Reflection-based BSON serialization. For AOT-safe paths use the JsonTypeInfo overload (JSON only).")]
     public byte[] Serialize<T>(T item) => SerializeToBson(item);
 
-    /// <summary>
-    /// Normalizes DateTime formats from Newtonsoft.Json to System.Text.Json compatible format.
-    /// </summary>
+    /// <summary>Normalizes DateTime formats from Newtonsoft.Json to System.Text.Json compatible format.</summary>
     /// <param name="jsonString">The JSON string to normalize.</param>
     /// <returns>Normalized JSON string.</returns>
     internal static string NormalizeDateTimeFormats(string jsonString)
@@ -155,11 +156,7 @@ public partial class SystemJsonBsonSerializer : ISerializer
         });
     }
 
-    /// <summary>
-    /// Attempts to decode <paramref name="jsonString"/> as an
-    /// <see cref="ObjectWrapper{T}"/>, preferring System.Text.Json and falling
-    /// back to Newtonsoft.Json.
-    /// </summary>
+    /// <summary>Attempts to decode <paramref name="jsonString"/> as an <see cref="ObjectWrapper{T}"/>, preferring System.Text.Json and falling back to Newtonsoft.Json.</summary>
     /// <typeparam name="T">The wrapped value type.</typeparam>
     /// <param name="jsonString">The JSON string to decode.</param>
     /// <param name="options">The System.Text.Json options to use.</param>
@@ -179,9 +176,9 @@ public partial class SystemJsonBsonSerializer : ISerializer
                 return true;
             }
         }
-        catch
+        catch (SystemTextJsonException)
         {
-            // Fall through to Newtonsoft.
+            // Not a System.Text.Json-shaped wrapper. Fall through to Newtonsoft.
         }
 
         try
@@ -193,18 +190,17 @@ public partial class SystemJsonBsonSerializer : ISerializer
                 return true;
             }
         }
-        catch
+        catch (NewtonsoftJsonException)
         {
-            // Give up — caller falls through to direct deserialization.
+            // Not a Newtonsoft-shaped wrapper either. The caller falls through to direct
+            // deserialization.
         }
 
         value = default;
         return false;
     }
 
-    /// <summary>
-    /// Serializes <paramref name="item"/> to BSON bytes, falling back to plain JSON on failure.
-    /// </summary>
+    /// <summary>Serializes <paramref name="item"/> to BSON bytes, falling back to plain JSON on failure.</summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="item">The item to serialize.</param>
     /// <returns>The serialized BSON (or JSON fallback) bytes.</returns>
@@ -255,8 +251,8 @@ public partial class SystemJsonBsonSerializer : ISerializer
             var token = Newtonsoft.Json.Linq.JToken.ReadFrom(reader);
             var jsonString = token.ToString(Formatting.None);
 
-            if (jsonString.Contains("\"Value\":") &&
-                TryUnwrapObjectWrapper<T>(jsonString, _jsonSerializer.GetEffectiveOptions(), out var wrappedValue))
+            if (jsonString.Contains("\"Value\":")
+                && TryUnwrapObjectWrapper<T>(jsonString, _jsonSerializer.GetEffectiveOptions(), out var wrappedValue))
             {
                 return wrappedValue;
             }
@@ -267,51 +263,53 @@ public partial class SystemJsonBsonSerializer : ISerializer
                 var directOptions = _jsonSerializer.GetEffectiveOptions();
                 return System.Text.Json.JsonSerializer.Deserialize<T>(normalizedJson, directOptions);
             }
-            catch
+            catch (SystemTextJsonException)
             {
-                // Try Newtonsoft as last resort
+                // System.Text.Json cannot read this shape; try Newtonsoft as a last resort.
+            }
+            catch (NotSupportedException)
+            {
+                // The target type has no System.Text.Json converter; Newtonsoft may still cope.
             }
 
             try
             {
                 return JsonConvert.DeserializeObject<T>(jsonString);
             }
-            catch
+            catch (NewtonsoftJsonException)
             {
-                // Final fallback
+                // Neither serializer can read the payload; the caller gets the default value.
             }
         }
-        catch
+        catch (NewtonsoftJsonException)
         {
-            // Fall back if BSON handling fails
+            // The buffer is not readable as BSON at all. A malformed or truncated document
+            // arrives here too: the reader wraps the underlying end-of-stream as a read error
+            // rather than letting it escape, and the stream is memory over the caller's array.
         }
 
         return default;
     }
 
-    /// <summary>
-    /// Wraps a value so that primitive and root-level types can be encoded as a
-    /// BSON document (BSON requires an object root).
-    /// </summary>
+    /// <summary>Wraps a value so that primitive and root-level types can be encoded as a BSON document (BSON requires an object root).</summary>
     /// <typeparam name="T">The wrapped value type.</typeparam>
     internal class ObjectWrapper<T>
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class.</summary>
         public ObjectWrapper()
         {
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class with the supplied value.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="ObjectWrapper{T}"/> class with the supplied value.</summary>
         /// <param name="value">The value to wrap.</param>
         public ObjectWrapper(T? value) => Value = value;
 
-        /// <summary>
-        /// Gets or sets the wrapped value.
-        /// </summary>
+        /// <summary>Gets or sets the wrapped value.</summary>
+        /// <remarks>
+        /// Must stay public. System.Text.Json ignores a non-public property without reporting
+        /// anything, so narrowing this to match the wrapper's own accessibility makes every
+        /// wrapped payload round-trip as an empty object instead of failing loudly.
+        /// </remarks>
         public T? Value { get; set; }
     }
 }

@@ -19,21 +19,21 @@ namespace Akavache;
 /// <param name="serializer">The serializer to use for serializing and deserializing data.</param>
 public sealed class InMemoryBlobCache(IScheduler scheduler, ISerializer? serializer) : InMemoryBlobCacheBase(scheduler, serializer)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCache" /> class with default scheduler.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="InMemoryBlobCache" /> class with default scheduler.</summary>
     /// <param name="serialzerType">Type of the serialzer.</param>
     public InMemoryBlobCache(string serialzerType)
-        : this(CacheDatabase.TaskpoolScheduler, ArgumentExceptionHelper.EnsureNotNull(AppLocator.Current.GetService<ISerializer>(contract: serialzerType), "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
+        : this(
+            CacheDatabase.TaskpoolScheduler,
+            ArgumentValidation.EnsureNotNull(
+                AppLocator.Current.GetService<ISerializer>(contract: serialzerType),
+                "No default serializer available. Please ensure Akavache.SystemTextJson is referenced."))
     {
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.
-    /// </summary>
+    /// <summary>Initializes a new instance of the <see cref="InMemoryBlobCache"/> class.</summary>
     /// <param name="serializer">The serializer to use for object serialization/deserialization.</param>
     public InMemoryBlobCache(ISerializer serializer)
-        : this(CacheDatabase.TaskpoolScheduler, ArgumentExceptionHelper.EnsureNotNull(serializer))
+        : this(CacheDatabase.TaskpoolScheduler, ArgumentValidation.EnsureNotNull(serializer))
     {
     }
 }

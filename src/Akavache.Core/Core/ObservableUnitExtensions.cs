@@ -15,14 +15,18 @@ namespace Akavache.Core;
 /// </summary>
 internal static class ObservableUnitExtensions
 {
-    /// <summary>
-    /// Projects every emission of <paramref name="source"/> onto <see cref="Unit.Default"/>,
-    /// producing an <see cref="IObservable{T}"/> of <see cref="Unit"/>. Equivalent to
-    /// <c>source.Select(static _ =&gt; Unit.Default)</c> but clearer at the call site.
-    /// </summary>
+    /// <summary>Unit-normalisation helpers for an observable of any element type.</summary>
     /// <typeparam name="T">The element type of the source observable (ignored).</typeparam>
     /// <param name="source">The observable whose emissions should be normalised to <see cref="Unit.Default"/>.</param>
-    /// <returns>An observable that emits <see cref="Unit.Default"/> once per emission of <paramref name="source"/>.</returns>
-    public static IObservable<Unit> SelectUnit<T>(this IObservable<T> source) =>
-        new SelectConstantObservable<T, Unit>(source, Unit.Default);
+    extension<T>(IObservable<T> source)
+    {
+        /// <summary>
+        /// Projects every emission of <paramref name="source"/> onto <see cref="Unit.Default"/>,
+        /// producing an <see cref="IObservable{T}"/> of <see cref="Unit"/>. Equivalent to
+        /// <c>source.Select(static _ =&gt; Unit.Default)</c> but clearer at the call site.
+        /// </summary>
+        /// <returns>An observable that emits <see cref="Unit.Default"/> once per emission of <paramref name="source"/>.</returns>
+        internal IObservable<Unit> SelectUnit() =>
+            new SelectConstantObservable<T, Unit>(source, Unit.Default);
+    }
 }

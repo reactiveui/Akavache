@@ -6,14 +6,10 @@ using BenchmarkDotNet.Running;
 
 namespace Akavache.Benchmarks.V10;
 
-/// <summary>
-/// Main entry point class for Akavache V10 benchmarks.
-/// </summary>
+/// <summary> Main entry point class for Akavache V10 benchmarks. </summary>
 public static class Program
 {
-    /// <summary>
-    /// Main entry point.
-    /// </summary>
+    /// <summary> Main entry point. </summary>
     /// <param name="args">Arguments.</param>
     public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 }

@@ -6,15 +6,41 @@ using Akavache.Core.Observables;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="FirstMatchFromCandidatesObservable{TKey, TRaw, TResult}"/>.
-/// </summary>
+/// <summary>Tests for <see cref="FirstMatchFromCandidatesObservable{TKey, TRaw, TResult}"/>.</summary>
 [Category("Akavache")]
 public class FirstMatchFromCandidatesObservableTests
 {
-    /// <summary>
-    /// Empty candidate list emits the fallback value immediately.
-    /// </summary>
+    /// <summary>Fallback emitted when every candidate is probed and none satisfies the predicate.</summary>
+    private const int NoMatchFallbackValue = -99;
+
+    /// <summary>Fallback emitted when every candidate's projection faults.</summary>
+    private const int AllErrorsFallbackValue = -42;
+
+    /// <summary>Factor the sync-loop test's projection applies to each candidate key.</summary>
+    private const int ProjectionMultiplier = 10;
+
+    /// <summary>The projected value the sync-loop test's predicate accepts (the second candidate scaled by <see cref="ProjectionMultiplier"/>).</summary>
+    private const int MatchingProjectedValue = 20;
+
+    /// <summary>Fallback emitted by the cases where no candidate ever satisfies the predicate.</summary>
+    private const string FallbackText = "fallback";
+
+    /// <summary>Key of the candidate whose projection stays pending until the test pushes into it.</summary>
+    private const string PendingCandidateKey = "slow";
+
+    /// <summary>Key of the candidate that resolves inline once the pending one gives up.</summary>
+    private const string InlineCandidateKey = "fast";
+
+    /// <summary>The inline candidate's value, and the only value its predicate accepts.</summary>
+    private const string InlineCandidateValue = "fast-value";
+
+    /// <summary>Raw value pushed into the pending candidate's projection.</summary>
+    private const string PendingCandidateRawValue = "pending";
+
+    /// <summary>The pending candidate's raw value after the transform — what its predicate accepts.</summary>
+    private const string PendingCandidateMatchValue = "pending!";
+
+    /// <summary>Empty candidate list emits the fallback value immediately.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EmptyCandidates_EmitsFallback()
@@ -30,9 +56,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(result).IsEqualTo(-1);
     }
 
-    /// <summary>
-    /// First candidate matches — emits it and completes.
-    /// </summary>
+    /// <summary>First candidate matches — emits it and completes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task FirstCandidateMatches_EmitsAndCompletes()
@@ -50,9 +74,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(result).IsEqualTo("A");
     }
 
-    /// <summary>
-    /// Match is on the third candidate — first two are skipped.
-    /// </summary>
+    /// <summary>Match is on the third candidate — first two are skipped.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ThirdCandidateMatches_SkipsFirstTwo()
@@ -76,9 +98,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(projected).IsEquivalentTo(["x", "y", "z"]);
     }
 
-    /// <summary>
-    /// No candidate matches — emits fallback.
-    /// </summary>
+    /// <summary>No candidate matches — emits fallback.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task NoCandidateMatches_EmitsFallback()
@@ -87,18 +107,16 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, int>(
             keys,
-            static k => Observable.Return(k),
+            Observable.Return,
             static x => x,
             static _ => false,
-            -99);
+            NoMatchFallbackValue);
 
         var result = await sut.FirstAsync();
-        await Assert.That(result).IsEqualTo(-99);
+        await Assert.That(result).IsEqualTo(NoMatchFallbackValue);
     }
 
-    /// <summary>
-    /// Projection error on a candidate is swallowed — advances to next.
-    /// </summary>
+    /// <summary>Projection error on a candidate is swallowed — advances to next.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ProjectionError_SkipsCandidate()
@@ -107,7 +125,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            k => k == "boom"
+            static k => k == "boom"
                 ? Observable.Throw<string>(new InvalidOperationException("bang"))
                 : Observable.Return(k),
             static x => x,
@@ -118,9 +136,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(result).IsEqualTo("ok");
     }
 
-    /// <summary>
-    /// Projection factory throwing (not returning an erroring observable) is swallowed.
-    /// </summary>
+    /// <summary>Projection factory throwing (not returning an erroring observable) is swallowed.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ProjectionFactoryThrows_SkipsCandidate()
@@ -129,7 +145,7 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            k => k == "throw"
+            static k => k == "throw"
                 ? throw new InvalidOperationException("factory boom")
                 : Observable.Return(k),
             static x => x,
@@ -140,9 +156,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(result).IsEqualTo("ok");
     }
 
-    /// <summary>
-    /// Transform exception is swallowed — candidate treated as non-match.
-    /// </summary>
+    /// <summary>Transform exception is swallowed — candidate treated as non-match.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TransformThrows_SkipsCandidate()
@@ -151,8 +165,8 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, string>(
             keys,
-            static k => Observable.Return(k),
-            k => k == 1 ? throw new InvalidOperationException("transform boom") : k.ToString(),
+            Observable.Return,
+            static k => k == 1 ? throw new InvalidOperationException("transform boom") : k.ToString(),
             static _ => true,
             "none");
 
@@ -160,9 +174,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(result).IsEqualTo("2");
     }
 
-    /// <summary>
-    /// All projections error — emits fallback.
-    /// </summary>
+    /// <summary>All projections error — emits fallback.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AllProjectionsError_EmitsFallback()
@@ -180,9 +192,7 @@ public class FirstMatchFromCandidatesObservableTests
         await Assert.That(result).IsEqualTo(-1);
     }
 
-    /// <summary>
-    /// Dispose during async iteration stops further candidates.
-    /// </summary>
+    /// <summary>Dispose during async iteration stops further candidates.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task Dispose_StopsFurtherCandidates()
@@ -191,30 +201,27 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
             keys,
-            static k => Observable.Return(k),
+            Observable.Return,
             static x => x,
             static _ => false, // never match — would normally exhaust all candidates
-            "fallback");
+            FallbackText);
 
         // Subscribe and immediately dispose after first candidate
         string? received = null;
         var completed = false;
-        sut.Subscribe(
+        _ = sut.Subscribe(
             v => received = v,
-            _ => { },
+            static _ => { },
             () => completed = true);
 
         // With sync completion and no match, all candidates are tried synchronously.
         // The subscribe already completed by the time we get here.
         await Assert.That(completed).IsTrue();
-        await Assert.That(received).IsEqualTo("fallback");
+        await Assert.That(received).IsEqualTo(FallbackText);
     }
 
     // ── SyncProbe fast-path tests ───────────────────────────────────────
-
-    /// <summary>
-    /// Sync sources (Observable.Return) take the fast-path and return Disposable.Empty.
-    /// </summary>
+    /// <summary>Sync sources (Observable.Return) take the fast-path and return Disposable.Empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SyncSource_TakesFastPath()
@@ -230,18 +237,193 @@ public class FirstMatchFromCandidatesObservableTests
 
         string? result = null;
         var completed = false;
-        sut.Subscribe(
+        _ = sut.Subscribe(
             v => result = v,
-            _ => { },
+            static _ => { },
             () => completed = true);
 
         await Assert.That(result).IsEqualTo("found");
         await Assert.That(completed).IsTrue();
     }
 
-    /// <summary>
-    /// TrySyncLoop is exercised directly — verifies the internal sync fast-path.
-    /// </summary>
+    // ── Async continuation tests ────────────────────────────────────────
+    // A projection that does not complete on the calling thread pushes the
+    // subscription off the SyncProbe fast-path and onto the async walker,
+    // which re-projects the pending candidate and resumes from there.
+    /// <summary>A candidate that produces its value later still reaches the downstream observer.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateEmitsMatch_ForwardsValueAndCompletes()
+    {
+        using Subject<string> pending = new();
+        List<string> keys = [PendingCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            _ => pending,
+            static x => $"{x}!",
+            static v => v == PendingCandidateMatchValue,
+            "none");
+
+        string? received = null;
+        var completed = false;
+        _ = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            () => completed = true);
+
+        // Nothing has been produced yet, so the subscriber must still be waiting.
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsNull();
+            await Assert.That(completed).IsFalse();
+        }
+
+        pending.OnNext(PendingCandidateRawValue);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsEqualTo(PendingCandidateMatchValue);
+            await Assert.That(completed).IsTrue();
+        }
+    }
+
+    /// <summary>A pending candidate that completes without a value hands over to the next candidate.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateCompletesEmpty_AdvancesToNextCandidate()
+    {
+        using Subject<string> pending = new();
+        List<string> keys = [PendingCandidateKey, InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k == PendingCandidateKey ? pending : Observable.Return(InlineCandidateValue),
+            static x => x,
+            static v => v == InlineCandidateValue,
+            "none");
+
+        string? received = null;
+        var completed = false;
+        _ = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            () => completed = true);
+
+        await Assert.That(received).IsNull();
+
+        // The first candidate yields nothing, so the walker must move on to the second.
+        pending.OnCompleted();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsEqualTo(InlineCandidateValue);
+            await Assert.That(completed).IsTrue();
+        }
+    }
+
+    /// <summary>An error from a pending candidate is swallowed and the next candidate is tried.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidateErrors_AdvancesToNextCandidate()
+    {
+        using Subject<string> pending = new();
+        List<string> keys = [PendingCandidateKey, InlineCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            k => k == PendingCandidateKey ? pending : Observable.Return(InlineCandidateValue),
+            static x => x,
+            static v => v == InlineCandidateValue,
+            "none");
+
+        string? received = null;
+        Exception? error = null;
+        var completed = false;
+        _ = sut.Subscribe(
+            v => received = v,
+            ex => error = ex,
+            () => completed = true);
+
+        pending.OnError(new InvalidOperationException("candidate boom"));
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(error).IsNull();
+            await Assert.That(received).IsEqualTo(InlineCandidateValue);
+            await Assert.That(completed).IsTrue();
+        }
+    }
+
+    /// <summary>Once the walker runs out of candidates it emits the fallback and completes.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task AsyncCandidatesExhausted_EmitsFallback()
+    {
+        using Subject<string> pending = new();
+        List<string> keys = [PendingCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            _ => pending,
+            static x => x,
+            static _ => true,
+            FallbackText);
+
+        string? received = null;
+        var completed = false;
+        _ = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            () => completed = true);
+
+        pending.OnCompleted();
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsEqualTo(FallbackText);
+            await Assert.That(completed).IsTrue();
+        }
+    }
+
+    /// <summary>Disposing the subscription tears down the in-flight candidate subscription the walker is holding.</summary>
+    /// <returns>A task.</returns>
+    [Test]
+    public async Task DisposeDuringAsyncCandidate_UnsubscribesFromSource()
+    {
+        using Subject<string> pending = new();
+        List<string> keys = [PendingCandidateKey];
+
+        var sut = new FirstMatchFromCandidatesObservable<string, string, string>(
+            keys,
+            _ => pending,
+            static x => x,
+            static _ => true,
+            FallbackText);
+
+        string? received = null;
+        var completed = false;
+        var subscription = sut.Subscribe(
+            v => received = v,
+            static _ => { },
+            () => completed = true);
+
+        await Assert.That(pending.HasObservers).IsTrue();
+
+        subscription.Dispose();
+
+        await Assert.That(pending.HasObservers).IsFalse();
+
+        pending.OnNext("too late");
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(received).IsNull();
+            await Assert.That(completed).IsFalse();
+        }
+    }
+
+    /// <summary>TrySyncLoop is exercised directly — verifies the internal sync fast-path.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TrySyncLoop_MatchOnSecondCandidate()
@@ -250,25 +432,23 @@ public class FirstMatchFromCandidatesObservableTests
 
         var sut = new FirstMatchFromCandidatesObservable<int, int, int>(
             keys,
-            static k => Observable.Return(k * 10),
+            static k => Observable.Return(k * ProjectionMultiplier),
             static x => x,
-            static v => v == 20,
+            static v => v == MatchingProjectedValue,
             -1);
 
         int? result = null;
         var completed = false;
-        sut.TrySyncLoop(Observer.Create<int>(
+        _ = sut.TrySyncLoop(Observer.Create<int>(
             v => result = v,
-            _ => { },
+            static _ => { },
             () => completed = true));
 
-        await Assert.That(result).IsEqualTo(20);
+        await Assert.That(result).IsEqualTo(MatchingProjectedValue);
         await Assert.That(completed).IsTrue();
     }
 
-    /// <summary>
-    /// TrySyncLoop with all errors returns fallback.
-    /// </summary>
+    /// <summary>TrySyncLoop with all errors returns fallback.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TrySyncLoop_AllErrors_ReturnsFallback()
@@ -280,14 +460,14 @@ public class FirstMatchFromCandidatesObservableTests
             static _ => Observable.Throw<int>(new InvalidOperationException("fail")),
             static x => x,
             static _ => true,
-            -42);
+            AllErrorsFallbackValue);
 
         int? result = null;
-        sut.TrySyncLoop(Observer.Create<int>(
+        _ = sut.TrySyncLoop(Observer.Create<int>(
             v => result = v,
-            _ => { },
-            () => { }));
+            static _ => { },
+            static () => { }));
 
-        await Assert.That(result).IsEqualTo(-42);
+        await Assert.That(result).IsEqualTo(AllErrorsFallbackValue);
     }
 }

@@ -6,9 +6,7 @@ using Akavache.Tests.TestBases;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for DateTime operations associated with the <see cref="InMemoryBlobCache"/> class with BSON serialization.
-/// </summary>
+/// <summary>Tests for DateTime operations associated with the <see cref="InMemoryBlobCache"/> class with BSON serialization.</summary>
 [InheritsTests]
 public class NewtonsoftBsonInMemoryBlobCacheDateTimeTests : DateTimeTestBase
 {

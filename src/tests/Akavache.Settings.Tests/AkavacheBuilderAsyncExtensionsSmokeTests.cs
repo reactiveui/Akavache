@@ -18,7 +18,7 @@ namespace Akavache.Settings.Tests;
 public class AkavacheBuilderAsyncExtensionsSmokeTests
 {
     /// <summary>
-    /// Verifies <see cref="AkavacheBuilderAsyncExtensions.DisposeSettingsStoreAsync{T}"/>
+    /// Verifies <c>DisposeSettingsStoreAsync&lt;T&gt;()</c>
     /// completes without throwing when no settings store has been registered for the
     /// type (the observable path also no-ops in this case).
     /// </summary>
@@ -29,16 +29,16 @@ public class AkavacheBuilderAsyncExtensionsSmokeTests
         var appBuilder = AppBuilder.CreateSplatBuilder();
         IAkavacheInstance? instance = null;
 
-        appBuilder.WithAkavache<SystemJsonSerializer>(
+        _ = appBuilder.WithAkavache<SystemJsonSerializer>(
             $"dispose_smoke_{Guid.NewGuid():N}",
-            _ => { },
+            static _ => { },
             configured => instance = configured);
 
         await instance!.DisposeSettingsStoreAsync<ViewSettings>();
     }
 
     /// <summary>
-    /// Verifies <see cref="AkavacheBuilderAsyncExtensions.DeleteSettingsStoreAsync{T}"/>
+    /// Verifies <c>DeleteSettingsStoreAsync&lt;T&gt;()</c>
     /// completes without throwing when no settings store has been registered for the
     /// type. The delete shim's observable sibling swallows file-system errors for
     /// missing databases, so the smoke test just confirms the wrapper doesn't
@@ -51,9 +51,9 @@ public class AkavacheBuilderAsyncExtensionsSmokeTests
         var appBuilder = AppBuilder.CreateSplatBuilder();
         IAkavacheInstance? instance = null;
 
-        appBuilder.WithAkavache<SystemJsonSerializer>(
+        _ = appBuilder.WithAkavache<SystemJsonSerializer>(
             $"delete_smoke_{Guid.NewGuid():N}",
-            _ => { },
+            static _ => { },
             configured => instance = configured);
 
         await instance!.DeleteSettingsStoreAsync<ViewSettings>();

@@ -3,23 +3,18 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using Akavache.Helpers;
 
 namespace Akavache.Core;
 
-/// <summary>
-/// A cache for deduplicating concurrent requests for the same key.
-/// </summary>
+/// <summary>A cache for deduplicating concurrent requests for the same key.</summary>
 internal static class RequestCache
 {
     /// <summary>The set of currently in-flight requests, keyed by type-qualified cache key.
     /// Ordinal comparison — request keys are opaque identifiers, not user-facing text.</summary>
     private static readonly ConcurrentDictionary<string, IObservable<object>> _inflightRequests = new(StringComparer.Ordinal);
 
-    /// <summary>
-    /// Gets the number of currently in-flight requests (primarily for testing/debugging).
-    /// </summary>
-    public static int Count => _inflightRequests.Count;
+    /// <summary>Gets the number of currently in-flight requests (primarily for testing/debugging).</summary>
+    internal static int Count => _inflightRequests.Count;
 
     /// <summary>
     /// Gets or creates a request observable for the specified key and fetch function.
@@ -29,15 +24,28 @@ internal static class RequestCache
     /// <param name="key">The cache key.</param>
     /// <param name="fetchFunc">The function to fetch the value if not already in flight.</param>
     /// <returns>An observable that represents the shared fetch operation.</returns>
-    public static IObservable<T> GetOrCreateRequest<T>(string key, Func<IObservable<T>> fetchFunc)
+    internal static IObservable<T> GetOrCreateRequest<T>(string key, Func<IObservable<T>> fetchFunc)
     {
         ArgumentExceptionHelper.ThrowIfNull(fetchFunc);
 
         var requestKey = $"{typeof(T).FullName}:{key}";
 
+#if NET462
+        // net462 predates the state-passing GetOrAdd overload, so the factory closes over
+        // fetchFunc there. net472 and later do have it and take the branch below.
         return _inflightRequests.GetOrAdd(
             requestKey,
             cacheKey => fetchFunc().Select(static x => (object)x!)
+                .Do(
+                    onNext: static _ => { },
+                    onError: _ => RemoveRequestInternal(cacheKey),
+                    onCompleted: () => RemoveRequestInternal(cacheKey))
+                .Replay(1)
+                .RefCount()).Select(static x => (T)x);
+#else
+        return _inflightRequests.GetOrAdd(
+            requestKey,
+            static (cacheKey, fetch) => fetch().Select(static x => (object)x!)
                 .Do(
                     onNext: static _ => { },
                     onError: _ =>
@@ -51,20 +59,18 @@ internal static class RequestCache
                         RemoveRequestInternal(cacheKey);
                     })
                 .Replay(1)
-                .RefCount()).Select(static x => (T)x);
+                .RefCount(),
+            fetchFunc).Select(static x => (T)x);
+#endif
     }
 
-    /// <summary>
-    /// Clears all in-flight requests. This is primarily for testing purposes.
-    /// </summary>
-    public static void Clear() => _inflightRequests.Clear();
+    /// <summary>Clears all in-flight requests. This is primarily for testing purposes.</summary>
+    internal static void Clear() => _inflightRequests.Clear();
 
-    /// <summary>
-    /// Removes a specific request from the cache.
-    /// </summary>
+    /// <summary>Removes a specific request from the cache.</summary>
     /// <param name="key">The cache key.</param>
     /// <param name="type">The type of object.</param>
-    public static void RemoveRequest(string key, Type type)
+    internal static void RemoveRequest(string key, Type type)
     {
         ArgumentExceptionHelper.ThrowIfNull(type);
 
@@ -78,7 +84,7 @@ internal static class RequestCache
     /// subsequent GetOrFetchObject calls don't return stale RequestCache results.
     /// </summary>
     /// <param name="key">The cache key.</param>
-    public static void RemoveRequestsForKey(string key)
+    internal static void RemoveRequestsForKey(string key)
     {
         if (string.IsNullOrEmpty(key))
         {
@@ -87,8 +93,11 @@ internal static class RequestCache
 
         var keySuffix = $":{key}";
         List<string> keysToRemove = new(_inflightRequests.Count);
-        foreach (var requestKey in _inflightRequests.Keys)
+
+        // Indexing Key rather than deconstructing: KeyValuePair.Deconstruct postdates net4x.
+        foreach (var entry in _inflightRequests)
         {
+            var requestKey = entry.Key;
             if (requestKey.EndsWith(keySuffix, StringComparison.Ordinal))
             {
                 keysToRemove.Add(requestKey);
@@ -101,13 +110,11 @@ internal static class RequestCache
         }
     }
 
-    /// <summary>
-    /// Checks if a request is currently in flight for the specified key and type.
-    /// </summary>
+    /// <summary>Checks if a request is currently in flight for the specified key and type.</summary>
     /// <param name="key">The cache key.</param>
     /// <param name="type">The type of object.</param>
     /// <returns>True if a request is in flight, false otherwise.</returns>
-    public static bool HasInFlightRequest(string key, Type type)
+    internal static bool HasInFlightRequest(string key, Type type)
     {
         ArgumentExceptionHelper.ThrowIfNull(type);
 
@@ -115,9 +122,7 @@ internal static class RequestCache
         return _inflightRequests.ContainsKey(requestKey);
     }
 
-    /// <summary>
-    /// Removes the entry identified by <paramref name="requestKey"/> from the in-flight cache.
-    /// </summary>
+    /// <summary>Removes the entry identified by <paramref name="requestKey"/> from the in-flight cache.</summary>
     /// <param name="requestKey">The fully-qualified request key.</param>
     internal static void RemoveRequestInternal(string requestKey) => _inflightRequests.TryRemove(requestKey, out _);
 }

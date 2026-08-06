@@ -37,5 +37,5 @@ internal sealed class SqliteShutdownOperation : ISqliteOperation
 
     /// <summary>Invokes the stored last-will callback against <paramref name="connection"/>.</summary>
     /// <param name="connection">The connection to tear down on the worker thread.</param>
-    public void RunLastWill(SqlitePclRawConnection connection) => _lastWill(connection);
+    internal void RunLastWill(SqlitePclRawConnection connection) => _lastWill(connection);
 }

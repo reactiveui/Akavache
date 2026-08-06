@@ -7,9 +7,7 @@ using ReactiveUI.SourceGenerators;
 
 namespace AkavacheTodoWpf.Services;
 
-/// <summary>
-/// Represents information about cache usage.
-/// </summary>
+/// <summary>Represents information about cache usage.</summary>
 public partial class CacheInfo : ReactiveObject
 {
     /// <summary>
@@ -40,5 +38,5 @@ public partial class CacheInfo : ReactiveObject
     /// Gets or sets when this information was last checked.
     /// </summary>
     [Reactive]
-    public partial DateTimeOffset LastChecked { get; set; } = DateTimeOffset.Now;
+    public partial DateTimeOffset LastChecked { get; set; } = TimeProvider.System.GetLocalNow();
 }

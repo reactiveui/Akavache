@@ -6,16 +6,20 @@ using Akavache.Core.Observables;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="InitSignal"/> covering Complete, Fail, Gate, TryPark, and
-/// idempotent / race-condition paths.
-/// </summary>
+/// <summary>Tests for <see cref="InitSignal"/> covering Complete, Fail, Gate, TryPark, and idempotent / race-condition paths.</summary>
 [Category("Akavache")]
 public class InitSignalTests
 {
-    /// <summary>
-    /// Complete with no parked callbacks is a clean no-op (snapshot is null path).
-    /// </summary>
+    /// <summary>Value emitted by the factory observable a ready gate hands straight back.</summary>
+    private const int FactoryValue = 42;
+
+    /// <summary>Value a parked gate must deliver once the signal completes.</summary>
+    private const int ParkedValue = 77;
+
+    /// <summary>How many callbacks each multi-callback park test registers before completing or failing the signal.</summary>
+    private const int ParkedCallbackCount = 3;
+
+    /// <summary>Complete with no parked callbacks is a clean no-op (snapshot is null path).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Complete_NoPendingCallbacks_TransitionsToReady()
@@ -27,9 +31,7 @@ public class InitSignalTests
         await Assert.That(signal.IsCompleted).IsTrue();
     }
 
-    /// <summary>
-    /// Fail with no parked callbacks transitions to failed (snapshot is null path).
-    /// </summary>
+    /// <summary>Fail with no parked callbacks transitions to failed (snapshot is null path).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Fail_NoPendingCallbacks_TransitionsToFailed()
@@ -41,9 +43,7 @@ public class InitSignalTests
         await Assert.That(signal.IsCompleted).IsTrue();
     }
 
-    /// <summary>
-    /// Complete fires all parked callbacks with null error.
-    /// </summary>
+    /// <summary>Complete fires all parked callbacks with null error.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Complete_WithPendingCallbacks_FiresAllWithNullError()
@@ -51,8 +51,8 @@ public class InitSignalTests
         var signal = new InitSignal();
         Exception?[] received = [new InvalidOperationException("sentinel"), new InvalidOperationException("sentinel")];
 
-        signal.TryPark(err => received[0] = err, out _);
-        signal.TryPark(err => received[1] = err, out _);
+        _ = signal.TryPark(err => received[0] = err, out _);
+        _ = signal.TryPark(err => received[1] = err, out _);
 
         signal.Complete();
 
@@ -60,9 +60,7 @@ public class InitSignalTests
         await Assert.That(received[1]).IsNull();
     }
 
-    /// <summary>
-    /// Fail fires all parked callbacks with the captured error.
-    /// </summary>
+    /// <summary>Fail fires all parked callbacks with the captured error.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Fail_WithPendingCallbacks_FiresAllWithError()
@@ -71,8 +69,8 @@ public class InitSignalTests
         var expected = new InvalidOperationException("fail-all");
         Exception?[] received = new Exception?[2];
 
-        signal.TryPark(err => received[0] = err, out _);
-        signal.TryPark(err => received[1] = err, out _);
+        _ = signal.TryPark(err => received[0] = err, out _);
+        _ = signal.TryPark(err => received[1] = err, out _);
 
         signal.Fail(expected);
 
@@ -80,9 +78,7 @@ public class InitSignalTests
         await Assert.That(received[1]).IsSameReferenceAs(expected);
     }
 
-    /// <summary>
-    /// Double-Complete is idempotent — second call is a no-op.
-    /// </summary>
+    /// <summary>Double-Complete is idempotent — second call is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Complete_CalledTwice_IsIdempotent()
@@ -94,9 +90,7 @@ public class InitSignalTests
         await Assert.That(signal.IsReady).IsTrue();
     }
 
-    /// <summary>
-    /// Double-Fail is idempotent — second call is a no-op.
-    /// </summary>
+    /// <summary>Double-Fail is idempotent — second call is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Fail_CalledTwice_IsIdempotent()
@@ -111,17 +105,15 @@ public class InitSignalTests
 
         // The first error is pinned — Gate surfaces it.
         Exception? caught = null;
-        signal.Gate(() => Observable.Return(0)).Subscribe(
-            _ => { },
+        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+            static _ => { },
             ex => caught = ex,
-            () => { });
+            static () => { });
 
         await Assert.That(caught).IsSameReferenceAs(first);
     }
 
-    /// <summary>
-    /// Fail after Complete is a no-op — signal stays ready.
-    /// </summary>
+    /// <summary>Fail after Complete is a no-op — signal stays ready.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Fail_AfterComplete_IsNoop()
@@ -133,9 +125,7 @@ public class InitSignalTests
         await Assert.That(signal.IsReady).IsTrue();
     }
 
-    /// <summary>
-    /// Complete after Fail is a no-op — signal stays failed.
-    /// </summary>
+    /// <summary>Complete after Fail is a no-op — signal stays failed.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Complete_AfterFail_IsNoop()
@@ -148,9 +138,7 @@ public class InitSignalTests
         await Assert.That(signal.IsCompleted).IsTrue();
     }
 
-    /// <summary>
-    /// TryPark when pending returns true and adds the callback.
-    /// </summary>
+    /// <summary>TryPark when pending returns true and adds the callback.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryPark_WhenPending_ReturnsTrueAndParksCallback()
@@ -168,9 +156,7 @@ public class InitSignalTests
         await Assert.That(called).IsTrue();
     }
 
-    /// <summary>
-    /// TryPark when already ready returns false with null error.
-    /// </summary>
+    /// <summary>TryPark when already ready returns false with null error.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryPark_WhenReady_ReturnsFalseWithNullError()
@@ -178,15 +164,13 @@ public class InitSignalTests
         var signal = new InitSignal();
         signal.Complete();
 
-        var parked = signal.TryPark(_ => { }, out var error);
+        var parked = signal.TryPark(static _ => { }, out var error);
 
         await Assert.That(parked).IsFalse();
         await Assert.That(error).IsNull();
     }
 
-    /// <summary>
-    /// TryPark when already failed returns false with the captured error.
-    /// </summary>
+    /// <summary>TryPark when already failed returns false with the captured error.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryPark_WhenFailed_ReturnsFalseWithCapturedError()
@@ -195,15 +179,13 @@ public class InitSignalTests
         var expected = new InvalidOperationException("parked-fail");
         signal.Fail(expected);
 
-        var parked = signal.TryPark(_ => { }, out var error);
+        var parked = signal.TryPark(static _ => { }, out var error);
 
         await Assert.That(parked).IsFalse();
         await Assert.That(error).IsSameReferenceAs(expected);
     }
 
-    /// <summary>
-    /// Gate on the ready path returns the factory observable directly.
-    /// </summary>
+    /// <summary>Gate on the ready path returns the factory observable directly.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Gate_WhenReady_ReturnsFactoryObservable()
@@ -211,15 +193,13 @@ public class InitSignalTests
         var signal = new InitSignal();
         signal.Complete();
 
-        var expected = Observable.Return(42);
+        var expected = Observable.Return(FactoryValue);
         var actual = signal.Gate(() => expected);
 
         await Assert.That(actual).IsSameReferenceAs(expected);
     }
 
-    /// <summary>
-    /// Gate on the failed path returns a throwing observable with the captured error.
-    /// </summary>
+    /// <summary>Gate on the failed path returns a throwing observable with the captured error.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Gate_WhenFailed_ReturnsThrowingObservable()
@@ -229,31 +209,27 @@ public class InitSignalTests
         signal.Fail(expected);
 
         Exception? caught = null;
-        signal.Gate(() => Observable.Return(0)).Subscribe(
-            _ => { },
+        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+            static _ => { },
             ex => caught = ex,
-            () => { });
+            static () => { });
 
         await Assert.That(caught).IsSameReferenceAs(expected);
     }
 
-    /// <summary>
-    /// Gate on the pending path returns a <see cref="GatedByInitObservable{T}"/>.
-    /// </summary>
+    /// <summary>Gate on the pending path returns a <see cref="GatedByInitObservable{T}"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Gate_WhenPending_ReturnsGatedObservable()
     {
         var signal = new InitSignal();
 
-        var gated = signal.Gate(() => Observable.Return(1));
+        var gated = signal.Gate(static () => Observable.Return(1));
 
         await Assert.That(gated).IsTypeOf<GatedByInitObservable<int>>();
     }
 
-    /// <summary>
-    /// Gate on the pending path parks, then delivers value on Complete.
-    /// </summary>
+    /// <summary>Gate on the pending path parks, then delivers value on Complete.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Gate_WhenPending_DeliversValueAfterComplete()
@@ -261,21 +237,19 @@ public class InitSignalTests
         var signal = new InitSignal();
         int? received = null;
 
-        signal.Gate(() => Observable.Return(77)).Subscribe(
+        _ = signal.Gate(static () => Observable.Return(ParkedValue)).Subscribe(
             v => received = v,
-            _ => { },
-            () => { });
+            static _ => { },
+            static () => { });
 
         await Assert.That(received).IsNull();
 
         signal.Complete();
 
-        await Assert.That(received).IsEqualTo(77);
+        await Assert.That(received).IsEqualTo(ParkedValue);
     }
 
-    /// <summary>
-    /// Gate on the pending path parks, then delivers error on Fail.
-    /// </summary>
+    /// <summary>Gate on the pending path parks, then delivers error on Fail.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Gate_WhenPending_DeliversErrorAfterFail()
@@ -284,10 +258,10 @@ public class InitSignalTests
         Exception? caught = null;
         var expected = new InvalidOperationException("pending-fail");
 
-        signal.Gate(() => Observable.Return(0)).Subscribe(
-            _ => { },
+        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+            static _ => { },
             ex => caught = ex,
-            () => { });
+            static () => { });
 
         signal.Fail(expected);
 
@@ -307,10 +281,10 @@ public class InitSignalTests
         signal.Fail(expected);
 
         Exception? caught = null;
-        signal.Gate(() => Observable.Return(0)).Subscribe(
-            _ => { },
+        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+            static _ => { },
             ex => caught = ex,
-            () => { });
+            static () => { });
 
         await Assert.That(caught).IsSameReferenceAs(expected);
     }
@@ -329,10 +303,10 @@ public class InitSignalTests
         signal.Complete();
 
         Exception? caught = null;
-        signal.Gate(() => Observable.Return(0)).Subscribe(
-            _ => { },
+        _ = signal.Gate(static () => Observable.Return(0)).Subscribe(
+            static _ => { },
             ex => caught = ex,
-            () => { });
+            static () => { });
 
         await Assert.That(caught).IsSameReferenceAs(expected);
     }
@@ -347,12 +321,12 @@ public class InitSignalTests
     {
         var signal = new InitSignal();
         var expected = new InvalidOperationException("multi-fail");
-        Exception?[] received = new Exception?[3];
+        Exception?[] received = new Exception?[ParkedCallbackCount];
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < ParkedCallbackCount; i++)
         {
             var idx = i;
-            signal.TryPark(err => received[idx] = err, out _);
+            _ = signal.TryPark(err => received[idx] = err, out _);
         }
 
         signal.Fail(expected);
@@ -374,29 +348,27 @@ public class InitSignalTests
         var callCount = 0;
         Exception?[] received = [new InvalidOperationException("s"), new InvalidOperationException("s"), new InvalidOperationException("s")];
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < ParkedCallbackCount; i++)
         {
             var idx = i;
-            signal.TryPark(
+            _ = signal.TryPark(
                 err =>
                 {
                     received[idx] = err;
-                    Interlocked.Increment(ref callCount);
+                    _ = Interlocked.Increment(ref callCount);
                 },
                 out _);
         }
 
         signal.Complete();
 
-        await Assert.That(callCount).IsEqualTo(3);
+        await Assert.That(callCount).IsEqualTo(ParkedCallbackCount);
         await Assert.That(received[0]).IsNull();
         await Assert.That(received[1]).IsNull();
         await Assert.That(received[2]).IsNull();
     }
 
-    /// <summary>
-    /// Complete when already completed (not pending) is a no-op (line 83-84 early return).
-    /// </summary>
+    /// <summary>Complete when already completed (not pending) is a no-op (line 83-84 early return).</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Complete_WhenAlreadyReady_IsNoopReturnEarly()
@@ -405,7 +377,7 @@ public class InitSignalTests
         signal.Complete();
 
         // Park a callback AFTER Complete — TryPark returns false.
-        var parked = signal.TryPark(_ => { }, out _);
+        var parked = signal.TryPark(static _ => { }, out _);
         await Assert.That(parked).IsFalse();
 
         // Second Complete is a no-op — the early return at line 83-84.
@@ -413,9 +385,7 @@ public class InitSignalTests
         await Assert.That(signal.IsReady).IsTrue();
     }
 
-    /// <summary>
-    /// Fail when already completed (line 115-117 early return in Fail) is a no-op.
-    /// </summary>
+    /// <summary>Fail when already completed (line 115-117 early return in Fail) is a no-op.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task Fail_WhenAlreadyReady_IsNoopReturnEarly()

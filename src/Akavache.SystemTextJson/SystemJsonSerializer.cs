@@ -8,14 +8,16 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Akavache.SystemTextJson;
 
-/// <summary>
-/// A serializer using System.Text.Json for JSON serialization.
-/// </summary>
+/// <summary>A serializer using System.Text.Json for JSON serialization.</summary>
 public class SystemJsonSerializer : ISerializer
 {
     /// <summary>
-    /// Gets or sets the JSON serializer options for customizing serialization behavior.
+    /// Baseline options used when the caller has supplied none. Shared rather than rebuilt per
+    /// call because it is only ever read from — every caller receives a copy.
     /// </summary>
+    private static readonly JsonSerializerOptions SerializerDefaults = new();
+
+    /// <summary>Gets or sets the JSON serializer options for customizing serialization behavior.</summary>
     public JsonSerializerOptions? Options { get; set; }
 
     /// <inheritdoc/>
@@ -32,15 +34,11 @@ public class SystemJsonSerializer : ISerializer
     /// <param name="bytes">The bytes.</param>
     /// <param name="jsonTypeInfo">The JSON type information for AOT-safe deserialization.</param>
     /// <returns>The deserialized instance, or <c>default</c> when <paramref name="bytes"/> is null or empty.</returns>
-    public static T? DeserializeAot<T>(byte[] bytes, JsonTypeInfo<T> jsonTypeInfo) => bytes == null || bytes.Length == 0
+    public static T? DeserializeAot<T>(byte[] bytes, JsonTypeInfo<T> jsonTypeInfo) => bytes is null || bytes.Length == 0
         ? default
         : JsonSerializer.Deserialize(bytes, jsonTypeInfo);
 
-    /// <summary>
-    /// Serializes to bytes using the provided <see cref="JsonTypeInfo{T}"/> for
-    /// AOT-safe serialization. Static for the same reason as
-    /// <see cref="DeserializeAot{T}"/>.
-    /// </summary>
+    /// <summary>Serializes to bytes using the provided <see cref="JsonTypeInfo{T}"/> for AOT-safe serialization. Static for the same reason as <see cref="DeserializeAot{T}"/>.</summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="item">The item to serialize.</param>
     /// <param name="jsonTypeInfo">The JSON type information for AOT-safe serialization.</param>
@@ -53,7 +51,7 @@ public class SystemJsonSerializer : ISerializer
     [RequiresDynamicCode("Reflection-based JSON deserialization. For AOT, use the JsonTypeInfo overload.")]
     public T? Deserialize<T>(byte[] bytes)
     {
-        if (bytes == null || bytes.Length == 0)
+        if (bytes is null || bytes.Length == 0)
         {
             return default;
         }
@@ -71,14 +69,12 @@ public class SystemJsonSerializer : ISerializer
         return JsonSerializer.SerializeToUtf8Bytes(item, options);
     }
 
-    /// <summary>
-    /// Gets the effective JsonSerializerOptions for this serializer.
-    /// </summary>
+    /// <summary>Gets the effective JsonSerializerOptions for this serializer.</summary>
     /// <returns>The configured JsonSerializerOptions.</returns>
     [SuppressMessage("Design", "CA1024:Use properties where appropriate", Justification = "This is deliberately a method to allow for customization and extension.")]
     public JsonSerializerOptions GetEffectiveOptions()
     {
-        var options = Options ?? new JsonSerializerOptions();
+        var options = Options ?? SerializerDefaults;
 
         // Clone options to avoid modifying the original
         return new(options);

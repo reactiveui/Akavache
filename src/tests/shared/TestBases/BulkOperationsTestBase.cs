@@ -9,19 +9,13 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests.TestBases;
 
-/// <summary>
-/// A base class for tests about bulk operations.
-/// </summary>
+/// <summary>A base class for tests about bulk operations.</summary>
 public abstract class BulkOperationsTestBase : IDisposable
 {
-    /// <summary>
-    /// A backing field which indicates if the class has been disposed.
-    /// </summary>
+    /// <summary>A backing field which indicates if the class has been disposed.</summary>
     private bool _disposed;
 
-    /// <summary>
-    /// Tests if Get with multiple keys work correctly.
-    /// </summary>
+    /// <summary>Tests if Get with multiple keys work correctly.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -55,9 +49,7 @@ public abstract class BulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure that Get invalidates all the old keys.
-    /// </summary>
+    /// <summary>Tests to make sure that Get invalidates all the old keys.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -92,9 +84,7 @@ public abstract class BulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Tests to make sure that insert works with multiple keys.
-    /// </summary>
+    /// <summary>Tests to make sure that insert works with multiple keys.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -113,7 +103,7 @@ public abstract class BulkOperationsTestBase : IDisposable
             byte[] data = [0x10, 0x20, 0x30];
             string[] keys = ["Foo", "Bar", "Baz"];
 
-            fixture.Insert(keys.ToDictionary(k => k, _ => data)).SubscribeAndComplete();
+            fixture.Insert(keys.ToDictionary(static k => k, _ => data)).SubscribeAndComplete();
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length);
@@ -125,9 +115,7 @@ public abstract class BulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Invalidate should be able to trash multiple keys.
-    /// </summary>
+    /// <summary>Invalidate should be able to trash multiple keys.</summary>
     /// <param name="serializerType">Type of the serializer.</param>
     /// <returns>
     /// A task to monitor the progress.
@@ -161,18 +149,14 @@ public abstract class BulkOperationsTestBase : IDisposable
         }
     }
 
-    /// <summary>
-    /// Disposes the test base, restoring the original serializer.
-    /// </summary>
+    /// <summary>Disposes the test base, restoring the original serializer.</summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Gets the <see cref="IBlobCache" /> we want to do the tests against.
-    /// </summary>
+    /// <summary>Gets the <see cref="IBlobCache" /> we want to do the tests against.</summary>
     /// <param name="path">The path to the blob cache.</param>
     /// <param name="serializer">The serializer.</param>
     /// <returns>
@@ -180,9 +164,7 @@ public abstract class BulkOperationsTestBase : IDisposable
     /// </returns>
     protected abstract IBlobCache CreateBlobCache(string path, ISerializer serializer);
 
-    /// <summary>
-    /// Disposes resources.
-    /// </summary>
+    /// <summary>Disposes resources.</summary>
     /// <param name="disposing">True to dispose managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
@@ -191,16 +173,10 @@ public abstract class BulkOperationsTestBase : IDisposable
             return;
         }
 
-        if (disposing)
-        {
-        }
-
         _disposed = true;
     }
 
-    /// <summary>
-    /// Sets up the test with the specified serializer type.
-    /// </summary>
+    /// <summary>Sets up the test with the specified serializer type.</summary>
     /// <param name="serializerType">The type of serializer to use for this test.</param>
     /// <returns>The configured serializer instance.</returns>
     private static ISerializer SetupTestSerializer(Type? serializerType)
@@ -226,12 +202,6 @@ public abstract class BulkOperationsTestBase : IDisposable
             return new NewtonsoftSerializer();
         }
 
-        if (serializerType == typeof(SystemJsonSerializer))
-        {
-            // Register the System.Text.Json serializer
-            return new SystemJsonSerializer();
-        }
-
-        return null!;
+        return serializerType == typeof(SystemJsonSerializer) ? new SystemJsonSerializer() : null!;
     }
 }

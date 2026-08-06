@@ -17,5 +17,5 @@ internal static class CachedObservables
     /// <summary>A cached <see cref="IObservable{T}"/> that synchronously emits a single
     /// <see cref="Unit.Default"/> and completes. Use anywhere the library currently
     /// calls <c>Observable.Return(Unit.Default)</c> as a success signal.</summary>
-    public static readonly IObservable<Unit> UnitDefault = Observable.Return(Unit.Default);
+    internal static readonly IObservable<Unit> UnitDefault = Observable.Return(Unit.Default);
 }

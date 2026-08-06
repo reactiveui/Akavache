@@ -16,18 +16,17 @@ using ReactiveUI.Builder;
 
 namespace AkavacheTodoWpf;
 
-/// <summary>
-/// Interaction logic for App.xaml with Akavache and dependency injection setup.
-/// </summary>
+/// <summary>Interaction logic for App.xaml with Akavache and dependency injection setup.</summary>
 [SupportedOSPlatform("windows10.0.19041.0")]
 public partial class App
 {
+    /// <summary>How long shutdown waits for in-flight cache operations to drain.</summary>
+    private const int ShutdownDrainMilliseconds = 500;
+
     /// <summary>The dependency injection host used by the application.</summary>
     private IHost? _host;
 
-    /// <summary>
-    /// Called when the application starts.
-    /// </summary>
+    /// <summary>Called when the application starts.</summary>
     /// <param name="e">The startup event args.</param>
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -43,19 +42,17 @@ public partial class App
         StartApplication();
     }
 
-    /// <summary>
-    /// Called when the application shuts down.
-    /// </summary>
+    /// <summary>Called when the application shuts down.</summary>
     /// <param name="e">The exit event args.</param>
     protected override async void OnExit(ExitEventArgs e)
     {
         try
         {
             // Step 1: Stop all ViewModels and their timers first
-            if (_host != null)
+            if (_host is not null)
             {
                 var mainViewModel = _host.Services.GetService<MainViewModel>();
-                if (mainViewModel != null)
+                if (mainViewModel is not null)
                 {
                     try
                     {
@@ -73,7 +70,7 @@ public partial class App
             }
 
             // Step 2: Give a moment for any pending operations to complete
-            await Task.Delay(500);
+            await Task.Delay(ShutdownDrainMilliseconds);
 
             // Step 3: Shutdown Akavache properly to flush all pending operations
             try
@@ -86,7 +83,7 @@ public partial class App
             }
 
             // Step 4: Shutdown dependency injection host
-            if (_host != null)
+            if (_host is not null)
             {
                 try
                 {
@@ -109,9 +106,6 @@ public partial class App
         }
     }
 
-    /// <summary>
-    /// Use the builder pattern to configure Akavache with SQLite persistence.
-    /// </summary>
     /// <summary>Configures Akavache using the builder pattern with SQLite persistence.</summary>
     private static void ConfigureAkavache() => RxAppBuilder.CreateReactiveUIBuilder()
             .WithWpf()
@@ -126,13 +120,13 @@ public partial class App
     /// <summary>Creates the host builder used to register application services.</summary>
     /// <returns>The configured <see cref="IHostBuilder"/>.</returns>
     private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
-            .ConfigureServices(static (_, services) =>
+            .ConfigureServices(static services =>
             {
                 // Register services for dependency injection
-                services.AddSingleton<NotificationService>();
+                _ = services.AddSingleton<NotificationService>();
 
                 // Register view models
-                services.AddTransient<MainViewModel>();
+                _ = services.AddTransient<MainViewModel>();
             });
 
     /// <summary>Creates and shows the main window and activates the main view model.</summary>
@@ -142,15 +136,12 @@ public partial class App
         var notificationService = _host!.Services.GetRequiredService<NotificationService>();
         MainViewModel mainViewModel = new(notificationService);
 
-        MainWindow mainWindow = new()
-        {
-            ViewModel = mainViewModel
-        };
+        MainWindow mainWindow = new() { ViewModel = mainViewModel };
 
         mainWindow.Show();
 
         // Force activation after window is shown
         mainWindow.Loaded += (_, _) => mainViewModel.Activator?.Activate();
-        mainViewModel.Activator.Activate();
+        _ = mainViewModel.Activator.Activate();
     }
 }

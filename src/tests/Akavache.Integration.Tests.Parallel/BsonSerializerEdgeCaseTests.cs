@@ -10,15 +10,11 @@ using Newtonsoft.Json;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Skeleton tests for BSON serializers edge cases.
-/// </summary>
+/// <summary>Skeleton tests for BSON serializers edge cases.</summary>
 [Category("Serialization")]
 public class BsonSerializerEdgeCaseTests
 {
-    /// <summary>
-    /// Verifies the SystemTextJson BSON serializer round trips a simple object.
-    /// </summary>
+    /// <summary>Verifies the SystemTextJson BSON serializer round trips a simple object.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task SystemTextJsonBsonSerializer_SerializesAndDeserializesSimpleObject()
@@ -31,9 +27,7 @@ public class BsonSerializerEdgeCaseTests
         await Assert.That(roundtrip!.Name).IsEqualTo("BsonUser");
     }
 
-    /// <summary>
-    /// Verifies the Newtonsoft BSON serializer round trips a simple object.
-    /// </summary>
+    /// <summary>Verifies the Newtonsoft BSON serializer round trips a simple object.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task NewtonsoftBsonSerializer_SerializesAndDeserializesSimpleObject()
@@ -46,9 +40,7 @@ public class BsonSerializerEdgeCaseTests
         await Assert.That(roundtrip!.Name).IsEqualTo("NewtonUser");
     }
 
-    /// <summary>
-    /// Ensures circular references throw when attempting serialization.
-    /// </summary>
+    /// <summary>Ensures circular references throw when attempting serialization.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public Task BsonSerializer_ThrowsOnCircularReference()
@@ -58,7 +50,7 @@ public class BsonSerializerEdgeCaseTests
             NewtonsoftBsonSerializer serializer = new();
             List<object> list = [];
             list.Add(list); // circular reference
-            Assert.Throws<JsonSerializationException>(() => serializer.Serialize(list));
+            _ = Assert.Throws<JsonSerializationException>(() => serializer.Serialize(list));
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -67,9 +59,7 @@ public class BsonSerializerEdgeCaseTests
         }
     }
 
-    /// <summary>
-    /// Ensures invalid BSON data causes a controlled failure during deserialization.
-    /// </summary>
+    /// <summary>Ensures invalid BSON data causes a controlled failure during deserialization.</summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Test]
     public async Task BsonSerializer_GracefullyHandlesInvalidDataDuringDeserialize()

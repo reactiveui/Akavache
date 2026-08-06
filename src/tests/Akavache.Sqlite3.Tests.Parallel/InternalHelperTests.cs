@@ -6,17 +6,24 @@ using Akavache.Sqlite3;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for internal helper methods exposed for testability in the Sqlite3 package.
-/// </summary>
+/// <summary>Tests for internal helper methods exposed for testability in the Sqlite3 package.</summary>
 [Category("Akavache")]
 public class InternalHelperTests
 {
-    // ── SerializeKeysAsJson ────────────────────────────────────────────────
+    /// <summary>The key handed to the not-found factory, which must survive into the exception message.</summary>
+    private const string NotFoundKey = "mykey";
 
-    /// <summary>
-    /// An empty key list produces an empty JSON array.
-    /// </summary>
+    /// <summary>The value replayed to an observer so the test can tell a real delivery from a default.</summary>
+    private const int ReplayedValue = 42;
+
+    /// <summary>Payload stored under the first key when building cache entries.</summary>
+    private static readonly byte[] FirstEntryPayload = [1];
+
+    /// <summary>Payload stored under the second key when building cache entries.</summary>
+    private static readonly byte[] SecondEntryPayload = [2];
+
+    // ── SerializeKeysAsJson ────────────────────────────────────────────────
+    /// <summary>An empty key list produces an empty JSON array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeKeysAsJson_EmptyList_ReturnsEmptyArray()
@@ -25,9 +32,7 @@ public class InternalHelperTests
         await Assert.That(result).IsEqualTo("[]");
     }
 
-    /// <summary>
-    /// A single key produces a single-element JSON array.
-    /// </summary>
+    /// <summary>A single key produces a single-element JSON array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeKeysAsJson_SingleKey_ReturnsSingleElementArray()
@@ -36,9 +41,7 @@ public class InternalHelperTests
         await Assert.That(result).IsEqualTo("[\"hello\"]");
     }
 
-    /// <summary>
-    /// Multiple keys produce a comma-separated JSON array.
-    /// </summary>
+    /// <summary>Multiple keys produce a comma-separated JSON array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeKeysAsJson_MultipleKeys_ProducesValidJson()
@@ -47,9 +50,7 @@ public class InternalHelperTests
         await Assert.That(result).IsEqualTo("[\"a\",\"b\",\"c\"]");
     }
 
-    /// <summary>
-    /// Keys containing JSON-special characters are correctly escaped.
-    /// </summary>
+    /// <summary>Keys containing JSON-special characters are correctly escaped.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SerializeKeysAsJson_SpecialCharacters_AreEscaped()
@@ -59,10 +60,7 @@ public class InternalHelperTests
     }
 
     // ── AppendJsonString ───────────────────────────────────────────────────
-
-    /// <summary>
-    /// Control characters below 0x20 are escaped as \uXXXX.
-    /// </summary>
+    /// <summary>Control characters below 0x20 are escaped as \uXXXX.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_ControlCharacters_AreUnicodeEscaped()
@@ -72,9 +70,7 @@ public class InternalHelperTests
         await Assert.That(sb.ToString()).IsEqualTo("\"\\u0001\\u001F\"");
     }
 
-    /// <summary>
-    /// Standard escape sequences (\n, \r, \t, etc.) are correctly emitted.
-    /// </summary>
+    /// <summary>Standard escape sequences (\n, \r, \t, etc.) are correctly emitted.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AppendJsonString_StandardEscapes_AreCorrect()
@@ -85,37 +81,21 @@ public class InternalHelperTests
     }
 
     // ── CheckRc ────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// SQLITE_OK does not throw.
-    /// </summary>
+    /// <summary>SQLITE_OK does not throw.</summary>
     [Test]
-    public void CheckRc_SqliteOk_DoesNotThrow()
-    {
-        // 0 = SQLITE_OK
-        SqlitePclRawConnection.CheckRc(0, db: null, "test");
-    }
+    public void CheckRc_SqliteOk_DoesNotThrow() => SqlitePclRawConnection.CheckRc(0, db: null, "test");
 
-    /// <summary>
-    /// A non-success result code throws <see cref="AkavacheSqliteException"/>.
-    /// </summary>
+    /// <summary>A non-success result code throws <see cref="AkavacheSqliteException"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task CheckRc_ErrorCode_ThrowsAkavacheSqliteException()
-    {
-        // 1 = SQLITE_ERROR
-        await Assert.ThrowsAsync<AkavacheSqliteException>(() =>
+    public async Task CheckRc_ErrorCode_ThrowsAkavacheSqliteException() => await Assert.ThrowsAsync<AkavacheSqliteException>(static () =>
         {
             SqlitePclRawConnection.CheckRc(1, db: null, "test-op");
             return Task.CompletedTask;
         });
-    }
 
     // ── MaterializeKeys ────────────────────────────────────────────────────
-
-    /// <summary>
-    /// An input that is already an <see cref="IReadOnlyList{T}"/> is returned directly.
-    /// </summary>
+    /// <summary>An input that is already an <see cref="IReadOnlyList{T}"/> is returned directly.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MaterializeKeys_ReadOnlyList_ReturnsSameInstance()
@@ -125,25 +105,24 @@ public class InternalHelperTests
         await Assert.That(ReferenceEquals(result, keys)).IsTrue();
     }
 
-    /// <summary>
-    /// An <see cref="ICollection{T}"/> is materialized into an array.
-    /// </summary>
+    /// <summary>An <see cref="ICollection{T}"/> is materialized into an array.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MaterializeKeys_Collection_MaterializesToArray()
     {
+        const int ExpectedKeyCount = 3;
         var keys = new HashSet<string> { "x", "y", "z" };
         var result = SqliteBlobCache.MaterializeKeys(keys);
-        await Assert.That(result.Count).IsEqualTo(3);
+        await Assert.That(result.Count).IsEqualTo(ExpectedKeyCount);
     }
 
-    /// <summary>
-    /// A bare <see cref="IEnumerable{T}"/> (not a list or collection) is materialized.
-    /// </summary>
+    /// <summary>A bare <see cref="IEnumerable{T}"/> (not a list or collection) is materialized.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task MaterializeKeys_BareEnumerable_Materializes()
     {
+        const int ExpectedKeyCount = 2;
+
         static IEnumerable<string> Generate()
         {
             yield return "one";
@@ -151,31 +130,29 @@ public class InternalHelperTests
         }
 
         var result = SqliteBlobCache.MaterializeKeys(Generate());
-        await Assert.That(result.Count).IsEqualTo(2);
+        await Assert.That(result.Count).IsEqualTo(ExpectedKeyCount);
         await Assert.That(result[0]).IsEqualTo("one");
         await Assert.That(result[1]).IsEqualTo("two");
     }
 
     // ── BuildCacheEntries ──────────────────────────────────────────────────
-
-    /// <summary>
-    /// BuildCacheEntries stamps the shared type name, creation time, and expiry on each entry.
-    /// </summary>
+    /// <summary>BuildCacheEntries stamps the shared type name, creation time, and expiry on each entry.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BuildCacheEntries_StampsSharedFieldsOnEveryEntry()
     {
+        const int ExpectedEntryCount = 2;
         var created = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var expiry = new DateTimeOffset(2025, 12, 31, 0, 0, 0, TimeSpan.Zero);
         var kvps = new[]
         {
-            new KeyValuePair<string, byte[]>("k1", [1]),
-            new KeyValuePair<string, byte[]>("k2", [2]),
+            new KeyValuePair<string, byte[]>("k1", FirstEntryPayload),
+            new KeyValuePair<string, byte[]>("k2", SecondEntryPayload),
         };
 
         var entries = SqliteBlobCache.BuildCacheEntries(kvps, "MyType", created, expiry);
 
-        await Assert.That(entries.Count).IsEqualTo(2);
+        await Assert.That(entries.Count).IsEqualTo(ExpectedEntryCount);
         await Assert.That(entries[0].Id).IsEqualTo("k1");
         await Assert.That(entries[0].TypeName).IsEqualTo("MyType");
         await Assert.That(entries[0].CreatedAt).IsEqualTo(created);
@@ -183,9 +160,7 @@ public class InternalHelperTests
         await Assert.That(entries[1].Id).IsEqualTo("k2");
     }
 
-    /// <summary>
-    /// An empty input produces an empty list (no entries).
-    /// </summary>
+    /// <summary>An empty input produces an empty list (no entries).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task BuildCacheEntries_EmptyInput_ReturnsEmptyList()
@@ -193,42 +168,34 @@ public class InternalHelperTests
         var entries = SqliteBlobCache.BuildCacheEntries(
             [],
             typeName: null,
-            DateTimeOffset.UtcNow,
+            TimeProvider.System.GetUtcNow(),
             expiry: null);
 
         await Assert.That(entries.Count).IsEqualTo(0);
     }
 
     // ── ReadWithLegacyFallbackObservable.CreateNotFound ─────────────────────
-
-    /// <summary>
-    /// Untyped not-found includes the key in the message.
-    /// </summary>
+    /// <summary>Untyped not-found includes the key in the message.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateNotFound_Untyped_IncludesKey()
     {
-        var ex = ReadWithLegacyFallbackObservable.CreateNotFound("mykey", type: null);
-        await Assert.That(ex.Message).Contains("mykey");
+        var ex = ReadWithLegacyFallbackObservable.CreateNotFound(NotFoundKey, type: null);
+        await Assert.That(ex.Message).Contains(NotFoundKey);
     }
 
-    /// <summary>
-    /// Typed not-found includes both the key and type name in the message.
-    /// </summary>
+    /// <summary>Typed not-found includes both the key and type name in the message.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateNotFound_Typed_IncludesKeyAndType()
     {
-        var ex = ReadWithLegacyFallbackObservable.CreateNotFound("mykey", typeof(string));
-        await Assert.That(ex.Message).Contains("mykey");
+        var ex = ReadWithLegacyFallbackObservable.CreateNotFound(NotFoundKey, typeof(string));
+        await Assert.That(ex.Message).Contains(NotFoundKey);
         await Assert.That(ex.Message).Contains("System.String");
     }
 
     // ── SqliteReplyObservable.ReplayTo ──────────────────────────────────────
-
-    /// <summary>
-    /// ReplayTo with a success state delivers OnNext+OnCompleted.
-    /// </summary>
+    /// <summary>ReplayTo with a success state delivers OnNext+OnCompleted.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReplayTo_Success_DeliversOnNextThenOnCompleted()
@@ -236,105 +203,89 @@ public class InternalHelperTests
         var received = false;
         var completed = false;
         var observer = System.Reactive.Observer.Create<int>(
-            v => received = v == 42,
-            _ => { },
+            v => received = v == ReplayedValue,
+            static _ => { },
             () => completed = true);
 
-        // StateSuccess = 1
-        SqliteReplyObservable<int>.ReplayTo(observer, 1, 42, error: null);
+        SqliteReplyObservable<int>.ReplayTo(observer, SqliteReplyObservable<int>.StateSuccess, ReplayedValue, error: null);
 
         await Assert.That(received).IsTrue();
         await Assert.That(completed).IsTrue();
     }
 
-    /// <summary>
-    /// ReplayTo with an error state delivers OnError.
-    /// </summary>
+    /// <summary>ReplayTo with an error state delivers OnError.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReplayTo_Error_DeliversOnError()
     {
         Exception? caught = null;
         var observer = System.Reactive.Observer.Create<int>(
-            _ => { },
+            static _ => { },
             ex => caught = ex,
-            () => { });
+            static () => { });
 
         var expected = new InvalidOperationException("boom");
 
-        // StateError = 2
-        SqliteReplyObservable<int>.ReplayTo(observer, 2, 0, expected);
+        SqliteReplyObservable<int>.ReplayTo(observer, SqliteReplyObservable<int>.StateError, 0, expected);
 
         await Assert.That(caught).IsNotNull();
         await Assert.That(caught!.Message).IsEqualTo("boom");
     }
 
     // ── SqliteOperation ────────────────────────────────────────────────────
-
-    /// <summary>
-    /// An operation created with coalescable=true reports <see cref="ISqliteOperation.IsCoalescable"/> as true.
-    /// </summary>
+    /// <summary>An operation created with coalescable=true reports <see cref="ISqliteOperation.IsCoalescable"/> as true.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SqliteOperation_CoalescableTrue_ReportsIsCoalescable()
     {
         var reply = new SqliteReplyObservable<int>();
-        var op = new SqliteOperation<int>(_ => 1, reply, coalescable: true);
+        var op = new SqliteOperation<int>(static _ => 1, reply, coalescable: true);
         await Assert.That(op.IsCoalescable).IsTrue();
     }
 
-    /// <summary>
-    /// An operation created with coalescable=false reports <see cref="ISqliteOperation.IsCoalescable"/> as false.
-    /// </summary>
+    /// <summary>An operation created with coalescable=false reports <see cref="ISqliteOperation.IsCoalescable"/> as false.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SqliteOperation_CoalescableFalse_ReportsNotCoalescable()
     {
         var reply = new SqliteReplyObservable<int>();
-        var op = new SqliteOperation<int>(_ => 1, reply, coalescable: false);
+        var op = new SqliteOperation<int>(static _ => 1, reply, coalescable: false);
         await Assert.That(op.IsCoalescable).IsFalse();
     }
 
-    /// <summary>
-    /// <see cref="SqliteRowStreamOperation{T}"/> is never coalescable (reads).
-    /// </summary>
+    /// <summary>A <see cref="SqliteRowStreamOperation{T}"/> is never coalescable, because it streams rows.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SqliteRowStreamOperation_IsNeverCoalescable()
     {
         var stream = new SqliteRowObservable<int>();
-        var op = new SqliteRowStreamOperation<int>((_, _, _) => { }, stream);
+        var op = new SqliteRowStreamOperation<int>(static (_, _, _) => { }, stream);
         await Assert.That(op.IsCoalescable).IsFalse();
     }
 
-    /// <summary>
-    /// <see cref="SqliteShutdownOperation"/> is never coalescable.
-    /// </summary>
+    /// <summary>A <see cref="SqliteShutdownOperation"/> is never coalescable.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SqliteShutdownOperation_IsNeverCoalescable()
     {
-        var op = new SqliteShutdownOperation(_ => { });
+        var op = new SqliteShutdownOperation(static _ => { });
         await Assert.That(op.IsCoalescable).IsFalse();
     }
 
     // ── SqliteOperation.Fail ───────────────────────────────────────────────
-
-    /// <summary>
-    /// Calling <see cref="SqliteOperation{T}.Fail"/> delivers the error through the reply observable.
-    /// </summary>
+    /// <summary>Calling <see cref="SqliteOperation{T}.Fail"/> delivers the error through the reply observable.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task SqliteOperation_Fail_DeliversErrorToReply()
     {
         var reply = new SqliteReplyObservable<int>();
-        var op = new SqliteOperation<int>(_ => 1, reply, coalescable: false);
+        var op = new SqliteOperation<int>(static _ => 1, reply, coalescable: false);
 
         Exception? caught = null;
-        reply.Subscribe(System.Reactive.Observer.Create<int>(
-            _ => { },
+        _ = reply.Subscribe(System.Reactive.Observer.Create<int>(
+            static _ => { },
             ex => caught = ex,
-            () => { }));
+            static () => { }));
 
         op.Fail(new InvalidOperationException("test-fail"));
 

@@ -8,15 +8,32 @@ using Akavache.Tests.Mocks;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Tests for ISerializer interface implementations and functionality.
-/// </summary>
+/// <summary>Tests for ISerializer interface implementations and functionality.</summary>
 [Category("Akavache")]
 public class ISerializerInterfaceTests
 {
-    /// <summary>
-    /// Tests that all serializers implement basic serialization correctly.
-    /// </summary>
+    /// <summary>Slack allowed when comparing a round-tripped <see cref="double"/> against the original.</summary>
+    private const double DoubleRoundTripTolerance = 0.0001;
+
+    /// <summary>A full day of drift, the widest gap a non-BSON serializer may introduce by re-interpreting the kind of a local time.</summary>
+    private const double MaxDateDriftMinutes = 1440;
+
+    /// <summary>Character count of the "large object" string case — roughly one megabyte of UTF-8.</summary>
+    private const int LargeStringCharCount = 1_000_000;
+
+    /// <summary>Element count of the "large object" list case.</summary>
+    private const int LargeListItemCount = 10_000;
+
+    /// <summary>Floor the serialized large string must clear, well under its megabyte so encoding differences do not matter.</summary>
+    private const int MinLargeStringByteCount = 500_000;
+
+    /// <summary>Floor the serialized large list must clear.</summary>
+    private const int MinLargeListByteCount = 1000;
+
+    /// <summary>How many serialize/deserialize round trips each concurrent task performs.</summary>
+    private const int RoundTripsPerConcurrentTask = 10;
+
+    /// <summary>Tests that all serializers implement basic serialization correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -75,12 +92,10 @@ public class ISerializerInterfaceTests
         }
 
         var deserializedDouble = serializer.Deserialize<double>(doubleBytes);
-        await Assert.That(deserializedDouble).IsEqualTo(testDouble).Within(0.0001); // Allow for floating point precision
+        await Assert.That(deserializedDouble).IsEqualTo(testDouble).Within(DoubleRoundTripTolerance);
     }
 
-    /// <summary>
-    /// Tests that all serializers handle complex objects correctly.
-    /// </summary>
+    /// <summary>Tests that all serializers handle complex objects correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -92,12 +107,7 @@ public class ISerializerInterfaceTests
     {
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
-        UserObject testUser = new()
-        {
-            Name = "Test User",
-            Bio = "Test Bio with special characters: ������������",
-            Blog = "https://test.example.com/blog"
-        };
+        UserObject testUser = new() { Name = "Test User", Bio = "Test Bio with special characters: ������������", Blog = "https://test.example.com/blog" };
 
         // Act
         var serializedBytes = serializer.Serialize(testUser);
@@ -113,9 +123,7 @@ public class ISerializerInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that all serializers handle null values correctly.
-    /// </summary>
+    /// <summary>Tests that all serializers handle null values correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -143,9 +151,7 @@ public class ISerializerInterfaceTests
         await Assert.That(deserializedNullObject).IsNull();
     }
 
-    /// <summary>
-    /// Tests that all serializers handle collections correctly.
-    /// </summary>
+    /// <summary>Tests that all serializers handle collections correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -199,9 +205,7 @@ public class ISerializerInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that ForcedDateTimeKind property works correctly for all serializers.
-    /// </summary>
+    /// <summary>Tests that ForcedDateTimeKind property works correctly for all serializers.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -212,19 +216,14 @@ public class ISerializerInterfaceTests
     public async Task ForcedDateTimeKindShouldWorkCorrectly(Type serializerType)
     {
         // Arrange
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(serializerType);
 
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
         try
         {
             // Test default value (should be null for most serializers)
-
             // BSON serializers might have different default behavior, so we're flexible here
-
             // Test setting to Utc
             serializer.ForcedDateTimeKind = DateTimeKind.Utc;
             var utcValue = serializer.ForcedDateTimeKind;
@@ -263,9 +262,7 @@ public class ISerializerInterfaceTests
         // DateTime serialization behavior is tested separately in DateTimeSerializationShouldRespectForcedDateTimeKind
     }
 
-    /// <summary>
-    /// Tests that DateTime serialization respects ForcedDateTimeKind.
-    /// </summary>
+    /// <summary>Tests that DateTime serialization respects ForcedDateTimeKind.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -276,10 +273,7 @@ public class ISerializerInterfaceTests
     public async Task DateTimeSerializationShouldRespectForcedDateTimeKind(Type serializerType)
     {
         // Arrange
-        if (serializerType is null)
-        {
-            throw new ArgumentNullException(nameof(serializerType));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(serializerType);
 
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
         DateTime testDate = new(2025, 1, 15, 10, 30, 45, DateTimeKind.Local);
@@ -312,7 +306,7 @@ public class ISerializerInterfaceTests
             await Assert.That(deserializedDate).IsNotDefault();
 
             var regularTimeDiff = Math.Abs((testDate - deserializedDate).TotalMinutes);
-            await Assert.That(regularTimeDiff).IsLessThan(1440);
+            await Assert.That(regularTimeDiff).IsLessThan(MaxDateDriftMinutes);
         }
         catch (Exception ex) when (serializerType.Name.Contains("Bson"))
         {
@@ -330,9 +324,7 @@ public class ISerializerInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that serializers handle empty byte arrays correctly.
-    /// </summary>
+    /// <summary>Tests that serializers handle empty byte arrays correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -350,7 +342,7 @@ public class ISerializerInterfaceTests
         try
         {
             // Deserialize<string> may return null or a string for empty bytes - both are acceptable
-            serializer.Deserialize<string>(emptyBytes);
+            _ = serializer.Deserialize<string>(emptyBytes);
         }
         catch (Exception ex)
         {
@@ -371,9 +363,7 @@ public class ISerializerInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that serializers handle large objects correctly.
-    /// </summary>
+    /// <summary>Tests that serializers handle large objects correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -387,15 +377,15 @@ public class ISerializerInterfaceTests
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
         // Create a large object (large string)
-        string largeString = new('X', 1_000_000); // 1MB string
+        string largeString = new('X', LargeStringCharCount);
 
         // Create a large collection
-        var largeList = Enumerable.Range(0, 10_000).ToList();
+        var largeList = Enumerable.Range(0, LargeListItemCount).ToList();
 
         // Act & Assert - Large string
         var stringBytes = serializer.Serialize(largeString);
         await Assert.That(stringBytes).IsNotNull();
-        await Assert.That(stringBytes).Count().IsGreaterThan(500_000); // Should be at least 500KB
+        await Assert.That(stringBytes).Count().IsGreaterThan(MinLargeStringByteCount);
 
         var deserializedString = serializer.Deserialize<string>(stringBytes);
         await Assert.That(deserializedString).IsEqualTo(largeString);
@@ -403,7 +393,7 @@ public class ISerializerInterfaceTests
         // Act & Assert - Large collection
         var listBytes = serializer.Serialize(largeList);
         await Assert.That(listBytes).IsNotNull();
-        await Assert.That(listBytes).Count().IsGreaterThan(1000); // Should be reasonably sized
+        await Assert.That(listBytes).Count().IsGreaterThan(MinLargeListByteCount);
 
         var deserializedList = serializer.Deserialize<List<int>>(listBytes);
         await Assert.That(deserializedList).IsNotNull();
@@ -414,9 +404,7 @@ public class ISerializerInterfaceTests
         }
     }
 
-    /// <summary>
-    /// Tests that serializers handle nested objects correctly.
-    /// </summary>
+    /// <summary>Tests that serializers handle nested objects correctly.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -429,31 +417,20 @@ public class ISerializerInterfaceTests
         // Arrange
         var serializer = (ISerializer)Activator.CreateInstance(serializerType)!;
 
+        int[] leafNumbers = [1, 2, 3, 4, 5];
+        UserObject[] leafUsers =
+        [
+            new() { Name = "Nested User 1", Bio = "Bio 1", Blog = "Blog 1" },
+            new() { Name = "Nested User 2", Bio = "Bio 2", Blog = "Blog 2" }
+        ];
+
         var nestedObject = new
         {
             Level1 = new
             {
                 Level2 = new
                 {
-                    Level3 = new
-                    {
-                        Value = "Deeply nested value",
-                        Numbers = (int[])[1, 2, 3, 4, 5],
-                        Users = (UserObject[])[
-                            new()
-                            {
-                                Name = "Nested User 1",
-                                Bio = "Bio 1",
-                                Blog = "Blog 1"
-                            },
-                            new()
-                            {
-                                Name = "Nested User 2",
-                                Bio = "Bio 2",
-                                Blog = "Blog 2"
-                            }
-                        ]
-                    }
+                    Level3 = new NestedLeaf { Value = "Deeply nested value", Numbers = leafNumbers, Users = leafUsers }
                 }
             }
         };
@@ -471,9 +448,7 @@ public class ISerializerInterfaceTests
         await Assert.That(serializedString).Contains("Nested User 1");
     }
 
-    /// <summary>
-    /// Tests that serializers are thread-safe for concurrent operations.
-    /// </summary>
+    /// <summary>Tests that serializers are thread-safe for concurrent operations.</summary>
     /// <param name="serializerType">The serializer type to test.</param>
     /// <returns>A task representing the asynchronous test.</returns>
     [Arguments(typeof(SystemJsonSerializer))]
@@ -499,7 +474,7 @@ public class ISerializerInterfaceTests
             {
                 try
                 {
-                    for (var j = 0; j < 10; j++)
+                    for (var j = 0; j < RoundTripsPerConcurrentTask; j++)
                     {
                         var data = $"{testData}_{taskIndex}_{j}";
 
@@ -532,5 +507,21 @@ public class ISerializerInterfaceTests
 
         // Assert
         await Assert.That(exceptions).IsEmpty();
+    }
+
+    /// <summary>
+    /// The innermost payload of the nested object graph. A named type rather than an anonymous one
+    /// so every serializer emits the real property names the assertions look for.
+    /// </summary>
+    private sealed class NestedLeaf
+    {
+        /// <summary>Gets the marker string the assertions search for in the serialized bytes.</summary>
+        public string Value { get; init; } = string.Empty;
+
+        /// <summary>Gets a small numeric collection carried alongside the marker.</summary>
+        public IReadOnlyList<int> Numbers { get; init; } = [];
+
+        /// <summary>Gets the user objects nested at the deepest level of the graph.</summary>
+        public IReadOnlyList<UserObject> Users { get; init; } = [];
     }
 }

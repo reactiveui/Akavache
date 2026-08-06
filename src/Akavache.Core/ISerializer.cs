@@ -6,14 +6,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Akavache;
 
-/// <summary>
-/// Determines how to serialize to and from a byte.
-/// </summary>
+/// <summary>Determines how to serialize to and from a byte.</summary>
 public interface ISerializer
 {
-    /// <summary>
-    /// Gets or sets the DateTimeKind handling for BSON readers to be forced.
-    /// </summary>
+    /// <summary>Gets or sets the DateTimeKind handling for BSON readers to be forced.</summary>
     /// <remarks>
     /// <para>
     /// By default, BsonReader uses a <see cref="DateTimeKind"/> of <see cref="DateTimeKind.Local"/> and see BsonWriter
@@ -23,9 +19,7 @@ public interface ISerializer
     /// </remarks>
     DateTimeKind? ForcedDateTimeKind { get; set; }
 
-    /// <summary>
-    /// Deserializes from bytes.
-    /// </summary>
+    /// <summary>Deserializes from bytes.</summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="bytes">The bytes.</param>
     /// <returns>The type.</returns>
@@ -35,13 +29,15 @@ public interface ISerializer
     /// <see cref="ISerializer"/>; Akavache.Core is deliberately serializer-agnostic and does not
     /// depend on <c>System.Text.Json</c>.
     /// </remarks>
+    [SuppressMessage(
+        "Design",
+        "SST2307:Type parameter appears in no parameter",
+        Justification = "The type parameter names the cached or serialized type; there is no argument to infer it from.")]
     [RequiresUnreferencedCode("Implementations may use reflection-based deserialization. For AOT, use the JsonTypeInfo extension in Akavache.SystemTextJson.")]
     [RequiresDynamicCode("Implementations may use reflection-based deserialization. For AOT, use the JsonTypeInfo extension in Akavache.SystemTextJson.")]
     T? Deserialize<T>(byte[] bytes);
 
-    /// <summary>
-    /// Serializes to bytes.
-    /// </summary>
+    /// <summary>Serializes to bytes.</summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     /// <param name="item">The item to serialize.</param>
     /// <returns>The bytes.</returns>

@@ -19,6 +19,45 @@ namespace Akavache.Tests;
 [InheritsTests]
 public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 {
+    /// <summary>Key that exists only in the connection's legacy V10 store.</summary>
+    private const string LegacyKey = "legacyKey";
+
+    /// <summary>Key whose seeded row carries a null Id, which the post-query filters must drop.</summary>
+    private const string NullIdKey = "nullId";
+
+    /// <summary>Key whose seeded row carries a null payload, which the value filters must drop.</summary>
+    private const string NullValueKey = "nullValue";
+
+    /// <summary>How many entries the typed-flow test files under <see cref="string"/>.</summary>
+    private const int StringTypedEntryCount = 2;
+
+    /// <summary>How many keys the bulk overloads are asked for at once.</summary>
+    private const int BulkKeyCount = 2;
+
+    /// <summary>How many entries the non-typed flow test writes.</summary>
+    private const int NonTypedEntryCount = 3;
+
+    /// <summary>How many seeded rows keep a non-null Id and therefore survive the post-query filters.</summary>
+    private const int NonNullIdEntryCount = 2;
+
+    /// <summary>Payload used to prove a blob round-trips through the cache unchanged.</summary>
+    private static readonly byte[] RoundTripPayload = [1, 2, 3];
+
+    /// <summary>Payload seeded into the connection's legacy V10 store.</summary>
+    private static readonly byte[] LegacyPayload = [9, 8, 7];
+
+    /// <summary>Payload for the second key, kept distinct so entries can be told apart.</summary>
+    private static readonly byte[] SecondEntryPayload = [2];
+
+    /// <summary>Payload for the third key, kept distinct so entries can be told apart.</summary>
+    private static readonly byte[] ThirdEntryPayload = [3];
+
+    /// <summary>Payload for the fourth key, kept distinct so entries can be told apart.</summary>
+    private static readonly byte[] FourthEntryPayload = [4];
+
+    /// <summary>Payload of the one seeded row that passes every post-query filter.</summary>
+    private static readonly byte[] SurvivingEntryPayload = [9];
+
     /// <summary>
     /// Verifies the <see cref="EncryptedSqliteBlobCache(IAkavacheConnection, ISerializer, IScheduler?)"/>
     /// constructor accepts an <see cref="InMemoryAkavacheConnection"/> and round-trips data —
@@ -31,9 +70,9 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        cache.Insert("k", [1, 2, 3]).SubscribeAndComplete();
+        cache.Insert("k", RoundTripPayload).SubscribeAndComplete();
         var data = cache.Get("k").SubscribeGetValue();
-        await Assert.That(data).IsEquivalentTo(new byte[] { 1, 2, 3 });
+        await Assert.That(data).IsEquivalentTo(RoundTripPayload);
     }
 
     /// <summary>
@@ -47,26 +86,26 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         cache.Insert("a", [1], typeof(string)).SubscribeAndComplete();
-        cache.Insert("b", [2], typeof(string)).SubscribeAndComplete();
-        cache.Insert("c", [3], typeof(int)).SubscribeAndComplete();
+        cache.Insert("b", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
+        cache.Insert("c", ThirdEntryPayload, typeof(int)).SubscribeAndComplete();
 
         var typedKeys = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
-        await Assert.That(typedKeys!.Count).IsEqualTo(2);
+        await Assert.That(typedKeys!.Count).IsEqualTo(StringTypedEntryCount);
 
         var typedAll = cache.GetAll(typeof(string)).ToList().SubscribeGetValue();
-        await Assert.That(typedAll!.Count).IsEqualTo(2);
+        await Assert.That(typedAll!.Count).IsEqualTo(StringTypedEntryCount);
 
         var single = cache.Get("a", typeof(string)).SubscribeGetValue();
         await Assert.That(single).IsNotNull();
 
         var bulkTyped = cache.Get(["a", "b"], typeof(string)).ToList().SubscribeGetValue();
-        await Assert.That(bulkTyped!.Count).IsEqualTo(2);
+        await Assert.That(bulkTyped!.Count).IsEqualTo(BulkKeyCount);
 
         var createdAt = cache.GetCreatedAt("a", typeof(string)).SubscribeGetValue();
         await Assert.That(createdAt).IsNotNull();
 
         var bulkCreatedAt = cache.GetCreatedAt(["a", "b"], typeof(string)).ToList().SubscribeGetValue();
-        await Assert.That(bulkCreatedAt!.Count).IsEqualTo(2);
+        await Assert.That(bulkCreatedAt!.Count).IsEqualTo(BulkKeyCount);
 
         cache.Invalidate("a", typeof(string)).SubscribeAndComplete();
         cache.Invalidate(["b"], typeof(string)).SubscribeAndComplete();
@@ -88,28 +127,28 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         cache.Insert("a", [1]).SubscribeAndComplete();
-        cache.Insert("b", [2]).SubscribeAndComplete();
-        cache.Insert([new("c", [3])]).SubscribeAndComplete();
+        cache.Insert("b", SecondEntryPayload).SubscribeAndComplete();
+        cache.Insert([new("c", ThirdEntryPayload)]).SubscribeAndComplete();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
-        await Assert.That(keys!.Count).IsEqualTo(3);
+        await Assert.That(keys!.Count).IsEqualTo(NonTypedEntryCount);
 
         var single = cache.Get("a").SubscribeGetValue();
         await Assert.That(single).IsNotNull();
 
         var bulk = cache.Get(["a", "b"]).ToList().SubscribeGetValue();
-        await Assert.That(bulk!.Count).IsEqualTo(2);
+        await Assert.That(bulk!.Count).IsEqualTo(BulkKeyCount);
 
         var createdAt = cache.GetCreatedAt("a").SubscribeGetValue();
         await Assert.That(createdAt).IsNotNull();
 
         var bulkCreatedAt = cache.GetCreatedAt(["a", "b"]).ToList().SubscribeGetValue();
-        await Assert.That(bulkCreatedAt!.Count).IsEqualTo(2);
+        await Assert.That(bulkCreatedAt!.Count).IsEqualTo(BulkKeyCount);
 
-        cache.UpdateExpiration("a", DateTimeOffset.UtcNow.AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration("b", typeof(string), DateTimeOffset.UtcNow.AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration(["a"], DateTimeOffset.UtcNow.AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration(["b"], typeof(string), DateTimeOffset.UtcNow.AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration("a", TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration("b", typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(["a"], TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(["b"], typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
 
         cache.Flush().SubscribeAndComplete();
         cache.Flush(typeof(string)).SubscribeAndComplete();
@@ -136,98 +175,11 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         cache.Dispose();
 
-        var error = cache.Insert("k", [1]).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Insert([new("k", [1])]).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Insert("k", [1], typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Insert([new("k", [1])], typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Get("k").SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Get(["k"]).ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Get("k", typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Get(["k"], typeof(string)).ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetAllKeys().ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetAll(typeof(string)).ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetCreatedAt("k").SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetCreatedAt(["k"]).ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetCreatedAt("k", typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.GetCreatedAt(["k"], typeof(string)).ToList().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Flush().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Flush(typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Invalidate("k").SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Invalidate(["k"]).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Invalidate("k", typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Invalidate(["k"], typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.InvalidateAll().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.InvalidateAll(typeof(string)).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.Vacuum().SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.UpdateExpiration("k", DateTimeOffset.Now).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.UpdateExpiration(["k"], DateTimeOffset.Now).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.UpdateExpiration("k", typeof(string), DateTimeOffset.Now).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.UpdateExpiration(["k"], typeof(string), DateTimeOffset.Now).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
-
-        error = cache.BeforeWriteToDiskFilter([1, 2, 3], ImmediateScheduler.Instance).SubscribeGetError();
-        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+        await AssertDisposedForReadOperations(cache);
+        await AssertDisposedForWriteOperations(cache);
     }
 
-    /// <summary>
-    /// Verifies the encrypted cache surfaces <see cref="ArgumentNullException"/> through the
-    /// null-arg validation paths.
-    /// </summary>
+    /// <summary>Verifies the encrypted cache surfaces <see cref="ArgumentNullException"/> through the null-arg validation paths.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedInMemoryConnectionNullArgsShouldThrow()
@@ -287,20 +239,17 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     public async Task EncryptedInMemoryConnectionGetShouldFallBackToLegacyV10Store()
     {
         InMemoryAkavacheConnection connection = new();
-        connection.LegacyV10Store["legacyKey"] = [9, 8, 7];
+        connection.LegacyV10Store[LegacyKey] = LegacyPayload;
 
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        var data = cache.Get("legacyKey").SubscribeGetValue();
-        await Assert.That(data).IsEquivalentTo(new byte[] { 9, 8, 7 });
+        var data = cache.Get(LegacyKey).SubscribeGetValue();
+        await Assert.That(data).IsEquivalentTo(LegacyPayload);
 
-        var typedData = cache.Get("legacyKey", typeof(string)).SubscribeGetValue();
-        await Assert.That(typedData).IsEquivalentTo(new byte[] { 9, 8, 7 });
+        var typedData = cache.Get(LegacyKey, typeof(string)).SubscribeGetValue();
+        await Assert.That(typedData).IsEquivalentTo(LegacyPayload);
     }
 
-    /// <summary>
-    /// Verifies that on the encrypted compilation, missing keys throw
-    /// <see cref="KeyNotFoundException"/> after exhausting the legacy V10 fallback path.
-    /// </summary>
+    /// <summary>Verifies that on the encrypted compilation, missing keys throw <see cref="KeyNotFoundException"/> after exhausting the legacy V10 fallback path.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedInMemoryConnectionGetMissingShouldThrowKeyNotFound()
@@ -359,7 +308,6 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "Test deliberately exercises the synchronous Dispose path.")]
     public async Task EncryptedInMemoryConnectionSyncDisposeRunsCleanupPath()
     {
         InMemoryAkavacheConnection connection = new();
@@ -418,16 +366,19 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     }
 
     /// <summary>
-    /// Verifies the encrypted compilation's typed Insert swallows a failure in the
-    /// upsert path. Exercises the outer try/catch around <c>UpsertAsync</c>.
+    /// Verifies the encrypted compilation's typed Insert reports a failing upsert to the caller
+    /// rather than completing as though the write landed.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    public async Task EncryptedTypedInsertSwallowsUpsertFailure()
+    public async Task EncryptedTypedInsertSurfacesUpsertFailure()
     {
         InMemoryAkavacheConnection connection = new() { FailUpsert = true };
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
-        cache.Insert("k", [1], typeof(string)).SubscribeAndComplete();
+
+        var error = cache.Insert("k", [1], typeof(string)).SubscribeGetError();
+
+        await Assert.That(error).IsNotNull();
         await Assert.That(connection.Store.ContainsKey("k")).IsFalse();
         connection.FailUpsert = false;
     }
@@ -444,11 +395,11 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
         cache.Insert("k1", [1]).SubscribeAndComplete();
-        cache.Insert("k2", [2]).SubscribeAndComplete();
-        cache.Insert("k3", [3], typeof(string)).SubscribeAndComplete();
-        cache.Insert("k4", [4], typeof(string)).SubscribeAndComplete();
+        cache.Insert("k2", SecondEntryPayload).SubscribeAndComplete();
+        cache.Insert("k3", ThirdEntryPayload, typeof(string)).SubscribeAndComplete();
+        cache.Insert("k4", FourthEntryPayload, typeof(string)).SubscribeAndComplete();
 
-        var expiry = DateTimeOffset.UtcNow.AddHours(1);
+        var expiry = TimeProvider.System.GetUtcNow().AddHours(1);
         cache.UpdateExpiration("k1", expiry).SubscribeAndComplete();
         cache.UpdateExpiration(["k2"], expiry).SubscribeAndComplete();
         cache.UpdateExpiration("k3", typeof(string), expiry).SubscribeAndComplete();
@@ -460,35 +411,23 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         await Assert.That(connection.Store["k4"].ExpiresAt!.Value).IsEqualTo(expiry.UtcDateTime);
     }
 
-    /// <summary>
-    /// Verifies the encrypted compilation's synchronous <c>Dispose</c> path tolerates every
-    /// teardown call throwing.
-    /// </summary>
+    /// <summary>Verifies the encrypted compilation's synchronous <c>Dispose</c> path tolerates every teardown call throwing.</summary>
     [Test]
     public void EncryptedSyncDisposeTolerantOfAllFailures()
     {
-        InMemoryAkavacheConnection connection = new()
-        {
-            FailCheckpoint = true,
-        };
+        InMemoryAkavacheConnection connection = new() { FailCheckpoint = true };
         EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
 
         // Should not throw.
         cache.Dispose();
     }
 
-    /// <summary>
-    /// Verifies the encrypted compilation's <c>Dispose</c> tolerates every teardown call
-    /// throwing.
-    /// </summary>
+    /// <summary>Verifies the encrypted compilation's <c>Dispose</c> tolerates every teardown call throwing.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task EncryptedDisposeTolerantOfAllTeardownFailures()
     {
-        InMemoryAkavacheConnection connection = new()
-        {
-            FailCheckpoint = true, FailCompact = true,
-        };
+        InMemoryAkavacheConnection connection = new() { FailCheckpoint = true, FailCompact = true };
         EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
 
         cache.Dispose();
@@ -505,23 +444,23 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         InMemoryAkavacheConnection connection = new() { BypassPredicate = true };
         connection.SeedRaw(
-            "nullId",
-            new(Id: null, typeof(string).FullName, [1], DateTime.UtcNow, ExpiresAt: null));
+            NullIdKey,
+            new(Id: null, typeof(string).FullName, [1], TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
         connection.SeedRaw(
-            "nullValue",
-            new("nullValue", typeof(string).FullName, Value: null, DateTime.UtcNow, ExpiresAt: null));
+            NullValueKey,
+            new(NullValueKey, typeof(string).FullName, Value: null, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
         connection.SeedRaw(
             "good",
-            new("good", typeof(string).FullName, [9], DateTime.UtcNow, ExpiresAt: null));
+            new("good", typeof(string).FullName, SurvivingEntryPayload, TimeProvider.System.GetUtcNow().UtcDateTime, ExpiresAt: null));
 
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateScheduler.Instance);
 
         // Bulk Get/GetAll filter by BOTH null Id and null Value, so only "good" passes.
-        var bulk = cache.Get(["nullId", "nullValue", "good"]).ToList().SubscribeGetValue();
+        var bulk = cache.Get([NullIdKey, NullValueKey, "good"]).ToList().SubscribeGetValue();
         await Assert.That(bulk!.Count).IsEqualTo(1);
         await Assert.That(bulk![0].Key).IsEqualTo("good");
 
-        var bulkTyped = cache.Get(["nullId", "nullValue", "good"], typeof(string)).ToList().SubscribeGetValue();
+        var bulkTyped = cache.Get([NullIdKey, NullValueKey, "good"], typeof(string)).ToList().SubscribeGetValue();
         await Assert.That(bulkTyped!.Count).IsEqualTo(1);
 
         var all = cache.GetAll(typeof(string)).ToList().SubscribeGetValue();
@@ -529,17 +468,116 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
 
         // GetAllKeys / GetCreatedAt only filter by null Id, so "nullValue" (Id non-null) passes too.
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
-        await Assert.That(keys!.Count).IsEqualTo(2);
+        await Assert.That(keys!.Count).IsEqualTo(NonNullIdEntryCount);
         var typedKeys = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
-        await Assert.That(typedKeys!.Count).IsEqualTo(2);
+        await Assert.That(typedKeys!.Count).IsEqualTo(NonNullIdEntryCount);
 
-        var ca = cache.GetCreatedAt(["nullId", "nullValue", "good"]).ToList().SubscribeGetValue();
-        await Assert.That(ca!.Count).IsEqualTo(2);
-        var caTyped = cache.GetCreatedAt(["nullId", "nullValue", "good"], typeof(string)).ToList().SubscribeGetValue();
-        await Assert.That(caTyped!.Count).IsEqualTo(2);
+        var createdAt = cache.GetCreatedAt([NullIdKey, NullValueKey, "good"]).ToList().SubscribeGetValue();
+        await Assert.That(createdAt!.Count).IsEqualTo(NonNullIdEntryCount);
+        var typedCreatedAt = cache.GetCreatedAt([NullIdKey, NullValueKey, "good"], typeof(string)).ToList().SubscribeGetValue();
+        await Assert.That(typedCreatedAt!.Count).IsEqualTo(NonNullIdEntryCount);
     }
 
     /// <inheritdoc/>
     protected override IBlobCache CreateBlobCache(string path, ISerializer serializer) =>
         new EncryptedSqliteBlobCache(new InMemoryAkavacheConnection(), serializer, ImmediateScheduler.Instance);
+
+    /// <summary>Asserts every read-shaped operation on a disposed cache surfaces <see cref="ObjectDisposedException"/>.</summary>
+    /// <param name="cache">A cache that has already been disposed.</param>
+    /// <returns>A task.</returns>
+    private static async Task AssertDisposedForReadOperations(EncryptedSqliteBlobCache cache)
+    {
+        var error = cache.Get("k").SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Get(["k"]).ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Get("k", typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Get(["k"], typeof(string)).ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetAllKeys().ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetAll(typeof(string)).ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetCreatedAt("k").SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetCreatedAt(["k"]).ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetCreatedAt("k", typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.GetCreatedAt(["k"], typeof(string)).ToList().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+    }
+
+    /// <summary>Asserts every mutating operation on a disposed cache surfaces <see cref="ObjectDisposedException"/>.</summary>
+    /// <param name="cache">A cache that has already been disposed.</param>
+    /// <returns>A task.</returns>
+    private static async Task AssertDisposedForWriteOperations(EncryptedSqliteBlobCache cache)
+    {
+        var error = cache.Insert("k", [1]).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Insert([new("k", [1])]).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Insert("k", [1], typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Insert([new("k", [1])], typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Flush().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Flush(typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Invalidate("k").SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Invalidate(["k"]).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Invalidate("k", typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Invalidate(["k"], typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.InvalidateAll().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.InvalidateAll(typeof(string)).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.Vacuum().SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.UpdateExpiration("k", TimeProvider.System.GetLocalNow()).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.UpdateExpiration(["k"], TimeProvider.System.GetLocalNow()).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.UpdateExpiration("k", typeof(string), TimeProvider.System.GetLocalNow()).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.UpdateExpiration(["k"], typeof(string), TimeProvider.System.GetLocalNow()).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+
+        error = cache.BeforeWriteToDiskFilter(RoundTripPayload, ImmediateScheduler.Instance).SubscribeGetError();
+        await Assert.That(error).IsTypeOf<ObjectDisposedException>();
+    }
 }

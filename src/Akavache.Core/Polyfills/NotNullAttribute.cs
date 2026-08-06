@@ -6,6 +6,8 @@
 // https://github.com/SimonCropp/Polyfill
 #if !NET
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Diagnostics.CodeAnalysis;
 
 /// <summary>
@@ -15,13 +17,17 @@ namespace System.Diagnostics.CodeAnalysis;
 /// <remarks>
 /// Link: https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.notnullattribute.
 /// </remarks>
+[SuppressMessage(
+    "Design",
+    "SST2324:Do not declare a member more accessible than its containing type",
+    Justification = "Mirrors the shape of the corresponding BCL type (System.NotNullAttribute); the polyfill compiles only where the BCL lacks it.")]
 [ExcludeFromCodeCoverage]
 [DebuggerNonUserCode]
 [AttributeUsage(
-    AttributeTargets.Field |
-    AttributeTargets.Parameter |
-    AttributeTargets.Property |
-    AttributeTargets.ReturnValue,
+    AttributeTargets.Field
+    | AttributeTargets.Parameter
+    | AttributeTargets.Property
+    | AttributeTargets.ReturnValue,
     Inherited = false)]
 internal sealed class NotNullAttribute : Attribute;
 

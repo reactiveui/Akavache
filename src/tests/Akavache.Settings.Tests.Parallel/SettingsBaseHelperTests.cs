@@ -18,10 +18,13 @@ namespace Akavache.Settings.Tests;
 [Category("Akavache")]
 public class SettingsBaseHelperTests
 {
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryReadAmbientCache"/> returns the value
-    /// produced by a successful resolver.
-    /// </summary>
+    /// <summary>The value <see cref="ResolverInjectedSettings.TestValue"/> is seeded with.</summary>
+    private const int SeededTestValue = 42;
+
+    /// <summary>The value written over <see cref="SeededTestValue"/> to prove the settings instance is writable.</summary>
+    private const int UpdatedTestValue = 99;
+
+    /// <summary>Tests that <see cref="SettingsBase.TryReadAmbientCache"/> returns the value produced by a successful resolver.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryReadAmbientCacheShouldReturnValueFromSuccessfulResolver()
@@ -33,10 +36,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsSameReferenceAs(cache);
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryReadAmbientCache"/> swallows a resolver
-    /// exception and returns <see langword="null"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryReadAmbientCache"/> swallows a resolver exception and returns <see langword="null"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryReadAmbientCacheShouldReturnNullWhenResolverThrows()
@@ -46,10 +46,7 @@ public class SettingsBaseHelperTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/>
-    /// returns the UserAccount cache when its resolver succeeds.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetFromCacheDatabase(Func{IBlobCache}, Func{IBlobCache}, Func{IBlobCache})"/> returns the UserAccount cache when its resolver succeeds.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task TryGetFromCacheDatabaseShouldReturnUserAccountWhenResolverSucceeds()
@@ -209,29 +206,18 @@ public class SettingsBaseHelperTests
             ThrowingResolver,
             ThrowingResolver);
 
-        await Assert.That((int)settings.TestValue).IsEqualTo(42);
+        await Assert.That((int)settings.TestValue).IsEqualTo(SeededTestValue);
 
-        settings.TestValue.Set(99).SubscribeAndComplete();
+        settings.TestValue.Set(UpdatedTestValue).SubscribeAndComplete();
 
-        await Assert.That((int)settings.TestValue).IsEqualTo(99);
+        await Assert.That((int)settings.TestValue).IsEqualTo(UpdatedTestValue);
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns
-    /// <see langword="null"/> when no Akavache instance has been initialized
-    /// (CurrentInstance is null).
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.TryGetFromBlobCacheRegistry"/> returns <see langword="null"/> when no Akavache instance has been initialized (CurrentInstance is null).</summary>
     /// <returns>A task.</returns>
     [Test]
-    internal async Task TryGetFromBlobCacheRegistryShouldNotThrow()
-    {
-        // When CacheDatabase.CurrentInstance is null (or its registry is empty),
-        // TryGetFromBlobCacheRegistry returns null. If an instance happens to be
-        // configured by another test, the result will be the first registered
-        // entry (fallback). Either way, no exception.
-        await Assert.That(() => _ = SettingsBase.TryGetFromBlobCacheRegistry("NonexistentClass"))
+    internal async Task TryGetFromBlobCacheRegistryShouldNotThrow() => await Assert.That(static () => _ = SettingsBase.TryGetFromBlobCacheRegistry("NonexistentClass"))
             .ThrowsNothing();
-    }
 
     /// <summary>
     /// Tests that <see cref="SettingsBase.TryGetFromCacheDatabase()"/> (default-resolver
@@ -240,17 +226,9 @@ public class SettingsBaseHelperTests
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
-    internal async Task TryGetFromCacheDatabaseDefaultOverloadShouldNotThrow()
-    {
-        // The default overload delegates to ReadAmbientUserAccount/LocalMachine/InMemory
-        // wrapped in TryReadAmbientCache, so it swallows any exceptions.
-        await Assert.That(() => _ = SettingsBase.TryGetFromCacheDatabase()).ThrowsNothing();
-    }
+    internal async Task TryGetFromCacheDatabaseDefaultOverloadShouldNotThrow() => await Assert.That(static () => _ = SettingsBase.TryGetFromCacheDatabase()).ThrowsNothing();
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> returns
-    /// an <see cref="InvalidOperationException"/> that contains the class name.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> returns an <see cref="InvalidOperationException"/> that contains the class name.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CreateNoCacheFoundExceptionShouldContainClassName()
@@ -261,10 +239,7 @@ public class SettingsBaseHelperTests
         await Assert.That(exception.Message).Contains("MyTargetClass");
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports
-    /// available caches or &lt;none&gt; depending on registry state.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.CreateNoCacheFoundException"/> reports available caches or &lt;none&gt; depending on registry state.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task CreateNoCacheFoundExceptionShouldReportAvailableOrNone()
@@ -293,7 +268,7 @@ public class SettingsBaseHelperTests
 
         try
         {
-            await Assert.That(() => SettingsBase.GetBlobCacheForClass(
+            await Assert.That(static () => SettingsBase.GetBlobCacheForClass(
                 "UnresolvableClass",
                 ThrowingResolver,
                 ThrowingResolver,
@@ -304,15 +279,12 @@ public class SettingsBaseHelperTests
         {
             if (existing is not null)
             {
-                AppLocator.CurrentMutable.RegisterConstant<ISerializer>(existing);
+                AppLocator.CurrentMutable.RegisterConstant(existing);
             }
         }
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.PushAmbientCache"/> sets the ambient cache
-    /// and restores it on disposal.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.PushAmbientCache"/> sets the ambient cache and restores it on disposal.</summary>
     /// <returns>A task.</returns>
     [Test]
     internal async Task PushAmbientCacheShouldSetAndRestoreAmbientCache()
@@ -330,61 +302,33 @@ public class SettingsBaseHelperTests
         await Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.ReadAmbientUserAccount"/> throws
-    /// <see cref="InvalidOperationException"/> when CacheDatabase is not initialized.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.ReadAmbientUserAccount"/> throws <see cref="InvalidOperationException"/> when CacheDatabase is not initialized.</summary>
     /// <returns>A task.</returns>
     [Test]
-    internal async Task ReadAmbientUserAccountShouldNotThrowWhenWrapped()
-    {
-        // ReadAmbientUserAccount throws when CacheDatabase has no UserAccount.
-        // TryReadAmbientCache swallows the exception, so either we get null
-        // (not initialized) or a cache (if some other test initialized it).
-        await Assert.That(() => _ = SettingsBase.TryReadAmbientCache(SettingsBase.ReadAmbientUserAccount))
+    internal async Task ReadAmbientUserAccountShouldNotThrowWhenWrapped() => await Assert.That(static () => _ = SettingsBase.TryReadAmbientCache(SettingsBase.ReadAmbientUserAccount))
             .ThrowsNothing();
-    }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.ReadAmbientLocalMachine"/> does not throw
-    /// when wrapped in <see cref="SettingsBase.TryReadAmbientCache"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.ReadAmbientLocalMachine"/> does not throw when wrapped in <see cref="SettingsBase.TryReadAmbientCache"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
-    internal async Task ReadAmbientLocalMachineShouldNotThrowWhenWrapped()
-    {
-        await Assert.That(() => _ = SettingsBase.TryReadAmbientCache(SettingsBase.ReadAmbientLocalMachine))
+    internal async Task ReadAmbientLocalMachineShouldNotThrowWhenWrapped() => await Assert.That(static () => _ = SettingsBase.TryReadAmbientCache(SettingsBase.ReadAmbientLocalMachine))
             .ThrowsNothing();
-    }
 
-    /// <summary>
-    /// Tests that <see cref="SettingsBase.ReadAmbientInMemory"/> does not throw
-    /// when wrapped in <see cref="SettingsBase.TryReadAmbientCache"/>.
-    /// </summary>
+    /// <summary>Tests that <see cref="SettingsBase.ReadAmbientInMemory"/> does not throw when wrapped in <see cref="SettingsBase.TryReadAmbientCache"/>.</summary>
     /// <returns>A task.</returns>
     [Test]
-    internal async Task ReadAmbientInMemoryShouldNotThrowWhenWrapped()
-    {
-        await Assert.That(() => _ = SettingsBase.TryReadAmbientCache(SettingsBase.ReadAmbientInMemory))
+    internal async Task ReadAmbientInMemoryShouldNotThrowWhenWrapped() => await Assert.That(static () => _ = SettingsBase.TryReadAmbientCache(SettingsBase.ReadAmbientInMemory))
             .ThrowsNothing();
-    }
 
-    /// <summary>
-    /// Resolver stub that always throws, mirroring unconfigured cache behavior.
-    /// </summary>
+    /// <summary>Resolver stub that always throws, mirroring unconfigured cache behavior.</summary>
     /// <returns>Never returns; always throws.</returns>
     private static IBlobCache ThrowingResolver() =>
         throw new InvalidOperationException("cache kind not configured");
 
-    /// <summary>
-    /// Minimal <see cref="SettingsBase"/> subclass that forwards to the injectable-
-    /// resolver constructor, exercising the 3-arg overload (lines 48-57).
-    /// </summary>
+    /// <summary>Minimal <see cref="SettingsBase"/> subclass that forwards to the injectable- resolver constructor, exercising the 3-arg overload (lines 48-57).</summary>
     private sealed class ResolverInjectedSettings : SettingsBase
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ResolverInjectedSettings"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="ResolverInjectedSettings"/> class.</summary>
         /// <param name="className">The class name used as the key prefix.</param>
         /// <param name="userAccountResolver">Delegate that returns the UserAccount cache.</param>
         /// <param name="localMachineResolver">Delegate that returns the LocalMachine cache.</param>
@@ -395,7 +339,7 @@ public class SettingsBaseHelperTests
             Func<IBlobCache> localMachineResolver,
             Func<IBlobCache> inMemoryResolver)
             : base(className, userAccountResolver, localMachineResolver, inMemoryResolver) =>
-            TestValue = CreateProperty(42, nameof(TestValue));
+            TestValue = CreateProperty(SeededTestValue);
 
         /// <summary>Gets the test value property helper.</summary>
         public SettingsPropertyHelper<int> TestValue { get; }

@@ -6,35 +6,30 @@ using System.Diagnostics;
 
 namespace Akavache.Settings.Tests;
 
-/// <summary>
-/// A helper for the different tests.
-/// </summary>
+/// <summary>A helper for the different tests.</summary>
 internal static class TestHelper
 {
-    /// <summary>
-    /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
-    /// Handles transient disposal exceptions as retryable.
-    /// </summary>
+    /// <summary>Polls a condition until it returns <see langword="true"/> or the timeout expires. Handles transient disposal exceptions as retryable.</summary>
     /// <param name="condition">An asynchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
     /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 10000ms.</param>
     /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 50ms.</param>
     /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
     /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 500ms.</param>
     /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
-    public static async Task EventuallyAsync(
+    internal static async Task EventuallyAsync(
         Func<Task<bool>> condition,
-        int timeoutMs = 10000,
+        int timeoutMs = 10_000,
         int initialDelayMs = 50,
         double backoff = 1.5,
         int maxDelayMs = 500)
     {
-        var sw = Stopwatch.StartNew();
+        var start = Stopwatch.GetTimestamp();
         var delay = initialDelayMs;
 
         // Initial small delay to allow async operations to start
         await Task.Delay(delay).ConfigureAwait(false);
 
-        while (sw.ElapsedMilliseconds < timeoutMs)
+        while (Stopwatch.GetElapsedTime(start).TotalMilliseconds < timeoutMs)
         {
             bool ok;
             try
@@ -45,7 +40,7 @@ internal static class TestHelper
             {
                 ok = false;
             }
-            catch (InvalidOperationException ex) when (ex.IsDisposedMessage())
+            catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
             {
                 ok = false;
             }
@@ -62,19 +57,16 @@ internal static class TestHelper
         Assert.Fail($"Condition not met within {timeoutMs}ms.");
     }
 
-    /// <summary>
-    /// Polls a condition until it returns <see langword="true"/> or the timeout expires.
-    /// Handles transient disposal exceptions as retryable.
-    /// </summary>
+    /// <summary>Polls a condition until it returns <see langword="true"/> or the timeout expires. Handles transient disposal exceptions as retryable.</summary>
     /// <param name="condition">A synchronous function that returns <see langword="true"/> when the condition is satisfied.</param>
     /// <param name="timeoutMs">The maximum time, in milliseconds, to wait before failing the assertion. Default is 10000ms.</param>
     /// <param name="initialDelayMs">The initial delay between polls, in milliseconds. Default is 50ms.</param>
     /// <param name="backoff">The multiplicative backoff applied to the delay between retries. Default is 1.5.</param>
     /// <param name="maxDelayMs">The maximum delay between polls, in milliseconds. Default is 500ms.</param>
     /// <returns>A task that completes when the condition is satisfied or fails the test on timeout.</returns>
-    public static Task EventuallyAsync(
+    internal static Task EventuallyAsync(
         Func<bool> condition,
-        int timeoutMs = 10000,
+        int timeoutMs = 10_000,
         int initialDelayMs = 50,
         double backoff = 1.5,
         int maxDelayMs = 500) =>
@@ -90,7 +82,7 @@ internal static class TestHelper
     /// <returns>
     /// True if the action completes successfully; false if a transient disposal occurred and the caller should retry.
     /// </returns>
-    public static async Task<bool> WithFreshStoreAsync(
+    internal static async Task<bool> WithFreshStoreAsync(
         IAkavacheInstance instance,
         Func<ViewSettings?> getViewSettings,
         Func<ViewSettings, Task<bool>> action)
@@ -100,7 +92,7 @@ internal static class TestHelper
         {
             s = getViewSettings();
 
-            if (s != null)
+            if (s is not null)
             {
                 return await action(s).ConfigureAwait(false);
             }
@@ -112,7 +104,7 @@ internal static class TestHelper
         {
             return false;
         }
-        catch (InvalidOperationException ex) when (ex.IsDisposedMessage())
+        catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
         {
             return false;
         }
@@ -139,7 +131,7 @@ internal static class TestHelper
     /// </summary>
     /// <param name="probe">A function that evaluates to <see langword="true"/> when the condition is satisfied.</param>
     /// <returns>True if the probe succeeded and returned true; false on transient disposal or false condition.</returns>
-    public static bool TryRead(Func<bool> probe)
+    internal static bool TryRead(Func<bool> probe)
     {
         try
         {
@@ -149,7 +141,7 @@ internal static class TestHelper
         {
             return false;
         }
-        catch (InvalidOperationException ex) when (ex.IsDisposedMessage())
+        catch (InvalidOperationException ex) when (IsDisposedMessage(ex))
         {
             return false;
         }
@@ -162,12 +154,10 @@ internal static class TestHelper
         }
     }
 
-    /// <summary>
-    /// Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.
-    /// </summary>
+    /// <summary>Returns <see langword="true"/> if the supplied exception message looks like a "disposed" transient from Rx.</summary>
     /// <param name="ex">The exception to inspect.</param>
     /// <returns>True if the message indicates a disposed resource; otherwise, false.</returns>
-    public static bool IsDisposedMessage(this InvalidOperationException ex) =>
+    internal static bool IsDisposedMessage(InvalidOperationException ex) =>
         ex.Message.Contains("disposed", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>

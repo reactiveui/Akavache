@@ -8,26 +8,15 @@ using AkavacheTodoMaui.Services;
 
 namespace AkavacheTodoMaui;
 
-/// <summary>
-/// Main application class with Akavache lifecycle management.
-/// </summary>
+/// <summary>Main application class with Akavache lifecycle management.</summary>
 [RequiresUnreferencedCode("ReactiveObject requires types to be preserved for reflection.")]
 [RequiresDynamicCode("ReactiveObject requires types to be preserved for reflection.")]
 public partial class App : Application
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="App"/> class.
-    /// </summary>
-#pragma warning disable IL3050 // AOT reflection warnings are expected for ReactiveUI in sample applications
-    public App()
-    {
-        InitializeComponent();
-    }
-#pragma warning restore IL3050
+    /// <summary>Initializes a new instance of the <see cref="App"/> class.</summary>
+    public App() => InitializeComponent();
 
-    /// <summary>
-    /// Creates the main application window.
-    /// </summary>
+    /// <summary>Creates the main application window.</summary>
     /// <param name="activationState">The activation state.</param>
     /// <returns>The main window.</returns>
     protected override Window CreateWindow(IActivationState? activationState)
@@ -41,32 +30,26 @@ public partial class App : Application
         return window;
     }
 
-    /// <summary>
-    /// Called when the application starts.
-    /// </summary>
+    /// <summary>Called when the application starts.</summary>
     protected override void OnStart()
     {
         base.OnStart();
         System.Diagnostics.Debug.WriteLine("Application started");
     }
 
-    /// <summary>
-    /// Called when the application is put to sleep.
-    /// </summary>
+    /// <summary>Called when the application is put to sleep.</summary>
     protected override void OnSleep()
     {
         base.OnSleep();
 
         // Save application state when going to sleep
-        TodoCacheService.SaveApplicationState()
+        _ = TodoCacheService.SaveApplicationState()
             .Subscribe(
                 static _ => System.Diagnostics.Debug.WriteLine("Application state saved"),
                 static ex => System.Diagnostics.Debug.WriteLine($"Failed to save state: {ex}"));
     }
 
-    /// <summary>
-    /// Called when the application resumes.
-    /// </summary>
+    /// <summary>Called when the application resumes.</summary>
     protected override void OnResume()
     {
         base.OnResume();
@@ -75,19 +58,15 @@ public partial class App : Application
         System.Diagnostics.Debug.WriteLine("Application resumed");
     }
 
-    /// <summary>
-    /// Called when a window is created.
-    /// </summary>
+    /// <summary>Called when a window is created.</summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The event data.</param>
-    private void OnWindowCreated(object? sender, EventArgs e) => System.Diagnostics.Debug.WriteLine("Window created");
+    private static void OnWindowCreated(object? sender, EventArgs e) => System.Diagnostics.Debug.WriteLine("Window created");
 
-    /// <summary>
-    /// Called when a window is being destroyed to save application state and shut down the cache.
-    /// </summary>
+    /// <summary>Called when a window is being destroyed to save application state and shut down the cache.</summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The event data.</param>
-    private async void OnWindowDestroying(object? sender, EventArgs e)
+    private static async void OnWindowDestroying(object? sender, EventArgs e)
     {
         System.Diagnostics.Debug.WriteLine("Window destroying - saving state and shutting down cache");
 

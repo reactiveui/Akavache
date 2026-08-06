@@ -6,9 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Akavache.Helpers;
 
-/// <summary>
-/// Thread safe interlocked dispose helper.
-/// </summary>
+/// <summary>Thread safe interlocked dispose helper.</summary>
 [ExcludeFromCodeCoverage]
 internal static class DisposeHelper
 {

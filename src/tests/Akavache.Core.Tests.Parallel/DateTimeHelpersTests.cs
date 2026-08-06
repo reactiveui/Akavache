@@ -15,9 +15,16 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class DateTimeHelpersTests
 {
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase with MinValue and UTC forced kind.
-    /// </summary>
+    /// <summary>Year of the sample timestamps these tests round-trip through the helpers.</summary>
+    private const int SampleYear = 2025;
+
+    /// <summary>Year of the fixed safe date the recovery strategies fall back to when they cannot decode an exact value.</summary>
+    private const int RecoveredFallbackYear = 2025;
+
+    /// <summary>UTC offset, in hours, of the sample <see cref="DateTimeOffset"/> used to prove the offset survives the round trip.</summary>
+    private const int SampleOffsetHours = 5;
+
+    /// <summary>Tests HandleDateTimeEdgeCase with MinValue and UTC forced kind.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldHandleMinValueWithUtcKind()
@@ -27,9 +34,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc));
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase converting Local to UTC.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeEdgeCase converting Local to UTC.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertLocalToUtc()
@@ -39,9 +44,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase converting UTC to Local.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeEdgeCase converting UTC to Local.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertUtcToLocal()
@@ -51,9 +54,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase with no forced kind.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeEdgeCase with no forced kind.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldReturnUnchangedWhenNoForcedKind()
@@ -64,9 +65,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase converting Unspecified to UTC.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeEdgeCase converting Unspecified to UTC.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertUnspecifiedToUtc()
@@ -76,9 +75,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase converting Unspecified to Local.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeEdgeCase converting Unspecified to Local.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldConvertUnspecifiedToLocal()
@@ -88,9 +85,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeWithCrossSerializerSupport for normal DateTime.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeWithCrossSerializerSupport for normal DateTime.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeWithCrossSerializerSupportShouldHandleNormalDateTime()
@@ -100,9 +95,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeWithCrossSerializerSupport with MinValue when edge case processing doesn't change it.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeWithCrossSerializerSupport with MinValue when edge case processing doesn't change it.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeWithCrossSerializerSupportShouldHandleMinValue()
@@ -113,9 +106,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeOffsetWithCrossSerializerSupport for MinValue.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeOffsetWithCrossSerializerSupport for MinValue.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeOffsetWithCrossSerializerSupportShouldHandleMinValue()
@@ -124,9 +115,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTimeOffset.MinValue);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeOffsetWithCrossSerializerSupport for MaxValue.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeOffsetWithCrossSerializerSupport for MaxValue.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeOffsetWithCrossSerializerSupportShouldHandleMaxValue()
@@ -135,21 +124,17 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTimeOffset.MaxValue);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeOffsetWithCrossSerializerSupport for normal value.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeOffsetWithCrossSerializerSupport for normal value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeOffsetWithCrossSerializerSupportShouldHandleNormalValue()
     {
-        DateTimeOffset dto = new(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(5));
+        DateTimeOffset dto = new(2025, 6, 15, 12, 0, 0, TimeSpan.FromHours(SampleOffsetHours));
         var result = DateTimeHelpers.HandleDateTimeOffsetWithCrossSerializerSupport<DateTimeOffset>(dto);
         await Assert.That(result).IsEqualTo(dto);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeOffsetWithCrossSerializerSupport handles normal offsets.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeOffsetWithCrossSerializerSupport handles normal offsets.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeOffsetWithCrossSerializerSupportShouldHandleAll()
@@ -160,12 +145,10 @@ public class DateTimeHelpersTests
 
         await Assert.That(min).IsEqualTo(DateTimeOffset.MinValue);
         await Assert.That(max).IsEqualTo(DateTimeOffset.MaxValue);
-        await Assert.That(normal.Year).IsEqualTo(2025);
+        await Assert.That(normal.Year).IsEqualTo(SampleYear);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with MinValue and original value.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with MinValue and original value.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldRecoverOriginalValue()
@@ -175,9 +158,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(original);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with MinValue but no original.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with MinValue but no original.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldReturnMinValueWhenNoOriginal()
@@ -186,9 +167,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with forced UTC kind.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with forced UTC kind.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldApplyForcedUtcKind()
@@ -198,9 +177,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with forced Local kind.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with forced Local kind.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldApplyForcedLocalKind()
@@ -210,9 +187,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with forced Unspecified kind.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with forced Unspecified kind.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldApplyForcedUnspecifiedKind()
@@ -222,9 +197,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Unspecified);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with MinValue and unreasonable original.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with MinValue and unreasonable original.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldNotRecoverUnreasonableOriginal()
@@ -250,9 +223,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with MinValue but original also MinValue.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with MinValue but original also MinValue.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldKeepMinValueIfOriginalIsAlsoMinValue()
@@ -261,9 +232,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with data containing year patterns.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with data containing year patterns.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFromYearPatterns()
@@ -273,9 +242,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with data containing 2024.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with data containing 2024.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFrom2024Pattern()
@@ -285,9 +252,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with data containing 2026.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with data containing 2026.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFrom2026Pattern()
@@ -297,9 +262,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with short data (no recovery possible).
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with short data (no recovery possible).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldReturnOriginalForShortData()
@@ -309,9 +272,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with non-MinValue input.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with non-MinValue input.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldReturnOriginalWhenNotMinValue()
@@ -322,9 +283,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(original);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with large data containing no year patterns (strategy 3).
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with large data containing no year patterns (strategy 3).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldUseFallbackForLargeData()
@@ -338,25 +297,21 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with binary data containing valid epoch timestamp.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with binary data containing valid epoch timestamp.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFromBinaryTimestamp()
     {
         // Create data with a valid Unix epoch millisecond timestamp for ~2025
         var data = new byte[16];
-        var epochMs = (long)(new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc) - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+        var epochMs = (long)(new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc) - DateTime.UnixEpoch).TotalMilliseconds;
         BitConverter.GetBytes(epochMs).CopyTo(data, 0);
 
         var result = DateTimeHelpers.AttemptDateTimeRecovery(data, DateTime.MinValue);
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery with ISO 8601 date pattern.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery with ISO 8601 date pattern.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldRecoverFromIso8601Pattern()
@@ -369,9 +324,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery returns fallback for large data without year patterns.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery returns fallback for large data without year patterns.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldUseFallbackForLargeDataNoPatterns()
@@ -382,9 +335,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNotEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Tests HandleDateTimeEdgeCase MinValue without forced UTC kind returns unchanged.
-    /// </summary>
+    /// <summary>Tests HandleDateTimeEdgeCase MinValue without forced UTC kind returns unchanged.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task HandleDateTimeEdgeCaseShouldNotSpecialCaseMinValueWithoutUtcKind()
@@ -408,9 +359,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc));
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with Unspecified input forced to Utc.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with Unspecified input forced to Utc.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldConvertUnspecifiedToUtc()
@@ -420,9 +369,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
     }
 
-    /// <summary>
-    /// Tests ValidateDeserializedDateTime with Local input forced to Local returns specified Local.
-    /// </summary>
+    /// <summary>Tests ValidateDeserializedDateTime with Local input forced to Local returns specified Local.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ValidateDeserializedDateTimeShouldSpecifyLocalWhenUnspecifiedInputForcedLocal()
@@ -432,9 +379,7 @@ public class DateTimeHelpersTests
         await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Local);
     }
 
-    /// <summary>
-    /// Tests AttemptDateTimeRecovery returns problematic result when data is small and no patterns match.
-    /// </summary>
+    /// <summary>Tests AttemptDateTimeRecovery returns problematic result when data is small and no patterns match.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task AttemptDateTimeRecoveryShouldReturnOriginalForSmallDataNoPattern()
@@ -491,10 +436,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsEqualTo(DateTime.MinValue);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed
-    /// fallback date when the data contains the year "2024" as a substring.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed fallback date when the data contains the year "2024" as a substring.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFrom2024Pattern()
@@ -504,13 +446,10 @@ public class DateTimeHelpersTests
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(RecoveredFallbackYear);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed
-    /// fallback date when the data contains the year "2025" as a substring.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed fallback date when the data contains the year "2025" as a substring.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFrom2025Pattern()
@@ -520,13 +459,10 @@ public class DateTimeHelpersTests
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(RecoveredFallbackYear);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed
-    /// fallback date when the data contains the year "2026" as a substring.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed fallback date when the data contains the year "2026" as a substring.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFrom2026Pattern()
@@ -536,13 +472,10 @@ public class DateTimeHelpersTests
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(RecoveredFallbackYear);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed
-    /// fallback date when the data contains an ISO 8601 datetime substring (and no year hint).
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns a fixed fallback date when the data contains an ISO 8601 datetime substring (and no year hint).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldRecoverFromIso8601Pattern()
@@ -553,13 +486,10 @@ public class DateTimeHelpersTests
         var result = DateTimeHelpers.TryRecoverDateTimeFromText(data);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(RecoveredFallbackYear);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns
-    /// <c>null</c> when the data contains no year hint and no ISO 8601 signature.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromText"/> returns <c>null</c> when the data contains no year hint and no ISO 8601 signature.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromTextShouldReturnNullWhenNoPattern()
@@ -571,10 +501,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromBinary"/> returns
-    /// <c>null</c> for buffers shorter than 8 bytes (the minimum needed for an Int64 read).
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromBinary"/> returns <c>null</c> for buffers shorter than 8 bytes (the minimum needed for an Int64 read).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromBinaryShouldReturnNullForShortBuffer()
@@ -584,10 +511,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromBinary"/> recovers a
-    /// DateTime when the buffer contains a plausible Unix-epoch millisecond timestamp.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromBinary"/> recovers a DateTime when the buffer contains a plausible Unix-epoch millisecond timestamp.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromBinaryShouldRecoverPlausibleTimestamp()
@@ -595,19 +519,16 @@ public class DateTimeHelpersTests
         // Build a buffer where the first 8 bytes encode an Int64 little-endian millisecond
         // value that decodes to a year between 2000 and 2100.
         DateTime target = new(2025, 6, 15, 12, 0, 0, DateTimeKind.Utc);
-        var ms = (long)(target - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+        var ms = (long)(target - DateTime.UnixEpoch).TotalMilliseconds;
         var data = BitConverter.GetBytes(ms);
 
         var result = DateTimeHelpers.TryRecoverDateTimeFromBinary(data);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(SampleYear);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromBinary"/> returns
-    /// <c>null</c> when the buffer contains no plausible timestamp at any 4-byte aligned offset.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromBinary"/> returns <c>null</c> when the buffer contains no plausible timestamp at any 4-byte aligned offset.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromBinaryShouldReturnNullWhenNoPlausibleTimestamp()
@@ -641,10 +562,7 @@ public class DateTimeHelpersTests
         await Assert.That(result).IsNull();
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromLargeDataFallback"/>
-    /// returns a fixed safe date when the buffer is larger than 50 bytes.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromLargeDataFallback"/> returns a fixed safe date when the buffer is larger than 50 bytes.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromLargeDataFallbackShouldReturnSafeDateForLargeBuffers()
@@ -654,13 +572,10 @@ public class DateTimeHelpersTests
         var result = DateTimeHelpers.TryRecoverDateTimeFromLargeDataFallback(data);
 
         await Assert.That(result).IsNotNull();
-        await Assert.That(result!.Value.Year).IsEqualTo(2025);
+        await Assert.That(result!.Value.Year).IsEqualTo(RecoveredFallbackYear);
     }
 
-    /// <summary>
-    /// Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromLargeDataFallback"/>
-    /// returns <c>null</c> when the buffer is at or below the 50-byte threshold.
-    /// </summary>
+    /// <summary>Verifies <see cref="DateTimeHelpers.TryRecoverDateTimeFromLargeDataFallback"/> returns <c>null</c> when the buffer is at or below the 50-byte threshold.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task TryRecoverDateTimeFromLargeDataFallbackShouldReturnNullForSmallBuffers()

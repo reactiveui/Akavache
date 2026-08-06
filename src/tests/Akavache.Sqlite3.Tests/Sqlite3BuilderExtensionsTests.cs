@@ -11,24 +11,21 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for Akavache.Sqlite3.AkavacheBuilderExtensions (non-encrypted).
-/// </summary>
+/// <summary>Tests for Akavache.Sqlite3.AkavacheBuilderExtensions (non-encrypted).</summary>
 [Category("Akavache")]
 public class Sqlite3BuilderExtensionsTests
 {
-    /// <summary>
-    /// Tests WithSqliteProvider() throws on null builder.
-    /// </summary>
+    /// <summary>The cache slot name handed to <c>CreateSqliteCache</c> throughout these tests.</summary>
+    private const string UserAccountSlot = "UserAccount";
+
+    /// <summary>Tests WithSqliteProvider() throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteProviderShouldThrowOnNullBuilder() =>
         await Assert.That(static () => Sqlite3.AkavacheBuilderExtensions.WithSqliteProvider(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSqliteProvider() initializes the SQLite provider.
-    /// </summary>
+    /// <summary>Tests WithSqliteProvider() initializes the SQLite provider.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteProviderShouldInitialize()
@@ -39,32 +36,26 @@ public class Sqlite3BuilderExtensionsTests
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Tests WithSqliteProvider() is idempotent (second call is a no-op).
-    /// </summary>
+    /// <summary>Tests WithSqliteProvider() is idempotent (second call is a no-op).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteProviderShouldBeIdempotent()
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("WithSqliteProviderIdempotent");
-        builder.WithSqliteProvider();
+        _ = builder.WithSqliteProvider();
         var result = builder.WithSqliteProvider();
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Tests WithSqliteDefaults() throws on null builder.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults() throws on null builder.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldThrowOnNullBuilder() =>
         await Assert.That(static () => Sqlite3.AkavacheBuilderExtensions.WithSqliteDefaults(null!))
             .Throws<ArgumentNullException>();
 
-    /// <summary>
-    /// Tests WithSqliteDefaults() throws when no serializer is registered.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults() throws when no serializer is registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldThrowWhenNoSerializer()
@@ -75,29 +66,20 @@ public class Sqlite3BuilderExtensionsTests
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests WithSqliteDefaults() throws when application name is empty.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults() throws when application name is empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldThrowWhenApplicationNameEmpty()
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         SystemJsonSerializer serializer = new();
-        FakeAkavacheBuilder builder = new()
-        {
-            ApplicationName = string.Empty,
-            Serializer = serializer,
-            SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName,
-        };
+        FakeAkavacheBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
         await Assert.That(() => builder.WithSqliteDefaults())
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests WithSqliteDefaults() creates all SQLite-backed caches on the happy path.
-    /// </summary>
+    /// <summary>Tests WithSqliteDefaults() creates all SQLite-backed caches on the happy path.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task WithSqliteDefaultsShouldCreateCaches()
@@ -144,9 +126,7 @@ public class Sqlite3BuilderExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests CreateSqliteCache throws on empty cache name.
-    /// </summary>
+    /// <summary>Tests CreateSqliteCache throws on empty cache name.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateSqliteCacheShouldThrowOnEmptyName()
@@ -159,9 +139,7 @@ public class Sqlite3BuilderExtensionsTests
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests CreateSqliteCache throws when no serializer is registered.
-    /// </summary>
+    /// <summary>Tests CreateSqliteCache throws when no serializer is registered.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateSqliteCacheShouldThrowWhenNoSerializer()
@@ -169,33 +147,23 @@ public class Sqlite3BuilderExtensionsTests
         var builder = CacheDatabase.CreateBuilder()
             .WithApplicationName("CreateSqliteCacheNoSerializer");
 
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache("UserAccount", builder))
+        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(UserAccountSlot, builder))
             .Throws<InvalidOperationException>();
     }
 
-    /// <summary>
-    /// Tests CreateSqliteCache throws when application name is empty.
-    /// </summary>
+    /// <summary>Tests CreateSqliteCache throws when application name is empty.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateSqliteCacheShouldThrowWhenApplicationNameEmpty()
     {
         SystemJsonSerializer serializer = new();
-        FakeAkavacheBuilder builder = new()
-        {
-            ApplicationName = string.Empty,
-            Serializer = serializer,
-            SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName,
-        };
+        FakeAkavacheBuilder builder = new() { ApplicationName = string.Empty, Serializer = serializer, SerializerTypeName = typeof(SystemJsonSerializer).AssemblyQualifiedName, };
 
-        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache("UserAccount", builder))
+        await Assert.That(() => Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(UserAccountSlot, builder))
             .Throws<ArgumentException>();
     }
 
-    /// <summary>
-    /// Tests CreateSqliteCache creates a cache on the happy path with legacy file location
-    /// and a forced DateTimeKind set.
-    /// </summary>
+    /// <summary>Tests CreateSqliteCache creates a cache on the happy path with legacy file location and a forced DateTimeKind set.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task CreateSqliteCacheShouldCreateCacheWithLegacyAndForcedDateTimeKind()
@@ -207,9 +175,9 @@ public class Sqlite3BuilderExtensionsTests
             .WithLegacyFileLocation()
             .UseForcedDateTimeKind(DateTimeKind.Utc);
 
-        builder.WithSqliteProvider();
+        _ = builder.WithSqliteProvider();
 
-        var cache = Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache("UserAccount", builder);
+        var cache = Sqlite3.AkavacheBuilderExtensions.CreateSqliteCache(UserAccountSlot, builder);
         try
         {
             await Assert.That(cache).IsNotNull();
@@ -221,24 +189,20 @@ public class Sqlite3BuilderExtensionsTests
         }
     }
 
-    /// <summary>
-    /// Tests ResetSqliteProviderForTests is callable and resets internal state.
-    /// </summary>
+    /// <summary>Tests ResetSqliteProviderForTests is callable and resets internal state.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ResetSqliteProviderForTestsShouldBeCallable()
     {
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var builder = CreateBuilder("ResetSqliteProviderForTestsCall");
-        builder.WithSqliteProvider();
+        _ = builder.WithSqliteProvider();
         Sqlite3.AkavacheBuilderExtensions.ResetSqliteProviderForTests();
         var result = builder.WithSqliteProvider();
         await Assert.That(result).IsSameReferenceAs(builder);
     }
 
-    /// <summary>
-    /// Creates a new <see cref="IAkavacheBuilder"/> with the given application name.
-    /// </summary>
+    /// <summary>Creates a new <see cref="IAkavacheBuilder"/> with the given application name.</summary>
     /// <param name="applicationName">The application name to configure on the builder.</param>
     /// <returns>A new <see cref="IAkavacheBuilder"/>.</returns>
     private static IAkavacheBuilder CreateBuilder(string applicationName) =>
@@ -326,7 +290,11 @@ public class Sqlite3BuilderExtensionsTests
         }
 
         /// <inheritdoc/>
-        public IAkavacheBuilder WithInMemoryDefaults() => this;
+        public IAkavacheBuilder WithInMemoryDefaults()
+        {
+            // The fake never materialises caches, so the in-memory slot stays exactly as the test left it.
+            return this;
+        }
 
         /// <inheritdoc/>
         public IAkavacheBuilder WithLegacyFileLocation()

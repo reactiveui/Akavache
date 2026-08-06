@@ -7,9 +7,7 @@ using ReactiveUI.SourceGenerators;
 
 namespace AkavacheTodoWpf.Services;
 
-/// <summary>
-/// Represents todo statistics for dashboard display.
-/// </summary>
+/// <summary>Represents todo statistics for dashboard display.</summary>
 public partial class TodoStats : ReactiveObject
 {
     /// <summary>
@@ -46,5 +44,5 @@ public partial class TodoStats : ReactiveObject
     /// Gets or sets when these statistics were calculated.
     /// </summary>
     [Reactive]
-    public partial DateTimeOffset LastCalculated { get; set; } = DateTimeOffset.Now;
+    public partial DateTimeOffset LastCalculated { get; set; } = TimeProvider.System.GetLocalNow();
 }

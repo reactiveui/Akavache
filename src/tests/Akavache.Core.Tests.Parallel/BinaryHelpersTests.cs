@@ -14,9 +14,22 @@ namespace Akavache.Tests;
 [Category("Akavache")]
 public class BinaryHelpersTests
 {
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes zero correctly.
-    /// </summary>
+    /// <summary>How many pseudo-random vectors each round-trip comparison against <see cref="BitConverter"/> generates.</summary>
+    private const int RandomizedVectorCount = 100;
+
+    /// <summary>Multiplier of the 32-bit linear congruential generator that produces the <see cref="int"/> test vectors.</summary>
+    private const ulong Int32LcgMultiplier = 1_103_515_245UL;
+
+    /// <summary>Increment of the 32-bit linear congruential generator that produces the <see cref="int"/> test vectors.</summary>
+    private const ulong Int32LcgIncrement = 12_345UL;
+
+    /// <summary>Multiplier of the 64-bit linear congruential generator that produces the <see cref="long"/> test vectors.</summary>
+    private const ulong Int64LcgMultiplier = 6_364_136_223_846_793_005UL;
+
+    /// <summary>Increment of the 64-bit linear congruential generator that produces the <see cref="long"/> test vectors.</summary>
+    private const ulong Int64LcgIncrement = 1_442_695_040_888_963_407UL;
+
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes zero correctly.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeZero()
@@ -28,10 +41,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(0);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes the value 1 from a
-    /// little-endian byte sequence.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes the value 1 from a little-endian byte sequence.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeOne()
@@ -43,10 +53,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(1);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes a value where every
-    /// byte is non-zero, exercising every byte position in the bit-shift reconstruction.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes a value where every byte is non-zero, exercising every byte position in the bit-shift reconstruction.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeAllByteLanes()
@@ -77,10 +84,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(int.MinValue);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes
-    /// <see cref="int.MaxValue"/> correctly.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes <see cref="int.MaxValue"/> correctly.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeIntMaxValue()
@@ -94,10 +98,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(int.MaxValue);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes -1 (all bits set)
-    /// correctly, exercising the OR-fold of every byte through the sign bit.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> decodes -1 (all bits set) correctly, exercising the OR-fold of every byte through the sign bit.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt32LittleEndianShouldDecodeNegativeOne()
@@ -109,10 +110,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(-1);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> reads from the supplied
-    /// offset rather than always starting at index 0.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt32LittleEndian"/> reads from the supplied offset rather than always starting at index 0.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt32LittleEndianShouldHonourOffset()
@@ -143,9 +141,9 @@ public class BinaryHelpersTests
         // System.Random (CA5394). The constants are the Numerical Recipes LCG —
         // good enough spread for round-trip coverage.
         var state = 42UL;
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < RandomizedVectorCount; i++)
         {
-            state = unchecked((state * 1103515245UL) + 12345UL);
+            state = unchecked((state * Int32LcgMultiplier) + Int32LcgIncrement);
             var expected = unchecked((int)state);
             var bytes = BitConverter.GetBytes(expected);
 
@@ -155,9 +153,7 @@ public class BinaryHelpersTests
         }
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes zero correctly.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes zero correctly.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeZero()
@@ -169,9 +165,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(0L);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes the value 1.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes the value 1.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeOne()
@@ -183,10 +177,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(1L);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes a value where every
-    /// byte is non-zero, exercising every byte lane in the bit-shift reconstruction.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes a value where every byte is non-zero, exercising every byte lane in the bit-shift reconstruction.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeAllByteLanes()
@@ -199,10 +190,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(0x0807060504030201L);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes
-    /// <see cref="long.MinValue"/> correctly, preserving the sign bit through the high byte.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes <see cref="long.MinValue"/> correctly, preserving the sign bit through the high byte.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeLongMinValue()
@@ -216,10 +204,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(long.MinValue);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes
-    /// <see cref="long.MaxValue"/> correctly.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes <see cref="long.MaxValue"/> correctly.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeLongMaxValue()
@@ -233,9 +218,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(long.MaxValue);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes -1 (all bits set).
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> decodes -1 (all bits set).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldDecodeNegativeOne()
@@ -247,10 +230,7 @@ public class BinaryHelpersTests
         await Assert.That(result).IsEqualTo(-1L);
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> reads from the supplied
-    /// offset rather than always starting at index 0.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.ReadInt64LittleEndian"/> reads from the supplied offset rather than always starting at index 0.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task ReadInt64LittleEndianShouldHonourOffset()
@@ -280,9 +260,9 @@ public class BinaryHelpersTests
         // System.Random (CA5394).
         var state = 99UL;
         var buffer = new byte[8];
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < RandomizedVectorCount; i++)
         {
-            state = unchecked((state * 6364136223846793005UL) + 1442695040888963407UL);
+            state = unchecked((state * Int64LcgMultiplier) + Int64LcgIncrement);
             var expected = unchecked((long)state);
             BitConverter.GetBytes(expected).CopyTo(buffer, 0);
 
@@ -292,37 +272,25 @@ public class BinaryHelpersTests
         }
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/>
-    /// for a null input without throwing.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/> for a null input without throwing.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task StartsWithJsonOpenerShouldReturnFalseForNullInput() =>
         await Assert.That(BinaryHelpers.StartsWithJsonOpener(null!)).IsFalse();
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/>
-    /// for an empty buffer (no non-whitespace byte to classify).
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/> for an empty buffer (no non-whitespace byte to classify).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task StartsWithJsonOpenerShouldReturnFalseForEmptyBuffer() =>
         await Assert.That(BinaryHelpers.StartsWithJsonOpener([])).IsFalse();
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/>
-    /// for a buffer containing only ASCII whitespace (no JSON opener to find).
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> returns <see langword="false"/> for a buffer containing only ASCII whitespace (no JSON opener to find).</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task StartsWithJsonOpenerShouldReturnFalseForWhitespaceOnly() =>
         await Assert.That(BinaryHelpers.StartsWithJsonOpener([.. " \t\n\r"u8])).IsFalse();
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> recognises the two JSON
-    /// opener bytes after skipping leading ASCII whitespace.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> recognises the two JSON opener bytes after skipping leading ASCII whitespace.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task StartsWithJsonOpenerShouldRecogniseJsonOpenersAfterWhitespace()
@@ -333,10 +301,7 @@ public class BinaryHelpersTests
         await Assert.That(BinaryHelpers.StartsWithJsonOpener([.. "\t\n\r["u8])).IsTrue();
     }
 
-    /// <summary>
-    /// Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> rejects a non-JSON payload
-    /// whose first non-whitespace byte is neither <c>{</c> nor <c>[</c>.
-    /// </summary>
+    /// <summary>Verifies <see cref="BinaryHelpers.StartsWithJsonOpener"/> rejects a non-JSON payload whose first non-whitespace byte is neither <c>{</c> nor <c>[</c>.</summary>
     /// <returns>A task.</returns>
     [Test]
     public async Task StartsWithJsonOpenerShouldRejectNonJsonPayloads()

@@ -54,7 +54,7 @@ namespace Akavache.Samples
                     { 
                         Name = "John Doe", 
                         Email = "john@example.com",
-                        LastUpdated = DateTimeOffset.Now
+                        LastUpdated = TimeProvider.System.GetLocalNow()
                     };
                 });
             }
@@ -127,9 +127,9 @@ namespace Akavache.Samples
                     await Task.Delay(800); // Simulate API call
                     return new List<Message>
                     {
-                        new() { Id = 1, Content = "Hello", Timestamp = DateTimeOffset.Now.AddMinutes(-30) },
-                        new() { Id = 2, Content = "How are you?", Timestamp = DateTimeOffset.Now.AddMinutes(-20) },
-                        new() { Id = 3, Content = "New message", Timestamp = DateTimeOffset.Now }
+                        new() { Id = 1, Content = "Hello", Timestamp = TimeProvider.System.GetLocalNow().AddMinutes(-30) },
+                        new() { Id = 2, Content = "How are you?", Timestamp = TimeProvider.System.GetLocalNow().AddMinutes(-20) },
+                        new() { Id = 3, Content = "New message", Timestamp = TimeProvider.System.GetLocalNow() }
                     };
                 });
             }
@@ -250,9 +250,9 @@ namespace Akavache.Samples
                     await Task.Delay(1200); // Simulate API call
                     return new List<NewsItem>
                     {
-                        new() { Id = 1, Title = "Breaking News", PublishedAt = DateTimeOffset.Now.AddHours(-2), LastModified = DateTimeOffset.Now },
-                        new() { Id = 2, Title = "Tech Update", PublishedAt = DateTimeOffset.Now.AddHours(-1), LastModified = DateTimeOffset.Now },
-                        new() { Id = 3, Title = "Latest Story", PublishedAt = DateTimeOffset.Now, LastModified = DateTimeOffset.Now }
+                        new() { Id = 1, Title = "Breaking News", PublishedAt = TimeProvider.System.GetLocalNow().AddHours(-2), LastModified = TimeProvider.System.GetLocalNow() },
+                        new() { Id = 2, Title = "Tech Update", PublishedAt = TimeProvider.System.GetLocalNow().AddHours(-1), LastModified = TimeProvider.System.GetLocalNow() },
+                        new() { Id = 3, Title = "Latest Story", PublishedAt = TimeProvider.System.GetLocalNow(), LastModified = TimeProvider.System.GetLocalNow() }
                     };
                 });
             }
@@ -350,7 +350,7 @@ namespace Akavache.Samples
                 // Only fetch fresh data if cached data is older than 5 minutes
                 CacheDatabase.LocalMachine.GetAndFetchLatest("weather_data",
                     () => FetchWeatherFromApi(),
-                    fetchPredicate: cachedDate => DateTimeOffset.Now - cachedDate > TimeSpan.FromMinutes(5))
+                    fetchPredicate: cachedDate => TimeProvider.System.GetLocalNow() - cachedDate > TimeSpan.FromMinutes(5))
                     .Subscribe(weather => 
                     {
                         Console.WriteLine($"Weather update: {weather.Temperature}°C (Humidity: {weather.Humidity}%)");
@@ -650,7 +650,7 @@ namespace Akavache.Samples
                 return new AppData
                 {
                     Items = Enumerable.Range(1, 10).Select(i => $"Item {i}").ToList(),
-                    LastUpdated = DateTimeOffset.Now,
+                    LastUpdated = TimeProvider.System.GetLocalNow(),
                     Version = "1.0"
                 };
             });
@@ -667,7 +667,7 @@ namespace Akavache.Samples
                     Theme = "Dark",
                     Language = "en-US",
                     NotificationsEnabled = true,
-                    LastModified = DateTimeOffset.Now
+                    LastModified = TimeProvider.System.GetLocalNow()
                 };
             });
         }
@@ -686,7 +686,7 @@ namespace Akavache.Samples
 
         private static void LogSettingsUpdate(UserSettings settings)
         {
-            Console.WriteLine($"Settings updated at {DateTimeOffset.Now}: {settings.LastModified}");
+            Console.WriteLine($"Settings updated at {TimeProvider.System.GetLocalNow()}: {settings.LastModified}");
         }
     }
 

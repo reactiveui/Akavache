@@ -21,10 +21,9 @@ internal sealed class TrySelectObservable<TIn, TOut>(
     public IDisposable Subscribe(IObserver<TOut> observer) =>
         source.Subscribe(new TrySelectObserver(observer, selector));
 
-    /// <summary>
-    /// Observer that applies the selector and only forwards non-null results.
-    /// Exceptions from the selector are routed to <see cref="IObserver{T}.OnError"/>.
-    /// </summary>
+    /// <summary>Observer that applies the selector and only forwards non-null results. Exceptions from the selector are routed to <see cref="IObserver{T}.OnError"/>.</summary>
+    /// <param name="downstream">The observer that receives the non-null projected values.</param>
+    /// <param name="selector">The projection applied to each source element; a null result is dropped.</param>
     private sealed class TrySelectObserver(
         IObserver<TOut> downstream,
         Func<TIn, TOut?> selector) : IObserver<TIn>

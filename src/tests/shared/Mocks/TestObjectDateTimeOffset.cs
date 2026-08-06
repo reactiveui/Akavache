@@ -4,18 +4,12 @@
 
 namespace Akavache.Tests.Mocks;
 
-/// <summary>
-/// Test object for doing DateTimeOffset tests.
-/// </summary>
+/// <summary>Test object for doing DateTimeOffset tests.</summary>
 public class TestObjectDateTimeOffset
 {
-    /// <summary>
-    /// Gets or sets a timestamp.
-    /// </summary>
+    /// <summary>Gets or sets a timestamp.</summary>
     public DateTimeOffset Timestamp { get; set; }
 
-    /// <summary>
-    /// Gets or sets a nullable timestamp.
-    /// </summary>
+    /// <summary>Gets or sets a nullable timestamp.</summary>
     public DateTimeOffset? TimestampNullable { get; set; }
 }

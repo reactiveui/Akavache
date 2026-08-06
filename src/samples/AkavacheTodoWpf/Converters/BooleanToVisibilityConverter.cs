@@ -8,14 +8,10 @@ using System.Windows.Data;
 
 namespace AkavacheTodoWpf.Converters;
 
-/// <summary>
-/// Converts boolean values to Visibility for WPF.
-/// </summary>
+/// <summary>Converts boolean values to Visibility for WPF.</summary>
 public class BooleanToVisibilityConverter : IValueConverter
 {
-    /// <summary>
-    /// Converts boolean to Visibility.
-    /// </summary>
+    /// <summary>Converts boolean to Visibility.</summary>
     /// <param name="value">The boolean value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
@@ -31,21 +27,11 @@ public class BooleanToVisibilityConverter : IValueConverter
         return Visibility.Collapsed;
     }
 
-    /// <summary>
-    /// Converts Visibility back to boolean.
-    /// </summary>
+    /// <summary>Converts Visibility back to boolean.</summary>
     /// <param name="value">The Visibility value.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The parameter.</param>
     /// <param name="culture">The culture.</param>
     /// <returns>True if Visible, false otherwise.</returns>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not Visibility visibility)
-        {
-            return false;
-        }
-
-        return visibility == Visibility.Visible;
-    }
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not Visibility visibility ? false : visibility == Visibility.Visible;
 }

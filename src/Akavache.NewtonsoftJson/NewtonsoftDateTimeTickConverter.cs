@@ -2,7 +2,6 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using Akavache.Helpers;
 using Newtonsoft.Json;
 
 namespace Akavache.NewtonsoftJson;
@@ -17,15 +16,11 @@ namespace Akavache.NewtonsoftJson;
 /// <param name="forceDateTimeKindOverride">Optional DateTime kind override.</param>
 internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOverride = null) : JsonConverter
 {
-    /// <summary>
-    /// Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.
-    /// </summary>
-    public static NewtonsoftDateTimeTickConverter Default { get; } = new();
+    /// <summary>Gets a instance of the DateTimeConverter that handles the DateTime in UTC mode.</summary>
+    internal static NewtonsoftDateTimeTickConverter Default { get; } = new();
 
-    /// <summary>
-    /// Gets a instance of the DateTimeConverter that handles the DateTime in Local mode.
-    /// </summary>
-    public static NewtonsoftDateTimeTickConverter LocalDateTimeKindDefault { get; } = new(DateTimeKind.Local);
+    /// <summary>Gets a instance of the DateTimeConverter that handles the DateTime in Local mode.</summary>
+    internal static NewtonsoftDateTimeTickConverter LocalDateTimeKindDefault { get; } = new(DateTimeKind.Local);
 
     /// <inheritdoc/>
     public override bool CanConvert(Type objectType) => objectType == typeof(DateTime) || objectType == typeof(DateTime?);
@@ -82,9 +77,7 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
         writer.WriteValue(ticksToStore);
     }
 
-    /// <summary>
-    /// Converts a <see cref="DateTime"/> to the specified <see cref="DateTimeKind"/>.
-    /// </summary>
+    /// <summary>Converts a <see cref="DateTime"/> to the specified <see cref="DateTimeKind"/>.</summary>
     /// <param name="dateTime">The source DateTime.</param>
     /// <param name="targetKind">The target kind.</param>
     /// <returns>A DateTime with the specified kind.</returns>
@@ -95,11 +88,6 @@ internal class NewtonsoftDateTimeTickConverter(DateTimeKind? forceDateTimeKindOv
             return DateTime.SpecifyKind(dateTime.ToUniversalTime(), DateTimeKind.Utc);
         }
 
-        if (targetKind == DateTimeKind.Local)
-        {
-            return DateTime.SpecifyKind(dateTime.ToLocalTime(), DateTimeKind.Local);
-        }
-
-        return DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+        return targetKind == DateTimeKind.Local ? DateTime.SpecifyKind(dateTime.ToLocalTime(), DateTimeKind.Local) : DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
     }
 }

@@ -34,12 +34,17 @@ namespace Akavache.Sqlite3;
 /// <param name="connection">The underlying sqlite connection used for both the V11 primary read and the V10 legacy fallback.</param>
 /// <param name="key">The cache key to look up.</param>
 /// <param name="type">Optional type filter; <see langword="null"/> for untyped reads.</param>
-internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection connection, string key, Type? type) : IObservable<byte[]>
+/// <param name="clock">Clock supplying the expiry cut-off for both the primary and legacy reads.</param>
+internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection connection, string key, Type? type, TimeProvider clock) : IObservable<byte[]>
 {
     /// <inheritdoc/>
     public IDisposable Subscribe(IObserver<byte[]> observer)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.GetUtcNow();
+
+        // The observer is handed the very disposable it will later replace, so this assignment
+        // cannot fold into an object initializer: an initializer may not reference the variable
+        // being declared. SST1193 is suppressed here because its fix does not compile.
         var subscription = new SerialDisposable();
         subscription.Disposable = connection
             .Get(key, type?.FullName, now)
@@ -115,10 +120,7 @@ internal sealed class ReadWithLegacyFallbackObservable(IAkavacheConnection conne
         }
     }
 
-    /// <summary>
-    /// Observes the V10 legacy fallback read. On a hit it emits the payload and
-    /// completes; on a miss it surfaces a <see cref="KeyNotFoundException"/>.
-    /// </summary>
+    /// <summary>Observes the V10 legacy fallback read. On a hit it emits the payload and completes; on a miss it surfaces a <see cref="KeyNotFoundException"/>.</summary>
     /// <param name="key">The cache key being looked up — used to format the not-found error.</param>
     /// <param name="type">Optional type filter — used to format the not-found error.</param>
     /// <param name="downstream">The downstream observer receiving the resolved payload.</param>

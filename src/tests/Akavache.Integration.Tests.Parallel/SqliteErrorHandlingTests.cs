@@ -10,16 +10,11 @@ using Akavache.Tests.Helpers;
 
 namespace Akavache.Integration.Tests;
 
-/// <summary>
-/// Error handling scenarios for Sqlite and Encrypted caches.
-/// </summary>
+/// <summary>Error handling scenarios for Sqlite and Encrypted caches.</summary>
 [Category("Sqlite")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "RCS1261:Resource can be disposed asynchronously", Justification = "Tests deliberately use synchronous Dispose to avoid sync-over-async deadlocks.")]
 public class SqliteErrorHandlingTests
 {
-    /// <summary>
-    /// Wrong password should cause failure on read attempt.
-    /// </summary>
+    /// <summary>Wrong password should cause failure on read attempt.</summary>
     /// <returns>A task representing the async test.</returns>
     [Test]
     public async Task EncryptedSqliteBlobCache_InvalidPassword_FailsGracefully()
@@ -30,7 +25,8 @@ public class SqliteErrorHandlingTests
 
         using (EncryptedSqliteBlobCache cache = new(path, "password1", serializer, ImmediateScheduler.Instance))
         {
-            cache.Insert("key", [1, 2, 3]).WaitForCompletion();
+            byte[] payload = [1, 2, 3];
+            cache.Insert("key", payload).WaitForCompletion();
             cache.Flush().WaitForCompletion();
         }
 
@@ -55,9 +51,7 @@ public class SqliteErrorHandlingTests
         await Assert.That(ex).IsNotNull();
     }
 
-    /// <summary>
-    /// Plain sqlite binary roundtrip.
-    /// </summary>
+    /// <summary>Plain sqlite binary roundtrip.</summary>
     /// <returns>A task representing the async test.</returns>
     [Test]
     public async Task SqliteBlobCache_InsertAndRetrieveBinary()

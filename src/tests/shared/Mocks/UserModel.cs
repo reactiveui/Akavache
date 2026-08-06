@@ -4,27 +4,19 @@
 
 namespace Akavache.Tests.Mocks;
 
-/// <summary>
-/// A mock for the user models.
-/// </summary>
+/// <summary>A mock for the user models.</summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="UserModel"/> class.
 /// </remarks>
 /// <param name="user">The user to abstract.</param>
 public class UserModel(UserObject user)
 {
-    /// <summary>
-    /// Gets or sets the name.
-    /// </summary>
+    /// <summary>Gets or sets the name.</summary>
     public string? Name { get; set; }
 
-    /// <summary>
-    /// Gets or sets the age.
-    /// </summary>
+    /// <summary>Gets or sets the age.</summary>
     public int Age { get; set; }
 
-    /// <summary>
-    /// Gets or sets the user.
-    /// </summary>
+    /// <summary>Gets or sets the user.</summary>
     public UserObject User { get; set; } = user;
 }

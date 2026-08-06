@@ -4,38 +4,24 @@
 
 namespace AkavacheTodoMaui.Models;
 
-/// <summary>
-/// Represents todo statistics for dashboard display.
-/// </summary>
+/// <summary>Represents todo statistics for dashboard display.</summary>
 public class TodoStats
 {
-    /// <summary>
-    /// Gets or sets the total number of todos.
-    /// </summary>
+    /// <summary>Gets or sets the total number of todos.</summary>
     public int TotalTodos { get; set; }
 
-    /// <summary>
-    /// Gets or sets the number of completed todos.
-    /// </summary>
+    /// <summary>Gets or sets the number of completed todos.</summary>
     public int CompletedTodos { get; set; }
 
-    /// <summary>
-    /// Gets or sets the number of overdue todos.
-    /// </summary>
+    /// <summary>Gets or sets the number of overdue todos.</summary>
     public int OverdueTodos { get; set; }
 
-    /// <summary>
-    /// Gets or sets the number of todos due soon.
-    /// </summary>
+    /// <summary>Gets or sets the number of todos due soon.</summary>
     public int DueSoonTodos { get; set; }
 
-    /// <summary>
-    /// Gets or sets the number of high priority todos.
-    /// </summary>
+    /// <summary>Gets or sets the number of high priority todos.</summary>
     public int HighPriorityTodos { get; set; }
 
-    /// <summary>
-    /// Gets or sets when these statistics were calculated.
-    /// </summary>
+    /// <summary>Gets or sets when these statistics were calculated.</summary>
     public DateTimeOffset LastCalculated { get; set; }
 }

@@ -4,17 +4,14 @@
 
 namespace Akavache.Tests;
 
-/// <summary>
-/// Tests for <see cref="SqliteProviderGate"/>.
-/// </summary>
+/// <summary>Tests for <see cref="SqliteProviderGate"/>.</summary>
 [Category("Akavache")]
 public class SqliteProviderGateTests
 {
     /// <summary>
-    /// <see cref="SqliteProviderGate.TryClaimInit"/> returns <see langword="true"/>
-    /// exactly once per process. A subsequent call always returns <see langword="false"/>,
-    /// exercising the "already claimed" branch at line 27 where
-    /// <c>Interlocked.Exchange</c> returns 1.
+    /// Claiming initialisation succeeds exactly once per process, so a subsequent
+    /// <see cref="SqliteProviderGate.TryClaimInit"/> call always returns <see langword="false"/>,
+    /// exercising the "already claimed" branch where <c>Interlocked.Exchange</c> returns 1.
     /// </summary>
     /// <returns>A task.</returns>
     [Test]
