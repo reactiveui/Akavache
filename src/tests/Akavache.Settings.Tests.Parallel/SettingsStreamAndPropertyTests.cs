@@ -87,7 +87,7 @@ public class SettingsStreamAndPropertyTests
             new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // Set before any getter access — forces the on-the-fly stream creation.
-        storage.SetName("hello").SubscribeAndComplete();
+        storage.SetName("hello").WaitForCompletion();
 
         var value = storage.Name.SubscribeGetValue();
 
@@ -105,7 +105,7 @@ public class SettingsStreamAndPropertyTests
         string? changedProperty = null;
         storage.PropertyChanged += (_, args) => changedProperty = args.PropertyName;
 
-        storage.SetName("world").SubscribeAndComplete();
+        storage.SetName("world").WaitForCompletion();
 
         await Assert.That(changedProperty).IsEqualTo("Name");
     }
@@ -144,8 +144,8 @@ public class SettingsStreamAndPropertyTests
         await Assert.That(ReferenceEquals(first, second)).IsTrue();
 
         // Both should complete successfully.
-        first.SubscribeAndComplete();
-        second.SubscribeAndComplete();
+        first.WaitForCompletion();
+        second.WaitForCompletion();
     }
 
     // ───────────────────────── SettingsPropertyHelper: Value, Set, Subscribe, Dispose ─────
@@ -168,7 +168,7 @@ public class SettingsStreamAndPropertyTests
         using var storage = new PropertyHelperTestSettings(
             new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
-        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).WaitForCompletion();
 
         await Assert.That(storage.Score.Value).IsEqualTo(UpdatedScore);
     }
@@ -184,7 +184,7 @@ public class SettingsStreamAndPropertyTests
         var received = new List<int>();
         var sub = storage.Score.Subscribe(Witness.Create<int>(received.Add));
 
-        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).WaitForCompletion();
         sub.Dispose();
 
         await Assert.That(received).Contains(DefaultScore); // initial replay
@@ -216,7 +216,7 @@ public class SettingsStreamAndPropertyTests
         string? changedProp = null;
         storage.Score.PropertyChanged += (_, args) => changedProp = args.PropertyName;
 
-        storage.Score.Set(UpdatedScore).SubscribeAndComplete();
+        storage.Score.Set(UpdatedScore).WaitForCompletion();
 
         await Assert.That(changedProp).IsEqualTo("Value");
     }
@@ -275,10 +275,10 @@ public class SettingsStreamAndPropertyTests
         var stream = new SettingsStream<string>(cache, "test:key", "seed");
 
         // Trigger the cold load first.
-        stream.EnsureLoaded().SubscribeAndComplete();
+        stream.EnsureLoaded().WaitForCompletion();
 
         // Now Set — should hit the _coldLoad is not null branch.
-        stream.Set(UpdatedName).SubscribeAndComplete();
+        stream.Set(UpdatedName).WaitForCompletion();
 
         var value = ((IObservable<string>)stream).SubscribeGetValue();
         await Assert.That(value).IsEqualTo(UpdatedName);
@@ -296,10 +296,10 @@ public class SettingsStreamAndPropertyTests
         var cache = new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer());
         var stream = new SettingsStream<string>(cache, "test:set_first", "seed");
 
-        stream.Set("explicit").SubscribeAndComplete();
+        stream.Set("explicit").WaitForCompletion();
 
         // EnsureLoaded after Set should return the sentinel immediately.
-        stream.EnsureLoaded().SubscribeAndComplete();
+        stream.EnsureLoaded().WaitForCompletion();
 
         var value = ((IObservable<string>)stream).SubscribeGetValue();
         await Assert.That(value).IsEqualTo("explicit");
@@ -338,7 +338,7 @@ public class SettingsStreamAndPropertyTests
             new InMemoryBlobCache(ImmediateSequencer.Instance, new SystemJsonSerializer()));
 
         // No PropertyChanged handler registered — should not throw.
-        storage.Score.Set(UnobservedScore).SubscribeAndComplete();
+        storage.Score.Set(UnobservedScore).WaitForCompletion();
 
         await Assert.That(storage.Score.Value).IsEqualTo(UnobservedScore);
     }
@@ -370,7 +370,7 @@ public class SettingsStreamAndPropertyTests
         await Assert.That(initial).IsEqualTo(DefaultName);
 
         // Set through the setter — should reuse the existing stream.
-        storage.SetName(UpdatedName).SubscribeAndComplete();
+        storage.SetName(UpdatedName).WaitForCompletion();
 
         var updated = storage.Name.SubscribeGetValue();
         await Assert.That(updated).IsEqualTo(UpdatedName);

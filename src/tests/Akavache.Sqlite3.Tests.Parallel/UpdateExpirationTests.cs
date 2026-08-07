@@ -235,7 +235,7 @@ public class UpdateExpirationTests : IDisposable
             const string key = "typed-null-exp-key";
             fixture.InsertObject(key, "value", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
-            fixture.UpdateExpiration(key, typeof(string), null).SubscribeAndComplete();
+            fixture.UpdateExpiration(key, typeof(string), null).WaitForCompletion();
 
             var value = fixture.GetObject<string>(key).WaitForValue();
             await Assert.That(value).IsEqualTo("value");
@@ -256,7 +256,7 @@ public class UpdateExpirationTests : IDisposable
             fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
             fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
-            fixture.UpdateExpiration(keys, null).SubscribeAndComplete();
+            fixture.UpdateExpiration(keys, null).WaitForCompletion();
 
             var first = fixture.GetObject<string>(keys[0]).WaitForValue();
             var second = fixture.GetObject<string>(keys[1]).WaitForValue();
@@ -279,7 +279,7 @@ public class UpdateExpirationTests : IDisposable
             fixture.InsertObject(keys[0], "v1", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
             fixture.InsertObject(keys[1], "v2", TimeProvider.System.GetLocalNow().Add(OriginalExpiration)).WaitForCompletion();
 
-            fixture.UpdateExpiration(keys, typeof(string), null).SubscribeAndComplete();
+            fixture.UpdateExpiration(keys, typeof(string), null).WaitForCompletion();
 
             var first = fixture.GetObject<string>(keys[0]).WaitForValue();
             var second = fixture.GetObject<string>(keys[1]).WaitForValue();

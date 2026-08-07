@@ -127,7 +127,7 @@ public class SettingsBaseFallbackTests
                 overrideDatabaseName: databaseName,
                 scheduler: ImmediateSequencer.Instance);
             settings1.Initialize().WaitForCompletion();
-            settings1.TestValue.Set(expectedValue).SubscribeAndComplete();
+            settings1.TestValue.Set(expectedValue).WaitForCompletion();
 
             // Verify the value was set.
             await Assert.That((int)settings1.TestValue).IsEqualTo(expectedValue);
@@ -148,7 +148,7 @@ public class SettingsBaseFallbackTests
         finally
         {
             instance?.DisposeSettingsStore<TestSettings>(databaseName).WaitForCompletion();
-            CacheDatabase.ResetForTests().SubscribeAndComplete();
+            CacheDatabase.ResetForTests().WaitForCompletion();
         }
 
         await TestHelper.EventuallyAsync(static () => AppBuilder.HasBeenBuilt).ConfigureAwait(false);

@@ -45,8 +45,8 @@ public class GetAllKeysSafeExtensionsTests
         using var cache = CreateCache();
         byte[] firstPayload = [1, 2, 3];
         byte[] secondPayload = [4, 5, 6];
-        cache.Insert("key1", firstPayload).SubscribeAndComplete();
-        cache.Insert("key2", secondPayload).SubscribeAndComplete();
+        cache.Insert("key1", firstPayload).WaitForCompletion();
+        cache.Insert("key2", secondPayload).WaitForCompletion();
 
         var keys = cache.GetAllKeysSafe().ToList().SubscribeGetValue();
 
@@ -73,8 +73,8 @@ public class GetAllKeysSafeExtensionsTests
     public async Task GetAllKeysSafe_WithType_ShouldReturnKeysForSpecificType()
     {
         using var cache = CreateCache();
-        cache.InsertObject(StringEntryKey, "value").SubscribeAndComplete();
-        cache.InsertObject(IntEntryKey, IntEntryValue).SubscribeAndComplete();
+        cache.InsertObject(StringEntryKey, "value").WaitForCompletion();
+        cache.InsertObject(IntEntryKey, IntEntryValue).WaitForCompletion();
 
         var stringKeys = cache.GetAllKeysSafe(typeof(string)).ToList().SubscribeGetValue();
         var intKeys = cache.GetAllKeysSafe(typeof(int)).ToList().SubscribeGetValue();
@@ -104,8 +104,8 @@ public class GetAllKeysSafeExtensionsTests
     public async Task GetAllKeysSafe_Generic_ShouldReturnKeysForSpecificType()
     {
         using var cache = CreateCache();
-        cache.InsertObject(StringEntryKey, "value").SubscribeAndComplete();
-        cache.InsertObject(IntEntryKey, IntEntryValue).SubscribeAndComplete();
+        cache.InsertObject(StringEntryKey, "value").WaitForCompletion();
+        cache.InsertObject(IntEntryKey, IntEntryValue).WaitForCompletion();
 
         var stringKeys = cache.GetAllKeysSafe<string>().ToList().SubscribeGetValue();
 

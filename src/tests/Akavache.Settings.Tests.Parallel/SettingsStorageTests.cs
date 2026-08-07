@@ -239,7 +239,7 @@ public class SettingsStorageTests
         storage.InvokeDispose(disposing: false);
 
         // Cache still works: insert/retrieve a key without throwing.
-        cache.Insert("k", SamplePayload).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload).WaitForCompletion();
         var bytes = cache.Get("k").SubscribeGetValue();
         await Assert.That(bytes).IsNotNull();
 

@@ -459,7 +459,7 @@ public partial class ImageCacheExtensionsTests
         {
             // Insert valid image data
             cache.Insert(key, validImageData)
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             // Set up mock bitmap loader for testing
             SetupMockBitmapLoader();
@@ -491,15 +491,15 @@ public partial class ImageCacheExtensionsTests
         byte[] secondImageBytes = [4, 5, 6];
         byte[] unrelatedBytes = [7, 8, 9];
         cache.Insert("image_1", firstImageBytes)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
         cache.Insert("image_2", secondImageBytes)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
         cache.Insert("other_data", unrelatedBytes)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Act - Clear only keys starting with "image_"
         cache.ClearImageCache(static key => key.StartsWith("image_", StringComparison.Ordinal))
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Assert - Only "other_data" should remain
         var remainingKeys = cache.GetAllKeys().ToList()
@@ -520,11 +520,11 @@ public partial class ImageCacheExtensionsTests
         // Insert some test data
         byte[] retainedBytes = [1, 2, 3];
         cache.Insert("test_key", retainedBytes)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Act - Use pattern that matches nothing
         cache.ClearImageCache(static key => key.StartsWith("nonexistent_", StringComparison.Ordinal))
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Assert - All data should remain
         var remainingKeys = cache.GetAllKeys().ToList()
@@ -584,8 +584,8 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("img1", imageData).SubscribeAndComplete();
-        cache.Insert("img2", imageData).SubscribeAndComplete();
+        cache.Insert("img1", imageData).WaitForCompletion();
+        cache.Insert("img2", imageData).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         try
@@ -647,7 +647,7 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert(SourceImageKey, imageData).SubscribeAndComplete();
+        cache.Insert(SourceImageKey, imageData).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -658,7 +658,7 @@ public partial class ImageCacheExtensionsTests
 
                 // Act
                 cache.CreateAndCacheThumbnail(SourceImageKey, ThumbnailKey, SavedThumbnailEdgePixels, SavedThumbnailEdgePixels)
-                    .SubscribeAndComplete();
+                    .WaitForCompletion();
 
                 // Assert - Thumbnail key should now exist in the cache
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -686,7 +686,7 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("source2", imageData).SubscribeAndComplete();
+        cache.Insert("source2", imageData).WaitForCompletion();
         var expiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
         var originalLoader = GetCurrentBitmapLoader();
@@ -696,7 +696,7 @@ public partial class ImageCacheExtensionsTests
 
             // Act
             cache.CreateAndCacheThumbnail("source2", "thumb2", ExpiringThumbnailEdgePixels, ExpiringThumbnailEdgePixels, expiration)
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             // Assert
             var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -718,7 +718,7 @@ public partial class ImageCacheExtensionsTests
             validImageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("null_bitmap_key", validImageData).SubscribeAndComplete();
+        cache.Insert("null_bitmap_key", validImageData).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         try
@@ -790,8 +790,8 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert(FirstCoverImageKey, imageData).SubscribeAndComplete();
-        cache.Insert(SecondCoverImageKey, imageData).SubscribeAndComplete();
+        cache.Insert(FirstCoverImageKey, imageData).WaitForCompletion();
+        cache.Insert(SecondCoverImageKey, imageData).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         SetupMockBitmapLoader();
@@ -848,7 +848,7 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("thumbnail_source_direct", imageData).SubscribeAndComplete();
+        cache.Insert("thumbnail_source_direct", imageData).WaitForCompletion();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new MockBitmapLoader();
@@ -860,7 +860,7 @@ public partial class ImageCacheExtensionsTests
                 "thumbnail_dest_direct",
                 DirectThumbnailEdgePixels,
                 DirectThumbnailEdgePixels)
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             // Assert
             var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -888,7 +888,7 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("thumbnail_source_exp", imageData).SubscribeAndComplete();
+        cache.Insert("thumbnail_source_exp", imageData).WaitForCompletion();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new MockBitmapLoader();
@@ -901,7 +901,7 @@ public partial class ImageCacheExtensionsTests
                 DirectExpiringThumbnailEdgePixels,
                 DirectExpiringThumbnailEdgePixels,
                 TimeProvider.System.GetLocalNow().AddMinutes(ThumbnailLifetimeMinutes))
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             // Assert
             var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -927,7 +927,7 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("size_valid_key", imageData).SubscribeAndComplete();
+        cache.Insert("size_valid_key", imageData).WaitForCompletion();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new MockBitmapLoader();
@@ -961,7 +961,7 @@ public partial class ImageCacheExtensionsTests
             imageData[i] = (byte)(i % ByteValueCount);
         }
 
-        cache.Insert("size_null_bitmap_key", imageData).SubscribeAndComplete();
+        cache.Insert("size_null_bitmap_key", imageData).WaitForCompletion();
 
         var originalLoader = BitmapLoader.Current;
         BitmapLoader.Current = new NullBitmapLoader();
@@ -1162,8 +1162,8 @@ public partial class ImageCacheExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         var imageData = CreateDecodableImageBytes();
 
-        cache.Insert(FirstWidthOnlyImageKey, imageData).SubscribeAndComplete();
-        cache.Insert(SecondWidthOnlyImageKey, imageData).SubscribeAndComplete();
+        cache.Insert(FirstWidthOnlyImageKey, imageData).WaitForCompletion();
+        cache.Insert(SecondWidthOnlyImageKey, imageData).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -1240,7 +1240,7 @@ public partial class ImageCacheExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
-        cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
+        cache.Insert(url, CreateDecodableImageBytes()).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -1279,7 +1279,7 @@ public partial class ImageCacheExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
-        cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
+        cache.Insert(url, CreateDecodableImageBytes()).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))
@@ -1318,7 +1318,7 @@ public partial class ImageCacheExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
-        cache.Insert(url, CreateDecodableImageBytes()).SubscribeAndComplete();
+        cache.Insert(url, CreateDecodableImageBytes()).WaitForCompletion();
 
         var originalLoader = GetCurrentBitmapLoader();
         using (new LoaderRestorer(originalLoader))

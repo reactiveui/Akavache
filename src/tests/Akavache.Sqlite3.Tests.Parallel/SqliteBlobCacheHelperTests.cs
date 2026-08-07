@@ -86,7 +86,7 @@ public class SqliteBlobCacheHelperTests
     public async Task ReadValueWithLegacyFallbackAsyncShouldReturnV11ValueWhenPresent()
     {
         using var cache = CreateCache();
-        cache.Insert("v11-key", UntypedV11Payload).SubscribeAndComplete();
+        cache.Insert("v11-key", UntypedV11Payload).WaitForCompletion();
 
         var bytes = cache.ReadValueWithLegacyFallback("v11-key", type: null).SubscribeGetValue();
 
@@ -103,7 +103,7 @@ public class SqliteBlobCacheHelperTests
     public async Task ReadValueWithLegacyFallbackAsyncShouldReturnTypedV11ValueWhenPresent()
     {
         using var cache = CreateCache();
-        cache.Insert("typed-key", TypedV11Payload, typeof(string)).SubscribeAndComplete();
+        cache.Insert("typed-key", TypedV11Payload, typeof(string)).WaitForCompletion();
 
         var bytes = cache.ReadValueWithLegacyFallback("typed-key", typeof(string)).SubscribeGetValue();
 

@@ -272,7 +272,7 @@ public class ImageExtensionsTests
             try
             {
                 // Insert image data
-                cache.Insert(key, imageData).SubscribeAndComplete();
+                cache.Insert(key, imageData).WaitForCompletion();
 
                 // Act
                 var loadedData = cache.LoadImageBytes(key).SubscribeGetValue();
@@ -595,7 +595,7 @@ public class ImageExtensionsTests
         {
             const string key = "too_small";
             var tinyData = new byte[32];
-            cache.Insert(key, tinyData).SubscribeAndComplete();
+            cache.Insert(key, tinyData).WaitForCompletion();
 
             var error = cache.LoadImageBytes(key).SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
@@ -615,7 +615,7 @@ public class ImageExtensionsTests
         try
         {
             const string key = "empty";
-            cache.Insert(key, []).SubscribeAndComplete();
+            cache.Insert(key, []).WaitForCompletion();
 
             var error = cache.LoadImageBytes(key).SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
@@ -641,7 +641,7 @@ public class ImageExtensionsTests
             const string url = "http://example.com/cached-string.png";
             var imageData = CreateImageData(SampleImageByteCount);
             cache.Insert(url, imageData, TimeProvider.System.GetLocalNow().AddMinutes(CacheEntryLifetimeMinutes))
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(url).SubscribeGetValue();
 
@@ -664,7 +664,7 @@ public class ImageExtensionsTests
             Uri uri = new("http://example.com/cached-uri.png");
             var imageData = CreateImageData(SampleImageByteCount);
             cache.Insert(uri.ToString(), imageData, TimeProvider.System.GetLocalNow().AddMinutes(CacheEntryLifetimeMinutes))
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(uri).SubscribeGetValue();
 
@@ -692,7 +692,7 @@ public class ImageExtensionsTests
             const string url = "http://example.com/with-key-string.png";
             var imageData = CreateImageData(LargeSampleImageByteCount);
             cache.Insert(key, imageData, TimeProvider.System.GetLocalNow().AddMinutes(CacheEntryLifetimeMinutes))
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(key, url).SubscribeGetValue();
 
@@ -716,7 +716,7 @@ public class ImageExtensionsTests
             Uri uri = new("http://example.com/with-key-uri.png");
             var imageData = CreateImageData(LargeSampleImageByteCount);
             cache.Insert(key, imageData, TimeProvider.System.GetLocalNow().AddMinutes(CacheEntryLifetimeMinutes))
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(key, uri).SubscribeGetValue();
 
@@ -742,7 +742,7 @@ public class ImageExtensionsTests
         {
             const string url = "http://example.com/tiny.png";
             cache.Insert(url, new byte[10], TimeProvider.System.GetLocalNow().AddMinutes(CacheEntryLifetimeMinutes))
-                .SubscribeAndComplete();
+                .WaitForCompletion();
 
             var error = cache.LoadImageBytesFromUrl(url).SubscribeGetError();
             await Assert.That(error).IsTypeOf<InvalidOperationException>();
@@ -888,7 +888,7 @@ public class ImageExtensionsTests
         try
         {
             var bytes = CreateImageData(SampleImageByteCount);
-            cache.Insert(UnreachableImageUrl, bytes).SubscribeAndComplete();
+            cache.Insert(UnreachableImageUrl, bytes).WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(UnreachableImageUrl).SubscribeGetValue();
             await Assert.That(result).IsEquivalentTo(bytes);
@@ -912,7 +912,7 @@ public class ImageExtensionsTests
         {
             Uri url = new(UnreachableImageUrl);
             var bytes = CreateImageData(SampleImageByteCount);
-            cache.Insert(url.ToString(), bytes).SubscribeAndComplete();
+            cache.Insert(url.ToString(), bytes).WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(url).SubscribeGetValue();
             await Assert.That(result).IsEquivalentTo(bytes);
@@ -940,7 +940,7 @@ public class ImageExtensionsTests
         {
             const string key = "img-key";
             var bytes = CreateImageData(SampleImageByteCount);
-            cache.Insert(key, bytes).SubscribeAndComplete();
+            cache.Insert(key, bytes).WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(key, UnreachableImageUrl).SubscribeGetValue();
             await Assert.That(result).IsEquivalentTo(bytes);
@@ -964,7 +964,7 @@ public class ImageExtensionsTests
         {
             const string key = "img-key";
             var bytes = CreateImageData(SampleImageByteCount);
-            cache.Insert(key, bytes).SubscribeAndComplete();
+            cache.Insert(key, bytes).WaitForCompletion();
 
             var result = cache.LoadImageBytesFromUrl(key, new Uri(UnreachableImageUrl))
                 .SubscribeGetValue();

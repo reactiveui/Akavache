@@ -26,7 +26,7 @@ public static class GlobalTestHooks
     /// <summary>Resets shared static state used by SQLite tests.</summary>
     private static void ResetState()
     {
-        CacheDatabase.ResetForTests().SubscribeAndComplete();
+        CacheDatabase.ResetForTests().WaitForCompletion();
         RequestCache.Clear();
         UniversalSerializer.ResetCaches();
         AkavacheBuilderExtensions.ResetSqliteProviderForTests();

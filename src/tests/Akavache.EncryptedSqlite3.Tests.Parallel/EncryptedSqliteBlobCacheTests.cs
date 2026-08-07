@@ -70,7 +70,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
-        cache.Insert("k", RoundTripPayload).SubscribeAndComplete();
+        cache.Insert("k", RoundTripPayload).WaitForCompletion();
         var data = cache.Get("k").SubscribeGetValue();
         await Assert.That(data).IsEquivalentTo(RoundTripPayload);
     }
@@ -85,9 +85,9 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
-        cache.Insert("a", [1], typeof(string)).SubscribeAndComplete();
-        cache.Insert("b", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
-        cache.Insert("c", ThirdEntryPayload, typeof(int)).SubscribeAndComplete();
+        cache.Insert("a", [1], typeof(string)).WaitForCompletion();
+        cache.Insert("b", SecondEntryPayload, typeof(string)).WaitForCompletion();
+        cache.Insert("c", ThirdEntryPayload, typeof(int)).WaitForCompletion();
 
         var typedKeys = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
         await Assert.That(typedKeys!.Count).IsEqualTo(StringTypedEntryCount);
@@ -107,9 +107,9 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         var bulkCreatedAt = cache.GetCreatedAt(["a", "b"], typeof(string)).ToList().SubscribeGetValue();
         await Assert.That(bulkCreatedAt!.Count).IsEqualTo(BulkKeyCount);
 
-        cache.Invalidate("a", typeof(string)).SubscribeAndComplete();
-        cache.Invalidate(["b"], typeof(string)).SubscribeAndComplete();
-        cache.InvalidateAll(typeof(int)).SubscribeAndComplete();
+        cache.Invalidate("a", typeof(string)).WaitForCompletion();
+        cache.Invalidate(["b"], typeof(string)).WaitForCompletion();
+        cache.InvalidateAll(typeof(int)).WaitForCompletion();
 
         var remaining = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(remaining).IsEmpty();
@@ -126,9 +126,9 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
-        cache.Insert("a", [1]).SubscribeAndComplete();
-        cache.Insert("b", SecondEntryPayload).SubscribeAndComplete();
-        cache.Insert([new("c", ThirdEntryPayload)]).SubscribeAndComplete();
+        cache.Insert("a", [1]).WaitForCompletion();
+        cache.Insert("b", SecondEntryPayload).WaitForCompletion();
+        cache.Insert([new("c", ThirdEntryPayload)]).WaitForCompletion();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys!.Count).IsEqualTo(NonTypedEntryCount);
@@ -145,18 +145,18 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         var bulkCreatedAt = cache.GetCreatedAt(["a", "b"]).ToList().SubscribeGetValue();
         await Assert.That(bulkCreatedAt!.Count).IsEqualTo(BulkKeyCount);
 
-        cache.UpdateExpiration("a", TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration("b", typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration(["a"], TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
-        cache.UpdateExpiration(["b"], typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration("a", TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
+        cache.UpdateExpiration("b", typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
+        cache.UpdateExpiration(["a"], TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
+        cache.UpdateExpiration(["b"], typeof(string), TimeProvider.System.GetUtcNow().AddHours(1)).WaitForCompletion();
 
-        cache.Flush().SubscribeAndComplete();
-        cache.Flush(typeof(string)).SubscribeAndComplete();
-        cache.Vacuum().SubscribeAndComplete();
+        cache.Flush().WaitForCompletion();
+        cache.Flush(typeof(string)).WaitForCompletion();
+        cache.Vacuum().WaitForCompletion();
 
-        cache.Invalidate("a").SubscribeAndComplete();
-        cache.Invalidate(["b"]).SubscribeAndComplete();
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.Invalidate("a").WaitForCompletion();
+        cache.Invalidate(["b"]).WaitForCompletion();
+        cache.InvalidateAll().WaitForCompletion();
 
         var remaining = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(remaining).IsEmpty();
@@ -276,7 +276,7 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
-            cache.Flush().SubscribeAndComplete();
+            cache.Flush().WaitForCompletion();
             await Assert.That(connection.CheckpointCount).IsGreaterThanOrEqualTo(1);
         }
         finally
@@ -394,16 +394,16 @@ public class EncryptedSqliteBlobCacheTests : BlobCacheTestsBase
     {
         InMemoryAkavacheConnection connection = new();
         using EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
-        cache.Insert("k1", [1]).SubscribeAndComplete();
-        cache.Insert("k2", SecondEntryPayload).SubscribeAndComplete();
-        cache.Insert("k3", ThirdEntryPayload, typeof(string)).SubscribeAndComplete();
-        cache.Insert("k4", FourthEntryPayload, typeof(string)).SubscribeAndComplete();
+        cache.Insert("k1", [1]).WaitForCompletion();
+        cache.Insert("k2", SecondEntryPayload).WaitForCompletion();
+        cache.Insert("k3", ThirdEntryPayload, typeof(string)).WaitForCompletion();
+        cache.Insert("k4", FourthEntryPayload, typeof(string)).WaitForCompletion();
 
         var expiry = TimeProvider.System.GetUtcNow().AddHours(1);
-        cache.UpdateExpiration("k1", expiry).SubscribeAndComplete();
-        cache.UpdateExpiration(["k2"], expiry).SubscribeAndComplete();
-        cache.UpdateExpiration("k3", typeof(string), expiry).SubscribeAndComplete();
-        cache.UpdateExpiration(["k4"], typeof(string), expiry).SubscribeAndComplete();
+        cache.UpdateExpiration("k1", expiry).WaitForCompletion();
+        cache.UpdateExpiration(["k2"], expiry).WaitForCompletion();
+        cache.UpdateExpiration("k3", typeof(string), expiry).WaitForCompletion();
+        cache.UpdateExpiration(["k4"], typeof(string), expiry).WaitForCompletion();
 
         await Assert.That(connection.Store["k1"].ExpiresAt!.Value).IsEqualTo(expiry.UtcDateTime);
         await Assert.That(connection.Store["k2"].ExpiresAt!.Value).IsEqualTo(expiry.UtcDateTime);

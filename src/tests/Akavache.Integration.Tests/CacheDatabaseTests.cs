@@ -170,7 +170,7 @@ public class CacheDatabaseTests
     /// <returns>A task.</returns>
     [Test]
     public async Task ShutdownShouldNoopWhenNotInitialized() =>
-        await Assert.That(static () => CacheDatabase.Shutdown().SubscribeAndComplete()).ThrowsNothing();
+        await Assert.That(static () => CacheDatabase.Shutdown().WaitForCompletion()).ThrowsNothing();
 
     /// <summary>Tests Initialize with serializer factory.</summary>
     /// <returns>A task.</returns>

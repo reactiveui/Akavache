@@ -326,8 +326,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationShouldUpdateExistingEntry()
     {
         using var cache = CreateCache();
-        cache.Insert("key1", SamplePayload).SubscribeAndComplete();
-        cache.UpdateExpiration("key1", TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.Insert("key1", SamplePayload).WaitForCompletion();
+        cache.UpdateExpiration("key1", TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var data = cache.Get("key1").SubscribeGetValue();
         await Assert.That(data).IsNotNull();
@@ -339,10 +339,10 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationKeysShouldUpdateMultiple()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload).SubscribeAndComplete();
-        cache.Insert("k2", AlternateSamplePayload).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload).WaitForCompletion();
+        cache.Insert("k2", AlternateSamplePayload).WaitForCompletion();
 
-        cache.UpdateExpiration(["k1", "k2"], TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(["k1", "k2"], TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var d1 = cache.Get("k1").SubscribeGetValue();
         var d2 = cache.Get("k2").SubscribeGetValue();
@@ -358,10 +358,10 @@ public class InMemoryBlobCacheBaseTests
         using var cache = CreateCache();
 
         // Insert with already-expired timestamp
-        cache.Insert(ExpiredKey, SamplePayload, TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
-        cache.Insert(ValidKey, AlternateSamplePayload, TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.Insert(ExpiredKey, SamplePayload, TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
+        cache.Insert(ValidKey, AlternateSamplePayload, TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
-        cache.Vacuum().SubscribeAndComplete();
+        cache.Vacuum().WaitForCompletion();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys).Contains(ValidKey);
@@ -388,7 +388,7 @@ public class InMemoryBlobCacheBaseTests
     {
         using var cache = CreateCache();
         UserObject user = new() { Name = "Alice", Bio = "Dev", Blog = "https://example.com" };
-        cache.InsertObject("user-1", user).SubscribeAndComplete();
+        cache.InsertObject("user-1", user).WaitForCompletion();
 
         var result = cache.GetObject<UserObject>("user-1").SubscribeGetValue();
         await Assert.That(result).IsNotNull();
@@ -401,7 +401,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task InsertObjectWithExpirationShouldStoreValue()
     {
         using var cache = CreateCache();
-        cache.InsertObject("k", new UserObject { Name = "Bob" }, TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.InsertObject("k", new UserObject { Name = "Bob" }, TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
         var result = cache.GetObject<UserObject>("k").SubscribeGetValue();
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Name).IsEqualTo("Bob");
@@ -437,9 +437,9 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetAllObjectsShouldReturnAllItemsForType()
     {
         using var cache = CreateCache();
-        cache.InsertObject("a", new UserObject { Name = "A" }).SubscribeAndComplete();
-        cache.InsertObject("b", new UserObject { Name = "B" }).SubscribeAndComplete();
-        cache.InsertObject("c", new UserObject { Name = "C" }).SubscribeAndComplete();
+        cache.InsertObject("a", new UserObject { Name = "A" }).WaitForCompletion();
+        cache.InsertObject("b", new UserObject { Name = "B" }).WaitForCompletion();
+        cache.InsertObject("c", new UserObject { Name = "C" }).WaitForCompletion();
 
         var all = cache.GetAllObjects<UserObject>().SubscribeGetValue();
         var list = all!.ToList();
@@ -464,7 +464,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetObjectCreatedAtShouldReturnTimestamp()
     {
         using var cache = CreateCache();
-        cache.InsertObject("k", new UserObject { Name = "x" }).SubscribeAndComplete();
+        cache.InsertObject("k", new UserObject { Name = "x" }).WaitForCompletion();
         var createdAt = cache.GetObjectCreatedAt<UserObject>("k").SubscribeGetValue();
         await Assert.That(createdAt).IsNotNull();
     }
@@ -475,8 +475,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task InvalidateObjectShouldRemoveEntry()
     {
         using var cache = CreateCache();
-        cache.InsertObject("k", new UserObject { Name = "x" }).SubscribeAndComplete();
-        cache.InvalidateObject<UserObject>("k").SubscribeAndComplete();
+        cache.InsertObject("k", new UserObject { Name = "x" }).WaitForCompletion();
+        cache.InvalidateObject<UserObject>("k").WaitForCompletion();
 
         var error = cache.GetObject<UserObject>("k").SubscribeGetError();
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
@@ -488,10 +488,10 @@ public class InMemoryBlobCacheBaseTests
     public async Task InvalidateAllObjectsShouldRemoveTypedEntries()
     {
         using var cache = CreateCache();
-        cache.InsertObject("a", new UserObject { Name = "A" }).SubscribeAndComplete();
-        cache.InsertObject("b", new UserObject { Name = "B" }).SubscribeAndComplete();
+        cache.InsertObject("a", new UserObject { Name = "A" }).WaitForCompletion();
+        cache.InsertObject("b", new UserObject { Name = "B" }).WaitForCompletion();
 
-        cache.InvalidateAllObjects<UserObject>().SubscribeAndComplete();
+        cache.InvalidateAllObjects<UserObject>().WaitForCompletion();
 
         var all = cache.GetAllObjects<UserObject>().SubscribeGetValue();
         await Assert.That(all!.Count()).IsEqualTo(0);
@@ -520,7 +520,7 @@ public class InMemoryBlobCacheBaseTests
             new("k1", SamplePayload),
             new("k2", AlternateSamplePayload)
         ];
-        cache.Insert(pairs, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert(pairs, typeof(UserObject)).WaitForCompletion();
 
         var keys = cache.GetAllKeys(typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(keys).Contains("k1");
@@ -545,7 +545,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task InsertWithTypeShouldPopulateTypeIndex()
     {
         using var cache = CreateCache();
-        cache.Insert("k", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload, typeof(UserObject)).WaitForCompletion();
         var keys = cache.GetAllKeys(typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(keys).Contains("k");
     }
@@ -568,7 +568,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetWithTypeShouldReturnValue()
     {
         using var cache = CreateCache();
-        cache.Insert("k", ThirdSamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k", ThirdSamplePayload, typeof(UserObject)).WaitForCompletion();
         var data = cache.Get("k", typeof(UserObject)).SubscribeGetValue();
         await Assert.That(data).IsNotNull();
         await Assert.That(data!.Length).IsEqualTo(ThirdSamplePayload.Length);
@@ -580,8 +580,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetMultipleWithTypeShouldReturnValues()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
-        cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload, typeof(UserObject)).WaitForCompletion();
+        cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).WaitForCompletion();
 
         var results = cache.Get(["k1", "k2", MissingKey], typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(results!.Count).IsEqualTo(StoredKeyResultCount);
@@ -593,8 +593,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetAllByTypeShouldReturnValidAndRemoveExpired()
     {
         using var cache = CreateCache();
-        cache.Insert(ValidKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
-        cache.Insert(ExpiredKey, AlternateSamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
+        cache.Insert(ValidKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
+        cache.Insert(ExpiredKey, AlternateSamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
 
         var all = cache.GetAll(typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(all!.Count).IsEqualTo(1);
@@ -629,8 +629,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetAllKeysByTypeShouldReturnValidAndRemoveExpired()
     {
         using var cache = CreateCache();
-        cache.Insert(ValidKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
-        cache.Insert(ExpiredKey, AlternateSamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
+        cache.Insert(ValidKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
+        cache.Insert(ExpiredKey, AlternateSamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
 
         var keys = cache.GetAllKeys(typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(keys).Contains(ValidKey);
@@ -665,7 +665,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetCreatedAtKeysShouldReturnTimestampsAndNulls()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload).WaitForCompletion();
 
         var results = cache.GetCreatedAt(["k1", MissingKey]).ToList().SubscribeGetValue();
         await Assert.That(results!.Count).IsEqualTo(RequestedKeyCount);
@@ -694,7 +694,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetCreatedAtKeysWithTypeShouldReturnTimestamps()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload, typeof(UserObject)).WaitForCompletion();
         var results = cache.GetCreatedAt(["k1"], typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(results!.Count).IsEqualTo(1);
         await Assert.That(results[0].Time).IsNotNull();
@@ -706,7 +706,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetCreatedAtWithTypeShouldReturnTimestamp()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload, typeof(UserObject)).WaitForCompletion();
         var created = cache.GetCreatedAt("k1", typeof(UserObject)).SubscribeGetValue();
         await Assert.That(created).IsNotNull();
     }
@@ -737,8 +737,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task InvalidateWithTypeShouldRemoveEntry()
     {
         using var cache = CreateCache();
-        cache.Insert("k", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
-        cache.Invalidate("k", typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload, typeof(UserObject)).WaitForCompletion();
+        cache.Invalidate("k", typeof(UserObject)).WaitForCompletion();
 
         var error = cache.Get("k").SubscribeGetError();
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
@@ -752,10 +752,10 @@ public class InMemoryBlobCacheBaseTests
         var cache = CreateCache();
         try
         {
-            cache.Insert("k1", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
-            cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).SubscribeAndComplete();
+            cache.Insert("k1", SamplePayload, typeof(UserObject)).WaitForCompletion();
+            cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).WaitForCompletion();
 
-            cache.Invalidate(["k1", "k2"], typeof(UserObject)).SubscribeAndComplete();
+            cache.Invalidate(["k1", "k2"], typeof(UserObject)).WaitForCompletion();
 
             var remaining = cache.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(remaining!.Count).IsEqualTo(0);
@@ -772,7 +772,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetShouldRemoveAndThrowWhenEntryExpired()
     {
         using var cache = CreateCache();
-        cache.Insert(ExpiredKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
+        cache.Insert(ExpiredKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
 
         var error = cache.Get(ExpiredKey).SubscribeGetError();
         await Assert.That(error).IsTypeOf<KeyNotFoundException>();
@@ -798,8 +798,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationWithTypeShouldUpdateMatching()
     {
         using var cache = CreateCache();
-        cache.Insert("k", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
-        cache.UpdateExpiration("k", typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload, typeof(UserObject)).WaitForCompletion();
+        cache.UpdateExpiration("k", typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var value = cache.Get("k").SubscribeGetValue();
         await Assert.That(value).IsNotNull();
@@ -811,10 +811,10 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationWithTypeShouldIgnoreMismatchedType()
     {
         using var cache = CreateCache();
-        cache.Insert("k", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload, typeof(UserObject)).WaitForCompletion();
 
         // Should not throw; simply no update performed since type mismatches.
-        cache.UpdateExpiration("k", typeof(string), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration("k", typeof(string), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var value = cache.Get("k").SubscribeGetValue();
         await Assert.That(value).IsNotNull();
@@ -826,10 +826,10 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationKeysWithTypeShouldUpdateMatching()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
-        cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload, typeof(UserObject)).WaitForCompletion();
+        cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).WaitForCompletion();
 
-        cache.UpdateExpiration(["k1", "k2"], typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(["k1", "k2"], typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var v1 = cache.Get("k1").SubscribeGetValue();
         var v2 = cache.Get("k2").SubscribeGetValue();
@@ -843,8 +843,8 @@ public class InMemoryBlobCacheBaseTests
     public async Task GetAllKeysShouldRemoveExpired()
     {
         using var cache = CreateCache();
-        cache.Insert(ValidKey, SamplePayload, TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
-        cache.Insert(ExpiredKey, AlternateSamplePayload, TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
+        cache.Insert(ValidKey, SamplePayload, TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
+        cache.Insert(ExpiredKey, AlternateSamplePayload, TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys).Contains(ValidKey);
@@ -857,10 +857,10 @@ public class InMemoryBlobCacheBaseTests
     public async Task InvalidateAllShouldClearAllEntries()
     {
         using var cache = CreateCache();
-        cache.Insert("k1", SamplePayload).SubscribeAndComplete();
-        cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k1", SamplePayload).WaitForCompletion();
+        cache.Insert("k2", AlternateSamplePayload, typeof(UserObject)).WaitForCompletion();
 
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys!.Count).IsEqualTo(0);
@@ -960,10 +960,10 @@ public class InMemoryBlobCacheBaseTests
         using var cache = CreateCache();
 
         // Insert untyped entries only — the type index never gets populated.
-        cache.Insert(ExpiredKey, SamplePayload, TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
-        cache.Insert(ValidKey, AlternateSamplePayload, TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.Insert(ExpiredKey, SamplePayload, TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
+        cache.Insert(ValidKey, AlternateSamplePayload, TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
-        cache.Vacuum().SubscribeAndComplete();
+        cache.Vacuum().WaitForCompletion();
 
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys).DoesNotContain(ExpiredKey);
@@ -976,13 +976,13 @@ public class InMemoryBlobCacheBaseTests
     public async Task VacuumShouldRemoveExpiredEntryFromTypeIndex()
     {
         using var cache = CreateCache();
-        cache.Insert(ExpiredTypedKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).SubscribeAndComplete();
-        cache.Insert(ValidTypedKey, AlternateSamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.Insert(ExpiredTypedKey, SamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddSeconds(AlreadyExpiredOffsetSeconds)).WaitForCompletion();
+        cache.Insert(ValidTypedKey, AlternateSamplePayload, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var typedKeysBefore = cache.GetAllKeys(typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(typedKeysBefore).Contains(ValidTypedKey);
 
-        cache.Vacuum().SubscribeAndComplete();
+        cache.Vacuum().WaitForCompletion();
 
         var typedKeysAfter = cache.GetAllKeys(typeof(UserObject)).ToList().SubscribeGetValue();
         await Assert.That(typedKeysAfter).DoesNotContain(ExpiredTypedKey);
@@ -1025,7 +1025,7 @@ public class InMemoryBlobCacheBaseTests
         using var cache = CreateCache();
 
         // Insert a null byte array directly via the raw Insert method.
-        cache.Insert("nulldata", null!, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("nulldata", null!, typeof(UserObject)).WaitForCompletion();
 
         var received = false;
         var result = cache.GetObject<UserObject>("nulldata").Do(_ => received = true).SubscribeGetValue();
@@ -1041,7 +1041,7 @@ public class InMemoryBlobCacheBaseTests
         using var cache = CreateCache();
 
         // Should complete without error even though the key does not exist.
-        cache.UpdateExpiration(MissingKey, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(MissingKey, typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
         await Task.CompletedTask;
     }
 
@@ -1051,10 +1051,10 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationKeysWithTypeShouldIgnoreMismatchedType()
     {
         using var cache = CreateCache();
-        cache.Insert("k", SamplePayload, typeof(UserObject)).SubscribeAndComplete();
+        cache.Insert("k", SamplePayload, typeof(UserObject)).WaitForCompletion();
 
         // Update with a different type should be a no-op.
-        cache.UpdateExpiration(["k"], typeof(string), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(["k"], typeof(string), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
         var value = cache.Get("k").SubscribeGetValue();
         await Assert.That(value).IsNotNull();
@@ -1068,7 +1068,7 @@ public class InMemoryBlobCacheBaseTests
         using var cache = CreateCache();
 
         // Should complete without error even though the key does not exist.
-        cache.UpdateExpiration(MissingKey, TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(MissingKey, TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
         await Task.CompletedTask;
     }
 
@@ -1078,7 +1078,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationKeysShouldNoopWhenKeysMissing()
     {
         using var cache = CreateCache();
-        cache.UpdateExpiration(["missing1", "missing2"], TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration(["missing1", "missing2"], TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
         await Task.CompletedTask;
     }
 
@@ -1088,7 +1088,7 @@ public class InMemoryBlobCacheBaseTests
     public async Task UpdateExpirationKeysWithTypeShouldNoopWhenKeysMissing()
     {
         using var cache = CreateCache();
-        cache.UpdateExpiration([MissingKey], typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+        cache.UpdateExpiration([MissingKey], typeof(UserObject), TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
         await Task.CompletedTask;
     }
 

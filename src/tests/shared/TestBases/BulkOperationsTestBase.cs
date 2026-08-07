@@ -35,7 +35,7 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             foreach (var v in keys)
             {
-                fixture.Insert(v, data).SubscribeAndComplete();
+                fixture.Insert(v, data).WaitForCompletion();
             }
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
@@ -69,7 +69,7 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             foreach (var v in keys)
             {
-                fixture.Insert(v, data, DateTimeOffset.MinValue).SubscribeAndComplete();
+                fixture.Insert(v, data, DateTimeOffset.MinValue).WaitForCompletion();
             }
 
             var allData = fixture.Get(keys).ToList().SubscribeGetValue();
@@ -102,7 +102,7 @@ public abstract class BulkOperationsTestBase : IDisposable
             byte[] data = [0x10, 0x20, 0x30];
             string[] keys = ["Foo", "Bar", "Baz"];
 
-            fixture.Insert(keys.ToDictionary(static k => k, _ => data)).SubscribeAndComplete();
+            fixture.Insert(keys.ToDictionary(static k => k, _ => data)).WaitForCompletion();
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length);
@@ -135,13 +135,13 @@ public abstract class BulkOperationsTestBase : IDisposable
 
             foreach (var v in keys)
             {
-                fixture.Insert(v, data).SubscribeAndComplete();
+                fixture.Insert(v, data).WaitForCompletion();
             }
 
             var allKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(allKeys).Count().IsEqualTo(keys.Length);
 
-            fixture.Invalidate(keys).SubscribeAndComplete();
+            fixture.Invalidate(keys).WaitForCompletion();
 
             var remainingKeys = fixture.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(remainingKeys).IsEmpty();

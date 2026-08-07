@@ -122,7 +122,7 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", ThreeBytePayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("k1", ThreeBytePayload, typeof(string)).WaitForCompletion();
                 var data = cache.Get("k1", typeof(string)).SubscribeGetValue();
 
                 await Assert.That(data).IsNotNull();
@@ -152,7 +152,7 @@ public class SqliteBlobCacheDirectTests
                     new("k1", FirstEntryPayload),
                     new("k2", SecondEntryPayload)
                 ];
-                cache.Insert(pairs, typeof(string)).SubscribeAndComplete();
+                cache.Insert(pairs, typeof(string)).WaitForCompletion();
 
                 var results = cache.Get(["k1", "k2"], typeof(string)).ToList().SubscribeGetValue();
                 await Assert.That(results!.Count).IsEqualTo(InsertedPairCount);
@@ -180,11 +180,11 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("k2", SecondEntryPayload, typeof(int)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("k2", SecondEntryPayload, typeof(int)).WaitForCompletion();
 
-                cache.Invalidate("k1", typeof(string)).SubscribeAndComplete();
-                cache.InvalidateAll(typeof(int)).SubscribeAndComplete();
+                cache.Invalidate("k1", typeof(string)).WaitForCompletion();
+                cache.InvalidateAll(typeof(int)).WaitForCompletion();
 
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(keys!).IsEmpty();
@@ -206,10 +206,10 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("k2", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("k2", SecondEntryPayload, typeof(string)).WaitForCompletion();
 
-                cache.Invalidate(["k1", "k2"], typeof(string)).SubscribeAndComplete();
+                cache.Invalidate(["k1", "k2"], typeof(string)).WaitForCompletion();
 
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(keys!).IsEmpty();
@@ -233,8 +233,8 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("k2", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("k2", SecondEntryPayload, typeof(string)).WaitForCompletion();
 
                 var single = cache.GetCreatedAt("k1", typeof(string)).SubscribeGetValue();
                 await Assert.That(single).IsNotNull();
@@ -259,11 +259,11 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload, typeof(string)).WaitForCompletion();
                 var newExpiration = TimeProvider.System.GetLocalNow().AddHours(1);
 
-                cache.UpdateExpiration("k1", typeof(string), newExpiration).SubscribeAndComplete();
-                cache.UpdateExpiration(["k1"], typeof(string), newExpiration).SubscribeAndComplete();
+                cache.UpdateExpiration("k1", typeof(string), newExpiration).WaitForCompletion();
+                cache.UpdateExpiration(["k1"], typeof(string), newExpiration).WaitForCompletion();
 
                 var data = cache.Get("k1", typeof(string)).SubscribeGetValue();
                 await Assert.That(data).IsNotNull();
@@ -324,10 +324,10 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", FirstEntryPayload, TimeProvider.System.GetLocalNow().Add(AlreadyElapsedLifetime)).SubscribeAndComplete();
-                cache.Insert("k2", SecondEntryPayload, TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload, TimeProvider.System.GetLocalNow().Add(AlreadyElapsedLifetime)).WaitForCompletion();
+                cache.Insert("k2", SecondEntryPayload, TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
-                cache.Vacuum().SubscribeAndComplete();
+                cache.Vacuum().WaitForCompletion();
 
                 var data = cache.Get("k2").SubscribeGetValue();
                 await Assert.That(data).IsNotNull();
@@ -352,13 +352,13 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", TwoBytePayload).SubscribeAndComplete();
+                cache.Insert("k1", TwoBytePayload).WaitForCompletion();
                 cache.Insert(
                     [
                         new("k2", ThirdEntryPayload),
                         new("k3", FourthEntryPayload)
                     ],
-                    TimeProvider.System.GetLocalNow().AddHours(1)).SubscribeAndComplete();
+                    TimeProvider.System.GetLocalNow().AddHours(1)).WaitForCompletion();
 
                 var single = cache.Get("k1").SubscribeGetValue();
                 await Assert.That(single).IsNotNull();
@@ -375,16 +375,16 @@ public class SqliteBlobCacheDirectTests
                 var createdMany = cache.GetCreatedAt(["k1", "k2"]).ToList().SubscribeGetValue();
                 await Assert.That(createdMany!.Count).IsEqualTo(BulkKeyCount);
 
-                cache.UpdateExpiration("k1", TimeProvider.System.GetLocalNow().AddDays(1)).SubscribeAndComplete();
-                cache.UpdateExpiration(["k2", "k3"], TimeProvider.System.GetLocalNow().AddDays(1)).SubscribeAndComplete();
+                cache.UpdateExpiration("k1", TimeProvider.System.GetLocalNow().AddDays(1)).WaitForCompletion();
+                cache.UpdateExpiration(["k2", "k3"], TimeProvider.System.GetLocalNow().AddDays(1)).WaitForCompletion();
 
-                cache.Flush().SubscribeAndComplete();
-                cache.Flush(typeof(string)).SubscribeAndComplete();
+                cache.Flush().WaitForCompletion();
+                cache.Flush(typeof(string)).WaitForCompletion();
 
-                cache.Invalidate("k1").SubscribeAndComplete();
-                cache.Invalidate(["k2"]).SubscribeAndComplete();
+                cache.Invalidate("k1").WaitForCompletion();
+                cache.Invalidate(["k2"]).WaitForCompletion();
 
-                cache.InvalidateAll().SubscribeAndComplete();
+                cache.InvalidateAll().WaitForCompletion();
 
                 var remaining = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(remaining!).IsEmpty();
@@ -461,7 +461,7 @@ public class SqliteBlobCacheDirectTests
         using (Utility.WithEmptyDirectory(out _))
         {
             var cache = CreateCache();
-            cache.Insert("k1", FirstEntryPayload).SubscribeAndComplete();
+            cache.Insert("k1", FirstEntryPayload).WaitForCompletion();
 
             // Synchronous dispose exercises the Dispose(bool) wal_checkpoint/journal/close paths
             cache.Dispose();
@@ -506,7 +506,7 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("expired", FirstEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().AddDays(-1)).SubscribeAndComplete();
+                cache.Insert("expired", FirstEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().AddDays(-1)).WaitForCompletion();
 
                 await Assert.That(CaptureError(cache.Get("expired", typeof(string)))).IsTypeOf<KeyNotFoundException>();
             }
@@ -559,7 +559,7 @@ public class SqliteBlobCacheDirectTests
         using (Utility.WithEmptyDirectory(out _))
         {
             var cache = CreateCache();
-            cache.Insert("k", FirstEntryPayload).SubscribeAndComplete();
+            cache.Insert("k", FirstEntryPayload).WaitForCompletion();
 
             cache.Dispose();
             cache.Dispose();
@@ -583,7 +583,7 @@ public class SqliteBlobCacheDirectTests
             try
             {
                 // Insert a valid entry to ensure the db is initialized, then look for a missing one
-                cache.Insert("existing", TwoBytePayload).SubscribeAndComplete();
+                cache.Insert("existing", TwoBytePayload).WaitForCompletion();
 
                 // Non-typed Get for missing key exercises full fallback path
                 await Assert.That(CaptureError(cache.Get("nonexistent"))).IsTypeOf<KeyNotFoundException>();
@@ -608,8 +608,8 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("a", FirstEntryPayload).SubscribeAndComplete();
-                cache.Insert("b", SecondEntryPayload).SubscribeAndComplete();
+                cache.Insert("a", FirstEntryPayload).WaitForCompletion();
+                cache.Insert("b", SecondEntryPayload).WaitForCompletion();
 
                 // Request keys where only some exist
                 var results = cache.Get(["a", "c", "d"]).ToList().SubscribeGetValue();
@@ -637,7 +637,7 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("k", FirstEntryPayload, typeof(string)).WaitForCompletion();
 
                 var results = cache.GetAll(typeof(int)).ToList().SubscribeGetValue();
                 await Assert.That(results!).IsEmpty();
@@ -659,8 +659,8 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("str1", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("int1", SecondEntryPayload, typeof(int)).SubscribeAndComplete();
+                cache.Insert("str1", FirstEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("int1", SecondEntryPayload, typeof(int)).WaitForCompletion();
 
                 var stringKeys = cache.GetAllKeys(typeof(string)).ToList().SubscribeGetValue();
                 await Assert.That(stringKeys!.Count).IsEqualTo(1);
@@ -695,12 +695,12 @@ public class SqliteBlobCacheDirectTests
                 var futureExpiration = TimeProvider.System.GetUtcNow().AddDays(1);
 
                 // Non-typed inserts with expiration
-                cache.Insert(ExpiredUntypedKey, FirstEntryPayload, pastExpiration).SubscribeAndComplete();
-                cache.Insert(ValidUntypedKey, SecondEntryPayload, futureExpiration).SubscribeAndComplete();
+                cache.Insert(ExpiredUntypedKey, FirstEntryPayload, pastExpiration).WaitForCompletion();
+                cache.Insert(ValidUntypedKey, SecondEntryPayload, futureExpiration).WaitForCompletion();
 
                 // Typed inserts with expiration
-                cache.Insert(ExpiredTypedKey, ThirdEntryPayload, typeof(string), pastExpiration).SubscribeAndComplete();
-                cache.Insert(ValidTypedKey, FourthEntryPayload, typeof(string), futureExpiration).SubscribeAndComplete();
+                cache.Insert(ExpiredTypedKey, ThirdEntryPayload, typeof(string), pastExpiration).WaitForCompletion();
+                cache.Insert(ValidTypedKey, FourthEntryPayload, typeof(string), futureExpiration).WaitForCompletion();
 
                 // Non-typed Get should not return expired
                 await Assert.That(CaptureError(cache.Get(ExpiredUntypedKey))).IsTypeOf<KeyNotFoundException>();
@@ -768,27 +768,27 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k1", FirstEntryPayload).SubscribeAndComplete();
-                cache.Insert("k2", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("k3", ThirdEntryPayload).SubscribeAndComplete();
-                cache.Insert("k4", FourthEntryPayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload).WaitForCompletion();
+                cache.Insert("k2", SecondEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("k3", ThirdEntryPayload).WaitForCompletion();
+                cache.Insert("k4", FourthEntryPayload, typeof(string)).WaitForCompletion();
 
                 var past = TimeProvider.System.GetUtcNow().AddDays(-1);
 
                 // Update single non-typed to past
-                cache.UpdateExpiration("k1", past).SubscribeAndComplete();
+                cache.UpdateExpiration("k1", past).WaitForCompletion();
                 await Assert.That(CaptureError(cache.Get("k1"))).IsTypeOf<KeyNotFoundException>();
 
                 // Update single typed to past
-                cache.UpdateExpiration("k2", typeof(string), past).SubscribeAndComplete();
+                cache.UpdateExpiration("k2", typeof(string), past).WaitForCompletion();
                 await Assert.That(CaptureError(cache.Get("k2", typeof(string)))).IsTypeOf<KeyNotFoundException>();
 
                 // Update bulk non-typed to past
-                cache.UpdateExpiration(["k3"], past).SubscribeAndComplete();
+                cache.UpdateExpiration(["k3"], past).WaitForCompletion();
                 await Assert.That(CaptureError(cache.Get("k3"))).IsTypeOf<KeyNotFoundException>();
 
                 // Update bulk typed to past
-                cache.UpdateExpiration(["k4"], typeof(string), past).SubscribeAndComplete();
+                cache.UpdateExpiration(["k4"], typeof(string), past).WaitForCompletion();
                 await Assert.That(CaptureError(cache.Get("k4", typeof(string)))).IsTypeOf<KeyNotFoundException>();
             }
             finally
@@ -808,13 +808,13 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("k", FirstEntryPayload).SubscribeAndComplete();
+                cache.Insert("k", FirstEntryPayload).WaitForCompletion();
 
                 // Non-typed flush triggers WAL checkpoint
-                cache.Flush().SubscribeAndComplete();
+                cache.Flush().WaitForCompletion();
 
                 // Typed flush is a no-op on SQLite but should complete
-                cache.Flush(typeof(string)).SubscribeAndComplete();
+                cache.Flush(typeof(string)).WaitForCompletion();
 
                 // Verify data is still accessible after flush
                 var data = cache.Get("k").SubscribeGetValue();
@@ -837,11 +837,11 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("expired1", FirstEntryPayload, TimeProvider.System.GetUtcNow().AddDays(-1)).SubscribeAndComplete();
-                cache.Insert("expired2", SecondEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().AddDays(-1)).SubscribeAndComplete();
-                cache.Insert("valid", ThirdEntryPayload, TimeProvider.System.GetUtcNow().AddDays(1)).SubscribeAndComplete();
+                cache.Insert("expired1", FirstEntryPayload, TimeProvider.System.GetUtcNow().AddDays(-1)).WaitForCompletion();
+                cache.Insert("expired2", SecondEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().AddDays(-1)).WaitForCompletion();
+                cache.Insert("valid", ThirdEntryPayload, TimeProvider.System.GetUtcNow().AddDays(1)).WaitForCompletion();
 
-                cache.Vacuum().SubscribeAndComplete();
+                cache.Vacuum().WaitForCompletion();
 
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(keys!.Count).IsEqualTo(1);
@@ -864,11 +864,11 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("str1", FirstEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("str2", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("int1", ThirdEntryPayload, typeof(int)).SubscribeAndComplete();
+                cache.Insert("str1", FirstEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("str2", SecondEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("int1", ThirdEntryPayload, typeof(int)).WaitForCompletion();
 
-                cache.InvalidateAll(typeof(string)).SubscribeAndComplete();
+                cache.InvalidateAll(typeof(string)).WaitForCompletion();
 
                 var remaining = cache.GetAllKeys(typeof(int)).ToList().SubscribeGetValue();
                 await Assert.That(remaining!.Count).IsEqualTo(1);
@@ -895,16 +895,16 @@ public class SqliteBlobCacheDirectTests
             try
             {
                 // Non-typed insert without expiration
-                cache.Insert("no_expiry", FirstEntryPayload).SubscribeAndComplete();
+                cache.Insert("no_expiry", FirstEntryPayload).WaitForCompletion();
 
                 // Typed insert without expiration
-                cache.Insert("no_expiry_typed", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
+                cache.Insert("no_expiry_typed", SecondEntryPayload, typeof(string)).WaitForCompletion();
 
                 // Bulk non-typed insert without expiration
-                cache.Insert([new("bulk1", ThirdEntryPayload)]).SubscribeAndComplete();
+                cache.Insert([new("bulk1", ThirdEntryPayload)]).WaitForCompletion();
 
                 // Bulk typed insert without expiration
-                cache.Insert([new("bulk2", FourthEntryPayload)], typeof(string)).SubscribeAndComplete();
+                cache.Insert([new("bulk2", FourthEntryPayload)], typeof(string)).WaitForCompletion();
 
                 // All should be retrievable
                 var data1 = cache.Get("no_expiry").SubscribeGetValue();
@@ -1007,11 +1007,11 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("a", FirstEntryPayload).SubscribeAndComplete();
-                cache.Insert("b", SecondEntryPayload, typeof(string)).SubscribeAndComplete();
-                cache.Insert("c", ThirdEntryPayload, typeof(int)).SubscribeAndComplete();
+                cache.Insert("a", FirstEntryPayload).WaitForCompletion();
+                cache.Insert("b", SecondEntryPayload, typeof(string)).WaitForCompletion();
+                cache.Insert("c", ThirdEntryPayload, typeof(int)).WaitForCompletion();
 
-                cache.InvalidateAll().SubscribeAndComplete();
+                cache.InvalidateAll().WaitForCompletion();
 
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(keys!).IsEmpty();
@@ -1033,11 +1033,11 @@ public class SqliteBlobCacheDirectTests
             var cache = CreateCache();
             try
             {
-                cache.Insert("a", FirstEntryPayload).SubscribeAndComplete();
-                cache.Insert("b", SecondEntryPayload).SubscribeAndComplete();
-                cache.Insert("c", ThirdEntryPayload).SubscribeAndComplete();
+                cache.Insert("a", FirstEntryPayload).WaitForCompletion();
+                cache.Insert("b", SecondEntryPayload).WaitForCompletion();
+                cache.Insert("c", ThirdEntryPayload).WaitForCompletion();
 
-                cache.Invalidate(["a", "b"]).SubscribeAndComplete();
+                cache.Invalidate(["a", "b"]).WaitForCompletion();
 
                 var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
                 await Assert.That(keys!.Count).IsEqualTo(1);
@@ -1071,7 +1071,7 @@ public class SqliteBlobCacheDirectTests
                     new("tk1", FirstTypedBulkPayload),
                     new("tk2", SecondTypedBulkPayload)
                 ];
-                cache.Insert(pairs, typeof(string), future).SubscribeAndComplete();
+                cache.Insert(pairs, typeof(string), future).WaitForCompletion();
 
                 var results = cache.Get(["tk1", "tk2"], typeof(string)).ToList().SubscribeGetValue();
                 await Assert.That(results!.Count).IsEqualTo(InsertedPairCount);
@@ -1094,14 +1094,14 @@ public class SqliteBlobCacheDirectTests
             try
             {
                 // Insert with a future expiration
-                cache.Insert("k1", FirstEntryPayload, TimeProvider.System.GetUtcNow().Add(ShortLifetime)).SubscribeAndComplete();
-                cache.Insert("k2", SecondEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().Add(ShortLifetime)).SubscribeAndComplete();
+                cache.Insert("k1", FirstEntryPayload, TimeProvider.System.GetUtcNow().Add(ShortLifetime)).WaitForCompletion();
+                cache.Insert("k2", SecondEntryPayload, typeof(string), TimeProvider.System.GetUtcNow().Add(ShortLifetime)).WaitForCompletion();
 
                 // Update to null expiration (permanent)
-                cache.UpdateExpiration("k1", null).SubscribeAndComplete();
-                cache.UpdateExpiration("k2", typeof(string), null).SubscribeAndComplete();
-                cache.UpdateExpiration(["k1"], null).SubscribeAndComplete();
-                cache.UpdateExpiration(["k2"], typeof(string), null).SubscribeAndComplete();
+                cache.UpdateExpiration("k1", null).WaitForCompletion();
+                cache.UpdateExpiration("k2", typeof(string), null).WaitForCompletion();
+                cache.UpdateExpiration(["k1"], null).WaitForCompletion();
+                cache.UpdateExpiration(["k2"], typeof(string), null).WaitForCompletion();
 
                 var d1 = cache.Get("k1").SubscribeGetValue();
                 await Assert.That(d1).IsNotNull();

@@ -92,7 +92,7 @@ public class IBlobCacheInterfaceTests
         byte[] testData = [1, 2, 3, 4, 5];
 
         // Insert
-        cache.Insert(ByteKey, testData).SubscribeAndComplete();
+        cache.Insert(ByteKey, testData).WaitForCompletion();
 
         // Get
         var retrieved = cache.Get(ByteKey).SubscribeGetValue();
@@ -111,7 +111,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(keys!).Contains(ByteKey);
 
         // Invalidate
-        cache.Invalidate(ByteKey).SubscribeAndComplete();
+        cache.Invalidate(ByteKey).WaitForCompletion();
 
         // Verify invalidated
         var getError = cache.Get(ByteKey).SubscribeGetError();
@@ -132,7 +132,7 @@ public class IBlobCacheInterfaceTests
         Dictionary<string, byte[]> testData = new() { ["key1"] = SamplePayload, ["key2"] = SecondSamplePayload, ["key3"] = ThirdSamplePayload };
 
         // Bulk insert
-        cache.Insert(testData).SubscribeAndComplete();
+        cache.Insert(testData).WaitForCompletion();
 
         // Bulk get
         var keys = testData.Keys.ToArray();
@@ -145,7 +145,7 @@ public class IBlobCacheInterfaceTests
         }
 
         // Bulk invalidate
-        cache.Invalidate(keys).SubscribeAndComplete();
+        cache.Invalidate(keys).WaitForCompletion();
 
         // Verify all invalidated
         foreach (var key in keys)
@@ -169,7 +169,7 @@ public class IBlobCacheInterfaceTests
         var expiration = TimeProvider.System.GetLocalNow().AddSeconds(1);
 
         // Insert with expiration
-        cache.Insert(ExpiringKey, testData, expiration).SubscribeAndComplete();
+        cache.Insert(ExpiringKey, testData, expiration).WaitForCompletion();
 
         // Should be available immediately
         var retrieved = cache.Get(ExpiringKey).SubscribeGetValue();
@@ -186,7 +186,7 @@ public class IBlobCacheInterfaceTests
         Dictionary<string, byte[]> bulkData = new() { ["bulk1"] = FirstBulkPayload, ["bulk2"] = SecondBulkPayload };
         var bulkExpiration = TimeProvider.System.GetLocalNow().AddSeconds(1);
 
-        cache.Insert(bulkData, bulkExpiration).SubscribeAndComplete();
+        cache.Insert(bulkData, bulkExpiration).WaitForCompletion();
 
         // Should be available immediately
         var bulkRetrieved = cache.Get([.. bulkData.Keys]).ToList().SubscribeGetValue();
@@ -214,16 +214,16 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert multiple items
-        cache.Insert("key1", SamplePayload).SubscribeAndComplete();
-        cache.Insert("key2", SecondSamplePayload).SubscribeAndComplete();
-        cache.Insert("key3", ThirdSamplePayload).SubscribeAndComplete();
+        cache.Insert("key1", SamplePayload).WaitForCompletion();
+        cache.Insert("key2", SecondSamplePayload).WaitForCompletion();
+        cache.Insert("key3", ThirdSamplePayload).WaitForCompletion();
 
         // Verify items exist
         var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keys).Count().IsEqualTo(SeededEntryCount);
 
         // InvalidateAll
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Verify all items are gone
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -251,10 +251,10 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert data
-        cache.Insert("flush_test", SamplePayload).SubscribeAndComplete();
+        cache.Insert("flush_test", SamplePayload).WaitForCompletion();
 
         // Flush should complete without error
-        cache.Flush().SubscribeAndComplete();
+        cache.Flush().WaitForCompletion();
 
         // Data should still be available after flush
         var retrieved = cache.Get("flush_test").SubscribeGetValue();
@@ -272,12 +272,12 @@ public class IBlobCacheInterfaceTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert and remove data to create fragmentation
-        cache.Insert("vacuum_test1", SamplePayload).SubscribeAndComplete();
-        cache.Insert("vacuum_test2", SecondSamplePayload).SubscribeAndComplete();
-        cache.Invalidate("vacuum_test1").SubscribeAndComplete();
+        cache.Insert("vacuum_test1", SamplePayload).WaitForCompletion();
+        cache.Insert("vacuum_test2", SecondSamplePayload).WaitForCompletion();
+        cache.Invalidate("vacuum_test1").WaitForCompletion();
 
         // Vacuum should complete without error
-        cache.Vacuum().SubscribeAndComplete();
+        cache.Vacuum().WaitForCompletion();
 
         // Remaining data should still be available
         var retrieved = cache.Get("vacuum_test2").SubscribeGetValue();
@@ -327,7 +327,7 @@ public class IBlobCacheInterfaceTests
         RoundTripDegenerateKey("   ");
 
         // Verify that valid operations still work
-        cache.Insert("valid_key", SamplePayload).SubscribeAndComplete();
+        cache.Insert("valid_key", SamplePayload).WaitForCompletion();
 
         var validData = cache.Get("valid_key").SubscribeGetValue();
         await Assert.That(validData).IsEquivalentTo(SamplePayload);
@@ -338,7 +338,7 @@ public class IBlobCacheInterfaceTests
         {
             try
             {
-                cache.Insert(key, SamplePayload).SubscribeAndComplete();
+                cache.Insert(key, SamplePayload).WaitForCompletion();
                 _ = cache.Get(key).SubscribeGetValue();
             }
             catch (ArgumentException)
@@ -387,7 +387,7 @@ public class IBlobCacheInterfaceTests
         InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert some data
-        cache.Insert("dispose_test", SamplePayload).SubscribeAndComplete();
+        cache.Insert("dispose_test", SamplePayload).WaitForCompletion();
 
         // Test multiple dispose calls — all should be idempotent
         cache.Dispose();
@@ -427,7 +427,7 @@ public class IBlobCacheInterfaceTests
         var userType = typeof(string);
 
         // Insert with Type
-        cache.Insert(TypedKey, testData, userType).SubscribeAndComplete();
+        cache.Insert(TypedKey, testData, userType).WaitForCompletion();
 
         // Get with Type
         var retrieved = cache.Get(TypedKey, userType).SubscribeGetValue();
@@ -448,7 +448,7 @@ public class IBlobCacheInterfaceTests
 
         // Bulk Insert with Type
         Dictionary<string, byte[]> bulkData = new() { ["bulk1"] = FirstBulkPayload, ["bulk2"] = SecondBulkPayload };
-        cache.Insert(bulkData, userType).SubscribeAndComplete();
+        cache.Insert(bulkData, userType).WaitForCompletion();
 
         // Bulk Get with Type
         var bulkRetrieved = cache.Get([.. bulkData.Keys], userType).ToList().SubscribeGetValue();
@@ -459,20 +459,20 @@ public class IBlobCacheInterfaceTests
         await Assert.That(bulkCreatedAt).Count().IsEqualTo(bulkData.Count);
 
         // Flush with Type
-        cache.Flush(userType).SubscribeAndComplete();
+        cache.Flush(userType).WaitForCompletion();
 
         // Invalidate with Type
-        cache.Invalidate(TypedKey, userType).SubscribeAndComplete();
+        cache.Invalidate(TypedKey, userType).WaitForCompletion();
 
         // Verify invalidation
         var invalidateError = cache.Get(TypedKey, userType).SubscribeGetError();
         await Assert.That(invalidateError).IsTypeOf<KeyNotFoundException>();
 
         // Bulk Invalidate with Type
-        cache.Invalidate([.. bulkData.Keys], userType).SubscribeAndComplete();
+        cache.Invalidate([.. bulkData.Keys], userType).WaitForCompletion();
 
         // InvalidateAll with Type
-        cache.InvalidateAll(userType).SubscribeAndComplete();
+        cache.InvalidateAll(userType).WaitForCompletion();
 
         // Verify all are gone
         var keysAfterInvalidateAll = cache.GetAllKeys(userType).ToList().SubscribeGetValue();
@@ -496,7 +496,7 @@ public class IBlobCacheInterfaceTests
         // Insert test data
         foreach (var key in testKeys)
         {
-            cache.Insert(key, testData).SubscribeAndComplete();
+            cache.Insert(key, testData).WaitForCompletion();
         }
 
         // Test bulk GetCreatedAt - InMemoryBlobCache may handle this differently
@@ -558,7 +558,7 @@ public class IBlobCacheInterfaceTests
         Dictionary<string, byte[]> emptyData = [];
 
         // Insert empty collection
-        cache.Insert(emptyData).SubscribeAndComplete();
+        cache.Insert(emptyData).WaitForCompletion();
 
         // Get empty collection
         var emptyGetResults = cache.Get(emptyKeys).ToList().SubscribeGetValue();
@@ -568,7 +568,7 @@ public class IBlobCacheInterfaceTests
         await Assert.That(emptyCreatedAtResults).IsEmpty();
 
         // Invalidate empty collection
-        cache.Invalidate(emptyKeys).SubscribeAndComplete();
+        cache.Invalidate(emptyKeys).WaitForCompletion();
 
         // These operations should complete without error
     }

@@ -173,7 +173,7 @@ public partial class SerializerExtensionsTests
         try
         {
             // Insert only one user
-            cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
+            cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
 
             // Act - Request multiple keys where some are missing
             IList<KeyValuePair<string, UserObject>>? results = null;

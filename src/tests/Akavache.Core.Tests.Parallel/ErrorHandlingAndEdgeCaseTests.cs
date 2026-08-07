@@ -62,7 +62,7 @@ public class ErrorHandlingAndEdgeCaseTests
         InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Insert some data first
-        cache.InsertObject("test", SampleValue).SubscribeAndComplete();
+        cache.InsertObject("test", SampleValue).WaitForCompletion();
 
         // Dispose the cache
         cache.Dispose();
@@ -92,7 +92,7 @@ public class ErrorHandlingAndEdgeCaseTests
         string largeData = new('X', LargeDataCharCount);
 
         // Act - Should handle large data without throwing
-        cache.InsertObject("large_data", largeData).SubscribeAndComplete();
+        cache.InsertObject("large_data", largeData).WaitForCompletion();
 
         var retrieved = cache.GetObject<string>("large_data").SubscribeGetValue();
 
@@ -115,7 +115,7 @@ public class ErrorHandlingAndEdgeCaseTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
         // Act - Insert null object
-        cache.InsertObject<string?>("null_key", null).SubscribeAndComplete();
+        cache.InsertObject<string?>("null_key", null).WaitForCompletion();
 
         var retrieved = cache.GetObject<string?>("null_key").SubscribeGetValue();
 
@@ -124,7 +124,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
         // Test with nullable reference types
         UserObject? nullUser = null;
-        cache.InsertObject("null_user", nullUser).SubscribeAndComplete();
+        cache.InsertObject("null_user", nullUser).WaitForCompletion();
 
         var retrievedUser = cache.GetObject<UserObject?>("null_user").SubscribeGetValue();
 
@@ -166,12 +166,12 @@ public class ErrorHandlingAndEdgeCaseTests
             try
             {
                 // InMemoryBlobCache may allow these keys - test that they work if allowed
-                cache.InsertObject(edgeCaseKey, "edge_case_value").SubscribeAndComplete();
+                cache.InsertObject(edgeCaseKey, "edge_case_value").WaitForCompletion();
 
                 var edgeRetrieved = cache.GetObject<string>(edgeCaseKey).SubscribeGetValue();
 
                 await Assert.That(edgeRetrieved).IsEqualTo("edge_case_value");
-                cache.InvalidateObject<string>(edgeCaseKey).SubscribeAndComplete();
+                cache.InvalidateObject<string>(edgeCaseKey).WaitForCompletion();
             }
             catch (ArgumentException)
             {
@@ -189,7 +189,7 @@ public class ErrorHandlingAndEdgeCaseTests
         using var cache = CreateCache();
 
         string veryLongKey = new('k', VeryLongKeyLength);
-        cache.InsertObject(veryLongKey, "long_key_value").SubscribeAndComplete();
+        cache.InsertObject(veryLongKey, "long_key_value").WaitForCompletion();
 
         var longKeyRetrieved = cache.GetObject<string>(veryLongKey).SubscribeGetValue();
 
@@ -235,7 +235,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
         foreach (var specialKey in specialCharKeys)
         {
-            cache.InsertObject(specialKey, $"value_for_{specialKey}").SubscribeAndComplete();
+            cache.InsertObject(specialKey, $"value_for_{specialKey}").WaitForCompletion();
 
             var specialRetrieved = cache.GetObject<string>(specialKey).SubscribeGetValue();
 
@@ -265,7 +265,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
         foreach (var unicodeKey in unicodeKeys)
         {
-            cache.InsertObject(unicodeKey, $"unicode_value_{unicodeKey}").SubscribeAndComplete();
+            cache.InsertObject(unicodeKey, $"unicode_value_{unicodeKey}").WaitForCompletion();
 
             var unicodeRetrieved = cache.GetObject<string>(unicodeKey).SubscribeGetValue();
 
@@ -273,7 +273,7 @@ public class ErrorHandlingAndEdgeCaseTests
         }
 
         // Test that regular operations still work after all these edge cases
-        cache.InsertObject("normal_key", "normal_value").SubscribeAndComplete();
+        cache.InsertObject("normal_key", "normal_value").WaitForCompletion();
 
         var normalRetrieved = cache.GetObject<string>("normal_key").SubscribeGetValue();
 
@@ -307,7 +307,7 @@ public class ErrorHandlingAndEdgeCaseTests
                     var value = $"value_{threadIndex}_{j}";
 
                     // Insert
-                    cache.InsertObject(key, value).SubscribeAndComplete();
+                    cache.InsertObject(key, value).WaitForCompletion();
 
                     // Retrieve
                     var retrieved = cache.GetObject<string>(key).SubscribeGetValue();
@@ -315,14 +315,14 @@ public class ErrorHandlingAndEdgeCaseTests
 
                     // Update
                     var newValue = $"updated_{value}";
-                    cache.InsertObject(key, newValue).SubscribeAndComplete();
+                    cache.InsertObject(key, newValue).WaitForCompletion();
 
                     // Retrieve updated
                     var updatedRetrieved = cache.GetObject<string>(key).SubscribeGetValue();
                     await Assert.That(updatedRetrieved).IsEqualTo(newValue);
 
                     // Invalidate
-                    cache.InvalidateObject<string>(key).SubscribeAndComplete();
+                    cache.InvalidateObject<string>(key).WaitForCompletion();
 
                     // Verify invalidation
                     var getError = cache.GetObject<string>(key).SubscribeGetError();
@@ -349,7 +349,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
         // Test immediate expiration
         var pastExpiration = TimeProvider.System.GetLocalNow().AddSeconds(-1);
-        cache.InsertObject("expired_key", "expired_value", pastExpiration).SubscribeAndComplete();
+        cache.InsertObject("expired_key", "expired_value", pastExpiration).WaitForCompletion();
 
         // Should be expired immediately
         var expiredError = cache.GetObject<string>("expired_key").SubscribeGetError();
@@ -357,7 +357,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
         // Test far future expiration
         var farFutureExpiration = TimeProvider.System.GetLocalNow().AddYears(FarFutureYears);
-        cache.InsertObject("far_future_key", "far_future_value", farFutureExpiration).SubscribeAndComplete();
+        cache.InsertObject("far_future_key", "far_future_value", farFutureExpiration).WaitForCompletion();
 
         var farFutureRetrieved = cache.GetObject<string>("far_future_key").SubscribeGetValue();
         await Assert.That(farFutureRetrieved).IsEqualTo("far_future_value");
@@ -367,13 +367,13 @@ public class ErrorHandlingAndEdgeCaseTests
         var maxExpiration = DateTimeOffset.MaxValue;
 
         // MinValue expiration (should be expired)
-        cache.InsertObject("min_expiration", "min_value", minExpiration).SubscribeAndComplete();
+        cache.InsertObject("min_expiration", "min_value", minExpiration).WaitForCompletion();
 
         var minError = cache.GetObject<string>("min_expiration").SubscribeGetError();
         await Assert.That(minError).IsTypeOf<KeyNotFoundException>();
 
         // MaxValue expiration (should be valid)
-        cache.InsertObject("max_expiration", "max_value", maxExpiration).SubscribeAndComplete();
+        cache.InsertObject("max_expiration", "max_value", maxExpiration).WaitForCompletion();
 
         var maxRetrieved = cache.GetObject<string>("max_expiration").SubscribeGetValue();
         await Assert.That(maxRetrieved).IsEqualTo("max_value");
@@ -381,7 +381,7 @@ public class ErrorHandlingAndEdgeCaseTests
         // Test very short expiration
         const string shortExpirationKey = "short_expiration";
         var shortExpiration = TimeProvider.System.GetLocalNow().AddMilliseconds(ShortExpirationMilliseconds);
-        cache.InsertObject(shortExpirationKey, "short_value", shortExpiration).SubscribeAndComplete();
+        cache.InsertObject(shortExpirationKey, "short_value", shortExpiration).WaitForCompletion();
 
         // Should be available immediately
         var shortRetrieved = cache.GetObject<string>(shortExpirationKey).SubscribeGetValue();
@@ -433,7 +433,7 @@ public class ErrorHandlingAndEdgeCaseTests
             nestedArrays);
 
         // Act
-        cache.InsertObject("complex_object", complexObject).SubscribeAndComplete();
+        cache.InsertObject("complex_object", complexObject).WaitForCompletion();
 
         var retrieved = cache.GetObject<dynamic>("complex_object").SubscribeGetValue();
 
@@ -462,7 +462,7 @@ public class ErrorHandlingAndEdgeCaseTests
             {
                 UserObject user = new() { Name = $"User{index}", Bio = $"This is a bio for user {index} with some additional text to make it larger", Blog = $"https://blog{index}.example.com" };
 
-                cache.InsertObject($"user_{index}", user).SubscribeAndComplete();
+                cache.InsertObject($"user_{index}", user).WaitForCompletion();
             }));
         }
 
@@ -524,7 +524,7 @@ public class ErrorHandlingAndEdgeCaseTests
         foreach (var testCase in testCases)
         {
             // Act
-            cache.InsertObject(testCase.Key, testCase.Value).SubscribeAndComplete();
+            cache.InsertObject(testCase.Key, testCase.Value).WaitForCompletion();
 
             var retrieved = cache.GetObject<string>(testCase.Key).SubscribeGetValue();
 
@@ -544,7 +544,7 @@ public class ErrorHandlingAndEdgeCaseTests
 
         foreach (var unicodeKey in unicodeKeys)
         {
-            cache.InsertObject(unicodeKey, $"value_for_{unicodeKey}").SubscribeAndComplete();
+            cache.InsertObject(unicodeKey, $"value_for_{unicodeKey}").WaitForCompletion();
 
             var retrieved = cache.GetObject<string>(unicodeKey).SubscribeGetValue();
 
@@ -583,7 +583,7 @@ public class ErrorHandlingAndEdgeCaseTests
             try
             {
                 // Act
-                cache.InsertObject(dateTimeCase.Key, dateTimeCase.Value).SubscribeAndComplete();
+                cache.InsertObject(dateTimeCase.Key, dateTimeCase.Value).WaitForCompletion();
 
                 var retrieved = cache.GetObject<DateTime>(dateTimeCase.Key).SubscribeGetValue();
 
@@ -628,7 +628,7 @@ public class ErrorHandlingAndEdgeCaseTests
         {
             try
             {
-                cache.InsertObject(offsetCase.Key, offsetCase.Value).SubscribeAndComplete();
+                cache.InsertObject(offsetCase.Key, offsetCase.Value).WaitForCompletion();
 
                 var retrieved = cache.GetObject<DateTimeOffset>(offsetCase.Key).SubscribeGetValue();
 

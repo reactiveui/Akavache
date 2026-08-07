@@ -47,15 +47,15 @@ public class SqliteBlobCacheInvalidateAllTests
         const int InsertedKeyCount = 3;
 
         // Arrange
-        cache.Insert("a", FirstUntypedPayload).SubscribeAndComplete();
-        cache.Insert("b", SecondUntypedPayload).SubscribeAndComplete();
-        cache.Insert("c", ThirdUntypedPayload).SubscribeAndComplete();
+        cache.Insert("a", FirstUntypedPayload).WaitForCompletion();
+        cache.Insert("b", SecondUntypedPayload).WaitForCompletion();
+        cache.Insert("c", ThirdUntypedPayload).WaitForCompletion();
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keysBefore).Count().IsEqualTo(InsertedKeyCount);
 
         // Act
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Assert
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -82,18 +82,18 @@ public class SqliteBlobCacheInvalidateAllTests
         const int InsertedKeyCount = 4;
 
         // Arrange: mix typed and untyped entries
-        cache.Insert("u1", FirstUntypedPayload).SubscribeAndComplete();
-        cache.Insert("u2", SecondUntypedPayload).SubscribeAndComplete();
+        cache.Insert("u1", FirstUntypedPayload).WaitForCompletion();
+        cache.Insert("u2", SecondUntypedPayload).WaitForCompletion();
 
         var userType = typeof(string);
-        cache.Insert("t1", FirstTypedPayload, userType).SubscribeAndComplete();
-        cache.Insert("t2", SecondTypedPayload, userType).SubscribeAndComplete();
+        cache.Insert("t1", FirstTypedPayload, userType).WaitForCompletion();
+        cache.Insert("t2", SecondTypedPayload, userType).WaitForCompletion();
 
         var keysBefore = cache.GetAllKeys().ToList().SubscribeGetValue();
         await Assert.That(keysBefore).Count().IsEqualTo(InsertedKeyCount);
 
         // Act
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Assert
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();
@@ -122,8 +122,8 @@ public class SqliteBlobCacheInvalidateAllTests
         using SqliteBlobCache cache = new(new InMemoryAkavacheConnection(), serializer, ImmediateSequencer.Instance);
 
         // Arrange: one expired, one not
-        cache.Insert("live", FirstUntypedPayload, TimeProvider.System.GetLocalNow().Add(LiveEntryLifetime)).SubscribeAndComplete();
-        cache.Insert("expired", SecondUntypedPayload, TimeProvider.System.GetLocalNow().Add(ExpiringEntryLifetime)).SubscribeAndComplete();
+        cache.Insert("live", FirstUntypedPayload, TimeProvider.System.GetLocalNow().Add(LiveEntryLifetime)).WaitForCompletion();
+        cache.Insert("expired", SecondUntypedPayload, TimeProvider.System.GetLocalNow().Add(ExpiringEntryLifetime)).WaitForCompletion();
 
         // wait for expiration
         await Task.Delay(ExpiryGracePeriod);
@@ -134,7 +134,7 @@ public class SqliteBlobCacheInvalidateAllTests
         await Assert.That(keysBefore).Count().IsLessThanOrEqualTo(1);
 
         // Act
-        cache.InvalidateAll().SubscribeAndComplete();
+        cache.InvalidateAll().WaitForCompletion();
 
         // Assert
         var keysAfter = cache.GetAllKeys().ToList().SubscribeGetValue();

@@ -147,7 +147,7 @@ public abstract class DateTimeTestBase : IDisposable
             fixture.ForcedDateTimeKind = DateTimeKind.Utc;
 
             var value = TimeProvider.System.GetUtcNow().UtcDateTime;
-            fixture.InsertObject("key", value).SubscribeAndComplete();
+            fixture.InsertObject("key", value).WaitForCompletion();
             var result = fixture.GetObject<DateTime>("key").SubscribeGetValue();
             await Assert.That(result.Kind).IsEqualTo(DateTimeKind.Utc);
         }

@@ -423,7 +423,7 @@ public class HttpServiceTests
         try
         {
             byte[] expected = [1, 2, 3];
-            cache.Insert("cached-key", expected).SubscribeAndComplete();
+            cache.Insert("cached-key", expected).WaitForCompletion();
 
             var result = service.DownloadUrl(cache, "cached-key", UnreachableHostUrl).SubscribeGetValue();
 
@@ -445,7 +445,7 @@ public class HttpServiceTests
         try
         {
             byte[] expected = [4, 5, 6];
-            cache.Insert("cached-uri-key", expected).SubscribeAndComplete();
+            cache.Insert("cached-uri-key", expected).WaitForCompletion();
 
             var result = service.DownloadUrl(cache, "cached-uri-key", new Uri(UnreachableHostUrl))
                 .SubscribeGetValue();
@@ -471,7 +471,7 @@ public class HttpServiceTests
     {
         HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds));
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
-        cache.Insert("fetch-always-key", "\t\t\t"u8.ToArray()).SubscribeAndComplete();
+        cache.Insert("fetch-always-key", "\t\t\t"u8.ToArray()).WaitForCompletion();
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);
@@ -501,7 +501,7 @@ public class HttpServiceTests
         HttpService.FastHttpService service = new(retries: 0, timeout: TimeSpan.FromMilliseconds(FailFastTimeoutMilliseconds));
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         byte[] stalePayload = [7, 7, 7];
-        cache.Insert("fetch-always-uri-key", stalePayload).SubscribeAndComplete();
+        cache.Insert("fetch-always-uri-key", stalePayload).WaitForCompletion();
 
         Exception? error = null;
         ManualResetEventSlim mre = new(false);

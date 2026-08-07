@@ -544,7 +544,7 @@ public class EncryptedSqliteBlobCacheDirectTests
         EncryptedSqliteBlobCache cache = new(connection, new SystemJsonSerializer(), ImmediateSequencer.Instance);
         try
         {
-            cache.Insert([], typeof(string)).SubscribeAndComplete();
+            cache.Insert([], typeof(string)).WaitForCompletion();
 
             var keys = cache.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys!).IsEmpty();

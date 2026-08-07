@@ -209,7 +209,7 @@ public class SettingsBaseHelperTests
 
         await Assert.That((int)settings.TestValue).IsEqualTo(SeededTestValue);
 
-        settings.TestValue.Set(UpdatedTestValue).SubscribeAndComplete();
+        settings.TestValue.Set(UpdatedTestValue).WaitForCompletion();
 
         await Assert.That((int)settings.TestValue).IsEqualTo(UpdatedTestValue);
     }

@@ -20,7 +20,7 @@ public class InMemoryBlobCacheObjectDisposedTests
         SystemJsonSerializer serializer = new();
         InMemoryBlobCache cache = new(ImmediateSequencer.Instance, serializer);
 
-        cache.InsertObject("test", "value").SubscribeAndComplete();
+        cache.InsertObject("test", "value").WaitForCompletion();
         cache.Dispose();
 
         var getError = cache.GetObject<string>("test").SubscribeGetError();

@@ -198,8 +198,8 @@ public partial class SerializerExtensionsTests
         {
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
             UserObject user2 = new() { Name = SecondUserName, Bio = "Bio2", Blog = SecondUserBlog };
-            cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-            cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+            cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+            cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
             var results = await SerializerExtensions.GetAllObjects<UserObject>(cache).ToList();
 
@@ -227,7 +227,7 @@ public partial class SerializerExtensionsTests
         try
         {
             UserObject user1 = new() { Name = FirstUserName, Bio = "Bio1", Blog = FirstUserBlog };
-            cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
+            cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
 
             _ = SerializerExtensions.InvalidateAllObjects<UserObject>(cache).Subscribe();
 

@@ -31,7 +31,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         try
         {
             byte[] payload = [1, 2, 3];
-            wrapper.Insert("k", payload).SubscribeAndComplete();
+            wrapper.Insert("k", payload).WaitForCompletion();
             var data = wrapper.Get("k").SubscribeGetValue();
             await Assert.That(data).IsNotNull();
             await Assert.That(data!.Length).IsEqualTo(payload.Length);
@@ -57,7 +57,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
                 new("k1", firstPayload),
                 new("k2", secondPayload)
             ];
-            wrapper.Insert(pairs).SubscribeAndComplete();
+            wrapper.Insert(pairs).WaitForCompletion();
 
             var keys = wrapper.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys).Contains("k1");
@@ -80,7 +80,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Insert("k", [1], typeof(string)).SubscribeAndComplete();
+            wrapper.Insert("k", [1], typeof(string)).WaitForCompletion();
             var data = wrapper.Get("k", typeof(string)).SubscribeGetValue();
             await Assert.That(data).IsNotNull();
         }
@@ -105,7 +105,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
                 new("k1", firstPayload),
                 new("k2", secondPayload)
             ];
-            wrapper.Insert(pairs, typeof(string)).SubscribeAndComplete();
+            wrapper.Insert(pairs, typeof(string)).WaitForCompletion();
 
             var results = wrapper.Get(["k1", "k2"], typeof(string)).ToList().SubscribeGetValue();
             await Assert.That(results!.Count).IsEqualTo(BatchedKeyCount);
@@ -133,8 +133,8 @@ public class Sqlite3SecureBlobCacheWrapperTests
             byte[] firstPayload = [1];
             byte[] secondPayload = [2];
             byte[] thirdPayload = [3];
-            wrapper.Insert("k1", firstPayload).SubscribeAndComplete();
-            wrapper.Insert("k2", secondPayload).SubscribeAndComplete();
+            wrapper.Insert("k1", firstPayload).WaitForCompletion();
+            wrapper.Insert("k2", secondPayload).WaitForCompletion();
 
             var single = wrapper.GetCreatedAt("k1").SubscribeGetValue();
             await Assert.That(single).IsNotNull();
@@ -142,7 +142,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
             var multi = wrapper.GetCreatedAt(["k1", "k2"]).ToList().SubscribeGetValue();
             await Assert.That(multi!.Count).IsEqualTo(BatchedKeyCount);
 
-            wrapper.Insert("k3", thirdPayload, typeof(int)).SubscribeAndComplete();
+            wrapper.Insert("k3", thirdPayload, typeof(int)).WaitForCompletion();
             var typed = wrapper.GetCreatedAt("k3", typeof(int)).SubscribeGetValue();
             await Assert.That(typed).IsNotNull();
 
@@ -167,15 +167,15 @@ public class Sqlite3SecureBlobCacheWrapperTests
             byte[] secondPayload = [2];
             byte[] thirdPayload = [3];
             byte[] fourthPayload = [4];
-            wrapper.Insert("k1", firstPayload).SubscribeAndComplete();
-            wrapper.Insert("k2", secondPayload).SubscribeAndComplete();
-            wrapper.Insert("k3", thirdPayload, typeof(string)).SubscribeAndComplete();
-            wrapper.Insert("k4", fourthPayload, typeof(int)).SubscribeAndComplete();
+            wrapper.Insert("k1", firstPayload).WaitForCompletion();
+            wrapper.Insert("k2", secondPayload).WaitForCompletion();
+            wrapper.Insert("k3", thirdPayload, typeof(string)).WaitForCompletion();
+            wrapper.Insert("k4", fourthPayload, typeof(int)).WaitForCompletion();
 
-            wrapper.Invalidate("k1").SubscribeAndComplete();
-            wrapper.Invalidate("k3", typeof(string)).SubscribeAndComplete();
-            wrapper.Invalidate(["k2"]).SubscribeAndComplete();
-            wrapper.Invalidate(["k4"], typeof(int)).SubscribeAndComplete();
+            wrapper.Invalidate("k1").WaitForCompletion();
+            wrapper.Invalidate("k3", typeof(string)).WaitForCompletion();
+            wrapper.Invalidate(["k2"]).WaitForCompletion();
+            wrapper.Invalidate(["k4"], typeof(int)).WaitForCompletion();
 
             var keys = wrapper.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys).IsEmpty();
@@ -196,11 +196,11 @@ public class Sqlite3SecureBlobCacheWrapperTests
         {
             byte[] firstPayload = [1];
             byte[] secondPayload = [2];
-            wrapper.Insert("k1", firstPayload, typeof(string)).SubscribeAndComplete();
-            wrapper.InvalidateAll(typeof(string)).SubscribeAndComplete();
+            wrapper.Insert("k1", firstPayload, typeof(string)).WaitForCompletion();
+            wrapper.InvalidateAll(typeof(string)).WaitForCompletion();
 
-            wrapper.Insert("k2", secondPayload).SubscribeAndComplete();
-            wrapper.InvalidateAll().SubscribeAndComplete();
+            wrapper.Insert("k2", secondPayload).WaitForCompletion();
+            wrapper.InvalidateAll().WaitForCompletion();
 
             var keys = wrapper.GetAllKeys().ToList().SubscribeGetValue();
             await Assert.That(keys).IsEmpty();
@@ -219,8 +219,8 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Flush().SubscribeAndComplete();
-            wrapper.Flush(typeof(string)).SubscribeAndComplete();
+            wrapper.Flush().WaitForCompletion();
+            wrapper.Flush(typeof(string)).WaitForCompletion();
         }
         finally
         {
@@ -238,7 +238,7 @@ public class Sqlite3SecureBlobCacheWrapperTests
         var wrapper = CreateWrapper();
         try
         {
-            wrapper.Vacuum().SubscribeAndComplete();
+            wrapper.Vacuum().WaitForCompletion();
         }
         finally
         {
@@ -258,14 +258,14 @@ public class Sqlite3SecureBlobCacheWrapperTests
         {
             byte[] firstPayload = [1];
             byte[] secondPayload = [2];
-            wrapper.Insert("k1", firstPayload).SubscribeAndComplete();
-            wrapper.Insert("k2", secondPayload, typeof(string)).SubscribeAndComplete();
+            wrapper.Insert("k1", firstPayload).WaitForCompletion();
+            wrapper.Insert("k2", secondPayload, typeof(string)).WaitForCompletion();
 
             var future = TimeProvider.System.GetLocalNow().AddHours(1);
-            wrapper.UpdateExpiration("k1", future).SubscribeAndComplete();
-            wrapper.UpdateExpiration("k2", typeof(string), future).SubscribeAndComplete();
-            wrapper.UpdateExpiration(["k1"], future).SubscribeAndComplete();
-            wrapper.UpdateExpiration(["k2"], typeof(string), future).SubscribeAndComplete();
+            wrapper.UpdateExpiration("k1", future).WaitForCompletion();
+            wrapper.UpdateExpiration("k2", typeof(string), future).WaitForCompletion();
+            wrapper.UpdateExpiration(["k1"], future).WaitForCompletion();
+            wrapper.UpdateExpiration(["k2"], typeof(string), future).WaitForCompletion();
         }
         finally
         {

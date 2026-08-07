@@ -149,7 +149,7 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Act
-                cache.InsertObjects(keyValuePairs).SubscribeAndComplete();
+                cache.InsertObjects(keyValuePairs).WaitForCompletion();
 
                 // Assert
                 var user1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetValue();
@@ -193,8 +193,8 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-                cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+                cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
                 // Act
                 var results = cache.GetObjects<UserObject>([FirstUserKey, SecondUserKey]).ToList().SubscribeGetValue();
@@ -240,8 +240,8 @@ public partial class SerializerExtensionsTests
             UserObject user2 = new() { Name = SecondUserName, Bio = "Bio2", Blog = SecondUserBlog };
 
             // Insert test data
-            cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-            cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+            cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+            cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
             // Act
             var allObjects = cache.GetAllObjects<UserObject>().SubscribeGetValue();
@@ -273,14 +273,14 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user).WaitForCompletion();
 
                 // Verify object exists
                 var retrievedUser = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetValue();
                 await Assert.That(retrievedUser).IsNotNull();
 
                 // Act
-                cache.InvalidateObject<UserObject>(FirstUserKey).SubscribeAndComplete();
+                cache.InvalidateObject<UserObject>(FirstUserKey).WaitForCompletion();
 
                 // Assert
                 var knfError1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetError();
@@ -310,11 +310,11 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-                cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+                cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
                 // Act
-                cache.InvalidateObjects<UserObject>([FirstUserKey, SecondUserKey]).SubscribeAndComplete();
+                cache.InvalidateObjects<UserObject>([FirstUserKey, SecondUserKey]).WaitForCompletion();
 
                 // Assert
                 var knfError1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetError();
@@ -347,15 +347,15 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Insert test data
-                cache.InsertObject(FirstUserKey, user1).SubscribeAndComplete();
-                cache.InsertObject(SecondUserKey, user2).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user1).WaitForCompletion();
+                cache.InsertObject(SecondUserKey, user2).WaitForCompletion();
 
                 // Verify objects exist before invalidation
                 var beforeInvalidation = cache.GetAllObjects<UserObject>().SubscribeGetValue();
                 await Assert.That(beforeInvalidation!.Count()).IsEqualTo(SampleUserCount);
 
                 // Act
-                cache.InvalidateAllObjects<UserObject>().SubscribeAndComplete();
+                cache.InvalidateAllObjects<UserObject>().WaitForCompletion();
 
                 // Assert - The primary verification is that individual objects can't be retrieved
                 var knfError1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetError();
@@ -392,7 +392,7 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Act
-                cache.InsertObject(FirstUserKey, user).SubscribeAndComplete();
+                cache.InsertObject(FirstUserKey, user).WaitForCompletion();
                 var createdAt = cache.GetObjectCreatedAt<UserObject>(FirstUserKey).SubscribeGetValue();
 
                 // Assert
@@ -427,7 +427,7 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Act
-                cache.InsertAllObjects(keyValuePairs).SubscribeAndComplete();
+                cache.InsertAllObjects(keyValuePairs).WaitForCompletion();
 
                 // Assert
                 var user1 = cache.GetObject<UserObject>(FirstUserKey).SubscribeGetValue();
@@ -503,7 +503,7 @@ public partial class SerializerExtensionsTests
             try
             {
                 // Insert existing user
-                cache.InsertObject("existing_user", existingUser).SubscribeAndComplete();
+                cache.InsertObject("existing_user", existingUser).WaitForCompletion();
 
                 // Act
                 UserObject? result = null;

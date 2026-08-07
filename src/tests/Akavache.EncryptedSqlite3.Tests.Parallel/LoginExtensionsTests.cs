@@ -196,7 +196,7 @@ public class LoginExtensionsTests
         // Writing an empty byte[] under the typed key causes GetObject<LoginInfo>
         // to emit a null value (it interprets empty payloads as stored nulls) so
         // the null branch of LoginExtensions.GetLogin's Select throw runs.
-        cache.Insert(key, [], typeof(LoginInfo)).SubscribeAndComplete();
+        cache.Insert(key, [], typeof(LoginInfo)).WaitForCompletion();
 
         var getError = cache.GetLogin(host).SubscribeGetError();
         await Assert.That(getError).IsTypeOf<KeyNotFoundException>();
@@ -219,10 +219,10 @@ public class LoginExtensionsTests
 
         // Save against the default host explicitly, so erasing it can only succeed if the
         // host-less overload resolves to that same host.
-        cache.SaveLogin("defaultuser", "defaultpassword", LoginExtensions.DefaultHost).SubscribeAndComplete();
-        cache.SaveLogin(namedUser, "namedpassword", namedHost).SubscribeAndComplete();
+        cache.SaveLogin("defaultuser", "defaultpassword", LoginExtensions.DefaultHost).WaitForCompletion();
+        cache.SaveLogin(namedUser, "namedpassword", namedHost).WaitForCompletion();
 
-        cache.EraseLogin().SubscribeAndComplete();
+        cache.EraseLogin().WaitForCompletion();
 
         var defaultError = cache.GetLogin(LoginExtensions.DefaultHost).SubscribeGetError();
         await Assert.That(defaultError).IsTypeOf<KeyNotFoundException>();

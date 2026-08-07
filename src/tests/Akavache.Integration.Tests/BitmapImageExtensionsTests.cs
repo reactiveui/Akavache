@@ -338,7 +338,7 @@ public class BitmapImageExtensionsTests
 
         // Act - Save image (should serialize the bitmap data)
         cache.SaveImage(key, mockBitmap)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Act - Load image (should deserialize and recreate bitmap)
         var loadedBitmap = cache.LoadImage(key)
@@ -427,7 +427,7 @@ public class BitmapImageExtensionsTests
 
         // Insert valid image data
         cache.Insert(key, validImageData)
-            .SubscribeAndComplete();
+            .WaitForCompletion();
 
         // Act - Load with dimensions
         var loadedBitmap = cache.LoadImage(key, DesiredWidthPixels, DesiredHeightPixels)
@@ -470,7 +470,7 @@ public class BitmapImageExtensionsTests
         var imageData = CreateValidImageBytes();
 
         // Seed cache with the URL as the key — DownloadUrl(string url) uses `url` as key.
-        cache.Insert(url, imageData).SubscribeAndComplete();
+        cache.Insert(url, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(url).SubscribeGetValue();
 
@@ -487,7 +487,7 @@ public class BitmapImageExtensionsTests
         var imageData = CreateValidImageBytes();
 
         // HttpService.DownloadUrl(Uri) uses url.ToString() as the cache key.
-        cache.Insert(uri.ToString(), imageData).SubscribeAndComplete();
+        cache.Insert(uri.ToString(), imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(uri).SubscribeGetValue();
 
@@ -511,7 +511,7 @@ public class BitmapImageExtensionsTests
         const string url = "http://example.com/keyed_string_url.png";
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(key, imageData).SubscribeAndComplete();
+        cache.Insert(key, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(key, url).SubscribeGetValue();
 
@@ -531,7 +531,7 @@ public class BitmapImageExtensionsTests
         Uri uri = new("http://example.com/keyed_uri.png");
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(key, imageData).SubscribeAndComplete();
+        cache.Insert(key, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(key, uri).SubscribeGetValue();
 
@@ -554,7 +554,7 @@ public class BitmapImageExtensionsTests
         const string url = "http://example.com/dimensioned.png";
         var imageData = CreateValidImageBytes();
 
-        cache.Insert(url, imageData).SubscribeAndComplete();
+        cache.Insert(url, imageData).WaitForCompletion();
 
         var loaded = cache.LoadImageFromUrl(url, fetchAlways: false, desiredWidth: 320F, desiredHeight: 240F)
             .SubscribeGetValue();
@@ -573,7 +573,7 @@ public class BitmapImageExtensionsTests
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "null_bitmap_key";
 
-        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).WaitForCompletion();
 
         var error = cache.LoadImage(key).SubscribeGetError();
         await Assert.That(error).IsTypeOf<IOException>();
@@ -733,7 +733,7 @@ public class BitmapImageExtensionsTests
     {
         using InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         const string key = "width_only_image";
-        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).WaitForCompletion();
 
         CapturingBitmapLoader loader = new();
         BitmapLoader.Current = loader;
@@ -1075,7 +1075,7 @@ public class BitmapImageExtensionsTests
         InMemoryBlobCache cache = new(ImmediateSequencer.Instance, new SystemJsonSerializer());
         CacheBackedHttpService httpService = new();
         cache.SetHttpService(httpService);
-        cache.Insert(key, CreateValidImageBytes()).SubscribeAndComplete();
+        cache.Insert(key, CreateValidImageBytes()).WaitForCompletion();
 
         CapturingBitmapLoader loader = new();
         BitmapLoader.Current = loader;

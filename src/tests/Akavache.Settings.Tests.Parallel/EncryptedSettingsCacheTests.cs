@@ -187,7 +187,7 @@ public class EncryptedSettingsCacheTests
                     await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                     // Mutate directly on the captured store
-                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).SubscribeAndComplete();
+                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).WaitForCompletion();
 
                     // Verify the value is readable from the same instance
                     await TestHelper.EventuallyAsync(
@@ -302,7 +302,7 @@ public class EncryptedSettingsCacheTests
                     await TestHelper.EventuallyAsync(() => viewSettings is not null).ConfigureAwait(false);
 
                     // Mutate directly on the captured store
-                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).SubscribeAndComplete();
+                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).WaitForCompletion();
 
                     // Verify the value is readable from the same instance
                     await TestHelper.EventuallyAsync(
@@ -539,9 +539,9 @@ public class EncryptedSettingsCacheTests
             () => instance.GetSecureSettingsStore<ViewSettings>(PersistencePassword, testName),
             async s =>
             {
-                s.StringTest.Set("Modified String").SubscribeAndComplete();
-                s.IntTest.Set(ModifiedIntSetting).SubscribeAndComplete();
-                s.BoolTest.Set(false).SubscribeAndComplete();
+                s.StringTest.Set("Modified String").WaitForCompletion();
+                s.IntTest.Set(ModifiedIntSetting).WaitForCompletion();
+                s.BoolTest.Set(false).WaitForCompletion();
 
                 var ok = TestHelper.TryRead(() =>
                     s.StringTest is not null && s.IntTest == ModifiedIntSetting && !s.BoolTest);
@@ -560,7 +560,7 @@ public class EncryptedSettingsCacheTests
             () => instance.GetSecureSettingsStore<ViewSettings>(PersistencePassword, testName),
             async s =>
             {
-                s.IntTest.Set(round * RecreateValueStride).SubscribeAndComplete();
+                s.IntTest.Set(round * RecreateValueStride).WaitForCompletion();
                 var ok = TestHelper.TryRead(() => s.IntTest >= 0);
                 await Task.Yield();
                 return ok;
@@ -602,7 +602,7 @@ public class EncryptedSettingsCacheTests
             () => instance.GetSecureSettingsStore<ViewSettings>(CorrectPassword, testName),
             async s =>
             {
-                s.StringTest.Set(SecretPayload).SubscribeAndComplete();
+                s.StringTest.Set(SecretPayload).WaitForCompletion();
 
                 // Verify the value round-trips in the same fresh store.
                 var ok = TestHelper.TryRead(() => s.StringTest == SecretPayload);

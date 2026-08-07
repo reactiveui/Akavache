@@ -407,7 +407,7 @@ public class SettingsCacheTests
                     await Task.Delay(StoreWarmupDelayMilliseconds).ConfigureAwait(false);
 
                     // Perform the mutation directly on the captured store
-                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).SubscribeAndComplete();
+                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).WaitForCompletion();
 
                     // Wait for the value to be readable via the property helper
                     await TestHelper.EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2)
@@ -513,7 +513,7 @@ public class SettingsCacheTests
                     await Task.Delay(StoreWarmupDelayMilliseconds).ConfigureAwait(false);
 
                     // Perform the mutation directly on the captured store
-                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).SubscribeAndComplete();
+                    viewSettings!.EnumTest.Set(EnumTestValue.Option2).WaitForCompletion();
 
                     // Wait for the value to be readable via the property helper
                     await TestHelper.EventuallyAsync(() => viewSettings.EnumTest == EnumTestValue.Option2)

@@ -78,7 +78,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         // Non-empty collection — takes the normal path.
         byte[] payload = [1, 2, 3];
         cache.Insert(
-            [new KeyValuePair<string, byte[]>("k1", payload)]).SubscribeAndComplete();
+            [new KeyValuePair<string, byte[]>("k1", payload)]).WaitForCompletion();
 
         // Empty collection — takes the early-return guard.
         var result = cache.Insert(
@@ -106,7 +106,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         byte[] payload = [1, 2, 3];
         cache.Insert(
             [new KeyValuePair<string, byte[]>("k1", payload)],
-            typeof(string)).SubscribeAndComplete();
+            typeof(string)).WaitForCompletion();
 
         // Empty typed collection — takes the early-return guard.
         var result = cache.Insert(
@@ -135,7 +135,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         var source = new[] { new KeyValuePair<string, byte[]>("k1", payload) }
             .Select(static x => x);
 
-        cache.Insert(source).SubscribeAndComplete();
+        cache.Insert(source).WaitForCompletion();
 
         var value = cache.Get("k1").SubscribeGetValue();
         await Assert.That(value).IsNotNull();
@@ -158,7 +158,7 @@ public class InMemoryBlobCacheBasePartialBranchTests
         var source = new[] { new KeyValuePair<string, byte[]>("k1", payload) }
             .Select(static x => x);
 
-        cache.Insert(source, typeof(string)).SubscribeAndComplete();
+        cache.Insert(source, typeof(string)).WaitForCompletion();
 
         var value = cache.Get("k1", typeof(string)).SubscribeGetValue();
         await Assert.That(value).IsNotNull();

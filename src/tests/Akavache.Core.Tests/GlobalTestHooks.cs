@@ -30,7 +30,7 @@ public static class GlobalTestHooks
     /// <summary>Resets shared static state used by core tests.</summary>
     private static void ResetState()
     {
-        CacheDatabase.ResetForTests().SubscribeAndComplete();
+        CacheDatabase.ResetForTests().WaitForCompletion();
         RequestCache.Clear();
         UniversalSerializer.ResetCaches();
         AppBuilder.ResetBuilderStateForTests();
